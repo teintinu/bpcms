@@ -1,17 +1,35 @@
 # BPCMS — Brainstorm
 
-*Documento vivo.* Nada aqui é especificação fechada: é material para explorar possibilidades, escolher e descartar.  
-Atualizado a cada rodada de entrevista. Última atualização: 2026-11-14 — *Rodada 1 respondida, Rodada 2 enviada.*
+*Documento vivo.* As decisões de baseline estão fechadas; o detalhe de implementação evolui por versão.
+Última atualização: **2026-11-13 — Rodada 4: baseline decisória v1, sem perguntas abertas, pronta para PRD/SPECS/PLAN.**
+
+> **O que mudou nesta rodada.** As perguntas de desenho foram fechadas. O documento agora tem uma **baseline v1**: cada decisão tem um default, uma razão e, quando ainda há incerteza real, um **experimento com critério de sucesso**. Não há mais “a decidir”: há decisões tomadas (✅), defaults vetáveis (🔶), hipóteses testáveis (🔬) e itens fora de escopo (🧊). O objetivo é destravar a transformação em **PRD.md + SPECS.md + PLAN.md**.
+
+### Resumo da baseline v1
+
+| Dimensão | Decisão |
+| :--- | :--- |
+| **Produto** | BPCMS = BPM + SOA + CMS, com a LLM como porta de entrada: conversa → modelo → BPMN, telas e documentos → runtime. |
+| **V1** | Web, monólito modular, núcleo Rust + estúdio TS, BPMN subset, Document/Shape/unidades, read/live, dev interpretado. |
+| **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
+| **Documento** | Dados + ações + regras + sync + ciclo de vida; `Shape` é dono da semântica; unidade original + projeção + snapshot. |
+| **Processo** | As-is primeiro; to-be como versão comparável; BPMN interativo/simulável; manual executável antes de automação. |
+| **Ambientes** | Dev sem build; QA determinístico; produção otimizada; mesmo artefato promovido. |
+| **Fora de escopo** | Marketplace, multi-plataforma, CRDT/offline, process mining, BPMN 2.0 completo. |
+| **Próximo passo** | Gerar PRD.md, SPECS.md e PLAN.md sem reabrir o escopo. |
 
 ## Legenda de status
+
 | Marca | Significado |
 | :--- | :--- |
-| ✅ | Decidido pelo autor do projeto |
-| 🔶 | Proposta minha (aguardando confirmação) |
-| ❓ | Pergunta aberta / lacuna |
-| 🧊 | Congelado de propósito (decidir depois) |
+| ✅ | Decidido e assumido na baseline |
+| 🔶 | Default de baseline — pode ser vetado, mas não bloqueia |
+| 🔬 | Hipótese com experimento e critério de sucesso |
+| 🧊 | Fora de escopo da v1 (com gatilho para revisitar) |
+| ❌ | Descartado com razão |
 
 ## Como ler (níveis de detalhe)
+
 | Nível | Conteúdo | Para quem |
 | :--- | :--- | :--- |
 | 0 | Pitch de 1 parágrafo | qualquer pessoa, 30s |
@@ -19,199 +37,1504 @@ Atualizado a cada rodada de entrevista. Última atualização: 2026-11-14 — *R
 | 2 | Arquitetura conceitual + diagramas | arquiteto |
 | 3 | Artefatos em detalhe (campos, exemplos) | quem implementa o núcleo |
 | 4 | Trade-offs e problemas duros | quem implementa construtores |
-| — | Lacunas, decisões, fila de entrevista | nós dois, agora |
+| 5 | MVP, roadmap, métricas, riscos | quem vai executar |
+| — | Baseline, experimentos e handoff | nós dois, agora |
+
+## Mapa do documento
+
+| Seção | O que responde |
+| :--- | :--- |
+| Nível 0 | Qual é a ideia em 1 parágrafo |
+| Nível 1 | Por que existe, para quem, o que entra e o que não entra |
+| Nível 2 | Como as peças se encaixam (LLM, BPMN, documentos, ambientes) |
+| Nível 3 | Como um artefato é definido em detalhe |
+| Nível 4 | O que é difícil e quais são as alternativas |
+| Nível 5 | Por onde começar e como medir |
+| Baseline / Experimentos | O que está decidido, o que é hipótese e como validar |
+| Handoff | Como este documento vira PRD, SPECS e PLAN |
 
 ---
 
 ## Nível 0 — Pitch
 
-BPCMS é uma ferramenta que unifica **BPM + CMS + SOA**: você declara o negócio em artefatos (`application`, `service`, `shape`, `widget`, `document`, `view`, `organogram`) numa linguagem própria parecida com TypeScript, e **construtores** transformam esses artefatos em software real — web, desktop, mobile, terminal, backend — sem reescrever a lógica. A lógica de negócio vive uma única vez, no artefato; a plataforma é um detalhe de geração.
+**BPCMS transforma a forma como uma área trabalha em software que roda — e continua evoluindo.**
+
+A pessoa conta o processo em texto simples. Uma LLM entrevista, pede exemplos, lê evidências (formulários, PDFs, screenshots, rascunhos à mão, Figma, DFD/MER, DDL/SQL, diagramas UML, planilhas) e propõe um modelo de processo, documentos, papéis e telas. O modelo é devolvido em **artefatos interativos**: um BPMN navegável e simulável, protótipos clicáveis, relatórios/dashboards e um **diagrama de documentos** parecido com um diagrama de classes.
+
+Por baixo, o BPCMS é a mescla de **BPM + SOA + CMS**: processos e papéis; serviços reutilizáveis com contratos; conteúdo, telas e apresentação. O modelo é a verdade. O runtime executa. Os **construtores** realizam o mesmo modelo em cada plataforma. **Dev roda sem build; QA é determinístico; produção é otimizada.**
+
+> **Frase de trabalho:** “Do relato ao processo que roda, sem reescrever a lógica a cada plataforma.”
 
 ---
 
 ## Nível 1 — Visão e fronteiras
 
-### 1.1 A mescla (o que cada sigla contribui)
-| Sigla | O que entra no BPCMS | Artefato(s) que carregam isso |
-| :--- | :--- | :--- |
-| **BPM** | processos, papéis, autorização, tarefas manuais e automatizadas | `Organogram`, ❓ `Process` (lacuna L1), `Document.ações` |
-| **CMS** | conteúdo/estrutura, apresentação, themes, i18n | `View`, `Widget`, `Theme`, `Shape` (display) |
-| **SOA** | serviços reutilizáveis, contratos, composição e substituição | `Service`, `Application`, construtores como ports |
+### 1.1 O problema que estamos resolvendo
 
-### 1.2 Princípios não-negociáveis ✅
-* **SOLID + clean code** rígidos em todo o projeto (núcleo, DSL, LSP, construtores).
+Hoje, o conhecimento de um processo vive espalhado:
+
+* na cabeça das pessoas que executam o processo;
+* em documentos, planilhas, PDFs e telas antigas;
+* em ferramentas de BPMN que exigem especialista e produzem diagramas que ninguém executa;
+* em ferramentas low-code que geram aplicativos, mas não entendem o negócio;
+* em LLMs que até entrevistam, mas devolvem texto solto, código frágil ou um diagrama que não vira sistema.
+
+O BPCMS fecha o ciclo **entendimento → modelo → protótipo → execução → evolução**. A LLM não é o produto; é a **porta de entrada** para um modelo estruturado, validável e executável.
+
+### 1.2 A mescla (o que cada sigla contribui)
+
+| Sigla | O que entra no BPCMS | Artefatos que carregam isso |
+| :--- | :--- | :--- |
+| **BPM** | processos as-is e to-be, papéis, tarefas humanas e automáticas, decisões, prazos, simulação, execução, auditoria | `Process` (BPMN), `Role`/`Organogram`, `Task`, `Rule`, `Event` |
+| **SOA** | serviços reutilizáveis, contratos, composição, substituição, propriedade de dados, capacidades | `Service`, `Application`, `Builder`, `Integration` |
+| **CMS** | conteúdo, estrutura, formulários, relatórios, temas, idiomas, acessibilidade | `View`, `Widget`, `Theme`, `Locale`, `Document` (conteúdo estruturado) |
+| **Descoberta (LLM)** | entrevista, evidências, propósito de cada informação, controle de complexidade, proposta de modelo | `Conversation`, `Evidence`, `Decision`, `Assumption` |
+
+> A LLM não é um quarto silo. É a camada que alimenta os três. O produto continua sendo BPM + SOA + CMS; a diferença é **como** o modelo é descoberto e mantido.
+
+### 1.3 Princípios não-negociáveis ✅
+
+* **SOLID + clean code** rígidos em todo o projeto (núcleo, DSL, LSP, runtime, construtores).
 * Arquitetura **inspirada** em Clean Architecture, com **nomes e artefatos próprios**.
 * **Regra de ouro:** lógica de negócio nunca na `Application`; vive em artefatos dentro de um `Service`.
 * **Corolário 🔶:** construtor também **não** contém regra de negócio — só realiza intenção.
 * **Independência de plataforma no nível conceitual:** artefato declara intenção, construtor decide realização.
 
-### 1.3 Fronteiras (🔶 confirmar)
+Princípios novos desta rodada:
+
+* **O modelo é a verdade.** A conversa é entrada; o BPMN, a DSL e as telas são **visões** do mesmo modelo. Nada de “o desenho é uma coisa e o sistema é outra”.
+* **Toda informação tem um propósito.** Campo, passo, exceção, integração ou relatório precisam apontar para uma decisão, ação, obrigação ou meta. Sem propósito, é candidato a remoção.
+* **Evidência antes de suposição.** Se existe um formulário, um PDF, um DDL ou um print, a LLM deve extrair e confirmar — não perguntar do zero nem inventar.
+* **Suposição explícita.** Toda inferência entra num registro de suposições, com impacto e forma de validação. Nada de decisão silenciosa.
+* **Complexidade é custo.** Cada processo tem um orçamento de complexidade; a solução mais simples que atinge o objetivo vence.
+* **Dev não tem build/deploy.** Build é otimização de produção, não pré-requisito para desenvolver.
+* **Mesma semântica em todo lugar.** Núcleo nativo, WASM e estúdio compartilham o mesmo IR e as mesmas validações.
+* **Reutilizar antes de criar; estender antes de bifurcar.**
+* **Um dado tem um dono.** Um serviço é dono de um documento; outros serviços referenciam ou copiam por contrato/evento, nunca escrevem direto.
+* **Privacidade por padrão.** Evidências podem conter dados pessoais; redigir antes de mandar para a LLM quando necessário.
+* **Acessibilidade e i18n não são afterthought.**
+
+### 1.4 Fronteiras da v1
+
 | É | Não é (por enquanto) |
 | :--- | :--- |
-| Linguagem + tooling (LSP/VSCode) + núcleo de artefatos + construtores | IDE visual no-code completa |
-| Framework de definição de negócio orientado a artefatos | Mais um ORM / mais um UI kit |
+| Linguagem + estúdio + núcleo + runtime + construtores | IDE visual no-code completa |
+| Descoberta de processo assistida por LLM | Uma LLM genérica / um chat que “gera código” |
+| BPMN interativo e executável (subconjunto) | Conformidade total com BPMN 2.0 |
+| Documento como unidade de verdade sincronizável | Um banco de dados |
+| Protótipos clicáveis + telas reais | Um Figma / uma ferramenta de design |
 | Multiplataforma por geração + interpretação | Todas as plataformas na v1 |
-| Documento como unidade de verdade sincronizável | Ser um banco de dados |
+| Dev/QA/produção com promoção de artefatos | Uma plataforma de CI/CD completa |
 
-### 1.4 Dois níveis de autoria ✅ (R1-Q2)
-O **analista de negócio** declara o negócio; o **dev** estende a plataforma. Mesma linguagem, dois modos.
+> Process mining e marketplace estão 🧊 (congelados para depois).
 
-| | Analista (modo simples) | Dev (modo avançado) |
+### 1.5 Personas e níveis de autoria
+
+A mudança central: **quem conversa não precisa escrever DSL.** Mas a DSL (ou uma visão estruturada do modelo) continua disponível para quem quiser revisar ou estender.
+
+| Persona | O que faz | O que vê | O que não precisa saber |
+| :--- | :--- | :--- | :--- |
+| **Dono do processo / usuário de negócio** | conta o as-is, responde, valida BPMN/telas/relatórios, aprova | conversa, diagramas, protótipos, perguntas | DSL, tipos, banco |
+| **Analista de negócio** | refina perguntas, cobre lacunas, revisa o modelo, aprova mudanças | matriz de cobertura, BPMN, diagrama de documentos, diff | código de construtor |
+| **Dev** | cria tipos, construtores, integrações; revisa o modelo quando necessário | DSL/IR, contratos, testes, logs | — |
+| **QA** | escreve cenários, fixtures, aprova promoção | cenários, cobertura, diffs, resultados | detalhes de implementação |
+| **Operação** | monitora produção, recálculos, dispositivos, conflitos | painéis, alertas, auditoria | modelo completo |
+
+**Três níveis de autoria:**
+
+1. **Conversacional** ✅ — a LLM escreve o modelo; o humano revisa por diagramas, telas e perguntas. É o modo principal.
+2. **Declarativo** 🔶 — o humano revisa a DSL/IR e, no modo avançado, edita diretamente (ou pelo canvas), com assistência da LLM. No v1 a edição direta é limitada ao dev; o analista revisa por artefatos. É o modo do analista avançado e do dev.
+3. **Extensão** ✅ — o dev cria novas primitivas: `Shape`, `Builder`, `Integration`, widgets customizados.
+
+> **Decisão B-01:** mesma IR, duas superfícies. A LLM escreve o modelo; o humano revisa por diagramas, telas e perguntas. No v1 a DSL é **visão/exportação somente leitura**; edição direta de DSL/IR é modo avançado (dev), não a porta de entrada. O que a LLM escreve é exatamente o que o humano pode inspecionar.
+
+A DSL herdada continua **parecida com TypeScript** (declarações, tipos, imports, overrides), mas nesta fase ela é uma **visão do IR** — somente leitura no v1, editável no modo avançado depois. A LLM pode produzi-la, o analista pode revisá-la e o dev pode estendê-la. O LSP/VSCode continua sendo a ferramenta do modo declarativo/avançado.
+
+### 1.6 Stack (baseline)
+
+| Camada | Decisão | Status |
 | :--- | :--- | :--- |
-| **Escreve** | `Application`, `Service`, `Document`, `View`, `Organogram`, `Process` | `Shape` custom, `Widget` custom, Construtor, integrações |
-| **Sintaxe** | declarativa, vocabulário de negócio, **sem expressões livres** 🔶 | tipos, expressões, código de extensão (❓ R2-Q4) |
-| **LSP fala** | linguagem de negócio + sugestão de correção | tipos, contratos, violações de SOLID |
-| **Ferramenta** | editor guiado + preview 🔶 | VSCode + CLI + testes |
-| **Pode** | compor e parametrizar o que existe | criar novas primitivas |
-| **Não pode** | furar a camada de negócio com código | embutir regra de negócio no construtor |
+| **Núcleo** | Rust: `syntax`, `ir`, `check`, `runtime`, `ports`; nativo + WebAssembly | ✅ herdado da Rodada 1 |
+| **Estúdio** | TypeScript/React + `bpmn-js` + editor de documentos + orquestração da LLM | 🔶 |
+| **Backend** | Rust (servidor) + Postgres (prod) / SQLite (dev); WebSocket/SSE; fila de jobs | 🔶 |
+| **LLM** | provedor-agnóstico; saída estruturada; ferramentas de modelo; opção local/on-prem | 🔶 |
+| **Construtores** | crates/plugins com `capabilities`; geração ou interpretação | ✅ conceito herdado |
+| **Tema/Idioma** | artefatos consumidos por construtores e estúdio | ✅ herdado |
 
-```mermaid
-flowchart TD
-  AN["Analista de negócio<br/>modo simples"]
-  DEV["Dev<br/>modo avançado"]
-  DSLA["Artefatos de negócio<br/>Application, Service, Document,<br/>View, Organogram, Process"]
-  DSLB["Extensões<br/>Shape custom, Widget custom, Construtor"]
-  IRX["Mesmo IR canônico"]
-  OUT["Construtores + Tema"]
+Ganhos da stack herdada:
 
-  AN --> DSLA --> IRX
-  DEV --> DSLB --> IRX
-  DEV -.->|também escreve| DSLA
-  IRX --> OUT
-```
-> ❓ **Como garantir a fronteira na prática:** modo simples é um *subconjunto validado da mesma DSL* ou uma *sintaxe separada*? (Rodada 4)
+* uma única implementação de validação/tipos/merge roda no editor, no browser e no servidor;
+* o parser do LSP é o mesmo do runtime → zero divergência de interpretação;
+* performance para merge, cálculo de documentos e validação em massa;
+* o estúdio TS fica livre para a experiência de conversa/BPMN, sem duplicar a semântica.
 
-### 1.5 Stack ✅ (R1-Q4)
-**Núcleo em Rust**, distribuído como **binário nativo** (LSP, CLI, servidor) e **WebAssembly** (runtime no browser). Alvo de apresentação: **HTML / CSS / JS**. Ganhos imediatos:
-* **Uma única implementação de Shape/validação/merge** roda no editor, no browser e no servidor → semântica idêntica nos três lugares.
-* O parser do LSP é o mesmo parser do runtime → zero divergência de interpretação.
-* Performance para merge, cálculo de documentos derivados e validação em massa.
+> **Decisão B-07:** o núcleo roda em **WASM no estúdio** para validação, checagem e preview; persistência, LLM, jobs e sync ficam no **servidor**. O estúdio fala com o servidor por HTTP/SSE; não existem dois núcleos nem duas semânticas.
+
+> **Decisão B-08:** na v1 só existem **construtores first-party compilados**. Plugins de terceiros via **WASM component model** ficam 🧊 para a v2, quando houver um contrato de capabilities estável e sandbox de execução.
 
 ---
 
 ## Nível 2 — Arquitetura conceitual
 
 ### 2.1 Camadas com nomes próprios 🔶
-| Camada | Responsabilidade | Realização em Rust |
+
+| Camada | Responsabilidade | O que mora aqui |
 | :--- | :--- | :--- |
-| **Declaração** | artefatos `.bpcms` | texto fonte |
-| **Núcleo** | parser → IR → checagem → execução | crates `syntax`, `ir`, `check`, `runtime` |
-| **Contrato de Construção** | o que todo construtor deve implementar | `trait` (port) + capabilities |
-| **Construtores** | gerar ou executar numa plataforma | crates `gen-*`, `web`, futuramente nativos |
-| **Tema** | tokens, cores, ícones, opções | artefato consumido por construtores |
+| **Experiência** | conversar, visualizar, revisar, aprovar | sala de entrevista, canvas BPMN, telas, relatórios, diagrama de documentos |
+| **Condução** | decidir o que perguntar, o que já se sabe, o que falta | plano de entrevista, matriz de cobertura, curadoria de evidências, suposições |
+| **Modelo** | representar, validar, versionar, comparar | IR canônico, checagem, diff, merge, catálogo de artefatos |
+| **Execução** | fazer o modelo acontecer | runtime de documentos, motor de processos, sync, cache, jobs |
+| **Realização** | materializar em cada plataforma | construtores, adaptadores, capabilities |
+| **Ambientes** | desenvolver, testar, operar | dev, QA, produção, promoção, observabilidade |
+| **Governança** | quem pode o quê, com rastro | papéis, permissões, auditoria, aprovações, segredos |
 
-*SOLID aqui:* 1 crate = 1 responsabilidade (SRP); construtor novo não altera o núcleo (OCP); artefato sobrescrito respeita o contrato do original (LSP); ports pequenos e específicos (ISP); núcleo depende de traits, nunca de banco/DOM (DIP).  
-🧊 *nomes alternativos:* Kernel, Port, Builder, Renderer.
-
-### 2.2 Pipeline e alvos (Rust + WASM)
 ```mermaid
-flowchart LR
-  DSL["Artefatos .bpcms"]
-  subgraph CORE["Núcleo Rust — mesma base para nativo e WASM"]
-    SYN["syntax<br/>lexer + parser"]
-    IR["ir<br/>AST canônico, imports e overrides resolvidos"]
-    CHK["check<br/>tipos, contratos, ciclos, lint"]
-    RT["runtime<br/>Documents, Shapes, ações, merge"]
-    PORTS["ports<br/>traits de E/S: persistência, transporte, clock, random"]
-    
-    SYN --> IR --> CHK --> RT --> PORTS
+flowchart TB
+  subgraph EXP["Experiência"]
+    CHAT["Sala de entrevista"]
+    BPMN["Canvas BPMN"]
+    PROT["Telas e relatórios"]
+    DOCD["Diagrama de documentos"]
   end
 
-  DSL --> SYN
-  CHK --> LSP["LSP nativo<br/>VSCode"]
-  IR --> GEN["Construtores geradores<br/>SQL/DDL, API, HTML/CSS/JS"]
-  RT --> WASM["Runtime WASM<br/>no browser"]
-  PORTS --> NAT["Adaptadores nativos<br/>no servidor"]
-  
-  WASM --> UI["HTML / CSS / JS"]
-  GEN --> BE["Backend gerado"]
-  THEME["Tema"] --> GEN
-  THEME --> WASM
+  subgraph COND["Condução"]
+    PLAN["Plano de entrevista"]
+    COV["Matriz de cobertura"]
+    EVID["Curadoria de evidências"]
+  end
+
+  subgraph MODELO["Modelo"]
+    IR["IR canônico e versionado"]
+    CHECK["Validação, diff, merge"]
+  end
+
+  subgraph EXEC["Execução"]
+    RT["Runtime de documentos<br/>ações, sync, cálculo"]
+    PROC["Motor de processos"]
+    GEN["Construtores"]
+  end
+
+  subgraph AMB["Ambientes"]
+    DEV["Dev"]
+    QA["QA"]
+    PROD["Produção"]
+  end
+
+  CHAT --> PLAN
+  EVID --> PLAN
+  PLAN --> COV
+  COV --> IR
+  IR --> CHECK
+  CHECK --> RT
+  CHECK --> PROC
+  CHECK --> GEN
+  RT --> DEV
+  RT --> QA
+  RT --> PROD
+  RT --> BPMN
+  RT --> PROT
+  RT --> DOCD
+  BPMN --> CHAT
+  PROT --> CHAT
+  DOCD --> CHAT
 ```
-> ❓ Construtores de terceiros são crates compilados juntos, ou **plugins WASM** (component model) carregados em runtime? (Rodada 4)
+
+### 2.2 Pipeline e alvos
+
+```mermaid
+flowchart LR
+  P["Pessoa de negócio<br/>texto simples"] --> E["Entrevista guiada<br/>LLM"]
+  V["Evidências<br/>PDF, formulários, prints,<br/>Figma, DFD/MER, DDL, UML"] --> E
+  E --> M["Modelo canônico<br/>Application, Service, Process,<br/>Document, View, Role"]
+  M --> A["Artefatos interativos<br/>BPMN, telas, relatórios,<br/>diagrama de documentos"]
+  A --> H{"Pessoa valida?"}
+  H -->|"corrige"| E
+  H -->|"aprova"| R["Runtime e construtores"]
+  R --> D["Dev<br/>sem build"]
+  R --> Q["QA<br/>determinístico"]
+  R --> PR["Produção<br/>otimizada"]
+  D --> F["Diff e feedback"]
+  Q --> F
+  PR --> F
+  F --> E
+```
+
+**Regra de arquitetura:** a LLM nunca gera código de produção diretamente. Ela opera o **modelo** por ferramentas estruturadas (criar, ligar, validar, comparar). O runtime e os construtores são os únicos que materializam. Isso preserva testabilidade, determinismo e SOLID.
 
 ### 2.3 Mapa de artefatos
+
 ```mermaid
 flowchart TD
-  App["Application<br/>Services + inicialização"]
-  Svc["Service<br/>unidade de negócio reutilizável"]
-  Svc2["Service dependência"]
-  Shape["Shape<br/>storage + parse + display + validate + random"]
-  Widget["Widget<br/>interação conceitual de alto nível"]
-  Doc["Document<br/>dados + estado + ações + sync"]
-  View["View<br/>form | report | table"]
-  Org["Organogram<br/>roles e hierarquia"]
-  Proc["Process?<br/>lacuna L1"]
+  APP["Application<br/>composição e wiring"]
+  SVC["Service<br/>capacidade reutilizável"]
+  PROC["Process<br/>BPMN as-is e to-be"]
+  DOC["Document<br/>dados, ações e sync"]
+  SHAPE["Shape<br/>semântica e unidade"]
+  VIEW["View<br/>form, relatório, dashboard"]
+  ROLE["Role / Organogram"]
+  EVID["Evidence<br/>arquivos e modelos importados"]
+  INT["Integration / Device"]
+  ENV["Environment"]
+  BUILD["Builder<br/>capabilities"]
 
-  App -->|importa| Svc
-  Svc --> Shape & Widget & Doc & View & Org
-  Svc -.->|usa / estende / sobrescreve| Svc2
-  Doc -->|toda propriedade tipada por| Shape
-  View -->|compõe| Widget
-  Widget -->|exibe / edita| Doc
-  Org -->|autoriza ações de| Doc
-  Proc -.->|orquestraria| Doc
+  APP --> SVC
+  SVC --> PROC
+  SVC --> DOC
+  SVC --> VIEW
+  SVC --> ROLE
+  SVC --> INT
+  PROC --> DOC
+  PROC --> VIEW
+  PROC --> ROLE
+  DOC --> SHAPE
+  VIEW --> DOC
+  DOC --> INT
+  APP --> ENV
+  ENV --> BUILD
+  EVID -.-> PROC
+  EVID -.-> DOC
+  EVID -.-> VIEW
+  BUILD -.-> DOC
+  BUILD -.-> VIEW
+  BUILD -.-> PROC
 ```
 
-### 2.4 Ciclo de vida do Document ✅
+> **Núcleo x suporte x depois.** Nem todo artefato entra na v1. A seção 3.1 separa o que é núcleo (Application, Service, Document, Shape, Process, View, Role), o que é suporte (Evidence, Environment, Builder, Theme, Locale, Conversation) e o que fica para depois (Job, Policy, Marketplace, Device avançado).
+
+### 2.4 Application
+
+**Definição.** É a aplicação do ponto de vista de quem usa — mesmo que por baixo existam vários serviços, páginas, domínios e até plataformas diferentes. É o conceito mais amplo do projeto.
+
+Na prática, a `Application` é pequena de propósito:
+
+* uma **lista de serviços** usados;
+* um **ponto de inicialização/wiring** (o “main”) que liga serviços, eventos, papéis e ambiente;
+* a configuração de **experiência**: navegação, tema, idiomas, pontos de entrada;
+* o **mapeamento de papéis** (unificar, apelidar, detalhar);
+* o **lockfile** de versões de serviços/construtores.
+
+```text
+application JohnStore {
+  services { Catalog, Cart, Checkout, Payment, Shipping, Auth, Notification }
+  roles    { Customer, Clerk, Manager; Manager > Clerk }
+  theme    Nuvula
+  locales  [pt-BR, en]
+  main {
+    start Auth
+    wire  Checkout with Payment, Shipping
+  }
+}
+```
+
+> **Decisão B-21:** o `main` é **declarativo** — inicialização e ligação, não regra de negócio. O `main()` imperativo do rascunho antigo é substituído por wiring; hooks de código só existem em extensões de serviço, no modo dev.
+>
+> Tema, idioma, papéis e ambientes são **configuração de composição**, não lógica. O núcleo da `Application` continua sendo o que o autor pediu: **lista de serviços + main**.
+
+**Application é um AST de composição** (metáfora da versão anterior): uma árvore declarativa que os construtores percorrem para montar a experiência. Ela não contém lógica; contém **intenção de montagem**.
+
+### 2.5 Service
+
+**Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. É como um package/DLL de negócio: pode ser reutilizado por várias aplicações e por outros serviços, importar/estender/sobrescrever artefatos e exportar novos.
+
+Um serviço **não é só backend**. Ele é uma **fatia vertical**:
+
+| O serviço possui | Exemplos |
+| :--- | :--- |
+| Processos | `Expedicao`, `AprovacaoDeCompra` |
+| Documentos | `Remessa`, `Pedido`, `Produto` |
+| Tipos de dados | `MassKg`, `MoneyBRL`, `CPF` |
+| Views | `SepararItens`, `CotarFrete`, `DashboardExpedicao` |
+| Papéis | `Separador`, `Conferente`, `Gestor` |
+| Integrações | transportadora, balança, ERP, e-mail |
+| Eventos | `RemessaDespachada`, `PedidoAprovado` |
+| Regras/políticas | limite de peso, alçada de aprovação, quatro-olhos |
+
+**Contratos e composição.** Um serviço exporta artefatos e importa dependências com versão. O `check` garante compatibilidade (LSP): sobrescrever não pode quebrar quem usa o original. Serviço novo não altera o núcleo (OCP).
+
+**Dono do dado.** Um documento tem um serviço dono. Outros serviços referenciam por ID, copiam um snapshot (ex.: dados do cliente numa nota fiscal) ou reagem a eventos. Não há escrita compartilhada nem transação distribuída; processos que atravessam serviços usam saga/compensação.
+
+> **Serviço ≠ microserviço.** SOA aqui é sobre **contrato e reuso**, não sobre número de processos na rede. Vários serviços podem ser implantados juntos na v1; a fronteira é lógica e de propriedade.
+
+> **Decisão B-05:** override **explícito por caminho**, com `check` de compatibilidade (LSP) e versão semântica (`Service@1.2`). Não há merge profundo automático nem overlay arbitrário. Trocar o `Shape` de um campo ou remover campo exige declaração de migração e é bloqueado se quebrar consumidores. O que não for declarado como override é imutável para quem depende.
+
+> **Decisão B-06:** um serviço por **capacidade de negócio** (não por área organizacional). Na v1 os serviços são implantados juntos como **monólito modular**; a extração física só acontece com razão operacional comprovada.
+
+### 2.6 Documento — o coração do modelo
+
+#### 2.6.1 Definição
+
+Um **documento** é como uma entidade ou tabela, mas atravessa todas as camadas. Ele tem:
+
+* **campos** tipados por `Shape`;
+* **índices** declarados semanticamente;
+* **ações** (comandos) com parâmetros tipados;
+* **regras** de documento (invariantes, transições, autorização);
+* **identidade e versão** (id, versão, etag, timestamps, tenant);
+* **semântica de leitura**: sob demanda (read) ou em tempo real (live);
+* **proveniência**: quem criou/alterou, quando, com base em quê;
+* **ciclo de vida**: draft, computing, valid, stale, conflict, archived, deleted.
+
+| Parte | O que declara | Exemplo |
+| :--- | :--- | :--- |
+| **Identidade** | id, versão, etag, tenant, timestamps | `RemessaId` |
+| **Campos** | nome, `Shape`, parâmetros simples | `pesoBruto: Mass` |
+| **Índices** | único, range, composto, textual | `status + criadoEm` |
+| **Ações** | comandos, parâmetros, permissões, efeitos | `dividir()` |
+| **Regras** | invariantes, transições, autorização | `peso <= limite` |
+| **Frescor** | TTL, agenda, dependência, estado | `CotacaoFrete` a cada 15 min |
+| **Origem** | normal, calculado, dispositivo, snapshot | balança, nota fiscal |
+| **Sync** | read/live, política de conflito | documento aberto por 3 pessoas |
+| **Proveniência** | autor, evidência, histórico | “veio do formulário X” |
+
+Ele **não é** uma tabela, nem um DTO, nem uma view, nem um banco. Ele **projeta** tabelas, APIs, caches, estado de UI, índices de busca e relatórios. A tabela é uma realização; o documento é o contrato. Ele também não é um evento, embora possa **emitir** eventos.
+
+Um documento pode ser realizado como **uma tabela, uma junção de várias ou um agregado** (ex.: nota fiscal + itens + snapshot do cliente). O documento define o agregado e as invariantes; o construtor decide a normalização física. Duplicar dados de propósito (snapshot) é permitido quando o histórico precisa sobreviver à mudança da origem.
+
+Um documento também pode ser:
+
+* **um cálculo** (dashboard, totalizador, cotação) — com expiração e recálculo;
+* **uma leitura de dispositivo** (balança, sensor, medidor) — com releitura, não recálculo;
+* **um snapshot histórico** (nota fiscal, laudo) — que continua válido mesmo se a origem mudar.
+
+#### 2.6.2 Atravessa todas as camadas
+
+```mermaid
+flowchart LR
+  DEF["Document<br/>campos, tipos, índices, ações"]
+  DEF --> ST["Storage<br/>tabelas, colunas, índices"]
+  DEF --> API["API<br/>comandos, consultas, eventos"]
+  DEF --> CACHE["Cache<br/>documento completo"]
+  DEF --> UI["Estado de UI<br/>sincronizado"]
+  DEF --> REP["Relatórios<br/>agregação e unidades"]
+  DEF --> SEARCH["Busca<br/>índice textual"]
+  DEF --> AUDIT["Auditoria<br/>histórico e proveniência"]
+  DEF --> DIAG["Diagrama<br/>classes, índices, relações"]
+```
+
+| Camada | Como o documento é otimizado |
+| :--- | :--- |
+| **Storage** | colunas tipadas (nada de string para número/data), índices únicos/range/compostos, constraints, colunas normalizadas para unidade |
+| **API** | comandos e consultas tipadas, paginação, filtros, eventos, idempotência |
+| **Cache** | documento completo por id, invalidação por ação/evento, TTL para leitura |
+| **UI** | store sincronizado, patch otimista, presença, reconciliação |
+| **Relatórios** | read models/materialized views, agregações na unidade pedida, frescor visível |
+| **Busca** | índice textual derivado, não fonte de verdade |
+| **Auditoria** | log append-only, diff, autor, correlação |
+| **Diagrama** | visão de entendimento, não de implementação |
+
+> **Não duplicar validação.** A validação mora no `Shape` e nas regras do documento. Cada camada apenas **realiza** a mesma semântica (ex.: constraint no banco, checagem na API, feedback no formulário). Se a regra aparece escrita duas vezes, está no lugar errado.
+
+#### 2.6.3 Leitura sob demanda x tempo real
+
+| Modo | O que o consumidor pede | O que recebe | Quando usar |
+| :--- | :--- | :--- | :--- |
+| **read** | consulta/snapshot | um retrato, com versão | relatório, tela de consulta, integração |
+| **live** | assinatura do documento | snapshot inicial + patches | edição colaborativa, painel, atendimento |
+
+No modo **live**, as ações são sincronizadas com todos que mantêm o documento aberto. O servidor é autoritativo; o cliente pode ser otimista, mas reconcilia com a versão do servidor.
+
+**Decisão B-10:** sincronização por **instância de documento** (não por consulta). Assinatura de coleção/consulta fica 🧊 v2.
+
+Alguns documentos são **OLTP** (edição transacional, concorrência alta); outros são **assíncronos/derivados** (cálculo, dispositivo, snapshot). O mesmo conceito cobre os dois; o que muda é a política de frescor e de conflito.
+
+**Conflitos.** Primeiro: concorrência otimista com versão/etag; em conflito, o cliente recebe o estado atual e a ação é rejeitada ou reaplicada. Depois: merge por campo e editor de conflitos (a ideia de “merge tipo git” da versão anterior) ficam 🧊 v2. Offline também fica 🧊 v2.
+
+**Permissões.** Por documento, por campo sensível e por ação. Os papéis vêm do `Organogram`; a aplicação pode remapear papéis. Auditoria de quem leu/alterou.
+
+#### 2.6.4 Campos, tipos e a regra “campo não valida”
+
+> **Nomenclatura:** o tipo de dado de um campo é um **`Shape`** — semântica de valor (parse, validação, unidade, índice), não forma visual. `Shape` é o nome canônico em todo o documento.
+
+**Campo** = nome + `Shape` + parâmetros simples. Nada de validação/formatação própria no campo.
+
+| O campo pode declarar | O `Shape` é dono de |
+| :--- | :--- |
+| `required`, `default` | parse e serialização |
+| `min`, `max` | validação semântica |
+| `maxLength`, `precision`, `scale` | normalização |
+| `unit`, `displayUnit` | formatação por locale |
+| `unique`, `indexed`, `searchable` | comparação e ordenação |
+| `readonly`, `sensitivity`, `retention` | codificação para índice |
+| | conversão de unidade |
+| | agregação (soma, mínimo, máximo) |
+| | geração de valor aleatório (testes) |
+| | dica de widget (não detalhe de UI) |
+
+Exemplos de `Shape`: `Text`, `Email`, `CPF`, `CNPJ`, `Phone`, `Money`, `Mass`, `Length`, `Duration`, `Temperature`, `Percentage`, `Enum`, `Reference<Document>`, `File`, `Image`, `Signature`, `GeoPoint`, `DeviceReading<T>`.
+
+> **Regra:** se você sentiu vontade de colocar um regex, uma máscara ou uma validação “só deste campo”, crie um `Shape` (ex.: `PlacaVeiculo`) ou uma regra de documento. O campo continua burro; a semântica fica reutilizável.
+
+**Por que isso importa:** consistência entre telas, API e banco; i18n; índices corretos; menos duplicação; e a LLM consegue reutilizar tipos em vez de inventar campos.
+
+#### 2.6.5 Tipos com dimensão e unidade
+
+**Dimensão ≠ unidade.** `1 kg !== 1 m`; o sistema de tipos impede somar, comparar ou passar um peso onde se espera um comprimento. Dentro da dimensão “massa”, `kg` e `lb` são unidades conversíveis. **Nenhum tipo numérico de negócio é “só número”:** até contagem tem unidade (`un`), e dinheiro tem moeda.
+
+| Dimensão | Unidades de exemplo | Cuidados |
+| :--- | :--- | :--- |
+| Massa | kg, g, t, lb | massa é invariante; não confundir com peso |
+| Comprimento | m, cm, km, in, ft | conversão multiplicativa |
+| Volume | m³, L, cm³ | comprimento³; conversão cúbica |
+| Força (peso) | N, kgf, lbf | depende da gravidade; em outro planeta muda |
+| Dinheiro | BRL, USD, EUR | precisa de taxa e data da taxa |
+| Tempo | s, min, h, dia | duração decorrida x calendário |
+| Temperatura | °C, °F, K | conversão afim (offset), não só fator |
+| Percentual/razão | %, ppm, fração | adimensional; cuidado com 0,1 x 10% |
+| Contagem | un, caixa, palete | inteiro, sem fração |
+
+> **Massa x peso.** “Massa em outro planeta é outro tipo de campo” — na física, a massa não muda; o peso (força) muda. Vale separar os dois tipos: `Mass` (kg) e `Weight`/`Force` (N), este último com contexto de gravidade. Se o negócio usa “peso” como massa, o tipo pode se chamar `Mass` e o rótulo de tela ser “peso”.
+
+**Armazenar a unidade original.** Se o usuário digitou `100 km`, o documento guarda `100` + `km`. A conversão para a unidade local acontece **na exibição**; o relatório converte para a unidade que ele pedir, **na hora do uso**. Nada de pré-converter e perder a intenção original.
+
+**Mas... e o índice?** 🔶 Esta é a tensão real desta rodada:
+
+* guardar só a unidade original inviabiliza range/ordenação/agregação se a mesma coluna tiver `kg` e `lb`;
+* guardar só a unidade canônica perde a unidade original e pode perder precisão na ida e volta;
+* **Decisão B-03:** guardar o **valor original + unidade** como verdade e manter uma **projeção normalizada** (coluna gerada/derivada) para índice, ordenação e agregação. A conversão continua acontecendo nas bordas (exibição/relatório); o índice só usa a projeção.
+
+**Precisão.** Nada de `float` para dinheiro/quantidade. Usar decimal (ou inteiro escalado) com escala definida; arredondar só na exibição; totalizar na unidade alvo, não somar valores já arredondados.
+
+**Exemplo:**
+
+```text
+campo pesoBruto : Mass {
+  unit: kg            // unidade de entrada/exibição padrão
+  min: 0.001
+  max: 50000
+  indexed: true       // índice sobre a projeção normalizada
+}
+
+relatório "Peso por transportadora" {
+  agrupar por transportadora
+  totalizar pesoBruto em kg     // conversão no momento do relatório
+  exibir "calculado em" e "recalculando" quando aplicável
+}
+```
+
+| Entrada | Guardado | Exibição pedida | Cálculo |
+| :--- | :--- | :--- | :--- |
+| 100 km | 100 km + normalizado 100000 m | milhas | converte na exibição |
+| 2,5 kg | 2,5 kg + normalizado 2,5 kg | lb | converte na exibição |
+| R$ 10,00 | 10,00 BRL + taxa/data quando multi-moeda | USD | converte com taxa e data |
+| 30 °C | 30 °C | °F | conversão afim |
+
+> **Decisão B-03:** guardar **valor original + unidade** como verdade, manter uma **projeção normalizada** para índice/ordenação/agregação e um **snapshot imutável** da conversão em documentos históricos. Conversões usam topologia em estrela por dimensão (tudo passa pela unidade-base), não grafo arbitrário. A unidade é um código UCUM-like; a dimensão é derivada. Alternativas (a), (b) e (c) foram descartadas: perdem consulta, rastreabilidade ou explodem em colunas.
+
+#### 2.6.6 Documentos calculados
+
+Um documento pode ser **um cálculo**: faturamento do mês, cotação de frete, KPIs de um dashboard, consolidado de exames. Ele tem:
+
+* **fonte**: documentos/queries/regras que alimentam o cálculo;
+* **frescor** (`freshness`): TTL, agenda, “recalcular se vencido ao ler”, ou invalidação por dependência;
+* **estado**: `fresh`, `stale`, `recalculating`, `error`;
+* **metadados**: `calculatedAt`, duração, versão dos insumos, `lastGood`;
+* **ação** `refresh()` e, se possível, recálculo incremental;
+* **parcialidade**: resultado parcial enquanto recalcula (quando o negócio aceita);
+* **custo**: o recálculo pode ser lento; não bloquear a UI.
+
+**Contrato de frescor:** ao mostrar um documento calculado, a tela/relatório exibe **quando foi calculado** e **se está recalculando**. O consumidor pode pedir “recalcular agora” ou aceitar o valor anterior (stale-while-revalidate). Em relatórios, o total usa a unidade pedida e a data de referência do cálculo.
+
+**Dashboard** = documento calculado + `View` (relatório). O documento guarda o resultado e o frescor; a view só apresenta. O recálculo é um job; a invalidação pode ser por TTL ou por evento de dependência.
+
+> **Decisão B-10:** v1 usa **TTL + refresh manual + dependências declaradas** para invalidação. O grafo completo e o recálculo incremental ficam 🧊 para a v2; o documento sempre expõe `calculatedAt`, `state` e `lastGood`.
+
+#### 2.6.7 Documentos de dispositivo
+
+Alguns documentos capturam informações de dispositivos (balança, sensor, medidor, catraca, GPS). Aqui não é recálculo: é **releitura**.
+
+| | Documento calculado | Documento de dispositivo |
+| :--- | :--- | :--- |
+| Origem | outros documentos/regras | dispositivo/conector |
+| Atualização | recálculo | releitura |
+| Metadado | `calculatedAt` | `readAt`, `lastKnown`, qualidade |
+| Frescor | TTL/dependência | `staleAfter`, falha de comunicação |
+| Histórico | versões do cálculo | série temporal |
+| UI | “calculado há X”, “recalculando” | “lido há X”, “sem sinal”, qualidade |
+
+**Extras:** buffer offline, calibração, unidade do dispositivo, flags de qualidade, alarme de leitura vencida, correlação com o documento de negócio. A leitura pode gerar um documento derivado (ex.: `Pesagem` → `Remessa.pesoBruto`).
+
+#### 2.6.8 O que o documento gera no backend
+
+| Realização | O que é | Otimização |
+| :--- | :--- | :--- |
+| Tabelas/colunas | uma ou mais tabelas, colunas tipadas | tipo nativo, sem parse, sem string para número |
+| Índices | único, range, composto, textual | declarados no documento, realizados pelo builder |
+| Constraints | FK, unique, check | derivadas do tipo/regra, não duplicadas |
+| Cache | documento completo por id | invalidação por ação/evento, TTL de leitura |
+| Change feed | outbox/eventos | integração e sync |
+| Read models | views/materialized views | relatórios e dashboards |
+| Busca | índice textual | derivado, eventual |
+| Arquivos | anexos/imagens | storage de objetos, URL assinada |
+| Auditoria | log append-only | histórico e compliance |
+| Migrações | evolução do schema | dev automático, QA dry-run, prod gated |
+
+> **Otimização é por camada, não por cópia.** O mesmo documento pode ter uma tabela normalizada no OLTP, um cache em memória, um read model no OLAP e um índice de busca. A definição é uma; as realizações são várias.
+
+#### 2.6.9 Ciclo de vida
+
 ```mermaid
 stateDiagram-v2
   [*] --> draft
-  draft --> computing: cálculo pesado iniciado
-  computing --> valid: cálculo ok + validações ok
-  computing --> draft: resultado parcial / falha
-  draft --> valid: Shapes + regras do Document ok
-  valid --> draft: edição
-  valid --> computing: refresh forçado / próxima atualização
+  draft --> computing: cálculo agendado
+  computing --> valid: cálculo e validações ok
+  computing --> draft: falha ou resultado parcial
+  draft --> valid: validações ok
+  valid --> stale: TTL vencido ou dependência mudou
+  stale --> computing: recálculo
+  valid --> conflict: edições concorrentes
+  conflict --> valid: merge resolvido
   valid --> archived: arquivar
   archived --> [*]
+  valid --> deleted: excluir
+  deleted --> [*]
 
   note right of valid
     Só documentos valid podem ser alvo de link.
     Arquivar não invalida quem já copiou os dados.
   end note
 ```
-> ❓ Faltam `invalid`, `stale` (vencido), `conflict` (merge pendente), `deleted` (tombstone)? (Rodada 3)
 
-### 2.5 Composição, override e remapeamento de roles
+* `draft`: em preenchimento ou cálculo incompleto; não é linkável.
+* `computing`: cálculo em andamento; pode mostrar parcial/lastGood.
+* `valid`: regras e tipos ok; linkável, publicável.
+* `stale`: vencido; ainda legível, mas o consumidor sabe que o frescor caiu.
+* `conflict`: merge pendente; leitura permitida, escrita bloqueada até resolver.
+* `archived`: histórico; não recebe novas ações.
+* `deleted`: tombstone para sync; não apaga o histórico de auditoria.
+
+> **Decisão B-12:** não existe estado `invalid` separado. `draft` carrega os erros de validação; `stale`, `conflict`, `archived` e `deleted` são estados explícitos. Isso evita dois conceitos para a mesma coisa e mantém a máquina de estados pequena.
+
+#### 2.6.10 O diagrama de documentos
+
+É o artefato que a LLM mostra para validar entendimento. Parece um diagrama de classes, mas não é UML:
+
+| Elemento | O que mostra |
+| :--- | :--- |
+| **Documento** | nome, propósito, dono (serviço), ciclo de vida, modo read/live |
+| **Campos** | nome, `Shape`, unidade, obrigatoriedade, sensibilidade |
+| **Índices** | único/range/composto/textual, campos e ordem |
+| **Relações** | referência (FK), composição (itens), snapshot (cópia histórica), derivação (calculado a partir de) |
+| **Ações** | comandos, parâmetros, permissões, efeitos |
+| **Frescor** | TTL, `calculatedAt`, `recalculating`, qualidade de dispositivo |
+| **Propósito/evidência** | por que o campo existe, qual decisão/relatório/obrigação ele atende |
+| **Alertas** | campo órfão, índice faltando, referência sem dono, tipo inadequado |
+
+```mermaid
+classDiagram
+  class Remessa {
+    <<document>>
+    +RemessaId id
+    +StatusRemessa status
+    +MassKg pesoBruto
+    +LengthCm comprimento
+    +VolumeM3 volume
+    +MoneyBRL frete
+    +DateTime criadoEm
+    +DateTime calculadoEm
+  }
+  class ItemRemessa {
+    <<document>>
+    +RemessaId remessaId
+    +ProdutoId produtoId
+    +Quantity quantidade
+    +MassKg pesoUnitario
+  }
+  class Produto {
+    <<document>>
+    +ProdutoId id
+    +String nome
+    +MassKg peso
+    +LengthCm comprimento
+  }
+  class CotacaoFrete {
+    <<computed>>
+    +RemessaId remessaId
+    +MoneyBRL valor
+    +Duration validade
+    +DateTime calculadoEm
+  }
+
+  Remessa "1" *-- "1..*" ItemRemessa
+  ItemRemessa --> Produto : referencia
+  Remessa --> CotacaoFrete : calcula
+
+  note for Remessa "Índices status e criadoEm; pesoBruto normalizado para índice"
+```
+
+**Interações do diagrama:** clicar num campo → tipo, propósito, evidência e impacto; alternar “storage/API/UI/relatório” para ver a projeção; ver o DDL gerado; comparar versões (diff); marcar campo órfão; simular uma alteração de tipo e ver o que quebra.
+
+> Este diagrama é a ponte entre o negócio e o banco. Se ele não estiver claro para o dono do processo, a LLM ainda não entendeu o suficiente.
+
+#### 2.6.11 Erros, idempotência e retry
+
+Um contrato de documento precisa de um modelo de erro pequeno e consistente. A spec detalha os payloads; a baseline fixa as classes:
+
+| Classe | Código | Quando | Comportamento |
+| :--- | :--- | :--- | :--- |
+| **Validação** | `400 validation_error` | tipo/regra/campo inválido | não muta; devolve campo, razão e correção possível |
+| **Conflito** | `409 conflict` | versão/etag divergente | não perde update; devolve estado atual e opções |
+| **Autorização** | `403 forbidden` | papel/campo/ação sem permissão | não revela existência de dado sensível |
+| **Não encontrado** | `404 not_found` | documento/processo inexistente | idempotente para leitura |
+| **Dependência** | `503 dependency_unavailable` | integração/dispositivo fora | retry com backoff e circuit breaker |
+| **Limite** | `429 rate_limited` | LLM/integração saturada | `Retry-After`; fila, não perda |
+| **Interno** | `500 internal` | bug/falha inesperada | `traceId`; sem detalhe sensível |
+| **Idempotência** | chave da ação | repetição de comando | mesma chave → mesmo resultado por 24 h |
+| **Outbox** | evento | efeito colateral | entrega ao menos uma vez; consumidor idempotente |
+| **DLQ** | job | falha após N retries | fila de inspeção humana; alerta |
+
+**Regras:** toda ação mutante aceita `Idempotency-Key`; eventos saem por outbox; retry é do transporte, não da regra de negócio; erro de validação nunca chega ao banco.
+
+### 2.7 BPMN interativo
+
+**As-is primeiro; to-be depois.** A v1 modela o processo como ele é, com evidências e dores. O to-be é uma proposta separada, comparável, aprovada.
+
+**Modelo x visão.** O BPMN é uma **visão** do `Process` no IR. O canvas (`bpmn-js`) edita BPMN 2.0 XML; ao salvar, o XML é importado para o IR (ou o IR é exportado para XML). Semânticas que o BPMN padrão não carrega — propósito, evidência, documento lido/escrito, papel, pergunta aberta — vivem no **IR**; quando o XML é exportado, elas podem virar `extensionElements`, mas o XML não é a fonte.
+
+> **Decisão B-04:** o **IR é canônico**; BPMN 2.0 XML é formato de importação/exportação. Semânticas que o BPMN não carrega (propósito, evidência, documentos lidos/escritos, perguntas) vivem no IR, não em sidecar paralelo. O canvas edita uma projeção e o importador reconcilia com o IR.
+
+**O que “interativo” significa:**
+
+* pan/zoom, clique em cada elemento, painel lateral com propósito, dono, evidências, documentos, telas, regras e perguntas;
+* **simulação**: rodar um caso, ver o token andar, os dados mudarem, os cálculos acontecerem, os gargalos aparecerem;
+* **edição**: arrastar, renomear, adicionar gateway; a LLM vê a edição e propõe melhorias;
+* **comentários e aprovação** por elemento;
+* **as-is x to-be** lado a lado, com diff;
+* **overlays** de volume, tempo de ciclo, erros, custo;
+* **links** para a tela/protótipo da tarefa e para o documento que ela lê/escreve.
+
 ```mermaid
 flowchart LR
-  subgraph SC["Service Catalog"]
-    D1["Document Product"]
-    V1["View ProductForm"]
+  subgraph P["Processo - Expedir pedido"]
+    S(["Pedido aprovado"]) --> T1["Separar itens<br/>tarefa humana"]
+    T1 --> G{"Peso e volume<br/>dentro do limite?"}
+    G -->|"sim"| T2["Cotar frete<br/>serviço"]
+    G -->|"não"| T3["Dividir remessa<br/>tarefa humana"]
+    T3 --> T2
+    T2 --> T4["Emitir etiqueta<br/>serviço"]
+    T4 --> E(["Remessa despachada"])
   end
-
-  subgraph SX["Service LojaExtras"]
-    O1["override Product.price<br/>Shape MoneyBRL"]
-  end
-
-  subgraph AP["Application JohnStore"]
-    RM["remapeamento de roles<br/>unificar R1 ou apelidar R1_S1 / R1_S2"]
-  end
-
-  SX -->|usa| SC
-  O1 -.->|sobrescreve| D1
-  AP --> SX
-  AP --> SC
-  RM -.->|unifica / apelida| SC
 ```
-> ❓ **R2-Q3:** merge profundo por caminho, herança explícita com `override`, ou overlay/patch? Pode trocar o Shape de uma propriedade? Pode remover propriedade? Como o check garante LSP (não quebrar quem usa o original)? Versionar `Catalog@1.2`?
+
+> Vista simplificada; o canvas real usa BPMN 2.0. O exemplo serve para mostrar o vínculo entre decisão, dado (peso/volume), tarefa humana e serviço.
+
+**Decisão B-04 — subconjunto executável:** start/end, user task, service task, business rule task, exclusive/parallel gateway, boundary events de timer/mensagem, subprocess, error event. Event-based gateway, compensação complexa e BPMN completo ficam 🧊 v2.
+
+Todo BPMN gerado é **validado** contra o schema e contra o subconjunto executável antes de aparecer; o canvas nunca deve abrir um XML inválido. Layout é um problema à parte (ver Nível 4).
+
+**Modo manual × automático.** Um processo pode ser executado mesmo com tarefas humanas: o sistema distribui tarefas, cobra prazo, registra decisão e mantém o caso. Automação vem depois, tarefa a tarefa. Isso é o valor de BPM: **visibilidade e controle antes de automação**.
+
+**Relação com documentos/telas.** Cada user task tem um formulário (view) e um ou mais documentos que lê/escreve. Cada service task chama uma integração/serviço. Cada gateway tem uma regra ou uma decisão humana. O BPMN não é o modelo inteiro; ele é a **espinha dorsal** que liga documentos, papéis e telas.
+
+### 2.8 Evidências: formulários, PDFs, prints, Figma, DFD/MER, DDL, UML
+
+**Primeiro, desambiguar “documento”.** A palavra aparece com três sentidos:
+
+| Termo (baseline) | Significado | Exemplo |
+| :--- | :--- | :--- |
+| **Documento** | artefato de dados (entidade/tabela) | `Remessa`, `Cliente`, `NotaFiscal` |
+| **Evidência** | arquivo ou modelo que ajuda a entender o processo | PDF, print, Figma, DDL, MER, UML |
+| **Template** (modelo de documento) | layout que coleta ou apresenta dados | formulário de compra, PDF de laudo |
+
+> `Template` evita confundir o layout com o **modelo canônico** (IR).
+
+> **Decisão B-02:** a separação é assumida. `Documento` = artefato de dados; `Evidência` = arquivo/fonte; `Template` = layout que coleta/apresenta. Nenhum dos três é sinônimo dos outros.
+
+**O que pode ser evidência:**
+
+| Tipo | O que a LLM extrai | Destino provável |
+| :--- | :--- | :--- |
+| Formulário (papel/HTML/PDF) | campos, obrigatoriedade, seções, validações | `Document` + `View` |
+| PDF de laudo/contrato | entidades, campos, regras, assinaturas | `Document` + `Rule` |
+| Screenshot de sistema legado | telas, campos, fluxo, rótulos | `View` + `Process` |
+| Rascunho à mão/Figma | fluxo, telas, hierarquia, atores | `Process` + `View` |
+| DFD | fluxos, entidades, depósitos, sistemas | `Process` + `Integration` |
+| MER | entidades, atributos, relacionamentos | `Document` + relações |
+| DDL/SQL | tabelas, colunas, tipos, FKs, índices | `Document` (importação) |
+| UML (classe/caso de uso/sequência) | classes, atores, mensagens | `Document` + `Process` + `Integration` |
+| Planilha | campos, cálculos, relatórios | `Document` + `View` + `Rule` |
+| E-mail/ata | decisões, exceções, regras | `Decision` + `Rule` |
+
+**Pipeline:**
+
+1. **Classificar** o arquivo (formulário? DDL? print?).
+2. **Extrair** (OCR/visão/parser) candidatos: entidades, campos, fluxos, atores, regras.
+3. **Normalizar** para o vocabulário do modelo.
+4. **Mapear** para documentos/processos/views existentes (ou propor novos).
+5. **Confirmar** com o humano (fila de revisão; confiança; impacto).
+6. **Anexar proveniência** ao elemento do modelo (arquivo, página, trecho, data, dono).
+
+**Nunca auto-aceitar o que é caro errar.** Importar um DDL inteiro sem revisão cria dívida; extrair um campo de um PDF sem confirmar cria retrabalho. A LLM propõe, o humano confirma.
+
+**Privacidade:** classificar a evidência (público/interno/restrito/pessoal), redigir antes de enviar à LLM quando necessário, guardar o original com controle de acesso.
+
+### 2.9 Protótipos, telas e relatórios
+
+**View** = composição de widgets com layout, navegação e papéis. Tipos: `form`, `report`, `dashboard`, `table`, `wizard`, `detail`, `kanban`, `calendar`.
+
+**Limitações de plataforma:** nem todo widget existe em todo alvo (um terminal não mostra imagem; um mobile pode não ter hover). A view declara fallback ou desabilita o widget; o construtor informa as capabilities de UI que suporta.
+
+**Modo protótipo x modo real:**
+
+| | Protótipo | Real |
+| :--- | :--- | :--- |
+| Dados | semeados/fake | documentos reais |
+| Persistência | em memória | runtime |
+| Integrações | mock | reais |
+| Objetivo | validar entendimento/UX | operar |
+| Build | nenhum | construtor |
+
+**O protótipo precisa ser clicável de verdade:** navegar, preencher, errar, ver validação do `Shape`, converter unidade, ver um cálculo com “calculado há X”, alternar papel (separador/gestor), abrir o relatório. Se o usuário só olha, não valida.
+
+**Relatórios/dashboards:** filtros, agregações na unidade pedida, `calculatedAt`, `recalculando`, export PDF/CSV, drill-down. O dashboard é um documento calculado + view; o relatório pode ser uma view sobre documentos/read models.
+
+**Relatório de validação do protótipo** (artefato de QA/UX): tarefas testadas, participantes, achados, mudanças propostas, vínculo com elementos do modelo. Serve para provar que o protótipo foi validado, não só exibido.
+
+**CMS:** tema (tokens, cores, ícones), idiomas, conteúdo de apoio (SOPs, checklists, ajuda), acessibilidade, responsividade. A documentação do processo (SOP) pode ser **gerada** do BPMN + documentos — uma sinergia BPM + CMS.
+
+### 2.10 A entrevista conduzida pela LLM
+
+#### 2.10.1 Postura
+
+A LLM age como **analista de processos sênior, cético e curioso**: pergunta o porquê, pede exemplos, desconfia de exceções inventadas, procura o caminho mais simples, separa fato de suposição. Ela não é uma “geradora de BPMN”; é uma **entrevistadora que constrói e testa um modelo**.
+
+Técnicas de exploração do as-is:
+
+* **funil:** pergunta aberta → detalhe → confirmação;
+* **caso real:** “me mostra o último pedido que você processou”;
+* **amostragem:** caso feliz, caso extremo, caso de exceção;
+* **observação:** pedir print/tela, caminhar pelo processo, job shadowing quando possível;
+* **5 porquês:** chegar à causa/objetivo, não só ao passo;
+* **evidência:** formulário, PDF, DDL, planilha, DFD/MER;
+* **teach-back:** explicar de volta e corrigir;
+* **simulação:** rodar um caso e mostrar o resultado;
+* **comparação:** processos similares, boas práticas, o que pode ser eliminado.
+
+#### 2.10.2 O que “entrevista completa” significa
+
+“Completa” não é “infinita”. É um **critério de cobertura** acordado. A matriz abaixo é o checklist; cada célula tem um estado: `desconhecido`, `suposto`, `confirmado`, `não se aplica`, `em conflito`.
+
+| Dimensão | O que precisa estar coberto | Evidência possível |
+| :--- | :--- | :--- |
+| **Objetivo** | por que o processo existe; que resultado entrega; como se mede sucesso | meta, KPI, contrato, SLA |
+| **Gatilho** | o que inicia; eventos, frequência, volume | formulário, e-mail, sistema |
+| **Atores** | quem faz o quê; papéis, hierarquia, delegação | organograma, acesso |
+| **Passos** | sequência real, entradas/saídas, handoffs | SOP, print, entrevista |
+| **Decisões** | critérios, regras, exceções, alçadas | tabela de decisão, política |
+| **Exceções** | o que dá errado; frequência; impacto; tratamento | histórico, reclamações |
+| **Dados** | documentos, campos, propósito de cada campo | formulário, DDL, MER |
+| **Regras** | validações, cálculo, autorização, segregação | política, contrato |
+| **Sistemas** | integrações, fontes, destinos, formato | DFD, API, print |
+| **Volumes/SLA** | quanto, em quanto tempo, o que acontece se atrasar | métricas, contrato |
+| **Relatórios** | quem usa, quando, para qual decisão | planilha, dashboard |
+| **Permissões** | quem pode ver/fazer; quatro-olhos | política, acesso |
+| **Compliance** | obrigações legais, retenção, auditoria | norma, contrato |
+
+**Critério de parada:** todas as células de alto impacto confirmadas; nenhuma contradição aberta; dono do processo assinou; simulação do caso feliz + 2 exceções passou; suposições restantes aceitas explicitamente.
+
+#### 2.10.3 Protocolo
+
+```mermaid
+stateDiagram-v2
+  [*] --> enquadramento
+  state "Enquadramento" as enquadramento
+  state "Elicitação" as elicitacao
+  state "Aprofundamento" as aprofundamento
+  state "Modelagem" as modelagem
+  state "Desafio" as desafio
+  state "Confirmação" as confirmacao
+  state "Handoff" as handoff
+
+  enquadramento --> elicitacao
+  elicitacao --> aprofundamento
+  aprofundamento --> modelagem
+  modelagem --> desafio
+  desafio --> confirmacao
+  confirmacao --> modelagem: correções
+  confirmacao --> handoff: cobertura ok e riscos aceitos
+  handoff --> [*]
+```
+
+| Fase | Objetivo | Exemplos de pergunta |
+| :--- | :--- | :--- |
+| **Enquadramento** | escopo, meta, sucesso, restrições | “Qual problema esse processo resolve?” “Como sabemos que ele funcionou?” |
+| **Elicitação** | caminho feliz, gatilhos, saídas | “Me conta um caso real, do começo ao fim.” |
+| **Aprofundamento** | decisões, exceções, dados, sistemas, volumes | “O que acontece se o peso passar do limite?” |
+| **Modelagem** | propor BPMN, documentos, telas | “Vou desenhar assim; o que está errado?” |
+| **Desafio** | contradições, lacunas, complexidade, propósito | “Por que esse campo existe? Quem usa?” |
+| **Confirmação** | teach-back, simulação, aprovação | “Deixa eu contar de volta...” |
+| **Handoff** | artefatos, suposições, perguntas, confiança | “Ficaram 3 dúvidas; quer resolver agora?” |
+
+#### 2.10.4 O propósito de cada informação
+
+Esta é a regra que evita o modelo-enciclopédia (cheio de campos e exceções que ninguém usa):
+
+* **campo** → qual decisão, ação, relatório ou obrigação ele atende?
+* **passo** → qual objetivo do processo ele realiza?
+* **exceção** → qual frequência e impacto? Se raro, pode ser manual.
+* **integração** → qual dado/ação ela troca? Se não troca, não existe.
+* **relatório** → quem usa, quando, para decidir o quê?
+* **permissão** → qual risco ela mitiga?
+
+A LLM mantém uma **matriz de rastreabilidade**: objetivo → passo → dado → tela → teste. Campo sem propósito é marcado como **órfão** e proposto para remoção. Passo sem objetivo é marcado como **ritual** e questionado.
+
+#### 2.10.5 Controle de complexidade
+
+* **Orçamento por processo:** nº de nós, gateways, campos, documentos, integrações, exceções, telas. Se estourar, a LLM explica o custo e propõe cortar.
+* **Pergunta mágica:** “O que acontece se não tivermos isso?” Se a resposta for “nada”, remove.
+* **Reutilizar antes de criar:** tipos, documentos, serviços, views e regras existentes.
+* **Adiar o raro:** exceção rara vira tarefa manual com registro, não automação complexa.
+* **Caminho feliz primeiro:** o modelo começa simples; exceções entram com frequência/impacto comprovados.
+* **Propor o mais simples:** a LLM mostra a versão enxuta e a versão completa, com trade-offs; o usuário escolhe.
+* **Nada de campo “só por garantia”.** Se ninguém usa, não entra.
+* **Medir:** complexidade ciclomática do processo, nº de campos por documento, nº de exceções, nº de integrações. Mostrar no review.
+
+#### 2.10.6 Evidência primeiro
+
+Se o usuário tem o formulário, o PDF, o DDL ou o print, a LLM **extrai e confirma** em vez de perguntar do zero:
+
+* “Achei estes campos no formulário; confere?”
+* “Este DDL tem `peso DECIMAL(10,2)` sem unidade; o negócio usa kg ou lb?”
+* “Este print mostra um campo ‘observações’ que não aparece no seu relato; ele é usado?”
+* “O MER tem `Cliente` e `NotaFiscal`; a NF copia os dados ou referencia?”
+
+Cada elemento do modelo carrega um **badge de origem**: `relato`, `evidência`, `importado`, `inferido`, `suposição`. O usuário vê de onde veio.
+
+#### 2.10.7 Suposições e decisões
+
+* **Registro de suposições:** id, afirmação, impacto, como validar, dono, status.
+* **Registro de decisões:** id, decisão, alternativas, motivo, data, quem decidiu.
+* **Nada de suposição silenciosa.** Se a LLM inferiu, ela marca e pede confirmação antes do handoff.
+* **Confiança por elemento:** alta/média/baixa; o review prioriza baixa confiança e alto impacto.
+
+#### 2.10.8 Teach-back e simulação
+
+A LLM explica o processo de volta em linguagem simples e roda um caso:
+
+> “Então, na prática: o pedido aprovado chega, o separador confere os itens, o sistema calcula o peso total e o volume. Se passar de 30 kg (ou do limite da transportadora) ou 1,2 m³, ele divide em duas remessas. Depois cota o frete na transportadora e emite a etiqueta. Se a transportadora não responder em 10 minutos, o caso vai para o supervisor. Certo?”
+
+Depois, simula: “pedido com 3 itens, 42 kg, 0,8 m³” → mostra o token, a divisão, a cotação, o prazo. O usuário corrige o que estiver errado. **Simulação é o teste de entendimento.**
+
+#### 2.10.9 Guardrails da LLM
+
+* Separar **fato**, **suposição** e **proposta**.
+* Citar a evidência; não inventar política, norma ou número.
+* Não expor dados sensíveis; redigir quando necessário.
+* Saída **estruturada** (schema validado pelo núcleo); se inválida, reparar antes de mostrar.
+* Operar o modelo por **ferramentas** (criar/ligar/validar/comparar), não por código livre.
+* Não alterar produção; mudanças passam por revisão/aprovação.
+* Registrar prompts/respostas (redigidos) para auditoria e melhoria.
+* Reconhecer e corrigir quando o usuário apontar erro; não defender a proposta.
+
+**Ferramentas mínimas da LLM:** `ask`, `record_answer`, `extract_evidence`, `upsert_process`, `upsert_document`, `link`, `validate`, `simulate`, `diff`, `propose_change`, `record_assumption`, `request_approval`. O contexto é montado por **recuperação** (evidências + trechos do modelo + transcript resumido), não despejando tudo no prompt.
+
+#### 2.10.10 Contrato de saída (esboço)
+
+```yaml
+process:
+  id: expedicao
+  goal: "Entregar o pedido no prazo combinado, com custo de frete conhecido"
+  actors: [Separador, Conferente, Supervisor, Transportadora]
+  triggers: [PedidoAprovado]
+  steps: [...]
+  decisions:
+    - id: limite_remessa
+      rule: "peso > limiteDePeso(transportadora) ou volume > 1,2 m3"
+      source: "evidência: tabela_frete.xlsx"
+  open_questions:
+    - "O frete é cotado por remessa ou por item?"
+  assumptions:
+    - id: A-001
+      statement: "Cotação de frete é sempre por remessa"
+      impact: alto
+      validation: "confirmar com logística"
+documents:
+  - id: Remessa
+    fields:
+      - name: pesoBruto
+        type: Mass
+        unit: kg
+        purpose: "calcular frete e validar limite"
+        source: "evidência: formulario_expedicao.pdf"
+```
+
+#### 2.10.11 UX da entrevista
+
+* **Split view:** conversa | BPMN | documentos | protótipo. Em telas pequenas, abas.
+* **Progresso:** cobertura, perguntas abertas, suposições, confiança.
+* **Fila de perguntas:** priorizada por impacto; permite “não sei”, “perguntar depois”, “pular”.
+* **Inbox de evidências:** upload, extração, revisão.
+* **Change review:** o que a LLM mudou, por quê, diff, aprovar/rejeitar.
+* **“Por que você está perguntando?”** sempre disponível.
+* **Assíncrono:** o usuário pode responder depois; stakeholders diferentes respondem partes; conflitos são expostos.
+* **Sessão retomável:** transcript + modelo + decisões; nada se perde.
+
+#### 2.10.12 Métricas da entrevista
+
+* tempo até o primeiro BPMN;
+* nº de turnos até cobertura;
+* % de células de alto impacto confirmadas;
+* nº de perguntas de alto impacto em aberto;
+* taxa de correção do modelo pelo usuário;
+* % de campos com propósito;
+* complexidade vs. orçamento;
+* custo/latência por sessão;
+* confiança do usuário (1–5) e taxa de aprovação.
+
+### 2.11 Ambientes: dev, QA e produção
+
+| Dimensão | Desenvolvimento | QA | Produção |
+| :--- | :--- | :--- | :--- |
+| **Objetivo** | feedback rápido, sem atrito | confiança e repetibilidade | operação, escala, segurança |
+| **Modelo** | interpretado | interpretado/gerado | gerado/otimizado |
+| **Build** | **nenhum** | build de verificação | build reproduzível |
+| **Deploy** | não existe | ambiente isolado | pipeline com aprovação |
+| **Dados** | semeados, em memória/SQLite | fixtures determinísticas, mascaradas | reais, com backup |
+| **Integrações** | mocks | stubs/contratos | reais |
+| **Banco** | SQLite/embedded | Postgres/efêmero | Postgres/HA |
+| **Tempo** | relógio real ou virtual | relógio virtual | real |
+| **Acesso** | dev local | QA restrito | usuários/operação |
+| **Observabilidade** | logs, inspector, diff | resultados, cobertura | métricas, tracing, alertas |
+
+#### 2.11.1 Desenvolvimento sem build/deploy ✅
+
+Princípio: **se uma mudança de modelo exige build, o modo dev está errado.** O dev roda o mesmo runtime em modo interpretado:
+
+* um comando (`bpcms dev`), sem Docker/K8s;
+* SQLite/in-memory, dados semeados, auth local, integrações mock;
+* hot reload do modelo e das views; estado preservado quando possível;
+* tempo virtual para TTL/cálculos; botão “reset”;
+* inspector de documentos, ações, eventos, tokens de processo e prompts (redigidos);
+* preview instantâneo no browser; sem instalar nada além do binário;
+* se um construtor só sabe gerar, o dev usa o fallback interpretado; a paridade é testada.
+
+**Loop alvo:** < 2 s entre “mudei o modelo” e “vi o efeito”. Esse é o critério de sucesso do dev mode.
+
+#### 2.11.2 QA
+
+* **Determinismo:** relógio fixo/virtual, seed fixa, fixtures, mocks de dispositivo/integração.
+* **Cenários:** dado um estado, quando uma ação/processo, então o documento/evento. Inclui caminho feliz, exceções, permissões, unidades, frescor.
+* **Cobertura:** caminhos do BPMN, ações, campos, regras, permissões.
+* **Golden files:** BPMN XML, diagrama de documentos, DDL, telas/relatórios.
+* **Migração:** dry-run, dados mascarados, rollback.
+* **Aprovação:** quality gate com erros/alertas/anotações (herdado do rascunho antigo), assinatura do analista/QA.
+* **LLM evals:** completude da entrevista, precisão/recall da extração, alucinação, qualidade das perguntas.
+* **Replay:** sessões de entrevista gravadas (redigidas) para reproduzir decisões e comparar versões do modelo.
+* **Isolamento:** um ambiente por branch/versão; paralelo; sem dados de produção.
+
+#### 2.11.3 Produção
+
+* build reproduzível e otimizado; UI gerada/compilada; índices e migrações;
+* observabilidade (logs/métricas/tracing), SLOs, alertas;
+* backup/restore, HA, segurança, rate limit, auditoria;
+* recálculos agendados, ingestão de dispositivos, sync em escala;
+* blue/green ou canary; rollback;
+* feature flags para desligar automações;
+* runbooks e resposta a incidente.
+
+#### 2.11.4 Promoção
+
+```mermaid
+flowchart LR
+  D["Dev<br/>interpretado, sem build"] --> C["Candidato<br/>artefato versionado"]
+  C --> Q["QA<br/>fixtures, replay, aprovação"]
+  Q --> P["Produção<br/>build otimizado, migrações"]
+  P -.->|"rollback"| C
+  C -.->|"correções"| D
+```
+
+* **Promove-se o mesmo artefato**, não se reconstrói a partir de outro commit. O que foi testado é o que vai para produção.
+* **Overlays de ambiente** só para segredos, endpoints, escala e feature flags. Nada de regra de negócio diferente por ambiente.
+* **Aprovações** e trilha de auditoria; diff entre ambientes; detecção de drift.
+* **Migração** faz parte do artefato; QA valida; produção executa com janela/rollback.
+
+> **Decisão B-09:** v1 é **monólito modular** (app + serviços no mesmo deployable). A separação física de serviços é uma decisão de operação, não de modelagem; só acontece com razão comprovada (escala, isolamento, time).
+
+### 2.12 Revisão do rascunho antigo (Khayyam)
+
+O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Application Framework** (Multlab, Escolar, Infarma, Venda Certa; componentes; construtores JS+PHP e Delphi; temas Nuvula/Gnome/Qualiom; pt-br/en). Ele é de outra época (SVN, instalador, PHP/Delphi), mas a **arquitetura de informação** continua útil.
+
+| Tela antiga | Conceito | O que fica no BPCMS |
+| :--- | :--- | :--- |
+| 1. Aplicações, componentes, construtores, temas, idiomas | catálogo | **Home da aplicação**: serviços, processos, documentos, ambientes, saúde |
+| 2. Versão atual, testes, cobertura, submeter/desfazer/diff, concluir/cancelar, histórico, ramificar, instalador | ciclo de versão | **Cockpit de release/QA**: versão, testes, cobertura, diff de BPMN/documentos, aprovar, promover, rollback |
+| 3. Componentes, geradores, título, idiomas, `main()` | configuração | **Composição da aplicação**: wiring declarativo, ambientes, tema, locale; sem `main()` imperativo |
+| 4. Construtor, ícone, título, capabilities | registry | **Builder registry**: capacidades, versão, compatibilidade, saúde |
+| 5. Tema, descrição, requer | tema | **Theme studio**: tokens, preview, suporte por construtor |
+| 6. Idioma, bandeira, descrição | locale | **Locale manager**: traduções, cobertura, fallback |
+| 7. Componente, descrição | detalhe | **Detalhe do serviço**: artefatos, contratos, dependências, papéis, versões |
+
+**O que manter:** catálogo → detalhe; versão/teste/cobertura no mesmo lugar; construtor com capabilities; tema e idioma como artefatos; histórico e ramificação; “programador/revisão” como dono/versão.
+
+**O que descartar:** instalador/binário como fluxo principal; SVN; foco em PHP/Delphi; `main()` como código; telas como especificação visual; “X erros, Y alertas” como placeholder sem quality gate real.
+
+**Telas novas que o rascunho não tinha:**
+
+1. Sala de entrevista (conversa + evidências + cobertura + suposições).
+2. Canvas BPMN (as-is/to-be, simulação, links).
+3. Documentos (diagrama + tipos + índices + cálculo/dispositivo + DDL).
+4. Experiências (telas/protótipos/relatórios + papéis + tema).
+5. Evidências (inbox, extração, proveniência).
+6. Qualidade (cenários, cobertura, diffs, aprovação).
+7. Operação (produção, recálculos, dispositivos, conflitos, auditoria).
 
 ---
 
-## Rodadas de Entrevista e Perguntas Pendentes
+## Nível 3 — Artefatos em detalhe
 
-* **Rodada 3 — prevista:** Document, sync e conflitos (Identidade/versão, autoridade da verdade, ambientes, estratégia de merge, editor de conflitos, cache/event stream, documentos calculados, estados extras).
-* **Rodada 4 — prevista:** DSL, LSP e construtores (Gramática mínima, modo simples × avançado, formato e versão do IR, capabilities de construtor, plugins WASM, Tema, testes).
-* **Rodada 5 — prevista:** Fechamento (Artefatos restantes: `Job`/`Task`/`Integration`/`Policy`/`Locale`/`Environment`, governança e versionamento — só então retomar D-013 MVP).
+### 3.1 Catálogo de artefatos
+
+| Artefato | Propósito | Propriedades-chave | Fase |
+| :--- | :--- | :--- | :--- |
+| **Application** | composição voltada ao usuário | services, main/wiring, theme, locales, roles, environments | Núcleo |
+| **Service** | capacidade de negócio reutilizável | exports, imports, versão, contratos, papéis, dono de dados | Núcleo |
+| **Process** | processo BPMN as-is/to-be | nós, fluxos, raias, eventos, SLAs, regras, vínculos | Núcleo |
+| **Document** | unidade de dados + ações + sync | campos, índices, ações, regras, frescor, dono | Núcleo |
+| **Shape** | semântica de valor | parse, validação, formato, unidade, índice, agregação | Núcleo |
+| **View** | tela/relatório | widgets, layout, papéis, dados, navegação | Núcleo |
+| **Role / Organogram** | autorização e hierarquia | papéis, herança, delegação, quatro-olhos | Núcleo |
+| **Evidence** | fonte para entendimento | tipo, arquivo, hash, confidencialidade, extração, proveniência | Suporte |
+| **Environment** | dev/QA/prod | runtime, dados, segredos, escala, aprovações | Suporte |
+| **Builder** | realização por plataforma | capabilities, versão, compatibilidade, saúde | Suporte |
+| **Theme** | identidade visual | tokens, cores, ícones, tipografia | Suporte |
+| **Locale** | idioma | traduções, fallback, cobertura | Suporte |
+| **Conversation** | sessão de entrevista | transcript, participantes, decisões, suposições, cobertura | Suporte |
+| **Decision** | decisão registrada | alternativas, motivo, dono, data | Suporte |
+| **Assumption** | suposição | impacto, validação, status | Suporte |
+| **Integration** | conexão com sistema/dispositivo | contrato, auth, mapeamento, erros, idempotência | Suporte |
+| **Report/Dashboard** | análise | fontes, agregações, unidades, frescor | Suporte |
+| **Event** | fato de negócio | nome, payload, produtor, consumidores | Suporte |
+| **Job/Schedule** | tarefa assíncrona | gatilho, idempotência, retry, DLQ | Depois |
+| **Policy/Rule** | decisão automatizada | condições, ações, prioridade, versão | Depois |
+| **Widget custom** | interação de alto nível criada pelo dev | tipo, dados, ações, capacidades por plataforma | Depois |
+| **Release/Version** | artefato promovido | versão, diff, aprovação, migração | Suporte |
+
+> **Núcleo** = sem ele não há produto. **Suporte** = necessário para a experiência completa. **Depois** = importante, mas não bloqueia o MVP.
+
+### 3.2 Shape em detalhe
+
+**Contrato de um `Shape`:**
+
+| Operação | O que faz | Exemplo |
+| :--- | :--- | :--- |
+| `parse` | texto/JSON → valor | “1.234,56” → 1234.56 |
+| `serialize` | valor → formato de transporte | decimal como string exata (transporte, não storage) |
+| `validate` | regras semânticas | CPF válido, temperatura absoluta |
+| `normalize` | forma canônica | trim, case, unidade base |
+| `format` | exibição por locale | “R$ 1.234,56” |
+| `compare` | ordenação/igualdade | unidade normalizada |
+| `index` | codificação para índice | coluna normalizada |
+| `convert` | unidade de/para | km ↔ mi |
+| `aggregate` | soma/min/max/média | total em kg |
+| `random` | valor para teste | CPF válido fake |
+| `widgetHint` | dica de UI | `currency`, `quantity`, `date` |
+
+**Parâmetros de campo:** simples e declarativos. Se precisar de lógica, é tipo novo ou regra de documento.
+
+**Exemplos:**
+
+| Tipo | Campo | Cuidados |
+| :--- | :--- | :--- |
+| `Mass` | `pesoBruto` | unidade original + projeção normalizada |
+| `Length` | `comprimento` | idem |
+| `Volume` | `volume` | comprimento³; unidade explícita |
+| `Money` | `frete` | moeda + taxa/data quando multi-moeda |
+| `Duration` | `prazo` | decorrido x calendário; timezone |
+| `Temperature` | `temperatura` | conversão afim |
+| `Percentage` | `desconto` | 0,1 x 10%; definir base |
+| `CPF` | `documento` | dígitos, normalização, sensibilidade |
+| `Reference<Produto>` | `produtoId` | integridade, exclusão, snapshot |
+| `File` | `anexo` | tipo, tamanho, antivírus, retenção |
+| `Signature` | `assinatura` | validade, signatário, carimbo |
+| `DeviceReading<Mass>` | `leituraBalança` | qualidade, calibração, `readAt` |
+
+**Versionamento de tipo:** mudanças compatíveis (adicionar validação opcional) x incompatíveis (mudar unidade base). O `check` detecta impacto; migração é explícita.
+
+### 3.3 Esboço de documento (sintaxe ilustrativa)
+
+> A sintaxe não está decidida; o objetivo é mostrar a **intenção**, não a gramática final.
+
+```text
+service Expedicao {
+  document Remessa {
+    fields {
+      id: RemessaId
+      status: StatusRemessa
+      pesoBruto: Mass { unit: kg, min: 0.001, max: 50000, indexed: true }
+      comprimento: Length { unit: cm, min: 1, max: 300 }
+      volume: Volume { unit: m3, min: 0, max: 100 }
+      frete: Money { currency: BRL }
+      criadoEm: DateTime
+      calculadoEm: DateTime?
+    }
+    indexes {
+      status_criadoEm: [status, criadoEm]
+      peso_normalizado: [pesoBruto.normalized]
+    }
+    actions {
+      criar(itens: ItemRemessa[], cliente: ClienteRef): Remessa
+      dividir(): Remessa[]
+      despachar(transportadora: TransportadoraRef): Evento<RemessaDespachada>
+    }
+    rules {
+      pesoBruto <= limiteDaTransportadora
+      somenteStatus(valid).podeSerDespachada
+    }
+  }
+
+  document CotacaoFrete {
+    computed from Remessa, TabelaFrete
+    freshness 15 min
+    fields {
+      valor: Money { currency: BRL }
+      validade: Duration
+      calculadoEm: DateTime
+    }
+  }
+}
+```
+
+### 3.4 Exemplo ponta a ponta (esboço)
+
+**Processo:** expedição de pedido.
+**Diálogo (trecho):**
+
+> **Pessoa:** “O pedido aprovado cai na expedição. O separador confere os itens, pesa e mede a caixa. Se passar de 30 kg ou 1,2 m³, ele divide. Depois cota o frete e emite a etiqueta.”
+> **LLM:** “Entendi. O peso e o volume são medidos ou calculados? A balança manda direto no sistema?”
+> **Pessoa:** “A balança manda; o volume é calculado pelas dimensões da caixa.”
+> **LLM:** “Vou modelar `pesoBruto` como massa (kg) com leitura de dispositivo e `volume` como comprimento³ calculado. O limite de 30 kg vale para todas as transportadoras?”
+> **Pessoa:** “Não; cada uma tem seu limite. Isso está na tabela de frete.”
+> **LLM:** “Então o limite é uma regra por transportadora, não um campo do documento. Vou ligar a decisão à tabela. Sobrou uma dúvida: o frete é cotado por remessa ou por item?”
+
+**Artefatos gerados:**
+
+* BPMN: separar → conferir peso/volume → decisão → dividir/cotar → etiqueta → despachar.
+* Documentos: `Remessa`, `ItemRemessa`, `Produto`, `CotacaoFrete` (calculado), `TabelaFrete`.
+* Views: `SepararItens` (form), `CotarFrete` (form), `DashboardExpedicao` (dashboard).
+* Papéis: Separador, Conferente, Supervisor, Transportadora.
+* Unidades: peso em kg (exibição em lb para filial), comprimento em cm (exibição em in), frete em BRL; relatório totaliza em kg e BRL.
+* Complexidade: sem otimização automática de rota na v1; decisão manual; exceção rara vira tarefa do supervisor.
+
+Esse exemplo mostra a tese: **a conversa vira modelo; o modelo vira BPMN + documentos + telas + relatório; tudo ligado e simulável.**
+
+---
+
+## Nível 4 — Problemas duros e trade-offs
+
+| Problema | Por que é difícil | Opções | Baseline v1 |
+| :--- | :--- | :--- | :--- |
+| **Confiança na LLM** | alucinação, inconsistência, custo | saída estruturada + validação; revisão humana; modelos locais | schema + ferramentas + evals + aprovação; nunca código direto |
+| **Completude x fadiga** | entrevista longa cansa; curta não cobre | questionário adaptativo; evidência primeiro; assíncrono | matriz de cobertura + priorização por impacto |
+| **Round-trip BPMN** | humano edita canvas, LLM edita modelo, XML perde semântica | IR canônico; BPMN XML + sidecar; lock de elementos | IR canônico; edições humanas viram “human-owned” e a LLM respeita |
+| **Layout do BPMN** | BPMN gerado precisa ser legível; LLM não é boa em coordenadas | auto-layout (ELK/dagre); posições do LLM; ajuste manual | auto-layout + ajuste manual; a LLM só sugere a topologia |
+| **Unidades x índices** | original preserva intenção; normalizado indexa | só original; só canônico; ambos | original + projeção normalizada; decidir na Rodada 4 |
+| **Sync/merge** | concorrência, offline, campos | LWW; versão/etag; merge por campo; CRDT | v1 otimista + conflito explícito; merge/CRDT 🧊 v2 |
+| **Evolução de schema** | documentos em produção, dados históricos | migração destrutiva; dual-write; versão de documento | migração versionada, dry-run em QA, compatibilidade |
+| **Paridade dev/prod** | interpretado x gerado | só interpretado; só gerado; híbrido | interpretado no dev, gerado no prod, testes de paridade |
+| **Fronteiras de serviço** | granularidade, dono do dado, transações | por área; por capacidade; monólito | por capacidade; monólito modular na v1 |
+| **Custo do cálculo** | recálculo lento, dashboard | TTL; dependência; incremental; cache | TTL + lastGood + async; incremental 🧊 v2 |
+| **Privacidade/LLM** | dados pessoais em evidências | cloud; local; redigir | redigir + opção local/on-prem + auditoria |
+| **Escopo** | BPM + CMS + SOA + LLM + multi-plataforma | tudo; vertical slice | vertical slice web primeiro |
+| **Adoção** | dono do processo não quer entrevista longa | concierge; async; template | piloto com processo real e sponsor |
+
+---
+
+## Nível 5 — MVP, roadmap e métricas
+
+### 5.0 Simples mas poderoso
+
+1. **Um processo, um documento, uma tela** no primeiro vertical slice. O resto é expansão.
+2. **Uma verdade canônica** (IR); BPMN, DSL, telas e relatórios são projeções.
+3. **Um runtime interpretado no dev**; build é otimização de produção, não pré-requisito.
+4. **Um subconjunto BPMN**; não o padrão inteiro. O que não for executável fica descritivo.
+5. **Uma interface de LLM** com ferramentas estruturadas; nenhum código de produção gerado direto.
+6. **Um monólito modular**; microserviço só com razão operacional.
+7. **Experimentos no lugar de perguntas abertas**: toda incerteza vira teste com critério.
+
+### 5.1 Estratégia
+
+**Vertical slice, não plataforma.** A v1 prova o ciclo em **um processo real, um serviço, poucos documentos, uma tela, um relatório, um ambiente dev**. O resto é expansão.
+
+Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro experimento de entrevista (X-01). As fases abaixo são a referência de sequência, não um cronograma.
+
+### 5.2 Fases
+
+| Fase | Entrega | Prova |
+| :--- | :--- | :--- |
+| **P0 — Tese** | entrevista + BPMN interativo (read-only) + diagrama de documentos + protótipo clicável | o dono do processo reconhece e valida o modelo |
+| **P1 — Fatia vertical** | 1 processo, 1 serviço, 3 documentos, form + dashboard, sync live, SQLite, dev mode, 1 builder (web+API+SQL) | o modelo vira software que persiste e sincroniza |
+| **P2 — Qualidade** | QA determinístico, cenários, versão, promoção, Postgres, build de produção | dá para operar com confiança |
+| **P3 — Escala** | ingestão de evidências (PDF/DDL/UML), docs calculados, dispositivos, multi-serviço, tema/locale | o produto lida com o mundo real |
+| **P4 — Plataforma** | marketplace, multi-plataforma, merge avançado/offline | ecossistema |
+
+#### 5.2.1 Frentes de trabalho
+
+| Frente | Escopo | Depende de |
+| :--- | :--- | :--- |
+| **Modelo e IR** | Application, Service, Process, Document, Shape, View, Role; validação, diff, versão | nada (é a base) |
+| **Runtime de documentos** | ações, regras, persistência, cache, read/live, ciclo de vida | IR + Shape |
+| **Motor BPMN** | subconjunto executável, tarefas humanas, timers, simulação | IR + runtime de documentos |
+| **Entrevista e LLM** | protocolo, cobertura, ferramentas de modelo, saída estruturada, evals | IR + schema de validação |
+| **Evidências** | upload, classificação, extração, revisão, proveniência | Document/Shape + entrevista |
+| **Estúdio** | sala de entrevista, canvas, diagrama de documentos, protótipo | IR + runtime + BPMN |
+| **Construtores e dev mode** | builder web/API/SQL, runtime interpretado, hot reload, seeds | runtime + IR |
+| **QA e promoção** | cenários, fixtures, golden files, migração, aprovação | runtime + construtores |
+| **Segurança e operação** | papéis, permissões, auditoria, segredos, observabilidade | modelo + runtime |
+
+**Dependências críticas:**
+
+* sem IR/schema validado, a LLM não tem ferramentas seguras;
+* sem `Shape`/unidades, não é possível modelar documentos reais;
+* sem runtime de documentos, não há sync nem protótipo vivo;
+* sem subconjunto BPMN, não há simulação nem execução;
+* sem dev interpretado, o loop de feedback quebra.
+
+### 5.3 Piloto recomendado
+
+* **Piloto A — Compras/aprovação:** rico em PDFs, alçadas, papéis, relatórios e exceções. Bom para entrevista, BPMN, documentos e permissões.
+* **Piloto B — Expedição/logística:** rico em unidades (peso/comprimento), dispositivos, cálculo de frete e SLA. Bom para tipos, cálculo e protótipo.
+* **Piloto C — Controle laboratorial** (herdado do Multlab): rico em laudos/PDF, compliance e dispositivos.
+
+**Recomendação:** começar com **Expedição** (P1) porque exercita unidades, cálculo, dispositivo e BPMN sem exigir integração fiscal complexa. Compras entra em P2/P3.
+
+### 5.4 Fora de escopo da v1
+
+* editor BPMN do zero (usar `bpmn-js`);
+* uma LLM própria (usar provedores + evals);
+* múltiplas plataformas (mobile/desktop/CLI);
+* BPMN 2.0 completo e process mining;
+* offline e merge CRDT;
+* marketplace e temas de terceiros;
+* multi-tenant SaaS (single-tenant primeiro);
+* automação de todas as tarefas (modo manual é suficiente para começar);
+* editor visual de widgets.
+
+### 5.5 Métricas de sucesso
+
+| Dimensão | Métrica |
+| :--- | :--- |
+| **Entrevista** | tempo até 1º BPMN; turnos até cobertura; % alto impacto confirmado; perguntas abertas |
+| **Modelo** | % elementos com propósito/evidência; complexidade vs orçamento; reuso de tipos/serviços |
+| **Protótipo** | tarefas concluídas no teste; fidelidade; mudanças por sessão |
+| **Runtime** | latência de sync; frescor de cálculo; conflitos; tempo de recálculo |
+| **Entrega** | lead time dev→prod; change failure rate; rollback; tempo de dev loop |
+| **Custo** | custo/latência por sessão de LLM; custo de recálculo |
+
+### 5.6 Riscos
+
+| Risco | Impacto | Mitigação |
+| :--- | :--- | :--- |
+| LLM alucina regra/campo | alto | evidência + schema + revisão + simulação |
+| Entrevista longa/cansativa | alto | cobertura priorizada, evidência primeiro, assíncrono |
+| Escopo explode | alto | vertical slice, “não construir agora” |
+| Unidades/indexação | médio | decisão explícita na Rodada 4 |
+| Sync/merge complexo | médio | v1 simples, merge depois |
+| Dev/prod divergem | médio | mesmo runtime interpretado, paridade testada |
+| Privacidade de evidências | alto | classificação, redação, local/on-prem |
+| Fronteiras de serviço erradas | médio | por capacidade, dono do dado, refactor com contrato |
+| Adoção | alto | piloto com sponsor, ganho visível na 1ª sessão |
+
+### 5.7 Requisitos não-funcionais
+
+| Categoria | Requisito | Meta v1 | Verificação |
+| :--- | :--- | :--- | :--- |
+| **Dev loop** | mudança de modelo → preview | p95 < 2 s; sem build/deploy | X-04, stopwatch |
+| **Sync** | propagação de ação para clientes live | p95 < 300 ms na mesma região; < 1 s cross-region | teste de carga |
+| **Leitura** | documento por id | p95 < 100 ms com cache; < 300 ms sem cache | benchmark |
+| **BPMN** | canvas com 200 nós / 500 fluxos | primeiro render < 1,5 s; pan/zoom fluido | X-02, benchmark |
+| **Entrevista** | 1ª versão do BPMN | < 5 min; retomada de sessão < 1 s | X-01, usabilidade |
+| **Calculados** | recálculo assíncrono | UI nunca bloqueia; timestamp e estado visíveis; p95 < 30 s no piloto | job metrics |
+| **Disponibilidade** | produção | 99,9% (SLO inicial) | monitoração |
+| **Backup** | RPO/RTO | RPO 15 min; RTO 1 h | simulação de restore |
+| **Segurança** | authn/authz, campos sensíveis, auditoria | OIDC/RBAC; cifra em trânsito e repouso; log de auditoria | revisão + testes |
+| **Privacidade** | PII em evidências e documentos | classificação, redação antes da LLM, retenção declarada por tipo (default 5 anos negócio; 2 anos evidências; configurável) | revisão LGPD |
+| **Acessibilidade** | UI e protótipos | WCAG 2.1 AA | auditoria |
+| **i18n** | idioma e unidade | pt-BR v1; en depois; formato por locale | testes de locale |
+| **Observabilidade** | logs, métricas, tracing | OpenTelemetry; correlação por caso/documento | dashboard |
+| **Portabilidade** | dados e arquivos | Postgres em prod; SQLite no dev; storage S3-compatible | testes de integração |
+| **Limites** | tamanho do modelo | 100 campos/doc; 500 nós/processo; 200 docs/serviço (soft, configurável) | validação no `check` |
+| **API** | compatibilidade | `/v1`; mudanças aditivas; depreciação anunciada | contract tests |
+| **Browser** | estúdio | Chrome/Firefox/Safari evergreens | matriz de testes |
+
+### 5.8 Épicos e critérios de aceite (MVP)
+
+| Épico | Resultado | Done when | Fase |
+| :--- | :--- | :--- | :--- |
+| **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; 20 casos golden; `check` sem falso negativo | P0 |
+| **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
+| **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
+| **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
+| **E6 — Protótipo** | form + dashboard + papéis + unidades | 5 usuários; > 80% concluem; X-08 passou | P0 |
+| **E7 — Evidências** | upload, classificação, extração, revisão | 20 PDFs + 5 DDLs; X-06 passou | P3 |
+| **E8 — Dev mode** | `bpcms dev`, seeds, mocks, hot reload | loop p95 < 2 s; zero build; X-04 passou | P1 |
+| **E9 — QA e promoção** | cenários, golden files, aprovação, rollback | mesmo artefato dev→QA→prod; rollback testado | P2 |
+| **E10 — Segurança e operação** | authz, auditoria, redação, observabilidade | checklist de segurança; restore drill; dashboards | P2 |
+
+---
+
+## Decisões
+
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-21`).
+
+| ID | Decisão | Status | Origem |
+| :--- | :--- | :--- | :--- |
+| D-001 | `Application` é composição + wiring, sem lógica de negócio | ✅ | pedido |
+| D-002 | `Service` é fatia vertical reutilizável (backend + frontend + papéis + processos + docs) | ✅ | pedido |
+| D-003 | `Document` atravessa camadas, tem ações, sync e ciclo de vida | ✅ | pedido |
+| D-004 | Campo não tem validação/formatação própria; `Shape` é dono da semântica | ✅ | pedido |
+| D-005 | Tipos numéricos têm dimensão/unidade; valor original + projeção normalizada; conversão na exibição/relatório | ✅ | pedido |
+| D-006 | Documento calculado tem frescor, `calculatedAt` e estado de recálculo; documento de dispositivo tem releitura | ✅ | pedido |
+| D-007 | LLM entrevista, coleta evidências, modela e mostra BPMN/telas/relatórios/diagrama de docs | ✅ | pedido |
+| D-008 | Dev evita build/deploy; QA e produção são modos distintos | ✅ | pedido |
+| D-009 | LLM é a autora principal do modelo; o humano revisa por artefatos; DSL é visão/export | ✅ | baseline v1 |
+| D-010 | O modelo (IR) é a verdade; BPMN/DSL/telas são visões | ✅ | baseline v1 |
+| D-011 | Separar `Documento` (dado), `Evidência` (arquivo) e `Template` (modelo de documento) | ✅ | baseline v1 |
+| D-012 | Guardar unidade original + projeção normalizada para índice/agregação | ✅ | baseline v1 |
+| D-013 | BPMN 2.0 como subconjunto executável, com import/export XML | ✅ | baseline v1 |
+| D-014 | v1: sync por documento, concorrência otimista; merge por campo 🧊 v2 | ✅ | baseline v1 |
+| D-015 | Promover o mesmo artefato entre ambientes; overlays só de configuração | ✅ | baseline v1 |
+| D-016 | Web primeiro; núcleo Rust + estúdio TS; monólito modular na v1 | ✅ | herança + baseline v1 |
+| D-017 | Processo manual executável antes de automação | ✅ | baseline v1 |
+| D-018 | Marketplace, process mining, offline/CRDT e multi-plataforma | 🧊 | congelado |
+
+---
+
+## Baseline v1 — perguntas fechadas
+
+> Esta seção substitui a fila de perguntas. Cada item tem uma **decisão default**, uma razão e, quando ainda existe incerteza real, um **experimento** (seção seguinte). Nada aqui bloqueia a geração de PRD/SPECS/PLAN; um veto seu vira **change request**, não uma lacuna.
+
+| ID | Pergunta | Decisão baseline | Razão | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **B-01** | Quem escreve o modelo? | A LLM escreve; o humano revisa por BPMN, telas, relatórios e diagrama de documentos. No v1 a DSL é visão/exportação somente leitura; edição direta é modo avançado (dev). | O usuário de negócio não deve pagar o custo da sintaxe; o modelo precisa ser inspecionável. | ✅ |
+| **B-02** | “Documento” é dado ou arquivo? | `Documento` = artefato de dados; `Evidência` = arquivo/fonte; `Template` = layout. | Elimina a ambiguidade que contamina requisitos, UX e modelo. | ✅ |
+| **B-03** | Unidade original, canônica ou ambas? | Original + projeção normalizada + snapshot imutável da conversão. Códigos UCUM-like; topologia em estrela por dimensão; decimal, nunca float. | Preserva a intenção, permite índice/agregação e mantém histórico correto. | ✅ |
+| **B-04** | BPMN as-is e to-be juntos? | As-is primeiro; to-be é uma versão separada, comparável por diff. IR é canônico; BPMN 2.0 XML é import/export; subconjunto executável. | Evita misturar diagnóstico com proposta e mantém interoperabilidade. | ✅ |
+| **B-05** | Como serviço estende/sobrescreve? | Override explícito por caminho, com `check` de LSP e versão semântica (`Service@1.2`). Sem merge profundo automático. Trocar tipo/remover campo exige declaração + migração. | Reuso sem quebrar consumidores; override silencioso é dívida. | ✅ |
+| **B-06** | Um serviço por área ou capacidade? | Por **capacidade de negócio**. v1 roda como monólito modular; separação física é decisão operacional. | Coesão e reuso; microserviço cedo demais multiplica custo. | ✅ |
+| **B-07** | Núcleo Rust + estúdio TS? | Sim: núcleo Rust (IR/check/runtime) em nativo + WASM; estúdio TS/React consome WASM para validação/preview e o servidor para persistência, LLM e jobs. | Uma semântica, duas superfícies; o estúdio não reimplementa regra. | ✅ |
+| **B-08** | Construtores de terceiros? | v1 só first-party compilados; plugins WASM (component model) ficam 🧊 v2. | Contrato de capabilities e sandbox ainda não estão maduros. | 🧊 |
+| **B-09** | Um ou vários deployables? | Um deployable (app + serviços) na v1. | Simplicidade operacional; extração só com razão comprovada. | ✅ |
+| **B-10** | Sync e merge na v1? | Live por instância de documento; concorrência otimista com versão/etag; conflito explícito. Merge por campo, CRDT e offline ficam 🧊 v2. | Entrega colaboração real sem o custo de um motor de merge. | ✅ |
+| **B-11** | Cálculo: TTL ou grafo? | TTL + refresh manual + dependências declaradas para invalidação. Grafo completo e incremental ficam 🧊 v2. | Frescor visível e previsível; complexidade incremental depois. | ✅ |
+| **B-12** | Estado `invalid`? | Não existe. `draft` carrega erros de validação; `stale`, `conflict`, `archived` e `deleted` são explícitos. | Máquina de estados pequena e sem dois nomes para a mesma coisa. | ✅ |
+| **B-13** | Dev, QA e produção? | Dev interpretado, sem build; QA determinístico; produção otimizada. Promove-se o **mesmo artefato**, com overlays de configuração. | Loop rápido no dev, confiança no QA, reprodutibilidade no prod. | ✅ |
+| **B-14** | Importar DDL/MER automaticamente? | A LLM **propõe** o mapeamento; o humano confirma. DDL/MER vira `draft`; nunca auto-aceita. | Importação automática cria dívida e erros silenciosos. | ✅ |
+| **B-15** | LLM cloud, local ou híbrida? | Provedor-agnóstico; cloud por padrão com redação de PII; opção local/on-prem. Saída estruturada e ferramentas de modelo; nunca código direto. | Evita lock-in e atende restrições de privacidade. | ✅ |
+| **B-16** | Quem aprova o quê? | Dono do processo aprova processo/documentos; QA aprova release; dev/ops promovem. Quatro-olhos para documentos sensíveis; tudo auditado. | Governança proporcional ao risco. | ✅ |
+| **B-17** | Qual piloto? | **Expedição/logística**: peso, volume, cálculo de frete, dispositivo e BPMN. | Exercita o núcleo sem integração fiscal complexa. | ✅ |
+| **B-18** | Layout do BPMN gerado? | Auto-layout (ELK/dagre) + ajuste manual; a LLM sugere topologia, não coordenadas. | Diagrama legível sem transformar a LLM em engine de layout. | ✅ |
+| **B-19** | Offline/CRDT? | 🧊 v2. | Custo alto; o caso de uso inicial é colaboração online. | 🧊 |
+| **B-20** | Marketplace/multi-plataforma? | 🧊 v2. | Só faz sentido depois de um vertical slice web bem-sucedido. | 🧊 |
+| **B-21** | `Application.main` é código ou wiring? | **Declarativo**: inicialização, ligação e ordem; hooks imperativos só em extensões de serviço. | A aplicação não deve conter lógica; wiring é composição. | ✅ |
+
+### Experimentos que substituem as dúvidas 🔬
+
+| ID | Hipótese | Como testar | Critério de sucesso | Fase |
+| :--- | :--- | :--- | :--- | :--- |
+| **X-01** | A entrevista guiada cobre um processo real sem especialista em BPMN. | 3 processos, 2 analistas, 5 stakeholders; medir cobertura, correções e tempo. | Cobertura > 80%; correções < 30%; 1ª versão em < 2 h. | P0 |
+| **X-02** | Auto-layout + ajuste manual produz BPMN legível. | Processo de 50 nós; ELK vs. posições manuais; 5 avaliadores. | Nota ≥ 4/5; ajuste < 15 min. | P0/P1 |
+| **X-03** | Original + normalizado indexa e agrega sem perder precisão. | 1M linhas com kg/lb/km/mi; range e soma por unidade. | Consulta p95 < 50 ms; zero divergência de total. | P1 |
+| **X-04** | Dev interpretado dá loop < 2 s. | 20 mudanças de modelo; medir até preview. | p95 < 2 s; nenhum build/deploy. | P1 |
+| **X-05** | Conflito explícito é suficiente para 3 editores. | 3 sessões, 20 ações concorrentes, conflitos induzidos. | Zero lost update; resolução < 1 min. | P1 |
+| **X-06** | Extração de evidências é útil, mas exige revisão. | 20 PDFs + 5 DDLs + 5 prints; medir precisão/recall e tempo de revisão. | Precisão/recall > 0,8; revisão < 10 min/doc. | P3 |
+| **X-07** | A LLM mantém custo/latência aceitáveis. | 10 sessões reais; medir p95 por turno e custo por sessão. | p95 < 3 s; custo dentro do orçamento do PLAN. | P0 |
+| **X-08** | O protótipo clicável valida entendimento. | 5 usuários; teste de tarefa no protótipo. | > 80% concluem; achados viram mudanças acionáveis. | P0 |
+| **X-09** | O núcleo Rust + estúdio TS compartilham a mesma semântica via WASM. | Spike: mesma IR validada no browser e no servidor; 100 documentos; CRUD + checagem. | Zero divergência de resultado; p95 < 100 ms na validação. | P0 |
+| **X-10** | BPMN 2.0 import/export preserva o subconjunto executável. | 20 diagramas; round-trip; diff semântico. | Nenhum elemento perdido; diff vazio ou justificado. | P1 |
+
+### Critérios de prontidão para PRD/SPECS/PLAN
+
+- [x] Escopo e não-escopo explícitos.
+- [x] Personas, jobs e jornada.
+- [x] Fluxos principais e estados.
+- [x] Decisões de baseline (B-01…B-21) sem lacunas.
+- [x] Requisitos não-funcionais com metas verificáveis.
+- [x] Épicos com critérios de aceite.
+- [x] Riscos, dependências e experimentos.
+- [x] Mapa de handoff para PRD/SPECS/PLAN.
+- [x] Pronto para gerar PRD/SPECS/PLAN.
+
+**Próximo passo:** gerar os três documentos, sem reabrir o escopo.
+
+### Handoff para PRD, SPECS e PLAN
+
+| Documento | O que herda deste brainstorm | O que **não** deve herdar |
+| :--- | :--- | :--- |
+| **PRD.md** | pitch, problema, personas, jobs, escopo, jornada, fluxos, métricas, NFRs, decisões de produto | detalhes de IR, schema, API, algoritmos |
+| **SPECS.md** | artefatos, Document/Shape/unidades, ciclo de vida, BPMN subset, protocolo da LLM, evidências, ambientes, segurança, erros | discussão de posicionamento e roadmap |
+| **PLAN.md** | fases, épicos, dependências, experimentos, riscos, critérios de aceite, marcos | texto de visão e justificativa de produto |
+
+> **Regra de ouro do handoff:** cada documento tem um público. O PRD decide **o quê e por quê**; o SPECS decide **como o sistema se comporta**; o PLAN decide **em que ordem e com que evidência**.
+
+---
+
+## Pesquisa e referências
+
+Pesquisa feita em **2026-11-13** para checar premissas e evitar reinventar padrões. As fontes são externas e não mandam no projeto; entram como evidência e inspiração.
+
+| Fonte | O que sustenta | Como usamos |
+| :--- | :--- | :--- |
+| [A Training Framework for BPM Modeling Interviews Based on LLM Assistants](https://ceur-ws.org/Vol-4032/paper-37.pdf) | Entrevista de modelagem BPM é uma habilidade treinável; assistentes LLM podem apoiar o processo. | Reforça protocolo explícito, cobertura e revisão humana (B-01, X-01). |
+| [Efficiency of Artifact-Centric Paradigm: A Literature Study](https://dl.acm.org/doi/10.1145/3149572.3149595) e [editorial sobre data/artifact-centric BPM](https://rd.springer.com/article/10.1007/s00607-016-0486-9) | Processos podem ser organizados em torno de artefatos de dados, não só de tarefas. | Sustenta `Document` como primeira classe e o diagrama de documentos (2.6). |
+| [bpmn.io forum: auto layout](https://forum.bpmn.io/t/why-bpmn-io-project-doesnt-provide-an-auto-layouting-feature/7318/3) e [bpmn-elk-layout](https://www.npmjs.com/package/bpmn-elk-layout) | `bpmn-js` não traz auto-layout; é preciso usar uma camada externa (ELK/dagre) ou posicionar manualmente. | Decisão B-18 e experimento X-02; o layout é tarefa de engenharia, não da LLM. |
+| [UCUM — Unified Code for Units of Measure](https://ucum.org/ucum) | Códigos de unidade com dimensão, unidades especiais (ex.: °C) e unidades arbitrárias. | Inspira o registro de unidades e a semântica de dimensão (B-03); v1 adota um subconjunto “UCUM-like”, não conformidade total. |
+| [SPEC-034: Units of Measure and Product Conversions](https://raw.githubusercontent.com/open-mercato/open-mercato/4849712ccb6cf9144da99889d30d7bd59317078a/.ai/specs/SPEC-034-2026-02-18-units-of-measure-conversions.md) | Padrão ERP de quantidade digitada + normalizada + snapshot imutável da conversão. | Confirma B-03: original para rastreabilidade, normalizado para índice, snapshot para histórico. |
+| [A Systematic Review of Generative AI Applications in Process Mining](https://ieeexplore.ieee.org/document/11543805) | GenAI em process mining é área emergente, com desafios de avaliação e qualidade. | Process mining fica 🧊 v1; não é pré-requisito para a entrevista. |
+
+**O que a pesquisa muda (ou confirma):**
+
+* a LLM é **assistente de entrevista**, não autoridade: protocolo, cobertura e validação humana são obrigatórios;
+* modelar **documentos como artefatos de primeira classe** é uma abordagem estabelecida, não um capricho;
+* BPMN gerado precisa de **layout externo**; sem isso, o diagrama fica ilegível e o produto perde valor;
+* unidades têm padrão (UCUM) e o padrão ERP de **digitado + normalizado + snapshot** resolve a tensão entre intenção e índice;
+* process mining e CRDT são poderosos, mas **não são necessários para o primeiro vertical slice**.
+
+**O que não adotamos na v1:** conformidade UCUM completa, grafo arbitrário de conversão, CRDT/offline, process mining e marketplace.
 
 ---
 
 ## Glossário rápido
+
 | Termo | Significado operacional |
 | :--- | :--- |
-| **Artefato** | unidade declarativa de negócio |
-| **Construtor** | plugin que gera ou executa artefatos |
-| **Service** | encapsulamento de negócio reutilizável |
-| **Application** | ponto de montagem voltado ao usuário final |
-| **IR (Intermediate Representation)** | árvore canônica resolvida pelo núcleo Rust |
+| **Aplicação** | composição voltada ao usuário: serviços + wiring + experiência + ambientes |
+| **Serviço** | capacidade de negócio reutilizável; fatia vertical com contrato e dono de dados |
+| **Artefato** | unidade declarativa de negócio (processo, documento, view, tipo, papel...) |
+| **Documento** | unidade de dados + ações + regras + sync + ciclo de vida; projeta storage/API/UI/relatórios |
+| **Shape** | semântica de valor: parse, validação, formato, unidade, índice, agregação |
+| **Dimensão** | grandeza física/econômica (massa, comprimento, dinheiro, tempo) |
+| **Unidade** | escala dentro da dimensão (kg, m, BRL, h) |
+| **Evidência** | arquivo/modelo que ajuda a entender o processo (PDF, print, DDL, MER, UML...) |
+| **Template** | modelo de documento: layout que coleta ou apresenta dados (formulário, laudo) |
+| **Processo** | fluxo BPMN as-is/to-be com papéis, decisões, eventos e vínculos |
+| **View** | tela, formulário, relatório ou dashboard composto de widgets |
+| **Protótipo** | view interativa com dados semeados, para validar entendimento |
+| **Diagrama de documentos** | visão class-like de documentos, campos, tipos, índices, relações e propósito |
+| **Construtor** | plugin que gera ou interpreta artefatos numa plataforma; declara capabilities |
+| **Capability** | capacidade exigida/ofertada (db, http, ui, auth, realtime, files...) |
+| **Ambiente** | dev, QA ou produção, com runtime/dados/configuração próprios |
+| **Promoção** | levar o mesmo artefato versionado de dev → QA → produção |
+| **IR** | representação intermediária canônica do modelo |
+| **Calculado** | documento cujo conteúdo deriva de outros dados, com frescor e recálculo |
+| **Dispositivo** | documento cuja atualização é releitura de um dispositivo/conector |
+| **Live/read** | consumo em tempo real (assinatura) ou sob demanda (snapshot) |
+| **Cobertura** | matriz do que a entrevista já confirmou, supõe, desconhece ou dispensa |
+| **Suposição** | inferência explícita, com impacto e forma de validação |
+| **As-is / to-be** | processo como é hoje / processo proposto |
+| **Baseline** | conjunto de decisões default que destrava os documentos seguintes |
+| **Experimento** | hipótese com método, critério de sucesso e fase |
+
+---
+
+## Histórico de rodadas
+
+| Rodada | Tema | Estado |
+| :--- | :--- | :--- |
+| R1 | Visão, artefatos, SOLID, stack | consolidada |
+| R2 | Autoria, serviços, documentos, ciclo de vida | consolidada |
+| R3 | LLM-first, BPMN interativo, evidências, tipos/unidades, dev/QA/prod, revisão do Khayyam | incorporada |
+| **R4 (esta)** | Baseline v1, fechamento das perguntas, NFRs, épicos, pesquisa e handoff | **incorporada** |
+| R5 | Gerar `PRD.md`, `SPECS.md` e `PLAN.md` a partir desta baseline | próxima |
+| R6 | Detalhar IR/LSP, construtores e primeira implementação | prevista |
+
+> **Como usar este documento:** esta é a **baseline v1**. Não há perguntas em aberto; itens 🔶 são defaults vetáveis e itens 🔬 são hipóteses com experimento. O próximo passo é gerar **PRD.md + SPECS.md + PLAN.md** sem reabrir o escopo.
