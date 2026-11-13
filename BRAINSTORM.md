@@ -1081,6 +1081,8 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 ## Nível 3 — Artefatos em detalhe
 
+> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 134 exemplos cobrindo os 22 tipos de artefato — use como teste de aceitação da sintaxe antes de fechar o SPECS.
+
 ### 3.1 Catálogo de artefatos
 
 | Artefato | Propósito | Propriedades-chave | Fase |
