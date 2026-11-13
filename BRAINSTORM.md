@@ -1,60 +1,217 @@
-- o objetivo aqui é criar a ferramenta BPCMS que é uma mescla de BPM + CMS + SOA
-- tudo que for desenvolvido aqui deverá seguir ridigamente SOLID e clean code, e algo parecido com clean arquitecture mas com artefatos e conceitos próprios. 
-- Vamos adotar uma linguagem parecida com typescript para definir artefatos. Teremos cláusulas que definirao objetos, por exemplo `application A {name: 'x'}` seria equivalente a `const A=new application(); a.name = x;`. O parametro passado vai supertar YAML
-- Será necessária uma linguagemSerá necessário um plugin VSCode + LSP para essa li
+# BPCMS — Brainstorm
 
-- artefatos:
-1) Aplicacao: Sem do ponto de vista do usuário final, ou seja, mesmo que sejam varias aplicações web, em páginas e domínios diferentes, mesmo que alguns sejam aplicações windows outras android outras ios ou linux e até de linha de comando. Uma aplicação é o conceito geral disso. Ou seja, é uma abstração de que será implementado mas com informação suficiente para que seja implementado atraves dos construtores+tema. De certa forma uma aplicacao é um AST. Mas a aplicação em si apenas define os serviços a serem usados e uma initializacao. Toda lógica deverá ser escrita em artefatos dentro de um serviço.
+*Documento vivo.* Nada aqui é especificação fechada: é material para explorar possibilidades, escolher e descartar.  
+Atualizado a cada rodada de entrevista. Última atualização: 2026-11-14 — *Rodada 1 respondida, Rodada 2 enviada.*
 
-Exemplos:
+## Legenda de status
+| Marca | Significado |
+| :--- | :--- |
+| ✅ | Decidido pelo autor do projeto |
+| 🔶 | Proposta minha (aguardando confirmação) |
+| ❓ | Pergunta aberta / lacuna |
+| 🧊 | Congelado de propósito (decidir depois) |
 
-application JohnStore {
-  caption:
-    pt_BR: 'Loja do João'
-    en: 'Jonh Store'
-  services:
-    - Cart
-    - Checkout
-    - Catalog
-    - Inventory
-    - Order
-    - Payment
-    - Shipping
-    - Auth
-    - Notification
-}
+## Como ler (níveis de detalhe)
+| Nível | Conteúdo | Para quem |
+| :--- | :--- | :--- |
+| 0 | Pitch de 1 parágrafo | qualquer pessoa, 30s |
+| 1 | Visão, fronteiras, princípios, personas | decisor |
+| 2 | Arquitetura conceitual + diagramas | arquiteto |
+| 3 | Artefatos em detalhe (campos, exemplos) | quem implementa o núcleo |
+| 4 | Trade-offs e problemas duros | quem implementa construtores |
+| — | Lacunas, decisões, fila de entrevista | nós dois, agora |
 
-application JohnStoreBackoffice {
-  caption:
-    pt_BR: 'Administração da Loja do João'
-    en: 'Jonh Store Backoffice'
-  services:
-    - Catalog
-    - Inventory
-    - Order
-    - Payment
-    - Shipping
-    - Auth
-    - Notification
-}
+---
 
-2) Serviço: É uma parte da aplicação, algo que pode ser reusado por várias aplicações e também por outros serviços. É como um package ou uma DLL mas num conceito de negócio. Ele pode importar artefatos de outros serviços, extender/sobreescrever eles e pode exportar novos artefatos. A ideia aqui é que o serviço emglobe tudo praquele servico funcionar, frontend/backend/tarefas automatizadas/manuais, etc...
+## Nível 0 — Pitch
 
-* quando um servico A usa um outro serviço B, o serviço A pode sobrescrever algo em qq dos artefatos do serviço B
+BPCMS é uma ferramenta que unifica **BPM + CMS + SOA**: você declara o negócio em artefatos (`application`, `service`, `shape`, `widget`, `document`, `view`, `organogram`) numa linguagem própria parecida com TypeScript, e **construtores** transformam esses artefatos em software real — web, desktop, mobile, terminal, backend — sem reescrever a lógica. A lógica de negócio vive uma única vez, no artefato; a plataforma é um detalhe de geração.
 
-artefatos que podem ser definidos/importados/usados por um serviço:
-  a) Shape - é como um DOMAIN do SQL mas muito mais avançado, com possibiliade de definir como armazenar/envelopar/stringify, como desenvelopar/parse, como exibir, aqui não iremos definir detalhes da UI mas, por exemplo, um número pode exibir separadores de milhares e de decimais diferentes conforme o idioma. Ou um enum pode serializar apenas 1-SIM,2-NAO mas mostrar um checkbox bonito na tela (checkbox aqui é um widget). Deve ter possibilidade também de gerar um valor random
+---
 
+## Nível 1 — Visão e fronteiras
 
-  b) widget - é um componente visível qualquer que permita interação com o usuário. O conceito aqui é independente da plataforma e sempre no auto-nível. Então, por exemplo, um FORM será composto por INPUTs e teremos INPUTs para data/string/CPF,memo/imagem/etc... se for numa página web isso será feito com form/input,textarea e algum tratamento para colocar um IMG, num app GUI para macos/windows já será diferente e depenerá da linguagem, num app para console/terminal linux nem é possível mostrar imagem ou RTF. então poderiamos apenas selecionar um arquivo de imagem, por exemplo. O widget é por tanto uma definição conceitual, cada widget deverá ter a representaçao do que será gerado dele no construtor.
+### 1.1 A mescla (o que cada sigla contribui)
+| Sigla | O que entra no BPCMS | Artefato(s) que carregam isso |
+| :--- | :--- | :--- |
+| **BPM** | processos, papéis, autorização, tarefas manuais e automatizadas | `Organogram`, ❓ `Process` (lacuna L1), `Document.ações` |
+| **CMS** | conteúdo/estrutura, apresentação, themes, i18n | `View`, `Widget`, `Theme`, `Shape` (display) |
+| **SOA** | serviços reutilizáveis, contratos, composição e substituição | `Service`, `Application`, construtores como ports |
 
-  c) document - um documento é como uma classe mas já considerando persistência, replicação de dados em multiplos ambientes, atualização sincrona/acroncrona, caching. Todas as propriedades deverão ser tipadas usando Shape, nunca tipos primitivos diretamente. Um documento pode ser uma tabela única, por exemplo um cadastro de cliente. ou pode ser uma junção de várias, por exemplo nota fiscal (já deve conter itens e os dados do cliente). É permitido duplicar dados, por exemplo pode-se duplicar os dados de cliente usados na NF e manter a referencia ao cliente. Se o cliente mudar ou for excluido a NF continua sendo um documento válido. O documento também poderá ser um state redux ou jotai na UI, por exemplo. Quando o documento for usado em modo real, a view deverá definir isso, pode-se ter um eventstream para notificar mudanças no documento, um redis para armazenar o documento em cache, etc... tudo isso é o documento. Observe que não se limita a FE ou BE, é um conceito amplo. Documentos também podem ser calculados, por exemplo, Faturamento mensagem poderá juntar dados do cliente de várias NF, enquanto o mês não fechar o documento deverá ficar como draft, isso acontece também se uma pessoa começa a cadastrar um cliente, ele fica como draft até confirmar. para confirmar é preciso passar pelas validações, primeiramente as validações dos Shapes, por exemplo um CPF inválido ou não preenchido, um nome em branco, etc... O documento também poderá ficar como valido ou como arquivado. só é permitido links a documentos válidos. caso o calculo seja muito complicado o documento poderá ter um estado de computing, é como o draft mas quer dizer que está sendo calculado naquelo momento (tipo refreshing).
-  um documento poderá ter acoes, por exemplo cliente.create(name: 'maria',cpf: '123')
-  algumas documentos poderão ter OLTP mas, em geral, a maioria dos documentos são assincronos, materão a informação de quando foram atualizados pela ultima vez, com possibilidade de proxima atualização/forçar a atualização naquele momento e serão sincronizados com merge (semelhante ao git), para isso será necessário um editor de conflitos para o documento e também para cada Shape
+### 1.2 Princípios não-negociáveis ✅
+* **SOLID + clean code** rígidos em todo o projeto (núcleo, DSL, LSP, construtores).
+* Arquitetura **inspirada** em Clean Architecture, com **nomes e artefatos próprios**.
+* **Regra de ouro:** lógica de negócio nunca na `Application`; vive em artefatos dentro de um `Service`.
+* **Corolário 🔶:** construtor também **não** contém regra de negócio — só realiza intenção.
+* **Independência de plataforma no nível conceitual:** artefato declara intenção, construtor decide realização.
 
-  d) view - pode ser form ou report ou table. usar widgets para exibir dados dos documentos. na verdade uma view é uma composição de widgets, com layouts, blocks, páginas, popovers, popups, etc... observe que nem todo widget poderá ser apresentado em todos os ambiente, porque há limitação para isso.
+### 1.3 Fronteiras (🔶 confirmar)
+| É | Não é (por enquanto) |
+| :--- | :--- |
+| Linguagem + tooling (LSP/VSCode) + núcleo de artefatos + construtores | IDE visual no-code completa |
+| Framework de definição de negócio orientado a artefatos | Mais um ORM / mais um UI kit |
+| Multiplataforma por geração + interpretação | Todas as plataformas na v1 |
+| Documento como unidade de verdade sincronizável | Ser um banco de dados |
 
-  e) organogram - define roles e hierarquia de roles. um gerente pode autorizar mas não pode fazer.  uma app poderá remapear roles, unificando ou detalhando. por examplo a role R1 se estiver duplicada no servico S1 e S2, o app poderá considerar como a mesma ou dar um alias, por exemplo R1_S1 e R1_S2.
+### 1.4 Dois níveis de autoria ✅ (R1-Q2)
+O **analista de negócio** declara o negócio; o **dev** estende a plataforma. Mesma linguagem, dois modos.
 
-2) construtores: são "plugins" capazes "gerar" ou "executar em runtime" os artefatos definidos acima. há ainda o conceito de tema que são opções e cores e icones que os construtores podem usar.
+| | Analista (modo simples) | Dev (modo avançado) |
+| :--- | :--- | :--- |
+| **Escreve** | `Application`, `Service`, `Document`, `View`, `Organogram`, `Process` | `Shape` custom, `Widget` custom, Construtor, integrações |
+| **Sintaxe** | declarativa, vocabulário de negócio, **sem expressões livres** 🔶 | tipos, expressões, código de extensão (❓ R2-Q4) |
+| **LSP fala** | linguagem de negócio + sugestão de correção | tipos, contratos, violações de SOLID |
+| **Ferramenta** | editor guiado + preview 🔶 | VSCode + CLI + testes |
+| **Pode** | compor e parametrizar o que existe | criar novas primitivas |
+| **Não pode** | furar a camada de negócio com código | embutir regra de negócio no construtor |
 
+```mermaid
+flowchart TD
+  AN["Analista de negócio<br/>modo simples"]
+  DEV["Dev<br/>modo avançado"]
+  DSLA["Artefatos de negócio<br/>Application, Service, Document,<br/>View, Organogram, Process"]
+  DSLB["Extensões<br/>Shape custom, Widget custom, Construtor"]
+  IRX["Mesmo IR canônico"]
+  OUT["Construtores + Tema"]
+
+  AN --> DSLA --> IRX
+  DEV --> DSLB --> IRX
+  DEV -.->|também escreve| DSLA
+  IRX --> OUT
+```
+> ❓ **Como garantir a fronteira na prática:** modo simples é um *subconjunto validado da mesma DSL* ou uma *sintaxe separada*? (Rodada 4)
+
+### 1.5 Stack ✅ (R1-Q4)
+**Núcleo em Rust**, distribuído como **binário nativo** (LSP, CLI, servidor) e **WebAssembly** (runtime no browser). Alvo de apresentação: **HTML / CSS / JS**. Ganhos imediatos:
+* **Uma única implementação de Shape/validação/merge** roda no editor, no browser e no servidor → semântica idêntica nos três lugares.
+* O parser do LSP é o mesmo parser do runtime → zero divergência de interpretação.
+* Performance para merge, cálculo de documentos derivados e validação em massa.
+
+---
+
+## Nível 2 — Arquitetura conceitual
+
+### 2.1 Camadas com nomes próprios 🔶
+| Camada | Responsabilidade | Realização em Rust |
+| :--- | :--- | :--- |
+| **Declaração** | artefatos `.bpcms` | texto fonte |
+| **Núcleo** | parser → IR → checagem → execução | crates `syntax`, `ir`, `check`, `runtime` |
+| **Contrato de Construção** | o que todo construtor deve implementar | `trait` (port) + capabilities |
+| **Construtores** | gerar ou executar numa plataforma | crates `gen-*`, `web`, futuramente nativos |
+| **Tema** | tokens, cores, ícones, opções | artefato consumido por construtores |
+
+*SOLID aqui:* 1 crate = 1 responsabilidade (SRP); construtor novo não altera o núcleo (OCP); artefato sobrescrito respeita o contrato do original (LSP); ports pequenos e específicos (ISP); núcleo depende de traits, nunca de banco/DOM (DIP).  
+🧊 *nomes alternativos:* Kernel, Port, Builder, Renderer.
+
+### 2.2 Pipeline e alvos (Rust + WASM)
+```mermaid
+flowchart LR
+  DSL["Artefatos .bpcms"]
+  subgraph CORE["Núcleo Rust — mesma base para nativo e WASM"]
+    SYN["syntax<br/>lexer + parser"]
+    IR["ir<br/>AST canônico, imports e overrides resolvidos"]
+    CHK["check<br/>tipos, contratos, ciclos, lint"]
+    RT["runtime<br/>Documents, Shapes, ações, merge"]
+    PORTS["ports<br/>traits de E/S: persistência, transporte, clock, random"]
+    
+    SYN --> IR --> CHK --> RT --> PORTS
+  end
+
+  DSL --> SYN
+  CHK --> LSP["LSP nativo<br/>VSCode"]
+  IR --> GEN["Construtores geradores<br/>SQL/DDL, API, HTML/CSS/JS"]
+  RT --> WASM["Runtime WASM<br/>no browser"]
+  PORTS --> NAT["Adaptadores nativos<br/>no servidor"]
+  
+  WASM --> UI["HTML / CSS / JS"]
+  GEN --> BE["Backend gerado"]
+  THEME["Tema"] --> GEN
+  THEME --> WASM
+```
+> ❓ Construtores de terceiros são crates compilados juntos, ou **plugins WASM** (component model) carregados em runtime? (Rodada 4)
+
+### 2.3 Mapa de artefatos
+```mermaid
+flowchart TD
+  App["Application<br/>Services + inicialização"]
+  Svc["Service<br/>unidade de negócio reutilizável"]
+  Svc2["Service dependência"]
+  Shape["Shape<br/>storage + parse + display + validate + random"]
+  Widget["Widget<br/>interação conceitual de alto nível"]
+  Doc["Document<br/>dados + estado + ações + sync"]
+  View["View<br/>form | report | table"]
+  Org["Organogram<br/>roles e hierarquia"]
+  Proc["Process?<br/>lacuna L1"]
+
+  App -->|importa| Svc
+  Svc --> Shape & Widget & Doc & View & Org
+  Svc -.->|usa / estende / sobrescreve| Svc2
+  Doc -->|toda propriedade tipada por| Shape
+  View -->|compõe| Widget
+  Widget -->|exibe / edita| Doc
+  Org -->|autoriza ações de| Doc
+  Proc -.->|orquestraria| Doc
+```
+
+### 2.4 Ciclo de vida do Document ✅
+```mermaid
+stateDiagram-v2
+  [*] --> draft
+  draft --> computing: cálculo pesado iniciado
+  computing --> valid: cálculo ok + validações ok
+  computing --> draft: resultado parcial / falha
+  draft --> valid: Shapes + regras do Document ok
+  valid --> draft: edição
+  valid --> computing: refresh forçado / próxima atualização
+  valid --> archived: arquivar
+  archived --> [*]
+
+  note right of valid
+    Só documentos valid podem ser alvo de link.
+    Arquivar não invalida quem já copiou os dados.
+  end note
+```
+> ❓ Faltam `invalid`, `stale` (vencido), `conflict` (merge pendente), `deleted` (tombstone)? (Rodada 3)
+
+### 2.5 Composição, override e remapeamento de roles
+```mermaid
+flowchart LR
+  subgraph SC["Service Catalog"]
+    D1["Document Product"]
+    V1["View ProductForm"]
+  end
+
+  subgraph SX["Service LojaExtras"]
+    O1["override Product.price<br/>Shape MoneyBRL"]
+  end
+
+  subgraph AP["Application JohnStore"]
+    RM["remapeamento de roles<br/>unificar R1 ou apelidar R1_S1 / R1_S2"]
+  end
+
+  SX -->|usa| SC
+  O1 -.->|sobrescreve| D1
+  AP --> SX
+  AP --> SC
+  RM -.->|unifica / apelida| SC
+```
+> ❓ **R2-Q3:** merge profundo por caminho, herança explícita com `override`, ou overlay/patch? Pode trocar o Shape de uma propriedade? Pode remover propriedade? Como o check garante LSP (não quebrar quem usa o original)? Versionar `Catalog@1.2`?
+
+---
+
+## Rodadas de Entrevista e Perguntas Pendentes
+
+* **Rodada 3 — prevista:** Document, sync e conflitos (Identidade/versão, autoridade da verdade, ambientes, estratégia de merge, editor de conflitos, cache/event stream, documentos calculados, estados extras).
+* **Rodada 4 — prevista:** DSL, LSP e construtores (Gramática mínima, modo simples × avançado, formato e versão do IR, capabilities de construtor, plugins WASM, Tema, testes).
+* **Rodada 5 — prevista:** Fechamento (Artefatos restantes: `Job`/`Task`/`Integration`/`Policy`/`Locale`/`Environment`, governança e versionamento — só então retomar D-013 MVP).
+
+---
+
+## Glossário rápido
+| Termo | Significado operacional |
+| :--- | :--- |
+| **Artefato** | unidade declarativa de negócio |
+| **Construtor** | plugin que gera ou executa artefatos |
+| **Service** | encapsulamento de negócio reutilizável |
+| **Application** | ponto de montagem voltado ao usuário final |
+| **IR (Intermediate Representation)** | árvore canônica resolvida pelo núcleo Rust |
