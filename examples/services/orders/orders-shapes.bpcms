@@ -1,0 +1,8 @@
+// service: example.com/services/orders
+
+
+shape OrderStatus {
+  base: text
+  values: [draft, placed, cancelled, fulfilled]
+  format: plain
+}

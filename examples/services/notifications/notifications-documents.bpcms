@@ -1,0 +1,56 @@
+// service: example.com/services/notifications
+document NotificationTemplate {
+  version: 1
+  owner: "Notifications"
+  sync: read
+  audit: true
+
+  fields {
+    key: Text { maxLength: 80, required, lookup }
+    channel: Channel { lookup }
+    subject: Text { maxLength: 160 }
+    body: Text
+    locale: LocaleTag { lookup }
+  }
+
+  indexes {
+    uniqueKey: [key, channel, locale] unique
+  }
+
+  actions {
+    create(key: Text, channel: Channel, locale: LocaleTag): NotificationTemplate
+    update(subject: Text, body: Text): NotificationTemplate
+  }
+}
+
+document Notification {
+  version: 1
+  owner: "Notifications"
+  sync: live
+
+  fields {
+    templateId: NotificationTemplateId
+    recipient: Text { lookup }
+    channel: Channel { lookup }
+    status: NotificationStatus { lookup }
+    consent: Boolean
+    sentAt: DateTime?
+    error: Text?
+  }
+
+  indexes {
+    byStatus: [status, sentAt] range
+    byRecipient: [recipient, sentAt] range
+  }
+
+  actions {
+    send(): Notification
+    retry(): Notification
+    sendDigest(): void
+    retryFailed(): void
+  }
+
+  rules {
+    status == sent implies sentAt != null
+  }
+}

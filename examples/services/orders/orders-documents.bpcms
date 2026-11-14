@@ -1,0 +1,61 @@
+// service: example.com/services/orders
+document OrderItem {
+  version: 1
+  owner: "Orders"
+  sync: live
+
+  fields {
+    orderId: OrderId
+    productId: ProductId { lookup }
+    quantity: Count { lookup }
+    unitPrice: MoneyBRL
+    total: MoneyBRL
+  }
+
+  indexes {
+    byOrder: [orderId] hash
+    byProduct: [productId] hash
+  }
+
+  rules {
+    quantity > 0
+    total == quantity * unitPrice
+  }
+}
+
+document Order {
+  version: 1
+  owner: "Orders"
+  sync: live
+  audit: true
+
+  fields {
+    customerId: UserId { lookup }
+    items: OrderItem[]
+    subtotal: MoneyBRL
+    discount: MoneyBRL
+    total: MoneyBRL { lookup }
+    status: OrderStatus { lookup }
+    placedAt: DateTime?
+    createdAt: DateTime
+  }
+
+  indexes {
+    byCustomer: [customerId, createdAt] range
+    byStatus: [status, createdAt] range
+  }
+
+  actions {
+    create(customerId: UserId, discount: Percentage): Order
+    addItem(productId: ProductId, quantity: Count): Order
+    place(): Order
+    cancel(reason: Text): Order
+    expireDraft(): Order
+  }
+
+  rules {
+    total == subtotal - discount
+    status == placed implies placedAt != null
+    items.count <= 50
+  }
+}

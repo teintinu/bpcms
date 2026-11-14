@@ -1,0 +1,78 @@
+// service: example.com/services/identity
+document User {
+  version: 1
+  owner: "Identity"
+  sync: read
+  audit: true
+
+  fields {
+    name: Text { maxLength: 120, required }
+    nickname: Text { maxLength: 40, lookup }
+    avatar: Image? { lookup }
+    email: Email { unique }
+    status: UserStatus
+    private loginAttempts: Count
+    createdAt: DateTime
+  }
+
+  indexes {
+    email: [email] unique
+    byStatus: [status, createdAt] range
+  }
+
+  actions {
+    create(name: Text, email: Email): User
+    disable(): User
+    private recalculateRisk(): Count
+  }
+
+  rules {
+    status in [active, suspended, disabled]
+  }
+}
+
+// Consumer compartilha UserId: ConsumerId é alias do mesmo id.
+document Consumer extends User {
+  version: 1
+  owner: "Identity"
+  sync: read
+
+  fields {
+    taxId: TaxIdentifier?
+  }
+
+  actions {
+    setTaxId(taxId: TaxIdentifier): Consumer
+  }
+
+  rules {
+    taxId == null or taxId.length >= 11
+  }
+}
+
+document Session {
+  version: 1
+  owner: "Identity"
+  sync: read
+
+  fields {
+    userId: UserId
+    issuedAt: DateTime { lookup }
+    expiresAt: DateTime
+    status: SessionStatus { lookup }
+  }
+
+  indexes {
+    byUser: [userId, issuedAt] range
+    byExpiry: [expiresAt] range
+  }
+
+  actions {
+    start(email: Email, password: Text): Session
+    end(): Session
+  }
+
+  rules {
+    expiresAt > issuedAt
+  }
+}

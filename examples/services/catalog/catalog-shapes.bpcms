@@ -1,0 +1,15 @@
+// service: example.com/services/catalog
+
+
+shape SKU {
+  base: text
+  normalize: upper-trim
+  maxLength: 40
+  format: plain
+}
+
+shape ProductStatus {
+  base: text
+  values: [draft, published, archived]
+  format: plain
+}

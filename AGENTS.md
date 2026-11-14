@@ -23,6 +23,22 @@ A `Application` só pode:
 
 Não coloque `parameter`, `document`, `view` ou qualquer outro artefato diretamente na `Application` — nem em exemplos, nem em docs.
 
+## Nomes de arquivos em `examples/`
+
+Todo arquivo `.bpcms` começa com o **nome do serviço/app dono da pasta**, em kebab-case, seguido do tipo:
+
+- `examples/services/identity/identity-documents.bpcms`
+- `examples/services/billing/billing-service.bpcms`
+- `examples/applications/loja-do-joao/loja-do-joao-application.bpcms`
+
+Regras:
+
+- O prefixo é o slug da pasta, não o tipo do artefato. `identity-documents.bpcms`, nunca `documents.bpcms`.
+- O arquivo `*-service.bpcms` é o manifesto do serviço; não use `service.bpcms` genérico.
+- O arquivo `*-application.bpcms` é a aplicação; não use `application.bpcms` genérico.
+- O restante do nome é o tipo do artefato (`documents`, `views`, `events`, `parameters`, `policies`, `jobs`, `reports`, `integrations`, `processes`, `decisions`, `roles`, `organograms`, `shapes`, `themes`, `locales`).
+- Use kebab-case e não repita o prefixo dentro da pasta.
+
 ## Documentos vivos
 
 - `BRAINSTORM.md` é a baseline de decisões.

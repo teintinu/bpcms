@@ -1,0 +1,14 @@
+// service: example.com/services/notifications
+
+
+shape Channel {
+  base: text
+  values: [email, whatsapp, in-app]
+  format: plain
+}
+
+shape NotificationStatus {
+  base: text
+  values: [queued, sent, failed, read]
+  format: plain
+}

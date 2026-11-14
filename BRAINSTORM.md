@@ -18,6 +18,8 @@
 | **Capabilities** | Conceitos de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`); tecnologia é detalhe do construtor. |
 | **Essenciais** | `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` oferece Shapes métrico/imperial e conversões. |
 | **Título** | `title` é localizado (`pt-BR`, `en-US`); locales definem chaves/default; prod estrito, dev pode fallback/editar. |
+| **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
+| **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId`; `ConsumerId` é alias de `UserId`. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
 | **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
@@ -634,14 +636,14 @@ Um **documento** é como uma entidade ou tabela, mas atravessa todas as camadas.
 * **índices** declarados semanticamente;
 * **ações** (comandos) com parâmetros tipados;
 * **regras** de documento (invariantes, transições, autorização);
-* **identidade e versão** (id, versão, etag, timestamps, tenant);
+* **identidade e versão** (id automático, versão, etag, timestamps, tenant);
 * **semântica de leitura**: sob demanda (read) ou em tempo real (live);
 * **proveniência**: quem criou/alterou, quando, com base em quê;
 * **ciclo de vida**: draft, computing, valid, stale, conflict, archived, deleted.
 
 | Parte | O que declara | Exemplo |
 | :--- | :--- | :--- |
-| **Identidade** | id, versão, etag, tenant, timestamps | `RemessaId` |
+| **Identidade** | id automático, versão, etag, tenant, timestamps | `RemessaId` implícito |
 | **Campos** | nome, `Shape`, parâmetros simples | `pesoBruto: Mass` |
 | **Índices** | único, range, composto, textual | `status + criadoEm` |
 | **Ações** | comandos, parâmetros, permissões, efeitos | `dividir()` |
@@ -948,6 +950,42 @@ Um contrato de documento precisa de um modelo de erro pequeno e consistente. A s
 | **DLQ** | job | falha após N retries | fila de inspeção humana; alerta |
 
 **Regras:** toda ação mutante aceita `Idempotency-Key`; eventos saem por outbox; retry é do transporte, não da regra de negócio; erro de validação nunca chega ao banco.
+
+#### 2.6.5 Identidade automática, lookup e referências
+
+Todo `document` ganha automaticamente um **id** e um **Shape de id** implícito: `Product` → `id: ProductId`. Não se declara `id` no documento nem `shape ProductId`; ambos são duplicidade (`E_DUPLICATE_ID_FIELD` / `E_DUPLICATE_ID_SHAPE`).
+
+Todo `document` base também marca com `lookup` os **campos** que o representam para o usuário quando ele é referenciado; a ordem dos campos é a ordem do lookup. Exemplo:
+
+```text
+document User {
+  fields {
+    nickname: Text { lookup }
+    avatar: Image? { lookup }
+    // ...
+  }
+}
+```
+
+Toda referência a um document grava **automaticamente** o lookup da origem. Assim, quem referencia `UserId` recebe `nickname`+`avatar` sem declarar isso de novo; o construtor decide se armazena como objeto embutido, campos prefixados ou outro formato.
+
+**ForeignKey.** Usar `CategoryId` significa uma ForeignKey para `Category`. Se o id não existir, **novos vínculos** são proibidos (`E_FK_MISSING`); vínculos já gravados continuam válidos e mantêm o lookup. Não há cascade destrutivo.
+
+**Projeção.** A referência pode puxar campos extras:
+
+```text
+customerId: UserId(taxId)
+```
+
+O lookup (`nickname`, `avatar`) já é automático; a referência só declara o campo extra (`taxId`). A projeção é cópia de exibição/snapshot, não substitui a identidade; os campos projetados são somente leitura.
+
+**Extensão.** `document Consumer extends User` separa o **usuário do sistema** (login/papéis) do **consumidor pagante**. A extensão é aditiva, herda campos/ações/regras/lookup, adiciona `taxId: TaxIdentifier?` e mantém o **mesmo id** (`UserId`). `ConsumerId`, se usado, é apenas alias de `UserId`: mesmo valor, sem segundo id. Referências usam `UserId`; `UserId(taxId)` projeta o campo extra da extensão. `taxId` é identificador fiscal (CPF/CNPJ), não taxa, e é opcional; `User` sem `Consumer` projeta `null`. Extensão fora do serviço do pai fica fora da v1.
+
+**Referência circular.** Se o documento referencia a si mesmo, o campo não pode se chamar `<document>Id` (ex.: `categoryId` dentro de `Category`); use outro nome, como `parentId: CategoryId?`, senão `E_SELF_ID_FIELD`. `Product.categoryId: CategoryId` é válido porque o alvo é `Category`.
+
+> **Decisão B-43:** id de document é implícito; Shape `<Document>Id` é implícito e não declarável. Duplicidade de campo `id`/Shape de id é erro.
+>
+> **Decisão B-44:** todo document base tem campos marcados com `lookup`; toda referência grava o lookup automaticamente. A ordem é a ordem dos campos. ForeignKey é “soft”: id inexistente bloqueia novos vínculos, mas não invalida os existentes. Projeções de extras (`UserId(taxId)`) são permitidas e somente leitura.
 
 ### 2.7 BPMN interativo
 
@@ -1632,7 +1670,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, title localizado e override/LSP validados; 20 casos golden | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, title localizado, id/lookup/FK, Consumer extends User e override/LSP validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1646,7 +1684,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-42`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-45`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1682,6 +1720,9 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-030 | Application não declara artefatos; só serviços declaram | ✅ | baseline atual |
 | D-031 | Serviços essenciais `location`, `timezone`, `regionalization`, `units` como capabilities | ✅ | baseline atual |
 | D-032 | `title` é `LocalizedText`; locales definem chaves e default | ✅ | baseline atual |
+| D-033 | Todo document tem id implícito e lookup; Shape de id não é declarado | ✅ | baseline atual |
+| D-034 | ForeignKey soft + projeção de campos na referência | ✅ | baseline atual |
+| D-035 | `Consumer extends User` compartilha `UserId` e adiciona `taxId` fiscal | ✅ | baseline atual |
 
 ---
 
@@ -1733,6 +1774,9 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-40** | A Application pode declarar artefatos? | **Não.** Todo artefato vive em `Service`; a app só compõe, configura e inicializa parâmetros no `main`. | Uma única fronteira de negócio; evita duplicação app/serviço. | ✅ |
 | **B-41** | Serviços essenciais como capabilities? | **Sim**: `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` depende de `regionalization` e oferece Shapes métrico/imperial com conversões. | Evita reimplementar GPS/fuso/formatação/unidades em cada serviço. | ✅ |
 | **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
+| **B-43** | Id de document é declarado? | **Não.** Todo document base gera `id: <Doc>Id` e o Shape de id implícito; extensão compartilha o id do pai. Declarar `id`/`<Doc>Id` é duplicidade. | Menos ruído e consistência de identidade. | ✅ |
+| **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência grava o snapshot; projeções puxam só campos extras; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
+| **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId` fiscal; `ConsumerId` é alias de `UserId`, não um segundo id. | Separa login/papéis de dados fiscais sem duplicar identidade. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1754,7 +1798,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-42) sem lacunas.
+- [x] Decisões de baseline (B-01…B-45) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

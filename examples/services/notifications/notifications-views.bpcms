@@ -1,0 +1,28 @@
+// service: example.com/services/notifications
+view TemplateEditor {
+  type: form
+  document: NotificationTemplate
+  roles: [Manager]
+
+  fields {
+    key: Text { required }
+    channel: Channel
+    subject: Text
+    body: Text
+  }
+
+  actions {
+    save -> NotificationTemplate.update
+    cancel -> none
+  }
+}
+
+view NotificationLog {
+  type: table
+  source: Notification
+  roles: [Manager]
+
+  columns { recipient; channel; status; sentAt; error }
+  filters { status; channel; period }
+  pagination: 50
+}

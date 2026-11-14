@@ -433,6 +433,11 @@ task RefundPayment {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `document <Name> { ... }` | Unidade de dados + ações + regras + sync. |
+| `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
+| `lookup` | `nickname: Text { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
+| referência | `categoryId: CategoryId` | ForeignKey para `Category`; novos vínculos exigem id existente; vínculos antigos continuam válidos. |
+| projeção | `customerId: UserId(taxId)` | Copia apenas campos **extras**; campos do `lookup` já são automáticos. |
+| `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
 | `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega snapshot. |
@@ -448,13 +453,34 @@ task RefundPayment {
 | `freshness` | `freshness: 15m` | TTL/agenda do cálculo; expõe `calculatedAt`. |
 | `exposes` | `exposes: [frete, calculatedAt]` | Campos resultantes do cálculo. |
 
+**ID automático.** O `id` não é declarado: todo `document` base ganha `id: <Name>Id` (ex.: `Product` → `ProductId`). O Shape `<Name>Id` também é implícito e **não pode ser declarado**. Declarar `id` no documento ou `shape ProductId` é `E_DUPLICATE_ID_FIELD`/`E_DUPLICATE_ID_SHAPE`. **Exceção:** extensão (`extends`) compartilha o id do pai; `Consumer extends User` usa `UserId`. Se `ConsumerId` for usado, é **alias de tipo** do mesmo `UserId` — não é um segundo id nem um segundo Shape/valor. Declarar `shape ConsumerId` é `E_DUPLICATE_ID_SHAPE`.
+
+**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: Text { lookup }` e `avatar: Image? { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
+
+**ForeignKey.** Usar `CategoryId` significa ForeignKey para `Category`. Se o id referenciado não existir, **novos vínculos** falham (`E_FK_MISSING`), mas vínculos já gravados continuam válidos e mantêm o lookup. Não há cascade destrutivo.
+
+**Projeção.** A referência só declara os campos **extras**; o lookup já cobre o resto. Ex.: `customerId: UserId(taxId)` grava o id + `nickname`/`avatar` (lookup) + `taxId` (extra). É cópia de exibição, não substitui a identidade; campos projetados são somente leitura.
+
+**Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
+
+- é aditiva: herda campos, ações, regras e lookup; adiciona `taxId: TaxIdentifier?`;
+- mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
+- fica no mesmo serviço do pai (v1);
+- pode ser referenciada como `UserId`; `UserId(taxId)` projeta o campo extra da extensão, e `UserId` sozinho entrega o lookup herdado.
+
+`taxId` aqui é **identificador fiscal** (CPF/CNPJ), não taxa. É opcional: um `User` sem perfil `Consumer` projeta `null`.
+
+**Referência circular.** Em um documento que referencia a si mesmo, o campo não pode se chamar `<document>Id` (ex.: `categoryId` dentro de `Category`): use outro nome, como `parentId: CategoryId?` (`E_SELF_ID_FIELD`). `Product.categoryId: CategoryId` é válido porque o alvo é `Category`, não `Product`.
+
 **Parâmetros de campo:**
 
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `required` | `required: true` | Campo obrigatório; ausência falha. |
+| `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
+| `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
+| booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
-| `unique` | `unique: true` | Unicidade lógica; índice realizando. |
+| `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
 | `unit` | `unit: kg` | Unidade de entrada/exibição; o `Shape` converte. |
 | `min` / `max` | `min: 0.001, max: 50000` | Faixa; o `Shape` valida. |
 | `default` | `default: BR` | Valor inicial; não é regra de negócio. |
@@ -469,9 +495,10 @@ document Shipment {
   sync: live
 
   fields {
-    id: ShipmentId
+    orderId: OrderId { lookup }
     pesoBruto: Mass { unit: kg, min: 0.001 }
-    status: ShipmentStatus
+    tracking: TrackingCode? { lookup }
+    status: ShipmentStatus { lookup }
     createdAt: DateTime
   }
 
@@ -513,18 +540,20 @@ document Shipment {
 | `displayUnits` | `displayUnits: [cm, m, in, ft]` | Unidades permitidas na exibição. |
 | `min` / `max` | `min: 0`, `max: 100` | Faixa semântica. |
 | `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Como texto vira valor. |
-| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `masked("...")` | Como valor vira texto por locale. |
+| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Como valor vira texto por locale. |
 | `compare` | `compare: exact` | Igualdade/ordenação; `exact` para dinheiro. |
 | `aggregate` | `aggregate: sum` | Soma/média/min/max permitidos. |
 | `convert` | `convert: mass`, `convert: units.mass` ou `convert: affine(C, F, K)` | Conversão de unidade; `units.mass` delega ao serviço de unidades. |
 | `index` | `index: normalized` | Codificação para índice. |
 | `normalize` | `normalize: digits`, `lower-trim`, `upper-trim` | Normalização antes de validar/comparar. |
-| `validate` | `validate: cpf-check-digits`, `uuid`, `email`, `phone`, `year-month` | Validação semântica. |
+| `validate` | `validate: cpf-check-digits`, `uuid`, `email`, `phone`, `url`, `year-month` | Validação semântica. |
 | `sensitive` | `sensitive: true` | Exige mascaramento/permissão. |
 | `maxLength` | `maxLength: 254` | Limite de texto. |
 | `fields` | `fields { street: Text ... }` | Shape composto. |
 | `default` | `default: BR` | Valor default de campo interno. |
 | `private` | `private helper: Text` | Campo interno do Shape; fora do contrato público. |
+
+> `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
 
 **Valores usados:**
 
@@ -1243,6 +1272,13 @@ policy FourEyesPayment {
 | :--- | :--- | :--- |
 | Identidade | URI inválida, duplicada ou com protocolo | `E_IDENTITY` |
 | Referência | `Shape`/`Document`/`View`/`Role`/`Event` inexistente | `E_REFERENCE` |
+| ID duplicado | campo `id` declarado no document | `E_DUPLICATE_ID_FIELD` |
+| ID duplicado | `shape <Document>Id` declarado | `E_DUPLICATE_ID_SHAPE` |
+| ID circular | campo `<document>Id` dentro do próprio document | `E_SELF_ID_FIELD` |
+| ForeignKey | novo vínculo para id inexistente | `E_FK_MISSING` |
+| Lookup | document base sem campo `lookup` ou campo inválido | `E_LOOKUP_MISSING` / `E_LOOKUP_FIELD` |
+| Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
+| Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
 | Dimensão | `Mass` onde se espera `Length`; soma incompatível | `E_DIMENSION` |
 | Unidade | unidade não pertence à dimensão | `E_UNIT` |

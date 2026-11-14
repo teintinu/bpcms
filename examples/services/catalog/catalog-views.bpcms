@@ -1,0 +1,34 @@
+// service: example.com/services/catalog
+view ProductForm {
+  type: form
+  document: Product
+
+  fields {
+    sku: SKU { required }
+    name: Text { required }
+    price: MoneyBRL { required }
+    weight: Mass
+    length: Length
+    status: ProductStatus { readonly }
+  }
+
+  actions {
+    save -> Product.create
+    cancel -> none
+  }
+}
+
+view ProductTable {
+  type: table
+  source: Product
+
+  columns { sku; name; price; weight; status; createdAt }
+  filters { status; categoryId; period }
+  pagination: 50
+
+  actions {
+    open -> ProductForm
+    publish -> Product.publish
+    export -> Csv
+  }
+}

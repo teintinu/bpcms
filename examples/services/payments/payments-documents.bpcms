@@ -1,0 +1,64 @@
+// service: example.com/services/payments
+document Payment {
+  version: 1
+  owner: "Payments"
+  sync: live
+  audit: true
+
+  fields {
+    orderId: OrderId { lookup }
+    amount: MoneyBRL { lookup }
+    method: PaymentMethod
+    status: PaymentStatus { lookup }
+    authorizedAt: DateTime?
+    capturedAt: DateTime?
+  }
+
+  indexes {
+    byOrder: [orderId] hash
+    byStatus: [status, capturedAt] range
+  }
+
+  actions {
+    authorize(): Payment
+    capture(): Payment
+    refund(): Refund
+    retryFailed(): void
+  }
+
+  rules {
+    amount > 0
+    status == captured implies capturedAt != null
+  }
+}
+
+document Refund {
+  version: 1
+  owner: "Payments"
+  sync: live
+  audit: true
+
+  fields {
+    paymentId: PaymentId { lookup }
+    amount: MoneyBRL { lookup }
+    reason: Text
+    status: RefundStatus { lookup }
+    requestedAt: DateTime
+  }
+
+  indexes {
+    byPayment: [paymentId] hash
+    byStatus: [status, requestedAt] range
+  }
+
+  actions {
+    request(reason: Text): Refund
+    approve(): Refund
+    complete(): Refund
+  }
+
+  rules {
+    amount > 0
+    amount <= 100000 BRL
+  }
+}

@@ -1,0 +1,109 @@
+// service: example.com/services/experience
+shape MoneyBRL {
+  base: decimal
+  currency: BRL
+  scale: 2
+  parse: locale-number
+  format: currency
+  compare: exact
+  aggregate: sum
+}
+
+shape Mass {
+  base: decimal
+  dimension: mass
+  unit: kg
+  displayUnits: [kg, g, t, lb, oz]
+  precision: 6
+  min: 0
+  parse: quantity
+  convert: units.mass
+  index: normalized
+  aggregate: sum
+}
+
+shape Length {
+  base: decimal
+  dimension: length
+  unit: cm
+  displayUnits: [cm, m, km, in, ft, yd, mi]
+  precision: 3
+  min: 0
+  parse: quantity
+  convert: units.length
+  index: normalized
+}
+
+shape Volume {
+  base: decimal
+  dimension: volume
+  unit: m3
+  displayUnits: [m3, L, cm3, gal]
+  precision: 6
+  min: 0
+  parse: quantity
+  convert: units.volume
+  index: normalized
+}
+
+shape Count {
+  base: integer
+  min: 0
+  precision: 0
+  format: plain
+  aggregate: sum
+}
+
+shape Percentage {
+  base: decimal
+  dimension: ratio
+  unit: "%"
+  min: 0
+  max: 100
+  scale: 2
+  parse: percent
+  format: percent
+  aggregate: weighted-average
+}
+
+shape CurrencyCode {
+  base: text
+  values: [BRL, USD, EUR]
+  format: plain
+}
+
+shape YearMonth {
+  base: text
+  validate: year-month
+  format: plain
+}
+
+shape Email {
+  base: text
+  normalize: lower-trim
+  validate: email
+  maxLength: 254
+  format: plain
+  index: exact
+}
+
+shape LocaleTag {
+  base: text
+  values: [pt-BR, en-US]
+  format: plain
+}
+
+shape Phone {
+  base: text
+  normalize: digits
+  validate: phone
+  maxLength: 20
+  format: masked("+## (##) #####-####")
+}
+
+shape Image {
+  base: text
+  validate: url
+  format: image
+  maxLength: 2048
+}

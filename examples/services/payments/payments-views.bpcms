@@ -1,0 +1,27 @@
+// service: example.com/services/payments
+view PaymentForm {
+  type: form
+  document: Payment
+  roles: [Manager]
+
+  fields {
+    orderId: OrderId { required }
+    amount: MoneyBRL { required }
+    method: PaymentMethod { required }
+  }
+
+  actions {
+    authorize -> Payment.authorize
+    capture -> Payment.capture
+    cancel -> none
+  }
+}
+
+view PaymentDetail {
+  type: detail
+  document: Payment
+  roles: [Manager]
+
+  sections { summary; refunds; timeline }
+  actions { refund; print }
+}

@@ -1,0 +1,14 @@
+// service: example.com/services/inventory
+
+
+shape StockStatus {
+  base: text
+  values: [available, reserved, blocked]
+  format: plain
+}
+
+shape ReservationStatus {
+  base: text
+  values: [active, released, expired]
+  format: plain
+}

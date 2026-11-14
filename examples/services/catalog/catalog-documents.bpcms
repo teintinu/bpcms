@@ -1,0 +1,58 @@
+// service: example.com/services/catalog
+document Category {
+  version: 1
+  owner: "Catalog"
+  sync: read
+
+  fields {
+    name: Text { maxLength: 120, required, lookup }
+    parentId: CategoryId?
+  }
+
+  indexes {
+    name: [name] unique
+    parent: [parentId] hash
+  }
+
+  actions {
+    create(name: Text, parentId: CategoryId?): Category
+    rename(name: Text): Category
+  }
+}
+
+document Product {
+  version: 1
+  owner: "Catalog"
+  sync: live
+  audit: true
+
+  fields {
+    sku: SKU { unique, lookup }
+    name: Text { maxLength: 160, required, lookup }
+    categoryId: CategoryId
+    price: MoneyBRL
+    weight: Mass
+    length: Length
+    status: ProductStatus
+    createdAt: DateTime
+  }
+
+  indexes {
+    sku: [sku] unique
+    name: [name] search
+    byStatus: [status, createdAt] range
+    byWeight: [weight.normalized] range
+  }
+
+  actions {
+    create(sku: SKU, name: Text, price: MoneyBRL): Product
+    update(name: Text, price: MoneyBRL): Product
+    publish(): Product
+    archive(): Product
+  }
+
+  rules {
+    price > 0
+    status == published implies price > 0
+  }
+}

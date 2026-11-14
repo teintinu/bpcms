@@ -1,0 +1,23 @@
+// service: example.com/services/shipping
+
+
+shape ShipmentStatus {
+  base: text
+  values: [draft, packed, dispatched, delivered, returned]
+  format: plain
+}
+
+shape TrackingEvent {
+  fields {
+    at: DateTime
+    status: ShipmentStatus
+    description: Text
+  }
+}
+
+shape TrackingCode {
+  base: text
+  normalize: upper-trim
+  maxLength: 40
+  format: plain
+}

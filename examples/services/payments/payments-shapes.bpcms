@@ -1,0 +1,20 @@
+// service: example.com/services/payments
+
+
+shape PaymentStatus {
+  base: text
+  values: [authorized, captured, failed, refunded]
+  format: plain
+}
+
+shape RefundStatus {
+  base: text
+  values: [requested, approved, completed, rejected]
+  format: plain
+}
+
+shape PaymentMethod {
+  base: text
+  values: [credit-card, pix, boleto]
+  format: plain
+}

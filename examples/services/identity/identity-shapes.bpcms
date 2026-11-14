@@ -1,0 +1,23 @@
+// service: example.com/services/identity
+
+
+
+shape UserStatus {
+  base: text
+  values: [active, suspended, disabled]
+  format: plain
+}
+
+shape SessionStatus {
+  base: text
+  values: [active, ended, expired]
+  format: plain
+}
+
+shape TaxIdentifier {
+  base: text
+  normalize: digits
+  validate: tax-id
+  maxLength: 14
+  format: masked("##.###.###/####-##")
+}

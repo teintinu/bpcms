@@ -1,0 +1,67 @@
+// service: example.com/services/shipping
+document ShipmentItem {
+  version: 1
+  owner: "Shipping"
+  sync: live
+
+  fields {
+    shipmentId: ShipmentId
+    productId: ProductId { lookup }
+    quantity: Count { lookup }
+    pesoUnitario: Mass
+  }
+
+  indexes {
+    byShipment: [shipmentId] hash
+  }
+
+  rules {
+    quantity > 0
+  }
+}
+
+document Shipment {
+  version: 1
+  owner: "Shipping"
+  sync: live
+  audit: true
+
+  fields {
+    orderId: OrderId { lookup }
+    items: ShipmentItem[]
+    pesoBruto: Mass
+    volume: Volume
+    frete: MoneyBRL?
+    tracking: TrackingCode? { lookup }
+    status: ShipmentStatus { lookup }
+    readAt: DateTime?
+    calculatedAt: DateTime?
+    createdAt: DateTime
+  }
+
+  source: device "scale-01" for pesoBruto
+
+  computed frete from Shipment {
+    freshness: 15m
+    exposes: [frete, calculatedAt]
+  }
+
+  indexes {
+    byOrder: [orderId] hash
+    byStatus: [status, createdAt] range
+    byWeight: [pesoBruto.normalized] range
+  }
+
+  actions {
+    create(orderId: OrderId): Shipment
+    addItem(productId: ProductId, quantity: Count): Shipment
+    split(): Shipment[]
+    dispatch(): Shipment
+    trackAll(): void
+  }
+
+  rules {
+    pesoBruto <= MaxWeight
+    status == dispatched implies tracking != null
+  }
+}

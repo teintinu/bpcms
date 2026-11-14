@@ -881,9 +881,8 @@ document Customer {
   audit: true
 
   fields {
-    id: CustomerId
-    name: Text { maxLength: 120, required: true }
-    email: Email { unique: true }
+    name: Text { maxLength: 120, required, lookup }
+    email: Email { unique, lookup }
     phone: Phone?
     status: CustomerStatus
     private internalScore: Score
@@ -911,7 +910,7 @@ document Customer {
 
 *Valida: unicidade por índice, campos opcionais, ações tipadas, `private` em campo/ação e sincronização live.*
 
-### D.2 Nota fiscal como agregado com snapshot
+### D.2 Nota fiscal como agregado com lookup
 
 ```bpcms
 document Invoice {
@@ -920,20 +919,19 @@ document Invoice {
   sync: live
 
   fields {
-    id: InvoiceId
-    number: InvoiceNumber { unique: true }
-    customer: CustomerSnapshot
+    number: InvoiceNumber { unique, lookup }
+    customerId: CustomerId { lookup }
     items: InvoiceItem[]
     subtotal: MoneyBRL
     tax: MoneyBRL
-    total: MoneyBRL
+    total: MoneyBRL { lookup }
     status: InvoiceStatus
     issuedAt: DateTime?
   }
 
   indexes {
     number: [number] unique
-    customer: [customer.id] hash
+    customerId: [customerId] hash
     byStatusDate: [status, issuedAt] range
   }
 
@@ -950,7 +948,7 @@ document Invoice {
 }
 ```
 
-*Valida: documento como agregado, snapshot do cliente, itens e regra de consistência do total.*
+*Valida: documento como agregado, lookup do cliente, itens e regra de consistência do total.*
 
 ### D.3 Remessa com dispositivo, unidades e cálculo
 
@@ -961,14 +959,13 @@ document Shipment {
   sync: live
 
   fields {
-    id: ShipmentId
-    orderId: OrderId
+    orderId: OrderId { lookup }
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
     volume: Volume { unit: m3, min: 0 }
     frete: MoneyBRL?
-    tracking: TrackingCode?
-    status: ShipmentStatus
+    tracking: TrackingCode? { lookup }
+    status: ShipmentStatus { lookup }
     readAt: DateTime?
     createdAt: DateTime
   }
@@ -1011,10 +1008,9 @@ document LabExam {
   retention: 5y
 
   fields {
-    id: ExamId
-    patientId: PatientId
-    type: ExamType
-    status: ExamStatus
+    patientId: PatientId { lookup }
+    type: ExamType { lookup }
+    status: ExamStatus { lookup }
     result: Text?
     resultFile: FileRef?
     signature: Signature?
@@ -1052,18 +1048,17 @@ document SupportTicket {
   sync: live
 
   fields {
-    id: TicketId
     customerId: CustomerId
-    subject: Text { maxLength: 160 }
+    subject: Text { maxLength: 160, lookup }
     description: Text
-    priority: TicketPriority
-    status: TicketStatus
+    priority: TicketPriority { lookup }
+    status: TicketStatus { lookup }
     assignee: UserId?
     slaDue: DateTime
     createdAt: DateTime
   }
 
-  computed SlaBreach from SupportTicket, Calendar {
+  computed SlaBreach from SupportTicket {
     freshness: 1m
     exposes: [breached, remaining]
   }
@@ -1100,8 +1095,8 @@ document MonthlyRevenue {
   sync: read
 
   fields {
-    month: YearMonth
-    revenue: MoneyBRL
+    month: YearMonth { lookup }
+    revenue: MoneyBRL { lookup }
     orderCount: Count
     calculatedAt: DateTime
   }
@@ -1269,10 +1264,10 @@ view CustomerForm {
   roles: [Clerk, Manager]
 
   fields {
-    name: Text { required: true }
-    email: Email { required: true }
+    name: Text { required }
+    email: Email { required }
     phone: Phone?
-    status: CustomerStatus { readonly: true }
+    status: CustomerStatus { readonly }
   }
 
   actions {
@@ -2129,7 +2124,7 @@ environment dr {
 parameter ErpUrl {
   type: Text
   source: config
-  required: true
+  required
   default: "https://erp.example.com"
   description: "URL base do ERP"
 }
@@ -2143,7 +2138,7 @@ parameter ErpUrl {
 parameter PaymentKey {
   type: Secret
   source: secret
-  required: true
+  required
   description: "Chave do gateway de pagamento"
 }
 ```
@@ -2197,7 +2192,7 @@ parameter SupportSla {
 parameter GoogleMapsKey {
   type: Secret
   source: secret
-  required: true
+  required
   description: "Chave da API Google Maps"
 }
 ```
@@ -3395,7 +3390,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 1 | `shape` deve ser nomeado por dimensão (`Mass`, `Length`) ou genérico (`Quantity<Mass>`)? | H.2, H.3, H.4 |
 | 2 | O campo deve carregar `unit` ou o `Shape` já define a unidade? | H.2, D.3, W.4 |
 | 3 | Documento agregado deve listar itens como `Document[]` ou ter um bloco `items` próprio? | D.2, D.3 |
-| 4 | Snapshot (`CustomerSnapshot`) é um `Shape`, um `Document` ou um operador (`snapshot Customer`)? | D.2, U.3 |
+| 4 | O `lookup` automático + projeção só de campos extras cobrem o antigo snapshot manual? | D.1, D.2 |
 | 5 | O processo deve ser declarado por nós (`task`, `gateway`) ou por XML BPMN com extensões? | P.1–P.6 |
 | 6 | `reads`/`writes` por tarefa são úteis ou ruído? | P.1–P.6 |
 | 7 | Expressões (`sum`, `count`, `by`, `bucket`, `percentage`) são suficientes? | R.1–R.6, N.1–N.6 |
@@ -3430,7 +3425,10 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 36 | `location`, `timezone`, `regionalization` e `units` devem ser capabilities essenciais, não imports? | U.1–U.3 |
 | 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos? | U.3 |
 | 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
-| 39 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
+| 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK? | D.1–D.3 |
+| 40 | A projeção `UserId(taxId)` (só o extra) e o lookup automático de `UserId` (`nickname`, `avatar`) estão claros? | D.2, árvores |
+| 41 | `Consumer extends User` compartilha `UserId`; `ConsumerId` é alias (mesmo valor) e `taxId` é o extra? | árvores |
+| 42 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
 
 ## Padrões que os exemplos já sugerem
 

@@ -1,0 +1,46 @@
+// service: example.com/services/inventory
+view StockTable {
+  type: table
+  source: StockItem
+
+  columns { productId; warehouse; available; reserved; reorderPoint }
+  filters { warehouse; available }
+  pagination: 50
+
+  actions {
+    adjust -> StockAdjustmentForm
+    export -> Csv
+  }
+}
+
+view StockAdjustmentForm {
+  type: form
+  document: StockItem
+
+  fields {
+    productId: ProductId { required }
+    quantity: Count { required }
+    reason: Text { required }
+  }
+
+  actions {
+    save -> StockItem.adjust
+    cancel -> none
+  }
+}
+
+view ReservationForm {
+  type: form
+  document: Reservation
+
+  fields {
+    productId: ProductId { required }
+    quantity: Count { required }
+    externalRef: Text
+  }
+
+  actions {
+    save -> Reservation.request
+    cancel -> none
+  }
+}
