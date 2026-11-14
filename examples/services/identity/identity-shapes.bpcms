@@ -41,12 +41,3 @@ shape SessionStatus {
   }
   format: plain
 }
-
-shape TaxIdentifier {
-  title: { pt-BR: "CPF/CNPJ", en: "Tax identifier" }
-  base: text
-  normalize: digits
-  validate: tax-id
-  maxLength: 14
-  format: masked("##.###.###/####-##")
-}

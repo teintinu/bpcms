@@ -14,3 +14,14 @@ view LoginForm {
     cancel -> none
   }
 }
+
+view CitizenAccounts {
+  title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
+  type: table
+  source: Consumer
+  roles: [Clerk, Manager]
+
+  columns { nickname; email; citizenId; status }
+  filters { citizenId; status }
+  pagination: 50
+}

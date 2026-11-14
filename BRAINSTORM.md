@@ -19,8 +19,10 @@
 | **Essenciais** | `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` oferece Shapes métrico/imperial e conversões. |
 | **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
-| **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId`; `ConsumerId` é alias de `UserId`. |
+| **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId`; `ConsumerId` é alias de `UserId`. |
 | **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` do serviço tem `symbol` e o tema resolve a imagem. |
+| **Citizen** | Serviço de identificação de pessoa/organização; `CitizenId` + lookup seguro; PII em `private`; sem `taxId`. |
+| **Citizen 1:N** | Um Citizen pode ter vários Users; cada Consumer referencia o mesmo `citizenId`; sem unique; merge reatribui. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
 | **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
@@ -627,6 +629,24 @@ view VisitForm {
 
 > **Decisão B-41:** `location`, `timezone`, `regionalization` e `units` são serviços essenciais expostos como capabilities. Nenhum deles é importado como serviço de app; o construtor/ambiente resolve.
 
+#### 2.5.5 Citizen — identificação civil e PII
+
+`Citizen` é o serviço de identificação de **pessoa ou organização em qualquer lugar do mundo**. Ele é o dono da identificação civil; a segurança/PII é tratada fora do DSL.
+
+Interface básica:
+
+- registrar pessoa (`registerPerson`);
+- registrar organização (`registerOrganization`);
+- mesclar duplicados (`merge`);
+- bloquear (`block`);
+- referenciar por `CitizenId`, resolvendo o lookup seguro (`displayName`, `kind`).
+
+O `document Citizen` expõe apenas o lookup seguro. Os dados PII ficam em campos `private`: `legalName`, `birthDate`, `documentHash`. O `Consumer` referencia `citizenId: CitizenId?`; não existe `taxId` nem CPF/CNPJ no modelo. `Invoice.customerId: UserId(citizenId)` projeta a referência, não a PII.
+
+**Relação 1:N.** Um `Citizen` pode ter **vários Users** no sistema. Cada User tem seu `Consumer` (perfil) e referencia o mesmo `citizenId`; não existe `unique` em `Consumer.citizenId`. O vínculo User↔Citizen é mantido pelo `identity`; `CitizenMerged` reatribui os Users do citizen de origem para o destino. `Consumer.byCitizen` é índice de consulta, não de unicidade.
+
+> **Decisão B-49:** identificação civil/PII vive no serviço `Citizen`; os demais serviços referenciam `CitizenId` e usam só o lookup seguro. `taxId` foi removido; `citizenId` não é CPF/CNPJ nem taxa. Segurança/PII é responsabilidade da camada de segurança, não do DSL.
+
 ### 2.6 Documento — o coração do modelo
 
 #### 2.6.1 Definição
@@ -975,18 +995,18 @@ Toda referência a um document grava **automaticamente** o lookup da origem. Ass
 **Projeção.** A referência pode puxar campos extras:
 
 ```text
-customerId: UserId(taxId)
+customerId: UserId(citizenId)
 ```
 
-O lookup (`nickname`, `avatar`) já é automático; a referência só declara o campo extra (`taxId`). A projeção é cópia de exibição/snapshot, não substitui a identidade; os campos projetados são somente leitura.
+O lookup (`nickname`, `avatar`) já é automático; a referência só declara o campo extra (`citizenId`). A projeção é cópia de exibição/snapshot, não substitui a identidade; os campos projetados são somente leitura.
 
-**Extensão.** `document Consumer extends User` separa o **usuário do sistema** (login/papéis) do **consumidor pagante**. A extensão é aditiva, herda campos/ações/regras/lookup, adiciona `taxId: TaxIdentifier?` e mantém o **mesmo id** (`UserId`). `ConsumerId`, se usado, é apenas alias de `UserId`: mesmo valor, sem segundo id. Referências usam `UserId`; `UserId(taxId)` projeta o campo extra da extensão. `taxId` é identificador fiscal (CPF/CNPJ), não taxa, e é opcional; `User` sem `Consumer` projeta `null`. Extensão fora do serviço do pai fica fora da v1.
+**Extensão.** `document Consumer extends User` separa o **usuário do sistema** (login/papéis) do **consumidor pagante**. A extensão é aditiva, herda campos/ações/regras/lookup, adiciona `citizenId: CitizenId?` e mantém o **mesmo id** (`UserId`). `ConsumerId`, se usado, é apenas alias de `UserId`: mesmo valor, sem segundo id. Referências usam `UserId`; `UserId(citizenId)` projeta o campo extra da extensão. `citizenId` é uma referência ao serviço `Citizen`, que é o dono da identificação/PII; é opcional e `User` sem `Consumer` projeta `null`. Extensão fora do serviço do pai fica fora da v1.
 
 **Referência circular.** Se o documento referencia a si mesmo, o campo não pode se chamar `<document>Id` (ex.: `categoryId` dentro de `Category`); use outro nome, como `parentId: CategoryId?`, senão `E_SELF_ID_FIELD`. `Product.categoryId: CategoryId` é válido porque o alvo é `Category`.
 
 > **Decisão B-43:** id de document é implícito; Shape `<Document>Id` é implícito e não declarável. Duplicidade de campo `id`/Shape de id é erro.
 >
-> **Decisão B-44:** todo document base tem campos marcados com `lookup`; toda referência grava o lookup automaticamente. A ordem é a ordem dos campos. ForeignKey é “soft”: id inexistente bloqueia novos vínculos, mas não invalida os existentes. Projeções de extras (`UserId(taxId)`) são permitidas e somente leitura.
+> **Decisão B-44:** todo document base tem campos marcados com `lookup`; toda referência grava o lookup automaticamente. A ordem é a ordem dos campos. ForeignKey é “soft”: id inexistente bloqueia novos vínculos, mas não invalida os existentes. Projeções de extras (`UserId(citizenId)`) são permitidas e somente leitura.
 
 ### 2.7 BPMN interativo
 
@@ -1671,7 +1691,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User e override/LSP validados; 20 casos golden | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User, Citizen/PII e override/LSP validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1685,7 +1705,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-48`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-50`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1723,10 +1743,12 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-032 | `title` é `I18n`; locales definem chaves e default | ✅ | baseline atual |
 | D-033 | Todo document tem id implícito e lookup; Shape de id não é declarado | ✅ | baseline atual |
 | D-034 | ForeignKey soft + projeção de campos na referência | ✅ | baseline atual |
-| D-035 | `Consumer extends User` compartilha `UserId` e adiciona `taxId` fiscal | ✅ | baseline atual |
+| D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
 | D-038 | Enum values têm `title` + `icon`; Icon carrega `symbol` resolvido pelo tema | ✅ | baseline atual |
+| D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
+| D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 
 ---
 
@@ -1780,10 +1802,12 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
 | **B-43** | Id de document é declarado? | **Não.** Todo document base gera `id: <Doc>Id` e o Shape de id implícito; extensão compartilha o id do pai. Declarar `id`/`<Doc>Id` é duplicidade. | Menos ruído e consistência de identidade. | ✅ |
 | **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência grava o snapshot; projeções puxam só campos extras; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
-| **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId` fiscal; `ConsumerId` é alias de `UserId`, não um segundo id. | Separa login/papéis de dados fiscais sem duplicar identidade. | ✅ |
+| **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId` que referencia o Citizen; `ConsumerId` é alias de `UserId`. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
 | **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é artefato do serviço com `symbol`, sem prefixo `Icon` no nome; o builder resolve `symbol` no conjunto de ícones do tema. | Labels e imagens consistentes sem binário no DSL. | ✅ |
+| **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
+| **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1805,7 +1829,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-48) sem lacunas.
+- [x] Decisões de baseline (B-01…B-50) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

@@ -1555,7 +1555,7 @@ evidence ERP_DDL {
 
   extracted {
     document Supplier {
-      fields { id; name; taxId; status }
+      fields { id; name; citizenId; status }
     }
     document PurchaseOrder {
       fields { id; supplierId; total; status; createdAt }
@@ -3495,8 +3495,8 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos? | U.3 |
 | 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
 | 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK? | D.1–D.3 |
-| 40 | A projeção `UserId(taxId)` (só o extra) e o lookup automático de `UserId` (`nickname`, `avatar`) estão claros? | D.2, árvores |
-| 41 | `Consumer extends User` compartilha `UserId`; `ConsumerId` é alias (mesmo valor) e `taxId` é o extra? | árvores |
+| 40 | A projeção `UserId(citizenId)` (só o extra) e o lookup automático de `UserId` (`nickname`, `avatar`) estão claros? | D.2, árvores |
+| 41 | `Consumer extends User` compartilha `UserId`; `ConsumerId` é alias (mesmo valor) e `citizenId` é o extra? | árvores |
 | 42 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
 
 ## Padrões que os exemplos já sugerem

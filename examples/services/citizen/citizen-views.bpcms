@@ -1,0 +1,29 @@
+// service: example.com/services/citizen
+view CitizenRegistrationForm {
+  title: { pt-BR: "Cadastro de cidadão", en: "Citizen registration" }
+  type: form
+  document: Citizen
+
+  fields {
+    kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, required }
+    displayName: Text { title: { pt-BR: "Nome de exibição", en: "Display name" }, required }
+    country: Text { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
+    legalName: Text { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
+    birthDate: Date { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
+  }
+
+  actions {
+    save -> Citizen.register
+    cancel -> none
+  }
+}
+
+view CitizenSearch {
+  title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
+  type: table
+  source: Citizen
+
+  columns { displayName; kind; country; status }
+  filters { kind; country; status }
+  pagination: 50
+}

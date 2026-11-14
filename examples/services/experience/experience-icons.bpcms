@@ -88,3 +88,13 @@ icon LocaleEnUs {
   title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
   symbol: "globe"
 }
+
+icon Person {
+  title: { pt-BR: "Pessoa", en: "Person" }
+  symbol: "user"
+}
+
+icon Organization {
+  title: { pt-BR: "Organização", en: "Organization" }
+  symbol: "building-2"
+}

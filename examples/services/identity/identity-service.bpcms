@@ -4,6 +4,7 @@ service "example.com/services/identity" {
   owner: "Platform Identity"
   imports {
     service "example.com/services/experience" as Experience
+    service "example.com/services/citizen" as Citizen
   }
   requires { oltp, scheduling }
   provides { identity }

@@ -34,7 +34,7 @@ document Invoice {
     number: Text { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
     series: Text { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    customerId: UserId(taxId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    customerId: UserId(citizenId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: MoneyBRL { title: { pt-BR: "Subtotal", en: "Subtotal" } }
     tax: MoneyBRL { title: { pt-BR: "Imposto", en: "Tax" } }

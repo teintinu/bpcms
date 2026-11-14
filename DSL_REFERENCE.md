@@ -455,7 +455,7 @@ task RefundPayment {
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
 | `lookup` | `nickname: Text { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | referência | `categoryId: CategoryId` | ForeignKey para `Category`; novos vínculos exigem id existente; vínculos antigos continuam válidos. |
-| projeção | `customerId: UserId(taxId)` | Copia apenas campos **extras**; campos do `lookup` já são automáticos. |
+| projeção | `customerId: UserId(citizenId)` | Copia apenas campos **extras**; campos do `lookup` já são automáticos. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
@@ -478,16 +478,17 @@ task RefundPayment {
 
 **ForeignKey.** Usar `CategoryId` significa ForeignKey para `Category`. Se o id referenciado não existir, **novos vínculos** falham (`E_FK_MISSING`), mas vínculos já gravados continuam válidos e mantêm o lookup. Não há cascade destrutivo.
 
-**Projeção.** A referência só declara os campos **extras**; o lookup já cobre o resto. Ex.: `customerId: UserId(taxId)` grava o id + `nickname`/`avatar` (lookup) + `taxId` (extra). É cópia de exibição, não substitui a identidade; campos projetados são somente leitura.
+**Projeção.** A referência só declara os campos **extras**; o lookup já cobre o resto. Ex.: `customerId: UserId(citizenId)` grava o id + `nickname`/`avatar` (lookup) + `citizenId` (extra). É cópia de exibição, não substitui a identidade; campos projetados são somente leitura.
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `taxId: TaxIdentifier?`;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizenId: CitizenId?`;
 - mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
 - fica no mesmo serviço do pai (v1);
-- pode ser referenciada como `UserId`; `UserId(taxId)` projeta o campo extra da extensão, e `UserId` sozinho entrega o lookup herdado.
+- pode ser referenciada como `UserId`; `UserId(citizenId)` projeta o campo extra da extensão, e `UserId` sozinho entrega o lookup herdado.
+- `citizenId` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
 
-`taxId` aqui é **identificador fiscal** (CPF/CNPJ), não taxa. É opcional: um `User` sem perfil `Consumer` projeta `null`.
+`citizenId` é uma referência ao `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` projeta `null`.
 
 **Referência circular.** Em um documento que referencia a si mesmo, o campo não pode se chamar `<document>Id` (ex.: `categoryId` dentro de `Category`): use outro nome, como `parentId: CategoryId?` (`E_SELF_ID_FIELD`). `Product.categoryId: CategoryId` é válido porque o alvo é `Category`, não `Product`.
 
