@@ -20,6 +20,7 @@
 | **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
 | **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId`; `ConsumerId` é alias de `UserId`. |
+| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` do serviço tem `symbol` e o tema resolve a imagem. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
 | **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
@@ -1386,7 +1387,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 ## Nível 3 — Artefatos em detalhe
 
-> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 145 exemplos cobrindo os 23 tipos de artefato. A [DSL_REFERENCE.md](DSL_REFERENCE.md) documenta cada cláusula com sintaxe e funcionamento; use as duas como teste de aceitação da sintaxe antes de fechar o SPECS.
+> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 151 exemplos cobrindo os 24 tipos de artefato. A [DSL_REFERENCE.md](DSL_REFERENCE.md) documenta cada cláusula com sintaxe e funcionamento; use as duas como teste de aceitação da sintaxe antes de fechar o SPECS.
 
 ### 3.1 Catálogo de artefatos
 
@@ -1684,7 +1685,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-47`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-48`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1711,7 +1712,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-021 | Override ativo quando os dois serviços estão na closure do app; um por alvo; LSP | ✅ | baseline atual |
 | D-022 | Sem `exports`: todo artefato de topo é público; privacidade só em membros (`private`) | ✅ | baseline atual |
 | D-023 | `alias`/`as` local para URIs de serviço | ✅ | baseline atual |
-| D-024 | Sem `extends` na v1; composição + override | 🧊 | baseline atual |
+| D-024 | `extends` restrito a documento no mesmo serviço; sem herança múltipla/geral | ✅ | baseline atual |
 | D-025 | Migração é release, não artefato de topo | ✅ | baseline atual |
 | D-026 | Capabilities de alto nível, sem tecnologia | ✅ | baseline atual |
 | D-027 | Compensação como task `type: compensation` | ✅ | baseline atual |
@@ -1725,6 +1726,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `taxId` fiscal | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
+| D-038 | Enum values têm `title` + `icon`; Icon carrega `symbol` resolvido pelo tema | ✅ | baseline atual |
 
 ---
 
@@ -1767,7 +1769,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-31** | Quando um override fica ativo? | Quando o serviço que override está na closure do app (explícita ou implicitamente); se só o original está presente, o original vale. Um override por alvo; LSP. | Ativação previsível sem configuração no app. | ✅ |
 | **B-32** | Serviço precisa declarar `exports`? | **Não**. Todo artefato de topo é público/exportado automaticamente; privacidade só dentro do artefato, via `private` em membros. | Menos boilerplate; o contrato é o que existe no serviço. | ✅ |
 | **B-33** | `alias`/`as`? | **Sim.** `"<uri>" as Nome` em `services`/`imports`; alias é local, não é identidade e não vai para o lock. | Legibilidade sem duplicar a URI em todo lugar. | ✅ |
-| **B-34** | `extends`/herança de tipo? | **Não na v1.** Composição + `override` cobrem reuso. Herança de tipo rígida complica LSP, migração e IDs; revisitar só com caso de refinamento puro. | Simplicidade estrutural; evita árvores frágeis. | 🧊 |
+| **B-34** | `extends`/herança de tipo? | **Restrito.** `document Consumer extends User` é permitido: pai único, mesmo serviço, aditivo e mesmo id. Herança múltipla/geral fica fora da v1. | Separa refinamento de identidade sem árvores frágeis. | ✅ |
 | **B-35** | Migração é artefato próprio? | **Não.** Migração é um `release` do tipo `migration`, com `changes`, `backfill`, `dryRun` e `rollback`. A gramática detalhada das operações fica no SPECS. | Um ciclo de vida só; migração promovida como release. | ✅ |
 | **B-36** | Capabilities podem citar tecnologia? | **Não.** Usar conceitos de alto nível: `gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`. O construtor mapeia para a tecnologia. | Serviço independente de HTTP/DB/UI kit; contrato estável. | ✅ |
 | **B-37** | Compensação no BPMN? | **Sim**: task `type: compensation` com `for: <Node>` e `action`, disparada por erro/cancelamento; executa em ordem reversa e é idempotente. | Compensação é passo de processo, não só retry. | ✅ |
@@ -1781,6 +1783,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId` fiscal; `ConsumerId` é alias de `UserId`, não um segundo id. | Separa login/papéis de dados fiscais sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
+| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é artefato do serviço com `symbol`, sem prefixo `Icon` no nome; o builder resolve `symbol` no conjunto de ícones do tema. | Labels e imagens consistentes sem binário no DSL. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1802,7 +1805,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-47) sem lacunas.
+- [x] Decisões de baseline (B-01…B-48) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

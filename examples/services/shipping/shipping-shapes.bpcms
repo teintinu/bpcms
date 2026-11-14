@@ -4,7 +4,28 @@
 shape ShipmentStatus {
   title: { pt-BR: "Status da remessa", en: "Shipment status" }
   base: text
-  values: [draft, packed, dispatched, delivered, returned]
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: Pending
+    }
+    packed {
+      title: { pt-BR: "Embalada", en: "Packed" }
+      icon: Info
+    }
+    dispatched {
+      title: { pt-BR: "Despachada", en: "Dispatched" }
+      icon: Info
+    }
+    delivered {
+      title: { pt-BR: "Entregue", en: "Delivered" }
+      icon: Success
+    }
+    returned {
+      title: { pt-BR: "Devolvida", en: "Returned" }
+      icon: Cancelled
+    }
+  }
   format: plain
 }
 

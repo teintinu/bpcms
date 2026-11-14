@@ -75,7 +75,20 @@ shape Percentage {
 shape CurrencyCode {
   title: { pt-BR: "Código de moeda", en: "Currency code" }
   base: text
-  values: [BRL, USD, EUR]
+  values {
+    BRL {
+      title: { pt-BR: "Real", en: "Brazilian real" }
+      icon: Brl
+    }
+    USD {
+      title: { pt-BR: "Dólar", en: "US dollar" }
+      icon: Usd
+    }
+    EUR {
+      title: { pt-BR: "Euro", en: "Euro" }
+      icon: Eur
+    }
+  }
   format: plain
 }
 
@@ -99,7 +112,16 @@ shape Email {
 shape LocaleTag {
   title: { pt-BR: "Idioma", en: "Locale" }
   base: text
-  values: [pt-BR, en-US]
+  values {
+    pt-BR {
+      title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+      icon: LocalePtBr
+    }
+    en-US {
+      title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+      icon: LocaleEnUs
+    }
+  }
   format: plain
 }
 

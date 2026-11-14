@@ -2,7 +2,7 @@
 
 *Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
 
-Cobrimos os **23 tipos de artefato** do catálogo, com **6 exemplos cada** — 145 exemplos de artefatos, porque `Shape` tem 8, Application/Service têm 8 e Process tem 7 (compensação); há também 3 exemplos de uso de serviços essenciais. Alguns exemplos usam o mesmo domínio de propósito, para mostrar composição e reuso; outros mudam de domínio para testar generalidade.
+Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 151 exemplos de artefatos, porque `Shape` tem 8, Application/Service têm 8 e Process tem 7 (compensação); há também 3 exemplos de uso de serviços essenciais. Alguns exemplos usam o mesmo domínio de propósito, para mostrar composição e reuso; outros mudam de domínio para testar generalidade.
 
 ## Como ler
 
@@ -41,9 +41,9 @@ Cobrimos os **23 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 | :--- | :--- | :--- |
 | **Núcleo** | Application, Service, Process, Document, Shape, View, Role/Organogram | 49 |
 | **Descoberta** | Evidence, Conversation, Decision, Assumption | 24 |
-| **Plataforma** | Environment, Parameter, Builder, Theme, Locale, Widget custom, Release/Version | 42 |
+| **Plataforma** | Environment, Parameter, Builder, Theme, Locale, Widget custom, Release/Version, Icon | 48 |
 | **Operação** | Integration, Report/Dashboard, Event, Job/Schedule, Policy/Rule | 30 |
-| **Total** | 23 tipos | **145** |
+| **Total** | 24 tipos | **151** |
 
 ---
 
@@ -2202,7 +2202,7 @@ parameter GoogleMapsKey {
 
 ## Serviços essenciais (usos)
 
-> Esta seção tem exemplos de **uso** das capabilities essenciais; não conta como um dos 145 exemplos de artefatos.
+> Esta seção tem exemplos de **uso** das capabilities essenciais; não conta como um dos 151 exemplos de artefatos.
 
 ### U.1 Serviço que depende das capabilities
 
@@ -3381,6 +3381,74 @@ policy ApprovalSegregation {
 *Valida: política que atravessa mais de um documento e ator.*
 
 ---
+
+# Icon
+
+### IC.1 Pendente
+
+```bpcms
+icon Pending {
+  title: { pt-BR: "Pendente", en: "Pending" }
+  symbol: "clock"
+}
+```
+
+*Valida: ícone definido no serviço, sem imagem/binário; o builder resolve no tema.*
+
+### IC.2 Sucesso
+
+```bpcms
+icon Success {
+  title: { pt-BR: "Concluído", en: "Success" }
+  symbol: "check-circle"
+}
+```
+
+*Valida: ícone reutilizável por vários values.*
+
+### IC.3 Erro
+
+```bpcms
+icon Error {
+  title: { pt-BR: "Erro", en: "Error" }
+  symbol: "alert-circle"
+}
+```
+
+*Valida: símbolo lógico independente do conjunto visual.*
+
+### IC.4 E-mail
+
+```bpcms
+icon Email {
+  title: { pt-BR: "E-mail", en: "Email" }
+  symbol: "mail"
+}
+```
+
+*Valida: ícone de canal definido no serviço de experiência.*
+
+### IC.5 Prioridade
+
+```bpcms
+icon Priority1 {
+  title: { pt-BR: "Prioridade 1", en: "Priority 1" }
+  symbol: "alert-octagon"
+}
+```
+
+*Valida: ícone de domínio para enum de prioridade.*
+
+### IC.6 Moeda
+
+```bpcms
+icon Brl {
+  title: { pt-BR: "Real", en: "Brazilian real" }
+  symbol: "brazilian-real-sign"
+}
+```
+
+*Valida: ícone para value de moeda; o value também tem title.*
 
 # O que validar nestes exemplos
 

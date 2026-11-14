@@ -4,20 +4,79 @@
 shape TicketStatus {
   title: { pt-BR: "Status do chamado", en: "Ticket status" }
   base: text
-  values: [open, in_progress, waiting, resolved, closed]
+  values {
+    open {
+      title: { pt-BR: "Aberta", en: "Open" }
+      icon: Pending
+    }
+    in_progress {
+      title: { pt-BR: "Em andamento", en: "In progress" }
+      icon: Info
+    }
+    waiting {
+      title: { pt-BR: "Aguardando", en: "Waiting" }
+      icon: Pending
+    }
+    resolved {
+      title: { pt-BR: "Resolvido", en: "Resolved" }
+      icon: Success
+    }
+    closed {
+      title: { pt-BR: "Fechado", en: "Closed" }
+      icon: Archived
+    }
+  }
   format: plain
 }
 
 shape ReturnStatus {
   title: { pt-BR: "Status da devolução", en: "Return status" }
   base: text
-  values: [requested, approved, rejected, received, refunded]
+  values {
+    requested {
+      title: { pt-BR: "Solicitado", en: "Requested" }
+      icon: Pending
+    }
+    approved {
+      title: { pt-BR: "Aprovado", en: "Approved" }
+      icon: Success
+    }
+    rejected {
+      title: { pt-BR: "Rejeitado", en: "Rejected" }
+      icon: Error
+    }
+    received {
+      title: { pt-BR: "Recebida", en: "Received" }
+      icon: Success
+    }
+    refunded {
+      title: { pt-BR: "Reembolsado", en: "Refunded" }
+      icon: Info
+    }
+  }
   format: plain
 }
 
 shape TicketPriority {
   title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
   base: text
-  values: [P1, P2, P3, P4]
+  values {
+    P1 {
+      title: { pt-BR: "Prioridade 1", en: "Priority 1" }
+      icon: Priority1
+    }
+    P2 {
+      title: { pt-BR: "Prioridade 2", en: "Priority 2" }
+      icon: Priority2
+    }
+    P3 {
+      title: { pt-BR: "Prioridade 3", en: "Priority 3" }
+      icon: Priority3
+    }
+    P4 {
+      title: { pt-BR: "Prioridade 4", en: "Priority 4" }
+      icon: Priority4
+    }
+  }
   format: plain
 }

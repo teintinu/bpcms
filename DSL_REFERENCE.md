@@ -29,6 +29,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | 25 | Expressões, operadores e valores |
 | 26 | Validação e erros |
 | 27 | Cobertura |
+| 28 | Icon |
 
 ---
 
@@ -51,7 +52,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
 | `version` | app, service, process, document, event, builder, release | `version: 1.4.0` ou `version: semver("1.4.0")` | Versão do artefato. `1.4.0` é açúcar para `semver("1.4.0")`. |
-| `title` | app, service, shape, document, field, view, event, parameter, role, organogram | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
+| `title` | app, service, shape, document, field, view, event, parameter, role, organogram, icon | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
 | `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
 | `source` | app/service, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app/service); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
@@ -222,7 +223,7 @@ O Shape guarda **valor original + unidade** e projeção normalizada. A exibiç�
 
 `I18n` é um **tipo interno** de texto localizado. Não é um `Shape` declarável; `shape I18n` é `E_RESERVED_TYPE`.
 
-`title` é obrigatório em `service`, `shape`, `document`, `field`, `view`, `event`, `parameter`, `role` e `organogram`; a `Application` também usa o mesmo tipo.
+`title` é obrigatório em `service`, `shape`, `document`, `field`, `view`, `event`, `parameter`, `role`, `organogram` e `icon`; a `Application` também usa o mesmo tipo.
 
 ```bpcms
 title: { pt-BR: "Nome", en: "Name" }
@@ -552,7 +553,7 @@ document Shipment {
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| text` | Representação base. |
-| `values` | `values: [draft, published, archived]` | Enumera valores permitidos (com `base: text`). |
+| `values` | `values { draft { title: {...}; icon: Pending } }` | Valores enumerados; cada valor exige `title` I18n e `icon` de um artefato `Icon`. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
@@ -575,6 +576,35 @@ document Shipment {
 | `private` | `private helper: Text` | Campo interno do Shape; fora do contrato público. |
 
 > `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
+
+**Valores enumerados.** Cada value é um bloco com `title` (I18n) e `icon` (referência a um `Icon`). A ordem dos blocos é a ordem do enum.
+
+```bpcms
+shape InvoiceStatus {
+  title: { pt-BR: "Status da nota", en: "Invoice status" }
+  base: text
+  format: plain
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: Pending
+    }
+    issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      icon: Info
+    }
+    paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      icon: Success
+    }
+  }
+}
+```
+
+- `title` e `icon` são obrigatórios em todo value.
+- O `icon` precisa referenciar um artefato `Icon` do serviço/closure.
+- O builder resolve `Icon.symbol` contra o conjunto de ícones do tema (`theme.icons`); o mesmo ícone pode ser usado por vários values.
+- Valores fora de `values` são inválidos; `values: [a, b]` sem título/ícone é erro.
 
 **Valores usados:**
 
@@ -1309,6 +1339,10 @@ policy FourEyesPayment {
 | ID circular | campo `<document>Id` dentro do próprio document | `E_SELF_ID_FIELD` |
 | ForeignKey | novo vínculo para id inexistente | `E_FK_MISSING` |
 | Lookup | document base sem campo `lookup` ou campo inválido | `E_LOOKUP_MISSING` / `E_LOOKUP_FIELD` |
+| Enum | value sem `title`/`icon` ou value duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_DUPLICATE` |
+| Icon | value aponta para Icon inexistente | `E_ICON_REFERENCE` |
+| Icon | Icon sem `symbol` | `E_ICON_SYMBOL` |
+| Icon | dois icons com o mesmo nome | `E_DUPLICATE_ICON` |
 | Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
@@ -1359,12 +1393,37 @@ policy FourEyesPayment {
 | Event | ✅ | 6 |
 | Job | ✅ | 6 |
 | Policy | ✅ | 6 |
+| Icon | ✅ | 6 |
 
 > Cobertura = todas as cláusulas de linguagem usadas nos exemplos estão documentadas. Campos de domínio (`name`, `email`, `id`) não entram na contagem. As cláusulas comuns (version/source/type/mode/status) aparecem na seção 1 e são referenciadas nas seções seguintes.
 
+# 28. Icon
+
+`Icon` é um artefato de identidade visual simbólica, definido dentro de um `Service`. O construtor resolve `symbol` no conjunto de ícones do `Theme` (`icons: "lucide"`).
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `icon` | `icon <Name> { ... }` | Ícone público do serviço. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `symbol` | `symbol: "clock"` | Identificador do ícone no conjunto do tema. |
+| `set` | `set: "lucide"` | Override opcional do conjunto; default é `Theme.icons`. |
+
+```bpcms
+icon Pending {
+  title: { pt-BR: "Pendente", en: "Pending" }
+  symbol: "clock"
+}
+```
+
+**Nomes:** `Icon` não usa prefixo `Icon` no nome. `icon Email` é o ícone `Email`, distinto de `shape Email` e `integration Email`; o namespace é por tipo de artefato. Dois icons com o mesmo nome são erro (`E_DUPLICATE_ICON`), mas o mesmo nome em tipos diferentes é permitido.
+
+**Resolução:** `value.icon` → `Icon.symbol` → `Theme.icons` → imagem. O ícone não carrega imagem nem binário; carrega o símbolo lógico. O builder pode trocar o conjunto visual sem mudar o DSL.
+
+**Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_SYMBOL` (Icon sem symbol), `E_DUPLICATE_ICON` (dois icons com o mesmo nome), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
+
 ## O que ainda não é cláusula
 
-* `extends`/herança de tipo — **fora da v1** (decisão B-34); composição + `override` cobrem o reuso.
+* Herança múltipla ou extensão fora do mesmo serviço — **fora da v1**. `document Consumer extends User` é a extensão simples permitida (B-34/B-45).
 * `migration` — **decidido**: é um `release` do tipo `migration`, não um artefato de topo (B-35). A gramática detalhada fica no SPECS.
 * `alias`/`as` — **decidido e documentado** na seção 1.1.
 * `private` — **decidido** para membros; artefato de topo nunca é privado.

@@ -1,0 +1,90 @@
+// service: example.com/services/experience
+icon Pending {
+  title: { pt-BR: "Pendente", en: "Pending" }
+  symbol: "clock"
+}
+
+icon Success {
+  title: { pt-BR: "Concluído", en: "Success" }
+  symbol: "check-circle"
+}
+
+icon Error {
+  title: { pt-BR: "Erro", en: "Error" }
+  symbol: "alert-circle"
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelado", en: "Cancelled" }
+  symbol: "x-circle"
+}
+
+icon Info {
+  title: { pt-BR: "Informação", en: "Info" }
+  symbol: "info"
+}
+
+icon Archived {
+  title: { pt-BR: "Arquivado", en: "Archived" }
+  symbol: "archive"
+}
+
+icon Email {
+  title: { pt-BR: "E-mail", en: "Email" }
+  symbol: "mail"
+}
+
+icon WhatsApp {
+  title: { pt-BR: "WhatsApp", en: "WhatsApp" }
+  symbol: "message-circle"
+}
+
+icon InApp {
+  title: { pt-BR: "No aplicativo", en: "In-app" }
+  symbol: "bell"
+}
+
+icon Priority1 {
+  title: { pt-BR: "Prioridade 1", en: "Priority 1" }
+  symbol: "alert-octagon"
+}
+
+icon Priority2 {
+  title: { pt-BR: "Prioridade 2", en: "Priority 2" }
+  symbol: "alert-triangle"
+}
+
+icon Priority3 {
+  title: { pt-BR: "Prioridade 3", en: "Priority 3" }
+  symbol: "flag"
+}
+
+icon Priority4 {
+  title: { pt-BR: "Prioridade 4", en: "Priority 4" }
+  symbol: "flag-off"
+}
+
+icon Brl {
+  title: { pt-BR: "Real", en: "Brazilian real" }
+  symbol: "brazilian-real-sign"
+}
+
+icon Usd {
+  title: { pt-BR: "Dólar", en: "US dollar" }
+  symbol: "dollar-sign"
+}
+
+icon Eur {
+  title: { pt-BR: "Euro", en: "Euro" }
+  symbol: "euro"
+}
+
+icon LocalePtBr {
+  title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+  symbol: "languages"
+}
+
+icon LocaleEnUs {
+  title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+  symbol: "globe"
+}

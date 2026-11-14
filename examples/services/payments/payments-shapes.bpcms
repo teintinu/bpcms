@@ -4,20 +4,67 @@
 shape PaymentStatus {
   title: { pt-BR: "Status do pagamento", en: "Payment status" }
   base: text
-  values: [authorized, captured, failed, refunded]
+  values {
+    authorized {
+      title: { pt-BR: "Autorizado", en: "Authorized" }
+      icon: Pending
+    }
+    captured {
+      title: { pt-BR: "Capturado", en: "Captured" }
+      icon: Success
+    }
+    failed {
+      title: { pt-BR: "Falhou", en: "Failed" }
+      icon: Error
+    }
+    refunded {
+      title: { pt-BR: "Reembolsado", en: "Refunded" }
+      icon: Info
+    }
+  }
   format: plain
 }
 
 shape RefundStatus {
   title: { pt-BR: "Status do reembolso", en: "Refund status" }
   base: text
-  values: [requested, approved, completed, rejected]
+  values {
+    requested {
+      title: { pt-BR: "Solicitado", en: "Requested" }
+      icon: Pending
+    }
+    approved {
+      title: { pt-BR: "Aprovado", en: "Approved" }
+      icon: Success
+    }
+    completed {
+      title: { pt-BR: "Concluído", en: "Completed" }
+      icon: Success
+    }
+    rejected {
+      title: { pt-BR: "Rejeitado", en: "Rejected" }
+      icon: Error
+    }
+  }
   format: plain
 }
 
 shape PaymentMethod {
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
   base: text
-  values: [credit-card, pix, boleto]
+  values {
+    credit-card {
+      title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+      icon: Info
+    }
+    pix {
+      title: { pt-BR: "Pix", en: "Pix" }
+      icon: Info
+    }
+    boleto {
+      title: { pt-BR: "Boleto", en: "Boleto" }
+      icon: Info
+    }
+  }
   format: plain
 }

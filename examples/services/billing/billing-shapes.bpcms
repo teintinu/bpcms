@@ -5,14 +5,48 @@
 shape InvoiceStatus {
   title: { pt-BR: "Status da nota", en: "Invoice status" }
   base: text
-  values: [draft, issued, paid, overdue, cancelled]
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: Pending
+    }
+    issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      icon: Info
+    }
+    paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      icon: Success
+    }
+    overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      icon: Error
+    }
+    cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      icon: Cancelled
+    }
+  }
   format: plain
 }
 
 shape CreditNoteStatus {
   title: { pt-BR: "Status da nota de crédito", en: "Credit note status" }
   base: text
-  values: [draft, issued, applied]
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: Pending
+    }
+    issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      icon: Info
+    }
+    applied {
+      title: { pt-BR: "Aplicada", en: "Applied" }
+      icon: Success
+    }
+  }
   format: plain
 }
 
@@ -20,13 +54,39 @@ shape CreditNoteStatus {
 shape BillStatus {
   title: { pt-BR: "Status da conta", en: "Bill status" }
   base: text
-  values: [open, paid, overdue]
+  values {
+    open {
+      title: { pt-BR: "Aberta", en: "Open" }
+      icon: Pending
+    }
+    paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      icon: Success
+    }
+    overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      icon: Error
+    }
+  }
   format: plain
 }
 
 shape TaxRegimeCode {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: text
-  values: [SIMPLES, LUCRO_PRESUMIDO, LUCRO_REAL]
+  values {
+    SIMPLES {
+      title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+      icon: Info
+    }
+    LUCRO_PRESUMIDO {
+      title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
+      icon: Info
+    }
+    LUCRO_REAL {
+      title: { pt-BR: "Lucro Real", en: "Actual profit" }
+      icon: Info
+    }
+  }
   format: plain
 }

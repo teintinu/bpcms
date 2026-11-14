@@ -14,6 +14,7 @@ theme Nuvula {
 
 theme Backoffice {
   mode: light
+  icons: "lucide"
   supports: [WebApp]
   tokens {
     color.primary: "#0f766e"
@@ -26,6 +27,7 @@ theme Backoffice {
 
 theme Ops {
   mode: light
+  icons: "lucide"
   supports: [WebApp, Cli]
   tokens {
     color.primary: "#b45309"

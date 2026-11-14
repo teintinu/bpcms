@@ -5,14 +5,40 @@
 shape UserStatus {
   title: { pt-BR: "Status do usuário", en: "User status" }
   base: text
-  values: [active, suspended, disabled]
+  values {
+    active {
+      title: { pt-BR: "Ativo", en: "Active" }
+      icon: Success
+    }
+    suspended {
+      title: { pt-BR: "Suspenso", en: "Suspended" }
+      icon: Error
+    }
+    disabled {
+      title: { pt-BR: "Desativado", en: "Disabled" }
+      icon: Error
+    }
+  }
   format: plain
 }
 
 shape SessionStatus {
   title: { pt-BR: "Status da sessão", en: "Session status" }
   base: text
-  values: [active, ended, expired]
+  values {
+    active {
+      title: { pt-BR: "Ativo", en: "Active" }
+      icon: Success
+    }
+    ended {
+      title: { pt-BR: "Encerrada", en: "Ended" }
+      icon: Cancelled
+    }
+    expired {
+      title: { pt-BR: "Expirada", en: "Expired" }
+      icon: Cancelled
+    }
+  }
   format: plain
 }
 

@@ -4,13 +4,39 @@
 shape StockStatus {
   title: { pt-BR: "Status do estoque", en: "Stock status" }
   base: text
-  values: [available, reserved, blocked]
+  values {
+    available {
+      title: { pt-BR: "Disponível", en: "Available" }
+      icon: Info
+    }
+    reserved {
+      title: { pt-BR: "Reservado", en: "Reserved" }
+      icon: Pending
+    }
+    blocked {
+      title: { pt-BR: "Bloqueado", en: "Blocked" }
+      icon: Error
+    }
+  }
   format: plain
 }
 
 shape ReservationStatus {
   title: { pt-BR: "Status da reserva", en: "Reservation status" }
   base: text
-  values: [active, released, expired]
+  values {
+    active {
+      title: { pt-BR: "Ativo", en: "Active" }
+      icon: Success
+    }
+    released {
+      title: { pt-BR: "Liberada", en: "Released" }
+      icon: Info
+    }
+    expired {
+      title: { pt-BR: "Expirada", en: "Expired" }
+      icon: Cancelled
+    }
+  }
   format: plain
 }

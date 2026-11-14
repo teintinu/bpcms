@@ -4,13 +4,43 @@
 shape Channel {
   title: { pt-BR: "Canal", en: "Channel" }
   base: text
-  values: [email, whatsapp, in-app]
+  values {
+    email {
+      title: { pt-BR: "E-mail", en: "Email" }
+      icon: Email
+    }
+    whatsapp {
+      title: { pt-BR: "WhatsApp", en: "WhatsApp" }
+      icon: WhatsApp
+    }
+    in-app {
+      title: { pt-BR: "No aplicativo", en: "In-app" }
+      icon: InApp
+    }
+  }
   format: plain
 }
 
 shape NotificationStatus {
   title: { pt-BR: "Status da notificação", en: "Notification status" }
   base: text
-  values: [queued, sent, failed, read]
+  values {
+    queued {
+      title: { pt-BR: "Na fila", en: "Queued" }
+      icon: Pending
+    }
+    sent {
+      title: { pt-BR: "Enviada", en: "Sent" }
+      icon: Success
+    }
+    failed {
+      title: { pt-BR: "Falhou", en: "Failed" }
+      icon: Error
+    }
+    read {
+      title: { pt-BR: "Lida", en: "Read" }
+      icon: Info
+    }
+  }
   format: plain
 }

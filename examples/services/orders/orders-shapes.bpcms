@@ -4,6 +4,23 @@
 shape OrderStatus {
   title: { pt-BR: "Status do pedido", en: "Order status" }
   base: text
-  values: [draft, placed, cancelled, fulfilled]
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: Pending
+    }
+    placed {
+      title: { pt-BR: "Realizado", en: "Placed" }
+      icon: Info
+    }
+    cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      icon: Cancelled
+    }
+    fulfilled {
+      title: { pt-BR: "Atendido", en: "Fulfilled" }
+      icon: Success
+    }
+  }
   format: plain
 }
