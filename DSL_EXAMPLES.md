@@ -1,8 +1,8 @@
 # BPCMS — Exemplos de DSL
 
-*Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN.
+*Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
 
-Cobrimos os **22 tipos de artefato** do catálogo, com **6 exemplos cada** — 134 no total, porque `Shape` tem 8 para exercitar dimensões e unidades. Alguns exemplos usam o mesmo domínio de propósito, para mostrar composição e reuso; outros mudam de domínio para testar generalidade.
+Cobrimos os **23 tipos de artefato** do catálogo, com **6 exemplos cada** — 145 exemplos de artefatos, porque `Shape` tem 8, Application/Service têm 8 e Process tem 7 (compensação); há também 3 exemplos de uso de serviços essenciais. Alguns exemplos usam o mesmo domínio de propósito, para mostrar composição e reuso; outros mudam de domínio para testar generalidade.
 
 ## Como ler
 
@@ -11,12 +11,13 @@ Cobrimos os **22 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 * A linha *Valida:* diz o que aquele exemplo quer provocar.
 * Nomes de artefatos são em inglês (`application`, `document`, `shape`); nomes de negócio podem ser em português (`Pedido`, `Remessa`).
 * Nada aqui substitui a baseline do [BRAINSTORM.md](BRAINSTORM.md); os exemplos são um **teste de sintaxe e modelagem**.
+* **Application e Service usam URI web sem protocolo** como identificador: `"example.com/app/..."` e `"example.com/services/..."`. A URL `http://<uri>/index.html` é a página de download (app) ou de documentação (serviço); em produção, `https://`.
 
 ## Convenções usadas
 
 | Construção | Forma | Observação |
 | :--- | :--- | :--- |
-| Artefato | `application Nome { ... }` | bloco nomeado; o tipo é a primeira palavra |
+| Artefato | `application "example.com/app/x" { ... }` | Application/Service usam URI; os demais usam nome simples |
 | Campo | `nome: Shape` | `Shape` é o tipo de dado, não uma forma visual |
 | Campo com parâmetros | `peso: Mass { unit: kg, min: 0 }` | o campo só passa parâmetros simples |
 | Lista | `[A, B, C]` | ordem preservada quando importa |
@@ -27,6 +28,10 @@ Cobrimos os **22 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 | Regra | `total == itens.sum(subtotal)` | expressão segura, sem código arbitrário |
 | Configuração | `env.ERP_URL`, `secret.STRIPE_KEY` | ambiente e segredo são resolvidos na promoção |
 | Processo | `start`, `task`, `gateway`, `end` | nós e transições; BPMN é uma visão |
+| Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
+| Versão | `version: semver("1.2.3")` / `tag("v1.2.3")` / `commit("9f3a1c")` | `1.4.0` é açúcar para `semver("1.4.0")` |
+| Release | `"<uri>"@1.2.3` | URI + seletor de versão |
+| Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
 | Evento de processo | `on Evento`, `on timer 2d`, `on error X` | gatilhos explícitos |
 | Permissão | `purchase.approve` | namespace por capacidade |
 
@@ -34,51 +39,67 @@ Cobrimos os **22 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 
 | Grupo | Tipos | Exemplos |
 | :--- | :--- | :--- |
-| **Núcleo** | Application, Service, Process, Document, Shape, View, Role/Organogram | 44 |
+| **Núcleo** | Application, Service, Process, Document, Shape, View, Role/Organogram | 49 |
 | **Descoberta** | Evidence, Conversation, Decision, Assumption | 24 |
-| **Plataforma** | Environment, Builder, Theme, Locale, Widget custom, Release/Version | 36 |
+| **Plataforma** | Environment, Parameter, Builder, Theme, Locale, Widget custom, Release/Version | 42 |
 | **Operação** | Integration, Report/Dashboard, Event, Job/Schedule, Policy/Rule | 30 |
-| **Total** | 22 tipos | **134** |
+| **Total** | 23 tipos | **145** |
 
 ---
 
 # Núcleo
+
+> **Páginas canônicas.** `http://example.com/app/loja-do-joao/index.html` é a página de **download**, com opções por SO. `http://example.com/services/catalog/index.html` é a página de **documentação para integração por API**, com opções de nuvem, protocolos (sockets/REST/RPC) e iframe para microfrontend, conforme o builder. Em produção, use `https://`.
+
+> **Duas origens.** `example.com/...` é registry BPCMS (páginas `/index.html`). `github.com/...` ou `gitlab.com/...` é repositório Git: a documentação é o **README** e o código é baixado do projeto (clone/zip/release); a versão pode ser `commit(...)` ou `tag(...)`. `source`/`version` deixam isso explícito.
 
 ## Application
 
 ### A.1 Loja virtual completa
 
 ```bpcms
-application LojaDoJoao {
+application "example.com/app/loja-do-joao" {
+  source: registry
   version: 1.4.0
+  title: {
+    pt-BR: "Loja do João"
+    en-US: "João's Store"
+  }
   owner: "Time Loja"
   description: "Loja virtual de ponta a ponta"
 
-  services { Catalog, Cart, Checkout, Payment, Shipping, Auth, Notifications }
+  services {
+    "example.com/services/catalog" as Catalog
+    "example.com/services/checkout" as Checkout
+    "example.com/services/notifications" as Notifications
+  }
   roles { Customer; Clerk; Manager; Manager > Clerk }
   theme: Nuvula
   locales: [pt-BR, en-US]
   environments: [dev, qa, prod]
 
   main {
-    start Auth
-    wire Checkout with Cart, Catalog, Payment, Shipping
-    wire Notifications with Checkout, Shipping
+    // DefaultCurrency é um Parameter do serviço Catalog
+    set Catalog.DefaultCurrency = "BRL"
   }
 }
 ```
 
-*Valida: composição por serviços, hierarquia de papéis, tema/idiomas e wiring declarativo.*
+*Valida: só entry points; `cart`, `payment`, `shipping` e `auth` entram implicitamente. `main` faz `set` em um Parameter **do serviço Catalog**; a app não declara artefatos.*
 
 ### A.2 Clínica com prontuário e faturamento
 
 ```bpcms
-application ClinicaVida {
+application "example.com/app/clinica-vida" {
   version: 2.1.0
+  title: { pt-BR: "Clínica Vida" }
   owner: "Diretoria Clínica"
-  description: "Atendimento, exames e faturamento"
 
-  services { Patients, Scheduling, Encounters, Billing, Auth, Notifications }
+  services {
+    "example.com/services/encounters"
+    "example.com/services/billing"
+    "example.com/services/notifications"
+  }
   roles {
     Reception
     Nurse
@@ -89,267 +110,358 @@ application ClinicaVida {
   theme: Clinica
   locales: [pt-BR]
   environments: [dev, qa, prod]
-
-  main {
-    start Auth
-    wire Encounters with Patients, Scheduling
-    wire Billing with Encounters
-  }
 }
 ```
 
-*Valida: papéis clínicos, um serviço de encontro que depende de pacientes e agenda, e faturamento separado.*
+*Valida: `patients`, `scheduling` e `auth` são implícitos; billing e notifications são entry points.*
 
 ### A.3 Logística com despacho e rastreio
 
 ```bpcms
-application RotaCerta {
+application "example.com/app/rota-certa" {
   version: 1.9.2
+  title: {
+    pt-BR: "Rota Certa"
+    en-US: "Right Route"
+  }
   owner: "Operações"
-  description: "Do pedido à entrega, com rastreio"
 
-  services { Orders, Dispatch, Fleet, Tracking, Billing, Auth, Notifications }
+  services {
+    "example.com/services/dispatch"
+    "example.com/services/tracking"
+    "example.com/services/billing"
+    "example.com/services/notifications"
+  }
   roles { Dispatcher; Driver; Supervisor; Supervisor > Dispatcher > Driver }
   theme: Ops
   locales: [pt-BR, en-US]
   environments: [dev, qa, prod]
-
-  main {
-    start Auth
-    wire Dispatch with Orders, Fleet
-    wire Tracking with Dispatch
-    wire Billing with Orders
-  }
 }
 ```
 
-*Valida: aplicação operacional, serviços de domínio distintos e um serviço de rastreio que reage ao despacho.*
+*Valida: `orders`, `fleet` e `auth` implícitos; tracking reage ao dispatch sem wire.*
 
 ### A.4 Backoffice que reusa o mesmo catálogo
 
 ```bpcms
-application BackofficeLoja {
+application "example.com/app/backoffice-loja" {
   version: 1.2.0
+  title: { pt-BR: "Backoffice da Loja" }
   owner: "Retaguarda"
-  description: "Operação interna da loja"
 
-  services { Catalog, Inventory, Orders, Billing, Auth, Reports }
+  services {
+    "example.com/services/inventory"
+    "example.com/services/orders"
+    "example.com/services/reports"
+  }
   roles { Clerk; Manager; Admin; Admin > Manager > Clerk }
   theme: Backoffice
   locales: [pt-BR]
   environments: [dev, qa, prod]
-
-  main {
-    start Auth
-    wire Reports with Orders, Billing, Inventory
-    wire Inventory with Catalog
-  }
 }
 ```
 
-*Valida: mesma capacidade (`Catalog`) em outra aplicação, com papéis e experiência diferentes.*
+*Valida: o mesmo `catalog` usado pela loja entra implicitamente via inventory; billing via reports.*
 
 ### A.5 Serviço de campo
 
 ```bpcms
-application CampoAgil {
+application "example.com/app/campo-agil" {
   version: 1.0.0
+  title: { pt-BR: "Campo Ágil" }
   owner: "Field Ops"
-  description: "Ordens de serviço e técnicos em campo"
 
-  services { WorkOrders, Scheduling, Inventory, Billing, Auth, Notifications }
+  services {
+    "example.com/services/work-orders"
+    "example.com/services/billing"
+    "example.com/services/notifications"
+  }
   roles { Technician; Dispatcher; Manager; Manager > Dispatcher > Technician }
   theme: Field
   locales: [pt-BR]
   environments: [dev, qa, prod]
-
-  main {
-    start Auth
-    wire WorkOrders with Scheduling, Inventory
-    wire Notifications with WorkOrders
-  }
 }
 ```
 
-*Valida: aplicação enxuta, com um serviço central (`WorkOrders`) e dependências laterais.*
+*Valida: scheduling, inventory e auth entram por work-orders; billing é entry point.*
 
 ### A.6 Marketplace com disputas
 
 ```bpcms
-application MercadoAberto {
+application "example.com/app/mercado-aberto" {
   version: 0.8.0
+  title: {
+    pt-BR: "Mercado Aberto"
+    en-US: "Open Market"
+  }
   owner: "Marketplace"
-  description: "Vendedores, pedidos e mediação"
 
-  services { Sellers, Listings, Orders, Payments, Disputes, Auth, Notifications }
+  services {
+    "example.com/services/sellers"
+    "example.com/services/orders"
+    "example.com/services/disputes"
+    "example.com/services/notifications"
+  }
   roles { Buyer; Seller; Support; Admin; Admin > Support > Seller > Buyer }
   theme: Market
   locales: [pt-BR, en-US]
   environments: [dev, qa, prod]
-
-  main {
-    start Auth
-    wire Orders with Listings, Payments
-    wire Disputes with Orders, Payments
-    wire Notifications with Orders, Disputes
-  }
 }
 ```
 
-*Valida: aplicação com muitos atores e um serviço de disputa que cruza pedido e pagamento.*
+*Valida: listings, payments e auth implícitos; disputes é entry point e depende de orders/payments.*
+
+### A.7 Aplicação hospedada em repositório Git
+
+```bpcms
+application "github.com/acme/field-app" {
+  source: repository
+  version: commit("9f3a1c7")
+  title: { pt-BR: "Field App" }
+  owner: "Acme Field Ops"
+
+  services {
+    "github.com/acme/work-orders"
+    "example.com/services/auth"
+    "example.com/services/notifications"
+  }
+  roles { Technician; Dispatcher; Manager; Manager > Dispatcher > Technician }
+  theme: Field
+  locales: [pt-BR]
+  environments: [dev, qa, prod]
+}
+```
+
+*Valida: app em repositório, versão por commit e mistura de serviço do repo com registry.*
+
+### A.8 Aplicação com override ativo
+
+```bpcms
+application "example.com/app/loja-com-antifraude" {
+  version: 1.0.0
+  title: { pt-BR: "Loja com Antifraude" }
+
+  services {
+    "example.com/services/checkout"
+    "example.com/services/fraud-checkout"
+    "example.com/services/notifications"
+  }
+  roles { Customer; Clerk; Manager; Manager > Clerk }
+  theme: Nuvula
+  locales: [pt-BR]
+  environments: [dev, qa, prod]
+}
+```
+
+*Valida: `fraud-checkout` importa `checkout`; como os dois estão na closure, o override de `placeOrder` fica ativo automaticamente. Se a app listasse só `checkout`, o original valeria.*
 
 ## Service
+
+> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, capabilities, roles, override).
 
 ### S.1 Catálogo com contrato e dependências
 
 ```bpcms
-service Catalog {
+service "example.com/services/catalog" {
+  source: registry
   version: 1.2.0
   owner: "Time de Catálogo"
+  // document Product, shape MoneyBRL, view ProductForm, event ProductUpdated: públicos
 
-  exports {
-    document Product
-    shape MoneyBRL
-    view ProductForm
-    event ProductUpdated
+  parameter DefaultCurrency {
+    type: CurrencyCode
+    source: config
+    default: "BRL"
   }
+
   imports {
-    service Auth@^1.0
-    service Media@^1.2
+    service "example.com/services/auth"
+    service "example.com/services/media"
   }
-  requires { db, http, files, search }
-  provides { catalog.api, catalog.events }
+  requires { oltp, attachments, identity, units }
+  provides { catalog }
   roles { CatalogManager, CatalogViewer }
 }
 ```
 
-*Valida: exports/imports explícitos, versão semântica e capabilities exigidas.*
+*Valida: imports sem versão; o lock do app escolhe uma versão de cada serviço.*
 
 ### S.2 Checkout como orquestrador
 
 ```bpcms
-service Checkout {
+service "example.com/services/checkout" {
   version: 2.0.1
   owner: "Time de Conversão"
+  // document CheckoutSession, event OrderPlaced: públicos
 
-  exports {
-    document CheckoutSession
-    event OrderPlaced
-  }
   imports {
-    service Cart@^1
-    service Catalog@^1
-    service Payment@^1
-    service Shipping@^1
-    service Auth@^1
+    service "example.com/services/cart" as Cart
+    service "example.com/services/catalog" as Catalog
+    service "example.com/services/payment" as Payment
+    service "example.com/services/shipping" as Shipping
+    service "example.com/services/auth" as Auth
   }
-  requires { db, http, jobs, realtime }
-  provides { checkout.api, checkout.events }
+  requires { oltp, sync, scheduling, identity, timezone, regionalization, units }
+  provides { checkout }
   roles { Customer }
 }
 ```
 
-*Valida: serviço que compõe outros serviços sem virar dono dos dados deles.*
+*Valida: serviço compõe outros serviços sem declarar versões; a app não repete essas dependências.*
 
 ### S.3 Estoque com reservas e alerta
 
 ```bpcms
-service Inventory {
+service "example.com/services/inventory" {
   version: 1.5.0
   owner: "Supply Chain"
+  // document StockItem, document Reservation, view StockTable, event StockLow: públicos
 
-  exports {
-    document StockItem
-    document Reservation
-    view StockTable
-    event StockLow
-  }
   imports {
-    service Catalog@^1
-    service Auth@^1
+    service "example.com/services/catalog"
+    service "example.com/services/auth"
   }
-  requires { db, jobs, search }
-  provides { inventory.api, inventory.events }
+  requires { oltp, scheduling, units }
+  provides { inventory }
   roles { StockClerk, WarehouseManager }
 }
 ```
 
-*Valida: dois documentos no mesmo serviço, evento de alerta e view de operação.*
+*Valida: dois documentos, evento de alerta e imports sem versão.*
 
 ### S.4 Faturamento com job e relatório
 
 ```bpcms
-service Billing {
+service "example.com/services/billing" {
   version: 1.8.0
   owner: "Financeiro"
+  // document Invoice, document Payment, report CashFlow, job CloseMonth, events: públicos
 
-  exports {
-    document Invoice
-    document Payment
-    report CashFlow
-    job CloseMonth
-    event InvoiceIssued
-    event PaymentFailed
-  }
   imports {
-    service Orders@^1
-    service Auth@^1
+    service "example.com/services/orders"
+    service "example.com/services/auth"
     integration ERP
   }
-  requires { db, http, jobs, files }
-  provides { billing.api, billing.events }
+  requires { oltp, scheduling, attachments, identity, timezone, regionalization, units }
+  provides { billing }
   roles { FinanceAnalyst, FinanceApprover }
 }
 ```
 
-*Valida: serviço de negócio com job agendado, relatório e integração de ERP.*
+*Valida: job, relatório e integração no mesmo serviço; versões ficam no lock.*
 
 ### S.5 Identidade e sessão
 
 ```bpcms
-service Auth {
+service "example.com/services/auth" {
   version: 3.0.0
   owner: "Plataforma"
+  // document User, document Session, roles Customer/Clerk, view LoginForm, event UserLoggedIn: públicos
 
-  exports {
-    document User
-    document Session
-    role Customer
-    role Clerk
-    view LoginForm
-    event UserLoggedIn
-  }
   imports { integration Email }
-  requires { db, http, cache }
-  provides { auth.api, auth.guard }
+  requires { oltp, identity }
+  provides { identity }
 }
 ```
 
-*Valida: serviço que exporta primitivas de identidade, inclusive papéis e view de login.*
+*Valida: identidade exporta papéis e view; sem lock/IDs dentro do serviço.*
 
 ### S.6 Notificações multicanal
 
 ```bpcms
-service Notifications {
+service "example.com/services/notifications" {
   version: 1.1.0
   owner: "Customer Success"
+  // document NotificationTemplate, event NotificationSent: públicos
 
-  exports {
-    document NotificationTemplate
-    event NotificationSent
-  }
   imports {
-    service Auth@^1
+    service "example.com/services/auth"
     integration Email
     integration WhatsApp
   }
-  requires { db, http, jobs }
-  provides { notifications.api, notifications.events }
+  requires { oltp, scheduling, timezone, regionalization }
+  provides { notifications }
   roles { NotificationAdmin }
 }
 ```
 
-*Valida: serviço de suporte com templates como documento e canais como integrações substituíveis.*
+*Valida: canais são integrações e o consumidor é entry point da app, sem wire.*
+
+### S.7 Serviço hospedado em repositório Git
+
+```bpcms
+service "gitlab.com/acme/lab-quality" {
+  source: repository
+  version: tag("v2.3.0")
+  owner: "Acme Lab"
+  // document LabQualityReport, event QualityAlert: públicos
+
+  imports {
+    service "example.com/services/auth"
+    integration Email
+  }
+  requires { oltp, attachments, scheduling, timezone, regionalization, units }
+  provides { lab-quality }
+  roles { LabManager, Pathologist }
+}
+```
+
+*Valida: serviço em repositório, versão por tag e README como documentação.*
+
+### S.8 Serviço que substitui um método
+
+```bpcms
+service "example.com/services/fraud-checkout" {
+  version: 1.0.0
+  owner: "Risk"
+  // document FraudCheckout: público
+
+  imports {
+    service "example.com/services/checkout"
+  }
+  override "example.com/services/checkout#CheckoutSession.placeOrder" {
+    with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
+  }
+  requires { oltp, sync }
+  provides { fraud-checkout }
+  roles { FraudAnalyst }
+}
+```
+
+*Valida: override declarado no serviço substituto; ativo quando `fraud-checkout` está na closure da app. O `check` exige assinatura compatível e um único override por alvo.*
+
+## Lock file do app
+
+```yaml
+lock:
+  application: "example.com/app/loja-com-antifraude"
+  version: 1
+  nextId: 48
+  services:
+    "example.com/services/checkout":
+      id: 3
+      version: 2.0.1
+      source: registry
+      integrity: "sha256:..."
+    "example.com/services/fraud-checkout":
+      id: 8
+      version: 1.0.0
+      source: registry
+    "example.com/services/notifications":
+      id: 6
+      version: 1.1.0
+      source: registry
+  artifacts:
+    "example.com/services/checkout#CheckoutSession": 20
+    "example.com/services/checkout#CheckoutSession.placeOrder": 21
+    "example.com/services/fraud-checkout#FraudCheckout.placeOrder": 40
+  overrides:
+    - target: "example.com/services/checkout#CheckoutSession.placeOrder"
+      by: "example.com/services/fraud-checkout"
+      id: 41
+```
+
+> O lock fixa **uma versão por serviço** para o app inteiro e um **ID estável por identificador** (usado para minificação e compressão da serialização). O serviço não tem lock, IDs nem versões de imports.
 
 ## Process
 
@@ -723,6 +835,40 @@ process IncidentManagement {
 
 *Valida: evento de início, severidade, comunicação em paralelo e aprendizado pós-incidente.*
 
+### P.7 Compensação de pagamento
+
+```bpcms
+process PaymentCompensation {
+  version: 1
+  goal: "Reverter a cobrança quando a reserva de estoque falha"
+  roles: [Clerk, Finance]
+  start on OrderApproved
+
+  task ChargePayment {
+    type: service
+    integration: Payment
+    action: Payment.charge
+  }
+
+  task ReserveStock {
+    type: service
+    action: Inventory.reserve
+  }
+
+  on error StockUnavailable -> RefundPayment
+
+  task RefundPayment {
+    type: compensation
+    for: ChargePayment
+    action: Payment.refund
+  }
+
+  end on OrderCancelled
+}
+```
+
+*Valida: compensação como passo de processo, alvo `for`, disparo por erro e execução idempotente em ordem reversa.*
+
 ## Document
 
 ### D.1 Cliente com identidade e unicidade
@@ -740,6 +886,7 @@ document Customer {
     email: Email { unique: true }
     phone: Phone?
     status: CustomerStatus
+    private internalScore: Score
     createdAt: DateTime
   }
 
@@ -752,6 +899,7 @@ document Customer {
     create(name: Text, email: Email): Customer
     update(name: Text, phone: Phone?): Customer
     archive(): void
+    private recalcScore(): Score
   }
 
   rules {
@@ -761,7 +909,7 @@ document Customer {
 }
 ```
 
-*Valida: unicidade por índice, campos opcionais, ações tipadas e sincronização live.*
+*Valida: unicidade por índice, campos opcionais, ações tipadas, `private` em campo/ação e sincronização live.*
 
 ### D.2 Nota fiscal como agregado com snapshot
 
@@ -995,6 +1143,7 @@ shape Mass {
   base: decimal
   dimension: mass
   unit: kg
+  displayUnits: [kg, g, t, lb, oz]
   precision: 6
   min: 0
   parse: quantity
@@ -1013,7 +1162,7 @@ shape Length {
   base: decimal
   dimension: length
   unit: cm
-  displayUnits: [cm, m, in, ft]
+  displayUnits: [cm, m, km, in, ft, yd, mi]
   precision: 3
   parse: quantity
   convert: length
@@ -1030,6 +1179,7 @@ shape Temperature {
   base: decimal
   dimension: temperature
   unit: C
+  displayUnits: [C, F, K]
   min: -273.15 C
   parse: quantity
   convert: affine(C, F, K)
@@ -1415,7 +1565,7 @@ evidence ERP_DDL {
       fields { id; supplierId; total; status; createdAt }
     }
   }
-  links { service Billing }
+  links { service "example.com/services/billing" }
   status: proposed
 }
 ```
@@ -1969,6 +2119,136 @@ environment dr {
 
 *Valida: ambiente de DR com réplica, ativação manual e restore explícito.*
 
+## Parameter
+
+> Cada bloco é um trecho de um `Service`. `Parameter` **não pode** ser declarado na `Application`; a app só faz `set` no `main`.
+
+### PR.1 URL de configuração
+
+```bpcms
+parameter ErpUrl {
+  type: Text
+  source: config
+  required: true
+  default: "https://erp.example.com"
+  description: "URL base do ERP"
+}
+```
+
+*Valida: configuração tipada, obrigatória, com default e descrição; valor resolvido pelo ambiente.*
+
+### PR.2 Chave secreta
+
+```bpcms
+parameter PaymentKey {
+  type: Secret
+  source: secret
+  required: true
+  description: "Chave do gateway de pagamento"
+}
+```
+
+*Valida: segredo sem default, sem valor no fonte e sem serialização/log.*
+
+### PR.3 Perfil de modelo
+
+```bpcms
+parameter LlmModel {
+  type: LlmModelName
+  source: config
+  default: "balanced"
+  description: "Perfil de modelo usado pelo serviço"
+}
+```
+
+*Valida: configuração enumerada e default; combina com a capability aberta `llm`.*
+
+### PR.4 Limite numérico
+
+```bpcms
+parameter MaxRetries {
+  type: Count
+  source: config
+  default: 3
+  min: 0
+  max: 10
+  description: "Tentativas máximas de integração"
+}
+```
+
+*Valida: constraints simples no Parameter, sem validação espalhada.*
+
+### PR.5 Janela de SLA
+
+```bpcms
+parameter SupportSla {
+  type: Duration
+  source: config
+  default: 2h
+  description: "SLA padrão do atendimento"
+}
+```
+
+*Valida: duração tipada com unidade, em vez de string.*
+
+### PR.6 Chave de API específica
+
+```bpcms
+parameter GoogleMapsKey {
+  type: Secret
+  source: secret
+  required: true
+  description: "Chave da API Google Maps"
+}
+```
+
+*Valida: segredo para uma capability específica (`google-maps`), sem acoplar o serviço à tecnologia.*
+
+## Serviços essenciais (usos)
+
+> Esta seção tem exemplos de **uso** das capabilities essenciais; não conta como um dos 145 exemplos de artefatos.
+
+### U.1 Serviço que depende das capabilities
+
+```bpcms
+service "example.com/services/field" {
+  version: 1.0.0
+  requires { location, timezone, regionalization, units, oltp, sync }
+  provides { field-service }
+}
+```
+
+*Valida: `location`, `timezone`, `regionalization` e `units` entram por `requires`, não por import de serviço.*
+
+### U.2 View formatando data e distância
+
+```bpcms
+view VisitForm {
+  type: form
+  computed {
+    scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
+    distance: units.format(location.distance(tech.position, visit.position), regionalization.system())
+  }
+}
+```
+
+*Valida: `timezone` resolve o fuso, `regionalization` formata e `units` converte a distância para o sistema local.*
+
+### U.3 Shape com unidades métricas e imperiais
+
+```bpcms
+shape Mass {
+  base: decimal
+  dimension: mass
+  unit: kg
+  displayUnits: [kg, g, t, lb, oz]
+  convert: units.mass
+  index: normalized
+}
+```
+
+*Valida: o Shape guarda a unidade original e delega conversão ao serviço de unidades; a exibição escolhe métrico/imperial via regionalization.*
+
 ## Builder
 
 ### B.1 Aplicação web
@@ -1978,13 +2258,15 @@ builder WebApp {
   version: 1.0.0
   target: browser
   mode: [interpret, generate]
-  capabilities: [ui, http, auth, realtime, files]
+  capabilities: [gui, sync, identity, attachments, timezone, regionalization, units]
   consumes: [Shape, Document, View, Process, Theme]
   produces: [html, css, js]
 }
 ```
 
 *Valida: builder com capabilities, consumo de artefatos e dois modos.*
+
+> Construtores podem declarar capabilities próprias, como `llm` ou `google-maps`; o contrato é documentado pelo construtor.
 
 ### B.2 API em Rust
 
@@ -1993,7 +2275,7 @@ builder ApiRust {
   version: 1.0.0
   target: server
   mode: [interpret, generate]
-  capabilities: [http, db, auth, jobs, realtime]
+  capabilities: [oltp, sync, scheduling, identity, attachments, timezone, regionalization, units]
   consumes: [Service, Document, Action, Event]
   produces: [rust, openapi]
 }
@@ -2008,7 +2290,7 @@ builder Postgres {
   version: 1.0.0
   target: database
   mode: generate
-  capabilities: [db, migrations, indexes, constraints]
+  capabilities: [oltp]
   consumes: [Document, Shape, Index]
   produces: [sql, ddl]
 }
@@ -2023,7 +2305,7 @@ builder MobileShell {
   version: 0.4.0
   target: mobile
   mode: generate
-  capabilities: [ui, files, camera, push]
+  capabilities: [gui, sync, location, timezone, regionalization, units, capture, attachments, notify]
   consumes: [View, Widget, Theme]
   produces: [react-native]
   limitations {
@@ -2042,7 +2324,7 @@ builder Cli {
   version: 1.0.0
   target: terminal
   mode: interpret
-  capabilities: [http, files]
+  capabilities: [tui, attachments, timezone, regionalization, units]
   consumes: [View, Action, Report]
   produces: [text, ansi]
   limitations {
@@ -2061,7 +2343,7 @@ builder DocsPdf {
   version: 1.0.0
   target: document
   mode: generate
-  capabilities: [pdf, files, templates]
+  capabilities: [print, attachments, timezone, regionalization, units]
   consumes: [View, Report, Document]
   produces: [pdf, html]
 }
@@ -2303,7 +2585,7 @@ locale ar-SA {
 ```bpcms
 widget SignaturePad {
   binds: Signature
-  capabilities: [ui, files]
+  capabilities: [gui, attachments]
   platforms {
     web: canvas
     mobile: native
@@ -2321,7 +2603,7 @@ widget SignaturePad {
 ```bpcms
 widget MapPicker {
   binds: GeoPoint
-  capabilities: [ui, http]
+  capabilities: [gui, location]
   platforms {
     web: map
     mobile: native-map
@@ -2337,7 +2619,7 @@ widget MapPicker {
 ```bpcms
 widget BarcodeScanner {
   binds: Barcode
-  capabilities: [ui, camera]
+  capabilities: [gui, capture]
   platforms {
     web: camera
     mobile: camera
@@ -2354,7 +2636,7 @@ widget BarcodeScanner {
 ```bpcms
 widget UnitInput {
   binds: Mass | Length | Volume
-  capabilities: [ui]
+  capabilities: [gui]
   platforms {
     web: input
     mobile: input
@@ -2376,7 +2658,7 @@ widget UnitInput {
 ```bpcms
 widget Timeline {
   binds: Event[]
-  capabilities: [ui]
+  capabilities: [gui]
   platforms {
     web: timeline
     mobile: list
@@ -2397,7 +2679,7 @@ widget Timeline {
 ```bpcms
 widget FileDropzone {
   binds: FileRef
-  capabilities: [ui, files]
+  capabilities: [gui, attachments]
   platforms {
     web: dropzone
     mobile: picker
@@ -2416,21 +2698,18 @@ widget FileDropzone {
 
 ## Release / Version
 
+> `@1.4.0` é semver; `@tag("v1.4.0")` e `@commit("9f3a1c7")` também são seletores válidos. Em produção, use tag/commit imutável. O app release aponta para o **lock** que fixa uma versão por serviço.
+
 ### V.1 Release de aplicação
 
 ```bpcms
-release JohnStore@1.4.0 {
-  application: JohnStore
-  includes {
-    Catalog@1.2.0
-    Checkout@2.0.1
-    Payment@1.8.0
-    Shipping@1.3.4
-  }
+release "example.com/app/loja-do-joao"@1.4.0 {
+  application: "example.com/app/loja-do-joao"
+  lock: "locks/loja-do-joao/1.4.0.lock"
   migrations: [M-2026-11-01]
   approvals: [QA, Owner]
   strategy: rolling
-  rollback: JohnStore@1.3.2
+  rollback: "example.com/app/loja-do-joao"@1.3.2
 }
 ```
 
@@ -2439,13 +2718,13 @@ release JohnStore@1.4.0 {
 ### V.2 Versão de serviço
 
 ```bpcms
-release Catalog@1.2.0 {
-  service: Catalog
+release "example.com/services/catalog"@1.2.0 {
+  service: "example.com/services/catalog"
   changes: [add Product.barcode, add ProductUpdated.v2]
   compatibility: backward
   migrations: [M-2026-10-12]
   approvals: [Owner]
-  rollback: Catalog@1.1.3
+  rollback: "example.com/services/catalog"@1.1.3
 }
 ```
 
@@ -2454,14 +2733,14 @@ release Catalog@1.2.0 {
 ### V.3 Hotfix
 
 ```bpcms
-release JohnStore@1.4.1 {
-  application: JohnStore
-  includes { Checkout@2.0.2 }
+release "example.com/app/loja-do-joao"@1.4.1 {
+  application: "example.com/app/loja-do-joao"
+  lock: "locks/loja-do-joao/1.4.1.lock"
   type: hotfix
   reason: "Corrige cálculo de frete em pedido dividido"
   approvals: [OnCall, Owner]
   strategy: immediate
-  rollback: JohnStore@1.4.0
+  rollback: "example.com/app/loja-do-joao"@1.4.0
 }
 ```
 
@@ -2490,10 +2769,11 @@ release M-2026-11-01 {
 ### V.5 Rollback
 
 ```bpcms
-release Rollback@1.4.2 {
+release "example.com/app/loja-do-joao"@1.4.2 {
   type: rollback
-  application: JohnStore
-  to: JohnStore@1.4.0
+  application: "example.com/app/loja-do-joao"
+  lock: "locks/loja-do-joao/1.4.2.lock"
+  to: "example.com/app/loja-do-joao"@1.4.0
   reason: "Erro de cálculo em produção"
   approvals: [Owner, Ops]
   strategy: immediate
@@ -2506,16 +2786,16 @@ release Rollback@1.4.2 {
 ### V.6 Canary
 
 ```bpcms
-release JohnStore@1.5.0 {
-  application: JohnStore
-  includes { Catalog@1.3.0; Checkout@2.1.0 }
+release "example.com/app/loja-do-joao"@1.5.0 {
+  application: "example.com/app/loja-do-joao"
+  lock: "locks/loja-do-joao/1.5.0.lock"
   strategy: canary(10%, 30m)
   guardrails {
     errorRate: < 1%
     p95Latency: < 500ms
   }
   approvals: [QA, Owner]
-  rollback: JohnStore@1.4.1
+  rollback: "example.com/app/loja-do-joao"@1.4.1
 }
 ```
 
@@ -3126,10 +3406,31 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 12 | `builder` deve declarar `limitations` por plataforma? | B.1–B.6 |
 | 13 | `widget` deve mapear `platforms` ou só declarar `capabilities`? | W.1–W.6 |
 | 14 | `conversation` deve ter `coverage` por dimensão ou por artefato? | C.1–C.6 |
-| 15 | `release` deve listar `includes` ou usar lockfile da aplicação? | V.1–V.6 |
+| 15 | `release` deve apontar para o lock do app (uma versão/serviço) em vez de listar includes? | V.1–V.6 |
 | 16 | Cálculo deve ser campo computado (`computed frete`) ou documento (`document FreightQuote`)? | D.3, D.6 |
 | 17 | Shape composto (`fields`) é Shape ou Document embutido? | H.8, D.2 |
-| 18 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
+| 18 | URI literal em todas as referências é verboso; quer alias local? | A.1, S.2 |
+| 19 | A página `/index.html` deve listar SOs/APIs/iframe a partir do builder? | A.1, S.1, B.1–B.6 |
+| 20 | URI entre aspas é aceitável ou prefere uma sintaxe sem aspas (ex.: `@example.com/...`)? | A.1, S.1 |
+| 21 | Repositório Git deve ser detectado por host (`source: auto`) ou sempre explícito? | A.7, S.7 |
+| 22 | Versão default de repo: commit, tag ou branch? Produção deve exigir pin? | S.7, V.1–V.6 |
+| 23 | A app deve listar só entry points e derivar a closure dos imports? | A.1, S.2 |
+| 24 | Uma versão por serviço por app é suficiente? Como tratar conflito de contrato? | lock, V.1–V.6 |
+| 25 | IDs no lock devem cobrir todos os identificadores ou só os serializados? | lock |
+| 26 | Override ativo por closure é suficiente, ou precisa de prioridade explícita? | A.8, S.8 |
+| 27 | Serviço sem `exports` e privacidade só por membro (`private`) está certo? | D.1, S.1–S.8 |
+| 28 | Alias local (`"uri" as Nome`) ajuda ou polui? | A.1, S.2 |
+| 29 | Sem `extends` na v1 e reuso só por composição/override está bom? | S.8 |
+| 30 | Migração como `release` do tipo `migration` é suficiente? | V.4 |
+| 31 | Capabilities de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`…) cobrem os casos? | S.1–S.8, B.1–B.6 |
+| 32 | Compensação como `type: compensation` + `for` está correta? | P.7 |
+| 33 | `Parameter` cobre configuração/segredo com `type`, `source`, `required` e `default`? | PR.1–PR.6 |
+| 34 | Capabilities customizadas (`llm`, `google-maps`) devem ser nomes abertos/contrato do construtor? | B.1, S.1 |
+| 35 | `main` deve ser só `set` de Parameter de serviço e `start`, sem `wire`? | A.1 |
+| 36 | `location`, `timezone`, `regionalization` e `units` devem ser capabilities essenciais, não imports? | U.1–U.3 |
+| 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos? | U.3 |
+| 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
+| 39 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
 
 ## Padrões que os exemplos já sugerem
 
@@ -3138,6 +3439,16 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 * **Process** orquestra, mas não implementa regra: chama `action`, `view`, `integration` e `role`.
 * **View/Report** são projeções; não são donas de dados.
 * **Environment/Builder/Release** são artefatos de plataforma, não de negócio.
+* **Dependências são implícitas:** o app lista entry points; `Service.imports` define a closure.
+* **Sem `exports`:** todo artefato de topo é público; `private` só em membros internos.
+* **Lock do app:** uma versão por serviço e um ID por identificador; o serviço não carrega nenhum dos dois.
+* **Override é composição:** ativo quando o serviço substituto está na closure; senão, o original vale.
+* **Capabilities são de alto nível:** `gui/tui/print`, `oltp/sync`, `location`; o construtor resolve a tecnologia.
+* **Parameter** é o contrato de configuração/segredo; o valor é resolvido pelo ambiente e nunca entra no lock.
+* **Capabilities são abertas:** construtores podem declarar `llm`, `google-maps`, etc.; o serviço só declara `requires`.
+* **Compensação é passo:** `type: compensation` + `for` + `action`, em ordem reversa e idempotente.
+* **Serviços essenciais são capabilities:** `location`, `timezone`, `regionalization` e `units`; não são imports de app.
+* **Repositório Git é origem de primeira classe:** README é documentação, clone/zip/release é distribuição, commit/tag é versão.
 * **Evidence/Conversation/Decision/Assumption** são a memória da descoberta; precisam ser consultáveis e versionadas.
 
 ### Golden examples sugeridos
@@ -3150,6 +3461,8 @@ Se for validar só alguns, comece por estes seis — eles cobrem as decisões ma
 4. **V.3 SalesDashboard** — métricas, frescor, unidade e exportação.
 5. **R.4 FinanceRoles** — permissões, quatro-olhos e limite.
 6. **N.1 PurchaseApproval** — decisão por faixa e caso default.
+7. **A.8 + S.8** — lock, closure e override ativo.
+8. **P.7** — compensação como passo de BPMN.
 
 ### Checklist de validação
 

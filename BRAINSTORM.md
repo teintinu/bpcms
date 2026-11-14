@@ -10,7 +10,16 @@
 | Dimensão | Decisão |
 | :--- | :--- |
 | **Produto** | BPCMS = BPM + SOA + CMS, com a LLM como porta de entrada: conversa → modelo → BPMN, telas e documentos → runtime. |
+| **Fronteira** | `Application` não declara artefatos; todo artefato vive em `Service`. A app compõe, configura e inicializa parâmetros. |
 | **V1** | Web, monólito modular, núcleo Rust + estúdio TS, BPMN subset, Document/Shape/unidades, read/live, dev interpretado. |
+| **Identidade** | Application e Service têm URI web sem protocolo; registry: `/index.html` (download/docs); repositório Git: README + código baixado do projeto; versão por semver/tag/commit. |
+| **Lock/IDs** | Um lock por app: uma versão por serviço + ID estável para cada identificador; usado para minificação e compressão. Serviço não tem lock/IDs/versões de imports. |
+| **Contrato do serviço** | Todo artefato de topo é público; não há `exports`. `private` só em membros internos (campos/ações). |
+| **Capabilities** | Conceitos de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`); tecnologia é detalhe do construtor. |
+| **Essenciais** | `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` oferece Shapes métrico/imperial e conversões. |
+| **Título** | `title` é localizado (`pt-BR`, `en-US`); locales definem chaves/default; prod estrito, dev pode fallback/editar. |
+| **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
+| **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
 | **Documento** | Dados + ações + regras + sync + ciclo de vida; `Shape` é dono da semântica; unidade original + projeção + snapshot. |
 | **Processo** | As-is primeiro; to-be como versão comparável; BPMN interativo/simulável; manual executável antes de automação. |
@@ -305,36 +314,139 @@ flowchart TD
 
 **Definição.** É a aplicação do ponto de vista de quem usa — mesmo que por baixo existam vários serviços, páginas, domínios e até plataformas diferentes. É o conceito mais amplo do projeto.
 
-Na prática, a `Application` é pequena de propósito:
-
-* uma **lista de serviços** usados;
-* um **ponto de inicialização/wiring** (o “main”) que liga serviços, eventos, papéis e ambiente;
-* a configuração de **experiência**: navegação, tema, idiomas, pontos de entrada;
-* o **mapeamento de papéis** (unificar, apelidar, detalhar);
-* o **lockfile** de versões de serviços/construtores.
+**Identificador.** O identificador canônico de uma `Application` é uma **URI web sem protocolo**, como `example.com/app/loja-do-joao`. No DSL, a representação default é um literal entre aspas (a forma final é decisão de sintaxe):
 
 ```text
-application JohnStore {
-  services { Catalog, Cart, Checkout, Payment, Shipping, Auth, Notification }
-  roles    { Customer, Clerk, Manager; Manager > Clerk }
-  theme    Nuvula
-  locales  [pt-BR, en]
+application "example.com/app/loja-do-joao" { ... }
+```
+
+> A URI é a identidade; nome curto (`LojaDoJoao`) é apenas alias local, se o DSL permitir. O exemplo usa a URI em todo lugar para não haver duas identidades.
+
+**Página de download.** `http://example.com/app/loja-do-joao/index.html` é a página de distribuição, com opções por SO — Windows, macOS, Linux, Android, iOS, conforme os construtores (em produção, `https://...`). Ela **não é a aplicação em execução**; é o ponto de download.
+
+Na prática, a `Application` é pequena de propósito:
+
+* uma **lista de serviços de entrada** (entry points) que a experiência usa diretamente;
+* a configuração de **experiência**: navegação, tema, idiomas, pontos de entrada;
+* o **mapeamento de papéis** (unificar, apelidar, detalhar);
+* o **lock file** da aplicação, que fixa **uma única versão por serviço** e os IDs de todos os identificadores.
+
+```text
+application "example.com/app/loja-do-joao" {
+  source: registry
+  version: 1.4.0
+  title: {
+    pt-BR: "Loja do João"
+    en-US: "João's Store"
+  }
+
+  services {
+    "example.com/services/catalog" as Catalog
+    "example.com/services/checkout" as Checkout
+    "example.com/services/notifications" as Notifications
+  }
+  roles { Customer, Clerk, Manager; Manager > Clerk }
+  theme: Nuvula
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
   main {
-    start Auth
-    wire  Checkout with Payment, Shipping
+    // DefaultCurrency é um Parameter declarado no serviço Catalog
+    set Catalog.DefaultCurrency = "BRL"
   }
 }
 ```
 
-> **Decisão B-21:** o `main` é **declarativo** — inicialização e ligação, não regra de negócio. O `main()` imperativo do rascunho antigo é substituído por wiring; hooks de código só existem em extensões de serviço, no modo dev.
+> **Decisão B-28 — sem `wire`.** A aplicação **não declara dependências entre serviços**. `Checkout` já declara `catalog` em `Service.imports`; o resolver percorre os imports, monta a closure, detecta ciclo/capability faltando e produz o lock. A lista `services` acima contém apenas os entry points; `cart`, `payment`, `shipping` e `auth` entram por importação implícita.
 >
-> Tema, idioma, papéis e ambientes são **configuração de composição**, não lógica. O núcleo da `Application` continua sendo o que o autor pediu: **lista de serviços + main**.
+> **Decisão B-29 — uma versão por app.** Se existem `catalog@1.2` e `catalog@2.0`, o app escolhe **uma** no lock; não há duas versões do mesmo serviço convivendo na mesma aplicação. Se dois serviços exigem contratos incompatíveis, o `check` falha e exige upgrade/override.
+>
+> **Decisão B-40 — a Application não declara artefatos.** Nem `Parameter`, nem `Document`, nem `View`: todo artefato vive dentro de um `Service`. A `Application` só compõe entry points, mapeia papéis, configura ambiente e inicializa parâmetros de serviços no `main`.
+>
+> **Decisão B-21 (revisada):** `main` é opcional e **não tem `wire`**. Ele serve para inicializar `Parameter` de serviço (`set`) e, se necessário, boot antecipado (`start ["..."]`); a inicialização normal é topológica e lazy.
+
+#### 2.4.1 Lock file, versões e IDs
+
+O app tem **um lock file** (ex.: `bpcms.lock`), gerado e versionado. Ele contém:
+
+* **uma versão por serviço** (com `source`/`integrity`), escolhida para o app;
+* **um ID estável para cada identificador** do app: serviços, documentos, shapes, views, ações, campos, eventos, papéis, nós de processo;
+* a lista de **overrides ativos**;
+* um contador monotônico (`nextId`) — IDs não são reutilizados.
+
+```yaml
+lock:
+  application: "example.com/app/loja-do-joao"
+  version: 1
+  nextId: 42
+  services:
+    "example.com/services/catalog":
+      id: 2
+      version: 1.2.0
+      source: registry
+      integrity: "sha256:..."
+    "example.com/services/checkout":
+      id: 3
+      version: 2.0.1
+      source: registry
+  artifacts:
+    "example.com/services/catalog#Product": 10
+    "example.com/services/catalog#Product.id": 11
+    "example.com/services/catalog#Product.name": 12
+  overrides:
+    - target: "example.com/services/checkout#CheckoutSession.placeOrder"
+      by: "example.com/services/fraud-checkout"
+      id: 30
+```
+
+> **Decisão B-30 — IDs no lock do app.** O serviço **não tem lock file, não carrega IDs e não declara versões de serviços importados**. Nomes humanos vivem no fonte; o builder/runtime troca nomes por IDs do lock para **minificação de código** e **compressão da serialização** (IDs inteiros/varint em vez de strings). O lock é a única fonte de IDs por aplicação; o mesmo serviço pode ter IDs diferentes em apps diferentes.
+
+#### 2.4.2 Título localizado
+
+`title` é um **texto localizado**, não uma string única. As chaves são tags de locale declaradas em `locales`; o primeiro locale é o default.
+
+```text
+application "example.com/app/loja-do-joao" {
+  locales: [pt-BR, en-US]
+  title: {
+    pt-BR: "Loja do João"
+    en-US: "João's Store"
+  }
+}
+```
+
+- A chave aceita hífen (`pt-BR`, `en-US`); o parser aceita isso no nome da propriedade e na chave do mapa.
+- Se o builder gerar para `pt-BR`, funciona com a entrada `pt-BR`.
+- Se gerar para `en-US` e a chave não existir, é **erro de tradução** (`E_TRANSLATION`) ou aviso (`W_TRANSLATION`) conforme a política do construtor.
+- O construtor de dev pode **fallback** para o locale default e permitir editar o título em runtime, gravando de volta no fonte.
+- Chave fora de `locales` é `E_LOCALE_UNDECLARED`; título sem o locale default é `E_TITLE_MISSING`.
+
+> **Decisão B-42:** `title` é `LocalizedText`; `locales` define o conjunto e o default. Produção é estrita; dev pode fallback/editar. O construtor decide a política de fallback, mas nunca inventa tradução.
 
 **Application é um AST de composição** (metáfora da versão anterior): uma árvore declarativa que os construtores percorrem para montar a experiência. Ela não contém lógica; contém **intenção de montagem**.
 
 ### 2.5 Service
 
-**Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. É como um package/DLL de negócio: pode ser reutilizado por várias aplicações e por outros serviços, importar/estender/sobrescrever artefatos e exportar novos.
+**Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. É como um package/DLL de negócio: pode ser reutilizado por várias aplicações e por outros serviços, importar/estender/sobrescrever artefatos e disponibilizar novos.
+
+**Identificador.** O identificador canônico de um `Service` também é uma **URI web sem protocolo**: `example.com/services/catalog`. A representação default no DSL é um literal entre aspas:
+
+```text
+service "example.com/services/catalog" { ... }
+```
+
+**Página de documentação.** `http://example.com/services/catalog/index.html` é a página de documentação para integração por API (em produção, `https://...`). Ela oferece, conforme as capabilities do construtor:
+
+* **servir o serviço na nuvem** (endpoint gerenciado);
+* **APIs** em sockets, REST, RPC ou outros protocolos;
+* **iframe** para microfrontend;
+* outras opções de hospedagem/integração declaradas pelo construtor.
+
+| | Application | Service |
+| :--- | :--- | :--- |
+| **Identificador** | URI sem protocolo | URI sem protocolo |
+| **Página `/index.html`** | download, com opções por SO | documentação de integração por API |
+| **Opções** | executáveis por SO | nuvem, APIs (sockets/REST/RPC), iframe, outras |
 
 Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 
@@ -349,15 +461,168 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 | Eventos | `RemessaDespachada`, `PedidoAprovado` |
 | Regras/políticas | limite de peso, alçada de aprovação, quatro-olhos |
 
-**Contratos e composição.** Um serviço exporta artefatos e importa dependências com versão. O `check` garante compatibilidade (LSP): sobrescrever não pode quebrar quem usa o original. Serviço novo não altera o núcleo (OCP).
+**Capabilities de plataforma (alto nível).** O serviço declara o que **precisa** (`requires`), não como a tecnologia resolve. O construtor mapeia a capability para sua implementação:
+
+| Capability | Significado | Quem costuma oferecer |
+| :--- | :--- | :--- |
+| `gui` | apresentação gráfica | WebApp, MobileShell |
+| `tui` | apresentação em terminal | Cli |
+| `print` | saída para impressão/PDF | DocsPdf |
+| `oltp` | persistência transacional | Postgres, ApiRust |
+| `sync` | sincronização em tempo real | WebApp, ApiRust |
+| `location` | localização/GPS | MobileShell |
+| `timezone` | fuso horário (inclusive quando o device não oferece) | WebApp, ApiRust, MobileShell |
+| `regionalization` | formatação de data/hora/número por locale | WebApp, ApiRust, MobileShell |
+| `units` | medidas, conversões e Shapes métrico/imperial | WebApp, ApiRust, MobileShell |
+| `identity` | autenticação/autorização | WebApp, ApiRust |
+| `scheduling` | agenda, timers e jobs | ApiRust |
+| `attachments` | arquivos/anexos | WebApp, ApiRust |
+| `capture` | câmera/scanner | MobileShell |
+| `notify` | notificação de saída | MobileShell |
+
+> `requires` é sobre a **capacidade de negócio/experiência**; `provides` é o **contrato de negócio** que o serviço oferece a outros (`catalog`, `checkout`, `identity`). `http`, `db`, `search`, `ui`, `files`, `auth`, `realtime`, `jobs`, `camera` e `push` não entram no vocabulário de capability: são detalhes de construtor.
+
+**Capabilities abertas.** O vocabulário acima é um núcleo, não um enum fechado. Construtores podem declarar novas capabilities — genéricas como `llm` ou específicas como `google-maps`, `acme.payments`. Use nomes curtos em kebab-case e documente o contrato no construtor; o serviço só declara `requires { llm }`. Parâmetros da capability (modelo, chave, região) são `Parameter`, não strings espalhadas.
+
+**Contratos e composição.** **Todo artefato de topo de um serviço é automaticamente público/exportado** — não existe `exports`. A privacidade só existe **dentro do artefato**: um campo ou ação pode ser `private` e fica acessível apenas dentro do serviço. O serviço importa outros serviços **por URI, sem versão**; a versão escolhida é única por aplicação e vive no lock do app. O `check` garante compatibilidade (LSP); override não pode quebrar quem usa o original.
+
+**Privacidade.** O artefato de topo é sempre público; o que pode ser privado é o **membro**. `private` em um campo esconde o campo do contrato/API/serialização para outros serviços; `private` em uma ação impede chamada externa. O dado continua existindo para o serviço dono e para as regras internas.
 
 **Dono do dado.** Um documento tem um serviço dono. Outros serviços referenciam por ID, copiam um snapshot (ex.: dados do cliente numa nota fiscal) ou reagem a eventos. Não há escrita compartilhada nem transação distribuída; processos que atravessam serviços usam saga/compensação.
 
 > **Serviço ≠ microserviço.** SOA aqui é sobre **contrato e reuso**, não sobre número de processos na rede. Vários serviços podem ser implantados juntos na v1; a fronteira é lógica e de propriedade.
 
-> **Decisão B-05:** override **explícito por caminho**, com `check` de compatibilidade (LSP) e versão semântica (`Service@1.2`). Não há merge profundo automático nem overlay arbitrário. Trocar o `Shape` de um campo ou remover campo exige declaração de migração e é bloqueado se quebrar consumidores. O que não for declarado como override é imutável para quem depende.
+> **Decisão B-05 — override como substituição.** O override é declarado no serviço que substitui, com caminho explícito para o alvo. Ele só fica **ativo quando os dois serviços estão na closure do app** (explícita ou implicitamente). Se o app usa só o serviço original, o método original vale. O `check` exige assinatura compatível (LSP), um único override por alvo e ausência de ciclos. O lock do app registra os overrides ativos.
 
 > **Decisão B-06:** um serviço por **capacidade de negócio** (não por área organizacional). Na v1 os serviços são implantados juntos como **monólito modular**; a extração física só acontece com razão operacional comprovada.
+
+#### 2.5.1 Origem: registry ou repositório
+
+A URI de `Application`/`Service` pode resolver para dois tipos de origem — e isso vale para os dois artefatos:
+
+| | Registry BPCMS | Repositório Git |
+| :--- | :--- | :--- |
+| **Identificador** | `example.com/app/...` ou `example.com/services/...` | `github.com/org/repo`, `gitlab.com/org/repo` ou similar |
+| **Documentação** | página `/<uri>/index.html` | **README** do projeto |
+| **Distribuição** | app: download por SO; serviço: API/nuvem/iframe | clone, zip ou release do próprio projeto |
+| **Versão** | semver | commit, tag ou flag explícita de versão |
+
+**Source.** `source: auto` (default) reconhece hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares) e resolve o resto como registry. `source: repository` ou `source: registry` força o modo. Se o repositório contém mais de um artefato, a URI pode apontar para um subdiretório: `github.com/acme/monorepo/apps/store`.
+
+**Version.** O flag `version` aceita `semver("1.4.0")`, `tag("v1.4.0")` ou `commit("9f3a1c7")`. Vale tanto para `Application` quanto para `Service` — a regra é simétrica; os exemplos mostram um seletor em cada, mas qualquer um aceita qualquer seletor. Em produção, commit/tag imutável; branch/HEAD só em dev/QA.
+
+```text
+application "github.com/acme/store" {
+  source: repository
+  version: commit("9f3a1c7")
+}
+
+service "gitlab.com/acme/lab" {
+  source: repository
+  version: tag("v2.3.0")
+}
+```
+
+> Para artefato em repositório, **não há página `/index.html` obrigatória**: a documentação é o README (da raiz ou do subdiretório) e o código é baixado do projeto. A página de download da app, quando existir, é a página de releases/clone do repositório.
+
+#### 2.5.2 Override: substituição de método
+
+Um serviço pode substituir um método/ação de outro serviço. O serviço que substitui **importa** o serviço alvo e declara o caminho:
+
+```text
+service "example.com/services/fraud-checkout" {
+  imports { service "example.com/services/checkout" }
+
+  override "example.com/services/checkout#CheckoutSession.placeOrder" {
+    with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
+  }
+}
+```
+
+**Ativação:**
+
+* `APP1` lista `fraud-checkout` (ou ele entra implicitamente): como `fraud-checkout` importa `checkout`, os dois estão na closure → o override de `placeOrder` fica ativo.
+* `APP2` lista apenas `checkout` e não inclui `fraud-checkout` → o `placeOrder` original vale.
+* Se `fraud-checkout` for incluído sem `checkout`, o `check` falha: o alvo não existe.
+* Dois overrides para o mesmo alvo no mesmo app = `E_OVERRIDE_CONFLICT`; é preciso escolher um.
+* O método substituto precisa manter parâmetros, retorno e contrato (LSP). Trocar `Shape`/campo continua exigindo migração e não é um override de comportamento.
+
+**No lock:** o app registra `target`, `by` e o ID do override; a resolução é determinística e reproduzível.
+
+#### 2.5.3 Parameter: configuração e segredo
+
+`Parameter` é um artefato de topo **dentro de um `Service`**, para **configuração** e **segredo**. Ele declara nome, `Shape`, obrigatoriedade e origem; o valor é resolvido pelo ambiente, nunca fica no lock. A `Application` não declara `Parameter`; no `main`, ela faz `set` em um parâmetro de serviço.
+
+> Os blocos abaixo são trechos de um `Service`; a `Application` só faz `set` no `main`.
+
+```text
+parameter ErpUrl {
+  type: Text
+  source: config
+  required: true
+  default: "https://erp.example.com"
+}
+
+parameter PaymentKey {
+  type: Secret
+  source: secret
+  required: true
+}
+```
+
+| Cláusula | Funcionamento |
+| :--- | :--- |
+| `type` | Shape do valor (`Text`, `Email`, `Count`, `Duration`, `Secret`...). |
+| `source` | `config` (configuração do ambiente) ou `secret` (secret store). |
+| `required` | Falha no boot/uso se não houver valor. |
+| `default` | Só para `config`; proibido para `secret`. |
+| `description` | Documentação do parâmetro. |
+| `min`/`max`/`maxLength` | Constraints simples, como em campo. |
+
+**Regras:** `Secret` nunca é serializado, logado, exportado ou enviado à LLM; o lock guarda o **ID** do Parameter, não o valor. Parameters são declarados **no serviço**; a app só inicializa valores no `main`. O serviço não guarda valores nem versões.
+
+> **Decisão B-38:** `Parameter` é o único artefato para configuração/segredo. `env.X`/`secret.X` são atalhos de resolução, não declarações.
+
+#### 2.5.4 Serviços essenciais como capabilities
+
+Alguns serviços são **essenciais da plataforma** e são acessados como capabilities, não importados como serviços normais. O construtor/ambiente implementa; o serviço só declara `requires`.
+
+| Capability | Operações | Depende de |
+| :--- | :--- | :--- |
+| `location` | `current()`, `distance(a, b)`, `timezoneOf(location)` | — |
+| `timezone` | `current()`, `of(location)`, `convert(at, from, to)`, `offset(zone, at)` | `location` (opcional) |
+| `regionalization` | `locale()`, `formatDate`, `formatTime`, `formatNumber`, `formatCurrency`, `parseDate`, `parseNumber` | `Locale` |
+| `units` | `system()`, `convert(value, unit)`, `format(value, locale)`, `shapes()` | `regionalization` |
+
+> `timezone` existe porque nem todo device informa fuso. `location` pode resolver o fuso; `regionalization` usa o `Locale` para formatar; `units` usa `regionalization.system()` para escolher métrico/imperial.
+
+**Shapes de unidades.** O serviço de unidades oferece famílias com unidades e conversões:
+
+| Família | Métrico | Imperial | Conversão |
+| :--- | :--- | :--- | :--- |
+| Massa | kg, g, t | lb, oz | fator |
+| Comprimento | m, cm, km | in, ft, yd, mi | fator |
+| Volume | m3, L, cm3 | gal, fl oz | fator |
+| Temperatura | C, K | F | afim |
+| Área | m2, ha | ft2, acre | fator |
+
+O Shape continua guardando **valor original + unidade** e projeção normalizada; a exibição usa `regionalization`/`units`, não converte o armazenamento.
+
+```text
+service "example.com/services/field" {
+  requires { location, timezone, regionalization, units, oltp, sync }
+}
+
+view VisitForm {
+  type: form
+  computed {
+    scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
+    distance: units.format(location.distance(tech.position, visit.position), regionalization.system())
+  }
+}
+```
+
+> **Decisão B-41:** `location`, `timezone`, `regionalization` e `units` são serviços essenciais expostos como capabilities. Nenhum deles é importado como serviço de app; o construtor/ambiente resolve.
 
 ### 2.6 Documento — o coração do modelo
 
@@ -723,6 +988,8 @@ Todo BPMN gerado é **validado** contra o schema e contra o subconjunto executá
 
 **Modo manual × automático.** Um processo pode ser executado mesmo com tarefas humanas: o sistema distribui tarefas, cobra prazo, registra decisão e mantém o caso. Automação vem depois, tarefa a tarefa. Isso é o valor de BPM: **visibilidade e controle antes de automação**.
 
+**Compensação.** Compensar é um tipo de passo, não só um retry. Uma task `type: compensation` declara `for: <Node>` e `action`; ela é disparada por erro/cancelamento, executa em **ordem reversa** das atividades concluídas e precisa ser **idempotente**. O BPMN representa isso como compensation boundary/handler; o runtime mantém o log de efeitos para saber o que compensar.
+
 **Relação com documentos/telas.** Cada user task tem um formulário (view) e um ou mais documentos que lê/escreve. Cada service task chama uma integração/serviço. Cada gateway tem uma regra ou uma decisão humana. O BPMN não é o modelo inteiro; ele é a **espinha dorsal** que liga documentos, papéis e telas.
 
 ### 2.8 Evidências: formulários, PDFs, prints, Figma, DFD/MER, DDL, UML
@@ -1057,7 +1324,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 | :--- | :--- | :--- |
 | 1. Aplicações, componentes, construtores, temas, idiomas | catálogo | **Home da aplicação**: serviços, processos, documentos, ambientes, saúde |
 | 2. Versão atual, testes, cobertura, submeter/desfazer/diff, concluir/cancelar, histórico, ramificar, instalador | ciclo de versão | **Cockpit de release/QA**: versão, testes, cobertura, diff de BPMN/documentos, aprovar, promover, rollback |
-| 3. Componentes, geradores, título, idiomas, `main()` | configuração | **Composição da aplicação**: wiring declarativo, ambientes, tema, locale; sem `main()` imperativo |
+| 3. Componentes, geradores, título, idiomas, `main()` | configuração | **Composição da aplicação**: entry points, lock, ambientes, tema, locale; sem `main()` imperativo |
 | 4. Construtor, ícone, título, capabilities | registry | **Builder registry**: capacidades, versão, compatibilidade, saúde |
 | 5. Tema, descrição, requer | tema | **Theme studio**: tokens, preview, suporte por construtor |
 | 6. Idioma, bandeira, descrição | locale | **Locale manager**: traduções, cobertura, fallback |
@@ -1081,20 +1348,21 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 ## Nível 3 — Artefatos em detalhe
 
-> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 134 exemplos cobrindo os 22 tipos de artefato — use como teste de aceitação da sintaxe antes de fechar o SPECS.
+> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 145 exemplos cobrindo os 23 tipos de artefato. A [DSL_REFERENCE.md](DSL_REFERENCE.md) documenta cada cláusula com sintaxe e funcionamento; use as duas como teste de aceitação da sintaxe antes de fechar o SPECS.
 
 ### 3.1 Catálogo de artefatos
 
 | Artefato | Propósito | Propriedades-chave | Fase |
 | :--- | :--- | :--- | :--- |
-| **Application** | composição voltada ao usuário | services, main/wiring, theme, locales, roles, environments | Núcleo |
-| **Service** | capacidade de negócio reutilizável | exports, imports, versão, contratos, papéis, dono de dados | Núcleo |
+| **Application** | composição voltada ao usuário | URI, source, version, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
+| **Service** | capacidade de negócio reutilizável | URI, source, version, imports sem versão, override, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
 | **Process** | processo BPMN as-is/to-be | nós, fluxos, raias, eventos, SLAs, regras, vínculos | Núcleo |
 | **Document** | unidade de dados + ações + sync | campos, índices, ações, regras, frescor, dono | Núcleo |
 | **Shape** | semântica de valor | parse, validação, formato, unidade, índice, agregação | Núcleo |
 | **View** | tela/relatório | widgets, layout, papéis, dados, navegação | Núcleo |
 | **Role / Organogram** | autorização e hierarquia | papéis, herança, delegação, quatro-olhos | Núcleo |
 | **Evidence** | fonte para entendimento | tipo, arquivo, hash, confidencialidade, extração, proveniência | Suporte |
+| **Parameter** | configuração e segredo tipados | shape, source, required, default, min/max, secret; declarado em Service | Suporte |
 | **Environment** | dev/QA/prod | runtime, dados, segredos, escala, aprovações | Suporte |
 | **Builder** | realização por plataforma | capabilities, versão, compatibilidade, saúde | Suporte |
 | **Theme** | identidade visual | tokens, cores, ícones, tipografia | Suporte |
@@ -1156,7 +1424,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 > A sintaxe não está decidida; o objetivo é mostrar a **intenção**, não a gramática final.
 
 ```text
-service Expedicao {
+service "example.com/services/expedicao" {
   document Remessa {
     fields {
       id: RemessaId
@@ -1272,7 +1540,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 | Frente | Escopo | Depende de |
 | :--- | :--- | :--- |
-| **Modelo e IR** | Application, Service, Process, Document, Shape, View, Role; validação, diff, versão | nada (é a base) |
+| **Modelo e IR** | Application, Service, Process, Document, Shape, View, Role; lock/IDs, Parameter/segredo, override, validação, diff, versão | nada (é a base) |
 | **Runtime de documentos** | ações, regras, persistência, cache, read/live, ciclo de vida | IR + Shape |
 | **Motor BPMN** | subconjunto executável, tarefas humanas, timers, simulação | IR + runtime de documentos |
 | **Entrevista e LLM** | protocolo, cobertura, ferramentas de modelo, saída estruturada, evals | IR + schema de validação |
@@ -1354,6 +1622,8 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **Observabilidade** | logs, métricas, tracing | OpenTelemetry; correlação por caso/documento | dashboard |
 | **Portabilidade** | dados e arquivos | Postgres em prod; SQLite no dev; storage S3-compatible | testes de integração |
 | **Limites** | tamanho do modelo | 100 campos/doc; 500 nós/processo; 200 docs/serviço (soft, configurável) | validação no `check` |
+| **Identidade/URLs** | app/serviço endereçáveis | URI sem protocolo; registry usa `/index.html`; repo usa README/releases; HTTPS em prod; redirect 301; cache/CDN | auditoria de URLs |
+| **Lock/IDs** | determinismo e estabilidade | uma versão/serviço por app; IDs monotônicos sem reuso; lock diffável e reproduzível | teste de reprodutibilidade |
 | **API** | compatibilidade | `/v1`; mudanças aditivas; depreciação anunciada | contract tests |
 | **Browser** | estúdio | Chrome/Firefox/Safari evergreens | matriz de testes |
 
@@ -1362,7 +1632,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; 20 casos golden; `check` sem falso negativo | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, title localizado e override/LSP validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1376,7 +1646,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-21`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-42`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1398,6 +1668,20 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-016 | Web primeiro; núcleo Rust + estúdio TS; monólito modular na v1 | ✅ | herança + baseline v1 |
 | D-017 | Processo manual executável antes de automação | ✅ | baseline v1 |
 | D-018 | Marketplace, process mining, offline/CRDT e multi-plataforma | 🧊 | congelado |
+| D-019 | Sem `wire`: dependências vêm de `Service.imports`; app lista entry points | ✅ | baseline atual |
+| D-020 | Lock por app: uma versão por serviço + IDs estáveis para minificação/compressão | ✅ | baseline atual |
+| D-021 | Override ativo quando os dois serviços estão na closure do app; um por alvo; LSP | ✅ | baseline atual |
+| D-022 | Sem `exports`: todo artefato de topo é público; privacidade só em membros (`private`) | ✅ | baseline atual |
+| D-023 | `alias`/`as` local para URIs de serviço | ✅ | baseline atual |
+| D-024 | Sem `extends` na v1; composição + override | 🧊 | baseline atual |
+| D-025 | Migração é release, não artefato de topo | ✅ | baseline atual |
+| D-026 | Capabilities de alto nível, sem tecnologia | ✅ | baseline atual |
+| D-027 | Compensação como task `type: compensation` | ✅ | baseline atual |
+| D-028 | `Parameter` para configuração/segredo; valor fora do lock | ✅ | baseline atual |
+| D-029 | Capabilities abertas a construtores (`llm`, `google-maps`...) | ✅ | baseline atual |
+| D-030 | Application não declara artefatos; só serviços declaram | ✅ | baseline atual |
+| D-031 | Serviços essenciais `location`, `timezone`, `regionalization`, `units` como capabilities | ✅ | baseline atual |
+| D-032 | `title` é `LocalizedText`; locales definem chaves e default | ✅ | baseline atual |
 
 ---
 
@@ -1411,7 +1695,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-02** | “Documento” é dado ou arquivo? | `Documento` = artefato de dados; `Evidência` = arquivo/fonte; `Template` = layout. | Elimina a ambiguidade que contamina requisitos, UX e modelo. | ✅ |
 | **B-03** | Unidade original, canônica ou ambas? | Original + projeção normalizada + snapshot imutável da conversão. Códigos UCUM-like; topologia em estrela por dimensão; decimal, nunca float. | Preserva a intenção, permite índice/agregação e mantém histórico correto. | ✅ |
 | **B-04** | BPMN as-is e to-be juntos? | As-is primeiro; to-be é uma versão separada, comparável por diff. IR é canônico; BPMN 2.0 XML é import/export; subconjunto executável. | Evita misturar diagnóstico com proposta e mantém interoperabilidade. | ✅ |
-| **B-05** | Como serviço estende/sobrescreve? | Override explícito por caminho, com `check` de LSP e versão semântica (`Service@1.2`). Sem merge profundo automático. Trocar tipo/remover campo exige declaração + migração. | Reuso sem quebrar consumidores; override silencioso é dívida. | ✅ |
+| **B-05** | Como serviço estende/sobrescreve? | Override explícito de **método/ação**, ativo quando o serviço substituto está na closure do app. Um override por alvo; `check` de LSP; conflito = erro. Trocar tipo/remover campo exige migração, não override. | Ativação previsível; sem merge profundo silencioso. | ✅ |
 | **B-06** | Um serviço por área ou capacidade? | Por **capacidade de negócio**. v1 roda como monólito modular; separação física é decisão operacional. | Coesão e reuso; microserviço cedo demais multiplica custo. | ✅ |
 | **B-07** | Núcleo Rust + estúdio TS? | Sim: núcleo Rust (IR/check/runtime) em nativo + WASM; estúdio TS/React consome WASM para validação/preview e o servidor para persistência, LLM e jobs. | Uma semântica, duas superfícies; o estúdio não reimplementa regra. | ✅ |
 | **B-08** | Construtores de terceiros? | v1 só first-party compilados; plugins WASM (component model) ficam 🧊 v2. | Contrato de capabilities e sandbox ainda não estão maduros. | 🧊 |
@@ -1427,7 +1711,28 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-18** | Layout do BPMN gerado? | Auto-layout (ELK/dagre) + ajuste manual; a LLM sugere topologia, não coordenadas. | Diagrama legível sem transformar a LLM em engine de layout. | ✅ |
 | **B-19** | Offline/CRDT? | 🧊 v2. | Custo alto; o caso de uso inicial é colaboração online. | 🧊 |
 | **B-20** | Marketplace/multi-plataforma? | 🧊 v2. | Só faz sentido depois de um vertical slice web bem-sucedido. | 🧊 |
-| **B-21** | `Application.main` é código ou wiring? | **Declarativo**: inicialização, ligação e ordem; hooks imperativos só em extensões de serviço. | A aplicação não deve conter lógica; wiring é composição. | ✅ |
+| **B-21** | `Application.main` é obrigatório? | **Não**. `main` é opcional para `set` de `Parameter` e `start` de boot; inicialização normal é topológica/lazy. | A aplicação não deve conter lógica; dependências já estão nos serviços. | ✅ |
+| **B-22** | Identificador de Application/Service? | **URI web sem protocolo**. A representação default no DSL é literal entre aspas; sintaxe alternativa é decisão de sintaxe no SPECS. Nome curto é alias opcional, nunca a identidade. | Identidade global e endereçável; evita colisão de nomes. | ✅ |
+| **B-23** | Página de download da aplicação? | `/<app-uri>/index.html`, com opções por SO (Windows, macOS, Linux, Android, iOS) e outras mídias do construtor. | Distribuição previsível e descobrível. | ✅ |
+| **B-24** | Página de documentação do serviço? | `/<service-uri>/index.html`, com integração por API, opção de servir na nuvem, protocolos (sockets/REST/RPC) e iframe para microfrontend, conforme construtor. | Serviço é contrato público, não só deploy. | ✅ |
+| **B-25** | A URI pode apontar para GitHub/GitLab? | Sim. Nesse caso a documentação é o **README** e o código é baixado do próprio projeto (clone/zip/release); não há `/index.html` obrigatório. | Reuso de projetos existentes sem exigir um registry BPCMS. | ✅ |
+| **B-26** | Como versionar app/serviço? | `version` aceita `semver(...)`, `tag(...)` ou `commit(...)`, tanto em `Application` quanto em `Service`; produção exige commit/tag imutável. | Versão explícita e reproduzível, com flexibilidade para repositório. | ✅ |
+| **B-27** | Como escolher registry x repositório? | `source: auto` reconhece hosts conhecidos; `source: registry`/`repository` força. URI pode incluir subdiretório do monorepo. | Funciona por convenção sem impedir controle explícito. | ✅ |
+| **B-28** | Precisamos de `wire`? | **Não**. Dependências vêm de `Service.imports`; a aplicação lista apenas entry points. O resolver monta a closure e o lock. | Uma fonte de verdade; evita drift entre app e serviço. | ✅ |
+| **B-29** | Mais de uma versão do mesmo serviço por app? | **Não**. O lock escolhe uma versão por serviço para o app inteiro; contrato incompatível falha no `check`. | Evita ambiguidade de versões e “dependency hell” silencioso. | ✅ |
+| **B-30** | Onde ficam IDs e versões? | **Só no lock do app**. Ele mapeia cada identificador para um ID estável (minificação/compressão) e cada serviço para uma versão. Serviço não tem lock, IDs nem versões de imports. | Serve múltiplos apps sem contaminar o serviço; IDs por app. | ✅ |
+| **B-31** | Quando um override fica ativo? | Quando o serviço que override está na closure do app (explícita ou implicitamente); se só o original está presente, o original vale. Um override por alvo; LSP. | Ativação previsível sem configuração no app. | ✅ |
+| **B-32** | Serviço precisa declarar `exports`? | **Não**. Todo artefato de topo é público/exportado automaticamente; privacidade só dentro do artefato, via `private` em membros. | Menos boilerplate; o contrato é o que existe no serviço. | ✅ |
+| **B-33** | `alias`/`as`? | **Sim.** `"<uri>" as Nome` em `services`/`imports`; alias é local, não é identidade e não vai para o lock. | Legibilidade sem duplicar a URI em todo lugar. | ✅ |
+| **B-34** | `extends`/herança de tipo? | **Não na v1.** Composição + `override` cobrem reuso. Herança de tipo rígida complica LSP, migração e IDs; revisitar só com caso de refinamento puro. | Simplicidade estrutural; evita árvores frágeis. | 🧊 |
+| **B-35** | Migração é artefato próprio? | **Não.** Migração é um `release` do tipo `migration`, com `changes`, `backfill`, `dryRun` e `rollback`. A gramática detalhada das operações fica no SPECS. | Um ciclo de vida só; migração promovida como release. | ✅ |
+| **B-36** | Capabilities podem citar tecnologia? | **Não.** Usar conceitos de alto nível: `gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`. O construtor mapeia para a tecnologia. | Serviço independente de HTTP/DB/UI kit; contrato estável. | ✅ |
+| **B-37** | Compensação no BPMN? | **Sim**: task `type: compensation` com `for: <Node>` e `action`, disparada por erro/cancelamento; executa em ordem reversa e é idempotente. | Compensação é passo de processo, não só retry. | ✅ |
+| **B-38** | Onde ficam configuração e segredo? | **Parameter** declarado em `Service`; a app faz `set` no `main`. `source: config \| secret`; valor resolvido pelo ambiente; `Secret` nunca é serializado/logado/exportado. | Contrato tipado sem artefato na app. | ✅ |
+| **B-39** | Capabilities são fechadas? | **Não.** Construtores podem declarar novas capabilities (`llm`, `google-maps`, `acme.payments`), desde que documentem o contrato. | Extensível sem inflar o núcleo. | ✅ |
+| **B-40** | A Application pode declarar artefatos? | **Não.** Todo artefato vive em `Service`; a app só compõe, configura e inicializa parâmetros no `main`. | Uma única fronteira de negócio; evita duplicação app/serviço. | ✅ |
+| **B-41** | Serviços essenciais como capabilities? | **Sim**: `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` depende de `regionalization` e oferece Shapes métrico/imperial com conversões. | Evita reimplementar GPS/fuso/formatação/unidades em cada serviço. | ✅ |
+| **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1449,7 +1754,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-21) sem lacunas.
+- [x] Decisões de baseline (B-01…B-42) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.
