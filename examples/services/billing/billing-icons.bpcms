@@ -1,0 +1,51 @@
+// service: example.com/services/billing
+
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
+  symbol: "clock"
+}
+
+icon Issued {
+  title: { pt-BR: "Emitida", en: "Issued" }
+  symbol: "info"
+}
+
+icon Paid {
+  title: { pt-BR: "Paga", en: "Paid" }
+  symbol: "check-circle"
+}
+
+icon Overdue {
+  title: { pt-BR: "Vencida", en: "Overdue" }
+  symbol: "alert-circle"
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelada", en: "Cancelled" }
+  symbol: "x-circle"
+}
+
+icon Applied {
+  title: { pt-BR: "Aplicada", en: "Applied" }
+  symbol: "info"
+}
+
+icon Open {
+  title: { pt-BR: "Aberta", en: "Open" }
+  symbol: "clock"
+}
+
+icon Simples {
+  title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+  symbol: "percent"
+}
+
+icon LucroPresumido {
+  title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
+  symbol: "percent"
+}
+
+icon LucroReal {
+  title: { pt-BR: "Lucro Real", en: "Actual profit" }
+  symbol: "percent"
+}

@@ -280,8 +280,8 @@ name: Text {
 | `title` | `title: { pt-BR: "..."; en-US: "..." }` | Nome localizado; chaves em `locales` (ver 1.9). |
 | `services` | `services { "<uri>" as Alias ... }` | **Entry points**; alias local opcional. A closure vem dos imports de cada serviço. |
 | `roles` | `roles { Customer; Clerk; Manager; Manager > Clerk }` | Papéis da aplicação e hierarquia (`>` = “superior a”). |
-| `theme` | `theme: Nuvula` | Tema aplicado à experiência. |
-| `locales` | `locales: [pt-BR, en-US]` | Idiomas disponíveis; o primeiro é o default. |
+| `theme` | `theme: Nuvula` | ID de tema fornecido pelo **construtor**; não é artefato de serviço. |
+| `locales` | `locales: [pt-BR, en-US]` | Idiomas da app/construtor; o primeiro é o default. |
 | `environments` | `environments: [dev, qa, prod]` | Ambientes declarados para a aplicação. |
 | `main` | `main { ... }` | Bloco opcional de inicialização/configuração; sem regra de negócio. |
 | `set` | `set <Alias>.<Parameter> = <valor>` | Inicializa/override de um `Parameter` de serviço; segredo só como `secret.NOME`. |
@@ -333,7 +333,7 @@ application "example.com/app/loja-do-joao" {
 
 > **Contrato:** todo artefato de topo é público automaticamente; **não existe `exports`**. Privacidade só por membro (`private`).
 
-**Funcionamento:** serviço é uma fatia vertical; todo artefato de topo é público e ele é dono dos seus documentos. O que é `private` dentro de um artefato não entra no contrato público. Importar um serviço não dá acesso de escrita aos dados dele. A URI registry resolve `/index.html` como documentação de API; repositório resolve README + código.
+**Funcionamento:** serviço é um **conceito de negócio**, não biblioteca/package/módulo. Não crie serviço apenas para agrupar Shapes/Icons/Themes/Locales. Ele é uma fatia vertical; todo artefato de topo é público e ele é dono dos seus documentos. O que é `private` dentro de um artefato não entra no contrato público. Importar um serviço não dá acesso de escrita aos dados dele. A URI registry resolve `/index.html` como documentação de API; repositório resolve README + código.
 
 ```bpcms
 service "example.com/services/catalog" {
@@ -554,7 +554,7 @@ document Shipment {
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| text` | Representação base. |
-| `values` | `values { draft { title: {...}; icon: Pending } }` | Valores enumerados; cada valor exige `title` I18n e `icon` de um artefato `Icon`. |
+| `values` | `values { draft { title: {...}; icon: Draft } }` | Valores enumerados; cada valor exige `title` I18n e `icon` de um artefato `Icon`. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
@@ -588,15 +588,15 @@ shape InvoiceStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Info
+      icon: Issued
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      icon: Success
+      icon: Paid
     }
   }
 }
@@ -975,7 +975,7 @@ builder WebApp {
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `theme` | `theme <Name> { ... }` | Tokens de apresentação. |
+| `theme` | `theme <Name> { ... }` | Asset do **construtor**; tokens de apresentação, não artefato de serviço. |
 | `mode` | `mode: light \| dark \| print` | Modo visual. |
 | `supports` | `supports: [WebApp, MobileShell]` | Builders que consomem o tema. |
 | `tokens` | `tokens { color.primary: "#2563eb"; radius.md: 8 }` | Chave pontuada → valor. |
@@ -985,6 +985,8 @@ builder WebApp {
 | `header` | `header: "logo"` | Cabeçalho de impressão. |
 | `footer` | `footer: "page-number"` | Rodapé de impressão. |
 | `density` | `density: compact` | Densidade de layout. |
+
+> Theme é asset do **construtor**, não artefato de serviço. Fontes, cores e tokens são implementação gerada; a app só referencia o ID.
 
 ```bpcms
 theme NuvulaLight {
@@ -1005,7 +1007,7 @@ theme NuvulaLight {
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `locale` | `locale <tag> { ... }` | Idioma/região. |
+| `locale` | `locale <tag> { ... }` | Configuração do app/construtor; não é artefato de serviço. |
 | `fallback` | `fallback: en-US` | Idioma de fallback. |
 | `currency` | `currency: BRL` | Moeda padrão. |
 | `units` | `units: metric \| imperial` | Sistema de unidades padrão. |
@@ -1015,6 +1017,8 @@ theme NuvulaLight {
 | `decimal` | `decimal: ","` | Separador decimal. |
 | `thousands` | `thousands: "."` | Separador de milhar. |
 | `messages` | `messages: "locales/pt-BR.json"` | Catálogo de mensagens. |
+
+> Locale é configuração da app/construtor; não é serviço. `I18n` de títulos é independente.
 
 ```bpcms
 locale pt-BR {
@@ -1138,7 +1142,7 @@ release "example.com/app/loja-com-antifraude"@1.0.0 {
 | `retry` | `retry: exponential(3)` | Política de retry. |
 | `idempotency` | `idempotency: header "Idempotency-Key"` | Chave de idempotência. |
 | `operations` | `operations { getSupplier(id): Supplier }` | Operações tipadas. |
-| `events` | `events { InvoiceIssued -> createInvoice }` | Evento de negócio → operação. |
+| `events` | `events { Issued -> createInvoice }` | Evento de negócio → operação. |
 | `webhooks` | `webhooks { payment.failed -> Payment.failed }` | Evento externo → evento interno. |
 | `fallback` | `fallback { onUnavailable: ManualQuote; cache: 5m }` | Comportamento em falha. |
 | `onUnavailable` | `onUnavailable: ManualQuote` | Ação/estado alternativo. |
@@ -1160,7 +1164,7 @@ integration ERP {
     getSupplier(id: SupplierId): Supplier
     createInvoice(invoice: Invoice): ExternalId
   }
-  events { InvoiceIssued -> createInvoice }
+  events { Issued -> createInvoice }
 }
 ```
 
@@ -1343,7 +1347,7 @@ policy FourEyesPayment {
 | Enum | value sem `title`/`icon` ou value duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_DUPLICATE` |
 | Icon | value aponta para Icon inexistente | `E_ICON_REFERENCE` |
 | Icon | Icon sem `symbol` | `E_ICON_SYMBOL` |
-| Icon | dois icons com o mesmo nome | `E_DUPLICATE_ICON` |
+| Icon | dois icons com o mesmo nome no mesmo serviço | `E_DUPLICATE_ICON` |
 | Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
@@ -1410,17 +1414,17 @@ policy FourEyesPayment {
 | `set` | `set: "lucide"` | Override opcional do conjunto; default é `Theme.icons`. |
 
 ```bpcms
-icon Pending {
-  title: { pt-BR: "Pendente", en: "Pending" }
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
   symbol: "clock"
 }
 ```
 
-**Nomes:** `Icon` não usa prefixo `Icon` no nome. `icon Email` é o ícone `Email`, distinto de `shape Email` e `integration Email`; o namespace é por tipo de artefato. Dois icons com o mesmo nome são erro (`E_DUPLICATE_ICON`), mas o mesmo nome em tipos diferentes é permitido.
+**Nomes:** `Icon` não usa prefixo `Icon` nem prefixo do serviço. O escopo do nome é o **serviço**: `Draft` em Billing e `Draft` em Catalog são icons diferentes; dentro do mesmo serviço, dois icons com o mesmo nome são erro (`E_DUPLICATE_ICON`). `icon Email` também coexiste com `shape Email` e `integration Email`; o namespace é por tipo dentro do serviço.
 
 **Resolução:** `value.icon` → `Icon.symbol` → `Theme.icons` → imagem. O ícone não carrega imagem nem binário; carrega o símbolo lógico. O builder pode trocar o conjunto visual sem mudar o DSL.
 
-**Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_SYMBOL` (Icon sem symbol), `E_DUPLICATE_ICON` (dois icons com o mesmo nome), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
+**Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_SYMBOL` (Icon sem symbol), `E_DUPLICATE_ICON` (dois icons com o mesmo nome no mesmo serviço), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
 
 ## O que ainda não é cláusula
 

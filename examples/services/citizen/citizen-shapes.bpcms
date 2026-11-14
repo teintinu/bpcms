@@ -21,16 +21,45 @@ shape CitizenStatus {
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
-      icon: Success
+      icon: Active
     }
     merged {
       title: { pt-BR: "Mesclado", en: "Merged" }
-      icon: Archived
+      icon: Merged
     }
     blocked {
       title: { pt-BR: "Bloqueado", en: "Blocked" }
-      icon: Error
+      icon: Blocked
     }
   }
   format: plain
+}
+
+shape Email {
+  title: { pt-BR: "E-mail", en: "Email" }
+  base: text
+  normalize: lower-trim
+  validate: email
+  maxLength: 254
+  format: plain
+  index: exact
+}
+
+
+shape Phone {
+  title: { pt-BR: "Telefone", en: "Phone" }
+  base: text
+  normalize: digits
+  validate: phone
+  maxLength: 20
+  format: masked("+## (##) #####-####")
+}
+
+
+shape Image {
+  title: { pt-BR: "Imagem", en: "Image" }
+  base: text
+  validate: url
+  format: image
+  maxLength: 2048
 }

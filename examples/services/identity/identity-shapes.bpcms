@@ -8,15 +8,15 @@ shape UserStatus {
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
-      icon: Success
+      icon: Active
     }
     suspended {
       title: { pt-BR: "Suspenso", en: "Suspended" }
-      icon: Error
+      icon: Suspended
     }
     disabled {
       title: { pt-BR: "Desativado", en: "Disabled" }
-      icon: Error
+      icon: Disabled
     }
   }
   format: plain
@@ -28,16 +28,25 @@ shape SessionStatus {
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
-      icon: Success
+      icon: Active
     }
     ended {
       title: { pt-BR: "Encerrada", en: "Ended" }
-      icon: Cancelled
+      icon: Ended
     }
     expired {
       title: { pt-BR: "Expirada", en: "Expired" }
-      icon: Cancelled
+      icon: Expired
     }
   }
   format: plain
+}
+
+shape Count {
+  title: { pt-BR: "Contagem", en: "Count" }
+  base: integer
+  min: 0
+  precision: 0
+  format: plain
+  aggregate: sum
 }

@@ -23,6 +23,8 @@
 | **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` do serviço tem `symbol` e o tema resolve a imagem. |
 | **Citizen** | Serviço de identificação de pessoa/organização; `CitizenId` + lookup seguro; PII em `private`; sem `taxId`. |
 | **Citizen 1:N** | Um Citizen pode ter vários Users; cada Consumer referencia o mesmo `citizenId`; sem unique; merge reatribui. |
+| **Serviço** | Conceito de negócio, não package/módulo; tipos compartilhados ficam no serviço dono; Theme/Locale são do construtor. |
+| **Nomes** | Sem repetir o serviço no nome (`Draft`, não `BillingDraft`); escopo é o serviço; sem duplicidade dentro do mesmo tipo/serviço. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
 | **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
@@ -173,7 +175,7 @@ A DSL herdada continua **parecida com TypeScript** (declarações, tipos, import
 | **Backend** | Rust (servidor) + Postgres (prod) / SQLite (dev); WebSocket/SSE; fila de jobs | 🔶 |
 | **LLM** | provedor-agnóstico; saída estruturada; ferramentas de modelo; opção local/on-prem | 🔶 |
 | **Construtores** | crates/plugins com `capabilities`; geração ou interpretação | ✅ conceito herdado |
-| **Tema/Idioma** | artefatos consumidos por construtores e estúdio | ✅ herdado |
+| **Tema/Idioma** | assets do construtor/estúdio; não são serviços nem artefatos de negócio | ✅ herdado |
 
 Ganhos da stack herdada:
 
@@ -432,7 +434,7 @@ application "example.com/app/loja-do-joao" {
 
 ### 2.5 Service
 
-**Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. É como um package/DLL de negócio: pode ser reutilizado por várias aplicações e por outros serviços, importar/estender/sobrescrever artefatos e disponibilizar novos.
+**Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. Ele **não é** biblioteca, package ou módulo: não existe serviço criado só para agrupar Shapes, Icons, Themes ou Locales compartilhados. Tipos compartilhados pertencem ao serviço de negócio que os possui; tema/idioma são do construtor, não do serviço.
 
 **Identificador.** O identificador canônico de um `Service` também é uma **URI web sem protocolo**: `example.com/services/catalog`. A representação default no DSL é um literal entre aspas:
 
@@ -1705,7 +1707,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-50`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-52`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1749,6 +1751,8 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-038 | Enum values têm `title` + `icon`; Icon carrega `symbol` resolvido pelo tema | ✅ | baseline atual |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
+| D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
+| D-042 | Identificadores são claros e escopados ao serviço; sem prefixo repetido; icons únicos por serviço | ✅ | baseline atual |
 
 ---
 
@@ -1808,6 +1812,8 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é artefato do serviço com `symbol`, sem prefixo `Icon` no nome; o builder resolve `symbol` no conjunto de ícones do tema. | Labels e imagens consistentes sem binário no DSL. | ✅ |
 | **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
 | **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
+| **B-51** | Serviço pode ser biblioteca/módulo de artefatos? | **Não.** Serviço é conceito de negócio. Não criar serviço para hospedar Shapes/Icons/Themes/Locales compartilhados; Theme/Locale/font/color são do construtor. | Evita serviços artificiais e detalhes de implementação no negócio. | ✅ |
+| **B-52** | Nomes de artefatos devem repetir o serviço? | **Não.** O serviço já é o escopo: `Draft` em Billing é local; não use `BillingDraft`. Nomes claros, sem prefixo de serviço; o mesmo nome pode existir em serviços diferentes, mas não duplicar dentro do mesmo tipo/serviço. | Menos repetição e identificadores legíveis. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1829,7 +1835,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-50) sem lacunas.
+- [x] Decisões de baseline (B-01…B-52) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

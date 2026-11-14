@@ -3,7 +3,6 @@ service "example.com/services/identity" {
   version: 1.0.0
   owner: "Platform Identity"
   imports {
-    service "example.com/services/experience" as Experience
     service "example.com/services/citizen" as Citizen
   }
   requires { oltp, scheduling }

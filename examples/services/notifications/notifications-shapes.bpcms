@@ -27,19 +27,35 @@ shape NotificationStatus {
   values {
     queued {
       title: { pt-BR: "Na fila", en: "Queued" }
-      icon: Pending
+      icon: Queued
     }
     sent {
       title: { pt-BR: "Enviada", en: "Sent" }
-      icon: Success
+      icon: Sent
     }
     failed {
       title: { pt-BR: "Falhou", en: "Failed" }
-      icon: Error
+      icon: Failed
     }
     read {
       title: { pt-BR: "Lida", en: "Read" }
-      icon: Info
+      icon: Read
+    }
+  }
+  format: plain
+}
+
+shape LocaleTag {
+  title: { pt-BR: "Idioma", en: "Locale" }
+  base: text
+  values {
+    pt-BR {
+      title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+      icon: LocalePtBr
+    }
+    en-US {
+      title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+      icon: LocaleEnUs
     }
   }
   format: plain

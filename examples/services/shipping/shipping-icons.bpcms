@@ -1,0 +1,26 @@
+// service: example.com/services/shipping
+
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
+  symbol: "clock"
+}
+
+icon Packed {
+  title: { pt-BR: "Embalada", en: "Packed" }
+  symbol: "info"
+}
+
+icon Dispatched {
+  title: { pt-BR: "Despachada", en: "Dispatched" }
+  symbol: "info"
+}
+
+icon Delivered {
+  title: { pt-BR: "Entregue", en: "Delivered" }
+  symbol: "check-circle"
+}
+
+icon Returned {
+  title: { pt-BR: "Devolvida", en: "Returned" }
+  symbol: "x-circle"
+}

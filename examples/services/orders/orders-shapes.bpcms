@@ -7,11 +7,11 @@ shape OrderStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     placed {
       title: { pt-BR: "Realizado", en: "Placed" }
-      icon: Info
+      icon: Placed
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
@@ -19,7 +19,7 @@ shape OrderStatus {
     }
     fulfilled {
       title: { pt-BR: "Atendido", en: "Fulfilled" }
-      icon: Success
+      icon: Fulfilled
     }
   }
   format: plain

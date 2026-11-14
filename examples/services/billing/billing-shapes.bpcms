@@ -8,19 +8,19 @@ shape InvoiceStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Info
+      icon: Issued
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      icon: Success
+      icon: Paid
     }
     overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: Error
+      icon: Overdue
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
@@ -36,15 +36,15 @@ shape CreditNoteStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Info
+      icon: Issued
     }
     applied {
       title: { pt-BR: "Aplicada", en: "Applied" }
-      icon: Success
+      icon: Applied
     }
   }
   format: plain
@@ -57,15 +57,15 @@ shape BillStatus {
   values {
     open {
       title: { pt-BR: "Aberta", en: "Open" }
-      icon: Pending
+      icon: Open
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      icon: Success
+      icon: Paid
     }
     overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: Error
+      icon: Overdue
     }
   }
   format: plain
@@ -77,16 +77,23 @@ shape TaxRegimeCode {
   values {
     SIMPLES {
       title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
-      icon: Info
+      icon: Simples
     }
     LUCRO_PRESUMIDO {
       title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
-      icon: Info
+      icon: LucroPresumido
     }
     LUCRO_REAL {
       title: { pt-BR: "Lucro Real", en: "Actual profit" }
-      icon: Info
+      icon: LucroReal
     }
   }
+  format: plain
+}
+
+shape YearMonth {
+  title: { pt-BR: "Ano/mês", en: "Year-month" }
+  base: text
+  validate: year-month
   format: plain
 }

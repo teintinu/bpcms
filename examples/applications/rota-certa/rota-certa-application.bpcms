@@ -7,7 +7,6 @@ application "example.com/app/rota-certa" {
   }
 
   services {
-    "example.com/services/experience" as Experience
     "example.com/services/identity" as Identity
     "example.com/services/orders" as Orders
     "example.com/services/shipping" as Shipping

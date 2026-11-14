@@ -1,0 +1,21 @@
+// service: example.com/services/orders
+
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
+  symbol: "clock"
+}
+
+icon Placed {
+  title: { pt-BR: "Realizado", en: "Placed" }
+  symbol: "info"
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelada", en: "Cancelled" }
+  symbol: "x-circle"
+}
+
+icon Fulfilled {
+  title: { pt-BR: "Atendido", en: "Fulfilled" }
+  symbol: "check-circle"
+}

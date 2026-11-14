@@ -4,7 +4,6 @@ service "example.com/services/inventory" {
   owner: "Supply Chain"
   imports {
     service "example.com/services/catalog" as Catalog
-    service "example.com/services/experience" as Experience
   }
   requires { oltp, scheduling, units }
   provides { inventory }

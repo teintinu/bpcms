@@ -12,7 +12,7 @@ event CitizenRegistered {
   key: citizenId
 }
 
-event CitizenMerged {
+event Merged {
   title: { pt-BR: "Cidadão mesclado", en: "Citizen merged" }
   version: 1
   payload {

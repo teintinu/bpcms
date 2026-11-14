@@ -1,0 +1,46 @@
+// service: example.com/services/notifications
+
+icon Email {
+  title: { pt-BR: "E-mail", en: "Email" }
+  symbol: "mail"
+}
+
+icon WhatsApp {
+  title: { pt-BR: "WhatsApp", en: "WhatsApp" }
+  symbol: "message-circle"
+}
+
+icon InApp {
+  title: { pt-BR: "No aplicativo", en: "In-app" }
+  symbol: "bell"
+}
+
+icon Queued {
+  title: { pt-BR: "Na fila", en: "Queued" }
+  symbol: "clock"
+}
+
+icon Sent {
+  title: { pt-BR: "Enviada", en: "Sent" }
+  symbol: "info"
+}
+
+icon Failed {
+  title: { pt-BR: "Falhou", en: "Failed" }
+  symbol: "alert-circle"
+}
+
+icon Read {
+  title: { pt-BR: "Lida", en: "Read" }
+  symbol: "info"
+}
+
+icon LocalePtBr {
+  title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+  symbol: "languages"
+}
+
+icon LocaleEnUs {
+  title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+  symbol: "globe"
+}

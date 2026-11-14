@@ -2,9 +2,6 @@ service "example.com/services/citizen" {
   title: { pt-BR: "Cidadão", en: "Citizen" }
   version: 1.0.0
   owner: "Platform Citizen"
-  imports {
-    service "example.com/services/experience" as Experience
-  }
   requires { oltp, sync }
   provides { citizen }
 }

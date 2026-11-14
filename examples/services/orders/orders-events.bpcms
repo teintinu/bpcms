@@ -1,5 +1,5 @@
 // service: example.com/services/orders
-event OrderPlaced {
+event Placed {
   title: { pt-BR: "Pedido realizado", en: "Order placed" }
   version: 1
   payload {
@@ -13,7 +13,7 @@ event OrderPlaced {
   key: orderId
 }
 
-event OrderCancelled {
+event Cancelled {
   title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
   version: 1
   payload {

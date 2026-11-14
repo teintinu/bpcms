@@ -6,7 +6,6 @@ service "example.com/services/orders" {
     service "example.com/services/catalog" as Catalog
     service "example.com/services/inventory" as Inventory
     service "example.com/services/identity" as Identity
-    service "example.com/services/experience" as Experience
   }
   requires { oltp, sync, scheduling, identity, timezone, regionalization, units }
   provides { orders }

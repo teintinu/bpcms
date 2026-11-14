@@ -3,7 +3,6 @@ service "example.com/services/catalog" {
   version: 1.0.0
   owner: "Catalog"
   imports {
-    service "example.com/services/experience" as Experience
     service "example.com/services/identity" as Identity
   }
   requires { oltp, attachments, units }

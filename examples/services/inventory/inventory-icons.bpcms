@@ -1,0 +1,31 @@
+// service: example.com/services/inventory
+
+icon Available {
+  title: { pt-BR: "Disponível", en: "Available" }
+  symbol: "info"
+}
+
+icon Reserved {
+  title: { pt-BR: "Reservado", en: "Reserved" }
+  symbol: "info"
+}
+
+icon Blocked {
+  title: { pt-BR: "Bloqueado", en: "Blocked" }
+  symbol: "alert-circle"
+}
+
+icon Active {
+  title: { pt-BR: "Ativo", en: "Active" }
+  symbol: "check-circle"
+}
+
+icon Released {
+  title: { pt-BR: "Liberada", en: "Released" }
+  symbol: "info"
+}
+
+icon Expired {
+  title: { pt-BR: "Expirada", en: "Expired" }
+  symbol: "x-circle"
+}

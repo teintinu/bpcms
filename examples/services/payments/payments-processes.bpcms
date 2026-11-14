@@ -3,7 +3,7 @@ process PaymentSaga {
   version: 1
   goal: "Cobrar o pedido e reverter se a captura falhar"
   roles: [Manager]
-  start on OrderPlaced
+  start on Placed
 
   task ChargePayment {
     type: service
@@ -13,7 +13,7 @@ process PaymentSaga {
     writes: [Payment]
   }
 
-  on error PaymentFailed -> RefundPayment
+  on error Failed -> RefundPayment
 
   task RefundPayment {
     type: compensation

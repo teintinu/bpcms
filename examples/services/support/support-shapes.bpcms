@@ -7,23 +7,23 @@ shape TicketStatus {
   values {
     open {
       title: { pt-BR: "Aberta", en: "Open" }
-      icon: Pending
+      icon: Open
     }
     in_progress {
       title: { pt-BR: "Em andamento", en: "In progress" }
-      icon: Info
+      icon: InProgress
     }
     waiting {
       title: { pt-BR: "Aguardando", en: "Waiting" }
-      icon: Pending
+      icon: Waiting
     }
     resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
-      icon: Success
+      icon: Resolved
     }
     closed {
       title: { pt-BR: "Fechado", en: "Closed" }
-      icon: Archived
+      icon: Closed
     }
   }
   format: plain
@@ -35,23 +35,23 @@ shape ReturnStatus {
   values {
     requested {
       title: { pt-BR: "Solicitado", en: "Requested" }
-      icon: Pending
+      icon: Requested
     }
     approved {
       title: { pt-BR: "Aprovado", en: "Approved" }
-      icon: Success
+      icon: Approved
     }
     rejected {
       title: { pt-BR: "Rejeitado", en: "Rejected" }
-      icon: Error
+      icon: Rejected
     }
     received {
       title: { pt-BR: "Recebida", en: "Received" }
-      icon: Success
+      icon: Received
     }
     refunded {
       title: { pt-BR: "Reembolsado", en: "Refunded" }
-      icon: Info
+      icon: Refunded
     }
   }
   format: plain
@@ -63,19 +63,19 @@ shape TicketPriority {
   values {
     P1 {
       title: { pt-BR: "Prioridade 1", en: "Priority 1" }
-      icon: Priority1
+      icon: P1
     }
     P2 {
       title: { pt-BR: "Prioridade 2", en: "Priority 2" }
-      icon: Priority2
+      icon: P2
     }
     P3 {
       title: { pt-BR: "Prioridade 3", en: "Priority 3" }
-      icon: Priority3
+      icon: P3
     }
     P4 {
       title: { pt-BR: "Prioridade 4", en: "Priority 4" }
-      icon: Priority4
+      icon: P4
     }
   }
   format: plain

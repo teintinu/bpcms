@@ -13,7 +13,7 @@ event PaymentSucceeded {
   key: paymentId
 }
 
-event PaymentFailed {
+event Failed {
   title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
   version: 1
   payload {

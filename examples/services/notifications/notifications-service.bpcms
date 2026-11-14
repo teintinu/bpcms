@@ -4,7 +4,7 @@ service "example.com/services/notifications" {
   owner: "Customer Success"
   imports {
     service "example.com/services/identity" as Identity
-    service "example.com/services/experience" as Experience
+    service "example.com/services/citizen" as Citizen
   }
   requires { oltp, scheduling, timezone, regionalization }
   provides { notifications }

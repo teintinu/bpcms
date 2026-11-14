@@ -1,0 +1,26 @@
+// service: example.com/services/identity
+
+icon Active {
+  title: { pt-BR: "Ativo", en: "Active" }
+  symbol: "check-circle"
+}
+
+icon Suspended {
+  title: { pt-BR: "Suspenso", en: "Suspended" }
+  symbol: "alert-circle"
+}
+
+icon Disabled {
+  title: { pt-BR: "Desativado", en: "Disabled" }
+  symbol: "alert-circle"
+}
+
+icon Ended {
+  title: { pt-BR: "Encerrada", en: "Ended" }
+  symbol: "x-circle"
+}
+
+icon Expired {
+  title: { pt-BR: "Expirada", en: "Expired" }
+  symbol: "x-circle"
+}

@@ -2349,6 +2349,8 @@ builder DocsPdf {
 
 ## Theme
 
+> Theme é asset do construtor, não serviço nem artefato de negócio. Os exemplos testam a sintaxe que o builder consome.
+
 ### T.1 Tema claro padrão
 
 ```bpcms
@@ -2466,6 +2468,8 @@ theme CompactOps {
 *Valida: tema de alta densidade para operação.*
 
 ## Locale
+
+> Locale é configuração da app/construtor; não é serviço nem artefato de negócio.
 
 ### L.1 Português do Brasil
 
@@ -3384,33 +3388,33 @@ policy ApprovalSegregation {
 
 # Icon
 
-### IC.1 Pendente
+### IC.1 Rascunho
 
 ```bpcms
-icon Pending {
-  title: { pt-BR: "Pendente", en: "Pending" }
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
   symbol: "clock"
 }
 ```
 
 *Valida: ícone definido no serviço, sem imagem/binário; o builder resolve no tema.*
 
-### IC.2 Sucesso
+### IC.2 Paga
 
 ```bpcms
-icon Success {
-  title: { pt-BR: "Concluído", en: "Success" }
+icon Paid {
+  title: { pt-BR: "Paga", en: "Paid" }
   symbol: "check-circle"
 }
 ```
 
 *Valida: ícone reutilizável por vários values.*
 
-### IC.3 Erro
+### IC.3 Vencida
 
 ```bpcms
-icon Error {
-  title: { pt-BR: "Erro", en: "Error" }
+icon Overdue {
+  title: { pt-BR: "Vencida", en: "Overdue" }
   symbol: "alert-circle"
 }
 ```
@@ -3426,18 +3430,18 @@ icon Email {
 }
 ```
 
-*Valida: ícone de canal definido no serviço de experiência.*
+*Valida: ícone de canal definido no serviço de notificações.*
 
 ### IC.5 Prioridade
 
 ```bpcms
-icon Priority1 {
+icon P1 {
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
   symbol: "alert-octagon"
 }
 ```
 
-*Valida: ícone de domínio para enum de prioridade.*
+*Valida: ícone de domínio para enum de prioridade no serviço de atendimento.*
 
 ### IC.6 Moeda
 

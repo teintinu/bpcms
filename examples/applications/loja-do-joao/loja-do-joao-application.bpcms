@@ -7,7 +7,6 @@ application "example.com/app/loja-do-joao" {
   }
 
   services {
-    "example.com/services/experience" as Experience
     "example.com/services/identity" as Identity
     "example.com/services/catalog" as Catalog
     "example.com/services/orders" as Orders

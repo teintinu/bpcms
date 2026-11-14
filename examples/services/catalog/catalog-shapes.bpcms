@@ -15,15 +15,106 @@ shape ProductStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     published {
       title: { pt-BR: "Publicado", en: "Published" }
-      icon: Success
+      icon: Published
     }
     archived {
       title: { pt-BR: "Arquivado", en: "Archived" }
       icon: Archived
+    }
+  }
+  format: plain
+}
+
+shape MoneyBRL {
+  title: { pt-BR: "Dinheiro (BRL)", en: "Money (BRL)" }
+  base: decimal
+  currency: BRL
+  scale: 2
+  parse: locale-number
+  format: currency
+  compare: exact
+  aggregate: sum
+}
+
+
+shape Mass {
+  title: { pt-BR: "Massa", en: "Mass" }
+  base: decimal
+  dimension: mass
+  unit: kg
+  displayUnits: [kg, g, t, lb, oz]
+  precision: 6
+  min: 0
+  parse: quantity
+  convert: units.mass
+  index: normalized
+  aggregate: sum
+}
+
+
+shape Length {
+  title: { pt-BR: "Comprimento", en: "Length" }
+  base: decimal
+  dimension: length
+  unit: cm
+  displayUnits: [cm, m, km, in, ft, yd, mi]
+  precision: 3
+  min: 0
+  parse: quantity
+  convert: units.length
+  index: normalized
+}
+
+
+shape Volume {
+  title: { pt-BR: "Volume", en: "Volume" }
+  base: decimal
+  dimension: volume
+  unit: m3
+  displayUnits: [m3, L, cm3, gal]
+  precision: 6
+  min: 0
+  parse: quantity
+  convert: units.volume
+  index: normalized
+}
+
+
+
+
+shape Percentage {
+  title: { pt-BR: "Percentual", en: "Percentage" }
+  base: decimal
+  dimension: ratio
+  unit: "%"
+  min: 0
+  max: 100
+  scale: 2
+  parse: percent
+  format: percent
+  aggregate: weighted-average
+}
+
+
+shape CurrencyCode {
+  title: { pt-BR: "Código de moeda", en: "Currency code" }
+  base: text
+  values {
+    BRL {
+      title: { pt-BR: "Real", en: "Brazilian real" }
+      icon: Brl
+    }
+    USD {
+      title: { pt-BR: "Dólar", en: "US dollar" }
+      icon: Usd
+    }
+    EUR {
+      title: { pt-BR: "Euro", en: "Euro" }
+      icon: Eur
     }
   }
   format: plain

@@ -7,23 +7,23 @@ shape ShipmentStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Pending
+      icon: Draft
     }
     packed {
       title: { pt-BR: "Embalada", en: "Packed" }
-      icon: Info
+      icon: Packed
     }
     dispatched {
       title: { pt-BR: "Despachada", en: "Dispatched" }
-      icon: Info
+      icon: Dispatched
     }
     delivered {
       title: { pt-BR: "Entregue", en: "Delivered" }
-      icon: Success
+      icon: Delivered
     }
     returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
-      icon: Cancelled
+      icon: Returned
     }
   }
   format: plain
