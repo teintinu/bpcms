@@ -1,0 +1,6 @@
+service "example.com/services/experience" {
+  version: 1.0.0
+  owner: "Platform Experience"
+  requires { gui, print, units, regionalization }
+  provides { experience }
+}

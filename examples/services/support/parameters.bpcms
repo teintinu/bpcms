@@ -1,0 +1,13 @@
+// service: example.com/services/support
+parameter DefaultSla {
+  type: Duration
+  source: config
+  default: 2d
+}
+
+parameter RefundLimit {
+  type: MoneyBRL
+  source: config
+  default: 500 BRL
+  min: 0 BRL
+}

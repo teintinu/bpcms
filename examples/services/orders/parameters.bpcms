@@ -1,0 +1,8 @@
+// service: example.com/services/orders
+parameter MaxItemsPerOrder {
+  type: Count
+  source: config
+  default: 50
+  min: 1
+  max: 200
+}

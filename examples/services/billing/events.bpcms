@@ -1,0 +1,25 @@
+// service: example.com/services/billing
+event InvoiceIssued {
+  version: 1
+  payload {
+    invoiceId: InvoiceId
+    orderId: OrderId
+    total: MoneyBRL
+    issuedAt: DateTime
+  }
+  producer: Invoice
+  consumers: [Orders, Notifications]
+  key: invoiceId
+}
+
+event InvoiceOverdue {
+  version: 1
+  payload {
+    invoiceId: InvoiceId
+    dueAt: DateTime
+    daysLate: Count
+  }
+  producer: Invoice
+  consumers: [Support, Notifications]
+  key: invoiceId
+}

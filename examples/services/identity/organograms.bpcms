@@ -1,0 +1,10 @@
+// service: example.com/services/identity
+organogram Platform {
+  hierarchy {
+    Admin > Manager > Clerk > Customer
+    Manager > Dispatcher > Driver
+  }
+  fourEyes {
+    refund.approve requires Manager and Manager != Clerk
+  }
+}

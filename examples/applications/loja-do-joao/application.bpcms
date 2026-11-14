@@ -1,0 +1,35 @@
+application "example.com/app/loja-do-joao" {
+  source: registry
+  version: 1.4.0
+  title: {
+    pt-BR: "Loja do João"
+    en-US: "João's Store"
+  }
+
+  services {
+    "example.com/services/experience" as Experience
+    "example.com/services/identity" as Identity
+    "example.com/services/catalog" as Catalog
+    "example.com/services/orders" as Orders
+    "example.com/services/payments" as Payments
+    "example.com/services/shipping" as Shipping
+    "example.com/services/notifications" as Notifications
+  }
+  roles {
+    Customer
+    Clerk
+    Manager
+    Dispatcher
+    Driver
+    Manager > Clerk
+    Manager > Dispatcher > Driver
+  }
+  theme: Nuvula
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
+  main {
+    set Catalog.DefaultCurrency = "BRL"
+    start ["example.com/services/identity"]
+  }
+}

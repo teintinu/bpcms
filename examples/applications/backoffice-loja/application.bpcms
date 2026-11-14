@@ -1,0 +1,36 @@
+application "example.com/app/backoffice-loja" {
+  source: registry
+  version: 1.2.0
+  title: {
+    pt-BR: "Administração da Loja"
+    en-US: "Store Backoffice"
+  }
+
+  services {
+    "example.com/services/experience" as Experience
+    "example.com/services/identity" as Identity
+    "example.com/services/orders" as Orders
+    "example.com/services/inventory" as Inventory
+    "example.com/services/billing" as Billing
+    "example.com/services/support" as Support
+    "example.com/services/notifications" as Notifications
+  }
+  roles {
+    Clerk
+    Manager
+    SupportAgent
+    Admin
+    Dispatcher
+    Driver
+    Admin > Manager > Clerk
+    Manager > SupportAgent
+    Manager > Dispatcher > Driver
+  }
+  theme: Backoffice
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
+  main {
+    set Billing.TaxRegime = "SIMPLES"
+  }
+}

@@ -1,0 +1,80 @@
+// service: example.com/services/support
+document Ticket {
+  version: 1
+  owner: "Support"
+  sync: live
+  audit: true
+
+  fields {
+    id: TicketId
+    customerId: CustomerId
+    orderId: OrderId?
+    subject: Text { maxLength: 160 }
+    description: Text
+    priority: TicketPriority
+    status: TicketStatus
+    assignee: UserId?
+    slaDue: DateTime
+    resolutionTime: Duration?
+    slaMet: Boolean?
+    createdAt: DateTime
+  }
+
+  computed SlaBreach from Ticket {
+    freshness: 1m
+    exposes: [breached, remaining]
+  }
+
+  indexes {
+    byStatus: [status, priority, slaDue] range
+    byAssignee: [assignee] hash
+    search: [subject, description] search
+  }
+
+  actions {
+    assign(user: UserId): Ticket
+    comment(body: Text): Ticket
+    resolve(): Ticket
+    reopen(reason: Text): Ticket
+    escalateBreached(): void
+  }
+
+  rules {
+    status == resolved implies assignee != null
+  }
+}
+
+document ReturnRequest {
+  version: 1
+  owner: "Support"
+  sync: live
+  audit: true
+
+  fields {
+    id: ReturnId
+    orderId: OrderId
+    paymentId: PaymentId?
+    shipmentId: ShipmentId?
+    reason: Text
+    status: ReturnStatus
+    refundAmount: MoneyBRL
+    requestedAt: DateTime
+  }
+
+  indexes {
+    byOrder: [orderId] hash
+    byStatus: [status, requestedAt] range
+  }
+
+  actions {
+    request(reason: Text): ReturnRequest
+    approve(): ReturnRequest
+    reject(reason: Text): ReturnRequest
+    refund(): ReturnRequest
+  }
+
+  rules {
+    refundAmount >= 0
+    status == approved implies refundAmount > 0
+  }
+}

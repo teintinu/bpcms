@@ -1,0 +1,17 @@
+// service: example.com/services/payments
+report PaymentReconciliation {
+  type: report
+  sources: [Payment, Refund]
+  roles: [Manager]
+
+  filters { period; status; method }
+  dimensions { method; status }
+  metrics {
+    captured: sum(Payment.amount) where status == captured
+    refunded: sum(Refund.amount) where status == completed
+    failed: count(Payment) where status == failed
+  }
+  freshness: 5m
+  units { captured: BRL; refunded: BRL }
+  export: [csv, pdf]
+}

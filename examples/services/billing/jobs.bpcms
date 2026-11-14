@@ -1,0 +1,10 @@
+// service: example.com/services/billing
+job CloseMonth {
+  schedule: "0 2 1 * *"
+  timezone: America/Fortaleza
+  action: Invoice.closeMonth()
+  timeout: 30m
+  retry: 3
+  idempotent: true
+  deadLetter: true
+}

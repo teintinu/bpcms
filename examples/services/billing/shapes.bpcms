@@ -1,0 +1,52 @@
+// service: example.com/services/billing
+shape InvoiceId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape InvoiceItemId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape CreditNoteId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape InvoiceStatus {
+  base: text
+  values: [draft, issued, paid, overdue, cancelled]
+  format: plain
+}
+
+shape CreditNoteStatus {
+  base: text
+  values: [draft, issued, applied]
+  format: plain
+}
+
+shape BillId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape BillStatus {
+  base: text
+  values: [open, paid, overdue]
+  format: plain
+}
+
+shape TaxRegimeCode {
+  base: text
+  values: [SIMPLES, LUCRO_PRESUMIDO, LUCRO_REAL]
+  format: plain
+}

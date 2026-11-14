@@ -1,0 +1,6 @@
+// service: example.com/services/inventory
+parameter ReservationTtl {
+  type: Duration
+  source: config
+  default: 30m
+}

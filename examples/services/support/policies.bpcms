@@ -1,0 +1,16 @@
+// service: example.com/services/support
+policy SlaEscalation {
+  appliesTo: Ticket
+  rule: if breached then escalateTo(Manager) within 15m
+  severity: enforce
+  notification: [Email, WhatsApp]
+  audit: true
+}
+
+policy RefundAuthorization {
+  appliesTo: ReturnRequest.refund
+  rule: amount <= RefundLimit or approver.role == Manager
+  severity: block
+  message: "Reembolso acima do limite exige gerente"
+  audit: true
+}

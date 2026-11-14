@@ -1,0 +1,9 @@
+// service: example.com/services/support
+job EscalateSla {
+  schedule: "*/5 * * * *"
+  timezone: America/Fortaleza
+  action: Ticket.escalateBreached()
+  filter { status != resolved and slaDue < now() }
+  batch: 100
+  retry: 1
+}

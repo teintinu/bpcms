@@ -1,0 +1,32 @@
+// service: example.com/services/support
+shape TicketId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape ReturnId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape TicketStatus {
+  base: text
+  values: [open, in_progress, waiting, resolved, closed]
+  format: plain
+}
+
+shape ReturnStatus {
+  base: text
+  values: [requested, approved, rejected, received, refunded]
+  format: plain
+}
+
+shape TicketPriority {
+  base: text
+  values: [P1, P2, P3, P4]
+  format: plain
+}

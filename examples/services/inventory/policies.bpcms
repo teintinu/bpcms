@@ -1,0 +1,8 @@
+// service: example.com/services/inventory
+policy StockAdjustment {
+  appliesTo: StockItem.adjust
+  rule: quantity != 0
+  severity: require
+  message: "Ajuste de estoque exige justificativa"
+  audit: true
+}

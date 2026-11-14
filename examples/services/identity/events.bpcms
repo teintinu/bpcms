@@ -1,0 +1,11 @@
+// service: example.com/services/identity
+event UserLoggedIn {
+  version: 1
+  payload {
+    userId: UserId
+    at: DateTime
+  }
+  producer: Session
+  consumers: [Notifications]
+  key: userId
+}

@@ -1,0 +1,17 @@
+service "example.com/services/billing" {
+  version: 1.0.0
+  owner: "Billing"
+  imports {
+    service "example.com/services/orders" as Orders
+    service "example.com/services/payments" as Payments
+    service "example.com/services/identity" as Identity
+    service "example.com/services/experience" as Experience
+  }
+  requires { oltp, scheduling, attachments, identity, timezone, regionalization, units }
+  provides { billing }
+
+  // Ativo apenas em apps que incluem billing na closure.
+  override "example.com/services/orders#Order.cancel" {
+    with: "example.com/services/billing#OrderCancellation.cancel"
+  }
+}

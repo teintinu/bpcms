@@ -1,0 +1,38 @@
+// service: example.com/services/shipping
+integration Carrier {
+  protocol: rest
+  baseUrl: env.CARRIER_URL
+  auth: oauth2
+  timeout: 20s
+
+  operations {
+    quote(shipment: Shipment): MoneyBRL
+    createLabel(shipment: Shipment): TrackingCode
+    track(tracking: TrackingCode): TrackingEvent[]
+  }
+
+  fallback {
+    onUnavailable: ManualQuote
+    cache: 5m
+  }
+}
+
+integration ScaleDevice {
+  protocol: mqtt
+  host: env.SCALE_HOST
+  topic: "scales/+/reading"
+  auth: certificate
+
+  operations {
+    read(deviceId: Text): Mass
+  }
+
+  events {
+    reading -> Shipment.pesoBruto
+  }
+
+  quality {
+    staleAfter: 5m
+    calibrate: monthly
+  }
+}

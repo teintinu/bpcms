@@ -1,0 +1,14 @@
+// service: example.com/services/shipping
+parameter DefaultCarrier {
+  type: Text
+  source: config
+  default: "CarrierX"
+}
+
+parameter MaxWeight {
+  type: Mass
+  source: config
+  default: 30 kg
+  min: 1 kg
+  max: 500 kg
+}

@@ -1,0 +1,10 @@
+// service: example.com/services/payments
+job RetryFailedPayments {
+  schedule: "*/15 * * * *"
+  timezone: America/Fortaleza
+  action: Payment.retryFailed()
+  filter { status == failed and capturedAt > now() - 24h }
+  maxAttempts: 5
+  backoff: exponential
+  deadLetter: true
+}

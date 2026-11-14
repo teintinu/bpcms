@@ -1,0 +1,27 @@
+// service: example.com/services/orders
+view OrderForm {
+  type: form
+  document: Order
+  roles: [Clerk]
+
+  fields {
+    customerId: CustomerId { required: true }
+    discount: MoneyBRL
+    status: OrderStatus { readonly: true }
+  }
+
+  actions {
+    save -> Order.create
+    place -> Order.place
+    cancel -> none
+  }
+}
+
+view OrderDetail {
+  type: detail
+  document: Order
+  roles: [Clerk, Manager]
+
+  sections { summary; items; timeline; documents }
+  actions { place; cancel; print }
+}

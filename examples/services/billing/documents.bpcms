@@ -1,0 +1,165 @@
+// service: example.com/services/billing
+document InvoiceItem {
+  version: 1
+  owner: "Billing"
+  sync: live
+
+  fields {
+    id: InvoiceItemId
+    invoiceId: InvoiceId
+    productId: ProductId
+    quantity: Count
+    unitPrice: MoneyBRL
+    total: MoneyBRL
+  }
+
+  indexes {
+    byInvoice: [invoiceId] hash
+  }
+
+  rules {
+    total == quantity * unitPrice
+  }
+}
+
+document Invoice {
+  version: 1
+  owner: "Billing"
+  sync: live
+  audit: true
+  retention: 5y
+
+  fields {
+    id: InvoiceId
+    number: Text { maxLength: 40, unique: true }
+    series: Text { maxLength: 10 }
+    orderId: OrderId
+    customer: CustomerSnapshot
+    items: InvoiceItem[]
+    subtotal: MoneyBRL
+    tax: MoneyBRL
+    total: MoneyBRL
+    status: InvoiceStatus
+    issuedAt: DateTime?
+    dueAt: DateTime?
+  }
+
+  indexes {
+    number: [series, number] unique
+    byOrder: [orderId] hash
+    byStatus: [status, dueAt] range
+  }
+
+  actions {
+    issue(series: Text, number: Text): Invoice
+    cancel(reason: Text): Invoice
+    closeMonth(): void
+  }
+
+  rules {
+    total == subtotal + tax
+    total == items.sum(total)
+    status == issued implies issuedAt != null
+  }
+}
+
+document CreditNote {
+  version: 1
+  owner: "Billing"
+  sync: live
+  audit: true
+
+  fields {
+    id: CreditNoteId
+    invoiceId: InvoiceId
+    amount: MoneyBRL
+    reason: Text
+    status: CreditNoteStatus
+    issuedAt: DateTime?
+  }
+
+  indexes {
+    byInvoice: [invoiceId] hash
+    byStatus: [status, issuedAt] range
+  }
+
+  actions {
+    issue(): CreditNote
+    apply(): CreditNote
+  }
+
+  rules {
+    amount > 0
+    amount <= 100000 BRL
+  }
+}
+
+document Bill {
+  version: 1
+  owner: "Billing"
+  sync: read
+  audit: true
+
+  fields {
+    id: BillId
+    supplier: Text { maxLength: 120 }
+    amount: MoneyBRL
+    dueAt: DateTime
+    status: BillStatus
+    paidAt: DateTime?
+  }
+
+  indexes {
+    byStatus: [status, dueAt] range
+  }
+
+  actions {
+    pay(): Bill
+  }
+
+  rules {
+    amount > 0
+  }
+}
+
+document OrderCancellation {
+  version: 1
+  owner: "Billing"
+  sync: live
+  audit: true
+
+  fields {
+    orderId: OrderId
+    reason: Text
+    cancelledAt: DateTime
+  }
+
+  actions {
+    cancel(reason: Text): Order
+  }
+
+  rules {
+    reason != null
+  }
+}
+
+document MonthlyRevenue {
+  version: 1
+  owner: "Billing"
+  computed from Invoice, Payment
+  freshness: 1h
+  sync: read
+
+  fields {
+    month: YearMonth
+    revenue: MoneyBRL
+    invoiceCount: Count
+    calculatedAt: DateTime
+  }
+
+  indexes { month: [month] unique }
+
+  actions { refresh(): MonthlyRevenue }
+
+  rules { month >= 2026-01 }
+}

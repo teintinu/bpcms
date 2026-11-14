@@ -1,0 +1,28 @@
+// service: example.com/services/notifications
+integration Email {
+  protocol: smtp
+  host: env.SMTP_HOST
+  auth: password
+  from: "no-reply@lojadojoao.com"
+
+  operations {
+    send(template: NotificationTemplate, to: Email, data: Map): MessageId
+  }
+  limits {
+    rate: 100/min
+    retry: exponential(5)
+  }
+}
+
+integration WhatsApp {
+  protocol: webhook
+  baseUrl: env.WHATSAPP_URL
+  auth: token
+
+  operations {
+    sendTemplate(to: Phone, template: NotificationTemplate, data: Map): MessageId
+  }
+  webhooks {
+    message.status -> Notification.status
+  }
+}

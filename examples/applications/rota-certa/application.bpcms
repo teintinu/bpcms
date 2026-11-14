@@ -1,0 +1,34 @@
+application "example.com/app/rota-certa" {
+  source: registry
+  version: 1.9.2
+  title: {
+    pt-BR: "Rota Certa"
+    en-US: "Right Route"
+  }
+
+  services {
+    "example.com/services/experience" as Experience
+    "example.com/services/identity" as Identity
+    "example.com/services/orders" as Orders
+    "example.com/services/shipping" as Shipping
+    "example.com/services/support" as Support
+    "example.com/services/notifications" as Notifications
+  }
+  roles {
+    Dispatcher
+    Driver
+    Manager
+    Clerk
+    SupportAgent
+    Manager > Dispatcher > Driver
+    Manager > Clerk
+    Manager > SupportAgent
+  }
+  theme: Ops
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
+  main {
+    set Shipping.DefaultCarrier = "CarrierX"
+  }
+}

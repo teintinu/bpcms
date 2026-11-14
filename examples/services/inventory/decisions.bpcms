@@ -1,0 +1,10 @@
+// service: example.com/services/inventory
+decision ReorderPoint {
+  appliesTo: StockItem.reserve
+  when: [available, reorderPoint]
+  cases {
+    available <= reorderPoint -> Reorder
+    available > reorderPoint -> Ok
+  }
+  owner: SupplyChain
+}

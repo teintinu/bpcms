@@ -1,0 +1,18 @@
+// service: example.com/services/notifications
+job SendDigest {
+  schedule: "0 7 * * *"
+  timezone: America/Fortaleza
+  action: Notification.sendDigest()
+  timeout: 5m
+  retry: 2
+}
+
+job RetryNotifications {
+  schedule: "*/15 * * * *"
+  timezone: America/Fortaleza
+  action: Notification.retryFailed()
+  filter { status == failed and sentAt > now() - 24h }
+  maxAttempts: 5
+  backoff: exponential
+  deadLetter: true
+}

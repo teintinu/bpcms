@@ -1,0 +1,8 @@
+// service: example.com/services/catalog
+policy ProductPublish {
+  appliesTo: Product.publish
+  rule: price > 0 and status == draft
+  severity: block
+  message: "Produto precisa de preço e estar em rascunho para publicar"
+  audit: true
+}

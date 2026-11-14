@@ -1,0 +1,13 @@
+// service: example.com/services/billing
+parameter TaxRegime {
+  type: TaxRegimeCode
+  source: config
+  default: "SIMPLES"
+}
+
+parameter InvoiceSeries {
+  type: Text
+  source: config
+  default: "A"
+  maxLength: 10
+}

@@ -1,0 +1,27 @@
+// service: example.com/services/billing
+view InvoiceForm {
+  type: form
+  document: Invoice
+  roles: [Manager]
+
+  fields {
+    orderId: OrderId { required: true }
+    series: Text { required: true }
+    number: Text { required: true }
+    status: InvoiceStatus { readonly: true }
+  }
+
+  actions {
+    save -> Invoice.issue
+    cancel -> none
+  }
+}
+
+view InvoiceDetail {
+  type: detail
+  document: Invoice
+  roles: [Manager]
+
+  sections { summary; items; customer; timeline }
+  actions { issue; print; cancel }
+}

@@ -1,0 +1,27 @@
+// service: example.com/services/payments
+process PaymentSaga {
+  version: 1
+  goal: "Cobrar o pedido e reverter se a captura falhar"
+  roles: [Manager]
+  start on OrderPlaced
+
+  task ChargePayment {
+    type: service
+    integration: PaymentGateway
+    action: Payment.capture
+    reads: [Payment]
+    writes: [Payment]
+  }
+
+  on error PaymentFailed -> RefundPayment
+
+  task RefundPayment {
+    type: compensation
+    for: ChargePayment
+    action: Payment.refund
+    reads: [Payment]
+    writes: [Refund]
+  }
+
+  end on PaymentSucceeded
+}

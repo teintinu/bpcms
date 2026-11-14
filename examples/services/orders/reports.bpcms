@@ -1,0 +1,16 @@
+// service: example.com/services/orders
+report OrderPipeline {
+  type: dashboard
+  sources: [Order]
+  roles: [Manager]
+
+  filters { period; status }
+  metrics {
+    placed: count(Order) where status == placed
+    cancelled: count(Order) where status == cancelled
+    revenue: sum(Order.total) where status == placed
+    avgTicket: avg(Order.total)
+  }
+  freshness: 10m
+  units { revenue: BRL; avgTicket: BRL }
+}

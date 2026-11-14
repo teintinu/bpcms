@@ -1,0 +1,15 @@
+// service: example.com/services/inventory
+report InventoryAging {
+  type: report
+  sources: [StockItem, Product]
+
+  filters { warehouse; category }
+  dimensions { productId; warehouse; ageBucket }
+  metrics {
+    quantity: sum(StockItem.available)
+    value: sum(StockItem.available * Product.price)
+    aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
+  }
+  sort { value: desc }
+  export: [csv, xlsx]
+}

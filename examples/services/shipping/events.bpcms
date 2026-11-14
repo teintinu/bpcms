@@ -1,0 +1,25 @@
+// service: example.com/services/shipping
+event ShipmentDispatched {
+  version: 1
+  payload {
+    shipmentId: ShipmentId
+    orderId: OrderId
+    tracking: TrackingCode
+    dispatchedAt: DateTime
+  }
+  producer: Shipment
+  consumers: [Orders, Billing, Notifications]
+  key: shipmentId
+}
+
+event DeliveryDelayed {
+  version: 1
+  payload {
+    shipmentId: ShipmentId
+    expectedAt: DateTime
+    newEta: DateTime
+  }
+  producer: Shipment
+  consumers: [Support, Notifications]
+  key: shipmentId
+}

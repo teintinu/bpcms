@@ -1,0 +1,8 @@
+// service: example.com/services/notifications
+policy NotificationConsent {
+  appliesTo: Notification.send
+  rule: consent == true
+  severity: block
+  message: "Destinatário sem consentimento para este canal"
+  audit: true
+}

@@ -1,0 +1,9 @@
+// service: example.com/services/inventory
+job ExpireReservations {
+  schedule: "*/10 * * * *"
+  timezone: America/Fortaleza
+  action: Reservation.expire()
+  filter { status == active and expiresAt < now() }
+  batch: 200
+  retry: 2
+}

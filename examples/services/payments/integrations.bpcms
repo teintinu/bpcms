@@ -1,0 +1,19 @@
+// service: example.com/services/payments
+integration PaymentGateway {
+  protocol: rest
+  baseUrl: env.PAYMENT_URL
+  auth: api-key
+  timeout: 15s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    authorize(order: Order, amount: MoneyBRL): Payment
+    capture(paymentId: PaymentId): Payment
+    refund(paymentId: PaymentId, amount: MoneyBRL): Refund
+  }
+
+  webhooks {
+    payment.succeeded -> PaymentSucceeded
+    payment.failed -> PaymentFailed
+  }
+}

@@ -1,0 +1,10 @@
+service "example.com/services/notifications" {
+  version: 1.0.0
+  owner: "Customer Success"
+  imports {
+    service "example.com/services/identity" as Identity
+    service "example.com/services/experience" as Experience
+  }
+  requires { oltp, scheduling, timezone, regionalization }
+  provides { notifications }
+}

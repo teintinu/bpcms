@@ -503,7 +503,8 @@ document Shipment {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
-| `base` | `base: decimal \| text` | Representação base. |
+| `base` | `base: decimal \| integer \| text` | Representação base. |
+| `values` | `values: [draft, published, archived]` | Enumera valores permitidos (com `base: text`). |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
@@ -511,14 +512,14 @@ document Shipment {
 | `precision` | `precision: 6` | Precisão de armazenamento/cálculo. |
 | `displayUnits` | `displayUnits: [cm, m, in, ft]` | Unidades permitidas na exibição. |
 | `min` / `max` | `min: 0`, `max: 100` | Faixa semântica. |
-| `parse` | `parse: quantity` | Como texto vira valor. |
-| `format` | `format: currency` | Como valor vira texto por locale. |
+| `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Como texto vira valor. |
+| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `masked("...")` | Como valor vira texto por locale. |
 | `compare` | `compare: exact` | Igualdade/ordenação; `exact` para dinheiro. |
 | `aggregate` | `aggregate: sum` | Soma/média/min/max permitidos. |
 | `convert` | `convert: mass`, `convert: units.mass` ou `convert: affine(C, F, K)` | Conversão de unidade; `units.mass` delega ao serviço de unidades. |
 | `index` | `index: normalized` | Codificação para índice. |
-| `normalize` | `normalize: digits` | Normalização antes de validar/comparar. |
-| `validate` | `validate: cpf-check-digits` | Validação semântica. |
+| `normalize` | `normalize: digits`, `lower-trim`, `upper-trim` | Normalização antes de validar/comparar. |
+| `validate` | `validate: cpf-check-digits`, `uuid`, `email`, `phone`, `year-month` | Validação semântica. |
 | `sensitive` | `sensitive: true` | Exige mascaramento/permissão. |
 | `maxLength` | `maxLength: 254` | Limite de texto. |
 | `fields` | `fields { street: Text ... }` | Shape composto. |
@@ -1211,12 +1212,15 @@ policy FourEyesPayment {
 | Lógica | `and`, `or`, `not` | Curto-circuito. |
 | Implicação | `a implies b` | `not a or b`; usado em regras. |
 | Transição | `A -> B` | Fluxo, caso ou ação. |
-| Soma | `sum(Invoice.total)` | Agregação; unidade do Shape. |
-| Contagem | `count(Order)` | Conta registros. |
+| Soma | `sum(Invoice.total)`, `sum(X) where cond` | Agregação; unidade do Shape; `where` filtra. |
+| Contagem | `count(Order)`, `count(X) where cond` | Conta registros; `where` filtra. |
 | Média | `avg(SupportTicket.resolutionTime)` | Média; unidade preservada. |
 | Percentual | `percentage(SupportTicket.slaMet)` | Razão 0–100. |
 | Bucket | `bucket(date, [30d, 60d, 90d])` | Faixas nomeadas. |
 | Agrupamento | `... by region` | Dimensão de agregação. |
+| Filtro | `... where cond` | Filtra registros antes de agregar. |
+| Aritmética | `quantity * unitPrice`, `subtotal * 10%` | Multiplicação/divisão com unidade; resultado tipado. |
+| Propriedade | `items.count` | Cardinalidade de coleção. |
 | Relógio | `now()`, `now() - 24h` | Relógio do runtime (virtual em QA). |
 | Usuário | `currentUser` | Ator autenticado. |
 | Moeda | `5000 BRL`, `10,00 BRL` | Valor + unidade; não é string. |

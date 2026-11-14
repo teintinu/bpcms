@@ -1,0 +1,8 @@
+// service: example.com/services/orders
+policy OrderDiscount {
+  appliesTo: Order.place
+  rule: discount <= subtotal * 10% or approver.role == Manager
+  severity: require
+  message: "Desconto acima de 10% exige gerente"
+  audit: true
+}

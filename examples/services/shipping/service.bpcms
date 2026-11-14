@@ -1,0 +1,12 @@
+service "example.com/services/shipping" {
+  version: 1.0.0
+  owner: "Shipping"
+  imports {
+    service "example.com/services/orders" as Orders
+    service "example.com/services/inventory" as Inventory
+    service "example.com/services/identity" as Identity
+    service "example.com/services/experience" as Experience
+  }
+  requires { oltp, scheduling, location, timezone, regionalization, units }
+  provides { shipping }
+}

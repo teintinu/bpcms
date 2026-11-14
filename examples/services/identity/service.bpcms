@@ -1,0 +1,9 @@
+service "example.com/services/identity" {
+  version: 1.0.0
+  owner: "Platform Identity"
+  imports {
+    service "example.com/services/experience" as Experience
+  }
+  requires { oltp, scheduling }
+  provides { identity }
+}

@@ -1,0 +1,54 @@
+// service: example.com/services/shipping
+process DispatchOrder {
+  version: 1
+  goal: "Despachar o pedido com frete conhecido e rastreio"
+  roles: [Dispatcher, Manager, Driver]
+  start on OrderPlaced
+
+  task PickItems {
+    role: Dispatcher
+    reads: [Order, StockItem]
+    writes: [Shipment]
+    sla: 2h
+  }
+
+  task PackItems {
+    role: Dispatcher
+    reads: [Shipment]
+    writes: [Shipment]
+  }
+
+  gateway WeightLimit {
+    if shipment.pesoBruto <= MaxWeight -> QuoteFreight
+    else -> SplitShipment
+  }
+
+  task SplitShipment {
+    role: Manager
+    reads: [Shipment]
+    writes: [Shipment]
+  }
+
+  task QuoteFreight {
+    type: service
+    integration: Carrier
+    reads: [Shipment]
+    writes: [Shipment.frete]
+  }
+
+  task PrintLabel {
+    type: service
+    integration: Carrier
+    reads: [Shipment]
+    writes: [Shipment.tracking]
+  }
+
+  end on ShipmentDispatched
+
+  on error CarrierUnavailable -> ManualQuote
+
+  task ManualQuote {
+    role: Manager
+    writes: [Shipment.frete]
+  }
+}

@@ -1,0 +1,26 @@
+// service: example.com/services/inventory
+shape StockItemId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape ReservationId {
+  base: text
+  validate: uuid
+  format: plain
+  index: exact
+}
+
+shape StockStatus {
+  base: text
+  values: [available, reserved, blocked]
+  format: plain
+}
+
+shape ReservationStatus {
+  base: text
+  values: [active, released, expired]
+  format: plain
+}

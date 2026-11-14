@@ -1,0 +1,15 @@
+// service: example.com/services/support
+report SlaCompliance {
+  type: dashboard
+  sources: [Ticket]
+  roles: [Manager]
+
+  filters { period; team; priority }
+  metrics {
+    compliance: percentage(Ticket.slaMet)
+    breached: count(Ticket) where breached == true
+    avgResolution: avg(Ticket.resolutionTime)
+  }
+  freshness: 5m
+  alert { compliance < 90% -> NotifyManager }
+}

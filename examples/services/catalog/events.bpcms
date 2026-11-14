@@ -1,0 +1,11 @@
+// service: example.com/services/catalog
+event ProductUpdated {
+  version: 1
+  payload {
+    productId: ProductId
+    changedAt: DateTime
+  }
+  producer: Product
+  consumers: [Orders, Notifications]
+  key: productId
+}

@@ -1,0 +1,38 @@
+// service: example.com/services/payments
+event PaymentSucceeded {
+  version: 1
+  payload {
+    paymentId: PaymentId
+    orderId: OrderId
+    amount: MoneyBRL
+    capturedAt: DateTime
+  }
+  producer: Payment
+  consumers: [Orders, Billing, Notifications]
+  key: paymentId
+}
+
+event PaymentFailed {
+  version: 1
+  payload {
+    paymentId: PaymentId
+    orderId: OrderId
+    reason: Text
+  }
+  producer: Payment
+  consumers: [Orders, Support, Notifications]
+  key: paymentId
+}
+
+event RefundIssued {
+  version: 1
+  payload {
+    refundId: RefundId
+    paymentId: PaymentId
+    amount: MoneyBRL
+    at: DateTime
+  }
+  producer: Refund
+  consumers: [Billing, Support, Notifications]
+  key: refundId
+}

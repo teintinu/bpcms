@@ -1,0 +1,9 @@
+// service: example.com/services/orders
+job ExpireDraftOrders {
+  schedule: "0 * * * *"
+  timezone: America/Fortaleza
+  action: Order.expireDraft()
+  filter { status == draft and createdAt < now() - 24h }
+  batch: 100
+  retry: 1
+}

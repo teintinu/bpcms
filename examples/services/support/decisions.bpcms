@@ -1,0 +1,12 @@
+// service: example.com/services/support
+decision RefundEligibility {
+  appliesTo: ReturnRequest.approve
+  when: [order.ageDays, payment.status, return.refundAmount]
+  cases {
+    order.ageDays <= 30 and payment.status == captured -> eligible
+    order.ageDays > 30 and return.refundAmount <= RefundLimit -> eligible
+    else -> notEligible
+  }
+  default: notEligible
+  owner: Support
+}

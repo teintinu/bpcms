@@ -1,0 +1,9 @@
+// service: example.com/services/shipping
+job TrackShipments {
+  schedule: "*/30 * * * *"
+  timezone: America/Fortaleza
+  action: Shipment.trackAll()
+  filter { status == dispatched }
+  batch: 100
+  timeout: 5m
+}

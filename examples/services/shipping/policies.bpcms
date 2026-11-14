@@ -1,0 +1,8 @@
+// service: example.com/services/shipping
+policy WeightLimit {
+  appliesTo: Shipment.dispatch
+  rule: pesoBruto <= MaxWeight
+  severity: block
+  message: "Remessa acima do limite de peso"
+  audit: true
+}

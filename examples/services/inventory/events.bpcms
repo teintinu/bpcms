@@ -1,0 +1,13 @@
+// service: example.com/services/inventory
+event StockLow {
+  version: 1
+  payload {
+    stockItemId: StockItemId
+    productId: ProductId
+    available: Count
+    reorderPoint: Count
+  }
+  producer: StockItem
+  consumers: [Orders, Notifications]
+  key: stockItemId
+}

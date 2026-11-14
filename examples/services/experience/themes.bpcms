@@ -1,0 +1,37 @@
+// service: example.com/services/experience
+theme Nuvula {
+  mode: light
+  supports: [WebApp, MobileShell]
+  tokens {
+    color.primary: "#2563eb"
+    color.surface: "#ffffff"
+    color.text: "#111827"
+    radius.md: 8
+    font.body: "Inter"
+  }
+  icons: "lucide"
+}
+
+theme Backoffice {
+  mode: light
+  supports: [WebApp]
+  tokens {
+    color.primary: "#0f766e"
+    color.surface: "#f8fafc"
+    radius.md: 4
+    font.size: 13
+  }
+  density: compact
+}
+
+theme Ops {
+  mode: light
+  supports: [WebApp, Cli]
+  tokens {
+    color.primary: "#b45309"
+    color.surface: "#fffbeb"
+    radius.md: 2
+    font.size: 12
+  }
+  density: compact
+}

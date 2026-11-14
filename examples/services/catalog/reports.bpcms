@@ -1,0 +1,16 @@
+// service: example.com/services/catalog
+report CatalogHealth {
+  type: dashboard
+  sources: [Product, Category]
+  roles: [Manager]
+
+  filters { category; status }
+  metrics {
+    published: count(Product) where status == published
+    drafts: count(Product) where status == draft
+    avgPrice: avg(Product.price)
+    totalWeight: sum(Product.weight)
+  }
+  freshness: 15m
+  units { avgPrice: BRL; totalWeight: kg }
+}

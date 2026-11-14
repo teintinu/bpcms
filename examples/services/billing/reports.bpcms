@@ -1,0 +1,17 @@
+// service: example.com/services/billing
+report CashFlow {
+  type: report
+  sources: [Invoice, Payment, Bill]
+  roles: [Manager]
+
+  filters { period; account }
+  dimensions { month; account }
+  metrics {
+    inflow: sum(Payment.amount) where status == captured
+    outflow: sum(Bill.amount) where status == paid
+    balance: inflow - outflow
+  }
+  units { inflow: BRL; outflow: BRL; balance: BRL }
+  freshness: 1h
+  export: [pdf, csv]
+}

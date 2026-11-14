@@ -1,0 +1,11 @@
+service "example.com/services/payments" {
+  version: 1.0.0
+  owner: "Payments"
+  imports {
+    service "example.com/services/orders" as Orders
+    service "example.com/services/identity" as Identity
+    service "example.com/services/experience" as Experience
+  }
+  requires { oltp, sync, identity, timezone, regionalization }
+  provides { payments }
+}

@@ -1,0 +1,41 @@
+// service: example.com/services/support
+process ReturnFlow {
+  version: 1
+  goal: "Analisar devolução e reembolsar quando elegível"
+  roles: [SupportAgent, Manager]
+  start on ReturnRequested
+
+  task Review {
+    role: SupportAgent
+    form: ReturnForm
+    reads: [ReturnRequest, Order, Payment]
+    writes: [ReturnRequest]
+  }
+
+  gateway Eligible {
+    if refundEligible.eligible -> Approve
+    else -> Reject
+  }
+
+  task Approve {
+    role: Manager
+    form: ReturnForm
+    reads: [ReturnRequest]
+    writes: [ReturnRequest]
+  }
+
+  task Refund {
+    type: service
+    action: Payment.refund
+    reads: [Payment]
+    writes: [Refund]
+  }
+
+  task Reject {
+    role: SupportAgent
+    form: ReturnForm
+    writes: [ReturnRequest]
+  }
+
+  end on ReturnApproved
+}

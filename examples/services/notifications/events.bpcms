@@ -1,0 +1,12 @@
+// service: example.com/services/notifications
+event NotificationSent {
+  version: 1
+  payload {
+    notificationId: NotificationId
+    channel: Channel
+    sentAt: DateTime
+  }
+  producer: Notification
+  consumers: [Support]
+  key: notificationId
+}

@@ -1,0 +1,27 @@
+// service: example.com/services/identity
+role Customer {
+  permissions: [catalog.view, order.create, order.viewOwn]
+}
+
+role Clerk {
+  inherits: Customer
+  permissions: [order.manage, customer.view]
+}
+
+role Manager {
+  inherits: Clerk
+  permissions: [report.view, refund.approve, customer.manage]
+}
+
+role Admin {
+  inherits: Manager
+  permissions: [user.manage, environment.manage]
+}
+
+role Dispatcher {
+  permissions: [shipment.dispatch, order.view]
+}
+
+role Driver {
+  permissions: [shipment.track, shipment.deliver]
+}

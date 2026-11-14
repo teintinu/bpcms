@@ -1,0 +1,25 @@
+// service: example.com/services/orders
+event OrderPlaced {
+  version: 1
+  payload {
+    orderId: OrderId
+    customerId: CustomerId
+    total: MoneyBRL
+    placedAt: DateTime
+  }
+  producer: Order
+  consumers: [Payments, Shipping, Billing, Notifications]
+  key: orderId
+}
+
+event OrderCancelled {
+  version: 1
+  payload {
+    orderId: OrderId
+    reason: Text
+    cancelledAt: DateTime
+  }
+  producer: Order
+  consumers: [Payments, Shipping, Notifications]
+  key: orderId
+}
