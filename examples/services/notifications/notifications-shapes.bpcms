@@ -7,7 +7,7 @@ shape Channel {
   values {
     email {
       title: { pt-BR: "E-mail", en: "Email" }
-      icon: Email
+      icon: channels.email
     }
     whatsapp {
       title: { pt-BR: "WhatsApp", en: "WhatsApp" }

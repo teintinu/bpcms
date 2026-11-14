@@ -3393,18 +3393,16 @@ policy ApprovalSegregation {
 ```bpcms
 icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
-  symbol: "clock"
 }
 ```
 
-*Valida: ícone definido no serviço, sem imagem/binário; o builder resolve no tema.*
+*Valida: ícone como token semântico; o builder/Theme resolve a imagem.*
 
 ### IC.2 Paga
 
 ```bpcms
 icon Paid {
   title: { pt-BR: "Paga", en: "Paid" }
-  symbol: "check-circle"
 }
 ```
 
@@ -3415,18 +3413,16 @@ icon Paid {
 ```bpcms
 icon Overdue {
   title: { pt-BR: "Vencida", en: "Overdue" }
-  symbol: "alert-circle"
 }
 ```
 
-*Valida: símbolo lógico independente do conjunto visual.*
+*Valida: Icon sem detalhe visual; o Theme escolhe a imagem.*
 
 ### IC.4 E-mail
 
 ```bpcms
 icon Email {
   title: { pt-BR: "E-mail", en: "Email" }
-  symbol: "mail"
 }
 ```
 
@@ -3437,7 +3433,6 @@ icon Email {
 ```bpcms
 icon P1 {
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
-  symbol: "alert-octagon"
 }
 ```
 
@@ -3448,11 +3443,36 @@ icon P1 {
 ```bpcms
 icon Brl {
   title: { pt-BR: "Real", en: "Brazilian real" }
-  symbol: "brazilian-real-sign"
 }
 ```
 
 *Valida: ícone para value de moeda; o value também tem title.*
+
+## SVG file-based Icons
+
+Além dos Icons declarados em `.bpcms`, arquivos `.svg` sob a raiz do serviço viram Icons implícitos. Exemplos em `examples/services/`:
+
+```text
+billing/status/draft.svg              -> status.draft      (aria-label)
+billing/status/paid.svg               -> status.paid        (<title>)
+billing/status/overdue.svg            -> status.overdue     (alt)
+billing/finance/invoice/issued.svg    -> finance.invoice.issued
+notifications/channels/email.svg      -> channels.email
+inventory/stock/low-stock.svg         -> stock.lowStock     (fallback: "Low Stock")
+payments/status/refunded.svg          -> status.refunded    (aria-label)
+```
+
+Uso no enum:
+
+```text
+draft { title: {...}; icon: status.draft }
+paid  { title: {...}; icon: status.paid }
+```
+
+- Arquivos/pastas em kebab-case; referências em camelCase com ponto.
+- Title: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n.
+- Conflito com Icon declarado no mesmo serviço é erro.
+- O builder resolve/sanitiza o SVG; isso é implementação, não DSL.
 
 # O que validar nestes exemplos
 

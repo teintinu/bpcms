@@ -2,55 +2,44 @@
 
 icon Authorized {
   title: { pt-BR: "Autorizado", en: "Authorized" }
-  symbol: "clock"
 }
 
 icon Captured {
   title: { pt-BR: "Capturado", en: "Captured" }
-  symbol: "check-circle"
 }
 
 icon Failed {
   title: { pt-BR: "Falhou", en: "Failed" }
-  symbol: "alert-circle"
 }
 
 icon Refunded {
   title: { pt-BR: "Reembolsado", en: "Refunded" }
-  symbol: "rotate-ccw"
 }
 
 icon Requested {
   title: { pt-BR: "Solicitado", en: "Requested" }
-  symbol: "clock"
 }
 
 icon Approved {
   title: { pt-BR: "Aprovado", en: "Approved" }
-  symbol: "check-circle"
 }
 
 icon Completed {
   title: { pt-BR: "Concluído", en: "Completed" }
-  symbol: "check-circle"
 }
 
 icon Rejected {
   title: { pt-BR: "Rejeitado", en: "Rejected" }
-  symbol: "alert-circle"
 }
 
 icon CreditCard {
   title: { pt-BR: "Cartão de crédito", en: "Credit card" }
-  symbol: "credit-card"
 }
 
 icon Pix {
   title: { pt-BR: "Pix", en: "Pix" }
-  symbol: "qr-code"
 }
 
 icon Boleto {
   title: { pt-BR: "Boleto", en: "Boleto" }
-  symbol: "barcode"
 }

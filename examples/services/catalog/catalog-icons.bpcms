@@ -2,30 +2,24 @@
 
 icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
-  symbol: "clock"
 }
 
 icon Published {
   title: { pt-BR: "Publicado", en: "Published" }
-  symbol: "info"
 }
 
 icon Archived {
   title: { pt-BR: "Arquivado", en: "Archived" }
-  symbol: "archive"
 }
 
 icon Brl {
   title: { pt-BR: "Real", en: "Brazilian real" }
-  symbol: "brazilian-real-sign"
 }
 
 icon Usd {
   title: { pt-BR: "Dólar", en: "US dollar" }
-  symbol: "dollar-sign"
 }
 
 icon Eur {
   title: { pt-BR: "Euro", en: "Euro" }
-  symbol: "euro"
 }

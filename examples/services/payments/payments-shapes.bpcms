@@ -19,7 +19,7 @@ shape PaymentStatus {
     }
     refunded {
       title: { pt-BR: "Reembolsado", en: "Refunded" }
-      icon: Refunded
+      icon: status.refunded
     }
   }
   format: plain

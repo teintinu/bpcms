@@ -604,7 +604,7 @@ shape InvoiceStatus {
 
 - `title` e `icon` são obrigatórios em todo value.
 - O `icon` precisa referenciar um artefato `Icon` do serviço/closure.
-- O builder resolve `Icon.symbol` contra o conjunto de ícones do tema (`theme.icons`); o mesmo ícone pode ser usado por vários values.
+- O builder/Theme resolve o nome do `Icon` para uma imagem; o mesmo Icon pode ser usado por vários values.
 - Valores fora de `values` são inválidos; `values: [a, b]` sem título/ícone é erro.
 
 **Valores usados:**
@@ -1346,7 +1346,7 @@ policy FourEyesPayment {
 | Lookup | document base sem campo `lookup` ou campo inválido | `E_LOOKUP_MISSING` / `E_LOOKUP_FIELD` |
 | Enum | value sem `title`/`icon` ou value duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_DUPLICATE` |
 | Icon | value aponta para Icon inexistente | `E_ICON_REFERENCE` |
-| Icon | Icon sem `symbol` | `E_ICON_SYMBOL` |
+| Icon | Theme/builder não resolve a imagem do Icon | `E_ICON_UNRESOLVED` |
 | Icon | dois icons com o mesmo nome no mesmo serviço | `E_DUPLICATE_ICON` |
 | Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
@@ -1404,27 +1404,68 @@ policy FourEyesPayment {
 
 # 28. Icon
 
-`Icon` é um artefato de identidade visual simbólica, definido dentro de um `Service`. O construtor resolve `symbol` no conjunto de ícones do `Theme` (`icons: "lucide"`).
+`Icon` é um artefato **semântico** definido dentro de um `Service`. O nome do Icon é o identificador; o construtor/Theme decide qual imagem usar. Não há `symbol` nem binário no DSL.
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `icon` | `icon <Name> { ... }` | Ícone público do serviço. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `symbol` | `symbol: "clock"` | Identificador do ícone no conjunto do tema. |
-| `set` | `set: "lucide"` | Override opcional do conjunto; default é `Theme.icons`. |
 
 ```bpcms
 icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
-  symbol: "clock"
 }
 ```
 
 **Nomes:** `Icon` não usa prefixo `Icon` nem prefixo do serviço. O escopo do nome é o **serviço**: `Draft` em Billing e `Draft` em Catalog são icons diferentes; dentro do mesmo serviço, dois icons com o mesmo nome são erro (`E_DUPLICATE_ICON`). `icon Email` também coexiste com `shape Email` e `integration Email`; o namespace é por tipo dentro do serviço.
 
-**Resolução:** `value.icon` → `Icon.symbol` → `Theme.icons` → imagem. O ícone não carrega imagem nem binário; carrega o símbolo lógico. O builder pode trocar o conjunto visual sem mudar o DSL.
+**Resolução:** `value.icon` → nome do `Icon` → mapeamento do builder/Theme → imagem. O Icon não carrega imagem nem binário; é um token semântico. O builder pode trocar o conjunto visual sem mudar o DSL.
 
-**Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_SYMBOL` (Icon sem symbol), `E_DUPLICATE_ICON` (dois icons com o mesmo nome no mesmo serviço), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
+### 28.1 Icons file-based (SVG)
+
+Além do `icon` declarado, qualquer arquivo `.svg` sob a raiz do serviço — em qualquer subpasta — vira um **Icon implícito**.
+
+```text
+services/billing/
+  billing-service.bpcms       <- raiz do serviço
+  status/
+    draft.svg                 -> status.draft
+    paid.svg                  -> status.paid
+    overdue.svg               -> status.overdue
+  finance/
+    invoice/
+      issued.svg              -> finance.invoice.issued
+```
+
+- Arquivos e pastas usam **kebab-case**.
+- O identificador é o caminho relativo, sem `.svg`, com segmentos **camelCase** unidos por `.`.
+- Referência local: `icon: status.draft`.
+- Referência por outro serviço: `icon: AliasDoServico.status.draft` (alias em `imports`).
+- O `alt`/`aria-label`/`<title>` é o title do Icon; **não usa I18n**.
+- Precedência do title: `aria-label` → `<title>` → `alt` → filename humanizado.
+- Sem `aria-label`, `<title>` ou `alt`, o filename é o fallback:
+  - `low-stock.svg` → `"Low Stock"`.
+- Um SVG e um `icon` declarado com o mesmo identificador no mesmo serviço são conflito (`E_DUPLICATE_ICON`).
+- O builder sanitiza o SVG; script/recursos externos não entram no contrato.
+
+```bpcms
+shape InvoiceStatus {
+  values {
+    draft {
+      title: { pt-BR: "Rascunho", en: "Draft" }
+      icon: status.draft
+    }
+    issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      icon: finance.invoice.issued
+    }
+  }
+}
+```
+
+**Erros:** `E_ICON_REFERENCE` para `icon:` que não resolve; `E_DUPLICATE_ICON` para conflito de identificador; `E_ICON_UNRESOLVED` para falha do builder/Theme.
+
+**Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_UNRESOLVED` (Theme/builder não resolve a imagem do Icon), `E_DUPLICATE_ICON` (dois icons com o mesmo nome no mesmo serviço), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
 
 ## O que ainda não é cláusula
 

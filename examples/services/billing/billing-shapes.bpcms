@@ -8,19 +8,19 @@ shape InvoiceStatus {
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Draft
+      icon: status.draft
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Issued
+      icon: finance.invoice.issued
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      icon: Paid
+      icon: status.paid
     }
     overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: Overdue
+      icon: status.overdue
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }

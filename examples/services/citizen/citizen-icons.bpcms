@@ -2,25 +2,20 @@
 
 icon Person {
   title: { pt-BR: "Pessoa", en: "Person" }
-  symbol: "user"
 }
 
 icon Organization {
   title: { pt-BR: "Organização", en: "Organization" }
-  symbol: "building-2"
 }
 
 icon Active {
   title: { pt-BR: "Ativo", en: "Active" }
-  symbol: "check-circle"
 }
 
 icon Merged {
   title: { pt-BR: "Mesclado", en: "Merged" }
-  symbol: "info"
 }
 
 icon Blocked {
   title: { pt-BR: "Bloqueado", en: "Blocked" }
-  symbol: "alert-circle"
 }

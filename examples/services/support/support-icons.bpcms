@@ -2,70 +2,56 @@
 
 icon Open {
   title: { pt-BR: "Aberta", en: "Open" }
-  symbol: "clock"
 }
 
 icon InProgress {
   title: { pt-BR: "Em andamento", en: "In progress" }
-  symbol: "info"
 }
 
 icon Waiting {
   title: { pt-BR: "Aguardando", en: "Waiting" }
-  symbol: "clock"
 }
 
 icon Resolved {
   title: { pt-BR: "Resolvido", en: "Resolved" }
-  symbol: "check-circle"
 }
 
 icon Closed {
   title: { pt-BR: "Fechado", en: "Closed" }
-  symbol: "archive"
 }
 
 icon Requested {
   title: { pt-BR: "Solicitado", en: "Requested" }
-  symbol: "clock"
 }
 
 icon Approved {
   title: { pt-BR: "Aprovado", en: "Approved" }
-  symbol: "check-circle"
 }
 
 icon Rejected {
   title: { pt-BR: "Rejeitado", en: "Rejected" }
-  symbol: "alert-circle"
 }
 
 icon Received {
   title: { pt-BR: "Recebida", en: "Received" }
-  symbol: "check-circle"
 }
 
 icon Refunded {
   title: { pt-BR: "Reembolsado", en: "Refunded" }
-  symbol: "rotate-ccw"
 }
 
 icon P1 {
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
-  symbol: "alert-octagon"
 }
 
 icon P2 {
   title: { pt-BR: "Prioridade 2", en: "Priority 2" }
-  symbol: "alert-triangle"
 }
 
 icon P3 {
   title: { pt-BR: "Prioridade 3", en: "Priority 3" }
-  symbol: "flag"
 }
 
 icon P4 {
   title: { pt-BR: "Prioridade 4", en: "Priority 4" }
-  symbol: "flag-off"
 }

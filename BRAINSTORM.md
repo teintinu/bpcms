@@ -20,7 +20,7 @@
 | **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
 | **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId`; `ConsumerId` é alias de `UserId`. |
-| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` do serviço tem `symbol` e o tema resolve a imagem. |
+| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` é token semântico e o Theme/builder resolve a imagem. |
 | **Citizen** | Serviço de identificação de pessoa/organização; `CitizenId` + lookup seguro; PII em `private`; sem `taxId`. |
 | **Citizen 1:N** | Um Citizen pode ter vários Users; cada Consumer referencia o mesmo `citizenId`; sem unique; merge reatribui. |
 | **Serviço** | Conceito de negócio, não package/módulo; tipos compartilhados ficam no serviço dono; Theme/Locale são do construtor. |
@@ -1748,7 +1748,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
-| D-038 | Enum values têm `title` + `icon`; Icon carrega `symbol` resolvido pelo tema | ✅ | baseline atual |
+| D-038 | Enum values têm `title` + `icon`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
@@ -1809,7 +1809,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId` que referencia o Citizen; `ConsumerId` é alias de `UserId`. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
-| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é artefato do serviço com `symbol`, sem prefixo `Icon` no nome; o builder resolve `symbol` no conjunto de ícones do tema. | Labels e imagens consistentes sem binário no DSL. | ✅ |
+| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é token semântico do serviço, sem prefixo `Icon` no nome; o Theme/builder resolve a imagem. | Labels e imagens consistentes sem binário no DSL. | ✅ |
 | **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
 | **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
 | **B-51** | Serviço pode ser biblioteca/módulo de artefatos? | **Não.** Serviço é conceito de negócio. Não criar serviço para hospedar Shapes/Icons/Themes/Locales compartilhados; Theme/Locale/font/color são do construtor. | Evita serviços artificiais e detalhes de implementação no negócio. | ✅ |
