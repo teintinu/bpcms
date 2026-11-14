@@ -1,16 +1,17 @@
 // service: example.com/services/notifications
 document NotificationTemplate {
+  title: { pt-BR: "Template de notificação", en: "Notification template" }
   version: 1
   owner: "Notifications"
   sync: read
   audit: true
 
   fields {
-    key: Text { maxLength: 80, required, lookup }
-    channel: Channel { lookup }
-    subject: Text { maxLength: 160 }
-    body: Text
-    locale: LocaleTag { lookup }
+    key: Text { title: { pt-BR: "Chave", en: "Key" }, maxLength: 80, required, lookup }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    subject: Text { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160 }
+    body: Text { title: { pt-BR: "Conteúdo", en: "Body" } }
+    locale: LocaleTag { title: { pt-BR: "Idioma", en: "Locale" }, lookup }
   }
 
   indexes {
@@ -24,18 +25,19 @@ document NotificationTemplate {
 }
 
 document Notification {
+  title: { pt-BR: "Notificação", en: "Notification" }
   version: 1
   owner: "Notifications"
   sync: live
 
   fields {
-    templateId: NotificationTemplateId
-    recipient: Text { lookup }
-    channel: Channel { lookup }
-    status: NotificationStatus { lookup }
-    consent: Boolean
-    sentAt: DateTime?
-    error: Text?
+    templateId: NotificationTemplateId { title: { pt-BR: "Template", en: "Template" } }
+    recipient: Text { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    status: NotificationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    consent: Boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
+    sentAt: DateTime? { title: { pt-BR: "Enviado em", en: "Sent at" } }
+    error: Text? { title: { pt-BR: "Erro", en: "Error" } }
   }
 
   indexes {

@@ -1,18 +1,28 @@
 // service: example.com/services/identity
 document User {
+  title: { pt-BR: "Usuário", en: "User" }
   version: 1
   owner: "Identity"
   sync: read
   audit: true
 
   fields {
-    name: Text { maxLength: 120, required }
-    nickname: Text { maxLength: 40, lookup }
-    avatar: Image? { lookup }
-    email: Email { unique }
-    status: UserStatus
-    private loginAttempts: Count
-    createdAt: DateTime
+    name: Text {
+      title: {
+        pt-BR: "Nome da pessoa"
+        en: "Person name"
+        short: { pt-BR: "Pessoa", en: "Person" }
+        tooltip: { pt-BR: "Nome completo da pessoa", en: "Full person name" }
+      }
+      maxLength: 120
+      required
+    }
+    nickname: Text { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
+    avatar: Image? { title: { pt-BR: "Avatar", en: "Avatar" }, lookup }
+    email: Email { title: { pt-BR: "E-mail", en: "Email" }, unique }
+    status: UserStatus { title: { pt-BR: "Status", en: "Status" } }
+    private loginAttempts: Count { title: { pt-BR: "Tentativas de login", en: "Login attempts" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
   indexes {
@@ -33,12 +43,13 @@ document User {
 
 // Consumer compartilha UserId: ConsumerId é alias do mesmo id.
 document Consumer extends User {
+  title: { pt-BR: "Consumidor", en: "Consumer" }
   version: 1
   owner: "Identity"
   sync: read
 
   fields {
-    taxId: TaxIdentifier?
+    taxId: TaxIdentifier? { title: { pt-BR: "CPF/CNPJ", en: "Tax ID" } }
   }
 
   actions {
@@ -51,15 +62,16 @@ document Consumer extends User {
 }
 
 document Session {
+  title: { pt-BR: "Sessão", en: "Session" }
   version: 1
   owner: "Identity"
   sync: read
 
   fields {
-    userId: UserId
-    issuedAt: DateTime { lookup }
-    expiresAt: DateTime
-    status: SessionStatus { lookup }
+    userId: UserId { title: { pt-BR: "Usuário", en: "User" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
+    expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
+    status: SessionStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
   }
 
   indexes {

@@ -1,5 +1,6 @@
 // service: example.com/services/inventory
 view StockTable {
+  title: { pt-BR: "Tabela de estoque", en: "Stock table" }
   type: table
   source: StockItem
 
@@ -14,13 +15,14 @@ view StockTable {
 }
 
 view StockAdjustmentForm {
+  title: { pt-BR: "Ajuste de estoque", en: "Stock adjustment" }
   type: form
   document: StockItem
 
   fields {
-    productId: ProductId { required }
-    quantity: Count { required }
-    reason: Text { required }
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
+    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, required }
   }
 
   actions {
@@ -30,13 +32,14 @@ view StockAdjustmentForm {
 }
 
 view ReservationForm {
+  title: { pt-BR: "Formulário de reserva", en: "Reservation form" }
   type: form
   document: Reservation
 
   fields {
-    productId: ProductId { required }
-    quantity: Count { required }
-    externalRef: Text
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
+    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
+    externalRef: Text { title: { pt-BR: "Referência externa", en: "External reference" } }
   }
 
   actions {

@@ -1,11 +1,12 @@
 // service: example.com/services/support
 event TicketOpened {
+  title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
   version: 1
   payload {
-    ticketId: TicketId
-    customerId: UserId
-    priority: TicketPriority
-    openedAt: DateTime
+    ticketId: TicketId { title: { pt-BR: "Chamado", en: "Ticket" } }
+    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
+    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" } }
+    openedAt: DateTime { title: { pt-BR: "Aberto em", en: "Opened at" } }
   }
   producer: Ticket
   consumers: [Notifications]
@@ -13,11 +14,12 @@ event TicketOpened {
 }
 
 event ReturnRequested {
+  title: { pt-BR: "Devolução solicitada", en: "Return requested" }
   version: 1
   payload {
-    returnId: ReturnRequestId
-    orderId: OrderId
-    requestedAt: DateTime
+    returnId: ReturnRequestId { title: { pt-BR: "Devolução", en: "Return" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
   producer: ReturnRequest
   consumers: [Payments, Shipping, Notifications]
@@ -25,12 +27,13 @@ event ReturnRequested {
 }
 
 event ReturnApproved {
+  title: { pt-BR: "Devolução aprovada", en: "Return approved" }
   version: 1
   payload {
-    returnId: ReturnRequestId
-    orderId: OrderId
-    refundAmount: MoneyBRL
-    approvedAt: DateTime
+    returnId: ReturnRequestId { title: { pt-BR: "Devolução", en: "Return" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
+    approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
   }
   producer: ReturnRequest
   consumers: [Payments, Billing, Notifications]

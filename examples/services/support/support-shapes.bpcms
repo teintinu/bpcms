@@ -2,18 +2,21 @@
 
 
 shape TicketStatus {
+  title: { pt-BR: "Status do chamado", en: "Ticket status" }
   base: text
   values: [open, in_progress, waiting, resolved, closed]
   format: plain
 }
 
 shape ReturnStatus {
+  title: { pt-BR: "Status da devolução", en: "Return status" }
   base: text
   values: [requested, approved, rejected, received, refunded]
   format: plain
 }
 
 shape TicketPriority {
+  title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
   base: text
   values: [P1, P2, P3, P4]
   format: plain

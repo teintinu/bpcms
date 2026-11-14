@@ -2,20 +2,23 @@
 
 
 shape ShipmentStatus {
+  title: { pt-BR: "Status da remessa", en: "Shipment status" }
   base: text
   values: [draft, packed, dispatched, delivered, returned]
   format: plain
 }
 
 shape TrackingEvent {
+  title: { pt-BR: "Evento de rastreio", en: "Tracking event" }
   fields {
-    at: DateTime
-    status: ShipmentStatus
-    description: Text
+    at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
+    status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" } }
+    description: Text { title: { pt-BR: "Descrição", en: "Description" } }
   }
 }
 
 shape TrackingCode {
+  title: { pt-BR: "Código de rastreio", en: "Tracking code" }
   base: text
   normalize: upper-trim
   maxLength: 40

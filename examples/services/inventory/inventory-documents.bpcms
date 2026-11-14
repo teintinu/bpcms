@@ -1,17 +1,18 @@
 // service: example.com/services/inventory
 document StockItem {
+  title: { pt-BR: "Item de estoque", en: "Stock item" }
   version: 1
   owner: "Inventory"
   sync: live
   audit: true
 
   fields {
-    productId: ProductId { lookup }
-    warehouse: Text { maxLength: 40, lookup }
-    available: Count
-    reserved: Count
-    reorderPoint: Count
-    lastMovement: DateTime
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    warehouse: Text { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
+    available: Count { title: { pt-BR: "Disponível", en: "Available" } }
+    reserved: Count { title: { pt-BR: "Reservado", en: "Reserved" } }
+    reorderPoint: Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
+    lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
   }
 
   indexes {
@@ -33,16 +34,17 @@ document StockItem {
 }
 
 document Reservation {
+  title: { pt-BR: "Reserva", en: "Reservation" }
   version: 1
   owner: "Inventory"
   sync: live
 
   fields {
-    productId: ProductId { lookup }
-    quantity: Count { lookup }
-    externalRef: Text
-    status: ReservationStatus { lookup }
-    expiresAt: DateTime
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    externalRef: Text { title: { pt-BR: "Referência externa", en: "External reference" } }
+    status: ReservationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 
   indexes {

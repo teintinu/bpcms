@@ -1,5 +1,6 @@
 // service: example.com/services/inventory
 parameter ReservationTtl {
+  title: { pt-BR: "Validade da reserva", en: "Reservation TTL" }
   type: Duration
   source: config
   default: 30m

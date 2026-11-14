@@ -1,14 +1,15 @@
 // service: example.com/services/billing
 view InvoiceForm {
+  title: { pt-BR: "Formulário de nota", en: "Invoice form" }
   type: form
   document: Invoice
   roles: [Manager]
 
   fields {
-    orderId: OrderId { required }
-    series: Text { required }
-    number: Text { required }
-    status: InvoiceStatus { readonly }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    series: Text { title: { pt-BR: "Série", en: "Series" }, required }
+    number: Text { title: { pt-BR: "Número", en: "Number" }, required }
+    status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 
   actions {
@@ -18,6 +19,7 @@ view InvoiceForm {
 }
 
 view InvoiceDetail {
+  title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
   type: detail
   document: Invoice
   roles: [Manager]

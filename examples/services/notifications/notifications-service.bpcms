@@ -1,4 +1,5 @@
 service "example.com/services/notifications" {
+  title: { pt-BR: "Notificações", en: "Notifications" }
   version: 1.0.0
   owner: "Customer Success"
   imports {

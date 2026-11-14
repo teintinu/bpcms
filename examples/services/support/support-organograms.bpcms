@@ -1,0 +1,12 @@
+// service: example.com/services/support
+role SupportAgent {
+  title: { pt-BR: "Agente de suporte", en: "Support agent" }
+  permissions: [ticket.view, ticket.comment, ticket.assign, return.review]
+}
+
+organogram Support {
+  title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
+  hierarchy {
+    Manager > SupportAgent
+  }
+}

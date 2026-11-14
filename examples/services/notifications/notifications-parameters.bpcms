@@ -1,13 +1,14 @@
 // service: example.com/services/notifications
 parameter FromEmail {
+  title: { pt-BR: "E-mail remetente", en: "From email" }
   type: Email
   source: config
   default: "no-reply@lojadojoao.com"
 }
 
 parameter WhatsAppToken {
+  title: { pt-BR: "Token do WhatsApp", en: "WhatsApp token" }
   type: Secret
   source: secret
   required
-  description: "Token do provedor WhatsApp"
 }

@@ -1,4 +1,5 @@
 service "example.com/services/support" {
+  title: { pt-BR: "Atendimento", en: "Support" }
   version: 1.0.0
   owner: "Support"
   imports {

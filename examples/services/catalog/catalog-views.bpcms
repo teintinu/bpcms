@@ -1,15 +1,16 @@
 // service: example.com/services/catalog
 view ProductForm {
+  title: { pt-BR: "Formulário de produto", en: "Product form" }
   type: form
   document: Product
 
   fields {
-    sku: SKU { required }
-    name: Text { required }
-    price: MoneyBRL { required }
-    weight: Mass
-    length: Length
-    status: ProductStatus { readonly }
+    sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, required }
+    name: Text { title: { pt-BR: "Nome", en: "Name" }, required }
+    price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" }, required }
+    weight: Mass { title: { pt-BR: "Peso", en: "Weight" } }
+    length: Length { title: { pt-BR: "Comprimento", en: "Length" } }
+    status: ProductStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 
   actions {
@@ -19,6 +20,7 @@ view ProductForm {
 }
 
 view ProductTable {
+  title: { pt-BR: "Tabela de produtos", en: "Product table" }
   type: table
   source: Product
 

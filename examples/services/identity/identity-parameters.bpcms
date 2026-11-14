@@ -1,7 +1,7 @@
 // service: example.com/services/identity
 parameter SessionTtl {
+  title: { pt-BR: "Duração da sessão", en: "Session TTL" }
   type: Duration
   source: config
   default: 30m
-  description: "Tempo de vida da sessão"
 }

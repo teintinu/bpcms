@@ -51,7 +51,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
 | `version` | app, service, process, document, event, builder, release | `version: 1.4.0` ou `version: semver("1.4.0")` | Versão do artefato. `1.4.0` é açúcar para `semver("1.4.0")`. |
-| `title` | app (e onde houver título) | `title: { pt-BR: "Loja do João" }` | Texto localizado por locale; chaves devem estar em `locales`. Ver 1.9. |
+| `title` | app, service, shape, document, field, view, event, parameter, role, organogram | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
 | `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
 | `source` | app/service, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app/service); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
@@ -218,38 +218,54 @@ view VisitForm {
 
 O Shape guarda **valor original + unidade** e projeção normalizada. A exibição usa `regionalization.system()`/`units.format`; o armazenamento não é convertido.
 
-## 1.9 Texto localizado (`title`)
+## 1.9 I18n (`title`)
 
-`title` é um mapa `locale -> texto`, não uma string global. As chaves precisam existir em `locales`; o primeiro locale é o default.
+`I18n` é um **tipo interno** de texto localizado. Não é um `Shape` declarável; `shape I18n` é `E_RESERVED_TYPE`.
+
+`title` é obrigatório em `service`, `shape`, `document`, `field`, `view`, `event`, `parameter`, `role` e `organogram`; a `Application` também usa o mesmo tipo.
 
 ```bpcms
-application "example.com/app/loja-do-joao" {
-  locales: [pt-BR, en-US]
+title: { pt-BR: "Nome", en: "Name" }
+```
+
+O mapa aceita locales (`pt-BR`, `en-US`, `en`) e duas versões alternativas **opcionais**, irmãs do mapa principal:
+
+```bpcms
+name: Text {
   title: {
-    pt-BR: "Loja do João"
-    en-US: "João's Store"
+    pt-BR: "Nome da pessoa"
+    en: "Person name"
+    short: { pt-BR: "Pessoa", en: "Person" }
+    tooltip: { pt-BR: "Nome completo da pessoa", en: "Full person name" }
   }
+  maxLength: 120
+  required
 }
 ```
 
-Com `locales: [pt-BR, en-US]`, o título abaixo cobre `pt-BR`, mas deixa `en-US` sem tradução:
+- `short` é o label curto para tabelas/grids.
+- `tooltip` é o texto do popover automático do title.
+- `short` e `tooltip` são **irmãos**; não ficam aninhados um no outro.
+- Se `short`/`tooltip` não existirem, o builder usa o title principal.
+- A ordem dos campos com `lookup` define a ordem de exibição; os títulos vêm dos campos.
 
-```text
-title: { pt-BR: "Loja do João" }
-```
+**Fallback:** locale exato → idioma (`en-US` → `en`) → locale default do app. Com `locales: [pt-BR, en-US]`, `en` cobre `en-US`; o default é `pt-BR`.
 
-O `check` emite `W_TRANSLATION`; um builder estrito para `en-US` falha com `E_TRANSLATION`; um builder de dev pode fazer fallback para `pt-BR`.
+**Campos:** o `title` do campo é o label; o `title` do `document`/`shape`/`view`/`event`/`parameter`/`role`/`organogram`/`service` é o nome do artefato. Em `Parameter`, `title` substitui o antigo `description`.
 
 | Situação | Resultado |
 | :--- | :--- |
 | Builder gera `pt-BR` e a chave existe | ok |
-| Builder gera `en-US` e a chave não existe | `W_TRANSLATION` no `check`; `E_TRANSLATION` se o builder for estrito |
+| Builder gera `en-US` e só existe `en` | ok por fallback de idioma |
+| Builder gera `en-US` e não existe `en-US` nem `en` | `W_TRANSLATION` no `check`; `E_TRANSLATION` se o builder for estrito |
 | Chave fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Sem entrada para o locale default | `E_TITLE_MISSING` |
+| `title` ausente no artefato/campo | `E_TITLE_MISSING` |
+| `shape I18n` declarado | `E_RESERVED_TYPE` |
 
-**Hífen:** `pt-BR`/`en-US` são chaves válidas; o parser aceita hífen tanto no nome da propriedade quanto na chave do mapa.
+**Hífen:** `pt-BR`/`en-US` são chaves válidas; o parser aceita hífen no nome da propriedade e na chave do mapa.
 
-**Artefato reutilizável:** quando `title` aparece em um `Service`/`View` compartilhado, o conjunto válido é o `locales` do **app consumidor**; o artefato não fixa o conjunto.
+**Artefato reutilizável:** quando `title` aparece em `Service`/`View` compartilhado, o conjunto válido é o `locales` do **app consumidor**; o artefato não fixa o conjunto.
 
 **Política do construtor:** dev pode fazer fallback para o locale default e permitir editar o título em runtime, gravando de volta no fonte; produção é estrita por padrão. O construtor nunca inventa tradução.
 
@@ -307,6 +323,7 @@ application "example.com/app/loja-do-joao" {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `service "<uri>" { ... }` | Identidade + contrato. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. |
 | `override` | `override "<uri>#<Artifact>.<member>" { with: "<uri>#<Artifact>.<member>" }` | Substitui um método/ação; ativo quando o serviço substituto está na closure. |
 | `requires` | `requires { oltp, attachments, identity }` | Capabilities de alto nível exigidas do construtor/ambiente (ver 1.7). |
@@ -433,6 +450,7 @@ task RefundPayment {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `document <Name> { ... }` | Unidade de dados + ações + regras + sync. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
 | `lookup` | `nickname: Text { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | referência | `categoryId: CategoryId` | ForeignKey para `Category`; novos vínculos exigem id existente; vínculos antigos continuam válidos. |
@@ -476,6 +494,7 @@ task RefundPayment {
 
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
 | `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
 | booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
@@ -490,16 +509,17 @@ task RefundPayment {
 
 ```bpcms
 document Shipment {
+  title: { pt-BR: "Remessa", en: "Shipment" }
   version: 1
   owner: "Dispatch"
   sync: live
 
   fields {
-    orderId: OrderId { lookup }
-    pesoBruto: Mass { unit: kg, min: 0.001 }
-    tracking: TrackingCode? { lookup }
-    status: ShipmentStatus { lookup }
-    createdAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001 }
+    tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
   source: device "scale-01" for pesoBruto
@@ -530,6 +550,7 @@ document Shipment {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| text` | Representação base. |
 | `values` | `values: [draft, published, archived]` | Enumera valores permitidos (com `base: text`). |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
@@ -586,13 +607,14 @@ shape Mass {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `view <Name> { ... }` | Projeção de dados/interação; não é dona do dado. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `type` | `type: form \| table \| dashboard \| wizard \| detail \| kanban` | Discriminador da view. |
 | `document` | `document: Customer` | Documento principal da tela. |
 | `source` | `source: Order` | Fonte de tabela/kanban. |
 | `sources` | `sources: [Invoice, Order]` | Fontes de dashboard/relatório. |
 | `roles` | `roles: [Clerk, Manager]` | Quem pode abrir/executar. |
-| `fields` | `fields { name: Text { required: true } }` | Campos exibidos/editados; aceita `required`, `readonly` e parâmetros do Shape. |
-| `readonly` | `readonly: true` | Campo apenas leitura na view. |
+| `fields` | `fields { name: Text { title: { pt-BR: "Nome", en: "Name" }, required } }` | Campos exibidos/editados; `title` é obrigatório; aceita `required`, `readonly` e parâmetros do Shape. |
+| `readonly` | `readonly` | Campo apenas leitura na view; `readonly: true` também é aceito. |
 | `columns` | `columns { number; customer.name; total }` | Colunas de tabela. |
 | `filters` | `filters { status; period; customer }` | Filtros de tabela/relatório. |
 | `filter` | `filter { assignee = currentUser }` | Filtro fixo/contextual (kanban). |
@@ -625,6 +647,7 @@ shape Mass {
 
 ```bpcms
 view SalesDashboard {
+  title: { pt-BR: "Painel de vendas", en: "Sales dashboard" }
   type: dashboard
   sources: [Invoice, Order]
   roles: [Manager]
@@ -646,6 +669,7 @@ view SalesDashboard {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `role` | `role <Name> { ... }` | Papel/permissões. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade. |
 | `inherits` | `inherits: Clerk` | Herda permissões do papel. |
 | `scope` | `scope: store` | Abrangência do papel/organograma. |
@@ -662,12 +686,16 @@ view SalesDashboard {
 | `unlimited` | `limits { Role: unlimited }` | Sem limite; decisão explícita. |
 | `masked` | `dataMasking { Role: field masked }` | Campo mascarado na leitura. |
 
+> Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`.
+
 ```bpcms
 role Manager {
+  title: { pt-BR: "Gerente", en: "Manager" }
   inherits: Clerk
   permissions: [customer.manage, report.view, refund.approve]
 }
 organogram Store {
+  title: { pt-BR: "Organograma da loja", en: "Store organogram" }
   hierarchy { Manager > Clerk > Customer }
   fourEyes { refund.approve requires Manager and Manager != Clerk }
   delegation { Manager -> Clerk when absent }
@@ -813,11 +841,11 @@ assumption A-001 {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `parameter` | `parameter <Name> { ... }` | Declara configuração/segredo tipado dentro de um serviço; artefato público. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n do parâmetro (obrigatório); substitui `description`; ver 1.9. |
 | `type` | `type: Text \| Secret \| Count \| Duration \| ...` | Shape do valor. |
 | `source` | `source: config \| secret` | Origem do valor: configuração do ambiente ou secret store. |
-| `required` | `required: true` | Falha no boot/uso se não houver valor. |
+| `required` | `required` | Falha no boot/uso se não houver valor; `required: true` também é aceito. |
 | `default` | `default: "..."` | Só para `config`; proibido para `secret`. |
-| `description` | `description: "..."` | Documentação do parâmetro. |
 | `min` / `max` | `min: 0, max: 10` | Constraints simples para numéricos. |
 | `maxLength` | `maxLength: 120` | Limite para texto. |
 | `Secret` | `type: Secret` | Shape embutido para segredo; nunca serializa, loga, exporta ou vai para a LLM. |
@@ -826,6 +854,7 @@ assumption A-001 {
 
 ```bpcms
 parameter ErpUrl {
+  title: { pt-BR: "URL do ERP", en: "ERP URL" }
   type: Text
   source: config
   required: true
@@ -833,6 +862,7 @@ parameter ErpUrl {
 }
 
 parameter PaymentKey {
+  title: { pt-BR: "Chave de pagamento", en: "Payment key" }
   type: Secret
   source: secret
   required: true
@@ -1146,6 +1176,7 @@ report SalesByRegion {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `event` | `event <Name> { ... }` | Fato de negócio publicado. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `version` | `version: 1` | Versão do contrato. |
 | `payload` | `payload { orderId: OrderId; approvedAt: DateTime }` | Campos do evento. |
 | `producer` | `producer: Order` | Documento/serviço que publica. |
@@ -1156,11 +1187,12 @@ report SalesByRegion {
 
 ```bpcms
 event OrderApproved {
+  title: { pt-BR: "Pedido aprovado", en: "Order approved" }
   version: 1
   payload {
-    orderId: OrderId
-    approvedBy: UserId
-    approvedAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    approvedBy: UserId { title: { pt-BR: "Aprovado por", en: "Approved by" } }
+    approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
   }
   producer: Order
   consumers: [Fulfillment, Billing]
@@ -1292,6 +1324,7 @@ policy FourEyesPayment {
 | Política | severidade inválida; exceção desconhecida | `E_POLICY` |
 | Ciclo | import/computed circular | `E_CYCLE` |
 | Tradução | locale sem `title` / builder estrito | `W_TRANSLATION` / `E_TRANSLATION` |
+| Tipo reservado | `shape I18n` declarado | `E_RESERVED_TYPE` |
 | Locale | chave de `title` fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Título | sem entrada para o locale default | `E_TITLE_MISSING` |
 

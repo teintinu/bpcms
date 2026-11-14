@@ -1,11 +1,12 @@
 // service: example.com/services/orders
 event OrderPlaced {
+  title: { pt-BR: "Pedido realizado", en: "Order placed" }
   version: 1
   payload {
-    orderId: OrderId
-    customerId: UserId
-    total: MoneyBRL
-    placedAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
+    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
   }
   producer: Order
   consumers: [Payments, Shipping, Billing, Notifications]
@@ -13,11 +14,12 @@ event OrderPlaced {
 }
 
 event OrderCancelled {
+  title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
   version: 1
   payload {
-    orderId: OrderId
-    reason: Text
-    cancelledAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
   producer: Order
   consumers: [Payments, Shipping, Notifications]

@@ -1,15 +1,16 @@
 // service: example.com/services/billing
 document InvoiceItem {
+  title: { pt-BR: "Item da nota", en: "Invoice item" }
   version: 1
   owner: "Billing"
   sync: live
 
   fields {
-    invoiceId: InvoiceId
-    productId: ProductId { lookup }
-    quantity: Count { lookup }
-    unitPrice: MoneyBRL
-    total: MoneyBRL
+    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
+    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
   }
 
   indexes {
@@ -22,6 +23,7 @@ document InvoiceItem {
 }
 
 document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
   version: 1
   owner: "Billing"
   sync: live
@@ -29,17 +31,17 @@ document Invoice {
   retention: 5y
 
   fields {
-    number: Text { maxLength: 40, unique, lookup }
-    series: Text { maxLength: 10 }
-    orderId: OrderId
-    customerId: UserId(taxId) { lookup }
-    items: InvoiceItem[]
-    subtotal: MoneyBRL
-    tax: MoneyBRL
-    total: MoneyBRL { lookup }
-    status: InvoiceStatus
-    issuedAt: DateTime?
-    dueAt: DateTime?
+    number: Text { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
+    series: Text { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    customerId: UserId(taxId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    subtotal: MoneyBRL { title: { pt-BR: "Subtotal", en: "Subtotal" } }
+    tax: MoneyBRL { title: { pt-BR: "Imposto", en: "Tax" } }
+    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" }, lookup }
+    status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" } }
+    issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    dueAt: DateTime? { title: { pt-BR: "Vence em", en: "Due at" } }
   }
 
   indexes {
@@ -62,17 +64,18 @@ document Invoice {
 }
 
 document CreditNote {
+  title: { pt-BR: "Nota de crédito", en: "Credit note" }
   version: 1
   owner: "Billing"
   sync: live
   audit: true
 
   fields {
-    invoiceId: InvoiceId { lookup }
-    amount: MoneyBRL { lookup }
-    reason: Text
-    status: CreditNoteStatus { lookup }
-    issuedAt: DateTime?
+    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" }, lookup }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
 
   indexes {
@@ -92,17 +95,18 @@ document CreditNote {
 }
 
 document Bill {
+  title: { pt-BR: "Conta a pagar", en: "Bill" }
   version: 1
   owner: "Billing"
   sync: read
   audit: true
 
   fields {
-    supplier: Text { maxLength: 120, lookup }
-    amount: MoneyBRL { lookup }
-    dueAt: DateTime
-    status: BillStatus { lookup }
-    paidAt: DateTime?
+    supplier: Text { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
+    status: BillStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    paidAt: DateTime? { title: { pt-BR: "Pago em", en: "Paid at" } }
   }
 
   indexes {
@@ -119,15 +123,16 @@ document Bill {
 }
 
 document OrderCancellation {
+  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
   version: 1
   owner: "Billing"
   sync: live
   audit: true
 
   fields {
-    orderId: OrderId { lookup }
-    reason: Text { lookup }
-    cancelledAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
+    cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
 
   actions {
@@ -140,6 +145,7 @@ document OrderCancellation {
 }
 
 document MonthlyRevenue {
+  title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   version: 1
   owner: "Billing"
   computed from Invoice, Payment
@@ -147,10 +153,10 @@ document MonthlyRevenue {
   sync: read
 
   fields {
-    month: YearMonth { lookup }
-    revenue: MoneyBRL { lookup }
-    invoiceCount: Count
-    calculatedAt: DateTime
+    month: YearMonth { title: { pt-BR: "Mês", en: "Month" }, lookup }
+    revenue: MoneyBRL { title: { pt-BR: "Receita", en: "Revenue" }, lookup }
+    invoiceCount: Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
   }
 
   indexes { month: [month] unique }

@@ -1,5 +1,39 @@
 // service: example.com/services/identity
+role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  permissions: [catalog.view, order.create, order.viewOwn]
+}
+
+role Clerk {
+  title: { pt-BR: "Atendente", en: "Clerk" }
+  inherits: Customer
+  permissions: [order.manage, customer.view]
+}
+
+role Manager {
+  title: { pt-BR: "Gerente", en: "Manager" }
+  inherits: Clerk
+  permissions: [report.view, refund.approve, customer.manage]
+}
+
+role Admin {
+  title: { pt-BR: "Administrador", en: "Admin" }
+  inherits: Manager
+  permissions: [user.manage, environment.manage]
+}
+
+role Dispatcher {
+  title: { pt-BR: "Despachante", en: "Dispatcher" }
+  permissions: [shipment.dispatch, order.view]
+}
+
+role Driver {
+  title: { pt-BR: "Motorista", en: "Driver" }
+  permissions: [shipment.track, shipment.deliver]
+}
+
 organogram Platform {
+  title: { pt-BR: "Organograma da plataforma", en: "Platform organogram" }
   hierarchy {
     Admin > Manager > Clerk > Customer
     Manager > Dispatcher > Driver

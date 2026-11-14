@@ -1,11 +1,13 @@
 // service: example.com/services/support
 parameter DefaultSla {
+  title: { pt-BR: "SLA padrão", en: "Default SLA" }
   type: Duration
   source: config
   default: 2d
 }
 
 parameter RefundLimit {
+  title: { pt-BR: "Limite de reembolso", en: "Refund limit" }
   type: MoneyBRL
   source: config
   default: 500 BRL

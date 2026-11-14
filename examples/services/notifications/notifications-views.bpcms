@@ -1,14 +1,15 @@
 // service: example.com/services/notifications
 view TemplateEditor {
+  title: { pt-BR: "Editor de template", en: "Template editor" }
   type: form
   document: NotificationTemplate
   roles: [Manager]
 
   fields {
-    key: Text { required }
-    channel: Channel
-    subject: Text
-    body: Text
+    key: Text { title: { pt-BR: "Chave", en: "Key" }, required }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
+    subject: Text { title: { pt-BR: "Assunto", en: "Subject" } }
+    body: Text { title: { pt-BR: "Conteúdo", en: "Body" } }
   }
 
   actions {
@@ -18,6 +19,7 @@ view TemplateEditor {
 }
 
 view NotificationLog {
+  title: { pt-BR: "Histórico de notificações", en: "Notification log" }
   type: table
   source: Notification
   roles: [Manager]

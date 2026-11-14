@@ -1,4 +1,5 @@
 service "example.com/services/inventory" {
+  title: { pt-BR: "Estoque", en: "Inventory" }
   version: 1.0.0
   owner: "Supply Chain"
   imports {

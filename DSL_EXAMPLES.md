@@ -269,6 +269,7 @@ service "example.com/services/catalog" {
   // document Product, shape MoneyBRL, view ProductForm, event ProductUpdated: públicos
 
   parameter DefaultCurrency {
+    title: { pt-BR: "Moeda padrão", en: "Default currency" }
     type: CurrencyCode
     source: config
     default: "BRL"
@@ -2122,24 +2123,24 @@ environment dr {
 
 ```bpcms
 parameter ErpUrl {
+  title: { pt-BR: "URL do ERP", en: "ERP URL" }
   type: Text
   source: config
   required
   default: "https://erp.example.com"
-  description: "URL base do ERP"
 }
 ```
 
-*Valida: configuração tipada, obrigatória, com default e descrição; valor resolvido pelo ambiente.*
+*Valida: configuração tipada, obrigatória, com default e título; valor resolvido pelo ambiente.*
 
 ### PR.2 Chave secreta
 
 ```bpcms
 parameter PaymentKey {
+  title: { pt-BR: "Chave de pagamento", en: "Payment key" }
   type: Secret
   source: secret
   required
-  description: "Chave do gateway de pagamento"
 }
 ```
 
@@ -2149,10 +2150,10 @@ parameter PaymentKey {
 
 ```bpcms
 parameter LlmModel {
+  title: { pt-BR: "Modelo de LLM", en: "LLM model" }
   type: LlmModelName
   source: config
   default: "balanced"
-  description: "Perfil de modelo usado pelo serviço"
 }
 ```
 
@@ -2162,12 +2163,12 @@ parameter LlmModel {
 
 ```bpcms
 parameter MaxRetries {
+  title: { pt-BR: "Máximo de tentativas", en: "Max retries" }
   type: Count
   source: config
   default: 3
   min: 0
   max: 10
-  description: "Tentativas máximas de integração"
 }
 ```
 
@@ -2177,10 +2178,10 @@ parameter MaxRetries {
 
 ```bpcms
 parameter SupportSla {
+  title: { pt-BR: "SLA de suporte", en: "Support SLA" }
   type: Duration
   source: config
   default: 2h
-  description: "SLA padrão do atendimento"
 }
 ```
 
@@ -2190,10 +2191,10 @@ parameter SupportSla {
 
 ```bpcms
 parameter GoogleMapsKey {
+  title: { pt-BR: "Chave do Google Maps", en: "Google Maps key" }
   type: Secret
   source: secret
   required
-  description: "Chave da API Google Maps"
 }
 ```
 

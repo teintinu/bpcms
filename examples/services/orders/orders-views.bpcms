@@ -1,13 +1,14 @@
 // service: example.com/services/orders
 view OrderForm {
+  title: { pt-BR: "Formulário de pedido", en: "Order form" }
   type: form
   document: Order
   roles: [Clerk]
 
   fields {
-    customerId: UserId { required }
-    discount: MoneyBRL
-    status: OrderStatus { readonly }
+    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" }, required }
+    discount: MoneyBRL { title: { pt-BR: "Desconto", en: "Discount" } }
+    status: OrderStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 
   actions {
@@ -18,6 +19,7 @@ view OrderForm {
 }
 
 view OrderDetail {
+  title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
   type: detail
   document: Order
   roles: [Clerk, Manager]

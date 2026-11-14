@@ -2,12 +2,14 @@
 
 
 shape Channel {
+  title: { pt-BR: "Canal", en: "Channel" }
   base: text
   values: [email, whatsapp, in-app]
   format: plain
 }
 
 shape NotificationStatus {
+  title: { pt-BR: "Status da notificação", en: "Notification status" }
   base: text
   values: [queued, sent, failed, read]
   format: plain

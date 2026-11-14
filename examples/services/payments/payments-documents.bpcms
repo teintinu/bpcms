@@ -1,17 +1,18 @@
 // service: example.com/services/payments
 document Payment {
+  title: { pt-BR: "Pagamento", en: "Payment" }
   version: 1
   owner: "Payments"
   sync: live
   audit: true
 
   fields {
-    orderId: OrderId { lookup }
-    amount: MoneyBRL { lookup }
-    method: PaymentMethod
-    status: PaymentStatus { lookup }
-    authorizedAt: DateTime?
-    capturedAt: DateTime?
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
+    status: PaymentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    authorizedAt: DateTime? { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
+    capturedAt: DateTime? { title: { pt-BR: "Capturado em", en: "Captured at" } }
   }
 
   indexes {
@@ -33,17 +34,18 @@ document Payment {
 }
 
 document Refund {
+  title: { pt-BR: "Reembolso", en: "Refund" }
   version: 1
   owner: "Payments"
   sync: live
   audit: true
 
   fields {
-    paymentId: PaymentId { lookup }
-    amount: MoneyBRL { lookup }
-    reason: Text
-    status: RefundStatus { lookup }
-    requestedAt: DateTime
+    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" }, lookup }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    status: RefundStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
 
   indexes {

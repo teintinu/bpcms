@@ -1,5 +1,6 @@
 // service: example.com/services/support
 view TicketKanban {
+  title: { pt-BR: "Kanban de chamados", en: "Ticket kanban" }
   type: kanban
   source: Ticket
   roles: [SupportAgent, Manager]
@@ -15,16 +16,17 @@ view TicketKanban {
 }
 
 view ReturnForm {
+  title: { pt-BR: "Formulário de devolução", en: "Return form" }
   type: form
   document: ReturnRequest
   roles: [SupportAgent, Manager]
 
   fields {
-    orderId: OrderId { required }
-    paymentId: PaymentId?
-    shipmentId: ShipmentId?
-    reason: Text { required }
-    refundAmount: MoneyBRL
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
+    shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, required }
+    refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
   }
 
   actions {

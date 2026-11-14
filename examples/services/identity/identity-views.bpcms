@@ -1,11 +1,12 @@
 // service: example.com/services/identity
 view LoginForm {
+  title: { pt-BR: "Formulário de login", en: "Login form" }
   type: form
   document: User
 
   fields {
-    email: Email { required }
-    password: Text { maxLength: 128, required }
+    email: Email { title: { pt-BR: "E-mail", en: "Email" }, required }
+    password: Text { title: { pt-BR: "Password", en: "Password" }, maxLength: 128, required }
   }
 
   actions {

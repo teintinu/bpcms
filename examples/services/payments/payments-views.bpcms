@@ -1,13 +1,14 @@
 // service: example.com/services/payments
 view PaymentForm {
+  title: { pt-BR: "Formulário de pagamento", en: "Payment form" }
   type: form
   document: Payment
   roles: [Manager]
 
   fields {
-    orderId: OrderId { required }
-    amount: MoneyBRL { required }
-    method: PaymentMethod { required }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, required }
+    method: PaymentMethod { title: { pt-BR: "Método", en: "Method" }, required }
   }
 
   actions {
@@ -18,6 +19,7 @@ view PaymentForm {
 }
 
 view PaymentDetail {
+  title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
   type: detail
   document: Payment
   roles: [Manager]

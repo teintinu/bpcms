@@ -1,7 +1,7 @@
 // service: example.com/services/catalog
 parameter DefaultCurrency {
+  title: { pt-BR: "Moeda padrão", en: "Default currency" }
   type: CurrencyCode
   source: config
   default: "BRL"
-  description: "Moeda padrão do catálogo"
 }

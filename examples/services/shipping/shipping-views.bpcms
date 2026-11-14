@@ -1,14 +1,15 @@
 // service: example.com/services/shipping
 view ShipmentForm {
+  title: { pt-BR: "Formulário de remessa", en: "Shipment form" }
   type: form
   document: Shipment
   roles: [Dispatcher]
 
   fields {
-    orderId: OrderId { required }
-    pesoBruto: Mass { readonly }
-    volume: Volume
-    status: ShipmentStatus { readonly }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, readonly }
+    volume: Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 
   actions {
@@ -19,6 +20,7 @@ view ShipmentForm {
 }
 
 view DispatchBoard {
+  title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
   type: kanban
   source: Shipment
   roles: [Dispatcher, Manager]

@@ -2,6 +2,7 @@
 
 
 shape OrderStatus {
+  title: { pt-BR: "Status do pedido", en: "Order status" }
   base: text
   values: [draft, placed, cancelled, fulfilled]
   format: plain

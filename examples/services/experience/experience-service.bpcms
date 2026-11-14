@@ -1,4 +1,5 @@
 service "example.com/services/experience" {
+  title: { pt-BR: "Experiência", en: "Experience" }
   version: 1.0.0
   owner: "Platform Experience"
   requires { gui, print, units, regionalization }

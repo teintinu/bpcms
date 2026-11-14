@@ -1,5 +1,6 @@
 // service: example.com/services/experience
 shape MoneyBRL {
+  title: { pt-BR: "Dinheiro (BRL)", en: "Money (BRL)" }
   base: decimal
   currency: BRL
   scale: 2
@@ -10,6 +11,7 @@ shape MoneyBRL {
 }
 
 shape Mass {
+  title: { pt-BR: "Massa", en: "Mass" }
   base: decimal
   dimension: mass
   unit: kg
@@ -23,6 +25,7 @@ shape Mass {
 }
 
 shape Length {
+  title: { pt-BR: "Comprimento", en: "Length" }
   base: decimal
   dimension: length
   unit: cm
@@ -35,6 +38,7 @@ shape Length {
 }
 
 shape Volume {
+  title: { pt-BR: "Volume", en: "Volume" }
   base: decimal
   dimension: volume
   unit: m3
@@ -47,6 +51,7 @@ shape Volume {
 }
 
 shape Count {
+  title: { pt-BR: "Contagem", en: "Count" }
   base: integer
   min: 0
   precision: 0
@@ -55,6 +60,7 @@ shape Count {
 }
 
 shape Percentage {
+  title: { pt-BR: "Percentual", en: "Percentage" }
   base: decimal
   dimension: ratio
   unit: "%"
@@ -67,18 +73,21 @@ shape Percentage {
 }
 
 shape CurrencyCode {
+  title: { pt-BR: "Código de moeda", en: "Currency code" }
   base: text
   values: [BRL, USD, EUR]
   format: plain
 }
 
 shape YearMonth {
+  title: { pt-BR: "Ano/mês", en: "Year-month" }
   base: text
   validate: year-month
   format: plain
 }
 
 shape Email {
+  title: { pt-BR: "E-mail", en: "Email" }
   base: text
   normalize: lower-trim
   validate: email
@@ -88,12 +97,14 @@ shape Email {
 }
 
 shape LocaleTag {
+  title: { pt-BR: "Idioma", en: "Locale" }
   base: text
   values: [pt-BR, en-US]
   format: plain
 }
 
 shape Phone {
+  title: { pt-BR: "Telefone", en: "Phone" }
   base: text
   normalize: digits
   validate: phone
@@ -102,6 +113,7 @@ shape Phone {
 }
 
 shape Image {
+  title: { pt-BR: "Imagem", en: "Image" }
   base: text
   validate: url
   format: image

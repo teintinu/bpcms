@@ -2,18 +2,21 @@
 
 
 shape PaymentStatus {
+  title: { pt-BR: "Status do pagamento", en: "Payment status" }
   base: text
   values: [authorized, captured, failed, refunded]
   format: plain
 }
 
 shape RefundStatus {
+  title: { pt-BR: "Status do reembolso", en: "Refund status" }
   base: text
   values: [requested, approved, completed, rejected]
   format: plain
 }
 
 shape PaymentMethod {
+  title: { pt-BR: "Método de pagamento", en: "Payment method" }
   base: text
   values: [credit-card, pix, boleto]
   format: plain

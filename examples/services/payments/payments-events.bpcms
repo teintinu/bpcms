@@ -1,11 +1,12 @@
 // service: example.com/services/payments
 event PaymentSucceeded {
+  title: { pt-BR: "Pagamento aprovado", en: "Payment succeeded" }
   version: 1
   payload {
-    paymentId: PaymentId
-    orderId: OrderId
-    amount: MoneyBRL
-    capturedAt: DateTime
+    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" } }
+    capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
   }
   producer: Payment
   consumers: [Orders, Billing, Notifications]
@@ -13,11 +14,12 @@ event PaymentSucceeded {
 }
 
 event PaymentFailed {
+  title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
   version: 1
   payload {
-    paymentId: PaymentId
-    orderId: OrderId
-    reason: Text
+    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
   }
   producer: Payment
   consumers: [Orders, Support, Notifications]
@@ -25,12 +27,13 @@ event PaymentFailed {
 }
 
 event RefundIssued {
+  title: { pt-BR: "Reembolso emitido", en: "Refund issued" }
   version: 1
   payload {
-    refundId: RefundId
-    paymentId: PaymentId
-    amount: MoneyBRL
-    at: DateTime
+    refundId: RefundId { title: { pt-BR: "Reembolso", en: "Refund" } }
+    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
+    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" } }
+    at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
   }
   producer: Refund
   consumers: [Billing, Support, Notifications]

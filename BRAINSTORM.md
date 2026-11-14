@@ -17,7 +17,7 @@
 | **Contrato do serviço** | Todo artefato de topo é público; não há `exports`. `private` só em membros internos (campos/ações). |
 | **Capabilities** | Conceitos de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`); tecnologia é detalhe do construtor. |
 | **Essenciais** | `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` oferece Shapes métrico/imperial e conversões. |
-| **Título** | `title` é localizado (`pt-BR`, `en-US`); locales definem chaves/default; prod estrito, dev pode fallback/editar. |
+| **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
 | **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId`; `ConsumerId` é alias de `UserId`. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
@@ -423,7 +423,7 @@ application "example.com/app/loja-do-joao" {
 - O construtor de dev pode **fallback** para o locale default e permitir editar o título em runtime, gravando de volta no fonte.
 - Chave fora de `locales` é `E_LOCALE_UNDECLARED`; título sem o locale default é `E_TITLE_MISSING`.
 
-> **Decisão B-42:** `title` é `LocalizedText`; `locales` define o conjunto e o default. Produção é estrita; dev pode fallback/editar. O construtor decide a política de fallback, mas nunca inventa tradução.
+> **Decisão B-42:** `title` é `I18n`; `locales` define o conjunto e o default. Produção é estrita; dev pode fallback/editar. O construtor decide a política de fallback, mas nunca inventa tradução.
 
 **Application é um AST de composição** (metáfora da versão anterior): uma árvore declarativa que os construtores percorrem para montar a experiência. Ela não contém lógica; contém **intenção de montagem**.
 
@@ -576,9 +576,9 @@ parameter PaymentKey {
 | :--- | :--- |
 | `type` | Shape do valor (`Text`, `Email`, `Count`, `Duration`, `Secret`...). |
 | `source` | `config` (configuração do ambiente) ou `secret` (secret store). |
-| `required` | Falha no boot/uso se não houver valor. |
+| `required` | Falha no boot/uso se não houver valor; bare = `true`. |
 | `default` | Só para `config`; proibido para `secret`. |
-| `description` | Documentação do parâmetro. |
+| `title` | I18n obrigatório do parâmetro; substitui `description`. |
 | `min`/`max`/`maxLength` | Constraints simples, como em campo. |
 
 **Regras:** `Secret` nunca é serializado, logado, exportado ou enviado à LLM; o lock guarda o **ID** do Parameter, não o valor. Parameters são declarados **no serviço**; a app só inicializa valores no `main`. O serviço não guarda valores nem versões.
@@ -1670,7 +1670,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, title localizado, id/lookup/FK, Consumer extends User e override/LSP validados; 20 casos golden | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User e override/LSP validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1684,7 +1684,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-45`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-47`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1719,10 +1719,12 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-029 | Capabilities abertas a construtores (`llm`, `google-maps`...) | ✅ | baseline atual |
 | D-030 | Application não declara artefatos; só serviços declaram | ✅ | baseline atual |
 | D-031 | Serviços essenciais `location`, `timezone`, `regionalization`, `units` como capabilities | ✅ | baseline atual |
-| D-032 | `title` é `LocalizedText`; locales definem chaves e default | ✅ | baseline atual |
+| D-032 | `title` é `I18n`; locales definem chaves e default | ✅ | baseline atual |
 | D-033 | Todo document tem id implícito e lookup; Shape de id não é declarado | ✅ | baseline atual |
 | D-034 | ForeignKey soft + projeção de campos na referência | ✅ | baseline atual |
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `taxId` fiscal | ✅ | baseline atual |
+| D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
+| D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
 
 ---
 
@@ -1777,6 +1779,8 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-43** | Id de document é declarado? | **Não.** Todo document base gera `id: <Doc>Id` e o Shape de id implícito; extensão compartilha o id do pai. Declarar `id`/`<Doc>Id` é duplicidade. | Menos ruído e consistência de identidade. | ✅ |
 | **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência grava o snapshot; projeções puxam só campos extras; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `taxId` fiscal; `ConsumerId` é alias de `UserId`, não um segundo id. | Separa login/papéis de dados fiscais sem duplicar identidade. | ✅ |
+| **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
+| **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1798,7 +1802,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-45) sem lacunas.
+- [x] Decisões de baseline (B-01…B-47) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

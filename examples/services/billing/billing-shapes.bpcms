@@ -3,12 +3,14 @@
 
 
 shape InvoiceStatus {
+  title: { pt-BR: "Status da nota", en: "Invoice status" }
   base: text
   values: [draft, issued, paid, overdue, cancelled]
   format: plain
 }
 
 shape CreditNoteStatus {
+  title: { pt-BR: "Status da nota de crédito", en: "Credit note status" }
   base: text
   values: [draft, issued, applied]
   format: plain
@@ -16,12 +18,14 @@ shape CreditNoteStatus {
 
 
 shape BillStatus {
+  title: { pt-BR: "Status da conta", en: "Bill status" }
   base: text
   values: [open, paid, overdue]
   format: plain
 }
 
 shape TaxRegimeCode {
+  title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: text
   values: [SIMPLES, LUCRO_PRESUMIDO, LUCRO_REAL]
   format: plain

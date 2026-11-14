@@ -1,7 +1,7 @@
 // service: example.com/services/payments
 parameter GatewayKey {
+  title: { pt-BR: "Chave do gateway", en: "Gateway key" }
   type: Secret
   source: secret
   required
-  description: "Chave do gateway de pagamento"
 }

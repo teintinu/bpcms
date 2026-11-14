@@ -1,11 +1,12 @@
 // service: example.com/services/billing
 event InvoiceIssued {
+  title: { pt-BR: "Nota emitida", en: "Invoice issued" }
   version: 1
   payload {
-    invoiceId: InvoiceId
-    orderId: OrderId
-    total: MoneyBRL
-    issuedAt: DateTime
+    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
   producer: Invoice
   consumers: [Orders, Notifications]
@@ -13,11 +14,12 @@ event InvoiceIssued {
 }
 
 event InvoiceOverdue {
+  title: { pt-BR: "Nota vencida", en: "Invoice overdue" }
   version: 1
   payload {
-    invoiceId: InvoiceId
-    dueAt: DateTime
-    daysLate: Count
+    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
+    dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
+    daysLate: Count { title: { pt-BR: "Dias em atraso", en: "Days late" } }
   }
   producer: Invoice
   consumers: [Support, Notifications]

@@ -1,4 +1,0 @@
-// service: example.com/services/support
-role SupportAgent {
-  permissions: [ticket.view, ticket.comment, ticket.assign, return.review]
-}

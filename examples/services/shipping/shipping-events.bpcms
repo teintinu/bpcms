@@ -1,11 +1,12 @@
 // service: example.com/services/shipping
 event ShipmentDispatched {
+  title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
   version: 1
   payload {
-    shipmentId: ShipmentId
-    orderId: OrderId
-    tracking: TrackingCode
-    dispatchedAt: DateTime
+    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+    dispatchedAt: DateTime { title: { pt-BR: "Despachado em", en: "Dispatched at" } }
   }
   producer: Shipment
   consumers: [Orders, Billing, Notifications]
@@ -13,11 +14,12 @@ event ShipmentDispatched {
 }
 
 event DeliveryDelayed {
+  title: { pt-BR: "Entrega atrasada", en: "Delivery delayed" }
   version: 1
   payload {
-    shipmentId: ShipmentId
-    expectedAt: DateTime
-    newEta: DateTime
+    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
+    expectedAt: DateTime { title: { pt-BR: "Previsão", en: "Expected at" } }
+    newEta: DateTime { title: { pt-BR: "Nova previsão", en: "New ETA" } }
   }
   producer: Shipment
   consumers: [Support, Notifications]

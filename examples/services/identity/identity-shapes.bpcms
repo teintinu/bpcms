@@ -3,18 +3,21 @@
 
 
 shape UserStatus {
+  title: { pt-BR: "Status do usuário", en: "User status" }
   base: text
   values: [active, suspended, disabled]
   format: plain
 }
 
 shape SessionStatus {
+  title: { pt-BR: "Status da sessão", en: "Session status" }
   base: text
   values: [active, ended, expired]
   format: plain
 }
 
 shape TaxIdentifier {
+  title: { pt-BR: "CPF/CNPJ", en: "Tax identifier" }
   base: text
   normalize: digits
   validate: tax-id

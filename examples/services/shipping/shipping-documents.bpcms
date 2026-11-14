@@ -1,14 +1,15 @@
 // service: example.com/services/shipping
 document ShipmentItem {
+  title: { pt-BR: "Item de remessa", en: "Shipment item" }
   version: 1
   owner: "Shipping"
   sync: live
 
   fields {
-    shipmentId: ShipmentId
-    productId: ProductId { lookup }
-    quantity: Count { lookup }
-    pesoUnitario: Mass
+    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    pesoUnitario: Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
   }
 
   indexes {
@@ -21,22 +22,23 @@ document ShipmentItem {
 }
 
 document Shipment {
+  title: { pt-BR: "Remessa", en: "Shipment" }
   version: 1
   owner: "Shipping"
   sync: live
   audit: true
 
   fields {
-    orderId: OrderId { lookup }
-    items: ShipmentItem[]
-    pesoBruto: Mass
-    volume: Volume
-    frete: MoneyBRL?
-    tracking: TrackingCode? { lookup }
-    status: ShipmentStatus { lookup }
-    readAt: DateTime?
-    calculatedAt: DateTime?
-    createdAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
+    volume: Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    frete: MoneyBRL? { title: { pt-BR: "Frete", en: "Freight" } }
+    tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    readAt: DateTime? { title: { pt-BR: "Lido em", en: "Read at" } }
+    calculatedAt: DateTime? { title: { pt-BR: "Calculado em", en: "Calculated at" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
   source: device "scale-01" for pesoBruto

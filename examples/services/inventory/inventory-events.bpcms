@@ -1,11 +1,12 @@
 // service: example.com/services/inventory
 event StockLow {
+  title: { pt-BR: "Estoque baixo", en: "Stock low" }
   version: 1
   payload {
-    stockItemId: StockItemId
-    productId: ProductId
-    available: Count
-    reorderPoint: Count
+    stockItemId: StockItemId { title: { pt-BR: "Item de estoque", en: "Stock item" } }
+    productId: ProductId { title: { pt-BR: "Produto", en: "Product" } }
+    available: Count { title: { pt-BR: "Disponível", en: "Available" } }
+    reorderPoint: Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
   }
   producer: StockItem
   consumers: [Orders, Notifications]

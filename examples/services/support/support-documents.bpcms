@@ -1,22 +1,23 @@
 // service: example.com/services/support
 document Ticket {
+  title: { pt-BR: "Chamado", en: "Ticket" }
   version: 1
   owner: "Support"
   sync: live
   audit: true
 
   fields {
-    customerId: UserId
-    orderId: OrderId?
-    subject: Text { maxLength: 160, lookup }
-    description: Text
-    priority: TicketPriority { lookup }
-    status: TicketStatus { lookup }
-    assignee: UserId?
-    slaDue: DateTime
-    resolutionTime: Duration?
-    slaMet: Boolean?
-    createdAt: DateTime
+    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
+    orderId: OrderId? { title: { pt-BR: "Pedido", en: "Order" } }
+    subject: Text { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
+    description: Text { title: { pt-BR: "Descrição", en: "Description" } }
+    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup }
+    status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    assignee: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
+    slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
+    resolutionTime: Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
+    slaMet: Boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
   computed SlaBreach from Ticket {
@@ -44,19 +45,20 @@ document Ticket {
 }
 
 document ReturnRequest {
+  title: { pt-BR: "Solicitação de devolução", en: "Return request" }
   version: 1
   owner: "Support"
   sync: live
   audit: true
 
   fields {
-    orderId: OrderId { lookup }
-    paymentId: PaymentId?
-    shipmentId: ShipmentId?
-    reason: Text
-    status: ReturnStatus { lookup }
-    refundAmount: MoneyBRL { lookup }
-    requestedAt: DateTime
+    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
+    shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
+    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
 
   indexes {

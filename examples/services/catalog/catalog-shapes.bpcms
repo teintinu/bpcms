@@ -2,6 +2,7 @@
 
 
 shape SKU {
+  title: { pt-BR: "SKU", en: "SKU" }
   base: text
   normalize: upper-trim
   maxLength: 40
@@ -9,6 +10,7 @@ shape SKU {
 }
 
 shape ProductStatus {
+  title: { pt-BR: "Status do produto", en: "Product status" }
   base: text
   values: [draft, published, archived]
   format: plain

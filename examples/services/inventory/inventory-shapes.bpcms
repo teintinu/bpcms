@@ -2,12 +2,14 @@
 
 
 shape StockStatus {
+  title: { pt-BR: "Status do estoque", en: "Stock status" }
   base: text
   values: [available, reserved, blocked]
   format: plain
 }
 
 shape ReservationStatus {
+  title: { pt-BR: "Status da reserva", en: "Reservation status" }
   base: text
   values: [active, released, expired]
   format: plain
