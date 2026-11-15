@@ -108,6 +108,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
 - [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
 - [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase; subpastas são namespaces de todos os artefatos.
+- [ ] Artefatos em PascalCase, com exceções internacionais (`pH`).
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
 - [ ] Icons sem prefixo `Icon`; iguais em serviços diferentes são permitidos; duplicados no mesmo serviço são erro.
 - [ ] Nenhum serviço criado só para biblioteca/agrupamento de Shapes/Icons/Themes/Locales.
@@ -194,27 +195,30 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `shape <Name> { ... }`
 - [ ] `title: I18n`
-- [ ] `base: decimal | integer | text | classification | workflow`
+- [ ] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
 - [ ] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
-- [ ] `currency`, `scale`
+- [ ] `currency`
 - [ ] `dimension`, `units { unidade: { factor, title } }`
 - [ ] `units` titles têm plural I18n e `format` escolhe `one`/`other`
-- [ ] `unit`, `min` e `precision` são do field, não do Shape
+- [ ] `unit`, `min`, `max`, `scale` e `precision` são do field (exceto `unit` em Shape de unidade única)
+- [ ] `unit` e `units` mutuamente exclusivos; `Percentage` usa `unit: "%"`
 - [ ] `format` auto-seleciona unidade; `flags.unit` força
-- [ ] `Convert` não existe
-- [ ] `min`/`max`, `maxLength`
+- [ ] `maxLength`; `min`/`max`/`scale` no field
 - [ ] `initial` único em `workflow`; `next` obrigatório; `[]` terminal
 - [ ] `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`
 - [ ] `parse`, `format`, `compare`, `aggregate`
-- [ ] `write(value, out)` com `out` inferido como `streamWriter`; `read(in)` com `in` inferido como `streamReader`; `void` inferido
+- [ ] `write(value, out)` com `out` inferido como `streamWriter`; `format(value, flags)` com `value` explícito; `read(in)` com `in` inferido como `streamReader`; `void` inferido
 - [ ] `new Shape{raw, unit}` e shorthand de propriedades
 - [ ] Erro de tipo/propriedade em `new` é `E_TYPE`/`E_CONSTRUCTOR_PROPERTY`
 - [ ] `<name>(...)` sem keyword `method`; compilador detecta por `(`
 - [ ] Argumentos obrigatórios; tipos/retorno explícitos ou inferidos
 - [ ] Exemplos de métodos com tipos explícitos, inferidos e mistos
-- [ ] `toNumber(value): number` por Shape; medidas de `bpcms.org/std` declaram explicitamente
+- [ ] `toNumber(value)` só em Shapes numéricos
+- [ ] `toOrdinal(value)` é gerado automaticamente em classification/workflow; não aparece no código
+- [ ] `Duration` em std; `Length / Duration -> Speed`
 - [ ] `format`/`parse` de compostos exigem método próprio
-- [ ] `convert` removido
+- [ ] `convert` inteligente; `formula` com `to`/`from`
+- [ ] `format` com `unitStyle: short | long`; `parse` exige unidade compatível
 - [ ] `index`, `normalize`, `validate`, `sensitive`
 - [ ] `fields { ... }` — shape composto
 - [ ] `default`, `private`
@@ -226,7 +230,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Resultado da inspeção:**
 
-- [x] 30 Shapes de negócio + 55 Shapes std; todos com `title`.
+- [x] 30 Shapes de negócio + 56 Shapes std; todos com `title`.
 - [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
@@ -245,13 +249,13 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `MoneyBRL` continua em Catalog; os demais tipos de medida foram para std. Fronteira correta?
 - [ ] `std.Count` substitui o Count de Identity; a migração está correta?
 - [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
-- [ ] `bpcms.org/std` definido e importado; migração dos Shapes padrão concluída?
+- [ ] `bpcms.org/std` definido e importado; 56 Shapes; migração concluída?
 - [ ] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
 - [ ] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
 
 **Status:** 🟡 em revisão de DSL. Migração para std concluída; revisão de Shape pendente.
 
-**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; Mass/Length/Volume/Percentage/CurrencyCode implementam `write/read/parse/format/toNumber`.
+**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; Mass/Length/Volume/Percentage/Duration implementam `write/read/parse/format/toNumber`; `CurrencyCode` não tem `toNumber`.
 
 ## 3. Role ⬜
 

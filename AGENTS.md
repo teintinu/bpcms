@@ -82,6 +82,7 @@ Regras:
 - Roles e organogram ficam no **mesmo** arquivo `<service>-organograms.bpcms`; não crie `<service>-roles.bpcms` separado.
 - Use kebab-case e não repita o prefixo dentro da pasta.
 - **Nomes de artefatos não repetem o serviço.** O serviço já é o escopo: `Draft`, não `BillingDraft`. O mesmo nome pode existir em serviços diferentes; não duplique dentro do mesmo tipo/serviço.
+- **PascalCase é o padrão para artefatos**, com exceções para formas internacionais consagradas. Exemplo: `pH`, não `Ph`.
 
 ## Documentos vivos
 

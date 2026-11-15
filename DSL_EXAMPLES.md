@@ -1195,7 +1195,7 @@ shape DiscountPolicy {
 
 ```bpcms
 shape CPF {
-  base: text
+  base: string
   normalize: digits
   validate: cpf-check-digits
   format: masked("###.###.###-##")
@@ -1210,7 +1210,7 @@ shape CPF {
 
 ```bpcms
 shape Email {
-  base: text
+  base: string
   normalize: lower-trim
   validate: email
   maxLength: 254
@@ -1274,8 +1274,8 @@ shape Distance {
     return value.raw;
   }
 
-  format(flags) {
-    return formatReal(value.raw, m, flags.unit ?? m, flags.style);
+  format(value, flags) {
+    return formatReal(value.raw, m, flags.unit ?? m, flags.style, flags.unitStyle);
   }
 }
 ```
@@ -1300,7 +1300,7 @@ fields {
 }
 ```
 
-Ela define 55 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
+Ela define 56 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
 
 ## View
 
@@ -2227,7 +2227,7 @@ parameter MaxRetries {
 ```bpcms
 parameter SupportSla {
   title: { pt-BR: "SLA de suporte", en: "Support SLA" }
-  type: Duration
+  type: std.Duration
   source: config
   default: 2h
 }

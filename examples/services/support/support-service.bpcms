@@ -3,6 +3,7 @@ service "example.com/services/support" {
   version: 1.0.0
   owner: "Support"
   imports {
+    service "bpcms.org/std" as std
     service "example.com/services/orders" as Orders
     service "example.com/services/payments" as Payments
     service "example.com/services/shipping" as Shipping

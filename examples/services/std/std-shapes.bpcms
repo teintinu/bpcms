@@ -138,10 +138,32 @@ shape Length {
     return new Length{raw, unit};
   }
 
-  format(flags) {
+  format(value, flags) {
     const from = value.unit ?? m;
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
-    return formatReal(value.raw, from, unit, flags.style);
+    return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
+  }
+
+  operator +(left: Length, right: Length): Length {
+    const rightInLeft = convert(right.raw, right.unit, left.unit);
+    return new Length{raw: left.raw + rightInLeft, unit: left.unit};
+  }
+
+  operator -(left: Length, right: Length): Length {
+    const rightInLeft = convert(right.raw, right.unit, left.unit);
+    return new Length{raw: left.raw - rightInLeft, unit: left.unit};
+  }
+
+  operator *(left: Length, right: Length): Area {
+    const l = convert(left.raw, left.unit, m);
+    const r = convert(right.raw, right.unit, m);
+    return new Area{raw: l * r, unit: m2};
+  }
+
+  operator /(left: Length, right: Duration): Speed {
+    const l = convert(left.raw, left.unit, m);
+    const r = convert(right.raw, right.unit, s);
+    return new Speed{raw: l / r, unit: m_s};
   }
 }
 
@@ -150,18 +172,18 @@ shape Mass {
   base: decimal
   dimension: mass
   units {
-    kg: {
-      factor: 1000
-      title: {
-        pt-BR: { one: "quilograma", other: "quilogramas" }
-        en: { one: "kilogram", other: "kilograms" }
-      }
-    }
     g: {
       factor: 1
       title: {
         pt-BR: { one: "grama", other: "gramas" }
         en: { one: "gram", other: "grams" }
+      }
+    }
+    kg: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilograma", other: "quilogramas" }
+        en: { one: "kilogram", other: "kilograms" }
       }
     }
     mg: {
@@ -268,10 +290,22 @@ shape Mass {
     return new Mass{raw, unit};
   }
 
-  format(flags) {
+  format(value, flags) {
     const from = value.unit ?? g;
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
-    return formatReal(value.raw, from, unit, flags.style);
+    return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
+  }
+
+  operator /(left: Mass, right: Volume): Density {
+    const m = convert(left.raw, left.unit, g);
+    const v = convert(right.raw, right.unit, m3);
+    return new Density{raw: m / 1000 / v, unit: kg_m3};
+  }
+
+  operator *(left: Mass, right: Acceleration): Force {
+    const m = convert(left.raw, left.unit, g) / 1000;
+    const a = convert(right.raw, right.unit, m_s2);
+    return new Force{raw: m * a, unit: N};
   }
 }
 
@@ -398,10 +432,10 @@ shape Volume {
     return new Volume{raw, unit};
   }
 
-  format(flags) {
+  format(value, flags) {
     const from = value.unit ?? m3;
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
-    return formatReal(value.raw, from, unit, flags.style);
+    return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
@@ -409,17 +443,7 @@ shape Percentage {
   title: { pt-BR: "Percentual", en: "Percentage" }
   base: decimal
   dimension: ratio
-  units {
-    %: {
-      factor: 1
-      title: {
-        pt-BR: { one: "por cento", other: "por cento" }
-        en: { one: "percent", other: "percent" }
-      }
-    }
-  }
-  scale: 2
-  max: 100
+  unit: %
   parse: percent
   format: percent
   aggregate: weighted-average
@@ -446,10 +470,10 @@ shape Percentage {
     return new Percentage{raw, unit};
   }
 
-  format(flags) {
+  format(value, flags) {
     const from = value.unit ?? %;
-    const unit = flags.unit ?? bestUnit(value.raw, from, units);
-    return formatReal(value.raw, from, unit, flags.style);
+    const unit = flags.unit ?? %;
+    return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
@@ -541,31 +565,33 @@ shape Temperature {
   units {
     K: {
       factor: 1
-      offset: 0
       title: {
         pt-BR: { one: "kelvin", other: "kelvins" }
         en: { one: "kelvin", other: "kelvins" }
       }
     }
     C: {
-      factor: 1
-      offset: 273.15
+      formula: K - 273.15
       title: {
         pt-BR: { one: "grau Celsius", other: "graus Celsius" }
         en: { one: "degree Celsius", other: "degrees Celsius" }
       }
     }
     F: {
-      factor: 0.5555555555555556
-      offset: 255.3722222222222
+      formula: {
+        to(K) { return (K - 273.15) * 1.8 + 32; }
+        from(F) { return (F - 32) / 1.8 + 273.15; }
+      }
       title: {
         pt-BR: { one: "grau Fahrenheit", other: "graus Fahrenheit" }
         en: { one: "degree Fahrenheit", other: "degrees Fahrenheit" }
       }
     }
     R: {
-      factor: 0.5555555555555556
-      offset: 0
+      formula: {
+        to(K) { return K * 1.8; }
+        from(R) { return R / 1.8; }
+      }
       title: {
         pt-BR: { one: "grau Rankine", other: "graus Rankine" }
         en: { one: "degree Rankine", other: "degrees Rankine" }
@@ -586,7 +612,6 @@ shape Probability {
   title: { pt-BR: "Probabilidade", en: "Probability" }
   base: decimal
   dimension: ratio
-  max: 1
 }
 
 shape Ratio {
@@ -640,13 +665,10 @@ shape ZScore {
 
 shape CurrencyCode {
   title: { pt-BR: "Código de moeda", en: "Currency code" }
-  base: text
+  base: string
   dimension: currency
   validate: iso-4217
 
-  toNumber(value) {
-    throw Error("CurrencyCode has no numeric value");
-  }
 
   write(value, out) {
     out.writeString(value.raw);
@@ -660,8 +682,103 @@ shape CurrencyCode {
     return new CurrencyCode{raw: text};
   }
 
-  format(flags) {
+  format(value, flags) {
     return value.raw;
+  }
+}
+
+shape Duration {
+  title: { pt-BR: "Duração", en: "Duration" }
+  base: decimal
+  dimension: duration
+  units {
+    s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "segundo", other: "segundos" }
+        en: { one: "second", other: "seconds" }
+      }
+    }
+    ms: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milissegundo", other: "milissegundos" }
+        en: { one: "millisecond", other: "milliseconds" }
+      }
+    }
+    us: {
+      factor: 0.000001
+      title: {
+        pt-BR: { one: "microssegundo", other: "microssegundos" }
+        en: { one: "microsecond", other: "microseconds" }
+      }
+    }
+    ns: {
+      factor: 0.000000001
+      title: {
+        pt-BR: { one: "nanossegundo", other: "nanossegundos" }
+        en: { one: "nanosecond", other: "nanoseconds" }
+      }
+    }
+    min: {
+      factor: 60
+      title: {
+        pt-BR: { one: "minuto", other: "minutos" }
+        en: { one: "minute", other: "minutes" }
+      }
+    }
+    h: {
+      factor: 3600
+      title: {
+        pt-BR: { one: "hora", other: "horas" }
+        en: { one: "hour", other: "hours" }
+      }
+    }
+    d: {
+      factor: 86400
+      title: {
+        pt-BR: { one: "dia", other: "dias" }
+        en: { one: "day", other: "days" }
+      }
+    }
+    week: {
+      factor: 604800
+      title: {
+        pt-BR: { one: "semana", other: "semanas" }
+        en: { one: "week", other: "weeks" }
+      }
+    }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+
+  toNumber(value) {
+    return value.raw;
+  }
+
+  write(value, out) {
+    const unit = value.unit ?? s;
+    out.writeString(unit);
+    out.writeDouble(value.raw);
+  }
+
+  read(in) {
+    const unit = in.readString();
+    const raw = in.readDouble();
+    return new Duration{raw, unit};
+  }
+
+  parse(text, flags) {
+    const unit = flags.unit ?? s;
+    const raw = parseReal(text, unit);
+    return new Duration{raw, unit};
+  }
+
+  format(value, flags) {
+    const from = value.unit ?? s;
+    const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
@@ -670,18 +787,18 @@ shape DataSize {
   base: decimal
   dimension: data
   units {
-    bit: {
-      factor: 0.125
-      title: {
-        pt-BR: { one: "bit", other: "bits" }
-        en: { one: "bit", other: "bits" }
-      }
-    }
     B: {
       factor: 1
       title: {
         pt-BR: { one: "byte", other: "bytes" }
         en: { one: "byte", other: "bytes" }
+      }
+    }
+    bit: {
+      factor: 0.125
+      title: {
+        pt-BR: { one: "bit", other: "bits" }
+        en: { one: "bit", other: "bits" }
       }
     }
     KB: {
@@ -915,6 +1032,12 @@ shape Force {
     }
   }
   parse: quantity
+
+  operator *(left: Force, right: Length): Energy {
+    const f = convert(left.raw, left.unit, N);
+    const d = convert(right.raw, right.unit, m);
+    return new Energy{raw: f * d, unit: J};
+  }
 }
 
 shape Pressure {
@@ -1095,6 +1218,12 @@ shape Energy {
   }
   parse: quantity
   aggregate: sum
+
+  operator /(left: Energy, right: Duration): Power {
+    const e = convert(left.raw, left.unit, J);
+    const t = convert(right.raw, right.unit, s);
+    return new Power{raw: e / t, unit: W};
+  }
 }
 
 shape Power {
@@ -1521,6 +1650,12 @@ shape ElectricCurrent {
     }
   }
   parse: quantity
+
+  operator *(left: ElectricCurrent, right: Duration): ElectricCharge {
+    const i = convert(left.raw, left.unit, A);
+    const t = convert(right.raw, right.unit, s);
+    return new ElectricCharge{raw: i * t, unit: C};
+  }
 }
 
 shape ElectricCharge {
@@ -1565,6 +1700,12 @@ shape ElectricCharge {
     }
   }
   parse: quantity
+
+  operator /(left: ElectricCharge, right: Duration): ElectricCurrent {
+    const q = convert(left.raw, left.unit, C);
+    const t = convert(right.raw, right.unit, s);
+    return new ElectricCurrent{raw: q / t, unit: A};
+  }
 }
 
 shape Voltage {
@@ -1602,6 +1743,12 @@ shape Voltage {
     }
   }
   parse: quantity
+
+  operator *(left: Voltage, right: ElectricCurrent): Power {
+    const v = convert(left.raw, left.unit, V);
+    const i = convert(right.raw, right.unit, A);
+    return new Power{raw: v * i, unit: W};
+  }
 }
 
 shape Resistance {
@@ -2071,7 +2218,7 @@ shape Molality {
   parse: quantity
 }
 
-shape Ph {
+shape pH {
   title: { pt-BR: "pH", en: "pH" }
   base: decimal
   dimension: ph
@@ -2084,7 +2231,6 @@ shape Ph {
       }
     }
   }
-  max: 14
 }
 
 shape CatalyticActivity {

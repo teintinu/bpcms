@@ -1,7 +1,7 @@
 // service: example.com/services/support
 parameter DefaultSla {
   title: { pt-BR: "SLA padrão", en: "Default SLA" }
-  type: Duration
+  type: std.Duration
   source: config
   default: 2d
 }

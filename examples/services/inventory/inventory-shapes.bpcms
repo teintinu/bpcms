@@ -26,6 +26,7 @@ shape StockStatus {
     }
   }
   format: plain
+
 }
 
 shape ReservationStatus {
@@ -53,4 +54,5 @@ shape ReservationStatus {
     }
   }
   format: plain
+
 }

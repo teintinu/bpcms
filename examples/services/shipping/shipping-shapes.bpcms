@@ -38,6 +38,7 @@ shape ShipmentStatus {
     }
   }
   format: plain
+
 }
 
 shape TrackingEvent {
@@ -51,7 +52,7 @@ shape TrackingEvent {
 
 shape TrackingCode {
   title: { pt-BR: "Código de rastreio", en: "Tracking code" }
-  base: text
+  base: string
   normalize: upper-trim
   maxLength: 40
   format: plain

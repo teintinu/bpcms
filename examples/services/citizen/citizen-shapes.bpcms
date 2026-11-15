@@ -15,6 +15,7 @@ shape CitizenKind {
     }
   }
   format: plain
+
 }
 
 shape CitizenStatus {
@@ -42,11 +43,12 @@ shape CitizenStatus {
     }
   }
   format: plain
+
 }
 
 shape Email {
   title: { pt-BR: "E-mail", en: "Email" }
-  base: text
+  base: string
   normalize: lower-trim
   validate: email
   maxLength: 254
@@ -57,7 +59,7 @@ shape Email {
 
 shape Phone {
   title: { pt-BR: "Telefone", en: "Phone" }
-  base: text
+  base: string
   normalize: digits
   validate: phone
   maxLength: 20
@@ -67,7 +69,7 @@ shape Phone {
 
 shape Image {
   title: { pt-BR: "Imagem", en: "Image" }
-  base: text
+  base: string
   validate: url
   format: image
   maxLength: 2048

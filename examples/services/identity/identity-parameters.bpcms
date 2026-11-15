@@ -1,7 +1,7 @@
 // service: example.com/services/identity
 parameter SessionTtl {
   title: { pt-BR: "Duração da sessão", en: "Session TTL" }
-  type: Duration
+  type: std.Duration
   source: config
   default: 30m
 }

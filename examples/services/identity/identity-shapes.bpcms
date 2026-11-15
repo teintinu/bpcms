@@ -27,6 +27,7 @@ shape UserStatus {
     }
   }
   format: plain
+
 }
 
 shape SessionStatus {
@@ -54,4 +55,5 @@ shape SessionStatus {
     }
   }
   format: plain
+
 }

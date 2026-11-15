@@ -38,6 +38,7 @@ shape TicketStatus {
     }
   }
   format: plain
+
 }
 
 shape ReturnStatus {
@@ -77,6 +78,7 @@ shape ReturnStatus {
     }
   }
   format: plain
+
 }
 
 shape TicketPriority {
@@ -105,4 +107,5 @@ shape TicketPriority {
     }
   }
   format: plain
+
 }

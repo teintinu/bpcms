@@ -32,6 +32,7 @@ shape PaymentStatus {
     }
   }
   format: plain
+
 }
 
 shape RefundStatus {
@@ -65,6 +66,7 @@ shape RefundStatus {
     }
   }
   format: plain
+
 }
 
 shape PaymentMethod {
@@ -88,4 +90,5 @@ shape PaymentMethod {
     }
   }
   format: plain
+
 }

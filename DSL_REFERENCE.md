@@ -61,7 +61,7 @@ Os tipos básicos são intrínsecos e não são Shapes:
 
 Tipos adicionais:
 
-- `DateTime`, `Date`, `Duration`, `Unit`, `FormatFlags`, `void`;
+- `DateTime`, `Date`, `Unit`, `FormatFlags`, `void`;
 - `streamReader` e `streamWriter` são as interfaces inferidas em `read` e `write`;
 - `Int8`, `Int16`, `Int32`, `Int64`, `Float`, `Double` são usados apenas nos métodos de `stream`;
 - `Shape` é o tipo de um valor de Classe; `new Classe{...}` cria um valor.
@@ -571,7 +571,9 @@ task RefundPayment {
 | `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
 | `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |
 | `min` / `max` | `min: 0.001, max: 50000` | Faixa validada no field. |
+| `scale` | `scale: 2` | Casas decimais do field. |
 | `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
+| `unit` / `units` | — | `unit` só no Shape de unidade única; `units` só no Shape multiunidade. |
 | `default` | `default: BR` | Valor inicial; não é regra de negócio. |
 | `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
 
@@ -621,14 +623,15 @@ document Shipment {
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `base` | `base: decimal \| integer \| text \| classification \| workflow` | Representação base. |
+| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
+| `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
-| `units` | `units { m: { factor: 1, title: { ... } } }` | Unidades, fatores e labels I18n. |
-| `max` | `max: 100` | Limite superior semântico. |
+| `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
+| `unit` | `unit: %` | Unidade única; mutuamente exclusivo com `units`. |
 | `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Perfil default de texto → valor; composto exige método. |
 | `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Perfil default de valor → texto; composto exige método. |
 | `compare` | `compare: exact` | Igualdade/ordenação; `exact` para dinheiro. |
@@ -641,7 +644,29 @@ document Shipment {
 | `fields` | `fields { street: string ... }` | Shape composto. |
 | `default` | `default: BR` | Valor default de campo interno. |
 | `private` | `private helper: string` | Campo interno do Shape; fora do contrato público. |
+| `operator` | `operator +(left: A, right: B): C { ... }` | Operador próprio do Shape. |
 | método | `<name>(...): <Type> { ... }` | Função própria do Shape; `value` é o receptor. O compilador detecta pelo identificador seguido de `(`. |
+
+### 6.0 Bases de apresentação
+
+- `string`: texto simples.
+- `richtext`: texto rico; o builder valida, sanitiza, transporta e armazena.
+- `attachment`: arquivo genérico; `mime` restringe.
+- `audio`, `image`, `video`: subtipos de apresentação de `attachment`; já implicam MIME de áudio, imagem e vídeo.
+- `mime` só é necessário no `attachment` genérico.
+
+```bpcms
+shape ProductImage {
+  title: { pt-BR: "Imagem do produto", en: "Product image" }
+  base: image
+}
+
+shape ProductManual {
+  title: { pt-BR: "Manual do produto", en: "Product manual" }
+  base: attachment
+  mime: [application/pdf, application/octet-stream]
+}
+```
 
 > `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
 
@@ -707,7 +732,7 @@ shape InvoiceStatus {
 
 ## 6.1.1 Units
 
-`units` é um mapa de unidade → fator relativo à unidade base (fator `1`). Unidades afins podem declarar `offset`.
+`units` é um mapa de unidade → fator relativo à unidade base (fator `1`). Unidades não lineares usam `formula { to/from }`.
 
 ```bpcms
 shape Length {
@@ -738,6 +763,9 @@ shape Length {
 - `value.unit` é a unidade do valor; se o field não definir, usa a unidade de fator `1`.
 - O `format` escolhe automaticamente a unidade mais legível, salvo `flags.unit`; o título usa `one`/`other` conforme o número.
 - `title` aceita `string | PluralForms`; `plural` não é campo separado da unidade.
+- A primeira unidade é a referência e tem `factor: 1`.
+- `unit` e `units` são mutuamente exclusivos (`E_UNIT_UNITS_CONFLICT`).
+- `Percentage` usa `unit: "%"`.
 
 ## 6.1.2 classification e workflow
 
@@ -766,6 +794,37 @@ shape TaxRegimeCode {
 - `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
 - Ordinal continua explícito, 10, 20, 30...
 
+### 6.1.1.1 formula e convert
+
+Unidades não lineares usam `formula`:
+
+```bpcms
+units {
+  mol_L: { factor: 1 }
+  pH: {
+    formula: {
+      to(mol_L) { return -log10(mol_L); }
+      from(pH) { return 10 ^ (-pH); }
+    }
+  }
+}
+```
+
+Arrow equivalente:
+
+```bpcms
+formula: {
+  to: (mol_L) => -log10(mol_L)
+  from: (pH) => 10 ^ (-pH)
+}
+```
+
+- `to` = referência → unidade.
+- `from` = unidade → referência.
+- `factor` e `formula` são mutuamente exclusivos.
+- O compilador gera `convert` para todas as direções.
+- Fórmula inválida gera `E_UNIT_FORMULA`.
+
 ## 6.2 Valor e métodos
 
 Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas são:
@@ -777,13 +836,15 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 | `format` | `format(value, flags)` | Texto para UI; tipos/retorno inferidos |
 | `parse` | `parse(text, flags)` | Texto → valor; tipos/retorno inferidos |
 | `toNumber` | `toNumber(value)` | Valor numérico; tipos/retorno inferidos |
+| `toOrdinal` | `toOrdinal(value)` | Gerado automaticamente em classification/workflow |
 
 - `write(value, out)` recebe `value` explícito; `out` é inferido como `streamWriter`; o retorno `void` é inferido.
 - `read(in)` infere `in` como `streamReader`.
 - `write`/`read` existem para **todos** os Shapes, inclusive enums e compostos.
 - `format`/`parse` têm default para primitivos, enums e medidas; **compostos exigem método próprio**.
-- `toNumber(value)` é declarado por cada Shape que expõe valor numérico; o tipo de `value` é inferido do Shape. Em `bpcms.org/std`, as medidas declaram o método explicitamente.
-- `value` é explícito em `write(value, out)` e `toNumber(value)`; em `format(flags)` é o receptor implícito. `read`/`parse` são estáticos.
+- `toNumber(value)` só em Shapes numéricos; `Money.toNumber` retorna `raw`.
+- `toOrdinal(value)` é gerado pelo compilador em `classification`/`workflow`; não se escreve no Shape.
+- `value` é explícito em `write(value, out)`, `format(value, flags)` e `toNumber(value)`. `read`/`parse` são estáticos.
 
 ### FormatFlags
 
@@ -791,6 +852,7 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 type FormatFlags = {
   style?: normal | short | tooltip;
   unit?: Unit;
+  unitStyle?: short | long;
 };
 ```
 
@@ -801,6 +863,8 @@ format(date, { style: tooltip })   // "Sábado, 14 de novembro de 2026"
 
 format(mass, { style: normal, unit: kg })
 format(mass, { style: short, unit: lb })
+format(mass, { unit: kg, unitStyle: short })   // "1kg"
+format(mass, { unit: kg, unitStyle: long })    // "1 quilograma"
 ```
 
 `parse` recebe as mesmas flags:
@@ -808,7 +872,17 @@ format(mass, { style: short, unit: lb })
 ```ts
 parse("14/nov/26", { style: short })
 parse("12,5 kg", { style: normal, unit: kg })
+// texto sem unidade ou unidade diferente de flags.unit -> E_PARSE_UNIT
 ```
+
+Regras do `parse`:
+
+- Shape com unidade exige unidade no texto.
+- Se `flags.unit` existir, a unidade do texto precisa ser compatível; caso contrário, `E_PARSE_UNIT`.
+- Se não existir `flags.unit`, a unidade do texto é usada.
+- Singular/plural vêm de `units.title`.
+- Separadores e símbolos vêm da regionalization interna.
+- Se a regionalization não for determinável: `E_REGIONALIZATION_UNKNOWN`.
 
 ## 6.3 stream canônico
 
@@ -861,7 +935,7 @@ Funções de apoio usadas pelos métodos da stdlib:
 
 ```ts
 parseReal(text: string, unit: Unit): number
-formatReal(raw: number, from: Unit, to: Unit, style: FormatStyle): string
+formatReal(raw: number, from: Unit, to: Unit, style: FormatStyle, unitStyle: UnitStyle): string
 bestUnit(raw: number, from: Unit, units: Units): Unit
 ```
 
@@ -871,7 +945,7 @@ bestUnit(raw: number, from: Unit, units: Units): Unit
 - `value.unit` é a unidade atual.
 - `read`/`parse` são métodos estáticos do Shape; `write`/`format` usam `value`; `toNumber` recebe `value` explícito.
 - `new Shape{...}` cria um valor; `new` é a forma geral de instanciar classes/Shapes.
-- `CurrencyCode` usa `writeString`/`readString` e não tem valor numérico; `toNumber` lança erro.
+- `CurrencyCode` usa `writeString`/`readString` e não tem `toNumber`; `Money.toNumber` retorna `raw`.
 
 ## 6.4 Expressões e métodos próprios
 
@@ -979,13 +1053,35 @@ convert(value: Length, unit) {
 - O compilador valida os tipos inferidos e gera `E_TYPE` se forem inválidos.
 - Não existe forma sem argumento: `write(out)` é inválido; o `value` é obrigatório.
 
+## 6.4.3 Operadores
+
+```bpcms
+shape Length {
+  operator +(left: Length, right: Length): Length {
+    const rightInLeft = convert(right.raw, right.unit, left.unit);
+    return new Length{raw: left.raw + rightInLeft, unit: left.unit};
+  }
+
+  operator /(left: Length, right: Duration): Speed {
+    const l = convert(left.raw, left.unit, m);
+    const r = convert(right.raw, right.unit, s);
+    return new Speed{raw: l / r, unit: m_s};
+  }
+}
+```
+
+- `1 m + 20 cm` → `1.2 m`.
+- `1 km / 3 h` → `Speed`.
+- `1 m + 1 s` → `E_TYPE`/`E_OPERATOR`.
+- Resultado de multiplicação/divisão usa a unidade de referência do Shape resultante.
+- `Force * Length` é `Energy`; `Torque` exige operador explícito próprio.
+
 ## 6.5 `toNumber`
 
 ```bpcms
 shape Rating {
   title: { pt-BR: "Avaliação", en: "Rating" }
   base: decimal
-  max: 5
 
   toNumber(value) {
     return value.raw;
@@ -998,9 +1094,28 @@ shape Rating {
 - Composto pode usar `value.campo`.
 - Em `bpcms.org/std`, medidas declaram `toNumber(value)` explicitamente.
 
-## 6.6 `convert` removido
+## 6.6 `toOrdinal`
 
-`convert` não é mais cláusula de Shape. `toNumber(value)` expõe o número; conversão de domínio é método próprio. Os `convert` antigos dos Shapes de Catalog e da stdlib foram removidos; os Shapes padrão vivem em `bpcms.org/std`.
+`toOrdinal(value)` é **gerado automaticamente** em todo `classification`/`workflow`.
+
+- Não se declara `toOrdinal` no Shape.
+- O compilador gera a função para retornar `value.ordinal`.
+- Isso evita código repetido em 22 enums.
+- `toNumber` continua restrito a Shapes numéricos.
+
+## 6.7 `convert`
+
+`convert` é intrínseco e inteligente:
+
+```ts
+convert(value: number, from: Unit, to: Unit): number
+```
+
+- Usa a unidade de referência e o grafo `units`.
+- Resolve `factor` e `formula` em todas as direções.
+- `Length -> Duration` não é conversão; é operador.
+- Unidades incompatíveis geram `E_UNIT`.
+- Fórmula inválida gera `E_UNIT_FORMULA`.
 
 # 7. View
 
@@ -1242,7 +1357,7 @@ assumption A-001 {
 | :--- | :--- | :--- |
 | `parameter` | `parameter <Name> { ... }` | Declara configuração/segredo tipado dentro de um serviço; artefato público. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do parâmetro (obrigatório); substitui `description`; ver 1.9. |
-| `type` | `type: string \| Secret \| Count \| Duration \| ...` | Shape do valor. |
+| `type` | `type: string \| Secret \| Count \| std.Duration \| ...` | Shape do valor. |
 | `source` | `source: config \| secret` | Origem do valor: configuração do ambiente ou secret store. |
 | `required` | `required` | Falha no boot/uso se não houver valor; `required: true` também é aceito. |
 | `default` | `default: "..."` | Só para `config`; proibido para `secret`. |
@@ -1726,6 +1841,9 @@ policy FourEyesPayment {
 | Workflow | initial/next inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_NEXT` / `E_WORKFLOW_TRANSITION` |
 | Classification | `initial`/`next` em classification | `E_CLASSIFICATION_TRANSITION` |
 | Runtime | mudança de estado não permitida | `E_INVALID_TRANSITION` |
+| Unidade | `unit` + `units`, fórmula inválida, parse sem unidade | `E_UNIT_UNITS_CONFLICT` / `E_UNIT_FORMULA` / `E_PARSE_UNIT` |
+| Operador | operandos incompatíveis ou operador inexistente | `E_OPERATOR` |
+| Regionalization | locale/regionalization indeterminada | `E_REGIONALIZATION_UNKNOWN` |
 | Dimensão | `Mass` onde se espera `Length`; soma incompatível | `E_DIMENSION` |
 | Unidade | unidade não pertence à dimensão | `E_UNIT` |
 | Índice | campo inexistente/não indexável; índice duplicado | `E_INDEX` |
@@ -1890,17 +2008,36 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 
 | Grupo | Shapes |
 | :--- | :--- |
-| Geometria/medidas | `Length`, `Mass`, `Volume`, `Area`, `Angle`, `Temperature` |
+| Geometria/medidas | `Length`, `Mass`, `Volume`, `Area`, `Angle`, `Temperature`, `Duration` |
 | Mecânica | `Speed`, `Acceleration`, `Force`, `Pressure`, `Energy`, `Power`, `Frequency`, `Density`, `Momentum`, `Torque` |
 | Fluidos/calor | `HeatCapacity`, `Entropy`, `ThermalConductivity`, `DynamicViscosity`, `KinematicViscosity`, `SurfaceTension` |
 | Eletromagnetismo | `ElectricCurrent`, `ElectricCharge`, `Voltage`, `Resistance`, `Capacitance`, `Inductance`, `MagneticFlux`, `MagneticFluxDensity` |
 | Luz/som | `LuminousIntensity`, `LuminousFlux`, `Illuminance`, `Luminance`, `SoundPressure`, `SoundLevel`, `AngularVelocity` |
-| Química | `AmountOfSubstance`, `MolarMass`, `MolarConcentration`, `Molality`, `Ph`, `CatalyticActivity` |
+| Química | `AmountOfSubstance`, `MolarMass`, `MolarConcentration`, `Molality`, `pH`, `CatalyticActivity` |
 | Radiação | `Radioactivity`, `AbsorbedDose`, `EquivalentDose` |
 | Dados/estatística | `DataSize`, `DataRate`, `Count`, `Percentage`, `Probability`, `Ratio`, `Rate`, `ZScore` |
 | Dinheiro | `CurrencyCode` |
 
 **`CurrencyCode`:** é um código ISO 4217 validado, **não** um enum com `values`/icons. A formatação/label vem de regionalization.
+
+## 29.2.1 Regionalization
+
+`Regionalization` é uma interface/capability do construtor, não um Shape:
+
+```ts
+Regionalization {
+  current(): Locale
+  parseNumber(text: string, locale?: Locale): number
+  formatNumber(value: number, style: NumberStyle, locale?: Locale): string
+  parseUnit(text: string, units: Units, locale?: Locale): UnitValue
+  formatUnit(value: number, unit: Unit, style: UnitStyle, locale?: Locale): string
+}
+```
+
+- `parse`, `format`, `convert` e `bestUnit` acessam internamente.
+- Se não for possível determinar a regionalization: `E_REGIONALIZATION_UNKNOWN`.
+- O serviço não precisa importar.
+
 
 ## 29.3 Onde fica
 
@@ -1908,7 +2045,7 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 - Fica na pasta normal `examples/services/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
 - Não é versionado pelo lock; a versão da std é a do construtor/DSL.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
-- `Mass`, `Length`, `Volume`, `Percentage` e `CurrencyCode` implementam `write`, `read`, `parse`, `format` e `toNumber`; `CurrencyCode.toNumber` lança erro por não ser numérico.
+- `Mass`, `Length`, `Volume`, `Percentage` e `Duration` implementam `write`, `read`, `parse`, `format` e `toNumber`; `CurrencyCode` não é numérico e não tem `toNumber`.
 
 > **Migração feita:** `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` foram removidos dos serviços de negócio e são referenciados como `std.*`. `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag` e `YearMonth` continuam nos serviços de negócio.
 

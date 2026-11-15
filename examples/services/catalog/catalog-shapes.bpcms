@@ -3,7 +3,7 @@
 
 shape SKU {
   title: { pt-BR: "SKU", en: "SKU" }
-  base: text
+  base: string
   normalize: upper-trim
   maxLength: 40
   format: plain
@@ -34,13 +34,13 @@ shape ProductStatus {
     }
   }
   format: plain
+
 }
 
 shape MoneyBRL {
   title: { pt-BR: "Dinheiro (BRL)", en: "Money (BRL)" }
   base: decimal
   currency: BRL
-  scale: 2
   parse: locale-number
   format: currency
   compare: exact

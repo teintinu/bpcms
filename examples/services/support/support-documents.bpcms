@@ -15,7 +15,7 @@ document Ticket {
     status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     assignee: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
     slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
-    resolutionTime: Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
+    resolutionTime: std.Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
     slaMet: boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
