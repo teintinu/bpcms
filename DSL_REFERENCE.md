@@ -2032,15 +2032,18 @@ shape Currency {
   title: { pt-BR: "Moeda", en: "Currency" }
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
   values {
-    BRL { scale: 2 }
-    USD { scale: 2 }
-    JPY { scale: 0 }
-    KWD { scale: 3 }
-    CVE { scale: 2 }
+    BRL { numeric: "986", scale: 2 }
+    USD { numeric: "840", scale: 2 }
+    JPY { numeric: "392", scale: 0 }
+    KWD { numeric: "414", scale: 3 }
+    CVE { numeric: "132", scale: 2 }
   }
 }
 ```
 
+- A stdlib contém os **178 códigos ativos da ISO 4217**.
+- Cada value tem `numeric` e `scale`.
+- `subunitRatio: 5` em MGA e MRU.
 - `CurrencyCode` não é Shape separado.
 - `DefaultCurrency` usa `std.Currency`.
 - A moeda usada sem `reintroduce` gera `E_CURRENCY_METADATA_MISSING`.
@@ -2064,6 +2067,12 @@ reintroduce std.Currency {
       suffix: " BTC"
       icon: Bitcoin
       ordinal: 1000
+    }
+    CVE {
+      title: { pt-BR: "Escudo cabo-verdiano", en: "Cape Verdean escudo" }
+      infix: "$"
+      icon: CVE
+      ordinal: 30
     }
   }
 }
