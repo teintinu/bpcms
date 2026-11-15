@@ -3,6 +3,7 @@ service "example.com/services/catalog" {
   version: 1.0.0
   owner: "Catalog"
   imports {
+    service "bpcms.org/std" as std
     service "example.com/services/identity" as Identity
   }
   requires { oltp, attachments, units }

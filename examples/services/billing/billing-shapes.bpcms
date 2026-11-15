@@ -9,22 +9,27 @@ shape InvoiceStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: status.draft
+      ordinal: 10
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
       icon: finance.invoice.issued
+      ordinal: 20
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
       icon: status.paid
+      ordinal: 30
     }
     overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
       icon: status.overdue
+      ordinal: 40
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
       icon: Cancelled
+      ordinal: 50
     }
   }
   format: plain
@@ -37,14 +42,17 @@ shape CreditNoteStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
+      ordinal: 10
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
       icon: Issued
+      ordinal: 20
     }
     applied {
       title: { pt-BR: "Aplicada", en: "Applied" }
       icon: Applied
+      ordinal: 30
     }
   }
   format: plain
@@ -58,14 +66,17 @@ shape BillStatus {
     open {
       title: { pt-BR: "Aberta", en: "Open" }
       icon: Open
+      ordinal: 10
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
       icon: Paid
+      ordinal: 20
     }
     overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
       icon: Overdue
+      ordinal: 30
     }
   }
   format: plain
@@ -78,14 +89,17 @@ shape TaxRegimeCode {
     SIMPLES {
       title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
       icon: Simples
+      ordinal: 10
     }
     LUCRO_PRESUMIDO {
       title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
       icon: LucroPresumido
+      ordinal: 20
     }
     LUCRO_REAL {
       title: { pt-BR: "Lucro Real", en: "Actual profit" }
       icon: LucroReal
+      ordinal: 30
     }
   }
   format: plain

@@ -8,8 +8,8 @@ document ShipmentItem {
   fields {
     shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    pesoUnitario: Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    pesoUnitario: std.Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
   }
 
   indexes {
@@ -31,8 +31,8 @@ document Shipment {
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
-    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
-    volume: Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
+    volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
     frete: MoneyBRL? { title: { pt-BR: "Frete", en: "Freight" } }
     tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -56,7 +56,7 @@ document Shipment {
 
   actions {
     create(orderId: OrderId): Shipment
-    addItem(productId: ProductId, quantity: Count): Shipment
+    addItem(productId: ProductId, quantity: std.Count): Shipment
     split(): Shipment[]
     dispatch(): Shipment
     trackAll(): void

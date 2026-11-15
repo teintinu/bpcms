@@ -25,7 +25,7 @@ view ReturnForm {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
     paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
     shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, required }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
     refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
   }
 

@@ -21,8 +21,8 @@ view StockAdjustmentForm {
 
   fields {
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, required }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
   }
 
   actions {
@@ -38,8 +38,8 @@ view ReservationForm {
 
   fields {
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
-    externalRef: Text { title: { pt-BR: "Referência externa", en: "External reference" } }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
+    externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
   }
 
   actions {

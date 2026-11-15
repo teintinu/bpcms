@@ -8,14 +8,17 @@ shape Channel {
     email {
       title: { pt-BR: "E-mail", en: "Email" }
       icon: channels.email
+      ordinal: 10
     }
     whatsapp {
       title: { pt-BR: "WhatsApp", en: "WhatsApp" }
       icon: WhatsApp
+      ordinal: 20
     }
     in-app {
       title: { pt-BR: "No aplicativo", en: "In-app" }
       icon: InApp
+      ordinal: 30
     }
   }
   format: plain
@@ -28,18 +31,22 @@ shape NotificationStatus {
     queued {
       title: { pt-BR: "Na fila", en: "Queued" }
       icon: Queued
+      ordinal: 10
     }
     sent {
       title: { pt-BR: "Enviada", en: "Sent" }
       icon: Sent
+      ordinal: 20
     }
     failed {
       title: { pt-BR: "Falhou", en: "Failed" }
       icon: Failed
+      ordinal: 30
     }
     read {
       title: { pt-BR: "Lida", en: "Read" }
       icon: Read
+      ordinal: 40
     }
   }
   format: plain
@@ -52,10 +59,12 @@ shape LocaleTag {
     pt-BR {
       title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
       icon: LocalePtBr
+      ordinal: 10
     }
     en-US {
       title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
       icon: LocaleEnUs
+      ordinal: 20
     }
   }
   format: plain

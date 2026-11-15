@@ -6,7 +6,7 @@ view LoginForm {
 
   fields {
     email: Email { title: { pt-BR: "E-mail", en: "Email" }, required }
-    password: Text { title: { pt-BR: "Password", en: "Password" }, maxLength: 128, required }
+    password: string { title: { pt-BR: "Password", en: "Password" }, maxLength: 128, required }
   }
 
   actions {

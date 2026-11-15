@@ -1,0 +1,855 @@
+// Pseudo-service bpcms.org/std: definido pelo builder, não publicado.
+// Modos: SI, imperial/US, CGS, astronômico, atômico/nuclear, química, dados e estatística.
+
+shape Length {
+  title: { pt-BR: "Comprimento", en: "Length" }
+  base: decimal
+  dimension: length
+  units {
+    m: { factor: 1 }
+    cm: { factor: 0.01 }
+    mm: { factor: 0.001 }
+    um: { factor: 1e-06 }
+    nm: { factor: 1e-09 }
+    km: { factor: 1000 }
+    in: { factor: 0.0254 }
+    ft: { factor: 0.3048 }
+    yd: { factor: 0.9144 }
+    mi: { factor: 1609.344 }
+    nmi: { factor: 1852 }
+    AU: { factor: 149597870700 }
+    ly: { factor: 9460730472580800 }
+    pc: { factor: 3.085677581e+16 }
+    angstrom: { factor: 1e-10 }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+
+  method write(out: stream): void {
+    const unit = value.unit ?? m;
+    out.writeString(unit);
+    out.writeDouble(value.raw);
+  }
+
+  method read(in: stream): Length {
+    const unit = in.readString();
+    const raw = in.readDouble();
+    return Length.fromRaw(raw, unit);
+  }
+
+  method parse(text: string, flags: FormatFlags): Length {
+    const unit = flags.unit ?? m;
+    return Length.fromRaw(ParseReal(text, unit), unit);
+  }
+
+  method format(flags: FormatFlags): string {
+    const from = value.unit ?? m;
+    const unit = flags.unit ?? BestUnit(value.raw, from, units);
+    return FormatReal(value.raw, from, unit, flags.style);
+  }
+}
+
+shape Mass {
+  title: { pt-BR: "Massa", en: "Mass" }
+  base: decimal
+  dimension: mass
+  units {
+    kg: { factor: 1000 }
+    g: { factor: 1 }
+    mg: { factor: 0.001 }
+    ug: { factor: 0.000001 }
+    µg: { factor: 0.000001 }
+    t: { factor: 1000000 }
+    lb: { factor: 453.59237 }
+    oz: { factor: 28.349523125 }
+    st: { factor: 6350.29318 }
+    ton: { factor: 907184.74 }
+    ct: { factor: 0.2 }
+    Da: { factor: 1.66053904e-24 }
+    Msun: { factor: 1.988475e33 }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+
+  method write(out: stream): void {
+    const unit = value.unit ?? g;
+    out.writeString(unit);
+    out.writeDouble(value.raw);
+  }
+
+  method read(in: stream): Mass {
+    const unit = in.readString();
+    const raw = in.readDouble();
+    return Mass.fromRaw(raw, unit);
+  }
+
+  method parse(text: string, flags: FormatFlags): Mass {
+    const unit = flags.unit ?? g;
+    return Mass.fromRaw(ParseReal(text, unit), unit);
+  }
+
+  method format(flags: FormatFlags): string {
+    const from = value.unit ?? g;
+    const unit = flags.unit ?? BestUnit(value.raw, from, units);
+    return FormatReal(value.raw, from, unit, flags.style);
+  }
+}
+
+shape Volume {
+  title: { pt-BR: "Volume", en: "Volume" }
+  base: decimal
+  dimension: volume
+  units {
+    m3: { factor: 1 }
+    L: { factor: 0.001 }
+    mL: { factor: 0.000001 }
+    cm3: { factor: 0.000001 }
+    mm3: { factor: 1e-09 }
+    gal: { factor: 0.003785411784 }
+    qt: { factor: 0.000946352946 }
+    pt: { factor: 0.000473176473 }
+    fl_oz: { factor: 0.0000295735295625 }
+    tbsp: { factor: 0.0000147867647813 }
+    tsp: { factor: 0.00000492892159375 }
+    bbl: { factor: 0.158987294928 }
+    bu: { factor: 0.03523907016688 }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+
+  method write(out: stream): void {
+    const unit = value.unit ?? m3;
+    out.writeString(unit);
+    out.writeDouble(value.raw);
+  }
+
+  method read(in: stream): Volume {
+    const unit = in.readString();
+    const raw = in.readDouble();
+    return Volume.fromRaw(raw, unit);
+  }
+
+  method parse(text: string, flags: FormatFlags): Volume {
+    const unit = flags.unit ?? m3;
+    return Volume.fromRaw(ParseReal(text, unit), unit);
+  }
+
+  method format(flags: FormatFlags): string {
+    const from = value.unit ?? m3;
+    const unit = flags.unit ?? BestUnit(value.raw, from, units);
+    return FormatReal(value.raw, from, unit, flags.style);
+  }
+}
+
+shape Percentage {
+  title: { pt-BR: "Percentual", en: "Percentage" }
+  base: decimal
+  dimension: ratio
+  units {
+    %: { factor: 1 }
+  }
+  scale: 2
+  max: 100
+  parse: percent
+  format: percent
+  aggregate: weighted-average
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+
+  method write(out: stream): void {
+    const unit = value.unit ?? %;
+    out.writeString(unit);
+    out.writeDouble(value.raw);
+  }
+
+  method read(in: stream): Percentage {
+    const unit = in.readString();
+    const raw = in.readDouble();
+    return Percentage.fromRaw(raw, unit);
+  }
+
+  method parse(text: string, flags: FormatFlags): Percentage {
+    const unit = flags.unit ?? %;
+    return Percentage.fromRaw(ParseReal(text, unit), unit);
+  }
+
+  method format(flags: FormatFlags): string {
+    const from = value.unit ?? %;
+    const unit = flags.unit ?? BestUnit(value.raw, from, units);
+    return FormatReal(value.raw, from, unit, flags.style);
+  }
+}
+
+shape Area {
+  title: { pt-BR: "Área", en: "Area" }
+  base: decimal
+  dimension: area
+  units {
+    m2: { factor: 1 }
+    cm2: { factor: 0.0001 }
+    mm2: { factor: 1e-06 }
+    km2: { factor: 1000000.0 }
+    ha: { factor: 10000.0 }
+    acre: { factor: 4046.8564224 }
+    ft2: { factor: 0.09290304 }
+    in2: { factor: 0.00064516 }
+    yd2: { factor: 0.83612736 }
+    mi2: { factor: 2589988.110336 }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+}
+
+shape Temperature {
+  title: { pt-BR: "Temperatura", en: "Temperature" }
+  base: decimal
+  dimension: temperature
+  units {
+    K: { factor: 1, offset: 0 }
+    C: { factor: 1, offset: 273.15 }
+    F: { factor: 0.5555555555555556, offset: 255.3722222222222 }
+    R: { factor: 0.5555555555555556, offset: 0 }
+  }
+  parse: quantity
+}
+
+shape Count {
+  title: { pt-BR: "Contagem", en: "Count" }
+  base: integer
+  dimension: count
+  aggregate: sum
+}
+
+shape Probability {
+  title: { pt-BR: "Probabilidade", en: "Probability" }
+  base: decimal
+  dimension: ratio
+  max: 1
+}
+
+shape Ratio {
+  title: { pt-BR: "Razão", en: "Ratio" }
+  base: decimal
+  dimension: ratio
+}
+
+shape Rate {
+  title: { pt-BR: "Taxa", en: "Rate" }
+  base: decimal
+  dimension: rate
+  units {
+    1_s: { factor: 1 }
+    1_min: { factor: 0.016666666666666666 }
+    1_h: { factor: 0.0002777777777777778 }
+    1_d: { factor: 1.1574074074074073e-05 }
+  }
+  parse: quantity
+}
+
+shape ZScore {
+  title: { pt-BR: "Escore Z", en: "Z-score" }
+  base: decimal
+  dimension: ratio
+}
+
+shape CurrencyCode {
+  title: { pt-BR: "Código de moeda", en: "Currency code" }
+  base: text
+  dimension: currency
+  validate: iso-4217
+
+  method toNumber(value): number {
+    throw Error("CurrencyCode has no numeric value");
+  }
+
+  method write(out: stream): void {
+    out.writeString(value.raw);
+  }
+
+  method read(in: stream): CurrencyCode {
+    return CurrencyCode.fromRaw(in.readString());
+  }
+
+  method parse(text: string, flags: FormatFlags): CurrencyCode {
+    return CurrencyCode.fromRaw(text);
+  }
+
+  method format(flags: FormatFlags): string {
+    return value.raw;
+  }
+}
+
+shape DataSize {
+  title: { pt-BR: "Tamanho de dados", en: "Data size" }
+  base: decimal
+  dimension: data
+  units {
+    bit: { factor: 0.125 }
+    B: { factor: 1 }
+    KB: { factor: 1000 }
+    MB: { factor: 1000000.0 }
+    GB: { factor: 1000000000.0 }
+    TB: { factor: 1000000000000.0 }
+    KiB: { factor: 1024 }
+    MiB: { factor: 1048576 }
+    GiB: { factor: 1073741824 }
+    TiB: { factor: 1099511627776 }
+  }
+  parse: quantity
+  aggregate: sum
+  index: normalized
+}
+
+shape DataRate {
+  title: { pt-BR: "Taxa de dados", en: "Data rate" }
+  base: decimal
+  dimension: data-rate
+  units {
+    bps: { factor: 1 }
+    kbps: { factor: 1000 }
+    Mbps: { factor: 1000000.0 }
+    Gbps: { factor: 1000000000.0 }
+    B_s: { factor: 8 }
+    KiB_s: { factor: 8192 }
+  }
+  parse: quantity
+  index: normalized
+}
+
+shape Speed {
+  title: { pt-BR: "Velocidade", en: "Speed" }
+  base: decimal
+  dimension: speed
+  units {
+    m_s: { factor: 1 }
+    km_h: { factor: 0.2777777777777778 }
+    mph: { factor: 0.44704 }
+    kn: { factor: 0.514444444444 }
+    ft_s: { factor: 0.3048 }
+  }
+  parse: quantity
+  index: normalized
+}
+
+shape Acceleration {
+  title: { pt-BR: "Aceleração", en: "Acceleration" }
+  base: decimal
+  dimension: acceleration
+  units {
+    m_s2: { factor: 1 }
+    ft_s2: { factor: 0.3048 }
+    g: { factor: 9.80665 }
+  }
+  parse: quantity
+}
+
+shape Force {
+  title: { pt-BR: "Força", en: "Force" }
+  base: decimal
+  dimension: force
+  units {
+    N: { factor: 1 }
+    kN: { factor: 1000 }
+    dyn: { factor: 1e-05 }
+    lbf: { factor: 4.4482216152605 }
+    kgf: { factor: 9.80665 }
+  }
+  parse: quantity
+}
+
+shape Pressure {
+  title: { pt-BR: "Pressão", en: "Pressure" }
+  base: decimal
+  dimension: pressure
+  units {
+    Pa: { factor: 1 }
+    kPa: { factor: 1000 }
+    MPa: { factor: 1000000.0 }
+    bar: { factor: 100000.0 }
+    mbar: { factor: 100 }
+    atm: { factor: 101325 }
+    psi: { factor: 6894.757293168 }
+    mmHg: { factor: 133.322387415 }
+    torr: { factor: 133.322368421 }
+    inHg: { factor: 3386.389 }
+  }
+  parse: quantity
+}
+
+shape Energy {
+  title: { pt-BR: "Energia", en: "Energy" }
+  base: decimal
+  dimension: energy
+  units {
+    J: { factor: 1 }
+    kJ: { factor: 1000 }
+    MJ: { factor: 1000000.0 }
+    cal: { factor: 4.184 }
+    kcal: { factor: 4184 }
+    Wh: { factor: 3600 }
+    kWh: { factor: 3600000.0 }
+    eV: { factor: 1.602176634e-19 }
+    keV: { factor: 1.602176634e-16 }
+    MeV: { factor: 1.602176634e-13 }
+    BTU: { factor: 1055.05585262 }
+    erg: { factor: 1e-07 }
+    ft_lbf: { factor: 1.3558179483314 }
+  }
+  parse: quantity
+  aggregate: sum
+}
+
+shape Power {
+  title: { pt-BR: "Potência", en: "Power" }
+  base: decimal
+  dimension: power
+  units {
+    W: { factor: 1 }
+    kW: { factor: 1000 }
+    MW: { factor: 1000000.0 }
+    hp: { factor: 745.6998715823 }
+    BTU_h: { factor: 0.29307107017 }
+  }
+  parse: quantity
+}
+
+shape Frequency {
+  title: { pt-BR: "Frequência", en: "Frequency" }
+  base: decimal
+  dimension: frequency
+  units {
+    Hz: { factor: 1 }
+    kHz: { factor: 1000 }
+    MHz: { factor: 1000000.0 }
+    GHz: { factor: 1000000000.0 }
+    rpm: { factor: 0.016666666666666666 }
+  }
+  parse: quantity
+  index: normalized
+}
+
+shape Angle {
+  title: { pt-BR: "Ângulo", en: "Angle" }
+  base: decimal
+  dimension: angle
+  units {
+    rad: { factor: 1 }
+    mrad: { factor: 0.001 }
+    deg: { factor: 0.017453292519943295 }
+    arcmin: { factor: 0.0002908882086657216 }
+    arcsec: { factor: 4.84813681109536e-06 }
+    grad: { factor: 0.015707963267948967 }
+    turn: { factor: 6.283185307179586 }
+  }
+  parse: quantity
+}
+
+shape Density {
+  title: { pt-BR: "Densidade", en: "Density" }
+  base: decimal
+  dimension: density
+  units {
+    kg_m3: { factor: 1 }
+    g_cm3: { factor: 1000 }
+    lb_ft3: { factor: 16.01846337396 }
+  }
+  parse: quantity
+}
+
+shape Momentum {
+  title: { pt-BR: "Momento linear", en: "Momentum" }
+  base: decimal
+  dimension: momentum
+  units {
+    kg_m_s: { factor: 1 }
+    g_cm_s: { factor: 1e-05 }
+    lb_ft_s: { factor: 0.138254954376 }
+  }
+  parse: quantity
+}
+
+shape Torque {
+  title: { pt-BR: "Torque", en: "Torque" }
+  base: decimal
+  dimension: torque
+  units {
+    N_m: { factor: 1 }
+    lbf_ft: { factor: 1.3558179483314 }
+  }
+  parse: quantity
+}
+
+shape HeatCapacity {
+  title: { pt-BR: "Capacidade térmica", en: "Heat capacity" }
+  base: decimal
+  dimension: heat-capacity
+  units {
+    J_K: { factor: 1 }
+    kJ_K: { factor: 1000 }
+    BTU_F: { factor: 1899.100534716 }
+  }
+  parse: quantity
+}
+
+shape Entropy {
+  title: { pt-BR: "Entropia", en: "Entropy" }
+  base: decimal
+  dimension: entropy
+  units {
+    J_K: { factor: 1 }
+    kJ_K: { factor: 1000 }
+  }
+  parse: quantity
+}
+
+shape ThermalConductivity {
+  title: { pt-BR: "Condutividade térmica", en: "Thermal conductivity" }
+  base: decimal
+  dimension: thermal-conductivity
+  units {
+    W_mK: { factor: 1 }
+    BTU_h_ft_F: { factor: 1.730734666 }
+  }
+  parse: quantity
+}
+
+shape DynamicViscosity {
+  title: { pt-BR: "Viscosidade dinâmica", en: "Dynamic viscosity" }
+  base: decimal
+  dimension: dynamic-viscosity
+  units {
+    Pa_s: { factor: 1 }
+    P: { factor: 0.1 }
+    cP: { factor: 0.001 }
+  }
+  parse: quantity
+}
+
+shape KinematicViscosity {
+  title: { pt-BR: "Viscosidade cinemática", en: "Kinematic viscosity" }
+  base: decimal
+  dimension: kinematic-viscosity
+  units {
+    m2_s: { factor: 1 }
+    St: { factor: 0.0001 }
+    cSt: { factor: 1e-06 }
+  }
+  parse: quantity
+}
+
+shape SurfaceTension {
+  title: { pt-BR: "Tensão superficial", en: "Surface tension" }
+  base: decimal
+  dimension: surface-tension
+  units {
+    N_m: { factor: 1 }
+    dyn_cm: { factor: 0.001 }
+  }
+  parse: quantity
+}
+
+shape ElectricCurrent {
+  title: { pt-BR: "Corrente elétrica", en: "Electric current" }
+  base: decimal
+  dimension: electric-current
+  units {
+    A: { factor: 1 }
+    mA: { factor: 0.001 }
+    uA: { factor: 1e-06 }
+    kA: { factor: 1000 }
+  }
+  parse: quantity
+}
+
+shape ElectricCharge {
+  title: { pt-BR: "Carga elétrica", en: "Electric charge" }
+  base: decimal
+  dimension: electric-charge
+  units {
+    C: { factor: 1 }
+    mC: { factor: 0.001 }
+    uC: { factor: 1e-06 }
+    Ah: { factor: 3600 }
+    mAh: { factor: 3.6 }
+  }
+  parse: quantity
+}
+
+shape Voltage {
+  title: { pt-BR: "Tensão elétrica", en: "Voltage" }
+  base: decimal
+  dimension: voltage
+  units {
+    V: { factor: 1 }
+    mV: { factor: 0.001 }
+    kV: { factor: 1000 }
+    uV: { factor: 1e-06 }
+  }
+  parse: quantity
+}
+
+shape Resistance {
+  title: { pt-BR: "Resistência elétrica", en: "Resistance" }
+  base: decimal
+  dimension: resistance
+  units {
+    ohm: { factor: 1 }
+    kohm: { factor: 1000 }
+    Mohm: { factor: 1000000.0 }
+  }
+  parse: quantity
+}
+
+shape Capacitance {
+  title: { pt-BR: "Capacitância", en: "Capacitance" }
+  base: decimal
+  dimension: capacitance
+  units {
+    F: { factor: 1 }
+    mF: { factor: 0.001 }
+    uF: { factor: 1e-06 }
+    nF: { factor: 1e-09 }
+    pF: { factor: 1e-12 }
+  }
+  parse: quantity
+}
+
+shape Inductance {
+  title: { pt-BR: "Indutância", en: "Inductance" }
+  base: decimal
+  dimension: inductance
+  units {
+    H: { factor: 1 }
+    mH: { factor: 0.001 }
+    uH: { factor: 1e-06 }
+  }
+  parse: quantity
+}
+
+shape MagneticFlux {
+  title: { pt-BR: "Fluxo magnético", en: "Magnetic flux" }
+  base: decimal
+  dimension: magnetic-flux
+  units {
+    Wb: { factor: 1 }
+    Mx: { factor: 1e-08 }
+  }
+  parse: quantity
+}
+
+shape MagneticFluxDensity {
+  title: { pt-BR: "Densidade de fluxo magnético", en: "Magnetic flux density" }
+  base: decimal
+  dimension: magnetic-flux-density
+  units {
+    T: { factor: 1 }
+    mT: { factor: 0.001 }
+    uT: { factor: 1e-06 }
+    G: { factor: 0.0001 }
+  }
+  parse: quantity
+}
+
+shape LuminousIntensity {
+  title: { pt-BR: "Intensidade luminosa", en: "Luminous intensity" }
+  base: decimal
+  dimension: luminous-intensity
+  units {
+    cd: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape LuminousFlux {
+  title: { pt-BR: "Fluxo luminoso", en: "Luminous flux" }
+  base: decimal
+  dimension: luminous-flux
+  units {
+    lm: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape Illuminance {
+  title: { pt-BR: "Iluminância", en: "Illuminance" }
+  base: decimal
+  dimension: illuminance
+  units {
+    lx: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape Luminance {
+  title: { pt-BR: "Luminância", en: "Luminance" }
+  base: decimal
+  dimension: luminance
+  units {
+    cd_m2: { factor: 1 }
+    nit: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape SoundPressure {
+  title: { pt-BR: "Pressão sonora", en: "Sound pressure" }
+  base: decimal
+  dimension: sound-pressure
+  units {
+    Pa: { factor: 1 }
+    mPa: { factor: 0.001 }
+    uPa: { factor: 1e-06 }
+  }
+  parse: quantity
+}
+
+shape SoundLevel {
+  title: { pt-BR: "Nível sonoro", en: "Sound level" }
+  base: decimal
+  dimension: sound-level
+  units {
+    dB: { factor: 1 }
+    dBA: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape AngularVelocity {
+  title: { pt-BR: "Velocidade angular", en: "Angular velocity" }
+  base: decimal
+  dimension: angular-velocity
+  units {
+    rad_s: { factor: 1 }
+    deg_s: { factor: 0.017453292519943295 }
+    rpm: { factor: 0.10471975511965977 }
+  }
+  parse: quantity
+}
+
+shape AmountOfSubstance {
+  title: { pt-BR: "Quantidade de substância", en: "Amount of substance" }
+  base: decimal
+  dimension: amount-of-substance
+  units {
+    mol: { factor: 1 }
+    mmol: { factor: 0.001 }
+    umol: { factor: 1e-06 }
+    kmol: { factor: 1000 }
+  }
+  parse: quantity
+  aggregate: sum
+}
+
+shape MolarMass {
+  title: { pt-BR: "Massa molar", en: "Molar mass" }
+  base: decimal
+  dimension: molar-mass
+  units {
+    g_mol: { factor: 1 }
+    kg_mol: { factor: 1000 }
+    Da: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape MolarConcentration {
+  title: { pt-BR: "Concentração molar", en: "Molar concentration" }
+  base: decimal
+  dimension: molar-concentration
+  units {
+    mol_L: { factor: 1 }
+    mmol_L: { factor: 0.001 }
+    uM: { factor: 1e-06 }
+    M: { factor: 1 }
+    mM: { factor: 0.001 }
+    ppm: { factor: 1e-06 }
+    ppb: { factor: 1e-09 }
+  }
+  parse: quantity
+}
+
+shape Molality {
+  title: { pt-BR: "Molalidade", en: "Molality" }
+  base: decimal
+  dimension: molality
+  units {
+    mol_kg: { factor: 1 }
+    mmol_kg: { factor: 0.001 }
+  }
+  parse: quantity
+}
+
+shape Ph {
+  title: { pt-BR: "pH", en: "pH" }
+  base: decimal
+  dimension: ph
+  units {
+    pH: { factor: 1 }
+  }
+  max: 14
+}
+
+shape CatalyticActivity {
+  title: { pt-BR: "Atividade catalítica", en: "Catalytic activity" }
+  base: decimal
+  dimension: catalytic-activity
+  units {
+    kat: { factor: 1 }
+  }
+  parse: quantity
+}
+
+shape Radioactivity {
+  title: { pt-BR: "Radioatividade", en: "Radioactivity" }
+  base: decimal
+  dimension: radioactivity
+  units {
+    Bq: { factor: 1 }
+    kBq: { factor: 1000 }
+    MBq: { factor: 1000000.0 }
+    Ci: { factor: 37000000000.0 }
+  }
+  parse: quantity
+}
+
+shape AbsorbedDose {
+  title: { pt-BR: "Dose absorvida", en: "Absorbed dose" }
+  base: decimal
+  dimension: absorbed-dose
+  units {
+    Gy: { factor: 1 }
+    mGy: { factor: 0.001 }
+    rad: { factor: 0.01 }
+  }
+  parse: quantity
+}
+
+shape EquivalentDose {
+  title: { pt-BR: "Dose equivalente", en: "Equivalent dose" }
+  base: decimal
+  dimension: equivalent-dose
+  units {
+    Sv: { factor: 1 }
+    mSv: { factor: 0.001 }
+    rem: { factor: 0.01 }
+  }
+  parse: quantity
+}

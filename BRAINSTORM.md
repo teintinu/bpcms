@@ -20,11 +20,12 @@
 | **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
 | **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId`; `ConsumerId` é alias de `UserId`. |
-| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon`; `Icon` é token semântico e o Theme/builder resolve a imagem. |
+| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon` + `ordinal` (10, 20, 30...); `Icon` é token semântico e o Theme/builder resolve a imagem. |
 | **Citizen** | Serviço de identificação de pessoa/organização; `CitizenId` + lookup seguro; PII em `private`; sem `taxId`. |
 | **Citizen 1:N** | Um Citizen pode ter vários Users; cada Consumer referencia o mesmo `citizenId`; sem unique; merge reatribui. |
 | **Serviço** | Conceito de negócio, não package/módulo; tipos compartilhados ficam no serviço dono; Theme/Locale são do construtor. |
 | **Nomes** | Sem repetir o serviço no nome (`Draft`, não `BillingDraft`); escopo é o serviço; sem duplicidade dentro do mesmo tipo/serviço. |
+| **Stdlib** | `bpcms.org/std` é pseudo-serviço do construtor; import + alias; `std.Mass` etc.; sem lock. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
 | **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
@@ -564,7 +565,7 @@ service "example.com/services/fraud-checkout" {
 
 ```text
 parameter ErpUrl {
-  type: Text
+  type: string
   source: config
   required: true
   default: "https://erp.example.com"
@@ -579,7 +580,7 @@ parameter PaymentKey {
 
 | Cláusula | Funcionamento |
 | :--- | :--- |
-| `type` | Shape do valor (`Text`, `Email`, `Count`, `Duration`, `Secret`...). |
+| `type` | Shape do valor (`string`, `Email`, `Count`, `Duration`, `Secret`...). |
 | `source` | `config` (configuração do ambiente) ou `secret` (secret store). |
 | `required` | Falha no boot/uso se não houver valor; bare = `true`. |
 | `default` | Só para `config`; proibido para `secret`. |
@@ -648,6 +649,30 @@ O `document Citizen` expõe apenas o lookup seguro. Os dados PII ficam em campos
 **Relação 1:N.** Um `Citizen` pode ter **vários Users** no sistema. Cada User tem seu `Consumer` (perfil) e referencia o mesmo `citizenId`; não existe `unique` em `Consumer.citizenId`. O vínculo User↔Citizen é mantido pelo `identity`; `CitizenMerged` reatribui os Users do citizen de origem para o destino. `Consumer.byCitizen` é índice de consulta, não de unicidade.
 
 > **Decisão B-49:** identificação civil/PII vive no serviço `Citizen`; os demais serviços referenciam `CitizenId` e usam só o lookup seguro. `taxId` foi removido; `citizenId` não é CPF/CNPJ nem taxa. Segurança/PII é responsabilidade da camada de segurança, não do DSL.
+
+#### 2.5.6 bpcms.org/std — biblioteca padrão
+
+`bpcms.org/std` é um **pseudo-serviço reservado do construtor**. Não é publicado, não tem endpoint, não entra no lock e não pode ser sobrescrito.
+
+Quem usa importa e referencia com alias:
+
+```text
+imports {
+  service "bpcms.org/std" as std
+}
+
+fields {
+  weight: std.Mass
+  length: std.Length
+  volume: std.Volume
+  discount: std.Percentage
+  currency: std.CurrencyCode
+}
+```
+
+A biblioteca cobre 55 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `CurrencyCode` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio é uma rodada separada.
+
+> **Decisão B-53:** biblioteca padrão vive em `bpcms.org/std`, pseudo-serviço do construtor; uso sempre por `std.Identificador`; sem import não resolve. Ela não substitui serviços de negócio.
 
 ### 2.6 Documento — o coração do modelo
 
@@ -750,7 +775,7 @@ Alguns documentos são **OLTP** (edição transacional, concorrência alta); out
 | | geração de valor aleatório (testes) |
 | | dica de widget (não detalhe de UI) |
 
-Exemplos de `Shape`: `Text`, `Email`, `CPF`, `CNPJ`, `Phone`, `Money`, `Mass`, `Length`, `Duration`, `Temperature`, `Percentage`, `Enum`, `Reference<Document>`, `File`, `Image`, `Signature`, `GeoPoint`, `DeviceReading<T>`.
+Exemplos de `Shape`: `string`, `Email`, `CPF`, `CNPJ`, `Phone`, `Money`, `Mass`, `Length`, `Duration`, `Temperature`, `Percentage`, `Enum`, `Reference<Document>`, `File`, `Image`, `Signature`, `GeoPoint`, `DeviceReading<T>`.
 
 > **Regra:** se você sentiu vontade de colocar um regex, uma máscara ou uma validação “só deste campo”, crie um `Shape` (ex.: `PlacaVeiculo`) ou uma regra de documento. O campo continua burro; a semântica fica reutilizável.
 
@@ -983,7 +1008,7 @@ Todo `document` base também marca com `lookup` os **campos** que o representam 
 ```text
 document User {
   fields {
-    nickname: Text { lookup }
+    nickname: string { lookup }
     avatar: Image? { lookup }
     // ...
   }
@@ -1103,7 +1128,7 @@ Todo BPMN gerado é **validado** contra o schema e contra o subconjunto executá
 
 **Modo protótipo x modo real:**
 
-| | Protótipo | Real |
+| | Protótipo | number |
 | :--- | :--- | :--- |
 | Dados | semeados/fake | documentos reais |
 | Persistência | em memória | runtime |
@@ -1707,7 +1732,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-52`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-55`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1748,11 +1773,14 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
-| D-038 | Enum values têm `title` + `icon`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
+| D-038 | Enum values têm `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
+| D-044 | Shape tem `write/read` em stream, `format/parse` com flags, `toNumber` e métodos próprios; `convert` removido | ✅ | baseline atual |
+| D-045 | `units` no Shape com fatores; `unit`/`min`/`precision` no field; sem `convert` | ✅ | baseline atual |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
 | D-042 | Identificadores são claros e escopados ao serviço; sem prefixo repetido; icons únicos por serviço | ✅ | baseline atual |
+| D-043 | Biblioteca padrão `bpcms.org/std` é pseudo-serviço do construtor, com import e alias | ✅ | baseline atual |
 
 ---
 
@@ -1809,11 +1837,14 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId` que referencia o Citizen; `ConsumerId` é alias de `UserId`. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
-| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n e `icon`.** `Icon` é token semântico do serviço, sem prefixo `Icon` no nome; o Theme/builder resolve a imagem. | Labels e imagens consistentes sem binário no DSL. | ✅ |
+| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n, `icon` e `ordinal`.** O primeiro ordinal é 10; incrementos de 10. `Icon` é token semântico do serviço; o Theme/builder resolve a imagem. | Labels, imagens e binário estáveis. | ✅ |
 | **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
 | **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
 | **B-51** | Serviço pode ser biblioteca/módulo de artefatos? | **Não.** Serviço é conceito de negócio. Não criar serviço para hospedar Shapes/Icons/Themes/Locales compartilhados; Theme/Locale/font/color são do construtor. | Evita serviços artificiais e detalhes de implementação no negócio. | ✅ |
 | **B-52** | Nomes de artefatos devem repetir o serviço? | **Não.** O serviço já é o escopo: `Draft` em Billing é local; não use `BillingDraft`. Nomes claros, sem prefixo de serviço; o mesmo nome pode existir em serviços diferentes, mas não duplicar dentro do mesmo tipo/serviço. | Menos repetição e identificadores legíveis. | ✅ |
+| **B-53** | Onde ficam medidas e constantes padrão? | **Em `bpcms.org/std`**, pseudo-serviço do construtor; import obrigatório; uso `std.Mass`, `std.Length`, etc.; sem lock/endpoint. | Evita redefinir unidades e tipos universais em cada serviço. | ✅ |
+| **B-54** | Como Shape serializa, formata e expõe valor? | **`stream` canônico** com `write/read`, `format/parse` com flags, `toNumber(value)` e métodos próprios em expressão TypeScript-like. `convert` removido. | Contrato único para binário, UI e métodos. | ✅ |
+| **B-55** | Onde ficam unidade, faixa e precisão? | **No field**, não no Shape. O Shape declara `units` com fatores; `unit`, `min` e `precision` são opcionais no field. `toNumber(value)` não tem default; `format` auto-seleciona unidade. | Shape é tipo; field é uso. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1835,7 +1866,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-52) sem lacunas.
+- [x] Decisões de baseline (B-01…B-55) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

@@ -3,6 +3,7 @@ service "example.com/services/identity" {
   version: 1.0.0
   owner: "Platform Identity"
   imports {
+    service "bpcms.org/std" as std
     service "example.com/services/citizen" as Citizen
   }
   requires { oltp, scheduling }

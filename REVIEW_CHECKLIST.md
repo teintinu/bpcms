@@ -72,8 +72,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 | # | Tipo | Depende de | Exemplos | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/*/*-icons.bpcms` | 🟡 |
-| 2 | Shape | Icon (values) | H.1–H.8 | ⬜ |
+| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/*/*-icons.bpcms` | ✅ |
+| 2 | Shape | Icon (values) | H.1–H.8 | 🟡 |
 | 3 | Role | permissões | R.1–R.6 | ⬜ |
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
 | 5 | Parameter | Shape/Secret | PR.1–PR.6 | ⬜ |
@@ -119,37 +119,39 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Nenhuma decisão de implementação (font/color/layout/resolução visual) foi revisada nesta fase.
 - [ ] `git diff --check`; sem `add/commit/push` sem pedido.
 
-## 1. Icon 🟡
+## 1. Icon ✅
 
 **Depende de:** nada na DSL.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `icon <Name> { ... }`
-- [ ] `title: I18n` obrigatório
-- [ ] `Icon` definido dentro de um `Service`
-- [ ] `icon` sem prefixo `Icon` nem prefixo de serviço
-- [ ] Escopo do nome = serviço; mesmo nome em serviços diferentes permitido
-- [ ] `E_DUPLICATE_ICON` apenas no mesmo serviço
-- [ ] Sem imagem/binário no DSL
-- [ ] SVG file-based: qualquer subpasta sob a raiz do serviço
-- [ ] Nome do SVG: caminho relativo em camelCase com `.`; arquivos/pastas em kebab-case
-- [ ] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n
-- [ ] Conflito SVG × Icon declarado = erro
+- [x] `icon <Name> { ... }`
+- [x] `title: I18n` obrigatório
+- [x] `Icon` definido dentro de um `Service`
+- [x] `icon` sem prefixo `Icon` nem prefixo de serviço
+- [x] Escopo do nome = serviço; mesmo nome em serviços diferentes permitido
+- [x] `E_DUPLICATE_ICON` apenas no mesmo serviço
+- [x] Sem imagem/binário no DSL
+- [x] SVG file-based: qualquer subpasta sob a raiz do serviço
+- [x] Nome do SVG: caminho relativo em camelCase com `.`; arquivos/pastas em kebab-case
+- [x] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n
+- [x] Conflito SVG × Icon declarado = erro
 
 **Exemplos:** IC.1–IC.6; 75 icons nos `*-icons.bpcms`; 7 SVGs em `billing/status`, `billing/finance/invoice`, `notifications/channels`, `inventory/stock`, `payments/status`.
 
 **Foco da revisão (só DSL):**
 
-- [ ] Um Icon precisa de mais alguma cláusula além de nome + `title`?
-- [ ] `symbol` é cláusula de DSL ou detalhe de resolução visual do builder?
-- [ ] `set` é cláusula de DSL ou escolha do tema?
-- [ ] `title` de Icon precisa de `short`/`tooltip`? Provavelmente não; confirmar.
-- [ ] Nomes locais (`Draft`, `Paid`) e escopo por serviço são suficientes?
+- [x] Um Icon precisa de mais alguma cláusula além de nome + `title`?
+- [x] `symbol` é cláusula de DSL ou detalhe de resolução visual do builder?
+- [x] `set` é cláusula de DSL ou escolha do tema?
+- [x] `title` de Icon precisa de `short`/`tooltip`? Provavelmente não; confirmar.
+- [x] Nomes locais (`Draft`, `Paid`) e escopo por serviço são suficientes?
 
-**Status:** 🟡 em revisão de DSL. A remoção de `symbol`/`set` foi aplicada sem aprovação; a pergunta agora é somente se essas cláusulas pertencem à DSL.
+**Status:** ✅ revisado em DSL.
 
-### Proposta P-ICON-SVG — SVG file-based Icons (não aplicada)
+**Decisão:** Icon = nome + `title`; `symbol`/`set` ficam fora da DSL. SVG file-based faz parte da alternativa de Icon: qualquer subpasta, kebab-case, identificador camelCase com ponto, title por `aria-label` → `<title>` → `alt` → filename, sem I18n. `E_ICON_UNRESOLVED` é erro de resolução do builder, não de sintaxe DSL.
+
+### P-ICON-SVG — SVG file-based Icons (aprovada)
 
 - **O que muda:** qualquer `.svg` sob `services/<service>/` (qualquer subpasta) vira Icon implícito.
 - **Nome:** caminho relativo com segmentos camelCase e pontos; `status/refunded.svg` → `status.refunded`; `checkout/status/refunded.svg` → `checkout.status.refunded`.
@@ -159,7 +161,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - **Conflito:** SVG × Icon declarado ou SVG × SVG com o mesmo identificador é erro (case-insensitive).
 - **Arquivos/pastas:** kebab-case; identificador de referência camelCase.
 - **Exemplos criados:** `billing/status/draft.svg`, `paid.svg`, `overdue.svg`, `billing/finance/invoice/issued.svg`, `notifications/channels/email.svg`, `inventory/stock/low-stock.svg`, `payments/status/refunded.svg`.
-- **Status:** 📝 exemplos criados; falta confirmar se camelCase/namespace vale só para file-based Icons ou para todos os artefatos.
+- **Status:** ✅ aprovado para file-based Icons. A aplicação da regra de namespace/camelCase a **todos** os artefatos continua pendente de validação própria.
 
 ### Regra de namespaces — perguntas abertas
 
@@ -171,18 +173,18 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] O mesmo nome em namespaces diferentes é permitido sem restrição? (proposta: sim, duplicidade só no mesmo tipo/namespace)
 - [ ] Arquivos `.bpcms` em subpastas continuam com prefixo `<service>-` ou usam só o nome do artefato? Hoje a regra de arquivos exige prefixo.
 
-### Proposta P-ICON-01 — remover `symbol`/`set` (aplicada sem aprovação)
+### P-ICON-01 — remover `symbol`/`set` (aprovada na revisão de Icon)
 
 - **O que muda:** `Icon` perde `symbol` e `set`; fica apenas `title`; entra `E_ICON_UNRESOLVED`.
 - **Por que:** `symbol`/`set` parecem detalhes de resolução visual, não contrato de negócio da DSL.
 - **Impacto:** 75 icons, exemplos IC.1–IC.6, `DSL_REFERENCE` e `BRAINSTORM`.
 - **Alternativas:** (a) restaurar `symbol`/`set`; (b) manter apenas nome + `title`; (c) `symbol` opcional.
 - **Arquivos afetados:** `examples/services/*/*-icons.bpcms`, `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `BRAINSTORM.md`.
-- **Status:** 📝 aplicada sem aprovação; requer decisão.
+- **Status:** ✅ aprovada retroativamente na revisão de Icon.
 
-**Decisão necessária (DSL):** manter a remoção, restaurar `symbol`/`set` ou adotar `symbol` opcional. Resolução visual do tema fica deferida. Nenhuma alteração adicional será feita antes da resposta.
+**Decisão:** manter `symbol`/`set` fora da DSL; resolução visual fica no builder/Theme.
 
-## 2. Shape ⬜
+## 2. Shape 🟡
 
 **Depende de:** Icon (values enumerados), tipos embutidos.
 
@@ -191,30 +193,56 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `shape <Name> { ... }`
 - [ ] `title: I18n`
 - [ ] `base: decimal | integer | text`
-- [ ] `values { <value> { title; icon } }` — enum
+- [ ] `values { <value> { title; icon; ordinal } }` — enum; ordinal 10, 20, 30...
 - [ ] `currency`, `scale`
-- [ ] `dimension`, `unit`, `precision`, `displayUnits`
+- [ ] `dimension`, `units { unidade: { factor } }`
+- [ ] `unit`, `min` e `precision` são do field, não do Shape
+- [ ] `format` auto-seleciona unidade; `flags.unit` força
+- [ ] `Convert` não existe
 - [ ] `min`/`max`, `maxLength`
 - [ ] `parse`, `format`, `compare`, `aggregate`
-- [ ] `convert`, `index`, `normalize`, `validate`, `sensitive`
+- [ ] `write(value, stream)`, `read(stream)`
+- [ ] `method <name>(...): <Type> { ... }` com expressão completa
+- [ ] `toNumber(value): number` por Shape; medidas de `bpcms.org/std` declaram explicitamente
+- [ ] `format`/`parse` de compostos exigem método próprio
+- [ ] `convert` removido
+- [ ] `index`, `normalize`, `validate`, `sensitive`
 - [ ] `fields { ... }` — shape composto
 - [ ] `default`, `private`
-- [ ] Enum: cada value tem `title` + `icon`; icons são locais ao serviço
+- [ ] Enum: cada value tem `title` + `icon` + `ordinal`; icons são locais ao serviço
 - [ ] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [ ] `<Document>Id` é Shape implícito de FK; não declarar
 
 **Exemplos:** H.1–H.8; `catalog-shapes`, `identity-shapes`, `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
 
-**Foco da revisão:**
+**Resultado da inspeção:**
 
-- [ ] `values` em bloco é a forma final?
-- [ ] Value `icon` é obrigatório em todo enum?
-- [ ] Shape composto (`fields`) é Shape ou Document embutido?
-- [ ] `unit` no campo ou só no Shape?
-- [ ] `Percentage`/`Count`/`Mass` etc. estão no serviço dono certo?
-- [ ] `default`/`private` em Shape são claros?
+- [x] 30 Shapes de negócio + 55 Shapes std; todos com `title`.
+- [x] 77 values; todos com `title` + `icon` + `ordinal`.
+- [x] `values` em bloco; sem `values: [...]`.
+- [x] Shape composto `TrackingEvent` com fields tipados/title.
+- [x] `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio.
+- [x] `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode`, `Count` movidos para `bpcms.org/std`.
+- [x] Catalog/Identity/Shipping/Inventory/Orders/Billing importam `bpcms.org/std` como `std`.
+- [x] `Email`, `Phone`, `Image` em Citizen.
+- [x] `LocaleTag` em Notifications.
+- [x] `YearMonth` em Billing.
 
-**Status:** ⬜ pendente.
+**Pontos para decidir (sem alterar):**
+
+- [ ] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
+- [ ] `default`, `private` e `sensitive` de Shape não têm exemplo no tree; manter, remover ou exemplificar?
+- [ ] `Shape.fields` composto só tem `TrackingEvent`; falta um exemplo com validação/privacidade?
+- [ ] `MoneyBRL` continua em Catalog; os demais tipos de medida foram para std. Fronteira correta?
+- [ ] `std.Count` substitui o Count de Identity; a migração está correta?
+- [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
+- [ ] `bpcms.org/std` definido e importado; migração dos Shapes padrão concluída?
+- [ ] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
+- [ ] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
+
+**Status:** 🟡 em revisão de DSL. Migração para std concluída; revisão de Shape pendente.
+
+**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; Mass/Length/Volume/Percentage/CurrencyCode implementam `write/read/parse/format/toNumber`.
 
 ## 3. Role ⬜
 
@@ -886,13 +914,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ⬜ pendente.
 
-## Primeira decisão pendente — Icon (DSL)
+## Revisão de Icon — encerrada
 
-A primeira revisão começa em **Icon**. Pontos de DSL a decidir antes de avançar:
+**✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-1. **Cláusulas**: Icon deve ter apenas `title`, ou mais alguma cláusula de contrato?
-2. **`symbol`/`set`**: ficam fora da DSL? Se sim, a remoção atual está correta.
-3. **`title`**: apenas o título principal ou também `short`/`tooltip`?
-4. **Escopo**: confirmar que `Draft` em Billing e `Draft` em Catalog são permitidos; duplicidade só dentro do mesmo serviço.
+Próximo: **Shape** 🟡.
 
 Depois de decidir Icon, seguimos para **Shape**.

@@ -19,7 +19,7 @@ event Failed {
   payload {
     paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
   }
   producer: Payment
   consumers: [Orders, Support, Notifications]

@@ -43,7 +43,7 @@ document Refund {
   fields {
     paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" }, lookup }
     amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: RefundStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
@@ -54,7 +54,7 @@ document Refund {
   }
 
   actions {
-    request(reason: Text): Refund
+    request(reason: string): Refund
     approve(): Refund
     complete(): Refund
   }

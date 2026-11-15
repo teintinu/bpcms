@@ -7,10 +7,10 @@ document NotificationTemplate {
   audit: true
 
   fields {
-    key: Text { title: { pt-BR: "Chave", en: "Key" }, maxLength: 80, required, lookup }
+    key: string { title: { pt-BR: "Chave", en: "Key" }, maxLength: 80, required, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
-    subject: Text { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160 }
-    body: Text { title: { pt-BR: "Conteúdo", en: "Body" } }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160 }
+    body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
     locale: LocaleTag { title: { pt-BR: "Idioma", en: "Locale" }, lookup }
   }
 
@@ -19,8 +19,8 @@ document NotificationTemplate {
   }
 
   actions {
-    create(key: Text, channel: Channel, locale: LocaleTag): NotificationTemplate
-    update(subject: Text, body: Text): NotificationTemplate
+    create(key: string, channel: Channel, locale: LocaleTag): NotificationTemplate
+    update(subject: string, body: string): NotificationTemplate
   }
 }
 
@@ -32,12 +32,12 @@ document Notification {
 
   fields {
     templateId: NotificationTemplateId { title: { pt-BR: "Template", en: "Template" } }
-    recipient: Text { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
+    recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
     status: NotificationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    consent: Boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
+    consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
     sentAt: DateTime? { title: { pt-BR: "Enviado em", en: "Sent at" } }
-    error: Text? { title: { pt-BR: "Erro", en: "Error" } }
+    error: string? { title: { pt-BR: "Erro", en: "Error" } }
   }
 
   indexes {

@@ -8,10 +8,10 @@ document StockItem {
 
   fields {
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    warehouse: Text { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
-    available: Count { title: { pt-BR: "Disponível", en: "Available" } }
-    reserved: Count { title: { pt-BR: "Reservado", en: "Reserved" } }
-    reorderPoint: Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
+    warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
+    available: std.Count { title: { pt-BR: "Disponível", en: "Available" } }
+    reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
+    reorderPoint: std.Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
     lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
   }
 
@@ -22,9 +22,9 @@ document StockItem {
   }
 
   actions {
-    adjust(quantity: Count, reason: Text): StockItem
-    reserve(quantity: Count): Reservation
-    release(quantity: Count): StockItem
+    adjust(quantity: std.Count, reason: string): StockItem
+    reserve(quantity: std.Count): Reservation
+    release(quantity: std.Count): StockItem
   }
 
   rules {
@@ -41,8 +41,8 @@ document Reservation {
 
   fields {
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    externalRef: Text { title: { pt-BR: "Referência externa", en: "External reference" } }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
     status: ReservationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
@@ -53,7 +53,7 @@ document Reservation {
   }
 
   actions {
-    request(productId: ProductId, quantity: Count, externalRef: Text): Reservation
+    request(productId: ProductId, quantity: std.Count, externalRef: string): Reservation
     release(): Reservation
     expire(): Reservation
   }

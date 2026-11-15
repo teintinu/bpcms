@@ -8,7 +8,7 @@ document OrderItem {
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
     total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
   }
@@ -48,10 +48,10 @@ document Order {
   }
 
   actions {
-    create(customerId: UserId, discount: Percentage): Order
-    addItem(productId: ProductId, quantity: Count): Order
+    create(customerId: UserId, discount: std.Percentage): Order
+    addItem(productId: ProductId, quantity: std.Count): Order
     place(): Order
-    cancel(reason: Text): Order
+    cancel(reason: string): Order
     expireDraft(): Order
   }
 

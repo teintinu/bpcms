@@ -1,7 +1,7 @@
 // service: example.com/services/orders
 parameter MaxItemsPerOrder {
   title: { pt-BR: "Máximo de itens por pedido", en: "Max items per order" }
-  type: Count
+  type: std.Count
   source: config
   default: 50
   min: 1

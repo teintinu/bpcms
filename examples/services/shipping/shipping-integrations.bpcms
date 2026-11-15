@@ -24,7 +24,7 @@ integration ScaleDevice {
   auth: certificate
 
   operations {
-    read(deviceId: Text): Mass
+    read(deviceId: string): std.Mass
   }
 
   events {

@@ -6,7 +6,7 @@ document Category {
   sync: read
 
   fields {
-    name: Text { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
     parentId: CategoryId? { title: { pt-BR: "Categoria pai", en: "Parent category" } }
   }
 
@@ -16,8 +16,8 @@ document Category {
   }
 
   actions {
-    create(name: Text, parentId: CategoryId?): Category
-    rename(name: Text): Category
+    create(name: string, parentId: CategoryId?): Category
+    rename(name: string): Category
   }
 }
 
@@ -30,11 +30,11 @@ document Product {
 
   fields {
     sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, unique, lookup }
-    name: Text { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
     categoryId: CategoryId { title: { pt-BR: "Categoria", en: "Category" } }
     price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" } }
-    weight: Mass { title: { pt-BR: "Peso", en: "Weight" } }
-    length: Length { title: { pt-BR: "Comprimento", en: "Length" } }
+    weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
+    length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
@@ -47,8 +47,8 @@ document Product {
   }
 
   actions {
-    create(sku: SKU, name: Text, price: MoneyBRL): Product
-    update(name: Text, price: MoneyBRL): Product
+    create(sku: SKU, name: string, price: MoneyBRL): Product
+    update(name: string, price: MoneyBRL): Product
     publish(): Product
     archive(): Product
   }

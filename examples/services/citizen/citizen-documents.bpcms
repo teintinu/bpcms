@@ -8,12 +8,12 @@ document Citizen {
 
   fields {
     kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, lookup }
-    displayName: Text { title: { pt-BR: "Nome de exibição", en: "Display name" }, maxLength: 160, required, lookup }
-    country: Text { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
+    displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" }, maxLength: 160, required, lookup }
+    country: string { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
     status: CitizenStatus { title: { pt-BR: "Status", en: "Status" } }
-    private legalName: Text { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
+    private legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
     private birthDate: Date? { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
-    private documentHash: Text? { title: { pt-BR: "Hash do documento", en: "Document hash" }, maxLength: 128 }
+    private documentHash: string? { title: { pt-BR: "Hash do documento", en: "Document hash" }, maxLength: 128 }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -24,11 +24,11 @@ document Citizen {
   }
 
   actions {
-    register(kind: CitizenKind, displayName: Text, country: Text, legalName: Text?, birthDate: Date?): Citizen
-    registerPerson(displayName: Text, country: Text, legalName: Text, birthDate: Date?): Citizen
-    registerOrganization(displayName: Text, country: Text, legalName: Text): Citizen
+    register(kind: CitizenKind, displayName: string, country: string, legalName: string?, birthDate: Date?): Citizen
+    registerPerson(displayName: string, country: string, legalName: string, birthDate: Date?): Citizen
+    registerOrganization(displayName: string, country: string, legalName: string): Citizen
     merge(target: CitizenId): Citizen
-    block(reason: Text): Citizen
+    block(reason: string): Citizen
   }
 
   rules {

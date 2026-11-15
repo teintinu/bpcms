@@ -30,6 +30,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | 26 | Validação e erros |
 | 27 | Cobertura |
 | 28 | Icon |
+| 29 | bpcms.org/std |
 
 ---
 
@@ -46,6 +47,34 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | `alias` | app/service | `"<uri>" as Nome` | Nome local para a URI em `services`/`imports`. Não é identidade e não vai para o lock. |
 
 **Regras:** a URI é a identidade canônica; o alias não substitui a URI em imports/releases. O `check` rejeita duas identidades para o mesmo artefato.
+
+## 1.1.1 Tipos básicos
+
+Os tipos básicos são intrínsecos e não são Shapes:
+
+| Tipo | Funcionamento |
+| :--- | :--- |
+| `string` | Texto UTF-8; substitui `Text`. |
+| `number` | Número; inteiro ou decimal; substitui `Real`. |
+| `boolean` | `true`/`false`; substitui `Boolean`. |
+| `stream` | Cursor binário de leitura/escrita; substitui `Stream`. |
+
+Tipos adicionais:
+
+- `DateTime`, `Date`, `Duration`, `Unit`, `FormatFlags`, `void`;
+- `Int8`, `Int16`, `Int32`, `Int64`, `Float`, `Double` são usados apenas nos métodos de `stream`;
+- `Shape` é o tipo de um valor de Shape; `Shape.fromRaw` cria um valor.
+
+Chamadas de stream:
+
+```ts
+stream.readInt32(): Int32
+stream.writeInt32(value: Int32): void
+stream.readString(): string
+stream.writeString(value: string): void
+stream.readStream(): stream
+stream.readStreamArray(): stream[]
+```
 
 ## 1.2 Metadados
 
@@ -191,7 +220,7 @@ Alguns serviços são de plataforma e são acessados como capabilities, não imp
 | `location` | `current()`, `distance(a, b)`, `timezoneOf(location)` | — |
 | `timezone` | `current()`, `of(location)`, `convert(at, from, to)`, `offset(zone, at)` | `location` (opcional) |
 | `regionalization` | `locale()`, `formatDate`, `formatTime`, `formatNumber`, `formatCurrency`, `parseDate`, `parseNumber` | `Locale` |
-| `units` | `system()`, `convert(value, unit)`, `format(value, locale)`, `shapes()` | `regionalization` |
+| `units` | `system()`, `format(value, locale)`, `shapes()` | `regionalization` |
 
 ```bpcms
 service "example.com/services/field" {
@@ -232,7 +261,7 @@ title: { pt-BR: "Nome", en: "Name" }
 O mapa aceita locales (`pt-BR`, `en-US`, `en`) e duas versões alternativas **opcionais**, irmãs do mapa principal:
 
 ```bpcms
-name: Text {
+name: string {
   title: {
     pt-BR: "Nome da pessoa"
     en: "Person name"
@@ -453,7 +482,7 @@ task RefundPayment {
 | declaração | `document <Name> { ... }` | Unidade de dados + ações + regras + sync. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
-| `lookup` | `nickname: Text { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
+| `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | referência | `categoryId: CategoryId` | ForeignKey para `Category`; novos vínculos exigem id existente; vínculos antigos continuam válidos. |
 | projeção | `customerId: UserId(citizenId)` | Copia apenas campos **extras**; campos do `lookup` já são automáticos. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
@@ -474,7 +503,7 @@ task RefundPayment {
 
 **ID automático.** O `id` não é declarado: todo `document` base ganha `id: <Name>Id` (ex.: `Product` → `ProductId`). O Shape `<Name>Id` também é implícito e **não pode ser declarado**. Declarar `id` no documento ou `shape ProductId` é `E_DUPLICATE_ID_FIELD`/`E_DUPLICATE_ID_SHAPE`. **Exceção:** extensão (`extends`) compartilha o id do pai; `Consumer extends User` usa `UserId`. Se `ConsumerId` for usado, é **alias de tipo** do mesmo `UserId` — não é um segundo id nem um segundo Shape/valor. Declarar `shape ConsumerId` é `E_DUPLICATE_ID_SHAPE`.
 
-**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: Text { lookup }` e `avatar: Image? { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
+**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image? { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
 
 **ForeignKey.** Usar `CategoryId` significa ForeignKey para `Category`. Se o id referenciado não existir, **novos vínculos** falham (`E_FK_MISSING`), mas vínculos já gravados continuam válidos e mantêm o lookup. Não há cascade destrutivo.
 
@@ -502,8 +531,9 @@ task RefundPayment {
 | booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
-| `unit` | `unit: kg` | Unidade de entrada/exibição; o `Shape` converte. |
-| `min` / `max` | `min: 0.001, max: 50000` | Faixa; o `Shape` valida. |
+| `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |
+| `min` / `max` | `min: 0.001, max: 50000` | Faixa validada no field. |
+| `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
 | `default` | `default: BR` | Valor inicial; não é regra de negócio. |
 | `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
 
@@ -518,7 +548,7 @@ document Shipment {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
-    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001 }
+    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
     tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
@@ -554,31 +584,31 @@ document Shipment {
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| text` | Representação base. |
-| `values` | `values { draft { title: {...}; icon: Draft } }` | Valores enumerados; cada valor exige `title` I18n e `icon` de um artefato `Icon`. |
+| `values` | `values { draft { title; icon; ordinal: 10 } }` | Enum; cada value exige `title`, `icon` e `ordinal`. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
-| `unit` | `unit: kg` | Unidade canônica do Shape. |
-| `precision` | `precision: 6` | Precisão de armazenamento/cálculo. |
-| `displayUnits` | `displayUnits: [cm, m, in, ft]` | Unidades permitidas na exibição. |
-| `min` / `max` | `min: 0`, `max: 100` | Faixa semântica. |
-| `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Como texto vira valor. |
-| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Como valor vira texto por locale. |
+| `units` | `units { kg: { factor: 1000 }, g: { factor: 1 } }` | Unidades e fatores relativos à base. |
+| `max` | `max: 100` | Limite superior semântico. |
+| `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Perfil default de texto → valor; composto exige método. |
+| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Perfil default de valor → texto; composto exige método. |
 | `compare` | `compare: exact` | Igualdade/ordenação; `exact` para dinheiro. |
 | `aggregate` | `aggregate: sum` | Soma/média/min/max permitidos. |
-| `convert` | `convert: mass`, `convert: units.mass` ou `convert: affine(C, F, K)` | Conversão de unidade; `units.mass` delega ao serviço de unidades. |
 | `index` | `index: normalized` | Codificação para índice. |
 | `normalize` | `normalize: digits`, `lower-trim`, `upper-trim` | Normalização antes de validar/comparar. |
 | `validate` | `validate: cpf-check-digits`, `uuid`, `email`, `phone`, `url`, `year-month` | Validação semântica. |
 | `sensitive` | `sensitive: true` | Exige mascaramento/permissão. |
 | `maxLength` | `maxLength: 254` | Limite de texto. |
-| `fields` | `fields { street: Text ... }` | Shape composto. |
+| `fields` | `fields { street: string ... }` | Shape composto. |
 | `default` | `default: BR` | Valor default de campo interno. |
-| `private` | `private helper: Text` | Campo interno do Shape; fora do contrato público. |
+| `private` | `private helper: string` | Campo interno do Shape; fora do contrato público. |
+| `method` | `method <name>(...): <Type> { ... }` | Função própria do Shape; `value` é o receptor. |
 
 > `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
 
-**Valores enumerados.** Cada value é um bloco com `title` (I18n) e `icon` (referência a um `Icon`). A ordem dos blocos é a ordem do enum.
+## 6.1 Valores enumerados
+
+Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 
 ```bpcms
 shape InvoiceStatus {
@@ -589,49 +619,227 @@ shape InvoiceStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
+      ordinal: 10
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
       icon: Issued
+      ordinal: 20
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
       icon: Paid
+      ordinal: 30
     }
   }
 }
 ```
 
-- `title` e `icon` são obrigatórios em todo value.
-- O `icon` precisa referenciar um artefato `Icon` do serviço/closure.
-- O builder/Theme resolve o nome do `Icon` para uma imagem; o mesmo Icon pode ser usado por vários values.
-- Valores fora de `values` são inválidos; `values: [a, b]` sem título/ícone é erro.
+- O primeiro ordinal é **10**; os seguintes incrementam de **10 em 10**.
+- `ordinal` é único, inteiro e estável; inserir um value no meio usa um ordinal livre.
+- O ordinal é usado no stream binário; o title/icon são para UI.
+- `values: [a, b]` sem title/icon/ordinal é erro.
 
-**Valores usados:**
+## 6.1.1 Units
 
-| Cláusula | Valores |
-| :--- | :--- |
-| `parse` | `locale-number`, `quantity`, `percent`, `digits`, `lower-trim`, `email`, `cpf-check-digits` |
-| `format` | `currency`, `locale-unit`, `percent`, `plain`, `postal`, `masked("###.###.###-##")` |
-| `convert` | `mass`, `length`, `affine(C, F, K)` |
-| `aggregate` | `sum`, `weighted-average` |
-| `index` | `normalized`, `hash`, `exact` |
-
-**Funcionamento:** o Shape é o único lugar com parse/validação/formatação/conversão. O campo apenas parametriza (`unit`, `min`, `max`, `required`). Um Shape composto agrupa campos, mas continua sendo valor, não documento.
+`units` é um mapa de unidade → fator relativo à unidade base (fator `1`). Unidades afins podem declarar `offset`.
 
 ```bpcms
 shape Mass {
+  title: { pt-BR: "Massa", en: "Mass" }
   base: decimal
   dimension: mass
-  unit: kg
-  precision: 6
-  min: 0
-  parse: quantity
-  convert: mass
-  index: normalized
-  aggregate: sum
+  units {
+    kg: { factor: 1000 }
+    g: { factor: 1 }
+    mg: { factor: 0.001 }
+    ug: { factor: 0.000001 }
+    µg: { factor: 0.000001 }
+    t: { factor: 1000000 }
+    lb: { factor: 453.59237 }
+    oz: { factor: 28.349523125 }
+    st: { factor: 6350.29318 }
+    ton: { factor: 907184.74 }
+    ct: { factor: 0.2 }
+    Da: { factor: 1.66053904e-24 }
+    Msun: { factor: 1.988475e33 }
+  }
 }
 ```
+
+- `unit`, `min` e `precision` **não são cláusulas de Shape**.
+- O field define `unit`, `min` e `precision` quando necessário.
+- `value.unit` é a unidade do valor; se o field não definir, usa a unidade de fator `1`.
+- O `format` escolhe automaticamente a unidade mais legível, salvo `flags.unit`.
+
+## 6.2 Valor e métodos
+
+Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas são:
+
+| Operação | Assinatura | Função |
+| :--- | :--- | :--- |
+| `write` | `write(value: Shape, out: stream): void` | Serializa no stream |
+| `read` | `read(in: stream): Shape` | Desserializa do stream |
+| `format` | `format(value: Shape, flags: FormatFlags): string` | Texto para UI |
+| `parse` | `parse(text: string, flags: FormatFlags): Shape` | Texto → valor |
+| `toNumber` | `toNumber(value: Shape): number` | Valor numérico do Shape |
+
+- `write`/`read` existem para **todos** os Shapes, inclusive enums e compostos.
+- `format`/`parse` têm default para primitivos, enums e medidas; **compostos exigem método próprio**.
+- `toNumber(value)` é declarado por cada Shape que expõe valor numérico; o tipo de `value` é inferido do Shape. Em `bpcms.org/std`, as medidas declaram o método explicitamente.
+- `value` é o receptor implícito; não se declara `value` nos parâmetros.
+
+### FormatFlags
+
+```ts
+type FormatFlags = {
+  style?: normal | short | tooltip;
+  unit?: Unit;
+};
+```
+
+```ts
+format(date, { style: short })     // "14/nov/26"
+format(date, { style: normal })    // "14 de novembro de 2026"
+format(date, { style: tooltip })   // "Sábado, 14 de novembro de 2026"
+
+format(mass, { style: normal, unit: kg })
+format(mass, { style: short, unit: lb })
+```
+
+`parse` recebe as mesmas flags:
+
+```ts
+parse("14/nov/26", { style: short })
+parse("12,5 kg", { style: normal, unit: kg })
+```
+
+## 6.3 stream canônico
+
+`stream` é um tipo intrínseco de leitura/escrita binária. Não é ASN.1.
+
+```ts
+type stream = {
+  readInt8(): Int8;
+  readInt16(): Int16;
+  readInt32(): Int32;
+  readInt64(): Int64;
+  readFloat(): Float;
+  readDouble(): Double;
+  readString(): string;
+  readStream(): stream;
+  readStreamArray(): stream[];
+
+  writeInt8(value: Int8): void;
+  writeInt16(value: Int16): void;
+  writeInt32(value: Int32): void;
+  writeInt64(value: Int64): void;
+  writeFloat(value: Float): void;
+  writeDouble(value: Double): void;
+  writeString(value: string): void;
+  writeStream(value: stream): void;
+  writeStreamArray(value: stream[]): void;
+};
+```
+
+Layout canônico interlinguagens:
+
+- little-endian;
+- sem padding;
+- campos na ordem declarada;
+- `boolean` = `int8` 0/1;
+- `Integer` = `int64`;
+- `number` = `double`;
+- `string` = `int32` comprimento + UTF-8;
+- enum = `int32` ordinal;
+- composto = campos inline;
+- array = `int32` quantidade + itens.
+
+`write(value, out)` e `read(in)` usam esse layout. Medidas gravam a unidade como texto e o valor como `double`; o builder pode otimizar armazenamento/indexação, mas o stream lido/escrito é o mesmo entre linguagens.
+
+Funções de apoio usadas pelos métodos da stdlib:
+
+```ts
+ParseReal(text: string, unit: Unit): number
+FormatReal(raw: number, from: Unit, to: Unit, style: FormatStyle): string
+BestUnit(raw: number, from: Unit, units: Units): Unit
+Shape.fromRaw(raw: number | string, unit?: Unit): Shape
+```
+
+- `BestUnit` escolhe a unidade que evita muitos decimais/zeros à direita; `flags.unit` força uma unidade.
+- `value.raw` é o valor na unidade atual.
+- `value.unit` é a unidade atual.
+- `Shape.fromRaw` cria um valor a partir do valor e da unidade.
+- `read`/`parse` são métodos estáticos do Shape; `write`/`format` usam `value`; `toNumber` recebe `value` explícito.
+- `CurrencyCode` usa `writeString`/`readString` e não tem valor numérico; `toNumber` lança erro.
+
+## 6.4 Expressões e métodos próprios
+
+```bpcms
+shape Distance {
+  title: { pt-BR: "Distância", en: "Distance" }
+  base: decimal
+  dimension: length
+  units {
+    m: { factor: 1 }
+    km: { factor: 1000 }
+    mi: { factor: 1609.344 }
+    ft: { factor: 0.3048 }
+  }
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+
+  method toWholeKilometres(): Integer {
+    const from = value.unit ?? m;
+    return Trunc(value.raw * units[from].factor / units[km].factor);
+  }
+
+  method isLongerThan(limit: Distance): boolean {
+    const a = value.raw * units[value.unit ?? m].factor;
+    const b = limit.raw * units[limit.unit ?? m].factor;
+    return a > b;
+  }
+}
+```
+
+Gramática mínima:
+
+- `const`;
+- `if`/`else`;
+- `for (const item of list)`;
+- `while`;
+- `return`;
+- `throw Error("...")`;
+- chamadas, membros (`value.field`), arrays, operadores e `??`;
+- `Round` e `Trunc` intrínsecos;
+- `toNumber(value)` é declarado pelo Shape; as medidas de `bpcms.org/std` já o declaram.
+
+Não há `let`, classes, funções aninhadas, async ou exceções customizadas no v1.
+
+## 6.5 `toNumber`
+
+```bpcms
+shape Rating {
+  title: { pt-BR: "Avaliação", en: "Rating" }
+  base: decimal
+  max: 5
+
+  method toNumber(value): number {
+    return value.raw;
+  }
+}
+```
+
+- `value.raw` é o valor base do Shape.
+- Enum pode usar `value.ordinal`.
+- Composto pode usar `value.campo`.
+- Em `bpcms.org/std`, medidas declaram `toNumber(value)` explicitamente.
+
+## 6.6 `convert` removido
+
+`convert` não é mais cláusula de Shape. `toNumber(value)` expõe o número; conversão de domínio é método próprio. Os `convert` antigos dos Shapes de Catalog e da stdlib foram removidos; os Shapes padrão vivem em `bpcms.org/std`.
 
 # 7. View
 
@@ -644,7 +852,7 @@ shape Mass {
 | `source` | `source: Order` | Fonte de tabela/kanban. |
 | `sources` | `sources: [Invoice, Order]` | Fontes de dashboard/relatório. |
 | `roles` | `roles: [Clerk, Manager]` | Quem pode abrir/executar. |
-| `fields` | `fields { name: Text { title: { pt-BR: "Nome", en: "Name" }, required } }` | Campos exibidos/editados; `title` é obrigatório; aceita `required`, `readonly` e parâmetros do Shape. |
+| `fields` | `fields { name: string { title: { pt-BR: "Nome", en: "Name" }, required } }` | Campos exibidos/editados; `title` é obrigatório; aceita `required`, `readonly` e parâmetros do Shape. |
 | `readonly` | `readonly` | Campo apenas leitura na view; `readonly: true` também é aceito. |
 | `columns` | `columns { number; customer.name; total }` | Colunas de tabela. |
 | `filters` | `filters { status; period; customer }` | Filtros de tabela/relatório. |
@@ -873,7 +1081,7 @@ assumption A-001 {
 | :--- | :--- | :--- |
 | `parameter` | `parameter <Name> { ... }` | Declara configuração/segredo tipado dentro de um serviço; artefato público. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do parâmetro (obrigatório); substitui `description`; ver 1.9. |
-| `type` | `type: Text \| Secret \| Count \| Duration \| ...` | Shape do valor. |
+| `type` | `type: string \| Secret \| Count \| Duration \| ...` | Shape do valor. |
 | `source` | `source: config \| secret` | Origem do valor: configuração do ambiente ou secret store. |
 | `required` | `required` | Falha no boot/uso se não houver valor; `required: true` também é aceito. |
 | `default` | `default: "..."` | Só para `config`; proibido para `secret`. |
@@ -886,7 +1094,7 @@ assumption A-001 {
 ```bpcms
 parameter ErpUrl {
   title: { pt-BR: "URL do ERP", en: "ERP URL" }
-  type: Text
+  type: string
   source: config
   required: true
   default: "https://erp.example.com"
@@ -1053,8 +1261,7 @@ locale pt-BR {
 | Opção | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `unit` | `unit: required` | Exige unidade na entrada. |
-| `convert` | `convert: display` | Converte na exibição, sem alterar o valor. |
-| `precision` | `precision: shape` | Usa a precisão do Shape. |
+| `precision` | `precision: field` | Usa a precisão do field. |
 | `order` | `order: asc` | Ordem da timeline. |
 | `groupBy` | `groupBy: day` | Agrupamento da timeline. |
 | `showActor` | `showActor: true` | Exibe o autor do evento. |
@@ -1344,10 +1551,13 @@ policy FourEyesPayment {
 | ID circular | campo `<document>Id` dentro do próprio document | `E_SELF_ID_FIELD` |
 | ForeignKey | novo vínculo para id inexistente | `E_FK_MISSING` |
 | Lookup | document base sem campo `lookup` ou campo inválido | `E_LOOKUP_MISSING` / `E_LOOKUP_FIELD` |
-| Enum | value sem `title`/`icon` ou value duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_DUPLICATE` |
+| Enum | value sem `title`/`icon`/`ordinal`, ordinal inválido ou duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_ORDINAL` / `E_ENUM_VALUE_DUPLICATE` |
 | Icon | value aponta para Icon inexistente | `E_ICON_REFERENCE` |
 | Icon | Theme/builder não resolve a imagem do Icon | `E_ICON_UNRESOLVED` |
 | Icon | dois icons com o mesmo nome no mesmo serviço | `E_DUPLICATE_ICON` |
+| Method | assinatura/corpo/retorno inválido | `E_METHOD_SIGNATURE` / `E_METHOD_BODY` / `E_METHOD_RETURN` |
+| stream | stream truncado, versão inválida ou bytes sobrando | `E_STREAM_INVALID` |
+| Format/Parse | composto sem método próprio | `E_FORMAT_MISSING` / `E_PARSE_MISSING` |
 | Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
@@ -1454,10 +1664,12 @@ shape InvoiceStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: status.draft
+      ordinal: 10
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
       icon: finance.invoice.issued
+      ordinal: 20
     }
   }
 }
@@ -1466,6 +1678,74 @@ shape InvoiceStatus {
 **Erros:** `E_ICON_REFERENCE` para `icon:` que não resolve; `E_DUPLICATE_ICON` para conflito de identificador; `E_ICON_UNRESOLVED` para falha do builder/Theme.
 
 **Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_UNRESOLVED` (Theme/builder não resolve a imagem do Icon), `E_DUPLICATE_ICON` (dois icons com o mesmo nome no mesmo serviço), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
+
+# 29. bpcms.org/std — biblioteca padrão
+
+`bpcms.org/std` é um **pseudo-serviço reservado**, fornecido pelo construtor. Ele não é publicado, não tem endpoint, não entra no lock do app e não pode ser sobrescrito.
+
+Quem usa precisa importar:
+
+```bpcms
+imports {
+  service "bpcms.org/std" as std
+}
+```
+
+O alias é obrigatório; o uso é sempre qualificado:
+
+```bpcms
+fields {
+  weight: std.Mass
+  length: std.Length
+  discount: std.Percentage
+  currency: std.CurrencyCode
+}
+```
+
+Não existe `Mass` implícito vindo da std. Sem import, `std.Mass` não resolve.
+
+## 29.1 Modos e unidades
+
+A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia unidade → fator relativo à base; o field escolhe a unidade do valor.
+
+| Modo | Exemplos de unidades |
+| :--- | :--- |
+| SI | m, kg, s, A, K, mol, cd; N, Pa, J, W, C, V, F, Ω, Wb, T, Hz |
+| Imperial/US | in, ft, yd, mi, lb, oz, gal, qt, pt, °F, psi, BTU, hp |
+| CGS | cm, g, dyn, erg, P, St, G, Mx |
+| Astronômico | AU, ly, pc, Msun |
+| Atômico/nuclear | eV, keV, MeV, Da, Ci, rad, rem |
+| Química | mol/L, mol/kg, pH, ppm, ppb, kat |
+| Dados | bit, B, KB/KiB, MB/MiB, GB/GiB, bps |
+| Estatística | count, %, probability, ratio, rate, z-score |
+
+**Convenção de tokens:** `_` representa divisão ou produto; `2`/`3` são potências; `u` é micro; `ohm` é Ω; `deg` é grau. Exemplos: `m_s`, `m_s2`, `kg_m3`, `W_mK`, `cd_m2`, `ft_lbf`.
+
+## 29.2 Shapes da biblioteca
+
+| Grupo | Shapes |
+| :--- | :--- |
+| Geometria/medidas | `Length`, `Mass`, `Volume`, `Area`, `Angle`, `Temperature` |
+| Mecânica | `Speed`, `Acceleration`, `Force`, `Pressure`, `Energy`, `Power`, `Frequency`, `Density`, `Momentum`, `Torque` |
+| Fluidos/calor | `HeatCapacity`, `Entropy`, `ThermalConductivity`, `DynamicViscosity`, `KinematicViscosity`, `SurfaceTension` |
+| Eletromagnetismo | `ElectricCurrent`, `ElectricCharge`, `Voltage`, `Resistance`, `Capacitance`, `Inductance`, `MagneticFlux`, `MagneticFluxDensity` |
+| Luz/som | `LuminousIntensity`, `LuminousFlux`, `Illuminance`, `Luminance`, `SoundPressure`, `SoundLevel`, `AngularVelocity` |
+| Química | `AmountOfSubstance`, `MolarMass`, `MolarConcentration`, `Molality`, `Ph`, `CatalyticActivity` |
+| Radiação | `Radioactivity`, `AbsorbedDose`, `EquivalentDose` |
+| Dados/estatística | `DataSize`, `DataRate`, `Count`, `Percentage`, `Probability`, `Ratio`, `Rate`, `ZScore` |
+| Dinheiro | `CurrencyCode` |
+
+**`CurrencyCode`:** é um código ISO 4217 validado, **não** um enum com `values`/icons. A formatação/label vem de regionalization.
+
+## 29.3 Onde fica
+
+- Definição: `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`.
+- Fica na pasta normal `examples/services/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
+- Não é versionado pelo lock; a versão da std é a do construtor/DSL.
+- Os Shapes de medida declaram `toNumber(value)` explicitamente.
+- `Mass`, `Length`, `Volume`, `Percentage` e `CurrencyCode` implementam `write`, `read`, `parse`, `format` e `toNumber`; `CurrencyCode.toNumber` lança erro por não ser numérico.
+
+> **Migração feita:** `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` foram removidos dos serviços de negócio e são referenciados como `std.*`. `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag` e `YearMonth` continuam nos serviços de negócio.
 
 ## O que ainda não é cláusula
 

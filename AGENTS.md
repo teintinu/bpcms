@@ -25,6 +25,8 @@ Não coloque `parameter`, `document`, `view` ou qualquer outro artefato diretame
 
 **Serviço é conceito de negócio.** Não crie serviço para agrupar artefatos compartilhados (Shapes, Icons, Themes, Locales) nem para ser biblioteca/package/módulo. Tipos compartilhados ficam no serviço de negócio dono (ex.: Money/Mass em Catalog, Email/Phone/Image em Citizen). `Theme`/`Locale`, fontes e cores são responsabilidade do construtor, não do serviço.
 
+**`bpcms.org/std` é exceção reservada.** É um pseudo-serviço do construtor para medidas/constantes padrão; fica em `examples/services/std/`, na pasta normal de serviços. Quem usa deve importar com alias (`imports { service "bpcms.org/std" as std }`) e referenciar `std.Mass` etc. Não criar endpoint nem lock para ele.
+
 ## Revisão por checklist: propor antes de mudar
 
 Durante a revisão de artefatos, **não remova, altere nem adicione nada sem antes explicar e obter confirmação explícita do usuário**.

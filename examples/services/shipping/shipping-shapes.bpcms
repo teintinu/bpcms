@@ -8,22 +8,27 @@ shape ShipmentStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
+      ordinal: 10
     }
     packed {
       title: { pt-BR: "Embalada", en: "Packed" }
       icon: Packed
+      ordinal: 20
     }
     dispatched {
       title: { pt-BR: "Despachada", en: "Dispatched" }
       icon: Dispatched
+      ordinal: 30
     }
     delivered {
       title: { pt-BR: "Entregue", en: "Delivered" }
       icon: Delivered
+      ordinal: 40
     }
     returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
       icon: Returned
+      ordinal: 50
     }
   }
   format: plain
@@ -34,7 +39,7 @@ shape TrackingEvent {
   fields {
     at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" } }
-    description: Text { title: { pt-BR: "Descrição", en: "Description" } }
+    description: string { title: { pt-BR: "Descrição", en: "Description" } }
   }
 }
 

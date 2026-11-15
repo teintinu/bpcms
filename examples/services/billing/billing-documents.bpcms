@@ -8,7 +8,7 @@ document InvoiceItem {
   fields {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    quantity: Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
     total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
   }
@@ -31,8 +31,8 @@ document Invoice {
   retention: 5y
 
   fields {
-    number: Text { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
-    series: Text { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
+    number: string { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
+    series: string { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     customerId: UserId(citizenId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
@@ -51,8 +51,8 @@ document Invoice {
   }
 
   actions {
-    issue(series: Text, number: Text): Invoice
-    cancel(reason: Text): Invoice
+    issue(series: string, number: string): Invoice
+    cancel(reason: string): Invoice
     closeMonth(): void
   }
 
@@ -73,7 +73,7 @@ document CreditNote {
   fields {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" }, lookup }
     amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
@@ -102,7 +102,7 @@ document Bill {
   audit: true
 
   fields {
-    supplier: Text { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
+    supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
     amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
     status: BillStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -131,12 +131,12 @@ document OrderCancellation {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
 
   actions {
-    cancel(reason: Text): Order
+    cancel(reason: string): Order
   }
 
   rules {
@@ -155,7 +155,7 @@ document MonthlyRevenue {
   fields {
     month: YearMonth { title: { pt-BR: "Mês", en: "Month" }, lookup }
     revenue: MoneyBRL { title: { pt-BR: "Receita", en: "Revenue" }, lookup }
-    invoiceCount: Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
     calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
   }
 

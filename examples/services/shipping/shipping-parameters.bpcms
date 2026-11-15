@@ -1,14 +1,14 @@
 // service: example.com/services/shipping
 parameter DefaultCarrier {
   title: { pt-BR: "Transportadora padrão", en: "Default carrier" }
-  type: Text
+  type: string
   source: config
   default: "CarrierX"
 }
 
 parameter MaxWeight {
   title: { pt-BR: "Peso máximo", en: "Max weight" }
-  type: Mass
+  type: std.Mass
   source: config
   default: 30 kg
   min: 1 kg

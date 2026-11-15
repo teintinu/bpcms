@@ -882,7 +882,7 @@ document Customer {
   audit: true
 
   fields {
-    name: Text { maxLength: 120, required, lookup }
+    name: string { maxLength: 120, required, lookup }
     email: Email { unique, lookup }
     phone: Phone?
     status: CustomerStatus
@@ -896,8 +896,8 @@ document Customer {
   }
 
   actions {
-    create(name: Text, email: Email): Customer
-    update(name: Text, phone: Phone?): Customer
+    create(name: string, email: Email): Customer
+    update(name: string, phone: Phone?): Customer
     archive(): void
     private recalcScore(): Score
   }
@@ -938,7 +938,7 @@ document Invoice {
 
   actions {
     issue(): Invoice
-    cancel(reason: Text): Invoice
+    cancel(reason: string): Invoice
   }
 
   rules {
@@ -1012,7 +1012,7 @@ document LabExam {
     patientId: PatientId { lookup }
     type: ExamType { lookup }
     status: ExamStatus { lookup }
-    result: Text?
+    result: string?
     resultFile: FileRef?
     signature: Signature?
     collectedAt: DateTime
@@ -1026,7 +1026,7 @@ document LabExam {
 
   actions {
     collect(sample: SampleRef): LabExam
-    result(value: Text, file: FileRef): LabExam
+    result(value: string, file: FileRef): LabExam
     review(pathologist: UserId, signature: Signature): LabExam
     release(): LabExam
   }
@@ -1050,8 +1050,8 @@ document SupportTicket {
 
   fields {
     customerId: CustomerId
-    subject: Text { maxLength: 160, lookup }
-    description: Text
+    subject: string { maxLength: 160, lookup }
+    description: string
     priority: TicketPriority { lookup }
     status: TicketStatus { lookup }
     assignee: UserId?
@@ -1072,9 +1072,9 @@ document SupportTicket {
 
   actions {
     assign(user: UserId): SupportTicket
-    comment(body: Text): SupportTicket
+    comment(body: string): SupportTicket
     resolve(): SupportTicket
-    reopen(reason: Text): SupportTicket
+    reopen(reason: string): SupportTicket
   }
 
   rules {
@@ -1127,81 +1127,69 @@ shape MoneyBRL {
   format: currency
   compare: exact
   aggregate: sum
+
+  method toNumber(value): number {
+    return value.raw;
+  }
 }
 ```
 
 *Valida: dinheiro não é “número”; moeda, escala e arredondamento vivem no Shape.*
 
-### H.2 Massa com dimensão e projeção
+### H.2 Massa via std
 
 ```bpcms
-shape Mass {
-  base: decimal
-  dimension: mass
-  unit: kg
-  displayUnits: [kg, g, t, lb, oz]
-  precision: 6
-  min: 0
-  parse: quantity
-  convert: mass
-  index: normalized
-  aggregate: sum
+shape Package {
+  title: { pt-BR: "Pacote", en: "Package" }
+  fields {
+    weight: std.Mass
+    volume: std.Volume
+  }
 }
 ```
 
-*Valida: dimensão, unidade, precisão e projeção para índice; `1 kg` não é `1 m`.*
+*Valida: Shape de negócio usando `std.Mass`/`std.Volume`; `1 kg` não é `1 m`.*
 
-### H.3 Comprimento com múltiplas unidades de exibição
+### H.3 Comprimento via std
 
 ```bpcms
-shape Length {
-  base: decimal
-  dimension: length
-  unit: cm
-  displayUnits: [cm, m, km, in, ft, yd, mi]
-  precision: 3
-  parse: quantity
-  convert: length
-  index: normalized
+shape ProductDimensions {
+  title: { pt-BR: "Dimensões do produto", en: "Product dimensions" }
+  fields {
+    length: std.Length
+    width: std.Length
+    height: std.Length
+  }
 }
 ```
 
-*Valida: entrada em cm, exibição em in/ft e índice em unidade normalizada.*
+*Valida: Shape de negócio compondo `std.Length` para dimensões.*
 
-### H.4 Temperatura com conversão afim
+### H.4 Temperatura via std
 
 ```bpcms
-shape Temperature {
-  base: decimal
-  dimension: temperature
-  unit: C
-  displayUnits: [C, F, K]
-  min: -273.15 C
-  parse: quantity
-  convert: affine(C, F, K)
-  format: locale-unit
+shape TemperatureReading {
+  title: { pt-BR: "Leitura de temperatura", en: "Temperature reading" }
+  fields {
+    value: std.Temperature
+  }
 }
 ```
 
-*Valida: conversão que não é só multiplicação; mínimo físico e exibição por locale.*
+*Valida: temperatura como tipo padrão da stdlib.*
 
-### H.5 Percentual como razão
+### H.5 Percentual via std
 
 ```bpcms
-shape Percentage {
-  base: decimal
-  dimension: ratio
-  unit: "%"
-  min: 0
-  max: 100
-  scale: 2
-  parse: percent
-  format: percent
-  aggregate: weighted-average
+shape DiscountPolicy {
+  title: { pt-BR: "Política de desconto", en: "Discount policy" }
+  fields {
+    rate: std.Percentage
+  }
 }
 ```
 
-*Valida: percentual é adimensional, mas tem faixa, escala e agregação própria.*
+*Valida: percentual como tipo padrão, usado por um Shape de política de desconto.*
 
 ### H.6 CPF com validação e sensibilidade
 
@@ -1238,11 +1226,11 @@ shape Email {
 ```bpcms
 shape Address {
   fields {
-    street: Text
-    number: Text
-    complement: Text?
-    district: Text
-    city: Text
+    street: string
+    number: string
+    complement: string?
+    district: string
+    city: string
     state: StateCode
     zip: CEP
     country: CountryCode { default: BR }
@@ -1253,6 +1241,26 @@ shape Address {
 ```
 
 *Valida: Shape composto, campos aninhados, default e índice derivado.*
+
+## bpcms.org/std
+
+A biblioteca padrão é pseudo-serviço: precisa ser importada e usada com alias.
+
+```text
+imports {
+  service "bpcms.org/std" as std
+}
+
+fields {
+  weight: std.Mass
+  length: std.Length
+  volume: std.Volume
+  discount: std.Percentage
+  currency: std.CurrencyCode
+}
+```
+
+Ela define 55 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
 
 ## View
 
@@ -1265,7 +1273,7 @@ view CustomerForm {
   roles: [Clerk, Manager]
 
   fields {
-    name: Text { required }
+    name: string { required }
     email: Email { required }
     phone: Phone?
     status: CustomerStatus { readonly }
@@ -2124,7 +2132,7 @@ environment dr {
 ```bpcms
 parameter ErpUrl {
   title: { pt-BR: "URL do ERP", en: "ERP URL" }
-  type: Text
+  type: string
   source: config
   required
   default: "https://erp.example.com"
@@ -2230,20 +2238,19 @@ view VisitForm {
 
 *Valida: `timezone` resolve o fuso, `regionalization` formata e `units` converte a distância para o sistema local.*
 
-### U.3 Shape com unidades métricas e imperiais
+### U.3 Shape com unidades via std
 
 ```bpcms
-shape Mass {
-  base: decimal
-  dimension: mass
-  unit: kg
-  displayUnits: [kg, g, t, lb, oz]
-  convert: units.mass
-  index: normalized
+shape ParcelWeight {
+  title: { pt-BR: "Peso do pacote", en: "Parcel weight" }
+  fields {
+    gross: std.Mass
+    net: std.Mass
+  }
 }
 ```
 
-*Valida: o Shape guarda a unidade original e delega conversão ao serviço de unidades; a exibição escolhe métrico/imperial via regionalization.*
+*Valida: Shape de negócio usando `std.Mass`; a stdlib resolve a unidade e a exibição.*
 
 ## Builder
 
@@ -2644,7 +2651,6 @@ widget UnitInput {
   }
   options {
     unit: required
-    convert: display
     precision: shape
   }
   events { changed -> value }
@@ -3134,7 +3140,7 @@ event ExamReleased {
     patientId: PatientId
     releasedBy: UserId
     releasedAt: DateTime
-    critical: Boolean
+    critical: boolean
   }
   producer: LabExam
   consumers: [Notifications, PatientPortal]

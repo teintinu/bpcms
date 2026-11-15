@@ -7,8 +7,8 @@ view InvoiceForm {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
-    series: Text { title: { pt-BR: "Série", en: "Series" }, required }
-    number: Text { title: { pt-BR: "Número", en: "Number" }, required }
+    series: string { title: { pt-BR: "Série", en: "Series" }, required }
+    number: string { title: { pt-BR: "Número", en: "Number" }, required }
     status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 

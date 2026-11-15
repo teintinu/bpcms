@@ -18,7 +18,7 @@ event Cancelled {
   version: 1
   payload {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
   producer: Order

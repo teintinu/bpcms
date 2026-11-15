@@ -19,7 +19,7 @@ event InvoiceOverdue {
   payload {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
-    daysLate: Count { title: { pt-BR: "Dias em atraso", en: "Days late" } }
+    daysLate: std.Count { title: { pt-BR: "Dias em atraso", en: "Days late" } }
   }
   producer: Invoice
   consumers: [Support, Notifications]

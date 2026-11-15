@@ -8,18 +8,22 @@ shape OrderStatus {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
+      ordinal: 10
     }
     placed {
       title: { pt-BR: "Realizado", en: "Placed" }
       icon: Placed
+      ordinal: 20
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
       icon: Cancelled
+      ordinal: 30
     }
     fulfilled {
       title: { pt-BR: "Atendido", en: "Fulfilled" }
       icon: Fulfilled
+      ordinal: 40
     }
   }
   format: plain

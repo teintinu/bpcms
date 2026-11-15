@@ -7,7 +7,7 @@ document User {
   audit: true
 
   fields {
-    name: Text {
+    name: string {
       title: {
         pt-BR: "Nome da pessoa"
         en: "Person name"
@@ -17,11 +17,11 @@ document User {
       maxLength: 120
       required
     }
-    nickname: Text { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
+    nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
     avatar: Image? { title: { pt-BR: "Avatar", en: "Avatar" }, lookup }
     email: Email { title: { pt-BR: "E-mail", en: "Email" }, unique }
     status: UserStatus { title: { pt-BR: "Status", en: "Status" } }
-    private loginAttempts: Count { title: { pt-BR: "Tentativas de login", en: "Login attempts" } }
+    private loginAttempts: std.Count { title: { pt-BR: "Tentativas de login", en: "Login attempts" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -31,9 +31,9 @@ document User {
   }
 
   actions {
-    create(name: Text, email: Email): User
+    create(name: string, email: Email): User
     disable(): User
-    private recalculateRisk(): Count
+    private recalculateRisk(): std.Count
   }
 
   rules {
@@ -85,7 +85,7 @@ document Session {
   }
 
   actions {
-    start(email: Email, password: Text): Session
+    start(email: Email, password: string): Session
     end(): Session
   }
 

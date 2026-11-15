@@ -7,8 +7,8 @@ view ShipmentForm {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
-    pesoBruto: Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, readonly }
-    volume: Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, readonly }
+    volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 

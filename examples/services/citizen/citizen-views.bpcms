@@ -6,9 +6,9 @@ view CitizenRegistrationForm {
 
   fields {
     kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, required }
-    displayName: Text { title: { pt-BR: "Nome de exibição", en: "Display name" }, required }
-    country: Text { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
-    legalName: Text { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
+    displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" }, required }
+    country: string { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
+    legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
     birthDate: Date { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
   }
 

@@ -9,14 +9,14 @@ document Ticket {
   fields {
     customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
     orderId: OrderId? { title: { pt-BR: "Pedido", en: "Order" } }
-    subject: Text { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
-    description: Text { title: { pt-BR: "Descrição", en: "Description" } }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
+    description: string { title: { pt-BR: "Descrição", en: "Description" } }
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup }
     status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     assignee: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
     slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
     resolutionTime: Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
-    slaMet: Boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
+    slaMet: boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -33,9 +33,9 @@ document Ticket {
 
   actions {
     assign(user: UserId): Ticket
-    comment(body: Text): Ticket
+    comment(body: string): Ticket
     resolve(): Ticket
-    reopen(reason: Text): Ticket
+    reopen(reason: string): Ticket
     escalateBreached(): void
   }
 
@@ -55,7 +55,7 @@ document ReturnRequest {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
     paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
     shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
-    reason: Text { title: { pt-BR: "Motivo", en: "Reason" } }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
@@ -67,9 +67,9 @@ document ReturnRequest {
   }
 
   actions {
-    request(reason: Text): ReturnRequest
+    request(reason: string): ReturnRequest
     approve(): ReturnRequest
-    reject(reason: Text): ReturnRequest
+    reject(reason: string): ReturnRequest
     refund(): ReturnRequest
   }
 

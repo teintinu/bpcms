@@ -8,7 +8,7 @@ parameter TaxRegime {
 
 parameter InvoiceSeries {
   title: { pt-BR: "Série da nota", en: "Invoice series" }
-  type: Text
+  type: string
   source: config
   default: "A"
   maxLength: 10

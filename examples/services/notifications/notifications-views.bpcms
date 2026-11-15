@@ -6,10 +6,10 @@ view TemplateEditor {
   roles: [Manager]
 
   fields {
-    key: Text { title: { pt-BR: "Chave", en: "Key" }, required }
+    key: string { title: { pt-BR: "Chave", en: "Key" }, required }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
-    subject: Text { title: { pt-BR: "Assunto", en: "Subject" } }
-    body: Text { title: { pt-BR: "Conteúdo", en: "Body" } }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
   }
 
   actions {

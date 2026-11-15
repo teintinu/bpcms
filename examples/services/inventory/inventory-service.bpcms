@@ -3,6 +3,7 @@ service "example.com/services/inventory" {
   version: 1.0.0
   owner: "Supply Chain"
   imports {
+    service "bpcms.org/std" as std
     service "example.com/services/catalog" as Catalog
   }
   requires { oltp, scheduling, units }

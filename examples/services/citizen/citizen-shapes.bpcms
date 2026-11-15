@@ -6,10 +6,12 @@ shape CitizenKind {
     person {
       title: { pt-BR: "Pessoa", en: "Person" }
       icon: Person
+      ordinal: 10
     }
     organization {
       title: { pt-BR: "Organização", en: "Organization" }
       icon: Organization
+      ordinal: 20
     }
   }
   format: plain
@@ -22,14 +24,17 @@ shape CitizenStatus {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
       icon: Active
+      ordinal: 10
     }
     merged {
       title: { pt-BR: "Mesclado", en: "Merged" }
       icon: Merged
+      ordinal: 20
     }
     blocked {
       title: { pt-BR: "Bloqueado", en: "Blocked" }
       icon: Blocked
+      ordinal: 30
     }
   }
   format: plain
