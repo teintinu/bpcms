@@ -623,8 +623,9 @@ document Shipment {
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext \| money` | Representação base; define exibição/edição. |
+| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
+| `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
 | `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
@@ -947,7 +948,7 @@ bestUnit(raw: number, from: Unit, units: Units): Unit
 - `value.unit` é a unidade atual.
 - `read`/`parse` são métodos estáticos do Shape; `write`/`format` usam `value`; `toNumber` recebe `value` explícito.
 - `new Shape{...}` cria um valor; `new` é a forma geral de instanciar classes/Shapes.
-- `CurrencyCode` usa `writeString`/`readString` e não tem `toNumber`; `Money.toNumber` retorna `raw`.
+- `Money.toNumber` é automático e retorna `raw`; `Currency` não tem `toNumber`.
 
 ## 6.4 Expressões e métodos próprios
 
@@ -1011,7 +1012,7 @@ return new Length{raw, unit};
 - O tipo de `in` em `read` é inferido como `streamReader`; o retorno declarado é `Length`.
 - Em `write(value, out)`, `value` é o Shape e `out` é inferido como `streamWriter`; `void` também é inferido.
 - Se o tipo de retorno, propriedade ou valor for inválido, o compilador gera erro (`E_TYPE`/`E_CONSTRUCTOR_PROPERTY`).
-- Para `CurrencyCode`, `new CurrencyCode{raw: in.readString()}`.
+- Para `Money`, `new Money{raw, currency}`.
 
 ### 6.4.2 Tipos explícitos ou inferidos
 
@@ -1843,6 +1844,8 @@ policy FourEyesPayment {
 | Workflow | initial/next inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_NEXT` / `E_WORKFLOW_TRANSITION` |
 | Classification | `initial`/`next` em classification | `E_CLASSIFICATION_TRANSITION` |
 | Runtime | mudança de estado não permitida | `E_INVALID_TRANSITION` |
+| Moeda | metadado ausente, moeda incompatível, parse/scale inválido | `E_CURRENCY_METADATA_MISSING` / `E_CURRENCY_MISMATCH` / `E_MONEY_PARSE` / `E_CURRENCY_INFIX_SCALE` |
+| Reintroduce | conflito ao completar definição externa | `E_REINTRODUCE_CONFLICT` |
 | Unidade | `unit` + `units`, fórmula inválida, parse sem unidade | `E_UNIT_UNITS_CONFLICT` / `E_UNIT_FORMULA` / `E_PARSE_UNIT` |
 | Operador | operandos incompatíveis ou operador inexistente | `E_OPERATOR` |
 | Regionalization | locale/regionalization indeterminada | `E_REGIONALIZATION_UNKNOWN` |
@@ -1983,7 +1986,7 @@ fields {
   weight: std.Mass
   length: std.Length
   discount: std.Percentage
-  currency: std.CurrencyCode
+  currency: std.Currency
 }
 ```
 
@@ -2018,11 +2021,94 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 | Química | `AmountOfSubstance`, `MolarMass`, `MolarConcentration`, `Molality`, `pH`, `CatalyticActivity` |
 | Radiação | `Radioactivity`, `AbsorbedDose`, `EquivalentDose` |
 | Dados/estatística | `DataSize`, `DataRate`, `Count`, `Percentage`, `Probability`, `Ratio`, `Rate`, `ZScore` |
-| Dinheiro | `Money`, `CurrencyCode` |
+| Dinheiro | `Money`, `Currency` |
 
-**`Money`:** tipo de valor monetário com qualquer `CurrencyCode`; sem conversão cambial. `toNumber` é automático. A exibição usa `sformat`/regionalization.
+**`Money`:** tipo de valor monetário com qualquer `Currency`; `base: decimal`. O valor carrega `raw` + `currency`; `toNumber` é automático e retorna `raw`. Sem conversão cambial.
 
-**`CurrencyCode`:** é um código ISO 4217 validado, **não** um enum com `values`/icons. A formatação/label vem de regionalization.
+**`Currency`:** classificação da stdlib com URL externa ISO 4217 e values com `scale`, sem `title`/`icon`/`ordinal`. Para usar uma moeda, o serviço precisa reintroduzi-la.
+
+```bpcms
+shape Currency {
+  title: { pt-BR: "Moeda", en: "Currency" }
+  classification: "https://www.iso.org/iso-4217-currency-codes.html"
+  values {
+    BRL { scale: 2 }
+    USD { scale: 2 }
+    JPY { scale: 0 }
+    KWD { scale: 3 }
+    CVE { scale: 2 }
+  }
+}
+```
+
+- `CurrencyCode` não é Shape separado.
+- `DefaultCurrency` usa `std.Currency`.
+- A moeda usada sem `reintroduce` gera `E_CURRENCY_METADATA_MISSING`.
+
+### 29.2.1.1 `reintroduce` e formatação de moeda
+
+```bpcms
+reintroduce std.Currency {
+  values {
+    BRL {
+      title: { pt-BR: "Real", en: "Brazilian real" }
+      prefix: {
+        pt-BR: "R$"
+        en: "BRL"
+      }
+      icon: Brl
+      ordinal: 10
+    }
+    BTC {
+      title: { pt-BR: "Bitcoin", en: "Bitcoin" }
+      suffix: " BTC"
+      icon: Bitcoin
+      ordinal: 1000
+    }
+  }
+}
+```
+
+- `prefix`, `suffix` e `infix` são mutuamente exclusivos.
+- `infix` fica na posição decimal: `CVE 100$00`.
+- `infix` exige `scale > 0`.
+- `prefix`/`suffix`/`infix` aceitam `string | I18n`.
+- `scale` default vem da moeda; o field pode sobrescrever.
+- Sem `prefix/suffix/infix`, regionalization decide.
+- `sformat` fica fora da v1.
+
+`Money` usa `prefix`/`suffix`/`infix` da moeda:
+
+```bpcms
+price: std.Money {
+  title: { pt-BR: "Preço", en: "Price" }
+  currency: BRL
+  scale: 2
+}
+```
+
+- `Money.toNumber` é automático e retorna `raw`.
+- `Money` sempre carrega `currency`.
+- `Money` com moedas diferentes em `+`/`-`/comparação gera `E_CURRENCY_MISMATCH`.
+- `parse` de Money usa prefix/suffix/infix; texto sem moeda usa `currency` do field; ausência total = `E_MONEY_PARSE`.
+- `scale` do field > `scale` da moeda.
+- Não arredondar no meio dos cálculos.
+- Sem conversão cambial.
+
+Operadores:
+
+```bpcms
+R$ 10 + R$ 5      // R$ 15
+R$ 10 - R$ 5      // R$ 5
+R$ 10 * 2         // R$ 20
+R$ 10 / R$ 5      // 2 (número)
+R$ 10 + USD 5     // E_CURRENCY_MISMATCH
+```
+
+- `Money + Money` e `Money - Money` exigem a mesma moeda.
+- `Money * number`, `number * Money` e `Money / number` são permitidos.
+- `Money / Money` retorna número.
+- Comparações exigem a mesma moeda.
 
 ## 29.2.1 Regionalization
 
@@ -2049,9 +2135,9 @@ Regionalization {
 - Fica na pasta normal `examples/services/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
 - Não é versionado pelo lock; a versão da std é a do construtor/DSL.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
-- `Mass`, `Length`, `Volume`, `Percentage` e `Duration` implementam `write`, `read`, `parse`, `format` e `toNumber`; `CurrencyCode` não é numérico e não tem `toNumber`.
+- `Mass`, `Length`, `Volume`, `Percentage` e `Duration` implementam `write`, `read`, `parse`, `format` e `toNumber`; `Money.toNumber` é automático; `Currency` não é numérico.
 
-> **Migração feita:** `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` foram removidos dos serviços de negócio e são referenciados como `std.*`. `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag` e `YearMonth` continuam nos serviços de negócio.
+> **Migração feita:** `Mass`, `Length`, `Volume`, `Percentage` e `Count` foram removidos dos serviços de negócio e são referenciados como `std.*`. `MoneyBRL` foi removido; valores monetários usam `std.Money`. `CurrencyCode` não é Shape; `Currency` é a classificação. `Email`, `Phone`, `Image`, `LocaleTag` e `YearMonth` continuam nos serviços de negócio.
 
 ## O que ainda não é cláusula
 

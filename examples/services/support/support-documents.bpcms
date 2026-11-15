@@ -57,7 +57,7 @@ document ReturnRequest {
     shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup }
+    refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
 

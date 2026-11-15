@@ -462,7 +462,7 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 | :--- | :--- |
 | Processos | `Expedicao`, `AprovacaoDeCompra` |
 | Documentos | `Remessa`, `Pedido`, `Produto` |
-| Tipos de dados | `MassKg`, `MoneyBRL`, `CPF` |
+| Tipos de dados | `MassKg`, `std.Money`, `CPF` |
 | Views | `SepararItens`, `CotarFrete`, `DashboardExpedicao` |
 | Papéis | `Separador`, `Conferente`, `Gestor` |
 | Integrações | transportadora, balança, ERP, e-mail |
@@ -666,11 +666,11 @@ fields {
   length: std.Length
   volume: std.Volume
   discount: std.Percentage
-  currency: std.CurrencyCode
+  currency: std.Currency
 }
 ```
 
-A biblioteca cobre 57 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `CurrencyCode` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` agora são `std.*`.
+A biblioteca cobre 57 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `Currency` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `Currency` e `Count` agora são `std.*`.
 
 > **Decisão B-53:** biblioteca padrão vive em `bpcms.org/std`, pseudo-serviço do construtor; uso sempre por `std.Identificador`; sem import não resolve. Ela não substitui serviços de negócio.
 
@@ -943,7 +943,7 @@ classDiagram
     +MassKg pesoBruto
     +LengthCm comprimento
     +VolumeM3 volume
-    +MoneyBRL frete
+    +std.Money frete
     +DateTime criadoEm
     +DateTime calculadoEm
   }
@@ -964,7 +964,7 @@ classDiagram
   class CotacaoFrete {
     <<computed>>
     +RemessaId remessaId
-    +MoneyBRL valor
+    +std.Money valor
     +Duration validade
     +DateTime calculadoEm
   }
@@ -1732,7 +1732,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-58`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-59`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1779,6 +1779,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-046 | I18n aceita `PluralForms`; units carregam plural no `title` | ✅ | baseline atual |
 | D-047 | Enums divididos em `classification` e `workflow`; workflow tem `initial`/`next` | ✅ | baseline atual |
 | D-048 | Bases de mídia, formula to/from, Duration, unitStyle e operadores tipados | ✅ | baseline atual |
+| D-049 | Money/Currency na stdlib; `MoneyBRL` removido; sem câmbio | ✅ | baseline atual |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
@@ -1851,6 +1852,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-56** | Como representar plural? | **Dentro do I18n**: cada locale pode ser string ou `PluralForms` CLDR (`one`, `other`, `many`...); `other` obrigatório. Units usam `title` com plural, sem campo `plural` separado. | Plural é tradução, não semântica de unidade. | ✅ |
 | **B-57** | Enum é classificação ou workflow? | **`base: classification`** para categorias; **`base: workflow`** para máquina de estados, com um `initial`, `next` obrigatório e `[]` terminal. Self-transition proibida; `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`. | Separa categoria de ciclo de vida. | ✅ |
 | **B-58** | Como representar mídia, unidades e operadores? | Bases `string`/`richtext`/`attachment`/`audio`/`image`/`video`; units com referência factor1 e `formula { to/from }`; `convert` inteligente; `unitStyle`; `Duration` std; operadores explícitos por Shape. | Cobre mídia, unidades não lineares e aritmética dimensional. | ✅ |
+| **B-59** | Como representar dinheiro? | `std.Money` com `base: decimal`, valor com `raw` + `currency`; `std.Currency` classification ISO com `scale`; `reintroduce` adiciona metadados e `prefix`/`suffix`/`infix`. Sem conversão cambial. | Dinheiro é valor + moeda, não número solto. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1872,7 +1874,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-58) sem lacunas.
+- [x] Decisões de baseline (B-01…B-59) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

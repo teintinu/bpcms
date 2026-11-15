@@ -36,17 +36,3 @@ shape ProductStatus {
   format: plain
 
 }
-
-shape MoneyBRL {
-  title: { pt-BR: "Dinheiro (BRL)", en: "Money (BRL)" }
-  base: decimal
-  currency: BRL
-  parse: locale-number
-  format: currency
-  compare: exact
-  aggregate: sum
-
-  toNumber(value) {
-    return value.raw;
-  }
-}

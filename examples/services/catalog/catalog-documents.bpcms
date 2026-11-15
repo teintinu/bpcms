@@ -32,7 +32,7 @@ document Product {
     sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
     categoryId: CategoryId { title: { pt-BR: "Categoria", en: "Category" } }
-    price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" }, scale: 2 }
+    price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" } }
@@ -47,8 +47,8 @@ document Product {
   }
 
   actions {
-    create(sku: SKU, name: string, price: MoneyBRL): Product
-    update(name: string, price: MoneyBRL): Product
+    create(sku: SKU, name: string, price: std.Money): Product
+    update(name: string, price: std.Money): Product
     publish(): Product
     archive(): Product
   }

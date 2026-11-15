@@ -6,7 +6,7 @@ integration Carrier {
   timeout: 20s
 
   operations {
-    quote(shipment: Shipment): MoneyBRL
+    quote(shipment: Shipment): std.Money
     createLabel(shipment: Shipment): TrackingCode
     track(tracking: TrackingCode): TrackingEvent[]
   }

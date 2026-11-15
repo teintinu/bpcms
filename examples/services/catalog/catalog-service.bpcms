@@ -8,4 +8,18 @@ service "example.com/services/catalog" {
   }
   requires { oltp, attachments, units }
   provides { catalog }
+
+  reintroduce std.Currency {
+    values {
+      BRL {
+        title: { pt-BR: "Real", en: "Brazilian real" }
+        prefix: {
+          pt-BR: "R$"
+          en: "BRL"
+        }
+        icon: Brl
+        ordinal: 10
+      }
+    }
+  }
 }

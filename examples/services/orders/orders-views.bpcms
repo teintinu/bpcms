@@ -7,7 +7,7 @@ view OrderForm {
 
   fields {
     customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" }, required }
-    discount: MoneyBRL { title: { pt-BR: "Desconto", en: "Discount" } }
+    discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
     status: OrderStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
   }
 

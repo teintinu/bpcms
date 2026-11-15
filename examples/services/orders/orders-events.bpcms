@@ -5,7 +5,7 @@ event Placed {
   payload {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
     placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
   }
   producer: Order

@@ -5,7 +5,7 @@ event InvoiceIssued {
   payload {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
   producer: Invoice

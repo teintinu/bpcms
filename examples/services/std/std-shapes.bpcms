@@ -661,30 +661,52 @@ shape ZScore {
 
 shape Money {
   title: { pt-BR: "Dinheiro", en: "Money" }
-  base: money
+  base: decimal
+
+  operator +(left: Money, right: Money): Money {
+    if (left.currency != right.currency) {
+      throw Error("E_CURRENCY_MISMATCH");
+    }
+    return new Money{raw: left.raw + right.raw, currency: left.currency};
+  }
+
+  operator -(left: Money, right: Money): Money {
+    if (left.currency != right.currency) {
+      throw Error("E_CURRENCY_MISMATCH");
+    }
+    return new Money{raw: left.raw - right.raw, currency: left.currency};
+  }
+
+  operator *(left: Money, right: number): Money {
+    return new Money{raw: left.raw * right, currency: left.currency};
+  }
+
+  operator *(left: number, right: Money): Money {
+    return new Money{raw: left * right.raw, currency: right.currency};
+  }
+
+  operator /(left: Money, right: number): Money {
+    return new Money{raw: left.raw / right, currency: left.currency};
+  }
+
+  operator /(left: Money, right: Money): number {
+    if (left.currency != right.currency) {
+      throw Error("E_CURRENCY_MISMATCH");
+    }
+    return left.raw / right.raw;
+  }
 }
 
-shape CurrencyCode {
-  title: { pt-BR: "Código de moeda", en: "Currency code" }
-  base: string
-  dimension: currency
-  validate: iso-4217
-
-
-  write(value, out) {
-    out.writeString(value.raw);
-  }
-
-  read(in) {
-    return new CurrencyCode{raw: in.readString()};
-  }
-
-  parse(text, flags) {
-    return new CurrencyCode{raw: text};
-  }
-
-  format(value, flags) {
-    return value.raw;
+shape Currency {
+  title: { pt-BR: "Moeda", en: "Currency" }
+  classification: "https://www.iso.org/iso-4217-currency-codes.html"
+  values {
+    USD { scale: 2 }
+    BRL { scale: 2 }
+    EUR { scale: 2 }
+    JPY { scale: 0 }
+    KWD { scale: 3 }
+    CVE { scale: 2 }
   }
 }
 

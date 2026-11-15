@@ -32,7 +32,7 @@ event ReturnApproved {
   payload {
     returnId: ReturnRequestId { title: { pt-BR: "Devolução", en: "Return" } }
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    refundAmount: MoneyBRL { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
+    refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, currency: BRL }
     approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
   }
   producer: ReturnRequest

@@ -7,9 +7,9 @@ integration PaymentGateway {
   idempotency: header "Idempotency-Key"
 
   operations {
-    authorize(order: Order, amount: MoneyBRL): Payment
+    authorize(order: Order, amount: std.Money): Payment
     capture(paymentId: PaymentId): Payment
-    refund(paymentId: PaymentId, amount: MoneyBRL): Refund
+    refund(paymentId: PaymentId, amount: std.Money): Refund
   }
 
   webhooks {

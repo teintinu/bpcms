@@ -266,11 +266,11 @@ service "example.com/services/catalog" {
   source: registry
   version: 1.2.0
   owner: "Time de Catálogo"
-  // document Product, shape MoneyBRL, view ProductForm, event ProductUpdated: públicos
+  // document Product, shape Money, view ProductForm, event ProductUpdated: públicos
 
   parameter DefaultCurrency {
     title: { pt-BR: "Moeda padrão", en: "Default currency" }
-    type: CurrencyCode
+    type: std.Currency
     source: config
     default: "BRL"
   }
@@ -923,9 +923,9 @@ document Invoice {
     number: InvoiceNumber { unique, lookup }
     customerId: CustomerId { lookup }
     items: InvoiceItem[]
-    subtotal: MoneyBRL
-    tax: MoneyBRL
-    total: MoneyBRL { lookup }
+    subtotal: std.Money
+    tax: std.Money
+    total: std.Money { lookup }
     status: InvoiceStatus
     issuedAt: DateTime?
   }
@@ -964,7 +964,7 @@ document Shipment {
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
     volume: Volume { unit: m3, min: 0 }
-    frete: MoneyBRL?
+    frete: std.Money?
     tracking: TrackingCode? { lookup }
     status: ShipmentStatus { lookup }
     readAt: DateTime?
@@ -1097,7 +1097,7 @@ document MonthlyRevenue {
 
   fields {
     month: YearMonth { lookup }
-    revenue: MoneyBRL { lookup }
+    revenue: std.Money { lookup }
     orderCount: Count
     calculatedAt: DateTime
   }
@@ -1119,17 +1119,14 @@ document MonthlyRevenue {
 ### H.1 Dinheiro com moeda e escala
 
 ```bpcms
-shape MoneyBRL {
-  base: decimal
-  currency: BRL
-  scale: 2
-  parse: locale-number
-  format: currency
-  compare: exact
-  aggregate: sum
-
-  toNumber(value) {
-    return value.raw;
+shape PriceTag {
+  title: { pt-BR: "Etiqueta de preço", en: "Price tag" }
+  fields {
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      scale: 2
+    }
   }
 }
 ```
@@ -1296,11 +1293,11 @@ fields {
   length: std.Length
   volume: std.Volume
   discount: std.Percentage
-  currency: std.CurrencyCode
+  currency: std.Currency
 }
 ```
 
-Ela define 57 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
+Ela define 57 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `std.Currency` é a classificação ISO 4217, completada por `reintroduce`.
 
 ## View
 
@@ -2886,9 +2883,9 @@ integration PaymentGateway {
   idempotency: header "Idempotency-Key"
 
   operations {
-    authorize(order: Order, amount: MoneyBRL): Authorization
+    authorize(order: Order, amount: std.Money): Authorization
     capture(authorizationId: ExternalId): Payment
-    refund(paymentId: ExternalId, amount: MoneyBRL): Refund
+    refund(paymentId: ExternalId, amount: std.Money): Refund
   }
 
   webhooks {

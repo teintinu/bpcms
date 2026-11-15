@@ -9,8 +9,8 @@ document InvoiceItem {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
   }
 
   indexes {
@@ -36,9 +36,9 @@ document Invoice {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     customerId: UserId(citizenId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
-    subtotal: MoneyBRL { title: { pt-BR: "Subtotal", en: "Subtotal" } }
-    tax: MoneyBRL { title: { pt-BR: "Imposto", en: "Tax" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" }, lookup }
+    subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
+    tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
     status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" } }
     issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
     dueAt: DateTime? { title: { pt-BR: "Vence em", en: "Due at" } }
@@ -72,7 +72,7 @@ document CreditNote {
 
   fields {
     invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" }, lookup }
-    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
@@ -103,7 +103,7 @@ document Bill {
 
   fields {
     supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
-    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
     status: BillStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     paidAt: DateTime? { title: { pt-BR: "Pago em", en: "Paid at" } }
@@ -154,7 +154,7 @@ document MonthlyRevenue {
 
   fields {
     month: YearMonth { title: { pt-BR: "Mês", en: "Month" }, lookup }
-    revenue: MoneyBRL { title: { pt-BR: "Receita", en: "Revenue" }, lookup }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
     invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
     calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
   }

@@ -9,8 +9,8 @@ document OrderItem {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup, min: 1, max: 1000 }
-    unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
+    unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
   }
 
   indexes {
@@ -34,9 +34,9 @@ document Order {
   fields {
     customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
     items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
-    subtotal: MoneyBRL { title: { pt-BR: "Subtotal", en: "Subtotal" } }
-    discount: MoneyBRL { title: { pt-BR: "Desconto", en: "Discount" } }
-    total: MoneyBRL { title: { pt-BR: "Total", en: "Total" }, lookup }
+    subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
+    discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
     status: OrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     placedAt: DateTime? { title: { pt-BR: "Realizado em", en: "Placed at" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }

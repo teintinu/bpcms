@@ -7,7 +7,7 @@ view ProductForm {
   fields {
     sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, required }
     name: string { title: { pt-BR: "Nome", en: "Name" }, required }
-    price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" }, required }
+    price: std.Money { title: { pt-BR: "Preço", en: "Price" }, required, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" }, readonly }

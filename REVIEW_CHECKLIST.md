@@ -230,12 +230,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Resultado da inspeção:**
 
-- [x] 30 Shapes de negócio + 57 Shapes std; todos com `title`.
+- [x] 29 Shapes de negócio + 57 Shapes std; todos com `title`.
 - [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
-- [x] `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio.
-- [x] `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode`, `Count` movidos para `bpcms.org/std`.
+- [x] `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio; `MoneyBRL` foi removido.
+- [x] `Mass`, `Length`, `Volume`, `Percentage`, `Count` movidos para `bpcms.org/std`; `Money`/`Currency` vivem na std.
 - [x] Catalog/Identity/Shipping/Inventory/Orders/Billing importam `bpcms.org/std` como `std`.
 - [x] `Email`, `Phone`, `Image` em Citizen.
 - [x] `LocaleTag` em Notifications.
@@ -246,7 +246,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
 - [ ] `default`, `private` e `sensitive` de Shape não têm exemplo no tree; manter, remover ou exemplificar?
 - [ ] `Shape.fields` composto só tem `TrackingEvent`; falta um exemplo com validação/privacidade?
-- [ ] `MoneyBRL` continua em Catalog; os demais tipos de medida foram para std. Fronteira correta?
+- [ ] `std.Money` substitui `MoneyBRL`; `currency` é restrição de field; valor carrega moeda?
 - [ ] `std.Count` substitui o Count de Identity; a migração está correta?
 - [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
 - [ ] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
@@ -255,7 +255,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** 🟡 em revisão de DSL. Migração para std concluída; revisão de Shape pendente.
 
-**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; Mass/Length/Volume/Percentage/Duration implementam `write/read/parse/format/toNumber`; `CurrencyCode` não tem `toNumber`.
+**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
 ## 3. Role ⬜
 
@@ -934,3 +934,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 Próximo: **Shape** 🟡.
 
 Depois de decidir Icon, seguimos para **Shape**.
+
+## Pendências de revisão de keywords
+
+- [ ] `reintroduce`: revisar depois de todas as keywords existentes.
+- [ ] `classification: <url>`: revisar junto com `reintroduce`; por enquanto só na stdlib.
+- [x] `prefix`/`suffix`/`infix` definidos: prefixo/sufixo e infix decimal (CVE).
+- [ ] CPF nao pode ser um tipo, revizar Citizen

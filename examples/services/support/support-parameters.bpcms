@@ -8,7 +8,7 @@ parameter DefaultSla {
 
 parameter RefundLimit {
   title: { pt-BR: "Limite de reembolso", en: "Refund limit" }
-  type: MoneyBRL
+  type: std.Money
   source: config
   default: 500 BRL
   min: 0 BRL

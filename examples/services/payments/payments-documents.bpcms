@@ -8,7 +8,7 @@ document Payment {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
-    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
     status: PaymentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     authorizedAt: DateTime? { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
@@ -42,7 +42,7 @@ document Refund {
 
   fields {
     paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" }, lookup }
-    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, lookup }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: RefundStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }

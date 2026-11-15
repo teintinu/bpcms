@@ -7,7 +7,7 @@ view PaymentForm {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
-    amount: MoneyBRL { title: { pt-BR: "Valor", en: "Amount" }, required }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, required, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" }, required }
   }
 
