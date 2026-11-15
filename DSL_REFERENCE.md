@@ -570,6 +570,7 @@ task RefundPayment {
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
 | `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |
+| `currency` | `currency: BRL` | Restringe/default da moeda de `std.Money`. |
 | `min` / `max` | `min: 0.001, max: 50000` | Faixa validada no field. |
 | `scale` | `scale: 2` | Casas decimais do field. |
 | `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
@@ -626,10 +627,8 @@ document Shipment {
 | `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
-| `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. |
+| `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. Exceção: values-base de `std.Currency` não exigem metadados. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
-| `currency` | `currency: BRL` | Moeda; exige escala e formato. |
-| `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
 | `unit` | `unit: %` | Unidade única; mutuamente exclusivo com `units`. |
@@ -768,6 +767,44 @@ shape Length {
 - `unit` e `units` são mutuamente exclusivos (`E_UNIT_UNITS_CONFLICT`).
 - `Percentage` usa `unit: "%"`.
 
+### 6.1.1.1 Exceção `std.Currency`
+
+`std.Currency` é a única classificação que pode ter values sem `title`, `icon` e `ordinal`:
+
+```bpcms
+shape Currency {
+  classification: "https://www.iso.org/iso-4217-currency-codes.html"
+  values {
+    BRL { numeric: "986", scale: 2 }
+    USD { numeric: "840", scale: 2 }
+  }
+}
+```
+
+- A exceção vale só para `std.Currency`.
+- Para usar uma moeda, o serviço deve completar os metadados com `reintroduce`.
+- Sem `reintroduce`: `E_CURRENCY_METADATA_MISSING`.
+- `reintroduce` adiciona `title`, `icon`, `ordinal` e formatação.
+
+### 6.1.1.2 Shape composto
+
+Shape composto usa serialização JSON canônica por default:
+
+```bpcms
+shape TrackingEvent {
+  fields {
+    at: DateTime
+    status: ShipmentStatus
+    description: string
+  }
+}
+```
+
+- Ordem dos fields = ordem de declaração.
+- `format`/`parse` explícitos sobrescrevem o default.
+- Campos `sensitive` são omitidos/redigidos na serialização pública.
+- Campos `private` não são serializados.
+
 ## 6.1.2 classification e workflow
 
 `base: classification` enumera categorias; `base: workflow` modela estados e transições.
@@ -795,7 +832,7 @@ shape TaxRegimeCode {
 - `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
 - Ordinal continua explícito, 10, 20, 30...
 
-### 6.1.1.1 formula e convert
+### 6.1.1.3 formula e convert
 
 Unidades não lineares usam `formula`:
 
@@ -810,6 +847,20 @@ units {
   }
 }
 ```
+
+Para fórmulas afins invertíveis, aceita-se o shorthand:
+
+```bpcms
+C: {
+  formula: K - 273.15
+}
+```
+
+- `formula: <expr>` mapeia referência → unidade.
+- O compilador infere `from` por inversão.
+- Só vale para expressão afim (`a * x + b`).
+- Se não for invertível, usar o bloco `to/from`.
+- As duas formas são válidas.
 
 Arrow equivalente:
 
@@ -2043,7 +2094,7 @@ shape Currency {
 
 - A stdlib contém os **178 códigos ativos da ISO 4217**.
 - Cada value tem `numeric` e `scale`.
-- `subunitRatio: 5` em MGA e MRU.
+- `subunitRatio: 5` em MGA e MRU; default é `10^scale`.
 - `CurrencyCode` não é Shape separado.
 - `DefaultCurrency` usa `std.Currency`.
 - A moeda usada sem `reintroduce` gera `E_CURRENCY_METADATA_MISSING`.

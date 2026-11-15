@@ -9,6 +9,32 @@ shape SKU {
   format: plain
 }
 
+shape ProductImage {
+  title: { pt-BR: "Imagem do produto", en: "Product image" }
+  base: image
+}
+
+shape ProductVideo {
+  title: { pt-BR: "Vídeo do produto", en: "Product video" }
+  base: video
+}
+
+shape ProductAudio {
+  title: { pt-BR: "Áudio do produto", en: "Product audio" }
+  base: audio
+}
+
+shape ProductManual {
+  title: { pt-BR: "Manual do produto", en: "Product manual" }
+  base: attachment
+  mime: [application/pdf]
+}
+
+shape ProductRichDescription {
+  title: { pt-BR: "Descrição rica", en: "Rich description" }
+  base: richtext
+}
+
 shape ProductStatus {
   title: { pt-BR: "Status do produto", en: "Product status" }
   base: workflow

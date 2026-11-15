@@ -36,6 +36,11 @@ document Product {
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" } }
+    image: ProductImage? { title: { pt-BR: "Imagem", en: "Image" } }
+    video: ProductVideo? { title: { pt-BR: "Vídeo", en: "Video" } }
+    audio: ProductAudio? { title: { pt-BR: "Áudio", en: "Audio" } }
+    manual: ProductManual? { title: { pt-BR: "Manual", en: "Manual" } }
+    richDescription: ProductRichDescription? { title: { pt-BR: "Descrição rica", en: "Rich description" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 

@@ -10,8 +10,10 @@ document Ticket {
     customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
     orderId: OrderId? { title: { pt-BR: "Pedido", en: "Order" } }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
-    description: string { title: { pt-BR: "Descrição", en: "Description" } }
-    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup }
+    description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
+    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
+    internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
+    budget: std.Money? { title: { pt-BR: "Orçamento", en: "Budget" } }
     status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     assignee: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
     slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }

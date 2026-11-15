@@ -222,7 +222,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `index`, `normalize`, `validate`, `sensitive`
 - [ ] `fields { ... }` — shape composto
 - [ ] `default`, `private`
-- [ ] Enum: cada value tem `title` + `icon` + `ordinal`; workflow também `next`; icons são locais ao serviço
+- [ ] Enum: cada value tem `title` + `icon` + `ordinal` (exceto values-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
 - [ ] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [ ] `<Document>Id` é Shape implícito de FK; não declarar
 
@@ -230,7 +230,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Resultado da inspeção:**
 
-- [x] 29 Shapes de negócio + 57 Shapes std; todos com `title`.
+- [x] 34 Shapes de negócio + 57 Shapes std; todos com `title` (exceto values-base de `Currency`).
 - [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
@@ -242,11 +242,14 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `YearMonth` em Billing.
 
 **Pontos para decidir (sem alterar):**
+- [x] `formula: <expr>` e bloco `to/from` aceitos; shorthand só afim invertível.
+- [x] `std.Currency` é exceção: values-base sem `title`/`icon`/`ordinal`; `reintroduce` completa.
+- [x] Mídia exemplificada: `ProductImage`, `ProductVideo`, `ProductAudio`, `ProductManual`, `ProductRichDescription`.
 
 - [ ] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
-- [ ] `default`, `private` e `sensitive` de Shape não têm exemplo no tree; manter, remover ou exemplificar?
-- [ ] `Shape.fields` composto só tem `TrackingEvent`; falta um exemplo com validação/privacidade?
-- [ ] `std.Money` substitui `MoneyBRL`; `currency` é restrição de field; valor carrega moeda?
+- [x] `default`, `private` e `sensitive` exemplificados em `Ticket`; semântica de field.
+- [x] Shape composto tem serialização JSON canônica por default; `format`/`parse` sobrescrevem.
+- [x] `std.Money` substitui `MoneyBRL`; `currency` é restrição de field; valor carrega moeda; multi-moeda exemplificado em `Ticket.budget`.
 - [ ] `std.Count` substitui o Count de Identity; a migração está correta?
 - [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
 - [ ] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
