@@ -1,0 +1,61 @@
+// service: example.com/services/laboratory
+
+icon Patient {
+  title: { pt-BR: "Paciente", en: "Patient" }
+}
+
+icon Support {
+  title: { pt-BR: "Apoio", en: "Support" }
+}
+
+icon Control {
+  title: { pt-BR: "Controle", en: "Control" }
+}
+
+icon Requested {
+  title: { pt-BR: "Solicitado", en: "Requested" }
+}
+
+icon Collected {
+  title: { pt-BR: "Coletada", en: "Collected" }
+}
+
+icon Received {
+  title: { pt-BR: "Recebida", en: "Received" }
+}
+
+icon Processing {
+  title: { pt-BR: "Em processamento", en: "Processing" }
+}
+
+icon Resulted {
+  title: { pt-BR: "Resultada", en: "Resulted" }
+}
+
+icon Referred {
+  title: { pt-BR: "Encaminhada", en: "Referred" }
+}
+
+icon Rejected {
+  title: { pt-BR: "Rejeitada", en: "Rejected" }
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelada", en: "Cancelled" }
+}
+
+icon Hemogram {
+  title: { pt-BR: "Hemograma", en: "Complete blood count" }
+}
+
+icon Glucose {
+  title: { pt-BR: "Glicemia", en: "Glucose" }
+}
+
+icon Culture {
+  title: { pt-BR: "Cultura", en: "Culture" }
+}
+
+icon Hba1c {
+  title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
+}

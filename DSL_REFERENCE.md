@@ -1242,12 +1242,15 @@ view SalesDashboard {
 | `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade. |
 | `inherits` | `inherits: Clerk` | Herda permissões do papel. |
 | `scope` | `scope: store` | Abrangência do papel/organograma. |
+| `roleManagement` | `roleManagement { LabManager manages [Collector, Analyst]; assignment: others-only }` | Papéis que um gerente pode atribuir a outras pessoas. |
+| `manages` | `LabManager manages [Collector, Analyst]` | Relação explícita de gestão de papéis; não concede as permissões do papel gerenciado. |
+| `assignment` | `assignment: others-only` | Atribuição apenas a terceiros; auto-atribuição é sempre proibida. |
 | `organogram` | `organogram <Name> { ... }` | Hierarquia e regras de autorização. |
-| `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; direção de autoridade. |
+| `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. |
 | `fourEyes` | `fourEyes { payment.approve requires Approver and Approver != Analyst }` | Exige segundo ator; pode comparar atores. |
 | `segregation` | `segregation { shipment.pick != shipment.check }` | Impede que o mesmo ator faça as duas ações. |
 | `delegation` | `delegation { Supervisor -> Checker when absent }` | Delegação condicional. |
-| `limits` | `limits { Approver: 50000 BRL; Controller: unlimited }` | Alçada por papel; `unlimited` é explícito. |
+| `limits` | `limits { Approver: std.Money { raw: 50000, currency: BRL }; Controller: unlimited }` | Alçada por papel; `unlimited` é explícito. |
 | `dataMasking` | `dataMasking { Agent: customer.phone masked }` | Mascara campo para o papel. |
 | `signature` | `signature { Pathologist }` | Papel com autoridade de assinatura. |
 | `requires` | `fourEyes { X requires Role }` | Papel/condição exigida. |
@@ -1265,11 +1268,28 @@ role Manager {
 }
 organogram Store {
   title: { pt-BR: "Organograma da loja", en: "Store organogram" }
-  hierarchy { Manager > Clerk > Customer }
+  hierarchy {
+    Manager > Clerk > Customer
+  }
+  roleManagement {
+    Manager manages [Clerk]
+    assignment: others-only
+  }
   fourEyes { refund.approve requires Manager and Manager != Clerk }
   delegation { Manager -> Clerk when absent }
 }
 ```
+
+**Atribuição de papel.** `roleManagement` define autoridade de atribuição, não permissões:
+
+- o gerente pode atribuir apenas papéis listados em `manages`;
+- o alvo recebe as permissões do **papel atribuído**, não as do gerente;
+- o gerente não precisa ter as permissões do papel que gerencia;
+- `assignment: others-only` proíbe o gerente de atribuir qualquer papel a si mesmo;
+- auto-atribuição é proibida mesmo que o papel esteja em `manages`;
+- `manages` não é `inherits` e não é `delegation`;
+- a atribuição é auditada;
+- a operação é `assignRole(target, role)`, com `target != actor`.
 
 ---
 

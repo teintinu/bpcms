@@ -1,0 +1,13 @@
+// service: example.com/services/laboratory
+service "example.com/services/laboratory" {
+  title: { pt-BR: "Laboratório", en: "Laboratory" }
+  version: 1.0.0
+  owner: "Laboratory"
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/citizen" as Citizen
+    service "example.com/services/identity" as Identity
+  }
+  requires { oltp, sync, scheduling, identity, timezone, regionalization, attachments }
+  provides { laboratory }
+}

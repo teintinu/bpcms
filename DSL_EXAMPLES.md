@@ -1139,8 +1139,8 @@ shape PriceTag {
 shape Package {
   title: { pt-BR: "Pacote", en: "Package" }
   fields {
-    weight: std.Mass
-    volume: std.Volume
+    weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
+    volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
   }
 }
 ```
@@ -1153,9 +1153,9 @@ shape Package {
 shape ProductDimensions {
   title: { pt-BR: "Dimensões do produto", en: "Product dimensions" }
   fields {
-    length: std.Length
-    width: std.Length
-    height: std.Length
+    length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
+    width: std.Length { title: { pt-BR: "Largura", en: "Width" } }
+    height: std.Length { title: { pt-BR: "Altura", en: "Height" } }
   }
 }
 ```
@@ -1168,7 +1168,7 @@ shape ProductDimensions {
 shape TemperatureReading {
   title: { pt-BR: "Leitura de temperatura", en: "Temperature reading" }
   fields {
-    value: std.Temperature
+    value: std.Temperature { title: { pt-BR: "Valor", en: "Value" } }
   }
 }
 ```
@@ -1181,7 +1181,7 @@ shape TemperatureReading {
 shape DiscountPolicy {
   title: { pt-BR: "Política de desconto", en: "Discount policy" }
   fields {
-    rate: std.Percentage
+    rate: std.Percentage { title: { pt-BR: "Taxa", en: "Rate" } }
   }
 }
 ```
@@ -1226,14 +1226,14 @@ shape Email {
 shape Address {
   title: { pt-BR: "Endereço", en: "Address" }
   fields {
-    street: string
-    number: string
-    complement: string?
-    district: string
-    city: string
-    state: StateCode
-    zip: CEP
-    country: CountryCode { default: BR }
+    street: string { title: { pt-BR: "Rua", en: "Street" } }
+    number: string { title: { pt-BR: "Número", en: "Number" } }
+    complement: string? { title: { pt-BR: "Complemento", en: "Complement" } }
+    district: string { title: { pt-BR: "Bairro", en: "District" } }
+    city: string { title: { pt-BR: "Cidade", en: "City" } }
+    state: StateCode { title: { pt-BR: "Estado", en: "State" } }
+    zip: CEP { title: { pt-BR: "CEP", en: "ZIP" } }
+    country: CountryCode { title: { pt-BR: "País", en: "Country" }, default: BR }
   }
 
   index: [city, state]
@@ -1442,18 +1442,24 @@ view SupportKanban {
 
 ```bpcms
 role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [catalog.view, order.create, order.viewOwn]
 }
 role Clerk {
+  title: { pt-BR: "Atendente", en: "Clerk" }
   inherits: Customer
   permissions: [order.manage, customer.view]
 }
 role Manager {
+  title: { pt-BR: "Gerente", en: "Manager" }
   inherits: Clerk
   permissions: [customer.manage, report.view, refund.approve]
 }
 organogram Store {
-  hierarchy { Manager > Clerk > Customer }
+  title: { pt-BR: "Organograma da loja", en: "Store organogram" }
+  hierarchy {
+    Manager > Clerk > Customer
+  }
   scope: store
 }
 ```
@@ -1464,22 +1470,29 @@ organogram Store {
 
 ```bpcms
 role Reception {
+  title: { pt-BR: "Recepção", en: "Reception" }
   permissions: [patient.create, appointment.schedule]
 }
 role Nurse {
+  title: { pt-BR: "Enfermeiro", en: "Nurse" }
   inherits: Reception
   permissions: [exam.collect, patient.viewClinical]
 }
 role Doctor {
+  title: { pt-BR: "Médico", en: "Doctor" }
   inherits: Nurse
   permissions: [prescription.create, exam.request]
 }
 role Manager {
+  title: { pt-BR: "Gerente", en: "Manager" }
   inherits: Doctor
   permissions: [billing.view, report.view]
 }
 organogram Clinic {
-  hierarchy { Manager > Doctor > Nurse > Reception }
+  title: { pt-BR: "Organograma da clínica", en: "Clinic organogram" }
+  hierarchy {
+    Manager > Doctor > Nurse > Reception
+  }
   fourEyes { prescription.create requires Doctor }
 }
 ```
@@ -1490,16 +1503,23 @@ organogram Clinic {
 
 ```bpcms
 role Picker {
+  title: { pt-BR: "Separador", en: "Picker" }
   permissions: [shipment.pick]
 }
 role Checker {
+  title: { pt-BR: "Conferente", en: "Checker" }
   permissions: [shipment.check, shipment.reject]
 }
 role Supervisor {
+  title: { pt-BR: "Supervisor", en: "Supervisor" }
   permissions: [shipment.override, report.view]
 }
 organogram Warehouse {
-  hierarchy { Supervisor > Checker; Supervisor > Picker }
+  title: { pt-BR: "Organograma do armazém", en: "Warehouse organogram" }
+  hierarchy {
+    Supervisor > Checker
+    Supervisor > Picker
+  }
   segregation { shipment.pick != shipment.check }
   delegation { Supervisor -> Checker when absent }
 }
@@ -1511,19 +1531,25 @@ organogram Warehouse {
 
 ```bpcms
 role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
   permissions: [invoice.create, payment.request]
 }
 role Approver {
+  title: { pt-BR: "Aprovador", en: "Approver" }
   permissions: [payment.approve, invoice.cancel]
 }
 role Controller {
+  title: { pt-BR: "Controlador", en: "Controller" }
   permissions: [report.view, audit.view, limit.override]
 }
 organogram Finance {
-  hierarchy { Controller > Approver > Analyst }
+  title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
+  hierarchy {
+    Controller > Approver > Analyst
+  }
   fourEyes { payment.approve requires Approver and Approver != Analyst }
   limits {
-    Approver: 50000 BRL
+    Approver: std.Money { raw: 50000, currency: BRL }
     Controller: unlimited
   }
 }
@@ -1535,18 +1561,24 @@ organogram Finance {
 
 ```bpcms
 role Agent {
+  title: { pt-BR: "Agente", en: "Agent" }
   permissions: [ticket.view, ticket.comment, ticket.assign]
 }
 role Lead {
+  title: { pt-BR: "Líder", en: "Lead" }
   inherits: Agent
   permissions: [ticket.escalate, report.view]
 }
 role Admin {
+  title: { pt-BR: "Administrador", en: "Admin" }
   inherits: Lead
   permissions: [user.manage, ticket.delete]
 }
 organogram Support {
-  hierarchy { Admin > Lead > Agent }
+  title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
+  hierarchy {
+    Admin > Lead > Agent
+  }
   delegation { Lead -> Agent when absent }
   dataMasking { Agent: customer.phone masked }
 }
@@ -1558,22 +1590,93 @@ organogram Support {
 
 ```bpcms
 role Collector {
+  title: { pt-BR: "Coletador", en: "Collector" }
   permissions: [sample.collect, exam.viewOwn]
 }
 role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
   permissions: [exam.result, exam.viewClinical]
 }
 role Pathologist {
+  title: { pt-BR: "Patologista", en: "Pathologist" }
   permissions: [exam.review, exam.release]
 }
 organogram Lab {
-  hierarchy { Pathologist > Analyst > Collector }
+  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
+  hierarchy {
+    Pathologist > Analyst > Collector
+  }
   fourEyes { exam.release requires Pathologist and Pathologist != Analyst }
   signature { Pathologist }
 }
 ```
 
 *Valida: autoridade de assinatura, revisão por outro ator e hierarquia.*
+
+### R.7 Laboratório com apoio e amostras
+
+```bpcms
+role Collector {
+  title: { pt-BR: "Coletador", en: "Collector" }
+  permissions: [
+    sample.collect.hemogram,
+    sample.collect.glucose,
+    exam.perform.hemogram
+  ]
+}
+
+role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
+  inherits: Collector
+  permissions: [
+    sample.collect.culture,
+    sample.collect.hba1c,
+    exam.perform.culture,
+    exam.perform.hba1c
+  ]
+}
+
+role Pathologist {
+  title: { pt-BR: "Patologista", en: "Pathologist" }
+  permissions: [exam.review, exam.release, result.release]
+}
+
+role SupportLiaison {
+  title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
+  permissions: [sample.receive, support.refer]
+}
+
+role LabManager {
+  title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
+  inherits: Pathologist
+  permissions: [lab.manage, support.refer]
+}
+
+organogram Laboratory {
+  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
+  scope: laboratory
+
+  hierarchy {
+    LabManager > Pathologist > Analyst > Collector
+    LabManager > SupportLiaison
+  }
+
+  roleManagement {
+    LabManager manages [Collector, Analyst, SupportLiaison]
+    assignment: others-only
+  }
+
+  segregation { exam.perform != exam.release }
+  delegation { LabManager -> Pathologist when absent }
+  signature { Pathologist }
+}
+```
+
+*Valida: coletor que também executa alguns exames, analista com escopo maior, apoio externo e assinatura.*
+
+No serviço `laboratory`, `Sample.kind` distingue `patient`, `support` e `control`. Amostras de apoio e controle não referenciam paciente; usam `supportLabId`/`controlLot`.
+
+O `LabManager` pode atribuir `Collector`, `Analyst` e `SupportLiaison` a outras pessoas, mas nunca a si mesmo. Quem recebe a role ganha as permissões da role atribuída, não as permissões do gerente; o gerente não precisa ter as permissões da role gerenciada.
 
 # Descoberta
 

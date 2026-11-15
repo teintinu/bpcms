@@ -1,4 +1,9 @@
 // service: example.com/services/support
+role Manager {
+  title: { pt-BR: "Gerente de suporte", en: "Support manager" }
+  permissions: [ticket.view, ticket.assign, ticket.escalate, report.view]
+}
+
 role SupportAgent {
   title: { pt-BR: "Agente de suporte", en: "Support agent" }
   permissions: [ticket.view, ticket.comment, ticket.assign, return.review]

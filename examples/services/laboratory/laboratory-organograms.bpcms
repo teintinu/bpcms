@@ -1,0 +1,66 @@
+// service: example.com/services/laboratory
+
+role Collector {
+  title: { pt-BR: "Coletador", en: "Collector" }
+  permissions: [
+    sample.collect.hemogram,
+    sample.collect.glucose,
+    sample.view,
+    exam.perform.hemogram
+  ]
+}
+
+role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
+  inherits: Collector
+  permissions: [
+    sample.collect.culture,
+    sample.collect.hba1c,
+    exam.perform.culture,
+    exam.perform.hba1c,
+    result.enter
+  ]
+}
+
+role Pathologist {
+  title: { pt-BR: "Patologista", en: "Pathologist" }
+  permissions: [exam.review, exam.release, result.release]
+}
+
+role SupportLiaison {
+  title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
+  permissions: [sample.receive, support.refer]
+}
+
+role LabManager {
+  title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
+  inherits: Pathologist
+  permissions: [lab.manage, support.refer]
+}
+
+organogram Laboratory {
+  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
+  scope: laboratory
+
+  hierarchy {
+    LabManager > Pathologist > Analyst > Collector
+    LabManager > SupportLiaison
+  }
+
+  roleManagement {
+    LabManager manages [Collector, Analyst, SupportLiaison]
+    assignment: others-only
+  }
+
+  segregation {
+    exam.perform != exam.release
+  }
+
+  delegation {
+    LabManager -> Pathologist when absent
+  }
+
+  signature {
+    Pathologist
+  }
+}

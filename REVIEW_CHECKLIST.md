@@ -187,50 +187,50 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Decisão:** manter `symbol`/`set` fora da DSL; resolução visual fica no builder/Theme.
 
-## 2. Shape 🟡
+## 2. Shape ✅
 
 **Depende de:** Icon (values enumerados), tipos embutidos.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `shape <Name> { ... }`
-- [ ] `title: I18n`
-- [ ] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
-- [ ] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
-- [ ] `currency`
-- [ ] `dimension`, `units { unidade: { factor, title } }`
-- [ ] `units` titles têm plural I18n e `format` escolhe `one`/`other`
-- [ ] `unit`, `min`, `max`, `scale` e `precision` são do field (exceto `unit` em Shape de unidade única)
-- [ ] `unit` e `units` mutuamente exclusivos; `Percentage` usa `unit: "%"`
-- [ ] `format` auto-seleciona unidade; `flags.unit` força
-- [ ] `maxLength`; `min`/`max`/`scale` no field
-- [ ] `initial` único em `workflow`; `next` obrigatório; `[]` terminal
-- [ ] `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`
-- [ ] `parse`, `format`, `compare`, `aggregate`
-- [ ] `write(value, out)` com `out` inferido como `streamWriter`; `format(value, flags)` com `value` explícito; `read(in)` com `in` inferido como `streamReader`; `void` inferido
-- [ ] `new Shape{raw, unit}` e shorthand de propriedades
-- [ ] Erro de tipo/propriedade em `new` é `E_TYPE`/`E_CONSTRUCTOR_PROPERTY`
-- [ ] `<name>(...)` sem keyword `method`; compilador detecta por `(`
-- [ ] Argumentos obrigatórios; tipos/retorno explícitos ou inferidos
-- [ ] Exemplos de métodos com tipos explícitos, inferidos e mistos
-- [ ] `toNumber(value)` só em Shapes numéricos
-- [ ] `toOrdinal(value)` é gerado automaticamente em classification/workflow; não aparece no código
-- [ ] `Duration` em std; `Length / Duration -> Speed`
-- [ ] `format`/`parse` de compostos exigem método próprio
-- [ ] `convert` inteligente; `formula` com `to`/`from`
-- [ ] `format` com `unitStyle: short | long`; `parse` exige unidade compatível
-- [ ] `index`, `normalize`, `validate`, `sensitive`
-- [ ] `fields { ... }` — shape composto
-- [ ] `default`, `private`
-- [ ] Enum: cada value tem `title` + `icon` + `ordinal` (exceto values-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
-- [ ] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
-- [ ] `<Document>Id` é Shape implícito de FK; não declarar
+- [x] `shape <Name> { ... }`
+- [x] `title: I18n`
+- [x] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
+- [x] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
+- [x] `currency`
+- [x] `dimension`, `units { unidade: { factor, title } }`
+- [x] `units` titles têm plural I18n e `format` escolhe `one`/`other`
+- [x] `unit`, `min`, `max`, `scale` e `precision` são do field (exceto `unit` em Shape de unidade única)
+- [x] `unit` e `units` mutuamente exclusivos; `Percentage` usa `unit: "%"`
+- [x] `format` auto-seleciona unidade; `flags.unit` força
+- [x] `maxLength`; `min`/`max`/`scale` no field
+- [x] `initial` único em `workflow`; `next` obrigatório; `[]` terminal
+- [x] `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`
+- [x] `parse`, `format`, `compare`, `aggregate`
+- [x] `write(value, out)` com `out` inferido como `streamWriter`; `format(value, flags)` com `value` explícito; `read(in)` com `in` inferido como `streamReader`; `void` inferido
+- [x] `new Shape{raw, unit}` e shorthand de propriedades
+- [x] Erro de tipo/propriedade em `new` é `E_TYPE`/`E_CONSTRUCTOR_PROPERTY`
+- [x] `<name>(...)` sem keyword `method`; compilador detecta por `(`
+- [x] Argumentos obrigatórios; tipos/retorno explícitos ou inferidos
+- [x] Exemplos de métodos com tipos explícitos, inferidos e mistos
+- [x] `toNumber(value)` só em Shapes numéricos
+- [x] `toOrdinal(value)` é gerado automaticamente em classification/workflow; não aparece no código
+- [x] `Duration` em std; `Length / Duration -> Speed`
+- [x] `format`/`parse` de compostos exigem método próprio
+- [x] `convert` inteligente; `formula` com `to`/`from`
+- [x] `format` com `unitStyle: short | long`; `parse` exige unidade compatível
+- [x] `index`, `normalize`, `validate`, `sensitive`
+- [x] `fields { ... }` — shape composto
+- [x] `default`, `private`
+- [x] Enum: cada value tem `title` + `icon` + `ordinal` (exceto values-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
+- [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
+- [x] `<Document>Id` é Shape implícito de FK; não declarar
 
 **Exemplos:** H.1–H.9; `catalog-shapes`, `identity-shapes`, `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
 
 **Resultado da inspeção:**
 
-- [x] 34 Shapes de negócio + 57 Shapes std; todos com `title` (exceto values-base de `Currency`).
+- [x] 39 Shapes de negócio + 57 Shapes std; todos com `title` (exceto values-base de `Currency`).
 - [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
@@ -249,21 +249,23 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `Address.format` formata BR/US conforme `std.regionalization`.
 - [x] Mídia exemplificada: `ProductImage`, `ProductVideo`, `ProductAudio`, `ProductManual`, `ProductRichDescription`.
 
-- [ ] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
+- [x] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
 - [x] `default`, `private` e `sensitive` exemplificados em `Ticket`; semântica de field.
 - [x] Shape composto tem serialização JSON canônica por default; `format`/`parse` sobrescrevem.
 - [x] `std.Money` substitui `MoneyBRL`; `currency` é restrição de field; valor carrega moeda; multi-moeda exemplificado em `Ticket.budget`.
-- [ ] `std.Count` substitui o Count de Identity; a migração está correta?
-- [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
-- [ ] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
-- [ ] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
-- [ ] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
+- [x] `std.Count` substitui o Count de Identity; a migração está correta?
+- [x] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
+- [x] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
+- [x] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
+- [x] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
 
-**Status:** 🟡 em revisão de DSL. Migração para std concluída; revisão de Shape pendente.
+**Status:** ✅ revisado e aprovado para a v0.1.
+
+**Decisões:** Shape base + campos; moeda em `Money`/`Currency`; `formula` block ou shorthand afim; `Currency` sem `title`/`icon`/`ordinal` e sem `toOrdinal`, stream/format/parse como código string; composto com JSON canônico e `format`/`parse` sobrescrevíveis; `sensitive`/`maxLength` default no Shape com override no field; `default`/`private` no field; 39 Shapes de negócio + 57 std; 178 moedas ISO.
 
 **Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
-## 3. Role ⬜
+## 3. Role 🟡
 
 **Depende de:** permissões/capabilities.
 
@@ -273,7 +275,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `title: I18n`
 - [ ] `permissions: [...]`
 - [ ] `inherits: Role`
-- [ ] `scope`
+- [x] `scope`
+- [ ] `roleManagement` / `manages`
+- [ ] `assignment: others-only`; auto-atribuição proibida
 - [ ] Papel público; sem `private` de topo
 - [ ] Papel definido no serviço ou no organogram
 
@@ -285,8 +289,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `permissions` é lista de namespaces ou catálogo?
 - [ ] Herança de papel é suficiente?
 - [ ] Role e organogram no mesmo arquivo está funcionando?
+- [ ] O gerente atribui apenas papéis em `manages`, nunca a si mesmo?
+- [ ] As permissões do papel atribuído são independentes das permissões do gerente?
 
-**Status:** ⬜ pendente.
+**Status:** 🟡 em revisão.
 
 ## 4. Organogram ⬜
 
@@ -937,9 +943,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-Próximo: **Shape** 🟡.
+Próximo: **Role** 🟡.
 
-Depois de decidir Icon, seguimos para **Shape**.
+Shape revisado; seguimos para **Role**.
 
 ## Pendências de revisão de keywords
 

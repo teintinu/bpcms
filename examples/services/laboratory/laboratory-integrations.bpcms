@@ -1,0 +1,13 @@
+// service: example.com/services/laboratory
+
+integration SupportLabGateway {
+  protocol: rest
+  baseUrl: env.SUPPORT_LAB_URL
+  auth: oauth2
+  timeout: 20s
+
+  operations {
+    sendSample(sample: Sample): string
+    receiveResult(sampleId: SampleId): ExamResult
+  }
+}

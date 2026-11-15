@@ -1,0 +1,102 @@
+// service: example.com/services/laboratory
+
+document SupportLab {
+  title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  audit: true
+
+  fields {
+    name: string { title: { pt-BR: "Nome", en: "Name" }, required, lookup }
+    accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
+    active: boolean { title: { pt-BR: "Ativo", en: "Active" } }
+  }
+
+  actions {
+    activate(): SupportLab
+    deactivate(): SupportLab
+  }
+}
+
+document Sample {
+  title: { pt-BR: "Amostra", en: "Sample" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  audit: true
+
+  fields {
+    code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
+    patientId: CitizenId? { title: { pt-BR: "Paciente", en: "Patient" }, lookup }
+    supportLabId: SupportLabId? { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+    controlLot: string? { title: { pt-BR: "Lote de controle", en: "Control lot" } }
+    status: SampleStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
+    collectedBy: UserId { title: { pt-BR: "Coletada por", en: "Collected by" } }
+  }
+
+  rules {
+    kind == patient implies patientId != null
+    kind == support implies supportLabId != null
+    kind == control implies controlLot != null
+  }
+
+  actions {
+    collect(by: UserId): Sample
+    receive(): Sample
+    refer(lab: SupportLabId): Sample
+  }
+}
+
+document ExamOrder {
+  title: { pt-BR: "Pedido de exame", en: "Exam order" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  audit: true
+
+  fields {
+    sampleId: SampleId { title: { pt-BR: "Amostra", en: "Sample" }, lookup }
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
+    status: ExamOrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    assignedTo: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
+    referredTo: SupportLabId? { title: { pt-BR: "Encaminhado para", en: "Referred to" } }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    resultedAt: DateTime? { title: { pt-BR: "Resultado em", en: "Resulted at" } }
+  }
+
+  rules {
+    status == resulted implies resultedAt != null
+    status == referred implies referredTo != null
+  }
+
+  actions {
+    assign(user: UserId): ExamOrder
+    start(): ExamOrder
+    refer(lab: SupportLabId): ExamOrder
+    result(): ExamOrder
+  }
+}
+
+document ExamResult {
+  title: { pt-BR: "Resultado de exame", en: "Exam result" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  audit: true
+
+  fields {
+    examOrderId: ExamOrderId { title: { pt-BR: "Pedido", en: "Exam order" }, lookup }
+    sampleId: SampleId { title: { pt-BR: "Amostra", en: "Sample" }, lookup }
+    value: string { title: { pt-BR: "Valor", en: "Value" } }
+    unit: string? { title: { pt-BR: "Unidade", en: "Unit" } }
+    releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
+    releasedBy: UserId { title: { pt-BR: "Liberado por", en: "Released by" } }
+  }
+
+  actions {
+    release(by: UserId): ExamResult
+  }
+}
