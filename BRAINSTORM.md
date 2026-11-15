@@ -1732,7 +1732,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-55`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-56`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1776,6 +1776,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-038 | Enum values têm `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
 | D-044 | Shape tem `write/read` em stream, `format/parse` com flags, `toNumber` e métodos próprios; `convert` removido | ✅ | baseline atual |
 | D-045 | `units` no Shape com fatores; `unit`/`min`/`precision` no field; sem `convert` | ✅ | baseline atual |
+| D-046 | I18n aceita `PluralForms`; units carregam plural no `title` | ✅ | baseline atual |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
@@ -1845,6 +1846,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-53** | Onde ficam medidas e constantes padrão? | **Em `bpcms.org/std`**, pseudo-serviço do construtor; import obrigatório; uso `std.Mass`, `std.Length`, etc.; sem lock/endpoint. | Evita redefinir unidades e tipos universais em cada serviço. | ✅ |
 | **B-54** | Como Shape serializa, formata e expõe valor? | **`stream` canônico** com `write/read`, `format/parse` com flags, `toNumber(value)` e métodos próprios em expressão TypeScript-like. `convert` removido. | Contrato único para binário, UI e métodos. | ✅ |
 | **B-55** | Onde ficam unidade, faixa e precisão? | **No field**, não no Shape. O Shape declara `units` com fatores; `unit`, `min` e `precision` são opcionais no field. `toNumber(value)` não tem default; `format` auto-seleciona unidade. | Shape é tipo; field é uso. | ✅ |
+| **B-56** | Como representar plural? | **Dentro do I18n**: cada locale pode ser string ou `PluralForms` CLDR (`one`, `other`, `many`...); `other` obrigatório. Units usam `title` com plural, sem campo `plural` separado. | Plural é tradução, não semântica de unidade. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1866,7 +1868,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-55) sem lacunas.
+- [x] Decisões de baseline (B-01…B-56) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

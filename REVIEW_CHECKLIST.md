@@ -105,6 +105,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `title: I18n` obrigatório onde a regra exige: service, shape, document, field, view, event, parameter, role, organogram, icon; application.
 - [ ] Campos têm `title`; payloads de evento têm `title`; values de enum têm `title` + `icon`.
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
+- [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
+- [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
 - [ ] Nomes de arquivos em kebab-case; referências em camelCase; subpastas são namespaces de todos os artefatos.
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
 - [ ] Icons sem prefixo `Icon`; iguais em serviços diferentes são permitidos; duplicados no mesmo serviço são erro.
@@ -195,13 +197,16 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `base: decimal | integer | text`
 - [ ] `values { <value> { title; icon; ordinal } }` — enum; ordinal 10, 20, 30...
 - [ ] `currency`, `scale`
-- [ ] `dimension`, `units { unidade: { factor } }`
+- [ ] `dimension`, `units { unidade: { factor, title } }`
+- [ ] `units` titles têm plural I18n e `format` escolhe `one`/`other`
 - [ ] `unit`, `min` e `precision` são do field, não do Shape
 - [ ] `format` auto-seleciona unidade; `flags.unit` força
 - [ ] `Convert` não existe
 - [ ] `min`/`max`, `maxLength`
 - [ ] `parse`, `format`, `compare`, `aggregate`
-- [ ] `write(value, stream)`, `read(stream)`
+- [ ] `write(value, stream)`, `read(in)` com `in` inferido como `StreamReader`
+- [ ] `new Shape{raw, unit}` e shorthand de propriedades
+- [ ] Erro de tipo/propriedade em `new` é `E_TYPE`/`E_CONSTRUCTOR_PROPERTY`
 - [ ] `method <name>(...): <Type> { ... }` com expressão completa
 - [ ] `toNumber(value): number` por Shape; medidas de `bpcms.org/std` declaram explicitamente
 - [ ] `format`/`parse` de compostos exigem método próprio

@@ -6,21 +6,111 @@ shape Length {
   base: decimal
   dimension: length
   units {
-    m: { factor: 1 }
-    cm: { factor: 0.01 }
-    mm: { factor: 0.001 }
-    um: { factor: 1e-06 }
-    nm: { factor: 1e-09 }
-    km: { factor: 1000 }
-    in: { factor: 0.0254 }
-    ft: { factor: 0.3048 }
-    yd: { factor: 0.9144 }
-    mi: { factor: 1609.344 }
-    nmi: { factor: 1852 }
-    AU: { factor: 149597870700 }
-    ly: { factor: 9460730472580800 }
-    pc: { factor: 3.085677581e+16 }
-    angstrom: { factor: 1e-10 }
+    m: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro", other: "metros" }
+        en: { one: "meter", other: "meters" }
+      }
+    }
+    cm: {
+      factor: 0.01
+      title: {
+        pt-BR: { one: "centímetro", other: "centímetros" }
+        en: { one: "centimeter", other: "centimeters" }
+      }
+    }
+    mm: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milímetro", other: "milímetros" }
+        en: { one: "millimeter", other: "millimeters" }
+      }
+    }
+    um: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "micrômetro", other: "micrômetros" }
+        en: { one: "micrometer", other: "micrometers" }
+      }
+    }
+    nm: {
+      factor: 1e-09
+      title: {
+        pt-BR: { one: "nanômetro", other: "nanômetros" }
+        en: { one: "nanometer", other: "nanometers" }
+      }
+    }
+    km: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilômetro", other: "quilômetros" }
+        en: { one: "kilometer", other: "kilometers" }
+      }
+    }
+    in: {
+      factor: 0.0254
+      title: {
+        pt-BR: { one: "polegada", other: "polegadas" }
+        en: { one: "inch", other: "inches" }
+      }
+    }
+    ft: {
+      factor: 0.3048
+      title: {
+        pt-BR: { one: "pé", other: "pés" }
+        en: { one: "foot", other: "feet" }
+      }
+    }
+    yd: {
+      factor: 0.9144
+      title: {
+        pt-BR: { one: "jarda", other: "jardas" }
+        en: { one: "yard", other: "yards" }
+      }
+    }
+    mi: {
+      factor: 1609.344
+      title: {
+        pt-BR: { one: "milha", other: "milhas" }
+        en: { one: "mile", other: "miles" }
+      }
+    }
+    nmi: {
+      factor: 1852
+      title: {
+        pt-BR: { one: "milha náutica", other: "milhas náuticas" }
+        en: { one: "nautical mile", other: "nautical miles" }
+      }
+    }
+    AU: {
+      factor: 149597870700
+      title: {
+        pt-BR: { one: "unidade astronômica", other: "unidades astronômicas" }
+        en: { one: "astronomical unit", other: "astronomical units" }
+      }
+    }
+    ly: {
+      factor: 9460730472580800
+      title: {
+        pt-BR: { one: "ano-luz", other: "anos-luz" }
+        en: { one: "light-year", other: "light-years" }
+      }
+    }
+    pc: {
+      factor: 3.085677581e+16
+      title: {
+        pt-BR: { one: "parsec", other: "parsecs" }
+        en: { one: "parsec", other: "parsecs" }
+      }
+    }
+    angstrom: {
+      factor: 1e-10
+      title: {
+        pt-BR: { one: "angstrom", other: "angstroms" }
+        en: { one: "angstrom", other: "angstroms" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -36,15 +126,16 @@ shape Length {
     out.writeDouble(value.raw);
   }
 
-  method read(in: stream): Length {
+  method read(in): Length {
     const unit = in.readString();
     const raw = in.readDouble();
-    return Length.fromRaw(raw, unit);
+    return new Length{raw, unit};
   }
 
   method parse(text: string, flags: FormatFlags): Length {
     const unit = flags.unit ?? m;
-    return Length.fromRaw(ParseReal(text, unit), unit);
+    const raw = ParseReal(text, unit);
+    return new Length{raw, unit};
   }
 
   method format(flags: FormatFlags): string {
@@ -59,19 +150,97 @@ shape Mass {
   base: decimal
   dimension: mass
   units {
-    kg: { factor: 1000 }
-    g: { factor: 1 }
-    mg: { factor: 0.001 }
-    ug: { factor: 0.000001 }
-    µg: { factor: 0.000001 }
-    t: { factor: 1000000 }
-    lb: { factor: 453.59237 }
-    oz: { factor: 28.349523125 }
-    st: { factor: 6350.29318 }
-    ton: { factor: 907184.74 }
-    ct: { factor: 0.2 }
-    Da: { factor: 1.66053904e-24 }
-    Msun: { factor: 1.988475e33 }
+    kg: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilograma", other: "quilogramas" }
+        en: { one: "kilogram", other: "kilograms" }
+      }
+    }
+    g: {
+      factor: 1
+      title: {
+        pt-BR: { one: "grama", other: "gramas" }
+        en: { one: "gram", other: "grams" }
+      }
+    }
+    mg: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "miligrama", other: "miligramas" }
+        en: { one: "milligram", other: "milligrams" }
+      }
+    }
+    ug: {
+      factor: 0.000001
+      title: {
+        pt-BR: { one: "micrograma", other: "microgramas" }
+        en: { one: "microgram", other: "micrograms" }
+      }
+    }
+    µg: {
+      factor: 0.000001
+      title: {
+        pt-BR: { one: "micrograma", other: "microgramas" }
+        en: { one: "microgram", other: "micrograms" }
+      }
+    }
+    t: {
+      factor: 1000000
+      title: {
+        pt-BR: { one: "tonelada métrica", other: "toneladas métricas" }
+        en: { one: "metric ton", other: "metric tons" }
+      }
+    }
+    lb: {
+      factor: 453.59237
+      title: {
+        pt-BR: { one: "libra", other: "libras" }
+        en: { one: "pound", other: "pounds" }
+      }
+    }
+    oz: {
+      factor: 28.349523125
+      title: {
+        pt-BR: { one: "onça", other: "onças" }
+        en: { one: "ounce", other: "ounces" }
+      }
+    }
+    st: {
+      factor: 6350.29318
+      title: {
+        pt-BR: { one: "stone", other: "stones" }
+        en: { one: "stone", other: "stones" }
+      }
+    }
+    ton: {
+      factor: 907184.74
+      title: {
+        pt-BR: { one: "tonelada curta", other: "toneladas curtas" }
+        en: { one: "short ton", other: "short tons" }
+      }
+    }
+    ct: {
+      factor: 0.2
+      title: {
+        pt-BR: { one: "quilate", other: "quilates" }
+        en: { one: "carat", other: "carats" }
+      }
+    }
+    Da: {
+      factor: 1.66053904e-24
+      title: {
+        pt-BR: { one: "dalton", other: "daltons" }
+        en: { one: "dalton", other: "daltons" }
+      }
+    }
+    Msun: {
+      factor: 1.988475e33
+      title: {
+        pt-BR: { one: "massa solar", other: "massas solares" }
+        en: { one: "solar mass", other: "solar masses" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -87,15 +256,16 @@ shape Mass {
     out.writeDouble(value.raw);
   }
 
-  method read(in: stream): Mass {
+  method read(in): Mass {
     const unit = in.readString();
     const raw = in.readDouble();
-    return Mass.fromRaw(raw, unit);
+    return new Mass{raw, unit};
   }
 
   method parse(text: string, flags: FormatFlags): Mass {
     const unit = flags.unit ?? g;
-    return Mass.fromRaw(ParseReal(text, unit), unit);
+    const raw = ParseReal(text, unit);
+    return new Mass{raw, unit};
   }
 
   method format(flags: FormatFlags): string {
@@ -110,19 +280,97 @@ shape Volume {
   base: decimal
   dimension: volume
   units {
-    m3: { factor: 1 }
-    L: { factor: 0.001 }
-    mL: { factor: 0.000001 }
-    cm3: { factor: 0.000001 }
-    mm3: { factor: 1e-09 }
-    gal: { factor: 0.003785411784 }
-    qt: { factor: 0.000946352946 }
-    pt: { factor: 0.000473176473 }
-    fl_oz: { factor: 0.0000295735295625 }
-    tbsp: { factor: 0.0000147867647813 }
-    tsp: { factor: 0.00000492892159375 }
-    bbl: { factor: 0.158987294928 }
-    bu: { factor: 0.03523907016688 }
+    m3: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro cúbico", other: "metros cúbicos" }
+        en: { one: "cubic meter", other: "cubic meters" }
+      }
+    }
+    L: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "litro", other: "litros" }
+        en: { one: "liter", other: "liters" }
+      }
+    }
+    mL: {
+      factor: 0.000001
+      title: {
+        pt-BR: { one: "mililitro", other: "mililitros" }
+        en: { one: "milliliter", other: "milliliters" }
+      }
+    }
+    cm3: {
+      factor: 0.000001
+      title: {
+        pt-BR: { one: "centímetro cúbico", other: "centímetros cúbicos" }
+        en: { one: "cubic centimeter", other: "cubic centimeters" }
+      }
+    }
+    mm3: {
+      factor: 1e-09
+      title: {
+        pt-BR: { one: "milímetro cúbico", other: "milímetros cúbicos" }
+        en: { one: "cubic millimeter", other: "cubic millimeters" }
+      }
+    }
+    gal: {
+      factor: 0.003785411784
+      title: {
+        pt-BR: { one: "galão", other: "galões" }
+        en: { one: "gallon", other: "gallons" }
+      }
+    }
+    qt: {
+      factor: 0.000946352946
+      title: {
+        pt-BR: { one: "quarto", other: "quartos" }
+        en: { one: "quart", other: "quarts" }
+      }
+    }
+    pt: {
+      factor: 0.000473176473
+      title: {
+        pt-BR: { one: "pint", other: "pints" }
+        en: { one: "pint", other: "pints" }
+      }
+    }
+    fl_oz: {
+      factor: 0.0000295735295625
+      title: {
+        pt-BR: { one: "onça líquida", other: "onças líquidas" }
+        en: { one: "fluid ounce", other: "fluid ounces" }
+      }
+    }
+    tbsp: {
+      factor: 0.0000147867647813
+      title: {
+        pt-BR: { one: "colher de sopa", other: "colheres de sopa" }
+        en: { one: "tablespoon", other: "tablespoons" }
+      }
+    }
+    tsp: {
+      factor: 0.00000492892159375
+      title: {
+        pt-BR: { one: "colher de chá", other: "colheres de chá" }
+        en: { one: "teaspoon", other: "teaspoons" }
+      }
+    }
+    bbl: {
+      factor: 0.158987294928
+      title: {
+        pt-BR: { one: "barril", other: "barris" }
+        en: { one: "barrel", other: "barrels" }
+      }
+    }
+    bu: {
+      factor: 0.03523907016688
+      title: {
+        pt-BR: { one: "alqueire", other: "alqueires" }
+        en: { one: "bushel", other: "bushels" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -138,15 +386,16 @@ shape Volume {
     out.writeDouble(value.raw);
   }
 
-  method read(in: stream): Volume {
+  method read(in): Volume {
     const unit = in.readString();
     const raw = in.readDouble();
-    return Volume.fromRaw(raw, unit);
+    return new Volume{raw, unit};
   }
 
   method parse(text: string, flags: FormatFlags): Volume {
     const unit = flags.unit ?? m3;
-    return Volume.fromRaw(ParseReal(text, unit), unit);
+    const raw = ParseReal(text, unit);
+    return new Volume{raw, unit};
   }
 
   method format(flags: FormatFlags): string {
@@ -161,7 +410,13 @@ shape Percentage {
   base: decimal
   dimension: ratio
   units {
-    %: { factor: 1 }
+    %: {
+      factor: 1
+      title: {
+        pt-BR: { one: "por cento", other: "por cento" }
+        en: { one: "percent", other: "percent" }
+      }
+    }
   }
   scale: 2
   max: 100
@@ -179,15 +434,16 @@ shape Percentage {
     out.writeDouble(value.raw);
   }
 
-  method read(in: stream): Percentage {
+  method read(in): Percentage {
     const unit = in.readString();
     const raw = in.readDouble();
-    return Percentage.fromRaw(raw, unit);
+    return new Percentage{raw, unit};
   }
 
   method parse(text: string, flags: FormatFlags): Percentage {
     const unit = flags.unit ?? %;
-    return Percentage.fromRaw(ParseReal(text, unit), unit);
+    const raw = ParseReal(text, unit);
+    return new Percentage{raw, unit};
   }
 
   method format(flags: FormatFlags): string {
@@ -202,16 +458,76 @@ shape Area {
   base: decimal
   dimension: area
   units {
-    m2: { factor: 1 }
-    cm2: { factor: 0.0001 }
-    mm2: { factor: 1e-06 }
-    km2: { factor: 1000000.0 }
-    ha: { factor: 10000.0 }
-    acre: { factor: 4046.8564224 }
-    ft2: { factor: 0.09290304 }
-    in2: { factor: 0.00064516 }
-    yd2: { factor: 0.83612736 }
-    mi2: { factor: 2589988.110336 }
+    m2: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro quadrado", other: "metros quadrados" }
+        en: { one: "square meter", other: "square meters" }
+      }
+    }
+    cm2: {
+      factor: 0.0001
+      title: {
+        pt-BR: { one: "centímetro quadrado", other: "centímetros quadrados" }
+        en: { one: "square centimeter", other: "square centimeters" }
+      }
+    }
+    mm2: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "milímetro quadrado", other: "milímetros quadrados" }
+        en: { one: "square millimeter", other: "square millimeters" }
+      }
+    }
+    km2: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "quilômetro quadrado", other: "quilômetros quadrados" }
+        en: { one: "square kilometer", other: "square kilometers" }
+      }
+    }
+    ha: {
+      factor: 10000.0
+      title: {
+        pt-BR: { one: "hectare", other: "hectares" }
+        en: { one: "hectare", other: "hectares" }
+      }
+    }
+    acre: {
+      factor: 4046.8564224
+      title: {
+        pt-BR: { one: "acre", other: "acres" }
+        en: { one: "acre", other: "acres" }
+      }
+    }
+    ft2: {
+      factor: 0.09290304
+      title: {
+        pt-BR: { one: "pé quadrado", other: "pés quadrados" }
+        en: { one: "square foot", other: "square feet" }
+      }
+    }
+    in2: {
+      factor: 0.00064516
+      title: {
+        pt-BR: { one: "polegada quadrada", other: "polegadas quadradas" }
+        en: { one: "square inch", other: "square inches" }
+      }
+    }
+    yd2: {
+      factor: 0.83612736
+      title: {
+        pt-BR: { one: "jarda quadrada", other: "jardas quadradas" }
+        en: { one: "square yard", other: "square yards" }
+      }
+    }
+    mi2: {
+      factor: 2589988.110336
+      title: {
+        pt-BR: { one: "milha quadrada", other: "milhas quadradas" }
+        en: { one: "square mile", other: "square miles" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -223,10 +539,38 @@ shape Temperature {
   base: decimal
   dimension: temperature
   units {
-    K: { factor: 1, offset: 0 }
-    C: { factor: 1, offset: 273.15 }
-    F: { factor: 0.5555555555555556, offset: 255.3722222222222 }
-    R: { factor: 0.5555555555555556, offset: 0 }
+    K: {
+      factor: 1
+      offset: 0
+      title: {
+        pt-BR: { one: "kelvin", other: "kelvins" }
+        en: { one: "kelvin", other: "kelvins" }
+      }
+    }
+    C: {
+      factor: 1
+      offset: 273.15
+      title: {
+        pt-BR: { one: "grau Celsius", other: "graus Celsius" }
+        en: { one: "degree Celsius", other: "degrees Celsius" }
+      }
+    }
+    F: {
+      factor: 0.5555555555555556
+      offset: 255.3722222222222
+      title: {
+        pt-BR: { one: "grau Fahrenheit", other: "graus Fahrenheit" }
+        en: { one: "degree Fahrenheit", other: "degrees Fahrenheit" }
+      }
+    }
+    R: {
+      factor: 0.5555555555555556
+      offset: 0
+      title: {
+        pt-BR: { one: "grau Rankine", other: "graus Rankine" }
+        en: { one: "degree Rankine", other: "degrees Rankine" }
+      }
+    }
   }
   parse: quantity
 }
@@ -256,10 +600,34 @@ shape Rate {
   base: decimal
   dimension: rate
   units {
-    1_s: { factor: 1 }
-    1_min: { factor: 0.016666666666666666 }
-    1_h: { factor: 0.0002777777777777778 }
-    1_d: { factor: 1.1574074074074073e-05 }
+    1_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "por segundo", other: "por segundo" }
+        en: { one: "per second", other: "per second" }
+      }
+    }
+    1_min: {
+      factor: 0.016666666666666666
+      title: {
+        pt-BR: { one: "por minuto", other: "por minuto" }
+        en: { one: "per minute", other: "per minute" }
+      }
+    }
+    1_h: {
+      factor: 0.0002777777777777778
+      title: {
+        pt-BR: { one: "por hora", other: "por hora" }
+        en: { one: "per hour", other: "per hour" }
+      }
+    }
+    1_d: {
+      factor: 1.1574074074074073e-05
+      title: {
+        pt-BR: { one: "por dia", other: "por dia" }
+        en: { one: "per day", other: "per day" }
+      }
+    }
   }
   parse: quantity
 }
@@ -284,12 +652,12 @@ shape CurrencyCode {
     out.writeString(value.raw);
   }
 
-  method read(in: stream): CurrencyCode {
-    return CurrencyCode.fromRaw(in.readString());
+  method read(in): CurrencyCode {
+    return new CurrencyCode{raw: in.readString()};
   }
 
   method parse(text: string, flags: FormatFlags): CurrencyCode {
-    return CurrencyCode.fromRaw(text);
+    return new CurrencyCode{raw: text};
   }
 
   method format(flags: FormatFlags): string {
@@ -302,16 +670,76 @@ shape DataSize {
   base: decimal
   dimension: data
   units {
-    bit: { factor: 0.125 }
-    B: { factor: 1 }
-    KB: { factor: 1000 }
-    MB: { factor: 1000000.0 }
-    GB: { factor: 1000000000.0 }
-    TB: { factor: 1000000000000.0 }
-    KiB: { factor: 1024 }
-    MiB: { factor: 1048576 }
-    GiB: { factor: 1073741824 }
-    TiB: { factor: 1099511627776 }
+    bit: {
+      factor: 0.125
+      title: {
+        pt-BR: { one: "bit", other: "bits" }
+        en: { one: "bit", other: "bits" }
+      }
+    }
+    B: {
+      factor: 1
+      title: {
+        pt-BR: { one: "byte", other: "bytes" }
+        en: { one: "byte", other: "bytes" }
+      }
+    }
+    KB: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "kilobyte", other: "kilobytes" }
+        en: { one: "kilobyte", other: "kilobytes" }
+      }
+    }
+    MB: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megabyte", other: "megabytes" }
+        en: { one: "megabyte", other: "megabytes" }
+      }
+    }
+    GB: {
+      factor: 1000000000.0
+      title: {
+        pt-BR: { one: "gigabyte", other: "gigabytes" }
+        en: { one: "gigabyte", other: "gigabytes" }
+      }
+    }
+    TB: {
+      factor: 1000000000000.0
+      title: {
+        pt-BR: { one: "terabyte", other: "terabytes" }
+        en: { one: "terabyte", other: "terabytes" }
+      }
+    }
+    KiB: {
+      factor: 1024
+      title: {
+        pt-BR: { one: "kibibyte", other: "kibibytes" }
+        en: { one: "kibibyte", other: "kibibytes" }
+      }
+    }
+    MiB: {
+      factor: 1048576
+      title: {
+        pt-BR: { one: "mebibyte", other: "mebibytes" }
+        en: { one: "mebibyte", other: "mebibytes" }
+      }
+    }
+    GiB: {
+      factor: 1073741824
+      title: {
+        pt-BR: { one: "gibibyte", other: "gibibytes" }
+        en: { one: "gibibyte", other: "gibibytes" }
+      }
+    }
+    TiB: {
+      factor: 1099511627776
+      title: {
+        pt-BR: { one: "tebibyte", other: "tebibytes" }
+        en: { one: "tebibyte", other: "tebibytes" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -323,12 +751,48 @@ shape DataRate {
   base: decimal
   dimension: data-rate
   units {
-    bps: { factor: 1 }
-    kbps: { factor: 1000 }
-    Mbps: { factor: 1000000.0 }
-    Gbps: { factor: 1000000000.0 }
-    B_s: { factor: 8 }
-    KiB_s: { factor: 8192 }
+    bps: {
+      factor: 1
+      title: {
+        pt-BR: { one: "bit por segundo", other: "bits por segundo" }
+        en: { one: "bit per second", other: "bits per second" }
+      }
+    }
+    kbps: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "kilobit por segundo", other: "kilobits por segundo" }
+        en: { one: "kilobit per second", other: "kilobits per second" }
+      }
+    }
+    Mbps: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megabit por segundo", other: "megabits por segundo" }
+        en: { one: "megabit per second", other: "megabits per second" }
+      }
+    }
+    Gbps: {
+      factor: 1000000000.0
+      title: {
+        pt-BR: { one: "gigabit por segundo", other: "gigabits por segundo" }
+        en: { one: "gigabit per second", other: "gigabits per second" }
+      }
+    }
+    B_s: {
+      factor: 8
+      title: {
+        pt-BR: { one: "byte por segundo", other: "bytes por segundo" }
+        en: { one: "byte per second", other: "bytes per second" }
+      }
+    }
+    KiB_s: {
+      factor: 8192
+      title: {
+        pt-BR: { one: "kibibyte por segundo", other: "kibibytes por segundo" }
+        en: { one: "kibibyte per second", other: "kibibytes per second" }
+      }
+    }
   }
   parse: quantity
   index: normalized
@@ -339,11 +803,41 @@ shape Speed {
   base: decimal
   dimension: speed
   units {
-    m_s: { factor: 1 }
-    km_h: { factor: 0.2777777777777778 }
-    mph: { factor: 0.44704 }
-    kn: { factor: 0.514444444444 }
-    ft_s: { factor: 0.3048 }
+    m_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro por segundo", other: "metros por segundo" }
+        en: { one: "meter per second", other: "meters per second" }
+      }
+    }
+    km_h: {
+      factor: 0.2777777777777778
+      title: {
+        pt-BR: { one: "quilômetro por hora", other: "quilômetros por hora" }
+        en: { one: "kilometer per hour", other: "kilometers per hour" }
+      }
+    }
+    mph: {
+      factor: 0.44704
+      title: {
+        pt-BR: { one: "milha por hora", other: "milhas por hora" }
+        en: { one: "mile per hour", other: "miles per hour" }
+      }
+    }
+    kn: {
+      factor: 0.514444444444
+      title: {
+        pt-BR: { one: "nó", other: "nós" }
+        en: { one: "knot", other: "knots" }
+      }
+    }
+    ft_s: {
+      factor: 0.3048
+      title: {
+        pt-BR: { one: "pé por segundo", other: "pés por segundo" }
+        en: { one: "foot per second", other: "feet per second" }
+      }
+    }
   }
   parse: quantity
   index: normalized
@@ -354,9 +848,27 @@ shape Acceleration {
   base: decimal
   dimension: acceleration
   units {
-    m_s2: { factor: 1 }
-    ft_s2: { factor: 0.3048 }
-    g: { factor: 9.80665 }
+    m_s2: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro por segundo ao quadrado", other: "metros por segundo ao quadrado" }
+        en: { one: "meter per second squared", other: "meters per second squared" }
+      }
+    }
+    ft_s2: {
+      factor: 0.3048
+      title: {
+        pt-BR: { one: "pé por segundo ao quadrado", other: "pés por segundo ao quadrado" }
+        en: { one: "foot per second squared", other: "feet per second squared" }
+      }
+    }
+    g: {
+      factor: 9.80665
+      title: {
+        pt-BR: { one: "grama-força", other: "gramas-força" }
+        en: { one: "gram-force", other: "gram-force" }
+      }
+    }
   }
   parse: quantity
 }
@@ -366,11 +878,41 @@ shape Force {
   base: decimal
   dimension: force
   units {
-    N: { factor: 1 }
-    kN: { factor: 1000 }
-    dyn: { factor: 1e-05 }
-    lbf: { factor: 4.4482216152605 }
-    kgf: { factor: 9.80665 }
+    N: {
+      factor: 1
+      title: {
+        pt-BR: { one: "newton", other: "newtons" }
+        en: { one: "newton", other: "newtons" }
+      }
+    }
+    kN: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilonewton", other: "quilonewtons" }
+        en: { one: "kilonewton", other: "kilonewtons" }
+      }
+    }
+    dyn: {
+      factor: 1e-05
+      title: {
+        pt-BR: { one: "dina", other: "dinas" }
+        en: { one: "dyne", other: "dynes" }
+      }
+    }
+    lbf: {
+      factor: 4.4482216152605
+      title: {
+        pt-BR: { one: "libra-força", other: "libras-força" }
+        en: { one: "pound-force", other: "pounds-force" }
+      }
+    }
+    kgf: {
+      factor: 9.80665
+      title: {
+        pt-BR: { one: "quilograma-força", other: "quilogramas-força" }
+        en: { one: "kilogram-force", other: "kilograms-force" }
+      }
+    }
   }
   parse: quantity
 }
@@ -380,16 +922,76 @@ shape Pressure {
   base: decimal
   dimension: pressure
   units {
-    Pa: { factor: 1 }
-    kPa: { factor: 1000 }
-    MPa: { factor: 1000000.0 }
-    bar: { factor: 100000.0 }
-    mbar: { factor: 100 }
-    atm: { factor: 101325 }
-    psi: { factor: 6894.757293168 }
-    mmHg: { factor: 133.322387415 }
-    torr: { factor: 133.322368421 }
-    inHg: { factor: 3386.389 }
+    Pa: {
+      factor: 1
+      title: {
+        pt-BR: { one: "pascal", other: "pascals" }
+        en: { one: "pascal", other: "pascals" }
+      }
+    }
+    kPa: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilopascal", other: "quilopascals" }
+        en: { one: "kilopascal", other: "kilopascals" }
+      }
+    }
+    MPa: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megapascal", other: "megapascals" }
+        en: { one: "megapascal", other: "megapascals" }
+      }
+    }
+    bar: {
+      factor: 100000.0
+      title: {
+        pt-BR: { one: "bar", other: "bares" }
+        en: { one: "bar", other: "bars" }
+      }
+    }
+    mbar: {
+      factor: 100
+      title: {
+        pt-BR: { one: "milibar", other: "milibares" }
+        en: { one: "millibar", other: "millibars" }
+      }
+    }
+    atm: {
+      factor: 101325
+      title: {
+        pt-BR: { one: "atmosfera", other: "atmosferas" }
+        en: { one: "atmosphere", other: "atmospheres" }
+      }
+    }
+    psi: {
+      factor: 6894.757293168
+      title: {
+        pt-BR: { one: "libra por polegada quadrada", other: "libras por polegada quadrada" }
+        en: { one: "pound per square inch", other: "pounds per square inch" }
+      }
+    }
+    mmHg: {
+      factor: 133.322387415
+      title: {
+        pt-BR: { one: "milímetro de mercúrio", other: "milímetros de mercúrio" }
+        en: { one: "millimeter of mercury", other: "millimeters of mercury" }
+      }
+    }
+    torr: {
+      factor: 133.322368421
+      title: {
+        pt-BR: { one: "torr", other: "torr" }
+        en: { one: "torr", other: "torr" }
+      }
+    }
+    inHg: {
+      factor: 3386.389
+      title: {
+        pt-BR: { one: "polegada de mercúrio", other: "polegadas de mercúrio" }
+        en: { one: "inch of mercury", other: "inches of mercury" }
+      }
+    }
   }
   parse: quantity
 }
@@ -399,19 +1001,97 @@ shape Energy {
   base: decimal
   dimension: energy
   units {
-    J: { factor: 1 }
-    kJ: { factor: 1000 }
-    MJ: { factor: 1000000.0 }
-    cal: { factor: 4.184 }
-    kcal: { factor: 4184 }
-    Wh: { factor: 3600 }
-    kWh: { factor: 3600000.0 }
-    eV: { factor: 1.602176634e-19 }
-    keV: { factor: 1.602176634e-16 }
-    MeV: { factor: 1.602176634e-13 }
-    BTU: { factor: 1055.05585262 }
-    erg: { factor: 1e-07 }
-    ft_lbf: { factor: 1.3558179483314 }
+    J: {
+      factor: 1
+      title: {
+        pt-BR: { one: "joule", other: "joules" }
+        en: { one: "joule", other: "joules" }
+      }
+    }
+    kJ: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilojoule", other: "quilojoules" }
+        en: { one: "kilojoule", other: "kilojoules" }
+      }
+    }
+    MJ: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megajoule", other: "megajoules" }
+        en: { one: "megajoule", other: "megajoules" }
+      }
+    }
+    cal: {
+      factor: 4.184
+      title: {
+        pt-BR: { one: "caloria", other: "calorias" }
+        en: { one: "calorie", other: "calories" }
+      }
+    }
+    kcal: {
+      factor: 4184
+      title: {
+        pt-BR: { one: "quilocaloria", other: "quilocalorias" }
+        en: { one: "kilocalorie", other: "kilocalories" }
+      }
+    }
+    Wh: {
+      factor: 3600
+      title: {
+        pt-BR: { one: "watt-hora", other: "watt-horas" }
+        en: { one: "watt-hour", other: "watt-hours" }
+      }
+    }
+    kWh: {
+      factor: 3600000.0
+      title: {
+        pt-BR: { one: "quilowatt-hora", other: "quilowatt-horas" }
+        en: { one: "kilowatt-hour", other: "kilowatt-hours" }
+      }
+    }
+    eV: {
+      factor: 1.602176634e-19
+      title: {
+        pt-BR: { one: "elétron-volt", other: "elétron-volts" }
+        en: { one: "electronvolt", other: "electronvolts" }
+      }
+    }
+    keV: {
+      factor: 1.602176634e-16
+      title: {
+        pt-BR: { one: "quiloelétron-volt", other: "quiloelétron-volts" }
+        en: { one: "kiloelectronvolt", other: "kiloelectronvolts" }
+      }
+    }
+    MeV: {
+      factor: 1.602176634e-13
+      title: {
+        pt-BR: { one: "megaelétron-volt", other: "megaelétron-volts" }
+        en: { one: "megaelectronvolt", other: "megaelectronvolts" }
+      }
+    }
+    BTU: {
+      factor: 1055.05585262
+      title: {
+        pt-BR: { one: "unidade térmica britânica", other: "unidades térmicas britânicas" }
+        en: { one: "British thermal unit", other: "British thermal units" }
+      }
+    }
+    erg: {
+      factor: 1e-07
+      title: {
+        pt-BR: { one: "erg", other: "ergs" }
+        en: { one: "erg", other: "ergs" }
+      }
+    }
+    ft_lbf: {
+      factor: 1.3558179483314
+      title: {
+        pt-BR: { one: "pé-libra-força", other: "pés-libra-força" }
+        en: { one: "foot-pound force", other: "foot-pounds force" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -422,11 +1102,41 @@ shape Power {
   base: decimal
   dimension: power
   units {
-    W: { factor: 1 }
-    kW: { factor: 1000 }
-    MW: { factor: 1000000.0 }
-    hp: { factor: 745.6998715823 }
-    BTU_h: { factor: 0.29307107017 }
+    W: {
+      factor: 1
+      title: {
+        pt-BR: { one: "watt", other: "watts" }
+        en: { one: "watt", other: "watts" }
+      }
+    }
+    kW: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilowatt", other: "quilowatts" }
+        en: { one: "kilowatt", other: "kilowatts" }
+      }
+    }
+    MW: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megawatt", other: "megawatts" }
+        en: { one: "megawatt", other: "megawatts" }
+      }
+    }
+    hp: {
+      factor: 745.6998715823
+      title: {
+        pt-BR: { one: "cavalo-vapor", other: "cavalos-vapor" }
+        en: { one: "horsepower", other: "horsepower" }
+      }
+    }
+    BTU_h: {
+      factor: 0.29307107017
+      title: {
+        pt-BR: { one: "BTU por hora", other: "BTU por hora" }
+        en: { one: "BTU per hour", other: "BTU per hour" }
+      }
+    }
   }
   parse: quantity
 }
@@ -436,11 +1146,41 @@ shape Frequency {
   base: decimal
   dimension: frequency
   units {
-    Hz: { factor: 1 }
-    kHz: { factor: 1000 }
-    MHz: { factor: 1000000.0 }
-    GHz: { factor: 1000000000.0 }
-    rpm: { factor: 0.016666666666666666 }
+    Hz: {
+      factor: 1
+      title: {
+        pt-BR: { one: "hertz", other: "hertz" }
+        en: { one: "hertz", other: "hertz" }
+      }
+    }
+    kHz: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilohertz", other: "quilohertz" }
+        en: { one: "kilohertz", other: "kilohertz" }
+      }
+    }
+    MHz: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megahertz", other: "megahertz" }
+        en: { one: "megahertz", other: "megahertz" }
+      }
+    }
+    GHz: {
+      factor: 1000000000.0
+      title: {
+        pt-BR: { one: "gigahertz", other: "gigahertz" }
+        en: { one: "gigahertz", other: "gigahertz" }
+      }
+    }
+    rpm: {
+      factor: 0.016666666666666666
+      title: {
+        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" }
+        en: { one: "revolution per minute", other: "revolutions per minute" }
+      }
+    }
   }
   parse: quantity
   index: normalized
@@ -451,13 +1191,55 @@ shape Angle {
   base: decimal
   dimension: angle
   units {
-    rad: { factor: 1 }
-    mrad: { factor: 0.001 }
-    deg: { factor: 0.017453292519943295 }
-    arcmin: { factor: 0.0002908882086657216 }
-    arcsec: { factor: 4.84813681109536e-06 }
-    grad: { factor: 0.015707963267948967 }
-    turn: { factor: 6.283185307179586 }
+    rad: {
+      factor: 1
+      title: {
+        pt-BR: { one: "radiano", other: "radianos" }
+        en: { one: "radian", other: "radians" }
+      }
+    }
+    mrad: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "miliradiano", other: "miliradianos" }
+        en: { one: "milliradian", other: "milliradians" }
+      }
+    }
+    deg: {
+      factor: 0.017453292519943295
+      title: {
+        pt-BR: { one: "grau", other: "graus" }
+        en: { one: "degree", other: "degrees" }
+      }
+    }
+    arcmin: {
+      factor: 0.0002908882086657216
+      title: {
+        pt-BR: { one: "minuto de arco", other: "minutos de arco" }
+        en: { one: "arcminute", other: "arcminutes" }
+      }
+    }
+    arcsec: {
+      factor: 4.84813681109536e-06
+      title: {
+        pt-BR: { one: "segundo de arco", other: "segundos de arco" }
+        en: { one: "arcsecond", other: "arcseconds" }
+      }
+    }
+    grad: {
+      factor: 0.015707963267948967
+      title: {
+        pt-BR: { one: "grado", other: "grados" }
+        en: { one: "gradian", other: "gradians" }
+      }
+    }
+    turn: {
+      factor: 6.283185307179586
+      title: {
+        pt-BR: { one: "volta", other: "voltas" }
+        en: { one: "turn", other: "turns" }
+      }
+    }
   }
   parse: quantity
 }
@@ -467,9 +1249,27 @@ shape Density {
   base: decimal
   dimension: density
   units {
-    kg_m3: { factor: 1 }
-    g_cm3: { factor: 1000 }
-    lb_ft3: { factor: 16.01846337396 }
+    kg_m3: {
+      factor: 1
+      title: {
+        pt-BR: { one: "quilograma por metro cúbico", other: "quilogramas por metro cúbico" }
+        en: { one: "kilogram per cubic meter", other: "kilograms per cubic meter" }
+      }
+    }
+    g_cm3: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "grama por centímetro cúbico", other: "gramas por centímetro cúbico" }
+        en: { one: "gram per cubic centimeter", other: "grams per cubic centimeter" }
+      }
+    }
+    lb_ft3: {
+      factor: 16.01846337396
+      title: {
+        pt-BR: { one: "libra por pé cúbico", other: "libras por pé cúbico" }
+        en: { one: "pound per cubic foot", other: "pounds per cubic foot" }
+      }
+    }
   }
   parse: quantity
 }
@@ -479,9 +1279,27 @@ shape Momentum {
   base: decimal
   dimension: momentum
   units {
-    kg_m_s: { factor: 1 }
-    g_cm_s: { factor: 1e-05 }
-    lb_ft_s: { factor: 0.138254954376 }
+    kg_m_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "quilograma metro por segundo", other: "quilogramas metro por segundo" }
+        en: { one: "kilogram meter per second", other: "kilogram meters per second" }
+      }
+    }
+    g_cm_s: {
+      factor: 1e-05
+      title: {
+        pt-BR: { one: "grama centímetro por segundo", other: "gramas centímetro por segundo" }
+        en: { one: "gram centimeter per second", other: "gram centimeters per second" }
+      }
+    }
+    lb_ft_s: {
+      factor: 0.138254954376
+      title: {
+        pt-BR: { one: "libra pé por segundo", other: "libras pé por segundo" }
+        en: { one: "pound foot per second", other: "pound feet per second" }
+      }
+    }
   }
   parse: quantity
 }
@@ -491,8 +1309,20 @@ shape Torque {
   base: decimal
   dimension: torque
   units {
-    N_m: { factor: 1 }
-    lbf_ft: { factor: 1.3558179483314 }
+    N_m: {
+      factor: 1
+      title: {
+        pt-BR: { one: "newton por metro", other: "newtons por metro" }
+        en: { one: "newton per meter", other: "newtons per meter" }
+      }
+    }
+    lbf_ft: {
+      factor: 1.3558179483314
+      title: {
+        pt-BR: { one: "libra-força pé", other: "libras-força pé" }
+        en: { one: "pound-force foot", other: "pound-force feet" }
+      }
+    }
   }
   parse: quantity
 }
@@ -502,9 +1332,27 @@ shape HeatCapacity {
   base: decimal
   dimension: heat-capacity
   units {
-    J_K: { factor: 1 }
-    kJ_K: { factor: 1000 }
-    BTU_F: { factor: 1899.100534716 }
+    J_K: {
+      factor: 1
+      title: {
+        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" }
+        en: { one: "joule per kelvin", other: "joules per kelvin" }
+      }
+    }
+    kJ_K: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" }
+        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" }
+      }
+    }
+    BTU_F: {
+      factor: 1899.100534716
+      title: {
+        pt-BR: { one: "BTU por grau Fahrenheit", other: "BTU por grau Fahrenheit" }
+        en: { one: "BTU per degree Fahrenheit", other: "BTU per degree Fahrenheit" }
+      }
+    }
   }
   parse: quantity
 }
@@ -514,8 +1362,20 @@ shape Entropy {
   base: decimal
   dimension: entropy
   units {
-    J_K: { factor: 1 }
-    kJ_K: { factor: 1000 }
+    J_K: {
+      factor: 1
+      title: {
+        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" }
+        en: { one: "joule per kelvin", other: "joules per kelvin" }
+      }
+    }
+    kJ_K: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" }
+        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" }
+      }
+    }
   }
   parse: quantity
 }
@@ -525,8 +1385,20 @@ shape ThermalConductivity {
   base: decimal
   dimension: thermal-conductivity
   units {
-    W_mK: { factor: 1 }
-    BTU_h_ft_F: { factor: 1.730734666 }
+    W_mK: {
+      factor: 1
+      title: {
+        pt-BR: { one: "watt por metro kelvin", other: "watts por metro kelvin" }
+        en: { one: "watt per meter kelvin", other: "watts per meter kelvin" }
+      }
+    }
+    BTU_h_ft_F: {
+      factor: 1.730734666
+      title: {
+        pt-BR: { one: "BTU por hora pé grau Fahrenheit", other: "BTU por hora pé grau Fahrenheit" }
+        en: { one: "BTU per hour foot degree Fahrenheit", other: "BTU per hour foot degree Fahrenheit" }
+      }
+    }
   }
   parse: quantity
 }
@@ -536,9 +1408,27 @@ shape DynamicViscosity {
   base: decimal
   dimension: dynamic-viscosity
   units {
-    Pa_s: { factor: 1 }
-    P: { factor: 0.1 }
-    cP: { factor: 0.001 }
+    Pa_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "pascal segundo", other: "pascais segundo" }
+        en: { one: "pascal second", other: "pascal seconds" }
+      }
+    }
+    P: {
+      factor: 0.1
+      title: {
+        pt-BR: { one: "poise", other: "poise" }
+        en: { one: "poise", other: "poise" }
+      }
+    }
+    cP: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "centipoise", other: "centipoise" }
+        en: { one: "centipoise", other: "centipoise" }
+      }
+    }
   }
   parse: quantity
 }
@@ -548,9 +1438,27 @@ shape KinematicViscosity {
   base: decimal
   dimension: kinematic-viscosity
   units {
-    m2_s: { factor: 1 }
-    St: { factor: 0.0001 }
-    cSt: { factor: 1e-06 }
+    m2_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro quadrado por segundo", other: "metros quadrados por segundo" }
+        en: { one: "square meter per second", other: "square meters per second" }
+      }
+    }
+    St: {
+      factor: 0.0001
+      title: {
+        pt-BR: { one: "stokes", other: "stokes" }
+        en: { one: "stokes", other: "stokes" }
+      }
+    }
+    cSt: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "centistokes", other: "centistokes" }
+        en: { one: "centistokes", other: "centistokes" }
+      }
+    }
   }
   parse: quantity
 }
@@ -560,8 +1468,20 @@ shape SurfaceTension {
   base: decimal
   dimension: surface-tension
   units {
-    N_m: { factor: 1 }
-    dyn_cm: { factor: 0.001 }
+    N_m: {
+      factor: 1
+      title: {
+        pt-BR: { one: "newton por metro", other: "newtons por metro" }
+        en: { one: "newton per meter", other: "newtons per meter" }
+      }
+    }
+    dyn_cm: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "dina por centímetro", other: "dinas por centímetro" }
+        en: { one: "dyne per centimeter", other: "dynes per centimeter" }
+      }
+    }
   }
   parse: quantity
 }
@@ -571,10 +1491,34 @@ shape ElectricCurrent {
   base: decimal
   dimension: electric-current
   units {
-    A: { factor: 1 }
-    mA: { factor: 0.001 }
-    uA: { factor: 1e-06 }
-    kA: { factor: 1000 }
+    A: {
+      factor: 1
+      title: {
+        pt-BR: { one: "ampère", other: "ampères" }
+        en: { one: "ampere", other: "amperes" }
+      }
+    }
+    mA: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "miliampère", other: "miliampères" }
+        en: { one: "milliampere", other: "milliamperes" }
+      }
+    }
+    uA: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microampère", other: "microampères" }
+        en: { one: "microampere", other: "microamperes" }
+      }
+    }
+    kA: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quiloampère", other: "quiloampères" }
+        en: { one: "kiloampere", other: "kiloamperes" }
+      }
+    }
   }
   parse: quantity
 }
@@ -584,11 +1528,41 @@ shape ElectricCharge {
   base: decimal
   dimension: electric-charge
   units {
-    C: { factor: 1 }
-    mC: { factor: 0.001 }
-    uC: { factor: 1e-06 }
-    Ah: { factor: 3600 }
-    mAh: { factor: 3.6 }
+    C: {
+      factor: 1
+      title: {
+        pt-BR: { one: "coulomb", other: "coulombs" }
+        en: { one: "coulomb", other: "coulombs" }
+      }
+    }
+    mC: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milicoulomb", other: "milicoulombs" }
+        en: { one: "millicoulomb", other: "millicoulombs" }
+      }
+    }
+    uC: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microcoulomb", other: "microcoulombs" }
+        en: { one: "microcoulomb", other: "microcoulombs" }
+      }
+    }
+    Ah: {
+      factor: 3600
+      title: {
+        pt-BR: { one: "ampère-hora", other: "ampère-horas" }
+        en: { one: "ampere-hour", other: "ampere-hours" }
+      }
+    }
+    mAh: {
+      factor: 3.6
+      title: {
+        pt-BR: { one: "miliampère-hora", other: "miliampère-horas" }
+        en: { one: "milliampere-hour", other: "milliampere-hours" }
+      }
+    }
   }
   parse: quantity
 }
@@ -598,10 +1572,34 @@ shape Voltage {
   base: decimal
   dimension: voltage
   units {
-    V: { factor: 1 }
-    mV: { factor: 0.001 }
-    kV: { factor: 1000 }
-    uV: { factor: 1e-06 }
+    V: {
+      factor: 1
+      title: {
+        pt-BR: { one: "volt", other: "volts" }
+        en: { one: "volt", other: "volts" }
+      }
+    }
+    mV: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milivolt", other: "milivolts" }
+        en: { one: "millivolt", other: "millivolts" }
+      }
+    }
+    kV: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilovolt", other: "quilovolts" }
+        en: { one: "kilovolt", other: "kilovolts" }
+      }
+    }
+    uV: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microvolt", other: "microvolts" }
+        en: { one: "microvolt", other: "microvolts" }
+      }
+    }
   }
   parse: quantity
 }
@@ -611,9 +1609,27 @@ shape Resistance {
   base: decimal
   dimension: resistance
   units {
-    ohm: { factor: 1 }
-    kohm: { factor: 1000 }
-    Mohm: { factor: 1000000.0 }
+    ohm: {
+      factor: 1
+      title: {
+        pt-BR: { one: "ohm", other: "ohms" }
+        en: { one: "ohm", other: "ohms" }
+      }
+    }
+    kohm: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quiloohm", other: "quiloohms" }
+        en: { one: "kiloohm", other: "kiloohms" }
+      }
+    }
+    Mohm: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megaohm", other: "megaohms" }
+        en: { one: "megaohm", other: "megaohms" }
+      }
+    }
   }
   parse: quantity
 }
@@ -623,11 +1639,41 @@ shape Capacitance {
   base: decimal
   dimension: capacitance
   units {
-    F: { factor: 1 }
-    mF: { factor: 0.001 }
-    uF: { factor: 1e-06 }
-    nF: { factor: 1e-09 }
-    pF: { factor: 1e-12 }
+    F: {
+      factor: 1
+      title: {
+        pt-BR: { one: "farad", other: "farads" }
+        en: { one: "farad", other: "farads" }
+      }
+    }
+    mF: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milifarad", other: "milifarads" }
+        en: { one: "millifarad", other: "millifarads" }
+      }
+    }
+    uF: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microfarad", other: "microfarads" }
+        en: { one: "microfarad", other: "microfarads" }
+      }
+    }
+    nF: {
+      factor: 1e-09
+      title: {
+        pt-BR: { one: "nanofarad", other: "nanofarads" }
+        en: { one: "nanofarad", other: "nanofarads" }
+      }
+    }
+    pF: {
+      factor: 1e-12
+      title: {
+        pt-BR: { one: "picofarad", other: "picofarads" }
+        en: { one: "picofarad", other: "picofarads" }
+      }
+    }
   }
   parse: quantity
 }
@@ -637,9 +1683,27 @@ shape Inductance {
   base: decimal
   dimension: inductance
   units {
-    H: { factor: 1 }
-    mH: { factor: 0.001 }
-    uH: { factor: 1e-06 }
+    H: {
+      factor: 1
+      title: {
+        pt-BR: { one: "henry", other: "henries" }
+        en: { one: "henry", other: "henries" }
+      }
+    }
+    mH: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milihenry", other: "milihenries" }
+        en: { one: "millihenry", other: "millihenries" }
+      }
+    }
+    uH: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microhenry", other: "microhenries" }
+        en: { one: "microhenry", other: "microhenries" }
+      }
+    }
   }
   parse: quantity
 }
@@ -649,8 +1713,20 @@ shape MagneticFlux {
   base: decimal
   dimension: magnetic-flux
   units {
-    Wb: { factor: 1 }
-    Mx: { factor: 1e-08 }
+    Wb: {
+      factor: 1
+      title: {
+        pt-BR: { one: "weber", other: "webers" }
+        en: { one: "weber", other: "webers" }
+      }
+    }
+    Mx: {
+      factor: 1e-08
+      title: {
+        pt-BR: { one: "maxwell", other: "maxwells" }
+        en: { one: "maxwell", other: "maxwells" }
+      }
+    }
   }
   parse: quantity
 }
@@ -660,10 +1736,34 @@ shape MagneticFluxDensity {
   base: decimal
   dimension: magnetic-flux-density
   units {
-    T: { factor: 1 }
-    mT: { factor: 0.001 }
-    uT: { factor: 1e-06 }
-    G: { factor: 0.0001 }
+    T: {
+      factor: 1
+      title: {
+        pt-BR: { one: "tesla", other: "teslas" }
+        en: { one: "tesla", other: "teslas" }
+      }
+    }
+    mT: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "militesla", other: "militeslas" }
+        en: { one: "millitesla", other: "milliteslas" }
+      }
+    }
+    uT: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "microtesla", other: "microteslas" }
+        en: { one: "microtesla", other: "microteslas" }
+      }
+    }
+    G: {
+      factor: 0.0001
+      title: {
+        pt-BR: { one: "gauss", other: "gauss" }
+        en: { one: "gauss", other: "gauss" }
+      }
+    }
   }
   parse: quantity
 }
@@ -673,7 +1773,13 @@ shape LuminousIntensity {
   base: decimal
   dimension: luminous-intensity
   units {
-    cd: { factor: 1 }
+    cd: {
+      factor: 1
+      title: {
+        pt-BR: { one: "candela", other: "candelas" }
+        en: { one: "candela", other: "candelas" }
+      }
+    }
   }
   parse: quantity
 }
@@ -683,7 +1789,13 @@ shape LuminousFlux {
   base: decimal
   dimension: luminous-flux
   units {
-    lm: { factor: 1 }
+    lm: {
+      factor: 1
+      title: {
+        pt-BR: { one: "lúmen", other: "lúmens" }
+        en: { one: "lumen", other: "lumens" }
+      }
+    }
   }
   parse: quantity
 }
@@ -693,7 +1805,13 @@ shape Illuminance {
   base: decimal
   dimension: illuminance
   units {
-    lx: { factor: 1 }
+    lx: {
+      factor: 1
+      title: {
+        pt-BR: { one: "lux", other: "lux" }
+        en: { one: "lux", other: "lux" }
+      }
+    }
   }
   parse: quantity
 }
@@ -703,8 +1821,20 @@ shape Luminance {
   base: decimal
   dimension: luminance
   units {
-    cd_m2: { factor: 1 }
-    nit: { factor: 1 }
+    cd_m2: {
+      factor: 1
+      title: {
+        pt-BR: { one: "candela por metro quadrado", other: "candelas por metro quadrado" }
+        en: { one: "candela per square meter", other: "candelas per square meter" }
+      }
+    }
+    nit: {
+      factor: 1
+      title: {
+        pt-BR: { one: "nit", other: "nits" }
+        en: { one: "nit", other: "nits" }
+      }
+    }
   }
   parse: quantity
 }
@@ -714,9 +1844,27 @@ shape SoundPressure {
   base: decimal
   dimension: sound-pressure
   units {
-    Pa: { factor: 1 }
-    mPa: { factor: 0.001 }
-    uPa: { factor: 1e-06 }
+    Pa: {
+      factor: 1
+      title: {
+        pt-BR: { one: "pascal", other: "pascals" }
+        en: { one: "pascal", other: "pascals" }
+      }
+    }
+    mPa: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milipascal", other: "milipascais" }
+        en: { one: "millipascal", other: "millipascals" }
+      }
+    }
+    uPa: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "micropascal", other: "micropascais" }
+        en: { one: "micropascal", other: "micropascals" }
+      }
+    }
   }
   parse: quantity
 }
@@ -726,8 +1874,20 @@ shape SoundLevel {
   base: decimal
   dimension: sound-level
   units {
-    dB: { factor: 1 }
-    dBA: { factor: 1 }
+    dB: {
+      factor: 1
+      title: {
+        pt-BR: { one: "decibel", other: "decibéis" }
+        en: { one: "decibel", other: "decibels" }
+      }
+    }
+    dBA: {
+      factor: 1
+      title: {
+        pt-BR: { one: "decibel A", other: "decibéis A" }
+        en: { one: "A-weighted decibel", other: "A-weighted decibels" }
+      }
+    }
   }
   parse: quantity
 }
@@ -737,9 +1897,27 @@ shape AngularVelocity {
   base: decimal
   dimension: angular-velocity
   units {
-    rad_s: { factor: 1 }
-    deg_s: { factor: 0.017453292519943295 }
-    rpm: { factor: 0.10471975511965977 }
+    rad_s: {
+      factor: 1
+      title: {
+        pt-BR: { one: "radiano por segundo", other: "radianos por segundo" }
+        en: { one: "radian per second", other: "radians per second" }
+      }
+    }
+    deg_s: {
+      factor: 0.017453292519943295
+      title: {
+        pt-BR: { one: "grau por segundo", other: "graus por segundo" }
+        en: { one: "degree per second", other: "degrees per second" }
+      }
+    }
+    rpm: {
+      factor: 0.10471975511965977
+      title: {
+        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" }
+        en: { one: "revolution per minute", other: "revolutions per minute" }
+      }
+    }
   }
   parse: quantity
 }
@@ -749,10 +1927,34 @@ shape AmountOfSubstance {
   base: decimal
   dimension: amount-of-substance
   units {
-    mol: { factor: 1 }
-    mmol: { factor: 0.001 }
-    umol: { factor: 1e-06 }
-    kmol: { factor: 1000 }
+    mol: {
+      factor: 1
+      title: {
+        pt-BR: { one: "mol", other: "mols" }
+        en: { one: "mole", other: "moles" }
+      }
+    }
+    mmol: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milimol", other: "milimols" }
+        en: { one: "millimole", other: "millimoles" }
+      }
+    }
+    umol: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "micromol", other: "micromols" }
+        en: { one: "micromole", other: "micromoles" }
+      }
+    }
+    kmol: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilomol", other: "quilomols" }
+        en: { one: "kilomole", other: "kilomoles" }
+      }
+    }
   }
   parse: quantity
   aggregate: sum
@@ -763,9 +1965,27 @@ shape MolarMass {
   base: decimal
   dimension: molar-mass
   units {
-    g_mol: { factor: 1 }
-    kg_mol: { factor: 1000 }
-    Da: { factor: 1 }
+    g_mol: {
+      factor: 1
+      title: {
+        pt-BR: { one: "grama por mol", other: "gramas por mol" }
+        en: { one: "gram per mole", other: "grams per mole" }
+      }
+    }
+    kg_mol: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilograma por mol", other: "quilogramas por mol" }
+        en: { one: "kilogram per mole", other: "kilograms per mole" }
+      }
+    }
+    Da: {
+      factor: 1
+      title: {
+        pt-BR: { one: "dalton", other: "daltons" }
+        en: { one: "dalton", other: "daltons" }
+      }
+    }
   }
   parse: quantity
 }
@@ -775,13 +1995,55 @@ shape MolarConcentration {
   base: decimal
   dimension: molar-concentration
   units {
-    mol_L: { factor: 1 }
-    mmol_L: { factor: 0.001 }
-    uM: { factor: 1e-06 }
-    M: { factor: 1 }
-    mM: { factor: 0.001 }
-    ppm: { factor: 1e-06 }
-    ppb: { factor: 1e-09 }
+    mol_L: {
+      factor: 1
+      title: {
+        pt-BR: { one: "mol por litro", other: "mols por litro" }
+        en: { one: "mole per liter", other: "moles per liter" }
+      }
+    }
+    mmol_L: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milimol por litro", other: "milimols por litro" }
+        en: { one: "millimole per liter", other: "millimoles per liter" }
+      }
+    }
+    uM: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "micromolar", other: "micromolar" }
+        en: { one: "micromolar", other: "micromolar" }
+      }
+    }
+    M: {
+      factor: 1
+      title: {
+        pt-BR: { one: "molar", other: "molar" }
+        en: { one: "molar", other: "molar" }
+      }
+    }
+    mM: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milimolar", other: "milimolar" }
+        en: { one: "millimolar", other: "millimolar" }
+      }
+    }
+    ppm: {
+      factor: 1e-06
+      title: {
+        pt-BR: { one: "parte por milhão", other: "partes por milhão" }
+        en: { one: "part per million", other: "parts per million" }
+      }
+    }
+    ppb: {
+      factor: 1e-09
+      title: {
+        pt-BR: { one: "parte por bilhão", other: "partes por bilhão" }
+        en: { one: "part per billion", other: "parts per billion" }
+      }
+    }
   }
   parse: quantity
 }
@@ -791,8 +2053,20 @@ shape Molality {
   base: decimal
   dimension: molality
   units {
-    mol_kg: { factor: 1 }
-    mmol_kg: { factor: 0.001 }
+    mol_kg: {
+      factor: 1
+      title: {
+        pt-BR: { one: "mol por quilograma", other: "mols por quilograma" }
+        en: { one: "mole per kilogram", other: "moles per kilogram" }
+      }
+    }
+    mmol_kg: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milimol por quilograma", other: "milimols por quilograma" }
+        en: { one: "millimole per kilogram", other: "millimoles per kilogram" }
+      }
+    }
   }
   parse: quantity
 }
@@ -802,7 +2076,13 @@ shape Ph {
   base: decimal
   dimension: ph
   units {
-    pH: { factor: 1 }
+    pH: {
+      factor: 1
+      title: {
+        pt-BR: { one: "pH", other: "pH" }
+        en: { one: "pH", other: "pH" }
+      }
+    }
   }
   max: 14
 }
@@ -812,7 +2092,13 @@ shape CatalyticActivity {
   base: decimal
   dimension: catalytic-activity
   units {
-    kat: { factor: 1 }
+    kat: {
+      factor: 1
+      title: {
+        pt-BR: { one: "katal", other: "katals" }
+        en: { one: "katal", other: "katals" }
+      }
+    }
   }
   parse: quantity
 }
@@ -822,10 +2108,34 @@ shape Radioactivity {
   base: decimal
   dimension: radioactivity
   units {
-    Bq: { factor: 1 }
-    kBq: { factor: 1000 }
-    MBq: { factor: 1000000.0 }
-    Ci: { factor: 37000000000.0 }
+    Bq: {
+      factor: 1
+      title: {
+        pt-BR: { one: "becquerel", other: "becquerels" }
+        en: { one: "becquerel", other: "becquerels" }
+      }
+    }
+    kBq: {
+      factor: 1000
+      title: {
+        pt-BR: { one: "quilobecquerel", other: "quilobecquerels" }
+        en: { one: "kilobecquerel", other: "kilobecquerels" }
+      }
+    }
+    MBq: {
+      factor: 1000000.0
+      title: {
+        pt-BR: { one: "megabecquerel", other: "megabecquerels" }
+        en: { one: "megabecquerel", other: "megabecquerels" }
+      }
+    }
+    Ci: {
+      factor: 37000000000.0
+      title: {
+        pt-BR: { one: "curie", other: "curies" }
+        en: { one: "curie", other: "curies" }
+      }
+    }
   }
   parse: quantity
 }
@@ -835,9 +2145,27 @@ shape AbsorbedDose {
   base: decimal
   dimension: absorbed-dose
   units {
-    Gy: { factor: 1 }
-    mGy: { factor: 0.001 }
-    rad: { factor: 0.01 }
+    Gy: {
+      factor: 1
+      title: {
+        pt-BR: { one: "gray", other: "grays" }
+        en: { one: "gray", other: "grays" }
+      }
+    }
+    mGy: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "miligray", other: "miligrays" }
+        en: { one: "milligray", other: "milligrays" }
+      }
+    }
+    rad: {
+      factor: 0.01
+      title: {
+        pt-BR: { one: "rad", other: "rads" }
+        en: { one: "rad", other: "rads" }
+      }
+    }
   }
   parse: quantity
 }
@@ -847,9 +2175,27 @@ shape EquivalentDose {
   base: decimal
   dimension: equivalent-dose
   units {
-    Sv: { factor: 1 }
-    mSv: { factor: 0.001 }
-    rem: { factor: 0.01 }
+    Sv: {
+      factor: 1
+      title: {
+        pt-BR: { one: "sievert", other: "sieverts" }
+        en: { one: "sievert", other: "sieverts" }
+      }
+    }
+    mSv: {
+      factor: 0.001
+      title: {
+        pt-BR: { one: "milisievert", other: "milisieverts" }
+        en: { one: "millisievert", other: "millisieverts" }
+      }
+    }
+    rem: {
+      factor: 0.01
+      title: {
+        pt-BR: { one: "rem", other: "rems" }
+        en: { one: "rem", other: "rems" }
+      }
+    }
   }
   parse: quantity
 }

@@ -62,8 +62,9 @@ Os tipos básicos são intrínsecos e não são Shapes:
 Tipos adicionais:
 
 - `DateTime`, `Date`, `Duration`, `Unit`, `FormatFlags`, `void`;
+- `StreamReader` e `StreamWriter` são as interfaces inferidas em `read` e `write`;
 - `Int8`, `Int16`, `Int32`, `Int64`, `Float`, `Double` são usados apenas nos métodos de `stream`;
-- `Shape` é o tipo de um valor de Shape; `Shape.fromRaw` cria um valor.
+- `Shape` é o tipo de um valor de Classe; `new Classe{...}` cria um valor.
 
 Chamadas de stream:
 
@@ -254,9 +255,45 @@ O Shape guarda **valor original + unidade** e projeção normalizada. A exibiç�
 
 `title` é obrigatório em `service`, `shape`, `document`, `field`, `view`, `event`, `parameter`, `role`, `organogram` e `icon`; a `Application` também usa o mesmo tipo.
 
+Cada valor de locale pode ser uma string ou um mapa de formas plurais CLDR:
+
+```ts
+type PluralForms = {
+  zero?: string;
+  one?: string;
+  two?: string;
+  few?: string;
+  many?: string;
+  other: string;
+};
+
+type I18nValue = string | PluralForms;
+type I18n = { [locale: string]: I18nValue };
+```
+
 ```bpcms
 title: { pt-BR: "Nome", en: "Name" }
 ```
+
+```bpcms
+title: {
+  pt-BR: {
+    one: "metro"
+    other: "metros"
+    many: "metros"
+  }
+  en: {
+    one: "meter"
+    other: "meters"
+  }
+}
+```
+
+- `other` é obrigatório quando o valor é um objeto plural.
+- `one` deve corresponder ao título singular quando existir.
+- Categorias `zero`, `two`, `few` e `many` são opcionais.
+- O builder resolve a categoria pelo locale/número; não é o Shape que decide plural.
+- `short` e `tooltip` aceitam o mesmo `I18nValue`.
 
 O mapa aceita locales (`pt-BR`, `en-US`, `en`) e duas versões alternativas **opcionais**, irmãs do mapa principal:
 
@@ -279,7 +316,7 @@ name: string {
 - Se `short`/`tooltip` não existirem, o builder usa o title principal.
 - A ordem dos campos com `lookup` define a ordem de exibição; os títulos vêm dos campos.
 
-**Fallback:** locale exato → idioma (`en-US` → `en`) → locale default do app. Com `locales: [pt-BR, en-US]`, `en` cobre `en-US`; o default é `pt-BR`.
+**Fallback:** locale exato → idioma (`en-US` → `en`) → locale default do app. Para plural: categoria → `other` → string do locale/título. Com `locales: [pt-BR, en-US]`, `en` cobre `en-US`; o default é `pt-BR`.
 
 **Campos:** o `title` do campo é o label; o `title` do `document`/`shape`/`view`/`event`/`parameter`/`role`/`organogram`/`service` é o nome do artefato. Em `Parameter`, `title` substitui o antigo `description`.
 
@@ -290,6 +327,7 @@ name: string {
 | Builder gera `en-US` e não existe `en-US` nem `en` | `W_TRANSLATION` no `check`; `E_TRANSLATION` se o builder for estrito |
 | Chave fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Sem entrada para o locale default | `E_TITLE_MISSING` |
+| Plural sem `other`/categoria inválida | `E_PLURAL_OTHER` / `E_PLURAL_FORM` |
 | `title` ausente no artefato/campo | `E_TITLE_MISSING` |
 | `shape I18n` declarado | `E_RESERVED_TYPE` |
 
@@ -588,7 +626,7 @@ document Shipment {
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
-| `units` | `units { kg: { factor: 1000 }, g: { factor: 1 } }` | Unidades e fatores relativos à base. |
+| `units` | `units { m: { factor: 1, title: { ... } } }` | Unidades, fatores e labels I18n. |
 | `max` | `max: 100` | Limite superior semântico. |
 | `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Perfil default de texto → valor; composto exige método. |
 | `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Perfil default de valor → texto; composto exige método. |
@@ -645,24 +683,25 @@ shape InvoiceStatus {
 `units` é um mapa de unidade → fator relativo à unidade base (fator `1`). Unidades afins podem declarar `offset`.
 
 ```bpcms
-shape Mass {
-  title: { pt-BR: "Massa", en: "Mass" }
+shape Length {
+  title: { pt-BR: "Comprimento", en: "Length" }
   base: decimal
-  dimension: mass
+  dimension: length
   units {
-    kg: { factor: 1000 }
-    g: { factor: 1 }
-    mg: { factor: 0.001 }
-    ug: { factor: 0.000001 }
-    µg: { factor: 0.000001 }
-    t: { factor: 1000000 }
-    lb: { factor: 453.59237 }
-    oz: { factor: 28.349523125 }
-    st: { factor: 6350.29318 }
-    ton: { factor: 907184.74 }
-    ct: { factor: 0.2 }
-    Da: { factor: 1.66053904e-24 }
-    Msun: { factor: 1.988475e33 }
+    m: {
+      factor: 1
+      title: {
+        pt-BR: { one: "metro", other: "metros" }
+        en: { one: "meter", other: "meters" }
+      }
+    }
+    cm: {
+      factor: 0.01
+      title: {
+        pt-BR: { one: "centímetro", other: "centímetros" }
+        en: { one: "centimeter", other: "centimeters" }
+      }
+    }
   }
 }
 ```
@@ -670,7 +709,8 @@ shape Mass {
 - `unit`, `min` e `precision` **não são cláusulas de Shape**.
 - O field define `unit`, `min` e `precision` quando necessário.
 - `value.unit` é a unidade do valor; se o field não definir, usa a unidade de fator `1`.
-- O `format` escolhe automaticamente a unidade mais legível, salvo `flags.unit`.
+- O `format` escolhe automaticamente a unidade mais legível, salvo `flags.unit`; o título usa `one`/`other` conforme o número.
+- `title` aceita `string | PluralForms`; `plural` não é campo separado da unidade.
 
 ## 6.2 Valor e métodos
 
@@ -679,7 +719,7 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 | Operação | Assinatura | Função |
 | :--- | :--- | :--- |
 | `write` | `write(value: Shape, out: stream): void` | Serializa no stream |
-| `read` | `read(in: stream): Shape` | Desserializa do stream |
+| `read` | `read(in): Shape` | Desserializa; `in` é inferido como `StreamReader` |
 | `format` | `format(value: Shape, flags: FormatFlags): string` | Texto para UI |
 | `parse` | `parse(text: string, flags: FormatFlags): Shape` | Texto → valor |
 | `toNumber` | `toNumber(value: Shape): number` | Valor numérico do Shape |
@@ -719,7 +759,7 @@ parse("12,5 kg", { style: normal, unit: kg })
 `stream` é um tipo intrínseco de leitura/escrita binária. Não é ASN.1.
 
 ```ts
-type stream = {
+type StreamReader = {
   readInt8(): Int8;
   readInt16(): Int16;
   readInt32(): Int32;
@@ -729,7 +769,9 @@ type stream = {
   readString(): string;
   readStream(): stream;
   readStreamArray(): stream[];
+};
 
+type StreamWriter = {
   writeInt8(value: Int8): void;
   writeInt16(value: Int16): void;
   writeInt32(value: Int32): void;
@@ -740,6 +782,8 @@ type stream = {
   writeStream(value: stream): void;
   writeStreamArray(value: stream[]): void;
 };
+
+type stream = StreamReader & StreamWriter;
 ```
 
 Layout canônico interlinguagens:
@@ -763,14 +807,14 @@ Funções de apoio usadas pelos métodos da stdlib:
 ParseReal(text: string, unit: Unit): number
 FormatReal(raw: number, from: Unit, to: Unit, style: FormatStyle): string
 BestUnit(raw: number, from: Unit, units: Units): Unit
-Shape.fromRaw(raw: number | string, unit?: Unit): Shape
 ```
 
 - `BestUnit` escolhe a unidade que evita muitos decimais/zeros à direita; `flags.unit` força uma unidade.
+- `FormatReal` resolve `title`/`PluralForms` da unidade; `format` usa `one`/`other` conforme o número.
 - `value.raw` é o valor na unidade atual.
 - `value.unit` é a unidade atual.
-- `Shape.fromRaw` cria um valor a partir do valor e da unidade.
 - `read`/`parse` são métodos estáticos do Shape; `write`/`format` usam `value`; `toNumber` recebe `value` explícito.
+- `new Shape{...}` cria um valor; `new` é a forma geral de instanciar classes/Shapes.
 - `CurrencyCode` usa `writeString`/`readString` e não tem valor numérico; `toNumber` lança erro.
 
 ## 6.4 Expressões e métodos próprios
@@ -816,7 +860,24 @@ Gramática mínima:
 - `Round` e `Trunc` intrínsecos;
 - `toNumber(value)` é declarado pelo Shape; as medidas de `bpcms.org/std` já o declaram.
 
-Não há `let`, classes, funções aninhadas, async ou exceções customizadas no v1.
+Não há `let`, declaração de classes, funções aninhadas, async ou exceções customizadas no v1.
+
+### 6.4.1 `new` e instanciação
+
+Classes e Shapes são instanciados com `new <Type>{...}`:
+
+```bpcms
+const unit = in.readString();
+const raw = in.readDouble();
+return new Length{raw, unit};
+```
+
+- `new Length{raw, unit}` equivale a `new Length{raw: raw, unit: unit}`.
+- A sintaxe de propriedades é `{ PROPNOME: PROPVALOR, ... }`.
+- Quando a variável tem o mesmo nome da propriedade, o valor pode ser omitido (shorthand), como em TypeScript.
+- O tipo de `in` em `read` é inferido como `StreamReader`; o retorno declarado é `Length`.
+- Se o tipo de retorno, propriedade ou valor for inválido, o compilador gera erro (`E_TYPE`/`E_CONSTRUCTOR_PROPERTY`).
+- Para `CurrencyCode`, `new CurrencyCode{raw: in.readString()}`.
 
 ## 6.5 `toNumber`
 
@@ -1561,6 +1622,7 @@ policy FourEyesPayment {
 | Lookup | bloco `lookup { ... }` usado | `E_LOOKUP_SYNTAX` |
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
+| Constructor | propriedade/valor inválido em `new` | `E_CONSTRUCTOR_PROPERTY` |
 | Dimensão | `Mass` onde se espera `Length`; soma incompatível | `E_DIMENSION` |
 | Unidade | unidade não pertence à dimensão | `E_UNIT` |
 | Índice | campo inexistente/não indexável; índice duplicado | `E_INDEX` |
