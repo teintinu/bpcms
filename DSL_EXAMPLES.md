@@ -1300,7 +1300,7 @@ fields {
 }
 ```
 
-Ela define 56 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
+Ela define 57 Shapes de medida/ciência/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas, químicas, dados e estatística. `CurrencyCode` é ISO 4217, sem enum de values/icons.
 
 ## View
 

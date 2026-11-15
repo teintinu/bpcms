@@ -69,8 +69,5 @@ shape Phone {
 
 shape Image {
   title: { pt-BR: "Imagem", en: "Image" }
-  base: string
-  validate: url
-  format: image
-  maxLength: 2048
+  base: image
 }

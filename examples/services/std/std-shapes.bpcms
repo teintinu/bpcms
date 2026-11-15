@@ -133,9 +133,8 @@ shape Length {
   }
 
   parse(text, flags) {
-    const unit = flags.unit ?? m;
-    const raw = parseReal(text, unit);
-    return new Length{raw, unit};
+    const {value, unit} = parseQuantity(text, flags);
+    return new Length{raw: value, unit};
   }
 
   format(value, flags) {
@@ -285,9 +284,8 @@ shape Mass {
   }
 
   parse(text, flags) {
-    const unit = flags.unit ?? g;
-    const raw = parseReal(text, unit);
-    return new Mass{raw, unit};
+    const parsed = parseQuantity(text, flags);
+    return new Mass{raw: parsed.value, unit: parsed.unit};
   }
 
   format(value, flags) {
@@ -427,9 +425,8 @@ shape Volume {
   }
 
   parse(text, flags) {
-    const unit = flags.unit ?? m3;
-    const raw = parseReal(text, unit);
-    return new Volume{raw, unit};
+    const parsed = parseQuantity(text, flags);
+    return new Volume{raw: parsed.value, unit: parsed.unit};
   }
 
   format(value, flags) {
@@ -465,9 +462,8 @@ shape Percentage {
   }
 
   parse(text, flags) {
-    const unit = flags.unit ?? %;
-    const raw = parseReal(text, unit);
-    return new Percentage{raw, unit};
+    const parsed = parseQuantity(text, flags);
+    return new Percentage{raw: parsed.value, unit: parsed.unit};
   }
 
   format(value, flags) {
@@ -663,6 +659,11 @@ shape ZScore {
   dimension: ratio
 }
 
+shape Money {
+  title: { pt-BR: "Dinheiro", en: "Money" }
+  base: money
+}
+
 shape CurrencyCode {
   title: { pt-BR: "Código de moeda", en: "Currency code" }
   base: string
@@ -770,9 +771,8 @@ shape Duration {
   }
 
   parse(text, flags) {
-    const unit = flags.unit ?? s;
-    const raw = parseReal(text, unit);
-    return new Duration{raw, unit};
+    const parsed = parseQuantity(text, flags);
+    return new Duration{raw: parsed.value, unit: parsed.unit};
   }
 
   format(value, flags) {

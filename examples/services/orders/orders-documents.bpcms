@@ -8,7 +8,7 @@ document OrderItem {
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup, min: 1, max: 1000 }
     unitPrice: MoneyBRL { title: { pt-BR: "Preço unitário", en: "Unit price" } }
     total: MoneyBRL { title: { pt-BR: "Total", en: "Total" } }
   }

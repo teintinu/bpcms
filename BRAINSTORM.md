@@ -670,7 +670,7 @@ fields {
 }
 ```
 
-A biblioteca cobre 56 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `CurrencyCode` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` agora são `std.*`.
+A biblioteca cobre 57 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `CurrencyCode` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `CurrencyCode` e `Count` agora são `std.*`.
 
 > **Decisão B-53:** biblioteca padrão vive em `bpcms.org/std`, pseudo-serviço do construtor; uso sempre por `std.Identificador`; sem import não resolve. Ela não substitui serviços de negócio.
 

@@ -230,7 +230,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Resultado da inspeção:**
 
-- [x] 30 Shapes de negócio + 56 Shapes std; todos com `title`.
+- [x] 30 Shapes de negócio + 57 Shapes std; todos com `title`.
 - [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
@@ -249,7 +249,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `MoneyBRL` continua em Catalog; os demais tipos de medida foram para std. Fronteira correta?
 - [ ] `std.Count` substitui o Count de Identity; a migração está correta?
 - [ ] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
-- [ ] `bpcms.org/std` definido e importado; 56 Shapes; migração concluída?
+- [ ] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
 - [ ] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
 - [ ] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
 

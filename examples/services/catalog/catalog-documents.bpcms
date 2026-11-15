@@ -32,7 +32,7 @@ document Product {
     sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
     categoryId: CategoryId { title: { pt-BR: "Categoria", en: "Category" } }
-    price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" } }
+    price: MoneyBRL { title: { pt-BR: "Preço", en: "Price" }, scale: 2 }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" } }

@@ -623,7 +623,7 @@ document Shipment {
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
+| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext \| money` | Representação base; define exibição/edição. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
@@ -842,7 +842,7 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 - `read(in)` infere `in` como `streamReader`.
 - `write`/`read` existem para **todos** os Shapes, inclusive enums e compostos.
 - `format`/`parse` têm default para primitivos, enums e medidas; **compostos exigem método próprio**.
-- `toNumber(value)` só em Shapes numéricos; `Money.toNumber` retorna `raw`.
+- `toNumber(value)` só em Shapes numéricos; `Money.toNumber` é implícito e retorna `raw`.
 - `toOrdinal(value)` é gerado pelo compilador em `classification`/`workflow`; não se escreve no Shape.
 - `value` é explícito em `write(value, out)`, `format(value, flags)` e `toNumber(value)`. `read`/`parse` são estáticos.
 
@@ -883,6 +883,7 @@ Regras do `parse`:
 - Singular/plural vêm de `units.title`.
 - Separadores e símbolos vêm da regionalization interna.
 - Se a regionalization não for determinável: `E_REGIONALIZATION_UNKNOWN`.
+- A stdlib usa `parseQuantity(text, flags)`: unidade do texto vence/é convertida para `flags.unit`; sem unidade em nenhum lugar = erro.
 
 ## 6.3 stream canônico
 
@@ -934,6 +935,7 @@ Layout canônico interlinguagens:
 Funções de apoio usadas pelos métodos da stdlib:
 
 ```ts
+parseQuantity(text: string, flags: FormatFlags): { value: number, unit: Unit }
 parseReal(text: string, unit: Unit): number
 formatReal(raw: number, from: Unit, to: Unit, style: FormatStyle, unitStyle: UnitStyle): string
 bestUnit(raw: number, from: Unit, units: Units): Unit
@@ -1101,7 +1103,7 @@ shape Rating {
 - Não se declara `toOrdinal` no Shape.
 - O compilador gera a função para retornar `value.ordinal`.
 - Isso evita código repetido em 22 enums.
-- `toNumber` continua restrito a Shapes numéricos.
+- `toNumber` continua restrito a Shapes numéricos; em `Money` é gerado automaticamente.
 
 ## 6.7 `convert`
 
@@ -2016,7 +2018,9 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 | Química | `AmountOfSubstance`, `MolarMass`, `MolarConcentration`, `Molality`, `pH`, `CatalyticActivity` |
 | Radiação | `Radioactivity`, `AbsorbedDose`, `EquivalentDose` |
 | Dados/estatística | `DataSize`, `DataRate`, `Count`, `Percentage`, `Probability`, `Ratio`, `Rate`, `ZScore` |
-| Dinheiro | `CurrencyCode` |
+| Dinheiro | `Money`, `CurrencyCode` |
+
+**`Money`:** tipo de valor monetário com qualquer `CurrencyCode`; sem conversão cambial. `toNumber` é automático. A exibição usa `sformat`/regionalization.
 
 **`CurrencyCode`:** é um código ISO 4217 validado, **não** um enum com `values`/icons. A formatação/label vem de regionalization.
 

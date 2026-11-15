@@ -9,7 +9,7 @@ document StockItem {
   fields {
     productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
     warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
-    available: std.Count { title: { pt-BR: "Disponível", en: "Available" } }
+    available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
     reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
     reorderPoint: std.Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
     lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
