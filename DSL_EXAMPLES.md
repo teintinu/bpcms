@@ -1131,7 +1131,7 @@ shape PriceTag {
 }
 ```
 
-*Valida: dinheiro não é “número”; moeda, escala e arredondamento vivem no Shape.*
+*Valida: dinheiro é valor + moeda; escala vem da moeda ou do field.*
 
 ### H.2 Massa via std
 
@@ -1192,6 +1192,7 @@ shape DiscountPolicy {
 
 ```bpcms
 shape CPF {
+  title: { pt-BR: "CPF", en: "CPF" }
   base: string
   normalize: digits
   validate: cpf-check-digits
@@ -1207,6 +1208,7 @@ shape CPF {
 
 ```bpcms
 shape Email {
+  title: { pt-BR: "E-mail", en: "Email" }
   base: string
   normalize: lower-trim
   validate: email
@@ -1222,6 +1224,7 @@ shape Email {
 
 ```bpcms
 shape Address {
+  title: { pt-BR: "Endereço", en: "Address" }
   fields {
     street: string
     number: string
@@ -1232,12 +1235,21 @@ shape Address {
     zip: CEP
     country: CountryCode { default: BR }
   }
-  format: postal
+
   index: [city, state]
+
+  format(value, flags) {
+    const locale = std.regionalization.current();
+    const complement = value.complement ?? "";
+    if (locale == "pt-BR") {
+      return value.street + ", " + value.number + " " + complement + " - " + value.district + ", " + value.city + " - " + value.state + ", " + value.zip + ", " + value.country;
+    }
+    return value.number + " " + value.street + " " + complement + ", " + value.city + ", " + value.state + " " + value.zip + ", " + value.country;
+  }
 }
 ```
 
-*Valida: Shape composto, campos aninhados, default e índice derivado.*
+*Valida: Shape composto, default, índice e `format` customizado por regionalization.*
 
 ### H.9 Métodos com tipos explícitos e inferidos
 

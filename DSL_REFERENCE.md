@@ -632,18 +632,16 @@ document Shipment {
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
 | `unit` | `unit: %` | Unidade única; mutuamente exclusivo com `units`. |
-| `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Perfil default de texto → valor; composto exige método. |
-| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Perfil default de valor → texto; composto exige método. |
+| `parse` | `parse: quantity`, `locale-number`, `percent`, `digits`, `lower-trim`, `email` | Perfil default de texto → valor; composto aceita perfil; método sobrescreve. |
+| `format` | `format: currency`, `locale-unit`, `percent`, `plain`, `postal`, `image`, `masked("...")` | Perfil default de valor → texto; composto aceita perfil; método sobrescreve. |
 | `compare` | `compare: exact` | Igualdade/ordenação; `exact` para dinheiro. |
 | `aggregate` | `aggregate: sum` | Soma/média/min/max permitidos. |
 | `index` | `index: normalized` | Codificação para índice. |
 | `normalize` | `normalize: digits`, `lower-trim`, `upper-trim` | Normalização antes de validar/comparar. |
 | `validate` | `validate: cpf-check-digits`, `uuid`, `email`, `phone`, `url`, `year-month` | Validação semântica. |
-| `sensitive` | `sensitive: true` | Exige mascaramento/permissão. |
-| `maxLength` | `maxLength: 254` | Limite de texto. |
+| `sensitive` | `sensitive: true` | Default do Shape; o field pode sobrescrever. |
+| `maxLength` | `maxLength: 254` | Default do Shape; o field pode sobrescrever. |
 | `fields` | `fields { street: string ... }` | Shape composto. |
-| `default` | `default: BR` | Valor default de campo interno. |
-| `private` | `private helper: string` | Campo interno do Shape; fora do contrato público. |
 | `operator` | `operator +(left: A, right: B): C { ... }` | Operador próprio do Shape. |
 | método | `<name>(...): <Type> { ... }` | Função própria do Shape; `value` é o receptor. O compilador detecta pelo identificador seguido de `(`. |
 
@@ -895,7 +893,7 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 - `write`/`read` existem para **todos** os Shapes, inclusive enums e compostos.
 - `format`/`parse` têm default para primitivos, enums e medidas; **compostos exigem método próprio**.
 - `toNumber(value)` só em Shapes numéricos; `Money.toNumber` é implícito e retorna `raw`.
-- `toOrdinal(value)` é gerado pelo compilador em `classification`/`workflow`; não se escreve no Shape.
+- `toOrdinal(value)` é gerado pelo compilador em `classification`/`workflow`; não se escreve no Shape. Exceção: `std.Currency` não tem ordinal nem `toOrdinal`.
 - `value` é explícito em `write(value, out)`, `format(value, flags)` e `toNumber(value)`. `read`/`parse` são estáticos.
 
 ### FormatFlags
@@ -924,18 +922,20 @@ format(mass, { unit: kg, unitStyle: long })    // "1 quilograma"
 ```ts
 parse("14/nov/26", { style: short })
 parse("12,5 kg", { style: normal, unit: kg })
-// texto sem unidade ou unidade diferente de flags.unit -> E_PARSE_UNIT
+// texto sem unidade e sem flags.unit, ou unidade incompatível -> E_PARSE_UNIT
 ```
 
 Regras do `parse`:
 
-- Shape com unidade exige unidade no texto.
-- Se `flags.unit` existir, a unidade do texto precisa ser compatível; caso contrário, `E_PARSE_UNIT`.
-- Se não existir `flags.unit`, a unidade do texto é usada.
+- Texto com unidade + sem `flags.unit`: usa a unidade do texto.
+- Texto com unidade + `flags.unit` diferente: converte para `flags.unit`.
+- Texto sem unidade + `flags.unit`: usa `flags.unit`.
+- Texto sem unidade + sem `flags.unit`: `E_PARSE_UNIT`.
+- Unidade incompatível/dimensionalmente inválida: `E_PARSE_UNIT`.
 - Singular/plural vêm de `units.title`.
 - Separadores e símbolos vêm da regionalization interna.
 - Se a regionalization não for determinável: `E_REGIONALIZATION_UNKNOWN`.
-- A stdlib usa `parseQuantity(text, flags)`: unidade do texto vence/é convertida para `flags.unit`; sem unidade em nenhum lugar = erro.
+- A stdlib usa `parseQuantity(text, flags)`.
 
 ## 6.3 stream canônico
 
@@ -978,7 +978,7 @@ Layout canônico interlinguagens:
 - `Integer` = `int64`;
 - `number` = `double`;
 - `string` = `int32` comprimento + UTF-8;
-- enum = `int32` ordinal;
+- enum = `int32` ordinal; `Currency` = `string` ISO;
 - composto = campos inline;
 - array = `int32` quantidade + itens.
 
@@ -2098,6 +2098,9 @@ shape Currency {
 - `CurrencyCode` não é Shape separado.
 - `DefaultCurrency` usa `std.Currency`.
 - A moeda usada sem `reintroduce` gera `E_CURRENCY_METADATA_MISSING`.
+- `Currency` não tem `toOrdinal`.
+- `Currency.write`/`read` usam o código como `string`.
+- `Currency.format(value)` retorna o próprio código; `Currency.parse(text)` retorna o próprio texto.
 
 ### 29.2.1.1 `reintroduce` e formatação de moeda
 

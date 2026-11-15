@@ -244,6 +244,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Pontos para decidir (sem alterar):**
 - [x] `formula: <expr>` e bloco `to/from` aceitos; shorthand só afim invertível.
 - [x] `std.Currency` é exceção: values-base sem `title`/`icon`/`ordinal`; `reintroduce` completa.
+- [x] `std.Currency` não tem `toOrdinal`; stream/format/parse usam o código string.
+- [x] `Currency.format`/`parse` retornam o próprio código string.
+- [x] `Address.format` formata BR/US conforme `std.regionalization`.
 - [x] Mídia exemplificada: `ProductImage`, `ProductVideo`, `ProductAudio`, `ProductManual`, `ProductRichDescription`.
 
 - [ ] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?

@@ -901,6 +901,22 @@ shape Currency {
     ZMW { numeric: "967", scale: 2 }
     ZWG { numeric: "924", scale: 2 }
   }
+
+  write(value, out) {
+    out.writeString(value);
+  }
+
+  read(in) {
+    return in.readString();
+  }
+
+  parse(text, flags) {
+    return text;
+  }
+
+  format(value, flags) {
+    return value;
+  }
 }
 
 shape Duration {
