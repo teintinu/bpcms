@@ -194,8 +194,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `shape <Name> { ... }`
 - [ ] `title: I18n`
-- [ ] `base: decimal | integer | text`
-- [ ] `values { <value> { title; icon; ordinal } }` — enum; ordinal 10, 20, 30...
+- [ ] `base: decimal | integer | text | classification | workflow`
+- [ ] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
 - [ ] `currency`, `scale`
 - [ ] `dimension`, `units { unidade: { factor, title } }`
 - [ ] `units` titles têm plural I18n e `format` escolhe `one`/`other`
@@ -203,6 +203,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `format` auto-seleciona unidade; `flags.unit` força
 - [ ] `Convert` não existe
 - [ ] `min`/`max`, `maxLength`
+- [ ] `initial` único em `workflow`; `next` obrigatório; `[]` terminal
+- [ ] `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`
 - [ ] `parse`, `format`, `compare`, `aggregate`
 - [ ] `write(value, out)` com `out` inferido como `streamWriter`; `read(in)` com `in` inferido como `streamReader`; `void` inferido
 - [ ] `new Shape{raw, unit}` e shorthand de propriedades
@@ -216,7 +218,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `index`, `normalize`, `validate`, `sensitive`
 - [ ] `fields { ... }` — shape composto
 - [ ] `default`, `private`
-- [ ] Enum: cada value tem `title` + `icon` + `ordinal`; icons são locais ao serviço
+- [ ] Enum: cada value tem `title` + `icon` + `ordinal`; workflow também `next`; icons são locais ao serviço
 - [ ] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [ ] `<Document>Id` é Shape implícito de FK; não declarar
 
@@ -225,7 +227,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Resultado da inspeção:**
 
 - [x] 30 Shapes de negócio + 55 Shapes std; todos com `title`.
-- [x] 77 values; todos com `title` + `icon` + `ordinal`.
+- [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
 - [x] `values` em bloco; sem `values: [...]`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
 - [x] `MoneyBRL`, `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio.

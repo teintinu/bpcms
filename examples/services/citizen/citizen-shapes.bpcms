@@ -1,7 +1,7 @@
 // service: example.com/services/citizen
 shape CitizenKind {
   title: { pt-BR: "Tipo de cidadão", en: "Citizen kind" }
-  base: text
+  base: classification
   values {
     person {
       title: { pt-BR: "Pessoa", en: "Person" }
@@ -19,22 +19,26 @@ shape CitizenKind {
 
 shape CitizenStatus {
   title: { pt-BR: "Status do cidadão", en: "Citizen status" }
-  base: text
+  base: workflow
+  initial: active
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
       icon: Active
       ordinal: 10
+      next: [merged, blocked]
     }
     merged {
       title: { pt-BR: "Mesclado", en: "Merged" }
       icon: Merged
       ordinal: 20
+      next: []
     }
     blocked {
       title: { pt-BR: "Bloqueado", en: "Blocked" }
       icon: Blocked
       ordinal: 30
+      next: []
     }
   }
   format: plain

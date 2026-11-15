@@ -3,32 +3,38 @@
 
 shape ShipmentStatus {
   title: { pt-BR: "Status da remessa", en: "Shipment status" }
-  base: text
+  base: workflow
+  initial: draft
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
       ordinal: 10
+      next: [packed, returned]
     }
     packed {
       title: { pt-BR: "Embalada", en: "Packed" }
       icon: Packed
       ordinal: 20
+      next: [dispatched, returned]
     }
     dispatched {
       title: { pt-BR: "Despachada", en: "Dispatched" }
       icon: Dispatched
       ordinal: 30
+      next: [delivered, returned]
     }
     delivered {
       title: { pt-BR: "Entregue", en: "Delivered" }
       icon: Delivered
       ordinal: 40
+      next: []
     }
     returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
       icon: Returned
       ordinal: 50
+      next: []
     }
   }
   format: plain

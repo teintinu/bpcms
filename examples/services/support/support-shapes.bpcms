@@ -3,32 +3,38 @@
 
 shape TicketStatus {
   title: { pt-BR: "Status do chamado", en: "Ticket status" }
-  base: text
+  base: workflow
+  initial: open
   values {
     open {
       title: { pt-BR: "Aberta", en: "Open" }
       icon: Open
       ordinal: 10
+      next: [in_progress, waiting, resolved]
     }
     in_progress {
       title: { pt-BR: "Em andamento", en: "In progress" }
       icon: InProgress
       ordinal: 20
+      next: [waiting, resolved]
     }
     waiting {
       title: { pt-BR: "Aguardando", en: "Waiting" }
       icon: Waiting
       ordinal: 30
+      next: [in_progress, resolved]
     }
     resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
       icon: Resolved
       ordinal: 40
+      next: [closed]
     }
     closed {
       title: { pt-BR: "Fechado", en: "Closed" }
       icon: Closed
       ordinal: 50
+      next: []
     }
   }
   format: plain
@@ -36,32 +42,38 @@ shape TicketStatus {
 
 shape ReturnStatus {
   title: { pt-BR: "Status da devolução", en: "Return status" }
-  base: text
+  base: workflow
+  initial: requested
   values {
     requested {
       title: { pt-BR: "Solicitado", en: "Requested" }
       icon: Requested
       ordinal: 10
+      next: [approved, rejected]
     }
     approved {
       title: { pt-BR: "Aprovado", en: "Approved" }
       icon: Approved
       ordinal: 20
+      next: [received]
     }
     rejected {
       title: { pt-BR: "Rejeitado", en: "Rejected" }
       icon: Rejected
       ordinal: 30
+      next: []
     }
     received {
       title: { pt-BR: "Recebida", en: "Received" }
       icon: Received
       ordinal: 40
+      next: [refunded]
     }
     refunded {
       title: { pt-BR: "Reembolsado", en: "Refunded" }
       icon: Refunded
       ordinal: 50
+      next: []
     }
   }
   format: plain
@@ -69,7 +81,7 @@ shape ReturnStatus {
 
 shape TicketPriority {
   title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
-  base: text
+  base: classification
   values {
     P1 {
       title: { pt-BR: "Prioridade 1", en: "Priority 1" }

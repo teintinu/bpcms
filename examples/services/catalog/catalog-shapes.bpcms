@@ -11,22 +11,26 @@ shape SKU {
 
 shape ProductStatus {
   title: { pt-BR: "Status do produto", en: "Product status" }
-  base: text
+  base: workflow
+  initial: draft
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
       ordinal: 10
+      next: [published, archived]
     }
     published {
       title: { pt-BR: "Publicado", en: "Published" }
       icon: Published
       ordinal: 20
+      next: [archived]
     }
     archived {
       title: { pt-BR: "Arquivado", en: "Archived" }
       icon: Archived
       ordinal: 30
+      next: []
     }
   }
   format: plain

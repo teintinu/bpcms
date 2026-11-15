@@ -3,7 +3,7 @@
 
 shape Channel {
   title: { pt-BR: "Canal", en: "Channel" }
-  base: text
+  base: classification
   values {
     email {
       title: { pt-BR: "E-mail", en: "Email" }
@@ -26,27 +26,32 @@ shape Channel {
 
 shape NotificationStatus {
   title: { pt-BR: "Status da notificação", en: "Notification status" }
-  base: text
+  base: workflow
+  initial: queued
   values {
     queued {
       title: { pt-BR: "Na fila", en: "Queued" }
       icon: Queued
       ordinal: 10
+      next: [sent, failed]
     }
     sent {
       title: { pt-BR: "Enviada", en: "Sent" }
       icon: Sent
       ordinal: 20
+      next: [read, failed]
     }
     failed {
       title: { pt-BR: "Falhou", en: "Failed" }
       icon: Failed
       ordinal: 30
+      next: [queued]
     }
     read {
       title: { pt-BR: "Lida", en: "Read" }
       icon: Read
       ordinal: 40
+      next: []
     }
   }
   format: plain
@@ -54,7 +59,7 @@ shape NotificationStatus {
 
 shape LocaleTag {
   title: { pt-BR: "Idioma", en: "Locale" }
-  base: text
+  base: classification
   values {
     pt-BR {
       title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }

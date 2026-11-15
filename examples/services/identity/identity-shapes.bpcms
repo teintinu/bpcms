@@ -4,22 +4,26 @@
 
 shape UserStatus {
   title: { pt-BR: "Status do usuário", en: "User status" }
-  base: text
+  base: workflow
+  initial: active
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
       icon: Active
       ordinal: 10
+      next: [suspended, disabled]
     }
     suspended {
       title: { pt-BR: "Suspenso", en: "Suspended" }
       icon: Suspended
       ordinal: 20
+      next: [active, disabled]
     }
     disabled {
       title: { pt-BR: "Desativado", en: "Disabled" }
       icon: Disabled
       ordinal: 30
+      next: []
     }
   }
   format: plain
@@ -27,22 +31,26 @@ shape UserStatus {
 
 shape SessionStatus {
   title: { pt-BR: "Status da sessão", en: "Session status" }
-  base: text
+  base: workflow
+  initial: active
   values {
     active {
       title: { pt-BR: "Ativo", en: "Active" }
       icon: Active
       ordinal: 10
+      next: [ended, expired]
     }
     ended {
       title: { pt-BR: "Encerrada", en: "Ended" }
       icon: Ended
       ordinal: 20
+      next: []
     }
     expired {
       title: { pt-BR: "Expirada", en: "Expired" }
       icon: Expired
       ordinal: 30
+      next: []
     }
   }
   format: plain

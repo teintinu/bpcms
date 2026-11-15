@@ -621,8 +621,9 @@ document Shipment {
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `base` | `base: decimal \| integer \| text` | Representação base. |
-| `values` | `values { draft { title; icon; ordinal: 10 } }` | Enum; cada value exige `title`, `icon` e `ordinal`. |
+| `base` | `base: decimal \| integer \| text \| classification \| workflow` | Representação base. |
+| `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. |
+| `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `currency` | `currency: BRL` | Moeda; exige escala e formato. |
 | `scale` | `scale: 2` | Casas decimais de exibição/agregação. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
@@ -661,23 +662,39 @@ Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 ```bpcms
 shape InvoiceStatus {
   title: { pt-BR: "Status da nota", en: "Invoice status" }
-  base: text
+  base: workflow
+  initial: draft
   format: plain
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
       ordinal: 10
+      next: [issued, cancelled]
     }
     issued {
       title: { pt-BR: "Emitida", en: "Issued" }
       icon: Issued
       ordinal: 20
+      next: [paid, overdue, cancelled]
     }
     paid {
       title: { pt-BR: "Paga", en: "Paid" }
       icon: Paid
       ordinal: 30
+      next: []
+    }
+    overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      icon: Overdue
+      ordinal: 40
+      next: [paid, cancelled]
+    }
+    cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      icon: Cancelled
+      ordinal: 50
+      next: []
     }
   }
 }
@@ -721,6 +738,33 @@ shape Length {
 - `value.unit` é a unidade do valor; se o field não definir, usa a unidade de fator `1`.
 - O `format` escolhe automaticamente a unidade mais legível, salvo `flags.unit`; o título usa `one`/`other` conforme o número.
 - `title` aceita `string | PluralForms`; `plural` não é campo separado da unidade.
+
+## 6.1.2 classification e workflow
+
+`base: classification` enumera categorias; `base: workflow` modela estados e transições.
+
+```bpcms
+shape TaxRegimeCode {
+  title: { pt-BR: "Regime tributário", en: "Tax regime" }
+  base: classification
+  values {
+    SIMPLES {
+      title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+      icon: Simples
+      ordinal: 10
+    }
+  }
+}
+```
+
+- `classification` não tem `initial` nem `next`.
+- `workflow` tem exatamente um `initial`.
+- Todo state de `workflow` tem `next`; `next: []` é terminal.
+- `next` referencia apenas states do mesmo workflow.
+- Self-transition é inválida no v1.
+- `canTransitionTo(next)` é um método automático do workflow.
+- `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
+- Ordinal continua explícito, 10, 20, 30...
 
 ## 6.2 Valor e métodos
 
@@ -1679,6 +1723,9 @@ policy FourEyesPayment {
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
 | Constructor | propriedade/valor inválido em `new` | `E_CONSTRUCTOR_PROPERTY` |
+| Workflow | initial/next inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_NEXT` / `E_WORKFLOW_TRANSITION` |
+| Classification | `initial`/`next` em classification | `E_CLASSIFICATION_TRANSITION` |
+| Runtime | mudança de estado não permitida | `E_INVALID_TRANSITION` |
 | Dimensão | `Mass` onde se espera `Length`; soma incompatível | `E_DIMENSION` |
 | Unidade | unidade não pertence à dimensão | `E_UNIT` |
 | Índice | campo inexistente/não indexável; índice duplicado | `E_INDEX` |

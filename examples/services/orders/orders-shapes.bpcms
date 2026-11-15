@@ -3,27 +3,32 @@
 
 shape OrderStatus {
   title: { pt-BR: "Status do pedido", en: "Order status" }
-  base: text
+  base: workflow
+  initial: draft
   values {
     draft {
       title: { pt-BR: "Rascunho", en: "Draft" }
       icon: Draft
       ordinal: 10
+      next: [placed, cancelled]
     }
     placed {
       title: { pt-BR: "Realizado", en: "Placed" }
       icon: Placed
       ordinal: 20
+      next: [cancelled, fulfilled]
     }
     cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
       icon: Cancelled
       ordinal: 30
+      next: []
     }
     fulfilled {
       title: { pt-BR: "Atendido", en: "Fulfilled" }
       icon: Fulfilled
       ordinal: 40
+      next: []
     }
   }
   format: plain
