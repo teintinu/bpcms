@@ -62,7 +62,7 @@ Os tipos básicos são intrínsecos e não são Shapes:
 Tipos adicionais:
 
 - `DateTime`, `Date`, `Duration`, `Unit`, `FormatFlags`, `void`;
-- `StreamReader` e `StreamWriter` são as interfaces inferidas em `read` e `write`;
+- `streamReader` e `streamWriter` são as interfaces inferidas em `read` e `write`;
 - `Int8`, `Int16`, `Int32`, `Int64`, `Float`, `Double` são usados apenas nos métodos de `stream`;
 - `Shape` é o tipo de um valor de Classe; `new Classe{...}` cria um valor.
 
@@ -640,9 +640,19 @@ document Shipment {
 | `fields` | `fields { street: string ... }` | Shape composto. |
 | `default` | `default: BR` | Valor default de campo interno. |
 | `private` | `private helper: string` | Campo interno do Shape; fora do contrato público. |
-| `method` | `method <name>(...): <Type> { ... }` | Função própria do Shape; `value` é o receptor. |
+| método | `<name>(...): <Type> { ... }` | Função própria do Shape; `value` é o receptor. O compilador detecta pelo identificador seguido de `(`. |
 
 > `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
+
+**Métodos não usam keyword.** Um identificador seguido de `(` no corpo do Shape declara um método:
+
+```bpcms
+toNumber(value) {
+  return value.raw;
+}
+```
+
+`method toNumber(value)` é inválido.
 
 ## 6.1 Valores enumerados
 
@@ -718,16 +728,18 @@ Cada Shape gera um tipo de valor na linguagem alvo. As operações reservadas s�
 
 | Operação | Assinatura | Função |
 | :--- | :--- | :--- |
-| `write` | `write(value: Shape, out: stream): void` | Serializa no stream |
-| `read` | `read(in): Shape` | Desserializa; `in` é inferido como `StreamReader` |
-| `format` | `format(value: Shape, flags: FormatFlags): string` | Texto para UI |
-| `parse` | `parse(text: string, flags: FormatFlags): Shape` | Texto → valor |
-| `toNumber` | `toNumber(value: Shape): number` | Valor numérico do Shape |
+| `write` | `write(value, out)` | Serializa; tipos/retorno inferidos |
+| `read` | `read(in)` | Desserializa; `in` é inferido como `streamReader`; retorno inferido |
+| `format` | `format(value, flags)` | Texto para UI; tipos/retorno inferidos |
+| `parse` | `parse(text, flags)` | Texto → valor; tipos/retorno inferidos |
+| `toNumber` | `toNumber(value)` | Valor numérico; tipos/retorno inferidos |
 
+- `write(value, out)` recebe `value` explícito; `out` é inferido como `streamWriter`; o retorno `void` é inferido.
+- `read(in)` infere `in` como `streamReader`.
 - `write`/`read` existem para **todos** os Shapes, inclusive enums e compostos.
 - `format`/`parse` têm default para primitivos, enums e medidas; **compostos exigem método próprio**.
 - `toNumber(value)` é declarado por cada Shape que expõe valor numérico; o tipo de `value` é inferido do Shape. Em `bpcms.org/std`, as medidas declaram o método explicitamente.
-- `value` é o receptor implícito; não se declara `value` nos parâmetros.
+- `value` é explícito em `write(value, out)` e `toNumber(value)`; em `format(flags)` é o receptor implícito. `read`/`parse` são estáticos.
 
 ### FormatFlags
 
@@ -759,7 +771,7 @@ parse("12,5 kg", { style: normal, unit: kg })
 `stream` é um tipo intrínseco de leitura/escrita binária. Não é ASN.1.
 
 ```ts
-type StreamReader = {
+type streamReader = {
   readInt8(): Int8;
   readInt16(): Int16;
   readInt32(): Int32;
@@ -771,7 +783,7 @@ type StreamReader = {
   readStreamArray(): stream[];
 };
 
-type StreamWriter = {
+type streamWriter = {
   writeInt8(value: Int8): void;
   writeInt16(value: Int16): void;
   writeInt32(value: Int32): void;
@@ -783,7 +795,7 @@ type StreamWriter = {
   writeStreamArray(value: stream[]): void;
 };
 
-type stream = StreamReader & StreamWriter;
+type stream = streamReader & streamWriter;
 ```
 
 Layout canônico interlinguagens:
@@ -804,13 +816,13 @@ Layout canônico interlinguagens:
 Funções de apoio usadas pelos métodos da stdlib:
 
 ```ts
-ParseReal(text: string, unit: Unit): number
-FormatReal(raw: number, from: Unit, to: Unit, style: FormatStyle): string
-BestUnit(raw: number, from: Unit, units: Units): Unit
+parseReal(text: string, unit: Unit): number
+formatReal(raw: number, from: Unit, to: Unit, style: FormatStyle): string
+bestUnit(raw: number, from: Unit, units: Units): Unit
 ```
 
-- `BestUnit` escolhe a unidade que evita muitos decimais/zeros à direita; `flags.unit` força uma unidade.
-- `FormatReal` resolve `title`/`PluralForms` da unidade; `format` usa `one`/`other` conforme o número.
+- `bestUnit` escolhe a unidade que evita muitos decimais/zeros à direita; `flags.unit` força uma unidade.
+- `formatReal` resolve `title`/`PluralForms` da unidade; `format` usa `one`/`other` conforme o número.
 - `value.raw` é o valor na unidade atual.
 - `value.unit` é a unidade atual.
 - `read`/`parse` são métodos estáticos do Shape; `write`/`format` usam `value`; `toNumber` recebe `value` explícito.
@@ -831,16 +843,16 @@ shape Distance {
     ft: { factor: 0.3048 }
   }
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 
-  method toWholeKilometres(): Integer {
+  toWholeKilometres() {
     const from = value.unit ?? m;
-    return Trunc(value.raw * units[from].factor / units[km].factor);
+    return trunc(value.raw * units[from].factor / units[km].factor);
   }
 
-  method isLongerThan(limit: Distance): boolean {
+  isLongerThan(limit) {
     const a = value.raw * units[value.unit ?? m].factor;
     const b = limit.raw * units[limit.unit ?? m].factor;
     return a > b;
@@ -857,7 +869,8 @@ Gramática mínima:
 - `return`;
 - `throw Error("...")`;
 - chamadas, membros (`value.field`), arrays, operadores e `??`;
-- `Round` e `Trunc` intrínsecos;
+- `round` e `trunc` intrínsecos;
+- funções em **camelCase**: `parseReal`, `formatReal`, `bestUnit`, `toNumber`.
 - `toNumber(value)` é declarado pelo Shape; as medidas de `bpcms.org/std` já o declaram.
 
 Não há `let`, declaração de classes, funções aninhadas, async ou exceções customizadas no v1.
@@ -875,9 +888,52 @@ return new Length{raw, unit};
 - `new Length{raw, unit}` equivale a `new Length{raw: raw, unit: unit}`.
 - A sintaxe de propriedades é `{ PROPNOME: PROPVALOR, ... }`.
 - Quando a variável tem o mesmo nome da propriedade, o valor pode ser omitido (shorthand), como em TypeScript.
-- O tipo de `in` em `read` é inferido como `StreamReader`; o retorno declarado é `Length`.
+- O tipo de `in` em `read` é inferido como `streamReader`; o retorno declarado é `Length`.
+- Em `write(value, out)`, `value` é o Shape e `out` é inferido como `streamWriter`; `void` também é inferido.
 - Se o tipo de retorno, propriedade ou valor for inválido, o compilador gera erro (`E_TYPE`/`E_CONSTRUCTOR_PROPERTY`).
 - Para `CurrencyCode`, `new CurrencyCode{raw: in.readString()}`.
+
+### 6.4.2 Tipos explícitos ou inferidos
+
+Os argumentos **precisam existir**; o tipo pode ser explícito ou inferido.
+
+Explícito:
+
+```bpcms
+toNumber(value: Length): number {
+  return value.raw;
+}
+
+write(value: Length, out: streamWriter) {
+  out.writeString(value.unit ?? m);
+  out.writeDouble(value.raw);
+}
+```
+
+Inferido:
+
+```bpcms
+toNumber(value) {
+  return value.raw;
+}
+
+write(value, out) {
+  out.writeString(value.unit ?? m);
+  out.writeDouble(value.raw);
+}
+```
+
+Misto:
+
+```bpcms
+convert(value: Length, unit) {
+  return value.raw * units[value.unit ?? m].factor / units[unit].factor;
+}
+```
+
+- O tipo de retorno também pode ser explícito ou inferido.
+- O compilador valida os tipos inferidos e gera `E_TYPE` se forem inválidos.
+- Não existe forma sem argumento: `write(out)` é inválido; o `value` é obrigatório.
 
 ## 6.5 `toNumber`
 
@@ -887,7 +943,7 @@ shape Rating {
   base: decimal
   max: 5
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 }
@@ -1651,7 +1707,7 @@ policy FourEyesPayment {
 | Service | ✅ | 8 |
 | Process | ✅ | 7 |
 | Document | ✅ | 6 |
-| Shape | ✅ | 8 |
+| Shape | ✅ | 9 |
 | View | ✅ | 6 |
 | Role/Organogram | ✅ | 6 |
 | Evidence | ✅ | 6 |

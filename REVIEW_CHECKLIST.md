@@ -73,7 +73,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 | # | Tipo | Depende de | Exemplos | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/*/*-icons.bpcms` | ✅ |
-| 2 | Shape | Icon (values) | H.1–H.8 | 🟡 |
+| 2 | Shape | Icon (values) | H.1–H.9 | 🟡 |
 | 3 | Role | permissões | R.1–R.6 | ⬜ |
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
 | 5 | Parameter | Shape/Secret | PR.1–PR.6 | ⬜ |
@@ -107,7 +107,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
 - [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
 - [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
-- [ ] Nomes de arquivos em kebab-case; referências em camelCase; subpastas são namespaces de todos os artefatos.
+- [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase; subpastas são namespaces de todos os artefatos.
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
 - [ ] Icons sem prefixo `Icon`; iguais em serviços diferentes são permitidos; duplicados no mesmo serviço são erro.
 - [ ] Nenhum serviço criado só para biblioteca/agrupamento de Shapes/Icons/Themes/Locales.
@@ -204,10 +204,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `Convert` não existe
 - [ ] `min`/`max`, `maxLength`
 - [ ] `parse`, `format`, `compare`, `aggregate`
-- [ ] `write(value, stream)`, `read(in)` com `in` inferido como `StreamReader`
+- [ ] `write(value, out)` com `out` inferido como `streamWriter`; `read(in)` com `in` inferido como `streamReader`; `void` inferido
 - [ ] `new Shape{raw, unit}` e shorthand de propriedades
 - [ ] Erro de tipo/propriedade em `new` é `E_TYPE`/`E_CONSTRUCTOR_PROPERTY`
-- [ ] `method <name>(...): <Type> { ... }` com expressão completa
+- [ ] `<name>(...)` sem keyword `method`; compilador detecta por `(`
+- [ ] Argumentos obrigatórios; tipos/retorno explícitos ou inferidos
+- [ ] Exemplos de métodos com tipos explícitos, inferidos e mistos
 - [ ] `toNumber(value): number` por Shape; medidas de `bpcms.org/std` declaram explicitamente
 - [ ] `format`/`parse` de compostos exigem método próprio
 - [ ] `convert` removido
@@ -218,7 +220,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [ ] `<Document>Id` é Shape implícito de FK; não declarar
 
-**Exemplos:** H.1–H.8; `catalog-shapes`, `identity-shapes`, `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
+**Exemplos:** H.1–H.9; `catalog-shapes`, `identity-shapes`, `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
 
 **Resultado da inspeção:**
 

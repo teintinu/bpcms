@@ -42,7 +42,7 @@ shape MoneyBRL {
   compare: exact
   aggregate: sum
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 }

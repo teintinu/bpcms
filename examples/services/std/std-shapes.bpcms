@@ -116,32 +116,32 @@ shape Length {
   aggregate: sum
   index: normalized
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 
-  method write(out: stream): void {
+  write(value, out) {
     const unit = value.unit ?? m;
     out.writeString(unit);
     out.writeDouble(value.raw);
   }
 
-  method read(in): Length {
+  read(in) {
     const unit = in.readString();
     const raw = in.readDouble();
     return new Length{raw, unit};
   }
 
-  method parse(text: string, flags: FormatFlags): Length {
+  parse(text, flags) {
     const unit = flags.unit ?? m;
-    const raw = ParseReal(text, unit);
+    const raw = parseReal(text, unit);
     return new Length{raw, unit};
   }
 
-  method format(flags: FormatFlags): string {
+  format(flags) {
     const from = value.unit ?? m;
-    const unit = flags.unit ?? BestUnit(value.raw, from, units);
-    return FormatReal(value.raw, from, unit, flags.style);
+    const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    return formatReal(value.raw, from, unit, flags.style);
   }
 }
 
@@ -246,32 +246,32 @@ shape Mass {
   aggregate: sum
   index: normalized
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 
-  method write(out: stream): void {
+  write(value, out) {
     const unit = value.unit ?? g;
     out.writeString(unit);
     out.writeDouble(value.raw);
   }
 
-  method read(in): Mass {
+  read(in) {
     const unit = in.readString();
     const raw = in.readDouble();
     return new Mass{raw, unit};
   }
 
-  method parse(text: string, flags: FormatFlags): Mass {
+  parse(text, flags) {
     const unit = flags.unit ?? g;
-    const raw = ParseReal(text, unit);
+    const raw = parseReal(text, unit);
     return new Mass{raw, unit};
   }
 
-  method format(flags: FormatFlags): string {
+  format(flags) {
     const from = value.unit ?? g;
-    const unit = flags.unit ?? BestUnit(value.raw, from, units);
-    return FormatReal(value.raw, from, unit, flags.style);
+    const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    return formatReal(value.raw, from, unit, flags.style);
   }
 }
 
@@ -376,32 +376,32 @@ shape Volume {
   aggregate: sum
   index: normalized
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 
-  method write(out: stream): void {
+  write(value, out) {
     const unit = value.unit ?? m3;
     out.writeString(unit);
     out.writeDouble(value.raw);
   }
 
-  method read(in): Volume {
+  read(in) {
     const unit = in.readString();
     const raw = in.readDouble();
     return new Volume{raw, unit};
   }
 
-  method parse(text: string, flags: FormatFlags): Volume {
+  parse(text, flags) {
     const unit = flags.unit ?? m3;
-    const raw = ParseReal(text, unit);
+    const raw = parseReal(text, unit);
     return new Volume{raw, unit};
   }
 
-  method format(flags: FormatFlags): string {
+  format(flags) {
     const from = value.unit ?? m3;
-    const unit = flags.unit ?? BestUnit(value.raw, from, units);
-    return FormatReal(value.raw, from, unit, flags.style);
+    const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    return formatReal(value.raw, from, unit, flags.style);
   }
 }
 
@@ -424,32 +424,32 @@ shape Percentage {
   format: percent
   aggregate: weighted-average
 
-  method toNumber(value): number {
+  toNumber(value) {
     return value.raw;
   }
 
-  method write(out: stream): void {
+  write(value, out) {
     const unit = value.unit ?? %;
     out.writeString(unit);
     out.writeDouble(value.raw);
   }
 
-  method read(in): Percentage {
+  read(in) {
     const unit = in.readString();
     const raw = in.readDouble();
     return new Percentage{raw, unit};
   }
 
-  method parse(text: string, flags: FormatFlags): Percentage {
+  parse(text, flags) {
     const unit = flags.unit ?? %;
-    const raw = ParseReal(text, unit);
+    const raw = parseReal(text, unit);
     return new Percentage{raw, unit};
   }
 
-  method format(flags: FormatFlags): string {
+  format(flags) {
     const from = value.unit ?? %;
-    const unit = flags.unit ?? BestUnit(value.raw, from, units);
-    return FormatReal(value.raw, from, unit, flags.style);
+    const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    return formatReal(value.raw, from, unit, flags.style);
   }
 }
 
@@ -644,23 +644,23 @@ shape CurrencyCode {
   dimension: currency
   validate: iso-4217
 
-  method toNumber(value): number {
+  toNumber(value) {
     throw Error("CurrencyCode has no numeric value");
   }
 
-  method write(out: stream): void {
+  write(value, out) {
     out.writeString(value.raw);
   }
 
-  method read(in): CurrencyCode {
+  read(in) {
     return new CurrencyCode{raw: in.readString()};
   }
 
-  method parse(text: string, flags: FormatFlags): CurrencyCode {
+  parse(text, flags) {
     return new CurrencyCode{raw: text};
   }
 
-  method format(flags: FormatFlags): string {
+  format(flags) {
     return value.raw;
   }
 }
