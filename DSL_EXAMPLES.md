@@ -1494,15 +1494,18 @@ view SupportKanban {
 
 ```bpcms
 role Customer {
+  scopes: [Store]
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [catalog.view, order.create, order.viewOwn]
 }
 role Clerk {
+  scopes: [Store]
   title: { pt-BR: "Atendente", en: "Clerk" }
   inherits: Customer
   permissions: [order.manage, customer.view]
 }
 role Manager {
+  scopes: [Store]
   title: { pt-BR: "Gerente", en: "Manager" }
   inherits: Clerk
   permissions: [customer.manage, report.view, refund.approve]
@@ -1728,6 +1731,56 @@ organogram Laboratory {
 No serviço `laboratory`, `Sample.kind` distingue `patient`, `support` e `control`. Amostras de apoio e controle não referenciam paciente; usam `supportLab`/`controlLot`.
 
 O `LabManager` pode atribuir `Collector`, `Analyst` e `SupportLiaison` a outras pessoas, mas nunca a si mesmo. Quem recebe a role ganha as permissões da role atribuída, não as permissões do gerente; o gerente não precisa ter as permissões da role gerenciada.
+
+```bpcms
+// managerUser/collectorUser/regionalUser: User
+// laboratoryMain/laboratorySupport: Laboratory — referências a documentos
+assignRole(managerUser, LabManager, scopes: {
+  Laboratory: {all}
+})
+
+assignRole(collectorUser, Collector, scopes: {
+  Laboratory: {only: [laboratoryMain]}
+})
+
+assignRole(regionalUser, LabManager, scopes: {
+  Laboratory: {except: [laboratoryMain]}
+})
+```
+
+### R.8 Herança múltipla de roles
+
+```bpcms
+role Collector {
+  title: { pt-BR: "Coletador", en: "Collector" }
+  scopes: [Laboratory]
+  permissions: [sample.collect, sample.view]
+}
+
+role Auditor {
+  title: { pt-BR: "Auditor", en: "Auditor" }
+  scopes: [Laboratory]
+  permissions: [audit.view]
+}
+
+role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
+  scopes: [Laboratory]
+  inherits: [Collector, Auditor]
+  permissions: [exam.result, exam.review]
+}
+
+organogram Laboratory {
+  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
+  scopes: [Laboratory]
+
+  hierarchy {
+    Analyst > Collector
+  }
+}
+```
+
+*Valida: permissões próprias + permissões herdadas de múltiplas roles, mantendo o mesmo escopo.*
 
 # Descoberta
 

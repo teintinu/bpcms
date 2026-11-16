@@ -1359,8 +1359,8 @@ view SalesDashboard {
 | `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo da role/organograma. |
 | `manages` | `LabManager manages [Collector, Analyst]` | Atribuição de roles a terceiros; nunca a si mesmo; não concede as permissões da role. |
 | `all` | `Store: {all}` | Todos os escopos do tipo; bare, sem `true`. |
-| `only` | `Store: {only: [id1, id2]}` | Lista explícita; escopo novo não entra. |
-| `except` | `Store: {except: [id1]}` | Todos, exceto a lista; escopo novo entra. |
+| `only` | `Store: {only: [storeForSP, storeForRJ]}` | Lista de **referências a documentos**; escopo novo não entra. |
+| `except` | `Store: {except: [storeForSP]}` | Todos, exceto as referências listadas; escopo novo entra. |
 | `organogram` | `organogram <Name> { ... }` | Hierarquia e regras de autorização. |
 | `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. |
 | `fourEyes` | `fourEyes { payment.approve requires Approver }` | Exige um segundo ator diferente, com a role indicada. |
@@ -1402,9 +1402,16 @@ organogram Store {
 ```
 
 ```bpcms
+// fiscalYearFor2026: FiscalYear — referência ao documento
+// storeForSP: Store — referência ao documento
 assignRole(user, InvoiceManager, scopes: {
   Store: {all}
-  FiscalYear: {only: [2026]}
+  FiscalYear: {only: [fiscalYearFor2026]}
+})
+
+assignRole(regionalUser, InvoiceManager, scopes: {
+  Store: {except: [storeForSP]}
+  FiscalYear: {only: [fiscalYearFor2026]}
 })
 ```
 
@@ -1418,16 +1425,32 @@ assignRole(user, InvoiceManager, scopes: {
 - permissões herdadas não mudam a identidade da role.
 
 ```bpcms
+role Collector {
+  title: { pt-BR: "Coletador", en: "Collector" }
+  permissions: [sample.collect]
+}
+
 role Auditor {
   title: { pt-BR: "Auditor", en: "Auditor" }
   permissions: [audit.view]
 }
 
 role Analyst {
+  title: { pt-BR: "Analista", en: "Analyst" }
   inherits: [Collector, Auditor]
   permissions: [exam.result]
 }
 ```
+
+**Referência de escopo.** Em `only`/`except`, passe sempre uma **referência ao documento** de escopo, nunca um ID solto nem uma chave alternativa:
+
+- `fiscalYearFor2026: FiscalYear` é uma referência válida;
+- `2026` ou `"2026"` é chave alternativa e não localiza o documento;
+- `storeForSP: Store` é uma referência válida;
+- `"SP"` ou um ID textual solto não são referências;
+- o builder extrai o ID interno da referência;
+- a referência é resolvida no runtime, não no assignment;
+- `all` não precisa de referência.
 
 **Atribuição de papel.** `manages` define autoridade de atribuição, não permissões:
 
@@ -1440,7 +1463,6 @@ role Analyst {
 - o gerente pode atribuir apenas papéis listados em `manages`;
 - o alvo recebe as permissões do **papel atribuído**, não as do gerente;
 - o gerente não precisa ter as permissões do papel que gerencia;
-- `assignment: others-only` proíbe o gerente de atribuir qualquer papel a si mesmo;
 - auto-atribuição é proibida mesmo que o papel esteja em `manages`;
 - `manages` não é `inherits` e não é `delegates to`;
 - a atribuição é auditada;

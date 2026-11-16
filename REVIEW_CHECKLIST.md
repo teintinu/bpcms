@@ -282,7 +282,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] Papel público; sem `private` de topo
 - [x] Papel definido no serviço ou no organogram
 
-**Exemplos:** R.1–R.7; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
+**Exemplos:** R.1–R.8; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
 
 **Foco da revisão:**
 
@@ -295,7 +295,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages` com `assignment: others-only`; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; roles e organograma no mesmo arquivo; Support tem `Manager` local; exemplos R.1–R.7 com títulos e hierarquia padronizada.
+**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages`; `manages` é sempre others-only; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; roles e organograma no mesmo arquivo; Support tem `Manager` local; exemplos R.1–R.8 com títulos, hierarquia e herança múltipla.
 
 ## 4. Organogram ✅
 
@@ -315,7 +315,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `requires` dentro de `fourEyes`
 - [x] mesmo arquivo dos roles (`*-organograms.bpcms`)
 
-**Exemplos:** R.1–R.7; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
+**Exemplos:** R.1–R.8; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
 
 **Foco da revisão:**
 
