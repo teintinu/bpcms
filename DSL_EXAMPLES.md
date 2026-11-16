@@ -403,7 +403,6 @@ service "example.com/services/fraud-checkout" {
 
   imports {
     service "example.com/services/checkout" as Checkout
-    service "example.com/services/identity" as Identity
   }
 
   reintroduce Checkout.Checkout {

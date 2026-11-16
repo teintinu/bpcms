@@ -4,9 +4,7 @@ service "example.com/services/fraud-checkout" {
   version: 1.0.0
   owner: "Risk"
   imports {
-    service "bpcms.org/std" as std
     service "example.com/services/checkout" as Checkout
-    service "example.com/services/identity" as Identity
   }
 
   reintroduce Checkout.Checkout {

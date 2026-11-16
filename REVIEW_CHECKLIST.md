@@ -674,15 +674,31 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [ ] `process <Name> { ... }`
-- [ ] `title`? (decidir)
+- [ ] `title`
 - [ ] `version`, `goal`, `roles`
-- [ ] `start on Event`
+- [ ] `start on Event`, `end on Event`
 - [ ] `task` (role/form/reads/writes/sla)
-- [ ] `type: service`
+- [ ] People task / User task
+- [ ] Form task / `form`
+- [ ] Service task
+- [ ] Business rule task / Decision
+- [ ] Manual task
+- [ ] Send task / Receive task
+- [ ] Script task (se suportado)
+- [ ] Subprocess / Call activity
 - [ ] `type: compensation` + `for` + `action`
-- [ ] `gateway` + `if/else`
-- [ ] `on error`
-- [ ] `end on Event`
+- [ ] Boundary events: timer, error, message, signal, escalation
+- [ ] Start/end/intermediate events
+- [ ] `gateway` exclusivo, inclusivo, paralelo, event-based, complexo
+- [ ] `if/else`, default flow, conditional flow
+- [ ] `insert`
+- [ ] Multi-instance / loop
+- [ ] Pools / lanes / participantes
+- [ ] Collaboration diagram
+- [ ] Choreography diagram / choreography task
+- [ ] Conversation diagram
+- [ ] Decision diagram / DMN
+- [ ] BPMN DI (formas e conexões)
 - [ ] `integration`
 
 **Exemplos:** P.1–P.7; `*-processes.bpcms`.
@@ -979,7 +995,43 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] precisam title, permissao, etc...
 
 ## 27. reintroduce
-- [ ] revisar uso de reintroduce para cada atertefato/atributo/metodo
+
+- [ ] Revisar uso de `reintroduce` para cada artefato.
+- [ ] Revisar uso para cada atributo.
+- [ ] Revisar uso para métodos/ações.
+- [ ] Revisar uso em Process: `task`, `insert`, transições, gateways, eventos.
+- [ ] Reintrodução é aditiva e altera só a parte declarada.
+- [ ] Conflito de metadados/nós = erro.
+- [ ] Validar dependências, ciclo, alvo existente e assinatura.
+- [ ] Definir efeito no AST, diff, lock e closure.
+- [ ] Definir como o construtor materializa a alteração.
+- [ ] Revisar depois de todas as keywords.
+
+## Reavaliação da ordem
+
+**Próximo: Document.**
+
+Motivo:
+
+- Document é a base de `link`, `scope`, `id`, `number`, permissões e leitura/edição;
+- Event, View, Decision, Policy, Job, Report e Process dependem de Document;
+- Process também depende de Event, Role, Integration e View;
+- revisar Process antes de Document criaria decisões sobre nós/eventos sem o contrato de dados fechado;
+- Process fica para depois de Document, Event, View, Decision, Integration e Report.
+
+Ordem recomendada:
+
+1. Document
+2. Event
+3. View
+4. Decision
+5. Policy
+6. Job
+7. Integration
+8. Report
+9. Process
+
+O item 27 (`reintroduce`) fica como revisão transversal depois das keywords.
 
 ## Revisão de Icon — encerrada
 
