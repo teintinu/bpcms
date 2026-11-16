@@ -975,6 +975,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ⬜ pendente.
 
+## 26. metodos
+- [ ] precisam title, permissao, etc...
+
+## 27. reintroduce
+- [ ] revisar uso de reintroduce para cada atertefato/atributo/metodo
+
 ## Revisão de Icon — encerrada
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
