@@ -262,7 +262,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** Shape base + campos; moeda em `Money`/`Currency`; `formula` block ou shorthand afim; `Currency` sem `title`/`icon`/`ordinal` e sem `toOrdinal`, stream/format/parse como código string; composto com JSON canônico e `format`/`parse` sobrescrevíveis; `sensitive`/`maxLength` default no Shape com override no field; `default`/`private` no field; 39 Shapes de negócio + 57 std; 178 moedas ISO.
+**Decisões:** Shape base + campos; moeda em `Money`/`Currency`; `formula` block ou shorthand afim; `Currency` sem `title`/`icon`/`ordinal` e sem `toOrdinal`, stream/format/parse como código string; composto com JSON canônico e `format`/`parse` sobrescrevíveis; `sensitive`/`maxLength` default no Shape com sobrescrita no field; `default`/`private` no field; 39 Shapes de negócio + 57 std; 178 moedas ISO.
 
 **Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
@@ -378,7 +378,6 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `title: I18n`
 - [x] `version`, `owner`
 - [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
-- [x] `override "<uri>#<Artifact>.<member>" { with: ... }`
 - [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
 - [x] Sem `provides`; contrato são os artefatos públicos
 - [x] Sem `roles` inline; roles no `*-organograms.bpcms`
@@ -395,14 +394,13 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `imports` vazio é permitido? — sim.
 - [x] `roles` inline vs arquivo de organogram? — apenas arquivo.
 - [x] `capabilities` fica no artefato, não no Service; `provides` não existe.
-- [x] Override é permitido? — sim; um por alvo, mesmo import, LSP.
 - [x] Serviço de negócio pode ter `Shape`/`Icon` locais? — sim, se forem do domínio.
 - [x] `reintroduce` pode alterar qualquer parte de qualquer artefato importado? — sim, aditivo; conflito é erro.
 - [x] `capabilities` pode existir em qualquer artefato? — sim; role de equipamento exemplifica.
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** Service sem `provides`, `roles`, `source`, `requires` ou `capabilities`; usa `imports`, `override` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam apenas no arquivo de organograma.
+**Decisões:** Service sem `provides`, `roles`, `source`, `requires`, `capabilities` ou cláusula de substituição; usa `imports` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam apenas no arquivo de organograma.
 
 ## 7. Document 🟡
 

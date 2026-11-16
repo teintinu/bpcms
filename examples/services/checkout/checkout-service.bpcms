@@ -1,0 +1,10 @@
+// service: example.com/services/checkout
+service "example.com/services/checkout" {
+  title: { pt-BR: "Finalização da compra", en: "Checkout" }
+  version: 1.0.0
+  owner: "Checkout"
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/identity" as Identity
+  }
+}

@@ -2,6 +2,8 @@
 
 *Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. Esta referência cobre **todas as cláusulas usadas em [DSL_EXAMPLES.md](DSL_EXAMPLES.md)** e serve de base para o SPECS.
 
+**A DSL é uma abstração de módulos.** O código-fonte descreve contratos, capacidades, dados e políticas; a implementação concreta é responsabilidade dos construtores. O compilador da DSL deve produzir um **AST simples, estável e poderoso**, validar dependências e impedir incoerências antes de qualquer geração de código.
+
 ## Como ler
 
 | Notação | Significado |
@@ -150,9 +152,6 @@ O app tem **um lock file** (`bpcms.lock`), gerado e versionado. Ele fixa **uma v
 | `source` | `source: registry \| repository` | Origem da versão. |
 | `integrity` | `integrity: "sha256:..."` | Integridade do artefato. |
 | `artifacts` | mapa `"<fqn>" -> id` | Todos os identificadores: documentos, campos, ações, views, eventos, papéis, nós. |
-| `overrides` | lista `{ target, by, id }` | Overrides ativos na app. |
-| `target` | `target: "<uri>#<Artifact>.<member>"` | Alvo do override. |
-| `by` | `by: "<uri>"` | Serviço que substitui. |
 
 ```yaml
 lock:
@@ -167,11 +166,7 @@ lock:
       integrity: "sha256:..."
   artifacts:
     "example.com/services/checkout#CheckoutSession": 20
-    "example.com/services/checkout#CheckoutSession.placeOrder": 21
-  overrides:
-    - target: "example.com/services/checkout#CheckoutSession.placeOrder"
-      by: "example.com/services/fraud-checkout"
-      id: 41
+    "example.com/services/checkout#Checkout": 21
 ```
 
 **Regras:** o lock é a única fonte de IDs por app; o serviço **não tem lock, IDs nem versões de imports**. Os IDs são usados para **minificação de código** e **compressão da serialização**; nomes humanos permanecem no fonte. Se dois serviços exigem versões incompatíveis do mesmo serviço, o `check` falha.
@@ -353,7 +348,7 @@ name: string {
 | `locales` | `locales: [pt-BR, en-US]` | Idiomas da app/construtor; o primeiro é o default. |
 | `environments` | `environments: [dev, qa, prod]` | Ambientes declarados para a aplicação. |
 | `main` | `main { ... }` | Bloco opcional de inicialização/configuração; sem regra de negócio. |
-| `set` | `set <Alias>.<Parameter\|Secret> = <valor\|secret.NOME>` | Inicializa/override de Parameter/Secret; segredo só como `secret.NOME`. |
+| `set` | `set <Alias>.<Parameter\|Secret> = <valor\|secret.NOME>` | Inicializa/sobrescreve Parameter/Secret; segredo só como `secret.NOME`. |
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
 
@@ -395,7 +390,6 @@ application "example.com/app/loja-do-joao" {
 | declaração | `service "<uri>" { ... }` | Identidade + contrato. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. Vazio é válido. |
-| `override` | `override "<uri>#<Artifact>.<member>" { with: "<uri>#<Artifact>.<member>" }` | Substitui um método/ação; ativo quando o serviço substituto está na closure. |
 | `reintroduce` | `reintroduce <Alias>.<Artifact> { ... }` | Altera/adiciona definições de um artefato importado. |
 
 > **Contrato:** todo artefato de topo é público automaticamente; **não existe `exports`**. Privacidade só por membro (`private`).
@@ -430,26 +424,7 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 **Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
 
-## 3.1 Override
-
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `override` | `override "<uri>#<Artifact>.<member>" { ... }` | Declara substituição de método/ação do serviço alvo. |
-| `with` | `with: "<uri>#<Artifact>.<member>"` | Implementação substituta; assinatura deve ser compatível (LSP). |
-| ativação | — | Ativo se o serviço substituto estiver na closure do app; se só o original estiver presente, o original vale. |
-
-**Regras:** o serviço que override deve importar o alvo; um override por alvo; dois overrides = `E_OVERRIDE_CONFLICT`; o lock registra `target`, `by` e `id`. Override não altera o original e não cria artefato novo.
-
-```bpcms
-service "example.com/services/fraud-checkout" {
-  imports { service "example.com/services/checkout" }
-  override "example.com/services/checkout#CheckoutSession.placeOrder" {
-    with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
-  }
-}
-```
-
-## 3.2 `reintroduce`
+## 3.1 `reintroduce`
 
 `reintroduce` altera/adiciona definições de um artefato importado. Pode modificar qualquer parte do artefato: `values`, `fields`, `title`, `icon`, `ordinal`, `permissions`, etc.
 
@@ -474,8 +449,33 @@ reintroduce std.Currency {
 - não remove definição;
 - conflito de metadados gera `E_REINTRODUCE_CONFLICT`;
 - vale para a closure do app;
-- não é `override`;
+- não há cláusula de substituição total; `reintroduce` altera apenas a parte declarada;
 - revisar depois de todas as keywords.
+
+Para processos, cada passo é um nó reutilizável. O `fraud-checkout` adiciona um passo sem substituir o processo inteiro:
+
+```bpcms
+service "example.com/services/fraud-checkout" {
+  imports {
+    service "example.com/services/checkout" as Checkout
+  }
+
+  reintroduce Checkout.Checkout {
+    task FraudCheck {
+      type: service
+      action: FraudCheck.evaluate
+    }
+
+    insert FraudCheck before AuthorizePayment
+  }
+}
+```
+
+- `FraudCheck` é adicionado ao processo existente;
+- `insert ... before ...` religa o fluxo;
+- os demais passos permanecem;
+- não há substituição total do processo.
+
 
 # 4. Process
 
@@ -501,6 +501,7 @@ reintroduce std.Currency {
 | `if` | `if <expr> -> <Node>` | Condição do gateway; primeira condição verdadeira vence. |
 | `else` | `else -> <Node>` | Caminho default do gateway. |
 | `->` | `A -> B` | Transição entre nós; também usado em casos/regras. |
+| `insert` | `insert FraudCheck before AuthorizePayment` | Insere um nó no fluxo linear, religando predecessor → novo → alvo. |
 | `parallel` | `parallel { task A { ... }; task B { ... } }` | Divide o fluxo; ambos os ramos executam. |
 | `subprocess` | `subprocess Name { process: OtherProcess }` | Chama outro processo como subprocesso. |
 | `process` | `process: ProvisionAccess` | Referência ao processo chamado. |
@@ -1475,7 +1476,7 @@ assignRole(regionalUser, InvoiceManager, scopes: {
 
 - `permissions` locais continuam valendo;
 - `inherits` aceita uma role ou lista;
-- herança é aditiva, sem override/remoção;
+- herança é aditiva, sem substituição/remoção;
 - ciclos são erro de build;
 - a role herdeira mantém `title`, `scopes` e `manages` próprios;
 - permissões herdadas não mudam a identidade da role.

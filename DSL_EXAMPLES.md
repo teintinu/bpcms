@@ -234,7 +234,7 @@ application "github.com/acme/field-app" {
 
 *Valida: app em repositório, versão por commit e mistura de serviço do repo com registry.*
 
-### A.8 Aplicação com override ativo
+### A.8 Aplicação com serviço que reintroduz
 
 ```bpcms
 application "example.com/app/loja-com-antifraude" {
@@ -253,17 +253,17 @@ application "example.com/app/loja-com-antifraude" {
 }
 ```
 
-*Valida: `fraud-checkout` importa `checkout`; como os dois estão na closure, o override de `placeOrder` fica ativo automaticamente. Se a app listasse só `checkout`, o original valeria.*
+*Valida: `fraud-checkout` importa `checkout` e reintroduz apenas o passo `FraudCheck`; a app não precisa configurar substituição.*
 
 ## Service
 
-> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, override).
+> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, reintroduce).
 
 ### S.1 Catálogo com contrato e dependências
 
 ```bpcms
 service "example.com/services/catalog" {
-  title: { pt-BR: "Catálogo", en: "Catálogo" }
+  title: { pt-BR: "Catálogo", en: "Catalog" }
   version: 1.2.0
   owner: "Time de Catálogo"
   // document Product, std.Money, view ProductForm, event ProductUpdated: públicos
@@ -308,7 +308,7 @@ service "example.com/services/checkout" {
 
 ```bpcms
 service "example.com/services/inventory" {
-  title: { pt-BR: "Estoque", en: "Stock" }
+  title: { pt-BR: "Estoque", en: "Inventory" }
   version: 1.5.0
   owner: "Supply Chain"
   // document StockItem, document Reservation, view StockTable, event StockLow: públicos
@@ -326,7 +326,7 @@ service "example.com/services/inventory" {
 
 ```bpcms
 service "example.com/services/billing" {
-  title: { pt-BR: "Faturamento", en: "Faturamento" }
+  title: { pt-BR: "Faturamento", en: "Billing" }
   version: 1.8.0
   owner: "Financeiro"
   // document Invoice, document Payment, report CashFlow, job CloseMonth, events: públicos
@@ -345,7 +345,7 @@ service "example.com/services/billing" {
 
 ```bpcms
 service "example.com/services/auth" {
-  title: { pt-BR: "Identidade", en: "Identidade" }
+  title: { pt-BR: "Identidade", en: "Identity" }
   version: 3.0.0
   owner: "Plataforma"
   // document User, document Session, roles Customer/Clerk, view LoginForm, event UserLoggedIn: públicos
@@ -360,7 +360,7 @@ service "example.com/services/auth" {
 
 ```bpcms
 service "example.com/services/notifications" {
-  title: { pt-BR: "Notificações", en: "Notificações" }
+  title: { pt-BR: "Notificações", en: "Notifications" }
   version: 1.1.0
   owner: "Customer Success"
   // document NotificationTemplate, event NotificationSent: públicos
@@ -379,7 +379,7 @@ service "example.com/services/notifications" {
 
 ```bpcms
 service "gitlab.com/acme/lab-quality" {
-  title: { pt-BR: "Qualidade laboratorial", en: "Qualidade laboratorial" }
+  title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
   version: tag("v2.3.0")
   owner: "Acme Lab"
   // document LabQualityReport, event QualityAlert: públicos
@@ -393,25 +393,31 @@ service "gitlab.com/acme/lab-quality" {
 
 *Valida: serviço em repositório, versão por tag e README como documentação.*
 
-### S.8 Serviço que substitui um método
+### S.8 Serviço que reintroduz um passo de processo
 
 ```bpcms
 service "example.com/services/fraud-checkout" {
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
   version: 1.0.0
   owner: "Risk"
-  // document FraudCheckout: público
 
   imports {
-    service "example.com/services/checkout"
+    service "example.com/services/checkout" as Checkout
+    service "example.com/services/identity" as Identity
   }
-  override "example.com/services/checkout#CheckoutSession.placeOrder" {
-    with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
+
+  reintroduce Checkout.Checkout {
+    task FraudCheck {
+      type: service
+      action: FraudCheck.evaluate
+    }
+
+    insert FraudCheck before AuthorizePayment
   }
 }
 ```
 
-*Valida: override declarado no serviço substituto; ativo quando `fraud-checkout` está na closure da app. O `check` exige assinatura compatível e um único override por alvo.*
+*Valida: cada passo do checkout é um nó reutilizável; o fraud-checkout acrescenta `FraudCheck` antes de `AuthorizePayment` sem substituir o processo inteiro.*
 
 ## Lock file do app
 
@@ -436,12 +442,8 @@ lock:
       source: registry
   artifacts:
     "example.com/services/checkout#CheckoutSession": 20
-    "example.com/services/checkout#CheckoutSession.placeOrder": 21
-    "example.com/services/fraud-checkout#FraudCheckout.placeOrder": 40
-  overrides:
-    - target: "example.com/services/checkout#CheckoutSession.placeOrder"
-      by: "example.com/services/fraud-checkout"
-      id: 41
+    "example.com/services/checkout#Checkout": 21
+    "example.com/services/fraud-checkout#FraudCheck": 40
 ```
 
 > O lock fixa **uma versão por serviço** para o app inteiro e um **ID estável por identificador** (usado para minificação e compressão da serialização). O serviço não tem lock, IDs nem versões de imports.
@@ -560,7 +562,7 @@ process OrderFulfillment {
   on error CarrierUnavailable -> ManualQuote
   task ManualQuote {
     role: Supervisor
-    form: FreightOverrideForm
+    form: FreightManualQuoteForm
     writes: [FreightQuote]
   }
 }
@@ -1424,7 +1426,7 @@ view CheckoutWizard {
   actions {
     next -> validateCurrentStep
     back -> previousStep
-    confirm -> Checkout.placeOrder
+    confirm -> Checkout.confirmOrder
   }
   integration: Payment
 }
@@ -1549,7 +1551,7 @@ role Checker {
 }
 role Supervisor {
   title: { pt-BR: "Supervisor", en: "Supervisor" }
-  permissions: [shipment.override, report.view]
+  permissions: [shipment.forceRelease, report.view]
 }
 organogram Warehouse {
   title: { pt-BR: "Organograma do armazém", en: "Warehouse organogram" }
@@ -1577,7 +1579,7 @@ role Approver {
 }
 role Controller {
   title: { pt-BR: "Controlador", en: "Controller" }
-  permissions: [report.view, audit.view, limit.override]
+  permissions: [report.view, audit.view, limit.exceed]
 }
 organogram Finance {
   title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
@@ -3752,10 +3754,10 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 23 | A app deve listar só entry points e derivar a closure dos imports | A.1, S.2 |
 | 24 | Uma versão por serviço por app é suficiente Como tratar conflito de contrato | lock, V.1–V.6 |
 | 25 | IDs no lock devem cobrir todos os identificadores ou só os serializados | lock |
-| 26 | Override ativo por closure é suficiente, ou precisa de prioridade explícita | A.8, S.8 |
+| 26 | `reintroduce` ativo por closure é suficiente, ou precisa de prioridade explícita | A.8, S.8 |
 | 27 | Serviço sem `exports` e privacidade só por membro (`private`) está certo? | D.1, S.1–S.8 |
 | 28 | Alias local (`"uri" as Nome`) ajuda ou polui? | A.1, S.2 |
-| 29 | Sem `extends` na v1 e reuso só por composição/override está bom | S.8 |
+| 29 | Sem `extends` na v1 e reuso só por composição/reintroduce está bom | S.8 |
 | 30 | Migração como `release` do tipo `migration` é suficiente | V.4 |
 | 31 | Capabilities de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`…) cobrem os casos? | S.1–S.8, B.1–B.6 |
 | 32 | Compensação como `type: compensation` + `for` está correta | P.7 |
@@ -3780,7 +3782,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 * **Dependências são implícitas:** o app lista entry points; `Service.imports` define a closure.
 * **Sem `exports`:** todo artefato de topo é público; `private` só em membros internos.
 * **Lock do app:** uma versão por serviço e um ID por identificador; o serviço não carrega nenhum dos dois.
-* **Override é composição:** ativo quando o serviço substituto está na closure; senão, o original vale.
+* **`reintroduce` é composição:** ativo quando o serviço que reintroduz está na closure; senão, o original vale.
 * **Capabilities são de alto nível:** `gui/tui/print`, `oltp/sync`, `location`; o construtor resolve a tecnologia.
 * **Parameter** é o contrato de configuração/segredo; o valor é resolvido pelo ambiente e nunca entra no lock.
 * **Capabilities são abertas:** construtores podem declarar `llm`, `google-maps`, etc.; o serviço só declara `capabilities`.
@@ -3799,7 +3801,7 @@ Se for validar só alguns, comece por estes seis — eles cobrem as decisões ma
 4. **V.3 SalesDashboard** — métricas, frescor, unidade e exportação.
 5. **R.4 FinanceRoles** — permissões, quatro-olhos e limite.
 6. **N.1 PurchaseApproval** — decisão por faixa e caso default.
-7. **A.8 + S.8** — lock, closure e override ativo.
+7. **A.8 + S.8** — lock, closure e reintroduce ativo.
 8. **P.7** — compensação como passo de BPMN.
 
 ### Checklist de validação

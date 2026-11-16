@@ -8,9 +8,4 @@ service "example.com/services/billing" {
     service "example.com/services/payments" as Payments
     service "example.com/services/identity" as Identity
   }
-
-  // Ativo apenas em apps que incluem billing na closure.
-  override "example.com/services/orders#Order.cancel" {
-    with: "example.com/services/billing#OrderCancellation.cancel"
-  }
 }

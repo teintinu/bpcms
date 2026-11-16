@@ -1,0 +1,25 @@
+// service: example.com/services/fraud-checkout
+document FraudCheck {
+  title: { pt-BR: "Verificação antifraude", en: "Fraud check" }
+  version: 1
+  owner: "Risk"
+  sync: live
+  audit: true
+
+  fields {
+    session: link CheckoutSession {
+      title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+      snapshot: [status]
+    }
+    score: number {
+      title: { pt-BR: "Pontuação de risco", en: "Risk score" }
+    }
+    approved: boolean {
+      title: { pt-BR: "Aprovado", en: "Approved" }
+    }
+  }
+
+  actions {
+    evaluate(): FraudCheck
+  }
+}

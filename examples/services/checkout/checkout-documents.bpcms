@@ -1,0 +1,31 @@
+// service: example.com/services/checkout
+document CheckoutSession {
+  title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+  version: 1
+  owner: "Checkout"
+  sync: live
+  audit: true
+
+  fields {
+    customer: link User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+      snapshot: [name, nickname]
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+    }
+    status: string {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+  }
+
+  actions {
+    validateCart(): CheckoutSession
+    quoteShipping(): CheckoutSession
+    authorizePayment(): CheckoutSession
+    confirmOrder(): CheckoutSession
+  }
+}

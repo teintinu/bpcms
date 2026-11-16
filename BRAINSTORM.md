@@ -165,7 +165,7 @@ A mudança central: **quem conversa não precisa escrever DSL.** Mas a DSL (ou u
 
 > **Decisão B-01:** mesma IR, duas superfícies. A LLM escreve o modelo; o humano revisa por diagramas, telas e perguntas. No v1 a DSL é **visão/exportação somente leitura**; edição direta de DSL/IR é modo avançado (dev), não a porta de entrada. O que a LLM escreve é exatamente o que o humano pode inspecionar.
 
-A DSL herdada continua **parecida com TypeScript** (declarações, tipos, imports, overrides), mas nesta fase ela é uma **visão do IR** — somente leitura no v1, editável no modo avançado depois. A LLM pode produzi-la, o analista pode revisá-la e o dev pode estendê-la. O LSP/VSCode continua sendo a ferramenta do modo declarativo/avançado.
+A DSL herdada continua **parecida com TypeScript** (declarações, tipos, imports, reintroductions), mas nesta fase ela é uma **visão do IR** — somente leitura no v1, editável no modo avançado depois. A LLM pode produzi-la, o analista pode revisá-la e o dev pode estendê-la. O LSP/VSCode continua sendo a ferramenta do modo declarativo/avançado. **A DSL é uma abstração:** implementação é do construtor; o compilador gera um AST simples, estável e poderoso, valida incoerências e evita erros do desenvolvedor.
 
 ### 1.6 Stack (baseline)
 
@@ -367,7 +367,7 @@ application "example.com/app/loja-do-joao" {
 
 > **Decisão B-28 — sem `wire`.** A aplicação **não declara dependências entre serviços**. `Checkout` já declara `catalog` em `Service.imports`; o resolver percorre os imports, monta a closure, detecta ciclo/capability faltando e produz o lock. A lista `services` acima contém apenas os entry points; `cart`, `payment`, `shipping` e `auth` entram por importação implícita.
 >
-> **Decisão B-29 — uma versão por app.** Se existem `catalog@1.2` e `catalog@2.0`, o app escolhe **uma** no lock; não há duas versões do mesmo serviço convivendo na mesma aplicação. Se dois serviços exigem contratos incompatíveis, o `check` falha e exige upgrade/override.
+> **Decisão B-29 — uma versão por app.** Se existem `catalog@1.2` e `catalog@2.0`, o app escolhe **uma** no lock; não há duas versões do mesmo serviço convivendo na mesma aplicação. Se dois serviços exigem contratos incompatíveis, o `check` falha e exige upgrade/reintroduce.
 >
 > **Decisão B-40 — a Application não declara artefatos.** Nem `Parameter`, nem `Document`, nem `View`: todo artefato vive dentro de um `Service`. A `Application` só compõe entry points, mapeia papéis, configura ambiente e inicializa parâmetros de serviços no `main`.
 >
@@ -379,7 +379,7 @@ O app tem **um lock file** (ex.: `bpcms.lock`), gerado e versionado. Ele contém
 
 * **uma versão por serviço** (com `source`/`integrity`), escolhida para o app;
 * **um ID estável para cada identificador** do app: serviços, documentos, shapes, views, ações, campos, eventos, papéis, nós de processo;
-* a lista de **overrides ativos**;
+* a lista de **reintroduções ativas**;
 * um contador monotônico (`nextId`) — IDs não são reutilizados.
 
 ```yaml
@@ -401,10 +401,6 @@ lock:
     "example.com/services/catalog#Product": 10
     "example.com/services/catalog#Product.id": 11
     "example.com/services/catalog#Product.name": 12
-  overrides:
-    - target: "example.com/services/checkout#CheckoutSession.placeOrder"
-      by: "example.com/services/fraud-checkout"
-      id: 30
 ```
 
 > **Decisão B-30 — IDs no lock do app.** O serviço **não tem lock file, não carrega IDs e não declara versões de serviços importados**. Nomes humanos vivem no fonte; o builder/runtime troca nomes por IDs do lock para **minificação de código** e **compressão da serialização** (IDs inteiros/varint em vez de strings). O lock é a única fonte de IDs por aplicação; o mesmo serviço pode ter IDs diferentes em apps diferentes.
@@ -469,7 +465,7 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 | Eventos | `RemessaDespachada`, `PedidoAprovado` |
 | Regras/políticas | limite de peso, alçada de aprovação, quatro-olhos |
 
-**Capabilities de plataforma (alto nível).** O serviço declara o que **precisa** (`requires`), não como a tecnologia resolve. O construtor mapeia a capability para sua implementação:
+**Capabilities de plataforma (alto nível).** Cada artefato declara o que **precisa** (`capabilities`), não como a tecnologia resolve. O construtor mapeia a capability para sua implementação:
 
 | Capability | Significado | Quem costuma oferecer |
 | :--- | :--- | :--- |
@@ -488,11 +484,11 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 | `capture` | câmera/scanner | MobileShell |
 | `notify` | notificação de saída | MobileShell |
 
-> `requires` é sobre a **capacidade de negócio/experiência**; `provides` é o **contrato de negócio** que o serviço oferece a outros (`catalog`, `checkout`, `identity`). `http`, `db`, `search`, `ui`, `files`, `auth`, `realtime`, `jobs`, `camera` e `push` não entram no vocabulário de capability: são detalhes de construtor.
+> `capabilities` é sobre a **capacidade de negócio/experiência** exigida pelo artefato. `provides` não existe no Service: o contrato de negócio são os artefatos públicos. `http`, `db`, `search`, `ui`, `files`, `auth`, `realtime`, `jobs`, `camera` e `push` não entram no vocabulário de capability: são detalhes de construtor.
 
-**Capabilities abertas.** O vocabulário acima é um núcleo, não um enum fechado. Construtores podem declarar novas capabilities — genéricas como `llm` ou específicas como `google-maps`, `acme.payments`. Use nomes curtos em kebab-case e documente o contrato no construtor; o serviço só declara `requires { llm }`. Parâmetros da capability (modelo, chave, região) são `Parameter`, não strings espalhadas.
+**Capabilities abertas.** O vocabulário acima é um núcleo, não um enum fechado. Construtores podem declarar novas capabilities — genéricas como `llm` ou específicas como `google-maps`, `acme.payments`. Use nomes curtos em kebab-case e documente o contrato no construtor; o artefato só declara `capabilities { llm }`. Parâmetros da capability (modelo, chave, região) são `Parameter`, não strings espalhadas.
 
-**Contratos e composição.** **Todo artefato de topo de um serviço é automaticamente público/exportado** — não existe `exports`. A privacidade só existe **dentro do artefato**: um campo ou ação pode ser `private` e fica acessível apenas dentro do serviço. O serviço importa outros serviços **por URI, sem versão**; a versão escolhida é única por aplicação e vive no lock do app. O `check` garante compatibilidade (LSP); override não pode quebrar quem usa o original.
+**Contratos e composição.** **Todo artefato de topo de um serviço é automaticamente público/exportado** — não existe `exports`. A privacidade só existe **dentro do artefato**: um campo ou ação pode ser `private` e fica acessível apenas dentro do serviço. O serviço importa outros serviços **por URI, sem versão**; a versão escolhida é única por aplicação e vive no lock do app. O `check` garante compatibilidade; `reintroduce` altera apenas a parte declarada e não pode quebrar o restante do contrato.
 
 **Privacidade.** O artefato de topo é sempre público; o que pode ser privado é o **membro**. `private` em um campo esconde o campo do contrato/API/serialização para outros serviços; `private` em uma ação impede chamada externa. O dado continua existindo para o serviço dono e para as regras internas.
 
@@ -500,7 +496,7 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 
 > **Serviço ≠ microserviço.** SOA aqui é sobre **contrato e reuso**, não sobre número de processos na rede. Vários serviços podem ser implantados juntos na v1; a fronteira é lógica e de propriedade.
 
-> **Decisão B-05 — override como substituição.** O override é declarado no serviço que substitui, com caminho explícito para o alvo. Ele só fica **ativo quando os dois serviços estão na closure do app** (explícita ou implicitamente). Se o app usa só o serviço original, o método original vale. O `check` exige assinatura compatível (LSP), um único override por alvo e ausência de ciclos. O lock do app registra os overrides ativos.
+> **Decisão B-05 — `reintroduce` como alteração parcial.** O serviço importa o dono e reintroduz apenas o artefato/parte necessária. Não há mapeamento de método substituto nem substituição total. O `check` valida a parte alterada, preserva o restante do contrato e impede conflitos. A alteração vale para a closure do app e é registrada no lock.
 
 > **Decisão B-06:** um serviço por **capacidade de negócio** (não por área organizacional). Na v1 os serviços são implantados juntos como **monólito modular**; a extração física só acontece com razão operacional comprovada.
 
@@ -533,29 +529,34 @@ service "gitlab.com/acme/lab" {
 
 > Para artefato em repositório, **não há página `/index.html` obrigatória**: a documentação é o README (da raiz ou do subdiretório) e o código é baixado do projeto. A página de download da app, quando existir, é a página de releases/clone do repositório.
 
-#### 2.5.2 Override: substituição de método
+#### 2.5.2 Reintroduce: alteração parcial
 
-Um serviço pode substituir um método/ação de outro serviço. O serviço que substitui **importa** o serviço alvo e declara o caminho:
+Um serviço pode alterar/adicionar definições de um artefato importado. O serviço importa o alvo e reintroduz apenas a parte necessária.
 
 ```text
 service "example.com/services/fraud-checkout" {
-  imports { service "example.com/services/checkout" }
+  imports { service "example.com/services/checkout" as Checkout }
 
-  override "example.com/services/checkout#CheckoutSession.placeOrder" {
-    with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
+  reintroduce Checkout.Checkout {
+    task FraudCheck {
+      type: service
+      action: FraudCheck.evaluate
+    }
+
+    insert FraudCheck before AuthorizePayment
   }
 }
 ```
 
 **Ativação:**
 
-* `APP1` lista `fraud-checkout` (ou ele entra implicitamente): como `fraud-checkout` importa `checkout`, os dois estão na closure → o override de `placeOrder` fica ativo.
-* `APP2` lista apenas `checkout` e não inclui `fraud-checkout` → o `placeOrder` original vale.
+* `APP1` lista `fraud-checkout` (ou ele entra implicitamente): como `fraud-checkout` importa `checkout`, a reintrodução vale na closure.
+* `APP2` lista apenas `checkout` e não inclui `fraud-checkout` → a definição original vale.
 * Se `fraud-checkout` for incluído sem `checkout`, o `check` falha: o alvo não existe.
-* Dois overrides para o mesmo alvo no mesmo app = `E_OVERRIDE_CONFLICT`; é preciso escolher um.
-* O método substituto precisa manter parâmetros, retorno e contrato (LSP). Trocar `Shape`/campo continua exigindo migração e não é um override de comportamento.
+* Duas reintroduções conflitantes no mesmo app = erro; é preciso resolver.
+* A parte alterada precisa preservar o contrato do restante do artefato; trocar tipo/remover campo continua exigindo migração.
 
-**No lock:** o app registra `target`, `by` e o ID do override; a resolução é determinística e reproduzível.
+**No lock:** o app registra `reintroduce`, alvo e ID; a resolução é determinística e reproduzível.
 
 #### 2.5.3 Parameter: configuração e segredo
 
@@ -593,7 +594,7 @@ parameter PaymentKey {
 
 #### 2.5.4 Serviços essenciais como capabilities
 
-Alguns serviços são **essenciais da plataforma** e são acessados como capabilities, não importados como serviços normais. O construtor/ambiente implementa; o serviço só declara `requires`.
+Alguns serviços são **essenciais da plataforma** e são acessados como capabilities, não importados como serviços normais. O construtor/ambiente implementa; o artefato declara `capabilities`.
 
 | Capability | Operações | Depende de |
 | :--- | :--- | :--- |
@@ -618,10 +619,11 @@ O Shape continua guardando **valor original + unidade** e projeção normalizada
 
 ```text
 service "example.com/services/field" {
-  requires { location, timezone, regionalization, units, oltp, sync }
+  title: { pt-BR: "Serviço de campo", en: "Field service" }
 }
 
 view VisitForm {
+  capabilities { location, timezone, regionalization, units }
   type: form
   computed {
     scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
@@ -1441,7 +1443,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 | Artefato | Propósito | Propriedades-chave | Fase |
 | :--- | :--- | :--- | :--- |
 | **Application** | composição voltada ao usuário | URI, source, version, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
-| **Service** | capacidade de negócio reutilizável | URI, source, version, imports sem versão, override, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
+| **Service** | capacidade de negócio reutilizável | URI, source, version, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
 | **Process** | processo BPMN as-is/to-be | nós, fluxos, raias, eventos, SLAs, regras, vínculos | Núcleo |
 | **Document** | unidade de dados + ações + sync | campos, índices, ações, regras, frescor, dono | Núcleo |
 | **Shape** | semântica de valor | parse, validação, formato, unidade, índice, agregação | Núcleo |
@@ -1626,7 +1628,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 | Frente | Escopo | Depende de |
 | :--- | :--- | :--- |
-| **Modelo e IR** | Application, Service, Process, Document, Shape, View, Role; lock/IDs, Parameter/segredo, override, validação, diff, versão | nada (é a base) |
+| **Modelo e IR** | Application, Service, Process, Document, Shape, View, Role; lock/IDs, Parameter/segredo, reintroduce, validação, diff, versão | nada (é a base) |
 | **Runtime de documentos** | ações, regras, persistência, cache, read/live, ciclo de vida | IR + Shape |
 | **Motor BPMN** | subconjunto executável, tarefas humanas, timers, simulação | IR + runtime de documentos |
 | **Entrevista e LLM** | protocolo, cobertura, ferramentas de modelo, saída estruturada, evals | IR + schema de validação |
@@ -1718,7 +1720,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User, Citizen/PII e override/LSP validados; 20 casos golden | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User, Citizen/PII e reintroduce validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1756,7 +1758,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-018 | Marketplace, process mining, offline/CRDT e multi-plataforma | 🧊 | congelado |
 | D-019 | Sem `wire`: dependências vêm de `Service.imports`; app lista entry points | ✅ | baseline atual |
 | D-020 | Lock por app: uma versão por serviço + IDs estáveis para minificação/compressão | ✅ | baseline atual |
-| D-021 | Override ativo quando os dois serviços estão na closure do app; um por alvo; LSP | ✅ | baseline atual |
+| D-021 | `reintroduce` ativo quando o serviço que reintroduz está na closure do app; alteração parcial; conflito é erro | ✅ | baseline atual |
 | D-022 | Sem `exports`: todo artefato de topo é público; privacidade só em membros (`private`) | ✅ | baseline atual |
 | D-023 | `alias`/`as` local para URIs de serviço | ✅ | baseline atual |
 | D-024 | `extends` restrito a documento no mesmo serviço; sem herança múltipla/geral | ✅ | baseline atual |
@@ -1798,7 +1800,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-02** | “Documento” é dado ou arquivo? | `Documento` = artefato de dados; `Evidência` = arquivo/fonte; `Template` = layout. | Elimina a ambiguidade que contamina requisitos, UX e modelo. | ✅ |
 | **B-03** | Unidade original, canônica ou ambas? | Original + projeção normalizada + snapshot imutável da conversão. Códigos UCUM-like; topologia em estrela por dimensão; decimal, nunca float. | Preserva a intenção, permite índice/agregação e mantém histórico correto. | ✅ |
 | **B-04** | BPMN as-is e to-be juntos? | As-is primeiro; to-be é uma versão separada, comparável por diff. IR é canônico; BPMN 2.0 XML é import/export; subconjunto executável. | Evita misturar diagnóstico com proposta e mantém interoperabilidade. | ✅ |
-| **B-05** | Como serviço estende/sobrescreve? | Override explícito de **método/ação**, ativo quando o serviço substituto está na closure do app. Um override por alvo; `check` de LSP; conflito = erro. Trocar tipo/remover campo exige migração, não override. | Ativação previsível; sem merge profundo silencioso. | ✅ |
+| **B-05** | Como serviço estende/sobrescreve? | `reintroduce` altera apenas a parte necessária de um artefato importado; sem mapeamento de método substituto. Conflito = erro; o restante do contrato é preservado. | Alteração parcial previsível; sem merge profundo silencioso. | ✅ |
 | **B-06** | Um serviço por área ou capacidade? | Por **capacidade de negócio**. v1 roda como monólito modular; separação física é decisão operacional. | Coesão e reuso; microserviço cedo demais multiplica custo. | ✅ |
 | **B-07** | Núcleo Rust + estúdio TS? | Sim: núcleo Rust (IR/check/runtime) em nativo + WASM; estúdio TS/React consome WASM para validação/preview e o servidor para persistência, LLM e jobs. | Uma semântica, duas superfícies; o estúdio não reimplementa regra. | ✅ |
 | **B-08** | Construtores de terceiros? | v1 só first-party compilados; plugins WASM (component model) ficam 🧊 v2. | Contrato de capabilities e sandbox ainda não estão maduros. | 🧊 |
@@ -1824,7 +1826,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-28** | Precisamos de `wire`? | **Não**. Dependências vêm de `Service.imports`; a aplicação lista apenas entry points. O resolver monta a closure e o lock. | Uma fonte de verdade; evita drift entre app e serviço. | ✅ |
 | **B-29** | Mais de uma versão do mesmo serviço por app? | **Não**. O lock escolhe uma versão por serviço para o app inteiro; contrato incompatível falha no `check`. | Evita ambiguidade de versões e “dependency hell” silencioso. | ✅ |
 | **B-30** | Onde ficam IDs e versões? | **Só no lock do app**. Ele mapeia cada identificador para um ID estável (minificação/compressão) e cada serviço para uma versão. Serviço não tem lock, IDs nem versões de imports. | Serve múltiplos apps sem contaminar o serviço; IDs por app. | ✅ |
-| **B-31** | Quando um override fica ativo? | Quando o serviço que override está na closure do app (explícita ou implicitamente); se só o original está presente, o original vale. Um override por alvo; LSP. | Ativação previsível sem configuração no app. | ✅ |
+| **B-31** | Quando um `reintroduce` fica ativo? | Quando o serviço que reintroduz está na closure do app; se só o original está presente, o original vale. Conflito de reintrodução é erro. | Ativação previsível sem configuração no app. | ✅ |
 | **B-32** | Serviço precisa declarar `exports`? | **Não**. Todo artefato de topo é público/exportado automaticamente; privacidade só dentro do artefato, via `private` em membros. | Menos boilerplate; o contrato é o que existe no serviço. | ✅ |
 | **B-33** | `alias`/`as`? | **Sim.** `"<uri>" as Nome` em `services`/`imports`; alias é local, não é identidade e não vai para o lock. | Legibilidade sem duplicar a URI em todo lugar. | ✅ |
 | **B-34** | `extends`/herança de tipo? | **Restrito.** `document Consumer extends User` é permitido: pai único, mesmo serviço, aditivo e mesmo id. Herança múltipla/geral fica fora da v1. | Separa refinamento de identidade sem árvores frágeis. | ✅ |
