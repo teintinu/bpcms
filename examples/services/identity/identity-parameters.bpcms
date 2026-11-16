@@ -2,6 +2,5 @@
 parameter SessionTtl {
   title: { pt-BR: "Duração da sessão", en: "Session TTL" }
   type: std.Duration
-  source: config
   default: 30m
 }

@@ -2379,7 +2379,7 @@ environment dr {
 
 *Valida: ambiente de DR com réplica, ativação manual e restore explícito.*
 
-## Parameter
+## Parameter / Secret
 
 > Cada bloco é um trecho de um `Service`. `Parameter` **não pode** ser declarado na `Application`; a app só faz `set` no `main`.
 
@@ -2389,8 +2389,6 @@ environment dr {
 parameter ErpUrl {
   title: { pt-BR: "URL do ERP", en: "ERP URL" }
   type: string
-  source: config
-  required
   default: "https://erp.example.com"
 }
 ```
@@ -2400,10 +2398,9 @@ parameter ErpUrl {
 ### PR.2 Chave secreta
 
 ```bpcms
-parameter PaymentKey {
+secret PaymentKey {
   title: { pt-BR: "Chave de pagamento", en: "Payment key" }
-  type: Secret
-  source: secret
+  type: string
   required
 }
 ```
@@ -2415,8 +2412,7 @@ parameter PaymentKey {
 ```bpcms
 parameter LlmModel {
   title: { pt-BR: "Modelo de LLM", en: "LLM model" }
-  type: LlmModelName
-  source: config
+  type: string
   default: "balanced"
 }
 ```
@@ -2428,8 +2424,7 @@ parameter LlmModel {
 ```bpcms
 parameter MaxRetries {
   title: { pt-BR: "Máximo de tentativas", en: "Max retries" }
-  type: Count
-  source: config
+  type: std.Count
   default: 3
   min: 0
   max: 10
@@ -2444,7 +2439,6 @@ parameter MaxRetries {
 parameter SupportSla {
   title: { pt-BR: "SLA de suporte", en: "Support SLA" }
   type: std.Duration
-  source: config
   default: 2h
 }
 ```
@@ -2454,10 +2448,9 @@ parameter SupportSla {
 ### PR.6 Chave de API específica
 
 ```bpcms
-parameter GoogleMapsKey {
+secret GoogleMapsKey {
   title: { pt-BR: "Chave do Google Maps", en: "Google Maps key" }
-  type: Secret
-  source: secret
+  type: string
   required
 }
 ```

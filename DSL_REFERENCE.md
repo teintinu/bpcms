@@ -24,7 +24,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | 1 | Léxico, metadados, origem, versão, lock/IDs, capabilities e serviços essenciais |
 | 2–8 | Application, Service, Process, Document, Shape, View, Role/Organogram |
 | 9–12 | Evidence, Conversation, Decision, Assumption |
-| 13–19 | Parameter, Environment, Builder, Theme, Locale, Widget, Release/Version |
+| 13–19 | Parameter, Secret, Environment, Builder, Theme, Locale, Widget, Release/Version |
 | 20–24 | Integration, Report, Event, Job, Policy |
 | 25 | Expressões, operadores e valores |
 | 26 | Validação e erros |
@@ -318,7 +318,7 @@ name: string {
 
 **Fallback:** locale exato → idioma (`en-US` → `en`) → locale default do app. Para plural: categoria → `other` → string do locale/título. Com `locales: [pt-BR, en-US]`, `en` cobre `en-US`; o default é `pt-BR`.
 
-**Campos:** o `title` do campo é o label; o `title` do `document`/`shape`/`view`/`event`/`parameter`/`role`/`organogram`/`service` é o nome do artefato. Em `Parameter`, `title` substitui o antigo `description`.
+**Campos:** o `title` do campo é o label; o `title` do `document`/`shape`/`view`/`event`/`parameter`/`secret`/`role`/`organogram`/`service` é o nome do artefato. Em `Parameter`, `title` substitui o antigo `description`.
 
 | Situação | Resultado |
 | :--- | :--- |
@@ -351,7 +351,7 @@ name: string {
 | `locales` | `locales: [pt-BR, en-US]` | Idiomas da app/construtor; o primeiro é o default. |
 | `environments` | `environments: [dev, qa, prod]` | Ambientes declarados para a aplicação. |
 | `main` | `main { ... }` | Bloco opcional de inicialização/configuração; sem regra de negócio. |
-| `set` | `set <Alias>.<Parameter> = <valor>` | Inicializa/override de um `Parameter` de serviço; segredo só como `secret.NOME`. |
+| `set` | `set <Alias>.<Parameter\|Secret> = <valor\|secret.NOME>` | Inicializa/override de Parameter/Secret; segredo só como `secret.NOME`. |
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
 
@@ -1600,42 +1600,85 @@ assumption A-001 {
 
 ---
 
-# 13. Parameter
+# 13. Parameter / Secret
 
-`Parameter` é o artefato de configuração e segredo, **sempre declarado dentro de um `Service`**. Ele declara o contrato; o valor é resolvido pelo ambiente e **nunca** entra no lock. A `Application` não declara `Parameter`; no `main`, ela faz `set` em um parâmetro de serviço.
+`Parameter` é configuração pública; `Secret` é configuração sensível. Ambos são declarados **dentro de um `Service`**, o valor é resolvido pelo ambiente e **nunca** entra no lock. A `Application` não declara nenhum dos dois; no `main`, ela faz `set` em um parâmetro/segredo já declarado.
+
+## 13.1 Parameter
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `parameter` | `parameter <Name> { ... }` | Declara configuração/segredo tipado dentro de um serviço; artefato público. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n do parâmetro (obrigatório); substitui `description`; ver 1.9. |
-| `type` | `type: string \| Secret \| Count \| std.Duration \| ...` | Shape do valor. |
-| `source` | `source: config \| secret` | Origem do valor: configuração do ambiente ou secret store. |
-| `required` | `required` | Falha no boot/uso se não houver valor; `required: true` também é aceito. |
-| `default` | `default: "..."` | Só para `config`; proibido para `secret`. |
-| `min` / `max` | `min: 0, max: 10` | Constraints simples para numéricos. |
-| `maxLength` | `maxLength: 120` | Limite para texto. |
-| `Secret` | `type: Secret` | Shape embutido para segredo; nunca serializa, loga, exporta ou vai para a LLM. |
-
-> Os parâmetros abaixo são trechos de um serviço. A `Application` só pode fazer `set` em um parâmetro já declarado no serviço.
+| `parameter` | `parameter <Name> { ... }` | Configuração tipada; artefato público. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório; substitui `description`. |
+| `type` | `type: Shape` | Shape do valor; obrigatório. |
+| `required` | `required` | Falha no boot/uso se não houver valor; mutuamente exclusivo com `default`. |
+| `default` | `default: "..."` | Valor fallback; mutuamente exclusivo com `required`. |
+| `min` / `max` | `min: 0, max: 10` | Constraints do Parameter, como no field. |
+| `maxLength` | `maxLength: 120` | Limite para texto, como no field. |
 
 ```bpcms
 parameter ErpUrl {
   title: { pt-BR: "URL do ERP", en: "ERP URL" }
   type: string
-  source: config
-  required: true
   default: "https://erp.example.com"
 }
 
-parameter PaymentKey {
-  title: { pt-BR: "Chave de pagamento", en: "Payment key" }
-  type: Secret
-  source: secret
-  required: true
+parameter MaxRetries {
+  title: { pt-BR: "Máximo de tentativas", en: "Max retries" }
+  type: std.Count
+  default: 3
+  min: 0
+  max: 10
 }
 ```
 
-**Regras:** o lock guarda o **ID** do Parameter, não o valor. `Secret` não tem default e não aparece em logs, serialização, evidência ou prompt. Parameters são declarados **no serviço**; a app só inicializa com `set <Alias>.<Parameter> = <valor>`. Para segredo, use `secret.NOME`, nunca um literal.
+- `type` é obrigatório;
+- `required` e `default` são mutuamente exclusivos;
+- `min`/`max`/`maxLength` são constraints do Parameter;
+- o Shape valida o intrínseco;
+- Parameter não referencia outro Parameter na v1;
+- `source` não existe: Parameter é sempre config;
+- `set` da Application valida tipo e constraints.
+
+## 13.2 Secret
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `secret` | `secret <Name> { ... }` | Segredo tipado; artefato público, valor privado. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório. |
+| `type` | `type: Shape` | Shape do valor; obrigatório, mas o valor nunca serializa. |
+| `required` | `required` | Falha no boot/uso se não houver valor. |
+| `min` / `max` | `min: 0, max: 10` | Constraints do Secret. |
+| `maxLength` | `maxLength: 120` | Limite para texto. |
+
+```bpcms
+secret PaymentKey {
+  title: { pt-BR: "Chave de pagamento", en: "Payment key" }
+  type: string
+  required
+}
+```
+
+- `Secret` não é Shape; `type` aponta para um Shape;
+- `default` não existe;
+- `source` não existe;
+- `required` é bare;
+- o valor nunca serializa, loga, exporta ou vai à LLM;
+- `secret.NOME` é a única forma de `set`;
+- o lock guarda o ID do artefato, não o valor.
+
+## 13.3 Application
+
+```bpcms
+set Billing.TaxRegime = "SIMPLES"
+set Payments.GatewayKey = secret.GATEWAY_KEY
+```
+
+- `set` só no `main`;
+- `Parameter` usa valor literal/tipado;
+- `Secret` usa `secret.NOME`;
+- literal para Secret é erro;
+- Parameter/Secret precisam existir no serviço importado.
 
 # 14. Environment
 

@@ -2,14 +2,12 @@
 parameter DefaultSla {
   title: { pt-BR: "SLA padrão", en: "Default SLA" }
   type: std.Duration
-  source: config
   default: 2d
 }
 
 parameter RefundLimit {
   title: { pt-BR: "Limite de reembolso", en: "Refund limit" }
   type: std.Money
-  source: config
   default: 500 BRL
   min: 0 BRL
 }

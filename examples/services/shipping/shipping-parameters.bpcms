@@ -2,14 +2,12 @@
 parameter DefaultCarrier {
   title: { pt-BR: "Transportadora padrão", en: "Default carrier" }
   type: string
-  source: config
   default: "CarrierX"
 }
 
 parameter MaxWeight {
   title: { pt-BR: "Peso máximo", en: "Max weight" }
   type: std.Mass
-  source: config
   default: 30 kg
   min: 1 kg
   max: 500 kg

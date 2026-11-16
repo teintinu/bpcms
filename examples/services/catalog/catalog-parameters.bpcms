@@ -2,6 +2,5 @@
 parameter DefaultCurrency {
   title: { pt-BR: "Moeda padrão", en: "Default currency" }
   type: std.Currency
-  source: config
   default: "BRL"
 }

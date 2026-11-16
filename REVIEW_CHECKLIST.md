@@ -329,36 +329,44 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Decisões:** `scopes` plural; `manages` e `delegates to` por linha; `delegates to` sem `->`; `fourEyes` exige ator diferente com role; `segregation` e `signature` ficam no Organogram até revisão de Document; `limits` e `dataMasking` movidos para Document; build valida estrutura, runtime decide autorização.
 
-## 5. Parameter 🟡
+## 5. Parameter / Secret ✅
 
-**Depende de:** Shape, Secret.
+**Depende de:** Shape.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `parameter <Name> { ... }`
-- [ ] `title: I18n` (substitui `description`)
-- [ ] `type: Shape | Secret`
-- [ ] `source: config | secret`
-- [ ] `required` (bare)
-- [ ] `default` (só config)
-- [ ] `min`/`max`/`maxLength`
-- [ ] Declarado apenas dentro de Service
-- [ ] App faz `set <Alias>.<Parameter>`
-- [ ] `Secret` nunca serializa/loga/exporta/vai à LLM
+- [x] `parameter <Name> { ... }`
+- [x] `secret <Name> { ... }`
+- [x] `title: I18n`
+- [x] `type: Shape` obrigatório em ambos
+- [x] `required` bare
+- [x] `default` só em Parameter; mutuamente exclusivo com `required`
+- [x] `min`/`max`/`maxLength` como no field
+- [x] Parameter/Secret declarados apenas dentro de Service
+- [x] App faz `set <Alias>.<Parameter|Secret>`
+- [x] Secret usa `secret.NOME`, nunca literal
+- [x] Secret nunca serializa/loga/exporta/vai à LLM
+- [x] Parameter não referencia outro Parameter
+- [x] `Secret` é artefato, não Shape
+- [x] `source: config/secret` não existe
 
 **Exemplos:** PR.1–PR.6; `*-parameters.bpcms`.
 
 **Foco da revisão:**
 
-- [ ] `title` em Parameter substituiu `description` por completo?
-- [ ] `required` bare é suficiente?
-- [ ] `default` de `secret` deve ser erro?
-- [ ] Parameter pode referenciar outro Parameter?
-- [ ] `min`/`max`/`maxLength` são constraints do Shape ou do Parameter?
+- [x] `title` em Parameter substituiu `description` por completo?
+- [x] `required` + `default` são mutuamente exclusivos?
+- [x] Secret sem default é suficiente?
+- [x] `type` aponta para Shape em Parameter e Secret?
+- [x] `min`/`max`/`maxLength` são constraints do Parameter/Secret, não do Shape?
+- [x] `set` de Secret sempre usa `secret.NOME`?
+- [x] Parameter/Secret não vão ao lock, só o ID?
 
-**Status:** 🟡 em revisão.
+**Status:** ✅ revisado e aprovado para a v0.1.
 
-## 6. Service ⬜
+**Decisões:** Parameter e Secret são artefatos separados; `type` aponta para Shape; `source` removido; `required` e `default` mutuamente exclusivos; Secret sem default; `min`/`max`/`maxLength` no Parameter/Secret; sem referência entre Parameters; `set` de Secret usa `secret.NOME`.
+
+## 6. Service 🟡
 
 **Depende de:** outros services, imports, capabilities.
 
@@ -387,7 +395,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Override de view/action/doc: o que é permitido?
 - [ ] Serviço de negócio pode ter `Shape`/`Icon` locais? Sim, se forem do domínio.
 
-**Status:** ⬜ pendente.
+**Status:** 🟡 em revisão.
 
 ## 7. Document 🟡
 
@@ -962,9 +970,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-Próximo: **Parameter** 🟡.
+Próximo: **Service** 🟡.
 
-Organogram revisado; seguimos para **Parameter**.
+Parameter/Secret revisado; seguimos para **Service**.
 
 ## Pendências de revisão de keywords
 

@@ -2,14 +2,12 @@
 parameter TaxRegime {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   type: TaxRegimeCode
-  source: config
   default: "SIMPLES"
 }
 
 parameter InvoiceSeries {
   title: { pt-BR: "Série da nota", en: "Invoice series" }
   type: string
-  source: config
   default: "A"
   maxLength: 10
 }
