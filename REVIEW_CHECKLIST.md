@@ -274,11 +274,11 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `role <Name> { ... }`
 - [x] `title: I18n`
 - [x] `permissions: [...]`
-- [x] `inherits: Role`
+- [x] `inherits: Role | [Role...]`; permissões próprias + herdadas
 - [x] `scopes`
-- [x] `roleManagement` / `manages`
+- [x] `manages` / `delegates to` por linha
 - [x] `all` / `only` / `except`
-- [x] `assignment: others-only`; auto-atribuição proibida
+- [x] `manages` é sempre others-only; auto-atribuição proibida
 - [x] Papel público; sem `private` de topo
 - [x] Papel definido no serviço ou no organogram
 
@@ -295,42 +295,41 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits`, `scopes` e `roleManagement.manages` com `assignment: others-only`; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; roles e organograma no mesmo arquivo; Support tem `Manager` local; exemplos R.1–R.7 com títulos e hierarquia padronizada.
+**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages` com `assignment: others-only`; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; roles e organograma no mesmo arquivo; Support tem `Manager` local; exemplos R.1–R.7 com títulos e hierarquia padronizada.
 
-## 4. Organogram 🟡
+## 4. Organogram ✅
 
 **Depende de:** Role.
 
 **Sintaxe/cláusulas:**
 
 - [x] `organogram <Name> { ... }`
-- [x] `scope`
-- [x] `roleManagement` / `manages` / `assignment`
+- [x] `scopes: [Tipo]`
 - [x] `title: I18n`
-- [x] `hierarchy { A > B > C }`
-- [x] `fourEyes`
-- [x] `segregation`
-- [x] `delegation` / `when absent`
-- [x] `limits` / `unlimited`
-- [x] `dataMasking` / `masked`
-- [x] `signature`
-- [x] `requires`
+- [x] `hierarchy { A > B > C }`; um caminho por linha
+- [x] `fourEyes { ação requires Role }`
+- [x] `segregation { ação != ação }`
+- [x] `delegates to ... when absent for 7d`
+- [x] `manages [Role]`; um por linha
+- [x] `signature { Role }`
+- [x] `requires` dentro de `fourEyes`
 - [x] mesmo arquivo dos roles (`*-organograms.bpcms`)
 
 **Exemplos:** R.1–R.7; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
 
 **Foco da revisão:**
 
-- [x] `Manager > SupportAgent` em Support pode referenciar role de Identity?
+- [x] `Manager > SupportAgent` em Support pode referenciar role de Identity? — Support usa `Manager` local.
 - [x] `title` de organogram é obrigatório?
-- [ ] `fourEyes`/`segregation` são avaliados no runtime ou no build?
-- [x] Limites por papel usam Shape/Money?
+- [x] `fourEyes`/`segregation` são avaliados no runtime ou no build? — build valida estrutura; runtime decide.
+- [x] `limits`/`dataMasking` pertencem ao Document, não ao Organogram.
+- [x] `manages`/`delegates to` são linhas independentes; sem `roleManagement`.
 
-**Status:** 🟡 em revisão.
+**Status:** ✅ revisado e aprovado para a v0.1.
 
-**Cobertura:** `title`, `hierarchy`, `fourEyes`, `segregation`, `delegation`, `limits`/`unlimited`, `dataMasking`/`masked`, `signature`, `requires`, `roleManagement`, `scope` e mesmo arquivo têm exemplos reais. `Support` usa `Manager` local; `Laboratory` usa `LabManager: unlimited`, `Collector.scope` e mascaramento de `Sample.patientId`.
+**Decisões:** `scopes` plural; `manages` e `delegates to` por linha; `delegates to` sem `->`; `fourEyes` exige ator diferente com role; `segregation` e `signature` ficam no Organogram até revisão de Document; `limits` e `dataMasking` movidos para Document; build valida estrutura, runtime decide autorização.
 
-## 5. Parameter ⬜
+## 5. Parameter 🟡
 
 **Depende de:** Shape, Secret.
 
@@ -357,7 +356,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Parameter pode referenciar outro Parameter?
 - [ ] `min`/`max`/`maxLength` são constraints do Shape ou do Parameter?
 
-**Status:** ⬜ pendente.
+**Status:** 🟡 em revisão.
 
 ## 6. Service ⬜
 
@@ -390,29 +389,36 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ⬜ pendente.
 
-## 7. Document ⬜
+## 7. Document 🟡
 
 **Depende de:** Shape, Icon, Role (ações), Service.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `document <Name> { ... }`
+- [ ] `document <Name> { ... }` e `scopable document <Name> { ... }`
 - [ ] `title: I18n`
-- [ ] `id` implícito (`<Name>Id`); não declarar
+- [ ] `id` interno implícito (`<Name>Id`); não declarar
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
 - [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`
-- [ ] `indexes` (unique/range/search/hash)
+- [ ] `link Target { title; snapshot; lookup }`; não é FK
+- [ ] link para `scopable document` infere escopo
+- [ ] sem `source`/`scope` block/parentId/path
+- [ ] ID interno × `number` de negócio
+- [ ] `number` com `format`, `sequence`, `unique`
+- [ ] `indexes` (unique/range/search/hash), inclusive `link.id`
 - [ ] `actions` (públicas/private)
 - [ ] `rules`
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
-- [ ] FK: `CategoryId`; id inexistente bloqueia só novos vínculos
-- [ ] Projeção: `UserId(citizenId)` só campos extras
-- [ ] Circular: campo não pode ser `<document>Id`; `parentId` é permitido
-- [ ] Duplicidade: `id`, `<Doc>Id`, `categoryId` no próprio Category
+- [ ] link circular usa nome diferente do id (`parent`)
+- [ ] duplicidade de id, `<Doc>Id` e link para si mesmo
 - [ ] PII em `private` quando aplicável
+- [ ] regras de leitura e edição por field
+- [ ] `dataMasking`/`masked` em field/link
+- [ ] `limits`/`unlimited` por role/field
+- [ ] `segregation` e `signature` no documento, se aplicável
 
 **Exemplos:** D.1–D.6; `*-documents.bpcms`.
 
@@ -421,12 +427,13 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` é tag de campo; `short`/`tooltip` são do title.
 - [ ] `extends` restrito a documento no mesmo serviço.
 - [ ] `id` implícito e `<Doc>Id` implícito.
-- [ ] FK soft: apagar origem não invalida vínculos antigos.
+- [ ] `link` não é FK; exclusão da origem não invalida vínculos antigos.
 - [ ] `computed` + `lookup` + `title` interagem bem?
 - [ ] `private` é suficiente para PII ou precisa `sensitive`?
 - [ ] `Date`/`DateTime`/`YearMonth` são tipos internos?
+- [ ] `dataMasking`, `limits`, `segregation` e `signature` pertencem ao Document ou ao Organogram?
 
-**Status:** ⬜ pendente.
+**Status:** 🟡 em revisão.
 
 ## 8. Event ⬜
 
@@ -950,9 +957,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-Próximo: **Organogram** 🟡.
+Próximo: **Parameter** 🟡.
 
-Role revisado; seguimos para **Organogram**.
+Organogram revisado; seguimos para **Parameter**.
 
 ## Pendências de revisão de keywords
 

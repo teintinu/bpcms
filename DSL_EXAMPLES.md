@@ -1512,7 +1512,7 @@ organogram Store {
   hierarchy {
     Manager > Clerk > Customer
   }
-  scope: store
+  scopes: [Store]
 }
 ```
 
@@ -1573,13 +1573,13 @@ organogram Warehouse {
     Supervisor > Picker
   }
   segregation { shipment.pick != shipment.check }
-  delegation { Supervisor -> Checker when absent }
+  Supervisor delegates to Checker when absent for 7d
 }
 ```
 
 *Valida: quem separa não confere; delegação explícita.*
 
-### R.4 Papéis financeiros com limites
+### R.4 Papéis financeiros com four-eyes
 
 ```bpcms
 role Analyst {
@@ -1599,17 +1599,13 @@ organogram Finance {
   hierarchy {
     Controller > Approver > Analyst
   }
-  fourEyes { payment.approve requires Approver and Approver != Analyst }
-  limits {
-    Approver: std.Money { raw: 50000, currency: BRL }
-    Controller: unlimited
-  }
+  fourEyes { payment.approve requires Approver }
 }
 ```
 
-*Valida: alçada como dado do papel, segregação e limite em unidade monetária.*
+*Valida: four-eyes e segregação de função; limites e mascaramento ficam para Document.*
 
-### R.5 Papéis de suporte com mascaramento
+### R.5 Papéis de suporte com delegação
 
 ```bpcms
 role Agent {
@@ -1631,12 +1627,11 @@ organogram Support {
   hierarchy {
     Admin > Lead > Agent
   }
-  delegation { Lead -> Agent when absent }
-  dataMasking { Agent: customer.phone masked }
+  Lead delegates to Agent when absent for 7d
 }
 ```
 
-*Valida: herança, delegação e mascaramento por papel.*
+*Valida: herança e delegação; mascaramento fica para Document.*
 
 ### R.6 Papéis de laboratório com assinatura
 
@@ -1651,6 +1646,7 @@ role Analyst {
   permissions: [exam.result, exam.viewClinical]
 }
 role Pathologist {
+  scopes: [Laboratory]
   title: { pt-BR: "Patologista", en: "Pathologist" }
   permissions: [exam.review, exam.release]
 }
@@ -1659,7 +1655,7 @@ organogram Lab {
   hierarchy {
     Pathologist > Analyst > Collector
   }
-  fourEyes { exam.release requires Pathologist and Pathologist != Analyst }
+  fourEyes { exam.release requires Pathologist }
   signature { Pathologist }
 }
 ```
@@ -1680,6 +1676,7 @@ role Collector {
 }
 
 role Analyst {
+  scopes: [Laboratory]
   title: { pt-BR: "Analista", en: "Analyst" }
   inherits: Collector
   permissions: [
@@ -1691,16 +1688,19 @@ role Analyst {
 }
 
 role Pathologist {
+  scopes: [Laboratory]
   title: { pt-BR: "Patologista", en: "Pathologist" }
   permissions: [exam.review, exam.release, result.release]
 }
 
 role SupportLiaison {
+  scopes: [Laboratory]
   title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
   permissions: [sample.receive, support.refer]
 }
 
 role LabManager {
+  scopes: [Laboratory]
   title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
   inherits: Pathologist
   permissions: [lab.manage, support.refer]
@@ -1708,28 +1708,17 @@ role LabManager {
 
 organogram Laboratory {
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scope: Laboratory
+  scopes: [Laboratory]
 
   hierarchy {
     LabManager > Pathologist > Analyst > Collector
     LabManager > SupportLiaison
   }
 
-  roleManagement {
-    LabManager manages [Collector, Analyst, SupportLiaison]
-    assignment: others-only
-  }
-
-  limits {
-    LabManager: unlimited
-  }
-
-  dataMasking {
-    Collector: Sample.patient masked
-  }
+  LabManager manages [Collector, Analyst, SupportLiaison]
+  LabManager delegates to Pathologist when absent for 7d
 
   segregation { exam.perform != exam.release }
-  delegation { LabManager -> Pathologist when absent }
   signature { Pathologist }
 }
 ```

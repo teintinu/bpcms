@@ -1355,27 +1355,20 @@ view SalesDashboard {
 | `role` | `role <Name> { ... }` | Papel/permissões. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade. |
-| `inherits` | `inherits: Clerk` | Herda permissões do papel. |
-| `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo exigidos pela role. |
-| `roleManagement` | `roleManagement { LabManager manages [Collector, Analyst]; assignment: others-only }` | Papéis que um gerente pode atribuir a outras pessoas. |
-| `manages` | `LabManager manages [Collector, Analyst]` | Relação explícita de gestão de papéis; não concede as permissões do papel gerenciado. |
-| `assignment` | `assignment: others-only` | Atribuição apenas a terceiros; auto-atribuição é sempre proibida. |
+| `inherits` | `inherits: Clerk` ou `inherits: [Clerk, Auditor]` | Soma as permissões herdadas às permissões próprias. |
+| `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo da role/organograma. |
+| `manages` | `LabManager manages [Collector, Analyst]` | Atribuição de roles a terceiros; nunca a si mesmo; não concede as permissões da role. |
 | `all` | `Store: {all}` | Todos os escopos do tipo; bare, sem `true`. |
 | `only` | `Store: {only: [id1, id2]}` | Lista explícita; escopo novo não entra. |
 | `except` | `Store: {except: [id1]}` | Todos, exceto a lista; escopo novo entra. |
 | `organogram` | `organogram <Name> { ... }` | Hierarquia e regras de autorização. |
-| `scope` | `scope: Laboratory` | Escopo raiz do organograma. |
 | `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. |
-| `fourEyes` | `fourEyes { payment.approve requires Approver and Approver != Analyst }` | Exige segundo ator; pode comparar atores. |
+| `fourEyes` | `fourEyes { payment.approve requires Approver }` | Exige um segundo ator diferente, com a role indicada. |
 | `segregation` | `segregation { shipment.pick != shipment.check }` | Impede que o mesmo ator faça as duas ações. |
-| `delegation` | `delegation { Supervisor -> Checker when absent }` | Delegação condicional. |
-| `limits` | `limits { Approver: std.Money { raw: 50000, currency: BRL }; Controller: unlimited }` | Alçada por papel; `unlimited` é explícito. |
-| `dataMasking` | `dataMasking { Agent: customer.phone masked }` | Mascara campo para o papel. |
+| `delegates to` | `Supervisor delegates to Checker when absent for 7d` | Delegação temporária e condicional. |
 | `signature` | `signature { Pathologist }` | Papel com autoridade de assinatura. |
 | `requires` | `fourEyes { X requires Role }` | Papel/condição exigida. |
-| `when absent` | `delegation { A -> B when absent }` | Condição de delegação. |
-| `unlimited` | `limits { Role: unlimited }` | Sem limite; decisão explícita. |
-| `masked` | `dataMasking { Role: field masked }` | Campo mascarado na leitura. |
+| `when absent` | `... when absent for 7d` | Condição e vigência da delegação. |
 
 > Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`.
 
@@ -1393,12 +1386,17 @@ role InvoiceManager {
 
 organogram Store {
   title: { pt-BR: "Organograma da loja", en: "Store organogram" }
+  scopes: [Store]
+
   hierarchy {
     InvoiceManager > Clerk
   }
-  roleManagement {
-    InvoiceManager manages [Clerk]
-    assignment: others-only
+
+  InvoiceManager manages [Clerk]
+  InvoiceManager delegates to Clerk when absent for 7d
+
+  fourEyes {
+    refund.approve requires InvoiceManager
   }
 }
 ```
@@ -1410,19 +1408,41 @@ assignRole(user, InvoiceManager, scopes: {
 })
 ```
 
-**Atribuição de papel.** `roleManagement` define autoridade de atribuição, não permissões:
+**Herança de role.** `inherits` soma permissões; não substitui as próprias:
+
+- `permissions` locais continuam valendo;
+- `inherits` aceita uma role ou lista;
+- herança é aditiva, sem override/remoção;
+- ciclos são erro de build;
+- a role herdeira mantém `title`, `scopes` e `manages` próprios;
+- permissões herdadas não mudam a identidade da role.
+
+```bpcms
+role Auditor {
+  title: { pt-BR: "Auditor", en: "Auditor" }
+  permissions: [audit.view]
+}
+
+role Analyst {
+  inherits: [Collector, Auditor]
+  permissions: [exam.result]
+}
+```
+
+**Atribuição de papel.** `manages` define autoridade de atribuição, não permissões:
 
 - `all` inclui escopos presentes e futuros;
 - `only` é fail-closed: escopo novo não entra;
 - `except` é fail-open: escopo novo entra, exceto os listados;
 - `all`, `only` e `except` são mutuamente exclusivos por escopo;
 - `except: []` equivale a todos, mas `all` é a forma explícita recomendada;
+- todo `manages` é `others-only`; o gerente só atribui a terceiros;
 - o gerente pode atribuir apenas papéis listados em `manages`;
 - o alvo recebe as permissões do **papel atribuído**, não as do gerente;
 - o gerente não precisa ter as permissões do papel que gerencia;
 - `assignment: others-only` proíbe o gerente de atribuir qualquer papel a si mesmo;
 - auto-atribuição é proibida mesmo que o papel esteja em `manages`;
-- `manages` não é `inherits` e não é `delegation`;
+- `manages` não é `inherits` e não é `delegates to`;
 - a atribuição é auditada;
 - a operação é `assignRole(target, role)`, com `target != actor`.
 

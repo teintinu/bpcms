@@ -39,6 +39,6 @@ organogram Platform {
     Manager > Dispatcher > Driver
   }
   fourEyes {
-    refund.approve requires Manager and Manager != Clerk
+    refund.approve requires Manager
   }
 }

@@ -45,32 +45,18 @@ role LabManager {
 
 organogram Laboratory {
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scope: Laboratory
+  scopes: [Laboratory]
 
   hierarchy {
     LabManager > Pathologist > Analyst > Collector
     LabManager > SupportLiaison
   }
 
-  roleManagement {
-    LabManager manages [Collector, Analyst, SupportLiaison]
-    assignment: others-only
-  }
-
-  limits {
-    LabManager: unlimited
-  }
-
-  dataMasking {
-    Collector: Sample.patient masked
-  }
+  LabManager manages [Collector, Analyst, SupportLiaison]
+  LabManager delegates to Pathologist when absent for 7d
 
   segregation {
     exam.perform != exam.release
-  }
-
-  delegation {
-    LabManager -> Pathologist when absent
   }
 
   signature {
