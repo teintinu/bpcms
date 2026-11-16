@@ -416,6 +416,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] duplicidade de id, `<Doc>Id` e link para si mesmo
 - [ ] PII em `private` quando aplicável
 - [ ] regras de leitura e edição por field
+- [ ] permissões por documento: buscar, criar, atualizar, excluir e ações próprias
+- [ ] permissões por campo: leitura e edição
+- [ ] combinação documento × campo × role × scope
 - [ ] `dataMasking`/`masked` em field/link
 - [ ] `limits`/`unlimited` por role/field
 - [ ] `segregation` e `signature` no documento, se aplicável
@@ -432,6 +435,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `private` é suficiente para PII ou precisa `sensitive`?
 - [ ] `Date`/`DateTime`/`YearMonth` são tipos internos?
 - [ ] `dataMasking`, `limits`, `segregation` e `signature` pertencem ao Document ou ao Organogram?
+- [ ] Permissões de documento e de campo usam `permissions` da role, `scopes` ou uma policy própria?
+- [ ] `buscar`, `criar`, `atualizar`, `excluir` e ações próprias têm permissões separadas?
 
 **Status:** 🟡 em revisão.
 
