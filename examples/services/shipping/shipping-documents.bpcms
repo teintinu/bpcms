@@ -6,8 +6,15 @@ document ShipmentItem {
   sync: live
 
   fields {
-    shipment: link Shipment { tracking, status }
-    product: link Product { sku, name }
+    shipment: link Shipment {
+      title: { pt-BR: "Remessa", en: "Shipment" }
+      snapshot: [tracking, status]
+    }
+    product: link Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+      snapshot: [sku, name]
+    }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     pesoUnitario: std.Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
   }
@@ -29,7 +36,11 @@ document Shipment {
   audit: true
 
   fields {
-    order: link Order { status, createdAt }
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+      snapshot: [status, createdAt]
+    }
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
     volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }

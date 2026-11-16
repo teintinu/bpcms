@@ -50,7 +50,10 @@ document Consumer extends User {
   sync: read
 
   fields {
-    citizen: link Citizen { displayName, avatar }?
+    citizen: link Citizen? {
+      title: { pt-BR: "Cidadão", en: "Citizen" }
+      snapshot: [displayName, avatar]
+    }
   }
 
   indexes {
@@ -73,7 +76,10 @@ document Session {
   sync: read
 
   fields {
-    user: link User { name }
+    user: link User {
+      title: { pt-BR: "Usuário", en: "User" }
+      snapshot: [name]
+    }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
     status: SessionStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

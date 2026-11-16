@@ -6,8 +6,15 @@ document OrderItem {
   sync: live
 
   fields {
-    order: link Order { status, createdAt }
-    product: link Product { sku, name }
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      snapshot: [status, createdAt]
+    }
+    product: link Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+      snapshot: [sku, name]
+    }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup, min: 1, max: 1000 }
     unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
@@ -32,7 +39,11 @@ document Order {
   audit: true
 
   fields {
-    customer: link User { name, nickname }
+    customer: link User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+      snapshot: [name, nickname]
+    }
     items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
     discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }

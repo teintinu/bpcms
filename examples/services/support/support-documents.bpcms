@@ -7,15 +7,24 @@ document Ticket {
   audit: true
 
   fields {
-    customer: link User { name, nickname }
-    order: link Order { status, createdAt }?
+    customer: link User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      snapshot: [name, nickname]
+    }
+    order: link Order? {
+      title: { pt-BR: "Pedido", en: "Order" }
+      snapshot: [status, createdAt]
+    }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
     budget: std.Money? { title: { pt-BR: "Orçamento", en: "Budget" } }
     status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    assignee: link User { name }?
+    assignee: link User? {
+      title: { pt-BR: "Responsável", en: "Assignee" }
+      snapshot: [name]
+    }
     slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
     resolutionTime: std.Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
     slaMet: boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
@@ -54,9 +63,19 @@ document ReturnRequest {
   audit: true
 
   fields {
-    order: link Order { status, createdAt }
-    payment: link Payment { status, amount }?
-    shipment: link Shipment { tracking, status }?
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+      snapshot: [status, createdAt]
+    }
+    payment: link Payment? {
+      title: { pt-BR: "Pagamento", en: "Payment" }
+      snapshot: [status, amount]
+    }
+    shipment: link Shipment? {
+      title: { pt-BR: "Remessa", en: "Shipment" }
+      snapshot: [tracking, status]
+    }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }

@@ -7,7 +7,11 @@ document StockItem {
   audit: true
 
   fields {
-    product: link Product { sku, name }
+    product: link Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+      snapshot: [sku, name]
+    }
     warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
     available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
     reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
@@ -41,7 +45,11 @@ document Reservation {
   sync: live
 
   fields {
-    product: link Product { sku, name }
+    product: link Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+      snapshot: [sku, name]
+    }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
     status: ReservationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

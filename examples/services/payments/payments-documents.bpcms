@@ -7,7 +7,11 @@ document Payment {
   audit: true
 
   fields {
-    order: link Order { status, createdAt }
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+      snapshot: [status, createdAt]
+    }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
     status: PaymentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -41,7 +45,11 @@ document Refund {
   audit: true
 
   fields {
-    payment: link Payment { status, amount }
+    payment: link Payment {
+      title: { pt-BR: "Pagamento", en: "Payment" }
+      lookup
+      snapshot: [status, amount]
+    }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: RefundStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

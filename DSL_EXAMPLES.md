@@ -939,9 +939,19 @@ document Invoice {
   sync: live
 
   fields {
-    store: link Store { code, name }
-    fiscalYear: link FiscalYear { year }
-    customer: link Customer { name, email }
+    store: link Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      snapshot: [code, name]
+    }
+    fiscalYear: link FiscalYear {
+      title: { pt-BR: "Exercício", en: "Fiscal year" }
+      snapshot: [year]
+    }
+    customer: link Customer {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+      snapshot: [name, email]
+    }
     number: InvoiceNumber {
       format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
       sequence: per(Store, FiscalYear)
@@ -987,7 +997,11 @@ document Shipment {
   sync: live
 
   fields {
-    order: link Order { status, createdAt }
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+      snapshot: [status, createdAt]
+    }
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
     volume: Volume { unit: m3, min: 0 }
@@ -1036,7 +1050,11 @@ document LabExam {
   retention: 5y
 
   fields {
-    patient: link Citizen { displayName, avatar }
+    patient: link Citizen {
+      title: { pt-BR: "Paciente", en: "Patient" }
+      lookup
+      snapshot: [displayName, avatar]
+    }
     type: ExamType { lookup }
     status: ExamStatus { lookup }
     result: string?
@@ -1076,12 +1094,19 @@ document SupportTicket {
   sync: live
 
   fields {
-    customer: link Customer { name, email }
+    customer: link Customer {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+      snapshot: [name, email]
+    }
     subject: string { maxLength: 160, lookup }
     description: string
     priority: TicketPriority { lookup }
     status: TicketStatus { lookup }
-    assignee: link User { name }?
+    assignee: link User? {
+      title: { pt-BR: "Responsável", en: "Assignee" }
+      snapshot: [name]
+    }
     slaDue: DateTime
     createdAt: DateTime
   }

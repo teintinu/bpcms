@@ -522,7 +522,7 @@ task RefundPayment {
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
 | `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | `scopable` | `scopable document Store { ... }` | Documento também é um tipo de escopo. |
-| `link` | `store: link Store { code, name }` | Referência lógica com `id` + snapshot; não é FK de banco. |
+| `link` | `store: link Store { title: {...}; snapshot: [code, name] }` | Referência lógica com `id` + snapshot; não é FK de banco. |
 | escopo inferido | `store: link Store` | Todo link direto para `scopable document` cria um escopo. |
 | `number` | `number: InvoiceNumber { format; sequence; unique }` | Chave alternativa de negócio; não é o `id` interno. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
@@ -571,8 +571,14 @@ scopable document FiscalYear {
 ```bpcms
 document Invoice {
   fields {
-    store: link Store { code, name }
-    fiscalYear: link FiscalYear { year }
+    store: link Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      snapshot: [code, name]
+    }
+    fiscalYear: link FiscalYear {
+      title: { pt-BR: "Exercício", en: "Fiscal year" }
+      snapshot: [year]
+    }
     number: InvoiceNumber
     issuedAt: DateTime
   }
@@ -586,10 +592,28 @@ document Invoice {
 - dois links para o mesmo tipo de escopo no mesmo documento são erro;
 - link opcional cria escopo opcional, com política explícita.
 
+**Forma completa do link.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
+
+```bpcms
+assignedTo: link User? {
+  title: { pt-BR: "Responsável", en: "Assignee" }
+  lookup
+  snapshot: [name]
+}
+```
+
+- `title`, `lookup`, `required`, `sensitive`, `default` etc. são atributos do field;
+- `snapshot: [...]` lista os campos copiados;
+- `id` é sempre implícito;
+- a forma curta `link User { name }?` só vale quando não há atributos.
+
 **`link` não é ForeignKey.** É uma referência lógica:
 
 ```bpcms
-store: link Store { code, name }
+store: link Store {
+  title: { pt-BR: "Loja", en: "Store" }
+  snapshot: [code, name]
+}
 ```
 
 Armazena, conceitualmente:
@@ -636,7 +660,7 @@ number: InvoiceNumber {
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { displayName, avatar }?`;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen? { title; snapshot: [displayName, avatar] }`;
 - mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
 - fica no mesmo serviço do pai (v1);
 - pode ser referenciada como `UserId`; o link `citizen` carrega o snapshot do cidadão, e `UserId` sozinho entrega o lookup herdado.
@@ -644,7 +668,7 @@ number: InvoiceNumber {
 
 `citizen` é um link para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
 
-**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { name }`). O id interno continua implícito.
+**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category? { title; snapshot: [name] }`). O id interno continua implícito.
 
 **Parâmetros de campo:**
 
@@ -675,7 +699,11 @@ document Shipment {
   sync: live
 
   fields {
-    order: link Order { status, createdAt }
+    order: link Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+      snapshot: [status, createdAt]
+    }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
     tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

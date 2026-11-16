@@ -36,14 +36,27 @@ document Sample {
 
   fields {
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
-    laboratory: link Laboratory { code, name }
+    laboratory: link Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+      snapshot: [code, name]
+    }
     kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
-    patient: link Citizen { displayName, avatar }
-    supportLab: link SupportLab { name }
+    patient: link Citizen {
+      title: { pt-BR: "Paciente", en: "Patient" }
+      lookup
+      snapshot: [displayName, avatar]
+    }
+    supportLab: link SupportLab {
+      title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+      snapshot: [name]
+    }
     controlLot: string? { title: { pt-BR: "Lote de controle", en: "Control lot" } }
     status: SampleStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
-    collectedBy: link User { name }
+    collectedBy: link User {
+      title: { pt-BR: "Coletada por", en: "Collected by" }
+      snapshot: [name]
+    }
   }
 
   rules {
@@ -67,12 +80,25 @@ document ExamOrder {
   audit: true
 
   fields {
-    laboratory: link Laboratory { code, name }
-    sample: link Sample { code }
+    laboratory: link Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+      snapshot: [code, name]
+    }
+    sample: link Sample {
+      title: { pt-BR: "Amostra", en: "Sample" }
+      lookup
+      snapshot: [code]
+    }
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
     status: ExamOrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    assignedTo: link User { name }?
-    referredTo: link SupportLab { name }?
+    assignedTo: link User? {
+      title: { pt-BR: "Responsável", en: "Assignee" }
+      snapshot: [name]
+    }
+    referredTo: link SupportLab? {
+      title: { pt-BR: "Encaminhado para", en: "Referred to" }
+      snapshot: [name]
+    }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
     resultedAt: DateTime? { title: { pt-BR: "Resultado em", en: "Resulted at" } }
   }
@@ -98,13 +124,26 @@ document ExamResult {
   audit: true
 
   fields {
-    laboratory: link Laboratory { code, name }
-    examOrder: link ExamOrder
-    sample: link Sample { code }
+    laboratory: link Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+      snapshot: [code, name]
+    }
+    examOrder: link ExamOrder {
+      title: { pt-BR: "Pedido", en: "Exam order" }
+      lookup
+    }
+    sample: link Sample {
+      title: { pt-BR: "Amostra", en: "Sample" }
+      lookup
+      snapshot: [code]
+    }
     value: string { title: { pt-BR: "Valor", en: "Value" } }
     unit: string? { title: { pt-BR: "Unidade", en: "Unit" } }
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
-    releasedBy: link User { name }
+    releasedBy: link User {
+      title: { pt-BR: "Liberado por", en: "Released by" }
+      snapshot: [name]
+    }
   }
 
   actions {
