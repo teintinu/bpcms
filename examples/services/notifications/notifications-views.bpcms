@@ -1,6 +1,6 @@
 // service: example.com/services/notifications
 view TemplateEditor {
-  title: { pt-BR: "Editor de template", en: "Template editor" }
+  title: { pt-BR: "Editor de modelo", en: "Template editor" }
   type: form
   document: NotificationTemplate
   roles: [Manager]

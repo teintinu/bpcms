@@ -2,7 +2,7 @@
 
 
 shape SKU {
-  title: { pt-BR: "SKU", en: "SKU" }
+  title: { pt-BR: "Código", en: "SKU" }
   base: string
   normalize: upper-trim
   maxLength: 40
@@ -40,7 +40,7 @@ shape ProductRichDescription {
 }
 
 shape ProductStatus {
-  title: { pt-BR: "Status do produto", en: "Product status" }
+  title: { pt-BR: "Situação do produto", en: "Product status" }
   base: workflow
   initial: draft
   values {

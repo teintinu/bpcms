@@ -32,7 +32,7 @@ shape SampleKind {
 }
 
 shape SampleStatus {
-  title: { pt-BR: "Status da amostra", en: "Sample status" }
+  title: { pt-BR: "Situação da amostra", en: "Sample status" }
   base: workflow
   initial: collected
   values {
@@ -105,7 +105,7 @@ shape ExamCode {
 }
 
 shape ExamOrderStatus {
-  title: { pt-BR: "Status do exame", en: "Exam order status" }
+  title: { pt-BR: "Situação do exame", en: "Exam order status" }
   base: workflow
   initial: requested
   values {

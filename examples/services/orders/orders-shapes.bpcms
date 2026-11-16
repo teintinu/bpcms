@@ -2,7 +2,7 @@
 
 
 shape OrderStatus {
-  title: { pt-BR: "Status do pedido", en: "Order status" }
+  title: { pt-BR: "Situação do pedido", en: "Order status" }
   base: workflow
   initial: draft
   values {

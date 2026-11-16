@@ -1,6 +1,6 @@
 // service: example.com/services/support
 parameter DefaultSla {
-  title: { pt-BR: "SLA padrão", en: "Default SLA" }
+  title: { pt-BR: "Prazo padrão", en: "Default SLA" }
   type: std.Duration
   default: 2d
 }

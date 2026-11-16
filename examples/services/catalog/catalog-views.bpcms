@@ -5,12 +5,12 @@ view ProductForm {
   document: Product
 
   fields {
-    sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, required }
+    sku: SKU { title: { pt-BR: "Código", en: "SKU" }, required }
     name: string { title: { pt-BR: "Nome", en: "Name" }, required }
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, required, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
-    status: ProductStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
+    status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
     image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
     video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
     audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }

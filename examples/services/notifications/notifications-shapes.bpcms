@@ -6,7 +6,7 @@ shape Channel {
   base: classification
   values {
     email {
-      title: { pt-BR: "E-mail", en: "Email" }
+      title: { pt-BR: "Correio eletrônico", en: "Email" }
       icon: channels.email
       ordinal: 10
     }
@@ -26,7 +26,7 @@ shape Channel {
 }
 
 shape NotificationStatus {
-  title: { pt-BR: "Status da notificação", en: "Notification status" }
+  title: { pt-BR: "Situação da notificação", en: "Notification status" }
   base: workflow
   initial: queued
   values {

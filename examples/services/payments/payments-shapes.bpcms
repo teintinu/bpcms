@@ -2,7 +2,7 @@
 
 
 shape PaymentStatus {
-  title: { pt-BR: "Status do pagamento", en: "Payment status" }
+  title: { pt-BR: "Situação do pagamento", en: "Payment status" }
   base: workflow
   initial: authorized
   values {
@@ -36,7 +36,7 @@ shape PaymentStatus {
 }
 
 shape RefundStatus {
-  title: { pt-BR: "Status do reembolso", en: "Refund status" }
+  title: { pt-BR: "Situação do reembolso", en: "Refund status" }
   base: workflow
   initial: requested
   values {

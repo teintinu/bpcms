@@ -287,7 +287,7 @@ service "example.com/services/catalog" {
 
 ```bpcms
 service "example.com/services/checkout" {
-  title: { pt-BR: "Checkout", en: "Checkout" }
+  title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 2.0.1
   owner: "Time de Conversão"
   // document CheckoutSession, event OrderPlaced: públicos
@@ -308,7 +308,7 @@ service "example.com/services/checkout" {
 
 ```bpcms
 service "example.com/services/inventory" {
-  title: { pt-BR: "Estoque", en: "Estoque" }
+  title: { pt-BR: "Estoque", en: "Stock" }
   version: 1.5.0
   owner: "Supply Chain"
   // document StockItem, document Reservation, view StockTable, event StockLow: públicos
@@ -397,7 +397,7 @@ service "gitlab.com/acme/lab-quality" {
 
 ```bpcms
 service "example.com/services/fraud-checkout" {
-  title: { pt-BR: "Checkout antifraude", en: "Checkout antifraude" }
+  title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
   version: 1.0.0
   owner: "Risk"
   // document FraudCheckout: público
@@ -1242,7 +1242,7 @@ shape CPF {
 
 ```bpcms
 shape Email {
-  title: { pt-BR: "E-mail", en: "Email" }
+  title: { pt-BR: "Correio eletrônico", en: "Email" }
   base: string
   normalize: lower-trim
   validate: email
@@ -2369,7 +2369,7 @@ environment dr {
 
 ```bpcms
 parameter ErpUrl {
-  title: { pt-BR: "URL do ERP", en: "ERP URL" }
+  title: { pt-BR: "Endereço do sistema de gestão", en: "ERP URL" }
   type: string
   default: "https://erp.example.com"
 }
@@ -2393,7 +2393,7 @@ secret PaymentKey {
 
 ```bpcms
 parameter LlmModel {
-  title: { pt-BR: "Modelo de LLM", en: "LLM model" }
+  title: { pt-BR: "Modelo de linguagem", en: "LLM model" }
   type: string
   default: "balanced"
 }
@@ -2419,7 +2419,7 @@ parameter MaxRetries {
 
 ```bpcms
 parameter SupportSla {
-  title: { pt-BR: "SLA de suporte", en: "Support SLA" }
+  title: { pt-BR: "Prazo de suporte", en: "Support SLA" }
   type: std.Duration
   default: 2h
 }
@@ -3669,7 +3669,7 @@ icon Overdue {
 
 ```bpcms
 icon Email {
-  title: { pt-BR: "E-mail", en: "Email" }
+  title: { pt-BR: "Correio eletrônico", en: "Email" }
 }
 ```
 

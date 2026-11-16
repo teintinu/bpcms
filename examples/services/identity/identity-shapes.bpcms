@@ -3,7 +3,7 @@
 
 
 shape UserStatus {
-  title: { pt-BR: "Status do usuário", en: "User status" }
+  title: { pt-BR: "Situação do usuário", en: "User status" }
   base: workflow
   initial: active
   values {
@@ -31,7 +31,7 @@ shape UserStatus {
 }
 
 shape SessionStatus {
-  title: { pt-BR: "Status da sessão", en: "Session status" }
+  title: { pt-BR: "Situação da sessão", en: "Session status" }
   base: workflow
   initial: active
   values {

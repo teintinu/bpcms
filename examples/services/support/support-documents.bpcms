@@ -20,14 +20,14 @@ document Ticket {
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
     budget: std.Money { title: { pt-BR: "Orçamento", en: "Budget" } }
-    status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     assignee: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
       snapshot: [name]
     }
-    slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
+    slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
     resolutionTime: std.Duration { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
-    slaMet: boolean { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
+    slaMet: boolean { title: { pt-BR: "Prazo cumprido", en: "SLA met" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -77,7 +77,7 @@ document ReturnRequest {
       snapshot: [tracking, status]
     }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-    status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: ReturnStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }

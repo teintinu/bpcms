@@ -48,7 +48,7 @@ document Order {
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
     discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
-    status: OrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }

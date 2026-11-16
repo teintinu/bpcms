@@ -752,7 +752,7 @@ document Shipment {
     }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
     tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
-    status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -846,7 +846,7 @@ Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 
 ```bpcms
 shape InvoiceStatus {
-  title: { pt-BR: "Status da nota", en: "Invoice status" }
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: workflow
   initial: draft
   format: plain
@@ -1674,7 +1674,7 @@ assumption A-001 {
 
 ```bpcms
 parameter ErpUrl {
-  title: { pt-BR: "URL do ERP", en: "ERP URL" }
+  title: { pt-BR: "Endereço do sistema de gestão", en: "ERP URL" }
   type: string
   default: "https://erp.example.com"
 }

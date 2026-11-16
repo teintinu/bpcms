@@ -1,6 +1,6 @@
 // service: example.com/services/support
 view TicketKanban {
-  title: { pt-BR: "Kanban de chamados", en: "Ticket kanban" }
+  title: { pt-BR: "Quadro de chamados", en: "Ticket kanban" }
   type: kanban
   source: Ticket
   roles: [SupportAgent, Manager]

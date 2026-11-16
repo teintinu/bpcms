@@ -2,7 +2,7 @@
 
 
 shape TicketStatus {
-  title: { pt-BR: "Status do chamado", en: "Ticket status" }
+  title: { pt-BR: "Situação do chamado", en: "Ticket status" }
   base: workflow
   initial: open
   values {
@@ -42,7 +42,7 @@ shape TicketStatus {
 }
 
 shape ReturnStatus {
-  title: { pt-BR: "Status da devolução", en: "Return status" }
+  title: { pt-BR: "Situação da devolução", en: "Return status" }
   base: workflow
   initial: requested
   values {

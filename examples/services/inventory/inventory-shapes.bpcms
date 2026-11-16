@@ -2,7 +2,7 @@
 
 
 shape StockStatus {
-  title: { pt-BR: "Status do estoque", en: "Stock status" }
+  title: { pt-BR: "Situação do estoque", en: "Stock status" }
   base: workflow
   initial: available
   values {
@@ -30,7 +30,7 @@ shape StockStatus {
 }
 
 shape ReservationStatus {
-  title: { pt-BR: "Status da reserva", en: "Reservation status" }
+  title: { pt-BR: "Situação da reserva", en: "Reservation status" }
   base: workflow
   initial: active
   values {

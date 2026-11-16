@@ -51,7 +51,7 @@ document Sample {
       snapshot: [name]
     }
     controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
-    status: SampleStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: SampleStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
     collectedBy: link User {
       title: { pt-BR: "Coletada por", en: "Collected by" }
@@ -90,7 +90,7 @@ document ExamOrder {
       snapshot: [code]
     }
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
-    status: ExamOrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: ExamOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     assignedTo: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
       snapshot: [name]

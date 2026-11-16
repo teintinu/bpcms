@@ -18,10 +18,10 @@ document User {
       required
     }
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
-    avatar: Image { title: { pt-BR: "Avatar", en: "Avatar" }, lookup }
-    email: Email { title: { pt-BR: "E-mail", en: "Email" }, unique }
-    status: UserStatus { title: { pt-BR: "Status", en: "Status" } }
-    private loginAttempts: std.Count { title: { pt-BR: "Tentativas de login", en: "Login attempts" } }
+    avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
+    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" }, unique }
+    status: UserStatus { title: { pt-BR: "Situação", en: "Status" } }
+    private loginAttempts: std.Count { title: { pt-BR: "Tentativas de acesso", en: "Login attempts" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
@@ -82,7 +82,7 @@ document Session {
     }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
-    status: SessionStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: SessionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
   }
 
   indexes {

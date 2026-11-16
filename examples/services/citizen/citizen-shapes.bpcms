@@ -19,7 +19,7 @@ shape CitizenKind {
 }
 
 shape CitizenStatus {
-  title: { pt-BR: "Status do cidadão", en: "Citizen status" }
+  title: { pt-BR: "Situação do cidadão", en: "Citizen status" }
   base: workflow
   initial: active
   values {
@@ -47,7 +47,7 @@ shape CitizenStatus {
 }
 
 shape Email {
-  title: { pt-BR: "E-mail", en: "Email" }
+  title: { pt-BR: "Correio eletrônico", en: "Email" }
   base: string
   normalize: lower-trim
   validate: email

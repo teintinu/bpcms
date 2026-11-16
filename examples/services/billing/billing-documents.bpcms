@@ -53,7 +53,7 @@ document Invoice {
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
-    status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" } }
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" } }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
   }
@@ -92,7 +92,7 @@ document CreditNote {
     }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-    status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: CreditNoteStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
 
@@ -123,7 +123,7 @@ document Bill {
     supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
-    status: BillStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: BillStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
   }
 

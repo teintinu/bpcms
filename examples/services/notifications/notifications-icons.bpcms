@@ -1,7 +1,7 @@
 // service: example.com/services/notifications
 
 icon Email {
-  title: { pt-BR: "E-mail", en: "Email" }
+  title: { pt-BR: "Correio eletrônico", en: "Email" }
 }
 
 icon WhatsApp {

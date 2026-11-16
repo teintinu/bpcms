@@ -1,6 +1,6 @@
 // service: example.com/services/notifications
 document NotificationTemplate {
-  title: { pt-BR: "Template de notificação", en: "Notification template" }
+  title: { pt-BR: "Modelo de notificação", en: "Notification template" }
   version: 1
   owner: "Notifications"
   sync: read
@@ -32,12 +32,12 @@ document Notification {
 
   fields {
     template: link NotificationTemplate {
-      title: { pt-BR: "Template", en: "Template" }
+      title: { pt-BR: "Modelo", en: "Template" }
       snapshot: [key, channel, subject]
     }
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
-    status: NotificationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: NotificationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
     sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
     error: string { title: { pt-BR: "Erro", en: "Error" } }

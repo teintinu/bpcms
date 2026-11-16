@@ -3,7 +3,7 @@
 
 
 shape InvoiceStatus {
-  title: { pt-BR: "Status da nota", en: "Invoice status" }
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: workflow
   initial: draft
   values {
@@ -43,7 +43,7 @@ shape InvoiceStatus {
 }
 
 shape CreditNoteStatus {
-  title: { pt-BR: "Status da nota de crédito", en: "Credit note status" }
+  title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
   base: workflow
   initial: draft
   values {
@@ -72,7 +72,7 @@ shape CreditNoteStatus {
 
 
 shape BillStatus {
-  title: { pt-BR: "Status da conta", en: "Bill status" }
+  title: { pt-BR: "Situação da conta", en: "Bill status" }
   base: workflow
   initial: open
   values {

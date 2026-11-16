@@ -52,7 +52,7 @@ document Reservation {
     }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
-    status: ReservationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
+    status: ReservationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 
