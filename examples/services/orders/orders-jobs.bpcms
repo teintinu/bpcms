@@ -1,5 +1,6 @@
 // service: example.com/services/orders
 job ExpireDraftOrders {
+  capabilities { scheduling }
   schedule: "0 * * * *"
   timezone: America/Fortaleza
   action: Order.expireDraft()

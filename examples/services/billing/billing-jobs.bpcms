@@ -1,5 +1,6 @@
 // service: example.com/services/billing
 job CloseMonth {
+  capabilities { scheduling }
   schedule: "0 2 1 * *"
   timezone: America/Fortaleza
   action: Invoice.closeMonth()

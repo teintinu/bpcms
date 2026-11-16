@@ -206,8 +206,10 @@ builder AiRuntime {
   capabilities: [llm, oltp, sync]
 }
 
-service "example.com/services/assistant" {
-  capabilities { oltp, llm }
+job RefreshAssistant {
+  capabilities { scheduling, llm }
+  schedule: "0 * * * *"
+  action: Assistant.refresh()
 }
 ```
 
@@ -225,10 +227,10 @@ Alguns serviços são de plataforma e são acessados como capabilities, não imp
 ```bpcms
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
-  capabilities { location, timezone, regionalization, units, oltp, sync }
 }
 
 view VisitForm {
+  capabilities { gui, location, timezone, regionalization, units }
   type: form
   computed {
     scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
@@ -394,7 +396,6 @@ application "example.com/app/loja-do-joao" {
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. Vazio é válido. |
 | `override` | `override "<uri>#<Artifact>.<member>" { with: "<uri>#<Artifact>.<member>" }` | Substitui um método/ação; ativo quando o serviço substituto está na closure. |
-| `capabilities` | `capabilities { oltp, attachments, identity }` | Capacidades exigidas do ambiente/construtor. Se faltar, o build falha. |
 | `reintroduce` | `reintroduce <Alias>.<Artifact> { ... }` | Altera/adiciona definições de um artefato importado. |
 
 > **Contrato:** todo artefato de topo é público automaticamente; **não existe `exports`**. Privacidade só por membro (`private`).
@@ -408,17 +409,19 @@ service "example.com/services/catalog" {
   owner: "Time de Catálogo"
 
   imports { service "example.com/services/identity" as Identity }
-  capabilities { oltp, attachments, identity, units }
 }
 ```
 
-**Capabilities.** `capabilities` não é uma lista decorativa: o builder precisa oferecer cada capacidade exigida pela closure. Se `oltp` não estiver disponível, o build falha.
+**Capabilities não ficam no Service.** Cada artefato declara as capacidades que usa:
 
-- capacidades de serviço são exigidas no boot;
-- cada artefato também pode declarar `capabilities`;
-- uma role de equipamento pode exigir `equipment`/`protocol`;
-- o builder valida a disponibilidade e o contrato antes de gerar o app;
-- capability indisponível falha no build, não no runtime.
+- `Job` → `scheduling`;
+- `View` → `gui`;
+- `Shape` de anexo → `attachments`;
+- `Document` com device → `capture`/`units`;
+- `Integration` de equipamento → `equipment`;
+- `Role` de equipamento → `equipment`/protocolo.
+
+O builder valida a closure. Se uma capability exigida por qualquer artefato não estiver disponível, o build falha. Capability indisponível falha no build, não no runtime.
 
 **Sem `provides`.** O serviço não declara o que oferece ao construtor; `provides` é responsabilidade do construtor. O contrato de negócio continua sendo os artefatos públicos do serviço.
 
@@ -439,7 +442,6 @@ service "example.com/services/catalog" {
 ```bpcms
 service "example.com/services/fraud-checkout" {
   imports { service "example.com/services/checkout" }
-  capabilities { oltp, sync }
   override "example.com/services/checkout#CheckoutSession.placeOrder" {
     with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
   }
@@ -2069,6 +2071,7 @@ event OrderApproved {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `job` | `job <Name> { ... }` | Tarefa assíncrona/agendada. |
+| `capabilities` | `capabilities { scheduling }` | Capacidades exigidas pelo Job; falha de build se ausentes. |
 | `schedule` | `schedule: "0 2 1 * *"` | Cron; `*/15 * * * *` para intervalo. |
 | `timezone` | `timezone: America/Fortaleza` | Fuso do cron. |
 | `action` | `action: Billing.closeMonth()` | Operação executada. |
@@ -2087,6 +2090,7 @@ event OrderApproved {
 
 ```bpcms
 job CloseMonth {
+  capabilities { scheduling }
   schedule: "Todo último dia útil do mês"
   timezone: America/Fortaleza
   action: Billing.closeMonth()

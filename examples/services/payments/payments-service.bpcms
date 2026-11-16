@@ -7,5 +7,4 @@ service "example.com/services/payments" {
     service "example.com/services/orders" as Orders
     service "example.com/services/identity" as Identity
   }
-  capabilities { oltp, sync, identity, timezone, regionalization }
 }

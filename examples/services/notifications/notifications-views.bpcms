@@ -1,5 +1,6 @@
 // service: example.com/services/notifications
 view TemplateEditor {
+  capabilities { gui }
   title: { pt-BR: "Editor de template", en: "Template editor" }
   type: form
   document: NotificationTemplate
@@ -19,6 +20,7 @@ view TemplateEditor {
 }
 
 view NotificationLog {
+  capabilities { gui }
   title: { pt-BR: "Histórico de notificações", en: "Notification log" }
   type: table
   source: Notification

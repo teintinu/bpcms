@@ -8,5 +8,4 @@ service "example.com/services/orders" {
     service "example.com/services/inventory" as Inventory
     service "example.com/services/identity" as Identity
   }
-  capabilities { oltp, sync, scheduling, identity, timezone, regionalization, units }
 }

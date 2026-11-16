@@ -1,5 +1,6 @@
 // service: example.com/services/identity
 view LoginForm {
+  capabilities { gui }
   title: { pt-BR: "Formulário de login", en: "Login form" }
   type: form
   document: User
@@ -16,6 +17,7 @@ view LoginForm {
 }
 
 view CitizenAccounts {
+  capabilities { gui }
   title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
   type: table
   source: Consumer

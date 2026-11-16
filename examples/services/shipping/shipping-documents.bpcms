@@ -52,6 +52,7 @@ document Shipment {
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
+  capabilities { capture, units }
   source: device "scale-01" for pesoBruto
 
   computed frete from Shipment {

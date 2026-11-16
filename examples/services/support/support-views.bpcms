@@ -1,5 +1,6 @@
 // service: example.com/services/support
 view TicketKanban {
+  capabilities { gui }
   title: { pt-BR: "Kanban de chamados", en: "Ticket kanban" }
   type: kanban
   source: Ticket
@@ -16,6 +17,7 @@ view TicketKanban {
 }
 
 view ReturnForm {
+  capabilities { gui }
   title: { pt-BR: "Formulário de devolução", en: "Return form" }
   type: form
   document: ReturnRequest

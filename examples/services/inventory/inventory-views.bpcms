@@ -1,5 +1,6 @@
 // service: example.com/services/inventory
 view StockTable {
+  capabilities { gui }
   title: { pt-BR: "Tabela de estoque", en: "Stock table" }
   type: table
   source: StockItem
@@ -15,6 +16,7 @@ view StockTable {
 }
 
 view StockAdjustmentForm {
+  capabilities { gui }
   title: { pt-BR: "Ajuste de estoque", en: "Stock adjustment" }
   type: form
   document: StockItem
@@ -32,6 +34,7 @@ view StockAdjustmentForm {
 }
 
 view ReservationForm {
+  capabilities { gui }
   title: { pt-BR: "Formulário de reserva", en: "Reservation form" }
   type: form
   document: Reservation

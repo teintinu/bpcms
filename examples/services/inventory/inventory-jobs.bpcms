@@ -1,5 +1,6 @@
 // service: example.com/services/inventory
 job ExpireReservations {
+  capabilities { scheduling }
   schedule: "*/10 * * * *"
   timezone: America/Fortaleza
   action: Reservation.expire()

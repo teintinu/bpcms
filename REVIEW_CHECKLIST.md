@@ -369,7 +369,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 ## 6. Service ✅
 
-**Depende de:** outros services, imports, capabilities.
+**Depende de:** outros services, imports.
 
 **Sintaxe/cláusulas:**
 
@@ -378,7 +378,6 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `version`, `owner`
 - [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
 - [x] `override "<uri>#<Artifact>.<member>" { with: ... }`
-- [x] `capabilities { ... }`; falha de build se ausente
 - [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
 - [x] Sem `provides`; contrato são os artefatos públicos
 - [x] Sem `roles` inline; roles no `*-organograms.bpcms`
@@ -394,7 +393,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [x] `imports` vazio é permitido? — sim.
 - [x] `roles` inline vs arquivo de organogram? — apenas arquivo.
-- [x] `capabilities` vs `provides`? — `capabilities` exige do ambiente; `provides` não existe no Service.
+- [x] `capabilities` fica no artefato, não no Service; `provides` não existe.
 - [x] Override é permitido? — sim; um por alvo, mesmo import, LSP.
 - [x] Serviço de negócio pode ter `Shape`/`Icon` locais? — sim, se forem do domínio.
 - [x] `reintroduce` pode alterar qualquer parte de qualquer artefato importado? — sim, aditivo; conflito é erro.
@@ -402,7 +401,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** Service sem `provides`, `roles`, `source` ou `requires`; usa `capabilities`, `imports`, `override` e `reintroduce`; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam apenas no arquivo de organograma.
+**Decisões:** Service sem `provides`, `roles`, `source`, `requires` ou `capabilities`; usa `imports`, `override` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam apenas no arquivo de organograma.
 
 ## 7. Document 🟡
 

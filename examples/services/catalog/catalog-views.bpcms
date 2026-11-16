@@ -1,5 +1,6 @@
 // service: example.com/services/catalog
 view ProductForm {
+  capabilities { gui }
   title: { pt-BR: "Formulário de produto", en: "Product form" }
   type: form
   document: Product
@@ -20,6 +21,7 @@ view ProductForm {
 }
 
 view ProductTable {
+  capabilities { gui }
   title: { pt-BR: "Tabela de produtos", en: "Product table" }
   type: table
   source: Product

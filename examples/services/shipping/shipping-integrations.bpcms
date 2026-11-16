@@ -18,6 +18,7 @@ integration Carrier {
 }
 
 integration ScaleDevice {
+  capabilities { equipment }
   protocol: mqtt
   host: env.SCALE_HOST
   topic: "scales/+/reading"

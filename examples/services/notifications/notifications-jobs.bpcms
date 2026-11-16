@@ -1,5 +1,6 @@
 // service: example.com/services/notifications
 job SendDigest {
+  capabilities { scheduling }
   schedule: "0 7 * * *"
   timezone: America/Fortaleza
   action: Notification.sendDigest()
@@ -8,6 +9,7 @@ job SendDigest {
 }
 
 job RetryNotifications {
+  capabilities { scheduling }
   schedule: "*/15 * * * *"
   timezone: America/Fortaleza
   action: Notification.retryFailed()

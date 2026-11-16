@@ -1,5 +1,6 @@
 // service: example.com/services/citizen
 view CitizenRegistrationForm {
+  capabilities { gui }
   title: { pt-BR: "Cadastro de cidadão", en: "Citizen registration" }
   type: form
   document: Citizen
@@ -20,6 +21,7 @@ view CitizenRegistrationForm {
 }
 
 view CitizenSearch {
+  capabilities { gui }
   title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
   type: table
   source: Citizen

@@ -257,7 +257,7 @@ application "example.com/app/loja-com-antifraude" {
 
 ## Service
 
-> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, capabilities, override).
+> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, override).
 
 ### S.1 Catálogo com contrato e dependências
 
@@ -278,7 +278,6 @@ service "example.com/services/catalog" {
     service "example.com/services/auth"
     service "example.com/services/media"
   }
-  capabilities { oltp, attachments, identity, units }
 }
 ```
 
@@ -300,7 +299,6 @@ service "example.com/services/checkout" {
     service "example.com/services/shipping" as Shipping
     service "example.com/services/auth" as Auth
   }
-  capabilities { oltp, sync, scheduling, identity, timezone, regionalization, units }
 }
 ```
 
@@ -319,7 +317,6 @@ service "example.com/services/inventory" {
     service "example.com/services/catalog"
     service "example.com/services/auth"
   }
-  capabilities { oltp, scheduling, units }
 }
 ```
 
@@ -339,7 +336,6 @@ service "example.com/services/billing" {
     service "example.com/services/auth"
     integration ERP
   }
-  capabilities { oltp, scheduling, attachments, identity, timezone, regionalization, units }
 }
 ```
 
@@ -355,7 +351,6 @@ service "example.com/services/auth" {
   // document User, document Session, roles Customer/Clerk, view LoginForm, event UserLoggedIn: públicos
 
   imports { integration Email }
-  capabilities { oltp, identity }
 }
 ```
 
@@ -375,7 +370,6 @@ service "example.com/services/notifications" {
     integration Email
     integration WhatsApp
   }
-  capabilities { oltp, scheduling, timezone, regionalization }
 }
 ```
 
@@ -394,7 +388,6 @@ service "gitlab.com/acme/lab-quality" {
     service "example.com/services/auth"
     integration Email
   }
-  capabilities { oltp, attachments, scheduling, timezone, regionalization, units }
 }
 ```
 
@@ -415,7 +408,6 @@ service "example.com/services/fraud-checkout" {
   override "example.com/services/checkout#CheckoutSession.placeOrder" {
     with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
   }
-  capabilities { oltp, sync }
 }
 ```
 
@@ -2451,17 +2443,21 @@ secret GoogleMapsKey {
 
 > Esta seção tem exemplos de **uso** das capabilities essenciais; não conta como um dos 152 exemplos de artefatos.
 
-### U.1 Serviço que depende das capabilities
+### U.1 Artefato que exige capabilities
 
 ```bpcms
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
   version: 1.0.0
-  capabilities { location, timezone, regionalization, units, oltp, sync }
+}
+
+view VisitForm {
+  capabilities { gui, location, timezone, regionalization, units }
+  type: form
 }
 ```
 
-*Valida: `location`, `timezone`, `regionalization` e `units` entram por `capabilities`, não por import de serviço.*
+*Valida: a View exige capabilities; o Service não as declara.*
 
 ### U.2 View formatando data e distância
 
@@ -3453,6 +3449,7 @@ event DeviceOffline {
 
 ```bpcms
 job CloseMonth {
+  capabilities { scheduling }
   schedule: "0 2 1 * *"
   timezone: America/Fortaleza
   action: Billing.closeMonth()
@@ -3469,6 +3466,7 @@ job CloseMonth {
 
 ```bpcms
 job DailyDigest {
+  capabilities { scheduling }
   schedule: "0 7 * * *"
   timezone: America/Fortaleza
   action: Notifications.sendDigest()
@@ -3484,6 +3482,7 @@ job DailyDigest {
 
 ```bpcms
 job PurgeExpiredEvidence {
+  capabilities { scheduling }
   schedule: "0 3 * * 0"
   timezone: America/Fortaleza
   action: Evidence.purgeExpired()
@@ -3500,6 +3499,7 @@ job PurgeExpiredEvidence {
 
 ```bpcms
 job RetryFailedIntegrations {
+  capabilities { scheduling }
   schedule: "*/15 * * * *"
   timezone: America/Fortaleza
   action: Integration.retryFailed()
@@ -3516,6 +3516,7 @@ job RetryFailedIntegrations {
 
 ```bpcms
 job SyncERP {
+  capabilities { scheduling }
   schedule: "*/30 * * * *"
   timezone: America/Fortaleza
   action: ERP.syncSuppliers()
@@ -3532,6 +3533,7 @@ job SyncERP {
 
 ```bpcms
 job RefreshSalesDashboard {
+  capabilities { scheduling }
   schedule: "*/5 * * * *"
   timezone: America/Fortaleza
   action: MonthlyRevenue.refresh()

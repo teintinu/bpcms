@@ -1,5 +1,6 @@
 // service: example.com/services/support
 job EscalateSla {
+  capabilities { scheduling }
   schedule: "*/5 * * * *"
   timezone: America/Fortaleza
   action: Ticket.escalateBreached()

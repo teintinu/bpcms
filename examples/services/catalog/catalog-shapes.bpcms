@@ -28,6 +28,7 @@ shape ProductManual {
   title: { pt-BR: "Manual do produto", en: "Product manual" }
   base: attachment
   mime: [application/pdf]
+  capabilities { attachments }
 }
 
 shape ProductRichDescription {

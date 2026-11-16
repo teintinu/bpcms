@@ -6,5 +6,4 @@ service "example.com/services/inventory" {
     service "bpcms.org/std" as std
     service "example.com/services/catalog" as Catalog
   }
-  capabilities { oltp, scheduling, units }
 }

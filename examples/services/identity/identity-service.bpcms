@@ -6,5 +6,4 @@ service "example.com/services/identity" {
     service "bpcms.org/std" as std
     service "example.com/services/citizen" as Citizen
   }
-  capabilities { oltp, scheduling }
 }

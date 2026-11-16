@@ -1,5 +1,6 @@
 // service: example.com/services/shipping
 job TrackShipments {
+  capabilities { scheduling }
   schedule: "*/30 * * * *"
   timezone: America/Fortaleza
   action: Shipment.trackAll()
