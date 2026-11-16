@@ -48,8 +48,8 @@ document User {
   }
 }
 
-// Consumer compartilha UserId: ConsumerId é alias do mesmo id.
-// Vários Users podem referenciar o mesmo CitizenId; não há unique aqui.
+// Consumer compartilha User: Consumer é alias do mesmo id.
+// Vários Users podem referenciar o mesmo Citizen; não há unique aqui.
 document Consumer extends User {
   title: { pt-BR: "Consumidor", en: "Consumer" }
   version: 1
@@ -57,7 +57,7 @@ document Consumer extends User {
   sync: read
 
   fields {
-    citizen: link Citizen {
+    citizen: Citizen {
       title: { pt-BR: "Cidadão", en: "Citizen" }
     }
   }
@@ -67,7 +67,7 @@ document Consumer extends User {
   }
 
   actions {
-    setCitizen(citizen: CitizenId){
+    setCitizen(citizen: Citizen){
       title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
       permission: Admin
     }
@@ -85,7 +85,7 @@ document Session {
   sync: read
 
   fields {
-    user: link User {
+    user: User {
       title: { pt-BR: "Usuário", en: "User" }
     }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }

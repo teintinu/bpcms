@@ -37,7 +37,7 @@ document Citizen {
       title: { pt-BR: "Cadastrar organização", en: "Register organization" }
       permission: Manager
     }
-    merge(target: CitizenId){
+    merge(target: Citizen){
       title: { pt-BR: "Mesclar", en: "Merge" }
       permission: Manager
     }

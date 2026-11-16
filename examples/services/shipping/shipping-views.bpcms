@@ -6,7 +6,7 @@ view ShipmentForm {
   roles: [Dispatcher]
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, readonly }
     volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
     status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
@@ -27,7 +27,7 @@ view DispatchBoard {
   groupBy: status
 
   columns { draft; packed; dispatched; delivered }
-  card { orderId; pesoBruto; volume; tracking }
+  card { order; pesoBruto; volume; tracking }
   actions {
     dispatch -> Shipment.dispatch
     track -> Shipment.trackAll

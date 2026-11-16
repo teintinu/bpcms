@@ -6,7 +6,7 @@ view OrderForm {
   roles: [Clerk]
 
   fields {
-    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" }, required }
+    customer: User { title: { pt-BR: "Cliente", en: "Customer" }, required }
     discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
     status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
   }

@@ -7,7 +7,7 @@ document Category {
 
   fields {
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
-    parent: link Category {
+    parent: Category {
       title: { pt-BR: "Categoria pai", en: "Parent category" }
     }
   }
@@ -18,7 +18,7 @@ document Category {
   }
 
   actions {
-    create(name: string, parentId: Category?){
+    create(name: string, parent: Category?){
       title: { pt-BR: "Criar categoria", en: "Create category" }
       permission: Manager
     }
@@ -39,7 +39,7 @@ document Product {
   fields {
     sku: SKU { title: { pt-BR: "Código", en: "SKU" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
-    category: link Category {
+    category: Category {
       title: { pt-BR: "Categoria", en: "Category" }
     }
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }

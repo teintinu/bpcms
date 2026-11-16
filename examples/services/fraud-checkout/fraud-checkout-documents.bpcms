@@ -7,7 +7,7 @@ document FraudCheck {
   audit: true
 
   fields {
-    session: link CheckoutSession {
+    session: CheckoutSession {
       title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
     }
     score: number {
@@ -15,6 +15,14 @@ document FraudCheck {
     }
     approved: boolean {
       title: { pt-BR: "Aprovado", en: "Approved" }
+    }
+  }
+
+  events {
+    Evaluated {
+      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
+      key: this.id
+      payload { approved: boolean; score: number }
     }
   }
 

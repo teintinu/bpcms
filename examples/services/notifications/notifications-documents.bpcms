@@ -37,7 +37,7 @@ document Notification {
   sync: live
 
   fields {
-    template: link NotificationTemplate {
+    template: NotificationTemplate {
       title: { pt-BR: "Modelo", en: "Template" }
     }
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }

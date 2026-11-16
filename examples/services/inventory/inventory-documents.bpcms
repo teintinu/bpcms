@@ -7,7 +7,7 @@ document StockItem {
   audit: true
 
   fields {
-    product: link Product {
+    product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     }
@@ -18,7 +18,7 @@ document StockItem {
     lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
   }
 
-  // TODO quando estiver revisando document, lembrar que todo document tem lookup e que lookup de links sao auto
+  // TODO quando estiver revisando document, lembrar que todo document tem lookup e que lookup de referências é automático
   indexes {
     uniqueProduct: [product.id, warehouse] unique
     byAvailable: [available] range
@@ -54,7 +54,7 @@ document Reservation {
   sync: live
 
   fields {
-    product: link Product {
+    product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     }
@@ -70,7 +70,7 @@ document Reservation {
   }
 
   actions {
-    request(productId: ProductId, quantity: std.Count, externalRef: string){
+    request(product: Product, quantity: std.Count, externalRef: string){
       title: { pt-BR: "Reservar", en: "Reserve" }
       permission: Clerk
     }

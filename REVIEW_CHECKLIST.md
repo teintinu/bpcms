@@ -410,12 +410,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `document <Name> { ... }` e `scopable document <Name> { ... }`
 - [ ] `title: I18n`
-- [ ] `id` interno implícito (`<Name>Id`); não declarar
+- [ ] `id` interno implícito; não declarar
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
 - [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`; sem `required` = opcional; sem `?`
-- [ ] `link Target { title; lookup }`; projeção automática do `lookup` do alvo; não é FK
+- [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `link`/`XxxId`; não é FK
 - [ ] link para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
 - [ ] ID interno × `number` de negócio
@@ -485,6 +485,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Sintaxe/cláusulas:**
 
+- [ ] TODO precisamos de algo mais proximo do conceito de user task / people task do BPM
 - [ ] `view <Name> { ... }`
 - [ ] `title: I18n`
 - [ ] `type: form | table | dashboard | wizard | detail | kanban`

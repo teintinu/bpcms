@@ -6,10 +6,10 @@ document InvoiceItem {
   sync: live
 
   fields {
-    invoice: link Invoice {
+    invoice: Invoice {
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
     }
-    product: link Product {
+    product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     } // TODO quando estiver revisando documento, rever sobre lookup-indices de lookup/searchable, view de lookup...
@@ -38,10 +38,10 @@ document Invoice {
   fields {
     number: string { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
     series: string { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
     }
-    customer: link User {
+    customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
     }
@@ -58,6 +58,19 @@ document Invoice {
     number: [series, number] unique
     byOrder: [order.id] hash
     byStatus: [status, dueAt] range
+  }
+
+  events {
+    Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      key: this.id // TODO existe mesmo necessidade disso? algum key será diferente?
+      payload { number: InvoiceNumber; total: std.Money }
+    }
+    Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      key: this.id
+      payload { reason: string }
+    }
   }
 
   actions {
@@ -103,7 +116,7 @@ document CreditNote {
   audit: true
 
   fields {
-    invoice: link Invoice {
+    invoice: Invoice {
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
       lookup
     }
@@ -118,6 +131,19 @@ document CreditNote {
     byStatus: [status, issuedAt] range
   }
 
+  events {
+    Issued {
+      title: { pt-BR: "Nota de crédito emitida", en: "Credit note issued" }
+      key: this.id
+      payload { amount: std.Money }
+    }
+    Applied {
+      title: { pt-BR: "Nota de crédito aplicada", en: "Credit note applied" }
+      key: this.id
+      payload { invoice: Invoice }
+    }
+  }
+
   actions {
     issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
@@ -130,7 +156,7 @@ document CreditNote {
       title: { pt-BR: "Aplicar", en: "Apply" }
       permission: Manager
       status => applied
-      emit Applied { invoiceId: invoiceId }
+      emit Applied { invoice: invoice }
     }
   }
 
@@ -159,6 +185,14 @@ document Bill {
     byStatus: [status, dueAt] range
   }
 
+  events {
+    Paid { // TODO mover eventos para o workflow?
+      title: { pt-BR: "Conta paga", en: "Bill paid" }
+      key: this.id
+      payload { amount: std.Money }
+    }
+  }
+
   actions {
     pay(){
       title: { pt-BR: "Pagar", en: "Pay" }
@@ -182,7 +216,7 @@ document OrderCancellation {
   audit: true
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }

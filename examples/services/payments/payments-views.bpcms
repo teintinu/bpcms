@@ -6,7 +6,7 @@ view PaymentForm {
   roles: [Manager]
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
+    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, required, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" }, required }
   }

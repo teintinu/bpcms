@@ -6,10 +6,10 @@ document ShipmentItem {
   sync: live
 
   fields {
-    shipment: link Shipment {
+    shipment: Shipment {
       title: { pt-BR: "Remessa", en: "Shipment" }
     }
-    product: link Product {
+    product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     }
@@ -34,7 +34,7 @@ document Shipment {
   audit: true
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }
@@ -63,12 +63,20 @@ document Shipment {
     byWeight: [pesoBruto.normalized] range
   }
 
+  events {
+    Dispatched {
+      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      key: this.id
+      payload { order: Order; tracking: TrackingCode }
+    }
+  }
+
   actions {
-    create(orderId: OrderId){
+    create(order: Order){
       title: { pt-BR: "Criar remessa", en: "Create shipment" }
       permission: Clerk
     }
-    addItem(productId: ProductId, quantity: std.Count){
+    addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       permission: Manager
     }
@@ -79,6 +87,7 @@ document Shipment {
     dispatch(){
       title: { pt-BR: "Despachar", en: "Dispatch" }
       permission: Manager
+      emit Dispatched { order: order; tracking: tracking }
     }
     trackAll(){
       title: { pt-BR: "Rastrear tudo", en: "Track all" }

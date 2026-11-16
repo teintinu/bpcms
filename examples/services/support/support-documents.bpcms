@@ -7,10 +7,10 @@ document Ticket {
   audit: true
 
   fields {
-    customer: link User {
+    customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
     }
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
     }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
@@ -19,7 +19,7 @@ document Ticket {
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
     budget: std.Money { title: { pt-BR: "Orçamento", en: "Budget" } }
     status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    assignee: link User {
+    assignee: User {
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
     slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
@@ -39,8 +39,21 @@ document Ticket {
     search: [subject, description] search
   }
 
+  events {
+    Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      key: this.id
+      payload { assignee: User }
+    }
+    Reopened {
+      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
+      key: this.id
+      payload { reason: string }
+    }
+  }
+
   actions {
-    assign(user: UserId){
+    assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Agent
       require user != null
@@ -61,7 +74,7 @@ document Ticket {
       require assignee != null
       status => resolved
       audit("ticket.resolved")
-      emit Resolved { assigneeId: assignee.id }
+      emit Resolved { assignee: assignee.id }
     }
 
     reopen(reason: string){
@@ -92,14 +105,14 @@ document ReturnRequest {
   audit: true
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }
-    payment: link Payment {
+    payment: Payment {
       title: { pt-BR: "Pagamento", en: "Payment" }
     }
-    shipment: link Shipment {
+    shipment: Shipment {
       title: { pt-BR: "Remessa", en: "Shipment" }
     }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
@@ -111,6 +124,28 @@ document ReturnRequest {
   indexes {
     byOrder: [order.id] hash
     byStatus: [status, requestedAt] range
+  }
+
+  events {
+    Requested {
+      title: { pt-BR: "Devolução solicitada", en: "Return requested" }
+      key: this.id
+      payload { reason: string }
+    }
+    Approved {
+      title: { pt-BR: "Devolução aprovada", en: "Return approved" }
+      key: this.id
+    }
+    Rejected {
+      title: { pt-BR: "Devolução rejeitada", en: "Return rejected" }
+      key: this.id
+      payload { reason: string }
+    }
+    Refunded {
+      title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
+      key: this.id
+      payload { refundAmount: std.Money }
+    }
   }
 
   actions {

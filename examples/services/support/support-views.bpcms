@@ -22,9 +22,9 @@ view ReturnForm {
   roles: [SupportAgent, Manager]
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
-    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
-    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
+    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
+    payment: Payment { title: { pt-BR: "Pagamento", en: "Payment" } }
+    shipment: Shipment { title: { pt-BR: "Remessa", en: "Shipment" } }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, currency: BRL }
   }

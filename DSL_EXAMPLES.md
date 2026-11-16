@@ -934,13 +934,13 @@ document Invoice {
   sync: live
 
   fields {
-    store: link Store {
+    store: Store {
       title: { pt-BR: "Loja", en: "Store" }
     }
-    fiscalYear: link FiscalYear {
+    fiscalYear: FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
     }
-    customer: link Customer {
+    customer: Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
     }
@@ -973,7 +973,7 @@ document Invoice {
   events {
     Issued {
       title: { pt-BR: "Nota emitida", en: "Invoice issued" }
-      key: invoiceId
+      key: this.id
       payload {
         number: InvoiceNumber
         total: std.Money
@@ -982,7 +982,7 @@ document Invoice {
 
     Cancelled {
       title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      key: invoiceId
+      key: this.id
       payload {
         reason: string
       }
@@ -1043,7 +1043,7 @@ document Shipment {
   sync: live
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }
@@ -1105,7 +1105,7 @@ document LabExam {
   retention: 5y
 
   fields {
-    patient: link Citizen {
+    patient: Citizen {
       title: { pt-BR: "Paciente", en: "Patient" }
       lookup
     }
@@ -1132,7 +1132,7 @@ document LabExam {
       title: { pt-BR: "Registrar resultado", en: "Record result" }
       permission: Analyst
     }
-    review(pathologist: UserId, signature: Signature) {
+    review(pathologist: User, signature: Signature) {
       title: { pt-BR: "Revisar", en: "Review" }
       permission: Pathologist
     }
@@ -1161,7 +1161,7 @@ document SupportTicket {
   sync: live
 
   fields {
-    customer: link Customer {
+    customer: Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
     }
@@ -1169,7 +1169,7 @@ document SupportTicket {
     description: string
     priority: TicketPriority { lookup }
     status: TicketStatus { lookup }
-    assignee: link User {
+    assignee: User {
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
     slaDue: DateTime
@@ -1190,18 +1190,18 @@ document SupportTicket {
   events {
     Resolved {
       title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
-      key: ticketId
-      payload { assigneeId: UserId }
+      key: this.id
+      payload { assignee: User }
     }
     Reopened {
       title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
-      key: ticketId
+      key: this.id
       payload { reason: string }
     }
   }
 
   actions {
-    assign(user: UserId) {
+    assign(user: User) {
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Agent
 
@@ -1227,7 +1227,7 @@ document SupportTicket {
 
       status => resolved
       audit("ticket.resolved")
-      emit Resolved { assignee: assignee.id }
+      emit Resolved { assignee }
     }
 
     reopen(reason: string) {
@@ -1939,10 +1939,10 @@ evidence ERP_DDL {
 
   extracted {
     document Supplier {
-      fields { id; name; citizenId; status }
+      fields { id; name; citizen; status }
     }
     document PurchaseOrder {
-      fields { id; supplierId; total; status; createdAt }
+      fields { id; supplier; total; status; createdAt }
     }
   }
   links { service "example.com/services/billing" }
@@ -1965,7 +1965,7 @@ evidence ClinicMER {
       fields { id; name; birthDate; document }
     }
     document Appointment {
-      fields { id; patientId; doctorId; startsAt; status }
+      fields { id; patient; doctor; startsAt; status }
     }
     relation Appointment.patient -> Patient
   }
@@ -3195,9 +3195,9 @@ integration ERP {
   retry: exponential(3)
 
   operations {
-    getSupplier(id: SupplierId): Supplier
+    getSupplier(supplier: Supplier): Supplier
     createInvoice(invoice: Invoice): ExternalId
-    getPurchaseOrder(id: PurchaseOrderId): PurchaseOrder
+    getPurchaseOrder(id: PurchaseOrder): PurchaseOrder
   }
 
   events {
@@ -3485,9 +3485,9 @@ document Order {
   events {
     Approved {
       title: { pt-BR: "Pedido aprovado", en: "Order approved" }
-      key: orderId
+      key: this.id
       payload {
-        approvedBy: UserId
+        approvedBy: User
         approvedAt: DateTime
       }
     }
@@ -3516,9 +3516,9 @@ document Shipment {
   events {
     Dispatched {
       title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
-      key: shipmentId
+      key: this.id
       payload {
-        orderId: OrderId
+        order: Order
         carrier: CarrierRef
         tracking: TrackingCode
         dispatchedAt: DateTime
@@ -3537,10 +3537,10 @@ document LabExam {
   events {
     Released {
       title: { pt-BR: "Exame liberado", en: "Exam released" }
-      key: examId
+      key: this.id
       payload {
-        patientId: PatientId
-        releasedBy: UserId
+        patient: Patient
+        releasedBy: User
         releasedAt: DateTime
         critical: boolean
       }
@@ -3559,9 +3559,9 @@ document Payment {
   events {
     Failed {
       title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
-      key: paymentId
+      key: this.id
       payload {
-        orderId: OrderId
+        order: Order
         reason: PaymentFailureReason
         failedAt: DateTime
       }
@@ -3579,9 +3579,9 @@ document StockItem {
   events {
     Low {
       title: { pt-BR: "Estoque baixo", en: "Stock low" }
-      key: stockItemId
+      key: this.id
       payload {
-        productId: ProductId
+        product: Product
         available: Quantity
         threshold: Quantity
       }
@@ -3926,8 +3926,8 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos | U.3 |
 | 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
 | 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK | D.1–D.3 |
-| 40 | A projeção `UserId(citizenId)` (só o extra) e o lookup automático de `UserId` (`nickname`, `avatar`) estão claros? | D.2, árvores |
-| 41 | `Consumer extends User` compartilha `UserId`; `ConsumerId` é alias (mesmo valor) e `citizenId` é o extra? | árvores |
+| 40 | A projeção `User(citizenId)` (só o extra) e o lookup automático de `User` (`nickname`, `avatar`) estão claros? | D.2, árvores |
+| 41 | `Consumer extends User` compartilha `User`; `ConsumerId` é alias (mesmo valor) e `citizenId` é o extra? | árvores |
 | 42 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
 
 ## Padrões que os exemplos já sugerem

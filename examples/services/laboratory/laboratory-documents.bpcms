@@ -42,21 +42,21 @@ document Sample {
 
   fields {
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
-    laboratory: link Laboratory {
+    laboratory: Laboratory {
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
     kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
-    patient: link Citizen {
+    patient: Citizen {
       title: { pt-BR: "Paciente", en: "Patient" }
       lookup
     }
-    supportLab: link SupportLab {
+    supportLab: SupportLab {
       title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
     }
     controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
     status: SampleStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
-    collectedBy: link User {
+    collectedBy: User {
       title: { pt-BR: "Coletada por", en: "Collected by" }
     }
   }
@@ -68,7 +68,7 @@ document Sample {
   }
 
   actions {
-    collect(by: UserId){
+    collect(by: User){
       title: { pt-BR: "Coletar", en: "Collect" }
       permission: Analyst
     }
@@ -76,7 +76,7 @@ document Sample {
       title: { pt-BR: "Receber", en: "Receive" }
       permission: Manager
     }
-    refer(lab: SupportLabId){
+    refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       permission: Manager
     }
@@ -91,19 +91,19 @@ document ExamOrder {
   audit: true
 
   fields {
-    laboratory: link Laboratory {
+    laboratory: Laboratory {
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
-    sample: link Sample {
+    sample: Sample {
       title: { pt-BR: "Amostra", en: "Sample" }
       lookup
     }
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
     status: ExamOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    assignedTo: link User {
+    assignedTo: User {
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
-    referredTo: link SupportLab {
+    referredTo: SupportLab {
       title: { pt-BR: "Encaminhado para", en: "Referred to" }
     }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
@@ -116,7 +116,7 @@ document ExamOrder {
   }
 
   actions {
-    assign(user: UserId){
+    assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Pathologist
     }
@@ -124,7 +124,7 @@ document ExamOrder {
       title: { pt-BR: "Iniciar", en: "Start" }
       permission: Manager
     }
-    refer(lab: SupportLabId){
+    refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       permission: Manager
     }
@@ -143,27 +143,27 @@ document ExamResult {
   audit: true
 
   fields {
-    laboratory: link Laboratory {
+    laboratory: Laboratory {
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
-    examOrder: link ExamOrder {
+    examOrder: ExamOrder {
       title: { pt-BR: "Pedido", en: "Exam order" }
       lookup
     }
-    sample: link Sample {
+    sample: Sample {
       title: { pt-BR: "Amostra", en: "Sample" }
       lookup
     }
     value: string { title: { pt-BR: "Valor", en: "Value" } }
     unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
-    releasedBy: link User {
+    releasedBy: User {
       title: { pt-BR: "Liberado por", en: "Released by" }
     }
   }
 
   actions {
-    release(by: UserId){
+    release(by: User){
       title: { pt-BR: "Liberar", en: "Release" }
       permission: Pathologist
     }

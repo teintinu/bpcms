@@ -565,11 +565,11 @@ task RefundPayment {
 | :--- | :--- | :--- |
 | declaração | `document <Name> { ... }` | Unidade de dados + ações + regras + sync. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
+| `id` | *(implícito)* | Todo document tem `id` único gerado; não declare o campo. |
 | `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | `scopable` | `scopable document Store { ... }` | Documento também é um tipo de escopo. |
-| `link` | `store: link Store { title: {...} }` | Referência lógica com `id` + lookup automático do alvo. |
-| escopo inferido | `store: link Store` | Todo link direto para `scopable document` cria um escopo. |
+| referência | `store: Store { title: {...} }` | Campo de Document é implicitamente um `DocumentRef` com `id` + lookup do alvo. |
+| escopo inferido | `store: Store` | Todo direto para `scopable document` cria um escopo. |
 | `number` | `number: InvoiceNumber { format; sequence; unique }` | Chave alternativa de negócio; não é o `id` interno. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
@@ -589,11 +589,11 @@ task RefundPayment {
 | `freshness` | `freshness: 15m` | TTL/agenda do cálculo; expõe `calculatedAt`. |
 | `exposes` | `exposes: [frete, calculatedAt]` | Campos resultantes do cálculo. |
 
-**ID automático.** O `id` não é declarado: todo `document` base ganha `id: <Name>Id` (ex.: `Product` → `ProductId`). O Shape `<Name>Id` também é implícito e **não pode ser declarado**. Declarar `id` no documento ou `shape ProductId` é `E_DUPLICATE_ID_FIELD`/`E_DUPLICATE_ID_SHAPE`. **Exceção:** extensão (`extends`) compartilha o id do pai; `Consumer extends User` usa `UserId`. Se `ConsumerId` for usado, é **alias de tipo** do mesmo `UserId` — não é um segundo id nem um segundo Shape/valor. Declarar `shape ConsumerId` é `E_DUPLICATE_ID_SHAPE`.
+**Identidade e `DocumentRef`.** Todo `document` tem um `id` interno implícito; ele não é declarado. Um campo cujo tipo é um Document é implicitamente um `DocumentRef`: carrega `id` + todos os campos `lookup` do alvo. Não existe Shape `<Name>Id` nem tipo `XxxId` na DSL. **Exceção:** extensão (`extends`) compartilha o `id` do pai; `Consumer extends User` usa o mesmo `id` de `User`.
 
-**Publicação/subscrição.** O `link`/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
+**Publicação/subscrição.** A referência/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
 
-**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Todo link para esse document recebe automaticamente esses campos; o builder decide se resolve na leitura ou materializa. Extensões **herdam** os campos marcados e não redeclaram um bloco.
+**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Todo para esse document recebe automaticamente esses campos; o builder decide se resolve na leitura ou materializa. Extensões **herdam** os campos marcados e não redeclaram um bloco.
 
 **`scopable document`.** Um documento marcado como `scopable` é um tipo de escopo. Ele mantém o `id` interno implícito e pode ter chaves de negócio como `code`/`year`:
 
@@ -614,15 +614,15 @@ scopable document FiscalYear {
 }
 ```
 
-**Escopo inferido por link.** Todo `link` direto para um `scopable document` cria um escopo no documento consumidor. Não há `scopes { ... }`, `source`, `parentId` nem `path`.
+**Escopo inferido por referência.** Todo campo direto para um `scopable document` cria um escopo no documento consumidor. Não há `scopes { ... }`, `source`, `parentId` nem `path`.
 
 ```bpcms
 document Invoice {
   fields {
-    store: link Store {
+    store: Store {
       title: { pt-BR: "Loja", en: "Store" }
     }
-    fiscalYear: link FiscalYear {
+    fiscalYear: FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
     }
     number: InvoiceNumber
@@ -636,12 +636,12 @@ document Invoice {
 - `code`/`year` são chaves de negócio e entram no lookup do alvo;
 - links indiretos não inferem escopo;
 - dois links para o mesmo tipo de escopo no mesmo documento são erro;
-- link opcional cria escopo opcional, com política explícita.
+- opcional cria escopo opcional, com política explícita.
 
-**Forma completa do link.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
+**Forma completa da referência.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
 
 ```bpcms
-assignedTo: link User {
+assignedTo: User {
   title: { pt-BR: "Responsável", en: "Assignee" }
   lookup
 }
@@ -649,25 +649,25 @@ assignedTo: link User {
 
 - `title`, `lookup`, `required`, `sensitive`, `default` etc. são atributos do field;
 - `id` é sempre implícito;
-- a forma curta `link User { name }` só vale quando não há atributos.
+- a forma curta `User { name }` só vale quando não há atributos.
 
-**`link` não é ForeignKey.** É uma referência lógica:
+**`DocumentRef` não é ForeignKey.** É uma referência lógica:
 
 ```bpcms
-store: link Store {
+store: Store {
   title: { pt-BR: "Loja", en: "Store" }
 }
 ```
 
-O alvo `Store` marca com `lookup` os campos `code` e `name`. O link entrega, conceitualmente:
+O alvo `Store` marca com `lookup` os campos `code` e `name`. O campo entrega, conceitualmente:
 
 ```json
 { "id": "st_123", "code": "0001", "name": "Loja 1" }
 ```
 
 - `id` é sempre preservado;
-- todos os campos `lookup` do alvo entram automaticamente no link;
-- o link não escolhe nem declara campos;
+- todos os campos `lookup` do alvo entram automaticamente na referência;
+- o campo não escolhe nem declara campos;
 - excluir o alvo não quebra o documento;
 - não há cascade;
 - o builder pode resolver o lookup na leitura ou materializar;
@@ -678,11 +678,11 @@ O alvo `Store` marca com `lookup` os campos `code` e `name`. O link entrega, con
 
 | Modo | Comportamento |
 | :--- | :--- |
-| `resolved` | Guarda só o id; resolve lookup na leitura |
-| `materialized` | Guarda id + lookup do alvo |
+| `resolved` | Guarda só o `id`; resolve lookup na leitura |
+| `materialized` | Guarda `id` + lookup do alvo |
 | `archive` | Lookup materializado e imutável |
 
-**ID interno × número.** Todo documento tem `id` interno implícito. O número de negócio é uma chave alternativa:
+**`id` × número.** Todo documento tem `id` interno implícito. O número de negócio é uma chave alternativa:
 
 ```bpcms
 number: InvoiceNumber {
@@ -692,26 +692,26 @@ number: InvoiceNumber {
 }
 ```
 
-- `id` é técnico e usado em links;
+- `id` é técnico e usado em referências;
 - `number` é exibido, pesquisável, etiquetável e rótulo;
 - `number` não substitui o `id`;
 - `sequence` é por escopo;
 - overflow e lacunas têm política explícita;
 - archive preserva o `number`.
 
-**Migração.** `categoryId: CategoryId` e `customerId: UserId(...)` são formas legadas de referência. O modelo novo usa `link`; a migração de cada documento é feita junto com a revisão de Document.
+**Migração.** Campos `customer: User` são `DocumentRef`; formas antigas `customerId: User` são legadas. O modelo novo usa `DocumentRef` implícito; a migração de cada documento é feita junto com a revisão de Document.
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { title }`;
-- mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: Citizen { title }`;
+- mantém o **mesmo `id`** do pai; `Consumer` não cria um segundo id;
 - fica no mesmo serviço do pai (v1);
-- pode ser referenciada como `UserId`; o link `citizen` carrega o lookup do cidadão, e `UserId` sozinho entrega o lookup herdado.
+- pode ser referenciada como `User`; o `citizen` carrega o lookup do cidadão, e `User` sozinho entrega o lookup herdado.
 - `citizen` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
 
-`citizen` é um link para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
+`citizen` é um para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
 
-**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { title }`). O id interno continua implícito.
+**Referência circular.** Em uma referência para o próprio documento, use um nome de campo diferente do id (ex.: `parent: Category { title }`). O id interno continua implícito.
 
 **Parâmetros de campo:**
 
@@ -820,7 +820,7 @@ document Shipment {
   sync: live
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }
@@ -902,7 +902,7 @@ shape ProductManual {
 }
 ```
 
-> `<Document>Id` é o Shape implícito de identidade do documento; não declare `shape CategoryId` (ver 5).
+> `<Document>Id` é o Shape implícito de identidade do documento; não declare `shape Category` (ver 5).
 
 **Métodos não usam keyword.** Um identificador seguido de `(` no corpo do Shape declara um método:
 
@@ -2069,7 +2069,7 @@ integration ERP {
   timeout: 10s
   retry: exponential(3)
   operations {
-    getSupplier(id: SupplierId): Supplier
+    getSupplier(supplier: Supplier): Supplier
     createInvoice(invoice: Invoice): ExternalId
   }
   events { Issued -> createInvoice }
@@ -2137,7 +2137,7 @@ document Order {
       title: { pt-BR: "Pedido aprovado", en: "Order approved" }
       key: orderId
       payload {
-        approvedBy: UserId
+        approvedBy: User
         approvedAt: DateTime
       }
     }

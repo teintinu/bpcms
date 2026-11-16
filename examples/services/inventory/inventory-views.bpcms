@@ -4,7 +4,7 @@ view StockTable {
   type: table
   source: StockItem
 
-  columns { productId; warehouse; available; reserved; reorderPoint }
+  columns { product; warehouse; available; reserved; reorderPoint }
   filters { warehouse; available }
   pagination: 50
 
@@ -20,7 +20,7 @@ view StockAdjustmentForm {
   document: StockItem
 
   fields {
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
+    product: Product { title: { pt-BR: "Produto", en: "Product" }, required }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
   }
@@ -37,7 +37,7 @@ view ReservationForm {
   document: Reservation
 
   fields {
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, required }
+    product: Product { title: { pt-BR: "Produto", en: "Product" }, required }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
   }

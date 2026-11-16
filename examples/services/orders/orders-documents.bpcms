@@ -6,10 +6,10 @@ document OrderItem {
   sync: live
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
     }
-    product: link Product {
+    product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     }
@@ -37,7 +37,7 @@ document Order {
   audit: true
 
   fields {
-    customer: link User {
+    customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
     }
@@ -55,15 +55,27 @@ document Order {
     byStatus: [status, createdAt] range
   }
 
+  events {
+    Placed {
+      title: { pt-BR: "Pedido realizado", en: "Order placed" }
+      key: this.id
+      payload { customer: User; total: std.Money }
+    }
+    Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      key: this.id
+      payload { reason: string }
+    }
+  }
+
   actions {
-    create(customerId: UserId, discount: std.Percentage){
+    create(customer: User, discount: std.Percentage){
       title: { pt-BR: "Criar", en: "Create" }
       permission: Clerk
-      customer = customerId
       audit("order.created", discount)
     }
 
-    addItem(productId: ProductId, quantity: std.Count){
+    addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       permission: Clerk
       require quantity > 0
@@ -76,7 +88,7 @@ document Order {
       status => placed
       placedAt = now()
       audit("order.placed")
-      emit Placed { customerId: customerId; total: total }
+      emit Placed { customer: customer; total: total }
     }
 
     cancel(reason: string){

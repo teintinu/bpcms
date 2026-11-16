@@ -21,7 +21,7 @@ view CitizenAccounts {
   source: Consumer
   roles: [Clerk, Manager]
 
-  columns { nickname; email; citizenId; status }
-  filters { citizenId; status }
+  columns { nickname; email; citizen; status }
+  filters { citizen; status }
   pagination: 50
 }

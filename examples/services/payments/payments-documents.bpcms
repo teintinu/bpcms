@@ -7,7 +7,7 @@ document Payment {
   audit: true
 
   fields {
-    order: link Order {
+    order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
     }
@@ -26,22 +26,22 @@ document Payment {
   events {
     Authorized {
       title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      key: paymentId
+      key: this.id
       payload { amount: std.Money }
     }
     Succeeded {
       title: { pt-BR: "Pagamento aprovado", en: "Payment succeeded" }
-      key: paymentId
+      key: this.id
       payload { amount: std.Money }
     }
     Failed {
       title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
-      key: paymentId
+      key: this.id
       payload { reason: string }
     }
     RefundIssued {
       title: { pt-BR: "Reembolso emitido", en: "Refund issued" }
-      key: refundId
+      key: this.id
       payload { amount: std.Money }
     }
   }
@@ -50,14 +50,21 @@ document Payment {
     authorize() {
       title: { pt-BR: "Autorizar", en: "Authorize" }
       permission: Manager
+      status => authorized
+      emit Authorized { amount: amount }
     }
-    capture(){
+    capture() {
       title: { pt-BR: "Capturar", en: "Capture" }
       permission: Manager
+      status => captured
+      capturedAt = now()
+      emit Succeeded { amount: amount }
     }
-    refund(){
+    refund() {
       title: { pt-BR: "Reembolsar", en: "Refund" }
       permission: Manager
+      status => refunded
+      emit RefundIssued { amount: amount }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
@@ -79,7 +86,7 @@ document Refund {
   audit: true
 
   fields {
-    payment: link Payment {
+    payment: Payment {
       title: { pt-BR: "Pagamento", en: "Payment" }
       lookup
     }

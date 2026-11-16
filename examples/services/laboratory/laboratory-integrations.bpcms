@@ -8,6 +8,6 @@ integration SupportLabGateway {
 
   operations {
     sendSample(sample: Sample): string
-    receiveResult(sampleId: SampleId): ExamResult
+    receiveResult(sample: Sample): ExamResult
   }
 }

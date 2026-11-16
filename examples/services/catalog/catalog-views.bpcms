@@ -38,7 +38,7 @@ view ProductTable {
     status
     createdAt
   }
-  filters { status; categoryId; period }
+  filters { status; category; period }
   pagination: 50
 
   actions {

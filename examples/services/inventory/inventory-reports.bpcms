@@ -7,7 +7,7 @@ document InventoryAging {
 
   report {
     filters { warehouse; category }
-    dimensions { productId; warehouse; ageBucket }
+    dimensions { product; warehouse; ageBucket }
     metrics {
     quantity: sum(StockItem.available)
     value: sum(StockItem.available * Product.price)
