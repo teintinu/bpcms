@@ -22,11 +22,11 @@ document SupportLab {
   }
 
   actions {
-    activate(): SupportLab {
+    activate(){
       title: { pt-BR: "Ativar", en: "Activate" }
       permission: Manager
     }
-    deactivate(): SupportLab {
+    deactivate(){
       title: { pt-BR: "Desativar", en: "Deactivate" }
       permission: Manager
     }
@@ -68,15 +68,15 @@ document Sample {
   }
 
   actions {
-    collect(by: UserId): Sample {
+    collect(by: UserId){
       title: { pt-BR: "Coletar", en: "Collect" }
       permission: Analyst
     }
-    receive(): Sample {
+    receive(){
       title: { pt-BR: "Receber", en: "Receive" }
       permission: Manager
     }
-    refer(lab: SupportLabId): Sample {
+    refer(lab: SupportLabId){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       permission: Manager
     }
@@ -116,19 +116,19 @@ document ExamOrder {
   }
 
   actions {
-    assign(user: UserId): ExamOrder {
+    assign(user: UserId){
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Pathologist
     }
-    start(): ExamOrder {
+    start(){
       title: { pt-BR: "Iniciar", en: "Start" }
       permission: Manager
     }
-    refer(lab: SupportLabId): ExamOrder {
+    refer(lab: SupportLabId){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       permission: Manager
     }
-    result(): ExamOrder {
+    result(){
       title: { pt-BR: "Resultar", en: "Result" }
       permission: Manager
     }
@@ -163,7 +163,7 @@ document ExamResult {
   }
 
   actions {
-    release(by: UserId): ExamResult {
+    release(by: UserId){
       title: { pt-BR: "Liberar", en: "Release" }
       permission: Pathologist
     }

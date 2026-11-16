@@ -18,11 +18,11 @@ document Category {
   }
 
   actions {
-    create(name: string, parentId: CategoryId?): Category {
+    create(name: string, parentId: Category?){
       title: { pt-BR: "Criar categoria", en: "Create category" }
       permission: Manager
     }
-    rename(name: string): Category {
+    rename(name: string){
       title: { pt-BR: "Renomear", en: "Rename" }
       permission: Manager
     }
@@ -62,19 +62,19 @@ document Product {
   }
 
   actions {
-    create(sku: SKU, name: string, price: std.Money): Product {
+    create(sku: SKU, name: string, price: std.Money){
       title: { pt-BR: "Criar produto", en: "Create product" }
       permission: Manager
     }
-    update(name: string, price: std.Money): Product {
+    update(name: string, price: std.Money){
       title: { pt-BR: "Atualizar", en: "Update" }
       permission: Manager
     }
-    publish(): Product {
+    publish(){
       title: { pt-BR: "Publicar", en: "Publish" }
       permission: Manager
     }
-    archive(): Product {
+    archive(){
       title: { pt-BR: "Arquivar", en: "Archive" }
       permission: Manager
     }

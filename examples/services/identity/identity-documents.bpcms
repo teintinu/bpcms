@@ -32,11 +32,11 @@ document User {
   }
 
   actions {
-    create(name: string, email: Email): User {
+    create(name: string, email: Email){
       title: { pt-BR: "Criar usuário", en: "Create user" }
       permission: Admin
     }
-    disable(): User {
+    disable(){
       title: { pt-BR: "Desativar", en: "Disable" }
       permission: Manager
     }
@@ -67,7 +67,7 @@ document Consumer extends User {
   }
 
   actions {
-    setCitizen(citizen: CitizenId): Consumer {
+    setCitizen(citizen: CitizenId){
       title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
       permission: Admin
     }
@@ -99,11 +99,11 @@ document Session {
   }
 
   actions {
-    start(email: Email, password: string): Session {
+    start(email: Email, password: string){
       title: { pt-BR: "Iniciar sessão", en: "Sign in" }
       permission: Customer
     }
-    end(): Session {
+    end(){
       title: { pt-BR: "Encerrar", en: "End" }
       permission: Manager
     }

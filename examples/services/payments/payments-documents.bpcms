@@ -23,20 +23,43 @@ document Payment {
     byStatus: [status, capturedAt] range
   }
 
+  events {
+    Authorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      key: paymentId
+      payload { amount: std.Money }
+    }
+    Succeeded {
+      title: { pt-BR: "Pagamento aprovado", en: "Payment succeeded" }
+      key: paymentId
+      payload { amount: std.Money }
+    }
+    Failed {
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      key: paymentId
+      payload { reason: string }
+    }
+    RefundIssued {
+      title: { pt-BR: "Reembolso emitido", en: "Refund issued" }
+      key: refundId
+      payload { amount: std.Money }
+    }
+  }
+
   actions {
-    authorize(): Payment {
+    authorize() {
       title: { pt-BR: "Autorizar", en: "Authorize" }
       permission: Manager
     }
-    capture(): Payment {
+    capture(){
       title: { pt-BR: "Capturar", en: "Capture" }
       permission: Manager
     }
-    refund(): Refund {
+    refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
       permission: Manager
     }
-    retryFailed(): void {
+    retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
       permission: Manager
     }
@@ -72,16 +95,16 @@ document Refund {
   }
 
   actions {
-    request(reason: string): Refund {
+    request(reason: string){
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
       permission: Manager
       require reason.length >= 10
     }
-    approve(): Refund {
+    approve(){
       title: { pt-BR: "Aprovar", en: "Approve" }
       permission: Manager
     }
-    complete(): Refund {
+    complete(){
       title: { pt-BR: "Concluir", en: "Complete" }
       permission: Manager
     }

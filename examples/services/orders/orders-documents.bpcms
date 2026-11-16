@@ -56,45 +56,43 @@ document Order {
   }
 
   actions {
-    create(customerId: UserId, discount: std.Percentage): Order {
+    create(customerId: UserId, discount: std.Percentage){
       title: { pt-BR: "Criar", en: "Create" }
       permission: Clerk
       customer = customerId
       audit("order.created", discount)
-      return self
     }
 
-    addItem(productId: ProductId, quantity: std.Count): Order {
+    addItem(productId: ProductId, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       permission: Clerk
       require quantity > 0
-      return self
     }
 
-    place(): Order {
+    place(){
       title: { pt-BR: "Realizar pedido", en: "Place order" }
       permission: Clerk
       require items.length > 0
       status => placed
       placedAt = now()
       audit("order.placed")
-      return self
+      emit Placed { customerId: customerId; total: total }
     }
 
-    cancel(reason: string): Order {
+    cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       permission: Manager
       require reason.length >= 10
       status => cancelled
       audit("order.cancelled", reason)
-      return self
+      emit Cancelled { reason: reason }
     }
 
-    expireDraft(): Order {
+    expireDraft(){
       title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
       permission: Manager
       status => cancelled
-      return self
+      emit Cancelled { reason: "draft expired" }
     }
   }
 

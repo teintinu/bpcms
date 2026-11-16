@@ -26,16 +26,16 @@ document StockItem {
   }
 
   actions {
-    adjust(quantity: std.Count, reason: string): StockItem {
+    adjust(quantity: std.Count, reason: string){
       title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
       permission: Manager
       require reason.length >= 10
     }
-    reserve(quantity: std.Count): Reservation {
+    reserve(quantity: std.Count){
       title: { pt-BR: "Reservar", en: "Reserve" }
       permission: Manager
     }
-    release(quantity: std.Count): StockItem {
+    release(quantity: std.Count){
       title: { pt-BR: "Liberar", en: "Release" }
       permission: Manager
     }
@@ -70,15 +70,15 @@ document Reservation {
   }
 
   actions {
-    request(productId: ProductId, quantity: std.Count, externalRef: string): Reservation {
+    request(productId: ProductId, quantity: std.Count, externalRef: string){
       title: { pt-BR: "Reservar", en: "Reserve" }
       permission: Clerk
     }
-    release(): Reservation {
+    release(){
       title: { pt-BR: "Liberar", en: "Release" }
       permission: Manager
     }
-    expire(): Reservation {
+    expire(){
       title: { pt-BR: "Expirar", en: "Expire" }
       permission: Manager
     }

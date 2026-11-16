@@ -3,7 +3,7 @@ process DispatchOrder {
   version: 1
   goal: "Despachar o pedido com frete conhecido e rastreio"
   roles: [Dispatcher, Manager, Driver]
-  start on Placed
+  start on Order.Placed
 
   task PickItems {
     role: Dispatcher
@@ -43,7 +43,7 @@ process DispatchOrder {
     writes: [Shipment.tracking]
   }
 
-  end on Dispatched
+  end on Shipment.Dispatched
 
   on error CarrierUnavailable -> ManualQuote
 

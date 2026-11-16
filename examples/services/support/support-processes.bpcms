@@ -3,7 +3,7 @@ process ReturnFlow {
   version: 1
   goal: "Analisar devolução e reembolsar quando elegível"
   roles: [SupportAgent, Manager]
-  start on ReturnRequested
+  start on ReturnRequest.Requested
 
   task Review {
     role: SupportAgent
@@ -37,5 +37,5 @@ process ReturnFlow {
     writes: [ReturnRequest]
   }
 
-  end on ReturnApproved
+  end on ReturnRequest.Approved
 }

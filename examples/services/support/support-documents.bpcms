@@ -40,42 +40,40 @@ document Ticket {
   }
 
   actions {
-    assign(user: UserId): Ticket {
+    assign(user: UserId){
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Agent
       require user != null
       assignee = user
       audit("ticket.assigned", user)
-      return self
     }
 
-    comment(body: string): Ticket {
+    comment(body: string){
       title: { pt-BR: "Comentar", en: "Comment" }
       permission: Agent
       require body.length > 0
       audit("ticket.commented", body)
-      return self
     }
 
-    resolve(): Ticket {
+    resolve(){
       title: { pt-BR: "Resolver", en: "Resolve" }
       permission: Agent
       require assignee != null
       status => resolved
       audit("ticket.resolved")
-      return self
+      emit Resolved { assigneeId: assignee.id }
     }
 
-    reopen(reason: string): Ticket {
+    reopen(reason: string){
       title: { pt-BR: "Reabrir", en: "Reopen" }
       permission: Manager
       require reason.length >= 10
       status => open
       audit("ticket.reopened", reason)
-      return self
+      emit Reopened { reason: reason }
     }
 
-    escalateBreached(): void {
+    escalateBreached(){
       title: { pt-BR: "Escalar prazo", en: "Escalate SLA" }
       permission: Manager
     }
@@ -116,34 +114,34 @@ document ReturnRequest {
   }
 
   actions {
-    request(reason: string): ReturnRequest {
+    request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
       permission: Clerk
       require reason.length >= 10
       status => requested
-      return self
+      emit Requested { reason: reason }
     }
 
-    approve(): ReturnRequest {
+    approve(){
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
       permission: Manager
       status => approved
-      return self
+      emit Approved
     }
 
-    reject(reason: string): ReturnRequest {
+    reject(reason: string){
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
       permission: Manager
       require reason.length >= 10
       status => rejected
-      return self
+      emit Rejected { reason: reason }
     }
 
-    refund(): ReturnRequest {
+    refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
       permission: Manager
       status => refunded
-      return self
+      emit Refunded { refundAmount: refundAmount }
     }
   }
 

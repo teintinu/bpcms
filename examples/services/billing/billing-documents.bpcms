@@ -61,7 +61,7 @@ document Invoice {
   }
 
   actions {
-    issue(series: string, number: string): Invoice {
+    issue(series: string, number: string){
       title: { pt-BR: "Emitir", en: "Issue" }
       permission: Manager
 
@@ -69,20 +69,20 @@ document Invoice {
       status => issued
       issuedAt = now()
       audit("invoice.issued", number)
-      return self
+      emit Issued { number: this.number; total: this.total }
     }
 
-    cancel(reason: string): Invoice {
+    cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       permission: Manager
 
       require reason.length >= 10
       status => cancelled
       audit("invoice.cancelled", reason)
-      return self
+      emit Cancelled { reason }
     }
 
-    closeMonth(): void {
+    closeMonth(){
       title: { pt-BR: "Fechar mês", en: "Close month" }
       permission: Manager
     }
@@ -119,18 +119,18 @@ document CreditNote {
   }
 
   actions {
-    issue(): CreditNote {
+    issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
       permission: Manager
       status => issued
-      return self
+      emit Issued { amount: amount }
     }
 
-    apply(): CreditNote {
+    apply(){
       title: { pt-BR: "Aplicar", en: "Apply" }
       permission: Manager
       status => applied
-      return self
+      emit Applied { invoiceId: invoiceId }
     }
   }
 
@@ -160,12 +160,12 @@ document Bill {
   }
 
   actions {
-    pay(): Bill {
+    pay(){
       title: { pt-BR: "Pagar", en: "Pay" }
       permission: Manager
       status => paid
       paidAt = now()
-      return self
+      emit Paid { amount: amount }
     }
   }
 
@@ -191,7 +191,7 @@ document OrderCancellation {
   }
 
   actions {
-    cancel(reason: string): Order {
+    cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       permission: Manager
       require reason.length >= 10
@@ -221,7 +221,7 @@ document MonthlyRevenue {
   indexes { month: [month] unique }
 
   actions {
-    refresh(): MonthlyRevenue {
+    refresh(){
       title: { pt-BR: "Atualizar", en: "Refresh" }
       permission: Manager
     }

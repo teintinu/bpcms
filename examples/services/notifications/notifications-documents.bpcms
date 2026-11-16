@@ -19,11 +19,11 @@ document NotificationTemplate {
   }
 
   actions {
-    create(key: string, channel: Channel, locale: LocaleTag): NotificationTemplate {
+    create(key: string, channel: Channel, locale: LocaleTag){
       title: { pt-BR: "Criar modelo", en: "Create template" }
       permission: Manager
     }
-    update(subject: string, body: string): NotificationTemplate {
+    update(subject: string, body: string){
       title: { pt-BR: "Atualizar", en: "Update" }
       permission: Manager
     }
@@ -54,19 +54,19 @@ document Notification {
   }
 
   actions {
-    send(): Notification {
+    send(){
       title: { pt-BR: "Enviar", en: "Send" }
       permission: Manager
     }
-    retry(): Notification {
+    retry(){
       title: { pt-BR: "Repetir", en: "Retry" }
       permission: Manager
     }
-    sendDigest(): void {
+    sendDigest(){
       title: { pt-BR: "Enviar resumo", en: "Send digest" }
       permission: Manager
     }
-    retryFailed(): void {
+    retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
       permission: Manager
     }

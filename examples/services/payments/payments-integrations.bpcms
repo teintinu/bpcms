@@ -13,7 +13,7 @@ integration PaymentGateway {
   }
 
   webhooks {
-    payment.succeeded -> PaymentSucceeded
+    payment.succeeded -> Payment.Succeeded
     payment.failed -> Failed
   }
 }

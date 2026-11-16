@@ -3,8 +3,8 @@ process Checkout {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
   goal: "Validar carrinho, cotar frete, autorizar pagamento e confirmar pedido"
-  start on CheckoutStarted
-  end on OrderPlaced
+  start on CheckoutSession.Validated
+  end on CheckoutSession.OrderConfirmed
 
   task ValidateCart {
     type: service

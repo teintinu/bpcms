@@ -23,7 +23,7 @@ Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 | Lista | `[A, B, C]` | ordem preservada quando importa |
 | Opcional | `T` | ausência é diferente de vazio |
 | Referência | `Document`, `View`, `Role` | por nome; o `check` valida existência e ciclo |
-| Ação | `criar(...): Retorno` | comando tipado, não método OO |
+| Ação | `criar(...)` | comando tipado, sem retorno, não método OO |
 | Índice | `byStatus: [status, criadoEm] range` | `unique`, `range`, `search`, `hash` |
 | Regra | `total == itens.sum(subtotal)` | expressão segura, sem código arbitrário |
 | Configuração | `env.ERP_URL`, `secret.STRIPE_KEY` | ambiente e segredo são resolvidos na promoção |
@@ -266,7 +266,7 @@ service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
   version: 1.2.0
   owner: "Time de Catálogo"
-  // document Product, std.Money, view ProductForm, event ProductUpdated: públicos
+  // document Product, std.Money, view ProductForm, event Product.Updated: público
 
   parameter DefaultCurrency {
     title: { pt-BR: "Moeda padrão", en: "Default currency" }
@@ -311,7 +311,7 @@ service "example.com/services/inventory" {
   title: { pt-BR: "Estoque", en: "Inventory" }
   version: 1.5.0
   owner: "Supply Chain"
-  // document StockItem, document Reservation, view StockTable, event StockLow: públicos
+  // document StockItem, document Reservation, view StockTable, event StockItem.Low: público
 
   imports {
     service "example.com/services/catalog"
@@ -348,7 +348,7 @@ service "example.com/services/auth" {
   title: { pt-BR: "Identidade", en: "Identity" }
   version: 3.0.0
   owner: "Plataforma"
-  // document User, document Session, roles Customer/Clerk, view LoginForm, event UserLoggedIn: públicos
+  // document User, document Session, roles Customer/Clerk, view LoginForm, event Session.LoggedIn: público
 
   imports { integration Email }
 }
@@ -363,7 +363,7 @@ service "example.com/services/notifications" {
   title: { pt-BR: "Notificações", en: "Notifications" }
   version: 1.1.0
   owner: "Customer Success"
-  // document NotificationTemplate, event NotificationSent: públicos
+  // document NotificationTemplate, event Notification.Sent: público
 
   imports {
     service "example.com/services/auth"
@@ -456,7 +456,7 @@ process PurchaseApproval {
   version: 1
   goal: "Comprar com alçada e rastro, sem travar o simples"
   roles: [Requester, Manager, Buyer, Director]
-  start on PurchaseRequested
+  start on PurchaseRequest.Requested
 
   task ReviewRequest {
     role: Manager
@@ -490,7 +490,7 @@ process PurchaseApproval {
     writes: [PurchaseOrder]
   }
 
-  end on PurchaseApproved
+  end on PurchaseRequest.Approved
 
   on timer 2d after ReviewRequest -> Escalate
   task Escalate {
@@ -509,7 +509,7 @@ process OrderFulfillment {
   version: 2
   goal: "Entregar o pedido no prazo com frete conhecido"
   roles: [Picker, Packer, Supervisor, Carrier]
-  start on OrderApproved
+  start on Order.Approved
 
   parallel {
     task PickItems {
@@ -556,7 +556,7 @@ process OrderFulfillment {
     writes: [Label]
   }
 
-  end on ShipmentDispatched
+  end on Shipment.Dispatched
 
   on error CarrierUnavailable -> ManualQuote
   task ManualQuote {
@@ -576,7 +576,7 @@ process LabExamFlow {
   version: 1
   goal: "Liberar laudo confiável no prazo"
   roles: [Collector, Analyst, Pathologist]
-  start on SampleCollected
+  start on Sample.Collected
 
   task ReceiveSample {
     role: Collector
@@ -623,7 +623,7 @@ process LabExamFlow {
     writes: [LabExam]
   }
 
-  end on ExamReleased
+  end on LabExam.Released
 
   on timer 4h after ReceiveSample -> Escalate
   task Escalate {
@@ -642,7 +642,7 @@ process EmployeeOnboarding {
   version: 1
   goal: "Novo colaborador produtivo no primeiro dia"
   roles: [HR, IT, Manager, NewHire]
-  start on CandidateHired
+  start on Candidate.Hired
 
   parallel {
     task CollectDocuments {
@@ -672,7 +672,7 @@ process EmployeeOnboarding {
     reads: [EmployeeProfile]
   }
 
-  end on OnboardingCompleted
+  end on Onboarding.Completed
 
   on timer 3d after CandidateHired -> Escalate
   task Escalate {
@@ -691,7 +691,7 @@ process InsuranceClaim {
   version: 1
   goal: "Regular sinistro com decisão rastreável"
   roles: [Adjuster, Analyst, Supervisor]
-  start on ClaimOpened
+  start on Claim.Opened
 
   task RegisterClaim {
     role: Analyst
@@ -741,7 +741,7 @@ process InsuranceClaim {
     writes: [Claim]
   }
 
-  end on ClaimSettled
+  end on Claim.Settled
 
   on error BankUnavailable -> RetryPayment
   task RetryPayment {
@@ -761,7 +761,7 @@ process IncidentManagement {
   version: 1
   goal: "Restaurar o serviço e aprender com o incidente"
   roles: [OnCall, SRE, Support, Manager]
-  start on IncidentReported
+  start on Incident.Reported
 
   task Triage {
     role: OnCall
@@ -807,7 +807,7 @@ process IncidentManagement {
     writes: [Postmortem]
   }
 
-  end on IncidentClosed
+  end on Incident.Closed
 
   on timer 15m after Triage -> Escalate
   task Escalate {
@@ -826,7 +826,7 @@ process PaymentCompensation {
   version: 1
   goal: "Reverter a cobrança quando a reserva de estoque falha"
   roles: [Clerk, Finance]
-  start on OrderApproved
+  start on Order.Approved
 
   task ChargePayment {
     type: service
@@ -847,7 +847,7 @@ process PaymentCompensation {
     action: Payment.refund
   }
 
-  end on OrderCancelled
+  end on Order.Cancelled
 }
 ```
 
@@ -880,10 +880,22 @@ document Customer {
   }
 
   actions {
-    create(name: string, email: Email): Customer
-    update(name: string, phone: Phone?): Customer
-    archive(): void
-    private recalcScore(): Score
+    create(name: string, email: Email) {
+      title: { pt-BR: "Criar", en: "Create" }
+      permission: Clerk
+    }
+    update(name: string, phone: Phone?) {
+      title: { pt-BR: "Atualizar", en: "Update" }
+      permission: Clerk
+    }
+    archive() {
+      title: { pt-BR: "Arquivar", en: "Archive" }
+      permission: Manager
+    }
+    private recalcScore() {
+      title: { pt-BR: "Recalcular", en: "Recalculate" }
+      permission: System
+    }
   }
 
   rules {
@@ -958,8 +970,27 @@ document Invoice {
     byStatusDate: [status, issuedAt] range
   }
 
+  events {
+    Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      key: invoiceId
+      payload {
+        number: InvoiceNumber
+        total: std.Money
+      }
+    }
+
+    Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      key: invoiceId
+      payload {
+        reason: string
+      }
+    }
+  }
+
   actions {
-    issue(): Invoice {
+    issue() {
       title: { pt-BR: "Emitir", en: "Issue" }
       permission: Manager
 
@@ -969,10 +1000,14 @@ document Invoice {
       status => issued
       issuedAt = now()
       audit("invoice.issued")
-      return self
+
+      emit Issued {
+        number: number
+        total: total
+      }
     }
 
-    cancel(reason: string): Invoice {
+    cancel(reason: string) {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       permission: Manager
 
@@ -981,7 +1016,10 @@ document Invoice {
 
       status => cancelled
       audit("invoice.cancelled", reason)
-      return self
+
+      emit Cancelled {
+        reason: reason
+      }
     }
   }
 
@@ -1033,9 +1071,18 @@ document Shipment {
   }
 
   actions {
-    addItem(item: ShipmentItem): Shipment
-    split(): Shipment[]
-    dispatch(carrier: CarrierRef): Shipment
+    addItem(item: ShipmentItem) {
+      title: { pt-BR: "Adicionar item", en: "Add item" }
+      permission: Clerk
+    }
+    split() {
+      title: { pt-BR: "Dividir", en: "Split" }
+      permission: Manager
+    }
+    dispatch(carrier: CarrierRef) {
+      title: { pt-BR: "Despachar", en: "Dispatch" }
+      permission: Manager
+    }
   }
 
   rules {
@@ -1077,10 +1124,22 @@ document LabExam {
   }
 
   actions {
-    collect(sample: SampleRef): LabExam
-    result(value: string, file: FileRef): LabExam
-    review(pathologist: UserId, signature: Signature): LabExam
-    release(): LabExam
+    collect(sample: SampleRef) {
+      title: { pt-BR: "Coletar", en: "Collect" }
+      permission: Analyst
+    }
+    result(value: string, file: FileRef) {
+      title: { pt-BR: "Registrar resultado", en: "Record result" }
+      permission: Analyst
+    }
+    review(pathologist: UserId, signature: Signature) {
+      title: { pt-BR: "Revisar", en: "Review" }
+      permission: Pathologist
+    }
+    release() {
+      title: { pt-BR: "Liberar", en: "Release" }
+      permission: Pathologist
+    }
   }
 
   rules {
@@ -1128,27 +1187,38 @@ document SupportTicket {
     search: [subject, description] search
   }
 
+  events {
+    Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      key: ticketId
+      payload { assigneeId: UserId }
+    }
+    Reopened {
+      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
+      key: ticketId
+      payload { reason: string }
+    }
+  }
+
   actions {
-    assign(user: UserId): SupportTicket {
+    assign(user: UserId) {
       title: { pt-BR: "Atribuir", en: "Assign" }
       permission: Agent
 
       require user != null
       assignee = user
       audit("ticket.assigned", user)
-      return self
     }
 
-    comment(body: string): SupportTicket {
+    comment(body: string) {
       title: { pt-BR: "Comentar", en: "Comment" }
       permission: Agent
 
       require body.length > 0
       audit("ticket.commented", body)
-      return self
     }
 
-    resolve(): SupportTicket {
+    resolve() {
       title: { pt-BR: "Resolver", en: "Resolve" }
       permission: Agent
 
@@ -1156,12 +1226,11 @@ document SupportTicket {
       require status.canTransitionTo(resolved)
 
       status => resolved
-      resolvedAt = now()
       audit("ticket.resolved")
-      return self
+      emit Resolved { assignee: assignee.id }
     }
 
-    reopen(reason: string): SupportTicket {
+    reopen(reason: string) {
       title: { pt-BR: "Reabrir", en: "Reopen" }
       permission: Manager
 
@@ -1169,9 +1238,8 @@ document SupportTicket {
       require status.canTransitionTo(open)
 
       status => open
-      reopenedAt = now()
       audit("ticket.reopened", reason)
-      return self
+      emit Reopened { reason: reason }
     }
   }
 
@@ -1203,7 +1271,12 @@ document MonthlyRevenue {
 
   indexes { month: [month] unique }
 
-  actions { refresh(): MonthlyRevenue }
+  actions {
+    refresh() {
+      title: { pt-BR: "Atualizar", en: "Refresh" }
+      permission: Manager
+    }
+  }
 
   rules {
     month >= 2026-01
@@ -3026,7 +3099,7 @@ release "example.com/app/loja-do-joao"@1.4.0 {
 ```bpcms
 release "example.com/services/catalog"@1.2.0 {
   service: "example.com/services/catalog"
-  changes: [add Product.barcode, add ProductUpdated.v2]
+  changes: [add Product.barcode, add Product.Updated.v2]
   compatibility: backward
   migrations: [M-2026-10-12]
   approvals: [Owner]
@@ -3128,7 +3201,7 @@ integration ERP {
   }
 
   events {
-    InvoiceIssued -> createInvoice
+    Invoice.Issued -> createInvoice
   }
 }
 ```
@@ -3408,36 +3481,50 @@ document OperationsControl {
 ### E.1 Pedido aprovado
 
 ```bpcms
-event OrderApproved {
-  version: 1
-  payload {
-    orderId: OrderId
-    approvedBy: UserId
-    approvedAt: DateTime
+document Order {
+  events {
+    Approved {
+      title: { pt-BR: "Pedido aprovado", en: "Order approved" }
+      key: orderId
+      payload {
+        approvedBy: UserId
+        approvedAt: DateTime
+      }
+    }
   }
-  producer: Order
-  consumers: [Fulfillment, Billing]
-  key: orderId
+
+  actions {
+    approve() {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      permission: Manager
+      status => approved
+      emit Approved {
+        approvedBy: currentUser.id
+        approvedAt: now()
+      }
+    }
+  }
 }
 ```
 
-*Valida: evento de negócio com payload, produtor, consumidores e chave de partição.*
+*Valida: evento dentro do Document, sem `producer`/`consumers`, emitido por action.*
 
 ### E.2 Remessa despachada
 
 ```bpcms
-event ShipmentDispatched {
-  version: 1
-  payload {
-    shipmentId: ShipmentId
-    orderId: OrderId
-    carrier: CarrierRef
-    tracking: TrackingCode
-    dispatchedAt: DateTime
+document Shipment {
+  events {
+    Dispatched {
+      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      key: shipmentId
+      payload {
+        orderId: OrderId
+        carrier: CarrierRef
+        tracking: TrackingCode
+        dispatchedAt: DateTime
+      }
+    }
   }
-  producer: Shipment
-  consumers: [Tracking, Notifications, Billing]
-  key: shipmentId
 }
 ```
 
@@ -3446,80 +3533,75 @@ event ShipmentDispatched {
 ### E.3 Exame liberado
 
 ```bpcms
-event ExamReleased {
-  version: 1
-  payload {
-    examId: ExamId
-    patientId: PatientId
-    releasedBy: UserId
-    releasedAt: DateTime
-    critical: boolean
+document LabExam {
+  events {
+    Released {
+      title: { pt-BR: "Exame liberado", en: "Exam released" }
+      key: examId
+      payload {
+        patientId: PatientId
+        releasedBy: UserId
+        releasedAt: DateTime
+        critical: boolean
+      }
+      sensitivity: restricted
+    }
   }
-  producer: LabExam
-  consumers: [Notifications, PatientPortal]
-  key: examId
-  sensitivity: restricted
 }
 ```
 
-*Valida: evento com dado sensível e consumidor de portal do paciente.*
+*Valida: evento com dado sensível e referência cross-service.*
 
 ### E.4 Pagamento falhou
 
 ```bpcms
-event PaymentFailed {
-  version: 1
-  payload {
-    paymentId: PaymentId
-    orderId: OrderId
-    reason: PaymentFailureReason
-    failedAt: DateTime
+document Payment {
+  events {
+    Failed {
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      key: paymentId
+      payload {
+        orderId: OrderId
+        reason: PaymentFailureReason
+        failedAt: DateTime
+      }
+    }
   }
-  producer: Payment
-  consumers: [Checkout, Notifications, Support]
-  key: paymentId
 }
 ```
 
-*Valida: evento de falha com consumidores de recuperação e atendimento.*
+*Valida: evento de falha consumido por Checkout, Notifications e Support via assinatura.*
 
 ### E.5 Estoque baixo
 
 ```bpcms
-event StockLow {
-  version: 1
-  payload {
-    stockItemId: StockItemId
-    productId: ProductId
-    available: Quantity
-    threshold: Quantity
+document StockItem {
+  events {
+    Low {
+      title: { pt-BR: "Estoque baixo", en: "Stock low" }
+      key: stockItemId
+      payload {
+        productId: ProductId
+        available: Quantity
+        threshold: Quantity
+      }
+    }
   }
-  producer: StockItem
-  consumers: [Purchasing, Notifications]
-  key: stockItemId
 }
 ```
 
 *Valida: evento de alerta com quantidades e limiar.*
 
-### E.6 Dispositivo offline
+### E.6 Assinatura cross-service
 
 ```bpcms
-event DeviceOffline {
-  version: 1
-  payload {
-    deviceId: DeviceId
-    lastReadAt: DateTime
-    site: SiteId
-  }
-  producer: DeviceReading
-  consumers: [OperationsControl, Notifications]
-  key: deviceId
-  severity: warning
+process PaymentSaga {
+  start on Order.Placed
+  end on Payment.Succeeded
 }
 ```
 
-*Valida: evento de infraestrutura/operação com severidade.*
+*Valida: processo assina `Document.Event`; não existe artefato Event de topo.*
 
 ## Job / Schedule
 

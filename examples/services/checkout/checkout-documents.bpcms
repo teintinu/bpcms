@@ -22,24 +22,28 @@ document CheckoutSession {
   }
 
   actions {
-    validateCart(): CheckoutSession {
+    validateCart() {
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
       permission: Customer
+      emit Validated
     }
 
-    quoteShipping(): CheckoutSession {
+    quoteShipping() {
       title: { pt-BR: "Cotar frete", en: "Quote shipping" }
       permission: Customer
+      emit ShippingQuoted
     }
 
-    authorizePayment(): CheckoutSession {
+    authorizePayment() {
       title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
       permission: Customer
+      emit PaymentAuthorized
     }
 
-    confirmOrder(): CheckoutSession {
+    confirmOrder() {
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
       permission: Customer
+      emit OrderConfirmed
     }
   }
 }

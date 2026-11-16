@@ -27,7 +27,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | 2–8 | Application, Service, Process, Document, Shape, View, Role/Organogram |
 | 9–12 | Evidence, Conversation, Decision, Assumption |
 | 13–19 | Parameter, Secret, Environment, Builder, Theme, Locale, Widget, Release/Version |
-| 20–24 | Integration, Report, Event, Job, Policy |
+| 20–24 | Integration, Job, Policy |
 | 25 | Expressões, operadores e valores |
 | 26 | Validação e erros |
 | 27 | Cobertura |
@@ -83,7 +83,7 @@ stream.readStreamArray(): stream[]
 
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
-| `version` | app, service, process, document, event, builder, release | `version: 1.4.0` ou `version: semver("1.4.0")` | Versão do artefato. `1.4.0` é açúcar para `semver("1.4.0")`. |
+| `version` | app, service, process, document, builder, release | `version: 1.4.0` ou `version: semver("1.4.0")` | Versão do artefato. `1.4.0` é açúcar para `semver("1.4.0")`. |
 | `title` | app, service, shape, document, field, view, event, parameter, role, organogram, icon | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
 | `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
@@ -119,7 +119,7 @@ stream.readStreamArray(): stream[]
 | `Document` | reads/writes/source | `reads: [Order]` | Referência a documento; o `check` valida existência e dono. |
 | `View` | form, actions | `form: ReviewForm` | Referência a uma view. |
 | `Role` | roles/role | `role: Manager` | Referência a papel. |
-| `Event` | start/end/on | `start on OrderApproved` | Referência a evento de negócio. |
+| `Event` | start/end/on | `start on Order.Approved` | Referência a evento de Document. |
 | `Integration` | task/integration | `integration: Carrier` | Referência a integração. |
 | `T` | campos | `phone: Phone` | Sem `required` = opcional; `?` não é usado no field. |
 | `T[]` | coleções | `items: InvoiceItem[]` | Lista ordenada de `T`. |
@@ -485,7 +485,7 @@ service "example.com/services/fraud-checkout" {
 | `version` | `version: 1` | Versão do processo; releases e diff usam. |
 | `goal` | `goal: "..."` | Objetivo de negócio; usado na entrevista e no review. |
 | `roles` | `roles: [Requester, Manager, Buyer]` | Atores que podem receber tarefas; referenciam `Role`. |
-| `start on` | `start on PurchaseRequested` | Evento que inicia uma instância. |
+| `start on` | `start on PurchaseRequest.Requested` | Evento que inicia uma instância. |
 | `task` | `task ReviewRequest { ... }` | Nó de trabalho humano (default) ou automático. |
 | `type` | `type: service` ou `type: compensation` | Na task, distingue humana (default), automática e compensação. |
 | `role` | `role: Manager` | Papel responsável pela tarefa humana. |
@@ -505,7 +505,7 @@ service "example.com/services/fraud-checkout" {
 | `parallel` | `parallel { task A { ... }; task B { ... } }` | Divide o fluxo; ambos os ramos executam. |
 | `subprocess` | `subprocess Name { process: OtherProcess }` | Chama outro processo como subprocesso. |
 | `process` | `process: ProvisionAccess` | Referência ao processo chamado. |
-| `end on` | `end on ShipmentDispatched` | Evento que encerra a instância. |
+| `end on` | `end on Shipment.Dispatched` | Evento que encerra a instância. |
 | `on timer` | `on timer 2d after ReviewRequest -> Escalate` | Boundary timer: dispara após duração, a partir do nó. |
 | `after` | `after <Node>` | Nó de referência do timer. |
 | `on error` | `on error CarrierUnavailable -> ManualQuote` | Boundary error: desvia quando a task/serviço falha. |
@@ -517,7 +517,7 @@ process PurchaseApproval {
   version: 1
   goal: "Comprar com alçada e rastro"
   roles: [Requester, Manager, Buyer]
-  start on PurchaseRequested
+  start on PurchaseRequest.Requested
 
   task ReviewRequest {
     role: Manager
@@ -537,7 +537,7 @@ process PurchaseApproval {
     action: PurchaseRequest.approve
   }
 
-  end on PurchaseApproved
+  end on PurchaseRequest.Approved
 }
 ```
 
@@ -580,7 +580,8 @@ task RefundPayment {
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
-| `actions` | `actions { approve(): Document { title; permission; status => approved; ... } }` | Comandos/botões tipados; `title` e `permission` obrigatórios; `private` restringe ao serviço dono. |
+| `actions` | `actions { approve() { title; permission; status => approved; ... } }` | Comandos/botões tipados; `title` e `permission` obrigatórios; sem retorno; `private` restringe ao serviço dono. |
+| `events` | `events { Approved { title; key; payload } }` | Eventos do Document; `emit` na action. |
 | `rules` | `rules { total == items.sum(subtotal) }` | Invariantes/transições; falha = erro de validação. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
@@ -749,24 +750,36 @@ document Invoice {
     }
   }
 
+  events {
+    Approved {
+      title: { pt-BR: "Nota aprovada", en: "Invoice approved" }
+      key: invoiceId
+    }
+    Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      key: invoiceId
+      payload { reason: string }
+    }
+  }
+
   actions {
-    approve(): Invoice {
+    approve() {
       title: { pt-BR: "Aprovar", en: "Approve" }
       permission: Manager
 
       status => approved
       audit("invoice.approved")
-      return self
+      emit Approved
     }
 
-    cancel(reason: string): Invoice {
+    cancel(reason: string) {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       permission: Manager
 
       require reason.length > 0
       status => cancelled
       audit("invoice.cancelled", reason)
-      return self
+      emit Cancelled { reason: reason }
     }
   }
 }
@@ -829,7 +842,7 @@ document Shipment {
   }
 
   actions {
-    dispatch(carrier: CarrierRef): Shipment
+    dispatch(carrier: CarrierRef)
   }
 
   rules {
@@ -2102,34 +2115,57 @@ Não há `report <Name> { ... }` como artefato de topo. Os arquivos `*-reports.b
 
 ---
 
-# 22. Event
+# 22. Event (dentro do Document)
+
+Evento não é artefato de topo. É declarado dentro do Document que o produz.
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `event` | `event <Name> { ... }` | Fato de negócio publicado. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `events` | `events { Approved { ... } }` | Eventos do documento. |
+| nome | `Approved` | Fato no passado; referência externa `Document.Approved`. |
+| `title` | `title: { ... }` | I18n obrigatório. |
 | `version` | `version: 1` | Versão do contrato. |
-| `payload` | `payload { orderId: OrderId; approvedAt: DateTime }` | Campos do evento. |
-| `producer` | `producer: Order` | Documento/serviço que publica. |
-| `consumers` | `consumers: [Fulfillment, Billing]` | Quem consome. |
+| `payload` | `payload { reason: string }` | Dados de negócio do fato. |
 | `key` | `key: orderId` | Chave de partição/ordenação. |
 | `sensitivity` | `sensitivity: restricted` | Restrição de dados. |
-| `severity` | `severity: warning` | Severidade operacional. |
+| `emit` | `emit Approved { ... }` | Emissão a partir da action. |
 
 ```bpcms
-event OrderApproved {
-  title: { pt-BR: "Pedido aprovado", en: "Order approved" }
-  version: 1
-  payload {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    approvedBy: UserId { title: { pt-BR: "Aprovado por", en: "Approved by" } }
-    approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+document Order {
+  events {
+    Approved {
+      title: { pt-BR: "Pedido aprovado", en: "Order approved" }
+      key: orderId
+      payload {
+        approvedBy: UserId
+        approvedAt: DateTime
+      }
+    }
   }
-  producer: Order
-  consumers: [Fulfillment, Billing]
-  key: orderId
+
+  actions {
+    approve() {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      permission: Manager
+      status => approved
+      emit Approved {
+        approvedBy: currentUser.id
+        approvedAt: now()
+      }
+    }
+  }
 }
 ```
+
+Regras:
+
+- `producer` é implícito;
+- `consumers` não pertencem ao evento;
+- processo/integração/job assinam `Order.Approved`;
+- ação que muda estado precisa emitir evento;
+- ação com `status =>` precisa emitir evento;
+- payload contém só dados de negócio;
+- envelope (`eventId`, `occurredAt`, `actorId`, `correlationId`, `aggregateVersion`) é gerado pelo builder.
 
 ---
 
@@ -2305,7 +2341,6 @@ policy FourEyesPayment {
 | Release | ✅ | 6 |
 | Integration | ✅ | 6 |
 | Report | ✅ | 6 |
-| Event | ✅ | 6 |
 | Job | ✅ | 6 |
 | Policy | ✅ | 6 |
 | Icon | ✅ | 6 |

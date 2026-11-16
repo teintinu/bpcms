@@ -79,14 +79,14 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 | 5 | Parameter | Shape/Secret | PR.1–PR.6 | ⬜ |
 | 6 | Service | outros services, imports | S.1–S.8 | ⬜ |
 | 7 | Document | Shape, Icon | D.1–D.6 | ⬜ |
-| 8 | Event | Document, Shape | E.1–E.6 | ⬜ |
+| 8 | Event | Document | E.1–E.6 | ✅ merged em Document |
 | 9 | View | Document, Role | V.1–V.6 | ⬜ |
 | 10 | Decision | Document, Role | N.1–N.6 | ⬜ |
 | 11 | Policy | Document, Role | P.1–P.6 | ⬜ |
 | 12 | Job | Service/ação | J.1–J.6 | ⬜ |
 | 13 | Integration | Shape, Service | I.1–I.6 | ⬜ |
 | 14 | Report | Document | R.1–R.6 | ✅ merged em Document |
-| 15 | Process | Event, Document, Role, Integration, View | P.1–P.7 | ⬜ |
+| 15 | Process | Document (eventos), Role, Integration, View | P.1–P.7 | ⬜ |
 | 16 | Evidence | Process, Document, Service | E.1–E.6 | ⬜ |
 | 17 | Assumption | links ao modelo | U.1–U.6 | ⬜ |
 | 18 | Conversation | Process, Role, Evidence, Assumption | C.1–C.6 | ⬜ |
@@ -421,8 +421,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] ID interno × `number` de negócio
 - [ ] `number` com `format`, `sequence`, `unique`
 - [ ] `indexes` (unique/range/search/hash), inclusive `link.id`
-- [ ] `actions` (públicas/private) com `title`, `permission` e corpo de negócio
-- [ ] `status => <estado>` em ações que mudam workflow
+- [ ] `actions` (públicas/private) com `title`, `permission`, corpo de negócio e sem retorno
+- [ ] `events { ... }` dentro do Document
+- [ ] `emit <Event>` em toda action que muda estado
+- [ ] `status => <estado>` em ações que mudam workflow; exige `emit`
 - [ ] UI recebe botão habilitado/desabilitado e motivo
 - [ ] `report` como `document type: report`
 - [ ] `rules`
@@ -459,33 +461,23 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** 🟡 em revisão.
 
-## 8. Event ⬜
+## 8. Event ✅ (merged into Document)
 
-**Depende de:** Document, Shape.
+**Depende de:** Document.
 
-**Sintaxe/cláusulas:**
+**Decisão:** eventos são declarados dentro do Document; não há artefato `event` de topo.
 
-- [ ] `event <Name> { ... }`
-- [ ] `title: I18n`
-- [ ] `version`
-- [ ] `payload { field: Shape { title } }`
-- [ ] `producer: Document`
-- [ ] `consumers: [Service]`
-- [ ] `key`
-- [ ] `sensitivity`
-- [ ] `severity`
+- [x] `events { Approved { title; key; payload } }`
+- [x] `emit Approved { ... }` na action
+- [x] `producer` implícito
+- [x] sem `consumers`
+- [x] referência `Order.Approved`
+- [x] payload só de negócio
+- [x] envelope automático do builder
+- [x] ação que muda estado emite evento
+- [x] ação com `status =>` emite evento
 
-**Exemplos:** E.1–E.6; `*-events.bpcms`.
-
-**Foco da revisão:**
-
-- [ ] Payload fields têm `title`?
-- [ ] `consumers` são serviços ou eventos?
-- [ ] `version` é semver ou inteiro?
-- [ ] Evento carrega PII? Deve carregar só `CitizenId`/lookup?
-- [ ] `key` é obrigatório?
-
-**Status:** ⬜ pendente.
+**Status:** ✅ merged em Document.
 
 ## 9. View ⬜
 
@@ -663,14 +655,14 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 ## 15. Process ⬜
 
-**Depende de:** Event, Document, Role, Integration, View.
+**Depende de:** Document (eventos), Role, Integration, View.
 
 **Sintaxe/cláusulas:**
 
 - [ ] `process <Name> { ... }`
 - [ ] `title`
 - [ ] `version`, `goal`, `roles`
-- [ ] `start on Event`, `end on Event`
+- [ ] `start on Document.Event`, `end on Document.Event`
 - [ ] `task` (role/form/reads/writes/sla)
 - [ ] People task / User task
 - [ ] Form task / `form`
@@ -1008,21 +1000,20 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 Motivo:
 
 - Document é a base de `link`, `scope`, `id`, `number`, permissões e leitura/edição;
-- Event, View, Decision, Policy, Job e Process dependem de Document;
-- Process também depende de Event, Role, Integration e View;
+- View, Decision, Policy, Job e Process dependem de Document;
+- Process também depende de eventos do Document, Role, Integration e View;
 - revisar Process antes de Document criaria decisões sobre nós/eventos sem o contrato de dados fechado;
-- Process fica para depois de Document, Event, View, Decision e Integration.
+- Process fica para depois de Document, View, Decision e Integration.
 
 Ordem recomendada:
 
 1. Document
-2. Event
-3. View
-4. Decision
-5. Policy
-6. Job
-7. Integration
-8. Process
+2. View
+3. Decision
+4. Policy
+5. Job
+6. Integration
+7. Process
 
 O item 27 (`reintroduce`) fica como revisão transversal depois das keywords.
 
