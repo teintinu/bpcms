@@ -6,6 +6,5 @@ service "example.com/services/notifications" {
     service "example.com/services/identity" as Identity
     service "example.com/services/citizen" as Citizen
   }
-  requires { oltp, scheduling, timezone, regionalization }
-  provides { notifications }
+  capabilities { oltp, scheduling, timezone, regionalization }
 }

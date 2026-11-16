@@ -6,8 +6,7 @@ service "example.com/services/catalog" {
     service "bpcms.org/std" as std
     service "example.com/services/identity" as Identity
   }
-  requires { oltp, attachments, units }
-  provides { catalog }
+  capabilities { oltp, attachments, units }
 
   reintroduce std.Currency {
     values {

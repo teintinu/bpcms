@@ -85,7 +85,7 @@ stream.readStreamArray(): stream[]
 | `title` | app, service, shape, document, field, view, event, parameter, role, organogram, icon | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
 | `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
-| `source` | app/service, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app/service); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
+| `source` | app, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
 | `status` | evidence, conversation, assumption | `status: proposed \| confirmed \| ...` | Estado do artefato de descoberta. Valores variam por artefato. |
 | `type` | task, view, release, report | `type: service`, `type: form`, `type: migration` | Discriminador; os valores válidos dependem do artefato. |
 | `mode` | builder, theme, report | `mode: [interpret, generate]`, `mode: dark`, `mode: live` | Modo de operação/apresentação. |
@@ -178,7 +178,7 @@ lock:
 
 ## 1.7 Capabilities
 
-`requires` e `capabilities` usam conceitos de **alto nível**, não tecnologia. O construtor mapeia para HTTP, DB, UI kit, fila etc.
+`capabilities` usa conceitos de **alto nível**, não tecnologia. O construtor mapeia para HTTP, DB, UI kit, fila etc.
 
 | Capability | Significado |
 | :--- | :--- |
@@ -197,7 +197,7 @@ lock:
 | `capture` | câmera/scanner |
 | `notify` | notificação de saída |
 
-`provides` é o **contrato de negócio** oferecido (`catalog`, `checkout`, `identity`), não uma capability técnica. Não use `http`, `db`, `search`, `ui`, `files`, `auth`, `realtime`, `jobs`, `camera` ou `push` como capability.
+`provides` não existe no Service: o contrato de negócio são os artefatos públicos. Não use `http`, `db`, `search`, `ui`, `files`, `auth`, `realtime`, `jobs`, `camera` ou `push` como capability.
 
 **Extensões.** O conjunto acima é um núcleo aberto. Construtores podem declarar novas capabilities, genéricas (`llm`) ou específicas (`google-maps`, `acme.payments`). Use kebab-case e documente o contrato no construtor. Configuração/segredo da capability usa `Parameter`.
 
@@ -207,8 +207,7 @@ builder AiRuntime {
 }
 
 service "example.com/services/assistant" {
-  requires { oltp, llm }
-  provides { assistant }
+  capabilities { oltp, llm }
 }
 ```
 
@@ -225,7 +224,8 @@ Alguns serviços são de plataforma e são acessados como capabilities, não imp
 
 ```bpcms
 service "example.com/services/field" {
-  requires { location, timezone, regionalization, units, oltp, sync }
+  title: { pt-BR: "Serviço de campo", en: "Field service" }
+  capabilities { location, timezone, regionalization, units, oltp, sync }
 }
 
 view VisitForm {
@@ -392,11 +392,10 @@ application "example.com/app/loja-do-joao" {
 | :--- | :--- | :--- |
 | declaração | `service "<uri>" { ... }` | Identidade + contrato. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. |
+| `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. Vazio é válido. |
 | `override` | `override "<uri>#<Artifact>.<member>" { with: "<uri>#<Artifact>.<member>" }` | Substitui um método/ação; ativo quando o serviço substituto está na closure. |
-| `requires` | `requires { oltp, attachments, identity }` | Capabilities de alto nível exigidas do construtor/ambiente (ver 1.7). |
-| `provides` | `provides { catalog }` | Contrato de negócio oferecido a outros serviços/aplicações. |
-| `roles` | `roles { CatalogManager, CatalogViewer }` | Papéis definidos pelo serviço. |
+| `capabilities` | `capabilities { oltp, attachments, identity }` | Capacidades exigidas do ambiente/construtor. Se faltar, o build falha. |
+| `reintroduce` | `reintroduce <Alias>.<Artifact> { ... }` | Altera/adiciona definições de um artefato importado. |
 
 > **Contrato:** todo artefato de topo é público automaticamente; **não existe `exports`**. Privacidade só por membro (`private`).
 
@@ -404,16 +403,30 @@ application "example.com/app/loja-do-joao" {
 
 ```bpcms
 service "example.com/services/catalog" {
+  title: { pt-BR: "Catálogo", en: "Catalog" }
   version: 1.2.0
-  // document Product, view ProductForm, event ProductUpdated são públicos automaticamente
-  imports { service "example.com/services/auth" }
-  requires { oltp, attachments, identity }
-  provides { catalog }
-  roles { CatalogManager, CatalogViewer }
+  owner: "Time de Catálogo"
+
+  imports { service "example.com/services/identity" as Identity }
+  capabilities { oltp, attachments, identity, units }
 }
 ```
 
-### 3.1 Override
+**Capabilities.** `capabilities` não é uma lista decorativa: o builder precisa oferecer cada capacidade exigida pela closure. Se `oltp` não estiver disponível, o build falha.
+
+- capacidades de serviço são exigidas no boot;
+- cada artefato também pode declarar `capabilities`;
+- uma role de equipamento pode exigir `equipment`/`protocol`;
+- o builder valida a disponibilidade e o contrato antes de gerar o app;
+- capability indisponível falha no build, não no runtime.
+
+**Sem `provides`.** O serviço não declara o que oferece ao construtor; `provides` é responsabilidade do construtor. O contrato de negócio continua sendo os artefatos públicos do serviço.
+
+**Sem `roles` inline.** Roles ficam no arquivo `*-organograms.bpcms`; a lista inline duplicava a fonte de verdade.
+
+**Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
+
+## 3.1 Override
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
@@ -421,16 +434,45 @@ service "example.com/services/catalog" {
 | `with` | `with: "<uri>#<Artifact>.<member>"` | Implementação substituta; assinatura deve ser compatível (LSP). |
 | ativação | — | Ativo se o serviço substituto estiver na closure do app; se só o original estiver presente, o original vale. |
 
-**Regras:** o serviço que override deve importar o alvo; um override por alvo; dois overrides = `E_OVERRIDE_CONFLICT`; o lock registra `target`, `by` e `id`.
+**Regras:** o serviço que override deve importar o alvo; um override por alvo; dois overrides = `E_OVERRIDE_CONFLICT`; o lock registra `target`, `by` e `id`. Override não altera o original e não cria artefato novo.
 
 ```bpcms
 service "example.com/services/fraud-checkout" {
   imports { service "example.com/services/checkout" }
+  capabilities { oltp, sync }
   override "example.com/services/checkout#CheckoutSession.placeOrder" {
     with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
   }
 }
 ```
+
+## 3.2 `reintroduce`
+
+`reintroduce` altera/adiciona definições de um artefato importado. Pode modificar qualquer parte do artefato: `values`, `fields`, `title`, `icon`, `ordinal`, `permissions`, etc.
+
+```bpcms
+reintroduce std.Currency {
+  values {
+    BRL {
+      title: { pt-BR: "Real", en: "Brazilian real" }
+      prefix: {
+        pt-BR: "R$"
+        en: "BRL"
+      }
+      icon: Brl
+      ordinal: 10
+    }
+  }
+}
+```
+
+- exige import do dono;
+- é aditivo;
+- não remove definição;
+- conflito de metadados gera `E_REINTRODUCE_CONFLICT`;
+- vale para a closure do app;
+- não é `override`;
+- revisar depois de todas as keywords.
 
 # 4. Process
 
@@ -1354,7 +1396,8 @@ view SalesDashboard {
 | :--- | :--- | :--- |
 | `role` | `role <Name> { ... }` | Papel/permissões. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade. |
+| `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade/ação. |
+| `capabilities` | `capabilities { equipment, laboratory-protocol }` | Capacidades exigidas pelo artefato; falha de build se ausentes. |
 | `inherits` | `inherits: Clerk` ou `inherits: [Clerk, Auditor]` | Soma as permissões herdadas às permissões próprias. |
 | `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo da role/organograma. |
 | `manages` | `LabManager manages [Collector, Analyst]` | Atribuição de roles a terceiros; nunca a si mesmo; não concede as permissões da role. |
@@ -1382,6 +1425,13 @@ role InvoiceManager {
   title: { pt-BR: "Gerente de notas", en: "Invoice manager" }
   scopes: [Store, FiscalYear]
   permissions: [invoice.view, invoice.issue, report.view]
+}
+
+role AnalyzerDevice {
+  title: { pt-BR: "Equipamento analisador", en: "Analyzer device" }
+  scopes: [Laboratory]
+  capabilities { equipment, laboratory-protocol }
+  permissions: [exam.perform.hemogram]
 }
 
 organogram Store {

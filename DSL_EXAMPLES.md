@@ -257,21 +257,20 @@ application "example.com/app/loja-com-antifraude" {
 
 ## Service
 
-> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, capabilities, roles, override).
+> Todo artefato declarado no serviço é público automaticamente; não há `exports`. Estes exemplos focam no contrato (imports, capabilities, override).
 
 ### S.1 Catálogo com contrato e dependências
 
 ```bpcms
 service "example.com/services/catalog" {
-  source: registry
+  title: { pt-BR: "Catálogo", en: "Catálogo" }
   version: 1.2.0
   owner: "Time de Catálogo"
-  // document Product, shape Money, view ProductForm, event ProductUpdated: públicos
+  // document Product, std.Money, view ProductForm, event ProductUpdated: públicos
 
   parameter DefaultCurrency {
     title: { pt-BR: "Moeda padrão", en: "Default currency" }
     type: std.Currency
-    source: config
     default: "BRL"
   }
 
@@ -279,9 +278,7 @@ service "example.com/services/catalog" {
     service "example.com/services/auth"
     service "example.com/services/media"
   }
-  requires { oltp, attachments, identity, units }
-  provides { catalog }
-  roles { CatalogManager, CatalogViewer }
+  capabilities { oltp, attachments, identity, units }
 }
 ```
 
@@ -291,6 +288,7 @@ service "example.com/services/catalog" {
 
 ```bpcms
 service "example.com/services/checkout" {
+  title: { pt-BR: "Checkout", en: "Checkout" }
   version: 2.0.1
   owner: "Time de Conversão"
   // document CheckoutSession, event OrderPlaced: públicos
@@ -302,9 +300,7 @@ service "example.com/services/checkout" {
     service "example.com/services/shipping" as Shipping
     service "example.com/services/auth" as Auth
   }
-  requires { oltp, sync, scheduling, identity, timezone, regionalization, units }
-  provides { checkout }
-  roles { Customer }
+  capabilities { oltp, sync, scheduling, identity, timezone, regionalization, units }
 }
 ```
 
@@ -314,6 +310,7 @@ service "example.com/services/checkout" {
 
 ```bpcms
 service "example.com/services/inventory" {
+  title: { pt-BR: "Estoque", en: "Estoque" }
   version: 1.5.0
   owner: "Supply Chain"
   // document StockItem, document Reservation, view StockTable, event StockLow: públicos
@@ -322,9 +319,7 @@ service "example.com/services/inventory" {
     service "example.com/services/catalog"
     service "example.com/services/auth"
   }
-  requires { oltp, scheduling, units }
-  provides { inventory }
-  roles { StockClerk, WarehouseManager }
+  capabilities { oltp, scheduling, units }
 }
 ```
 
@@ -334,6 +329,7 @@ service "example.com/services/inventory" {
 
 ```bpcms
 service "example.com/services/billing" {
+  title: { pt-BR: "Faturamento", en: "Faturamento" }
   version: 1.8.0
   owner: "Financeiro"
   // document Invoice, document Payment, report CashFlow, job CloseMonth, events: públicos
@@ -343,9 +339,7 @@ service "example.com/services/billing" {
     service "example.com/services/auth"
     integration ERP
   }
-  requires { oltp, scheduling, attachments, identity, timezone, regionalization, units }
-  provides { billing }
-  roles { FinanceAnalyst, FinanceApprover }
+  capabilities { oltp, scheduling, attachments, identity, timezone, regionalization, units }
 }
 ```
 
@@ -355,13 +349,13 @@ service "example.com/services/billing" {
 
 ```bpcms
 service "example.com/services/auth" {
+  title: { pt-BR: "Identidade", en: "Identidade" }
   version: 3.0.0
   owner: "Plataforma"
   // document User, document Session, roles Customer/Clerk, view LoginForm, event UserLoggedIn: públicos
 
   imports { integration Email }
-  requires { oltp, identity }
-  provides { identity }
+  capabilities { oltp, identity }
 }
 ```
 
@@ -371,6 +365,7 @@ service "example.com/services/auth" {
 
 ```bpcms
 service "example.com/services/notifications" {
+  title: { pt-BR: "Notificações", en: "Notificações" }
   version: 1.1.0
   owner: "Customer Success"
   // document NotificationTemplate, event NotificationSent: públicos
@@ -380,9 +375,7 @@ service "example.com/services/notifications" {
     integration Email
     integration WhatsApp
   }
-  requires { oltp, scheduling, timezone, regionalization }
-  provides { notifications }
-  roles { NotificationAdmin }
+  capabilities { oltp, scheduling, timezone, regionalization }
 }
 ```
 
@@ -392,7 +385,7 @@ service "example.com/services/notifications" {
 
 ```bpcms
 service "gitlab.com/acme/lab-quality" {
-  source: repository
+  title: { pt-BR: "Qualidade laboratorial", en: "Qualidade laboratorial" }
   version: tag("v2.3.0")
   owner: "Acme Lab"
   // document LabQualityReport, event QualityAlert: públicos
@@ -401,9 +394,7 @@ service "gitlab.com/acme/lab-quality" {
     service "example.com/services/auth"
     integration Email
   }
-  requires { oltp, attachments, scheduling, timezone, regionalization, units }
-  provides { lab-quality }
-  roles { LabManager, Pathologist }
+  capabilities { oltp, attachments, scheduling, timezone, regionalization, units }
 }
 ```
 
@@ -413,6 +404,7 @@ service "gitlab.com/acme/lab-quality" {
 
 ```bpcms
 service "example.com/services/fraud-checkout" {
+  title: { pt-BR: "Checkout antifraude", en: "Checkout antifraude" }
   version: 1.0.0
   owner: "Risk"
   // document FraudCheckout: público
@@ -423,9 +415,7 @@ service "example.com/services/fraud-checkout" {
   override "example.com/services/checkout#CheckoutSession.placeOrder" {
     with: "example.com/services/fraud-checkout#FraudCheckout.placeOrder"
   }
-  requires { oltp, sync }
-  provides { fraud-checkout }
-  roles { FraudAnalyst }
+  capabilities { oltp, sync }
 }
 ```
 
@@ -2465,13 +2455,13 @@ secret GoogleMapsKey {
 
 ```bpcms
 service "example.com/services/field" {
+  title: { pt-BR: "Serviço de campo", en: "Field service" }
   version: 1.0.0
-  requires { location, timezone, regionalization, units, oltp, sync }
-  provides { field-service }
+  capabilities { location, timezone, regionalization, units, oltp, sync }
 }
 ```
 
-*Valida: `location`, `timezone`, `regionalization` e `units` entram por `requires`, não por import de serviço.*
+*Valida: `location`, `timezone`, `regionalization` e `units` entram por `capabilities`, não por import de serviço.*
 
 ### U.2 View formatando data e distância
 
@@ -3791,7 +3781,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 * **Override é composição:** ativo quando o serviço substituto está na closure; senão, o original vale.
 * **Capabilities são de alto nível:** `gui/tui/print`, `oltp/sync`, `location`; o construtor resolve a tecnologia.
 * **Parameter** é o contrato de configuração/segredo; o valor é resolvido pelo ambiente e nunca entra no lock.
-* **Capabilities são abertas:** construtores podem declarar `llm`, `google-maps`, etc.; o serviço só declara `requires`.
+* **Capabilities são abertas:** construtores podem declarar `llm`, `google-maps`, etc.; o serviço só declara `capabilities`.
 * **Compensação é passo:** `type: compensation` + `for` + `action`, em ordem reversa e idempotente.
 * **Serviços essenciais são capabilities:** `location`, `timezone`, `regionalization` e `units`; não são imports de app.
 * **Repositório Git é origem de primeira classe:** README é documentação, clone/zip/release é distribuição, commit/tag é versão.

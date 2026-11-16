@@ -3,5 +3,4 @@ service "bpcms.org/std" {
   title: { pt-BR: "Biblioteca padrão BPCMS", en: "BPCMS Standard Library" }
   version: 1.0.0
   owner: "BPCMS"
-  provides { std }
 }

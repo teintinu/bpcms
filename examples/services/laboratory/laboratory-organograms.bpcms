@@ -11,6 +11,13 @@ role Collector {
   ]
 }
 
+role AnalyzerDevice {
+  title: { pt-BR: "Equipamento analisador", en: "Analyzer device" }
+  scopes: [Laboratory]
+  capabilities { equipment, laboratory-protocol }
+  permissions: [exam.perform.hemogram]
+}
+
 role Analyst {
   title: { pt-BR: "Analista", en: "Analyst" }
   scopes: [Laboratory]
@@ -50,9 +57,10 @@ organogram Laboratory {
   hierarchy {
     LabManager > Pathologist > Analyst > Collector
     LabManager > SupportLiaison
+    LabManager > AnalyzerDevice
   }
 
-  LabManager manages [Collector, Analyst, SupportLiaison]
+  LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
   LabManager delegates to Pathologist when absent for 7d
 
   segregation {

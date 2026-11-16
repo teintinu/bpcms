@@ -8,6 +8,5 @@ service "example.com/services/laboratory" {
     service "example.com/services/citizen" as Citizen
     service "example.com/services/identity" as Identity
   }
-  requires { oltp, sync, scheduling, identity, timezone, regionalization, attachments }
-  provides { laboratory }
+  capabilities { oltp, sync, scheduling, identity, timezone, regionalization, attachments }
 }

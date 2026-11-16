@@ -274,6 +274,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `role <Name> { ... }`
 - [x] `title: I18n`
 - [x] `permissions: [...]`
+- [x] `capabilities { ... }`
 - [x] `inherits: Role | [Role...]`; permissões próprias + herdadas
 - [x] `scopes`
 - [x] `manages` / `delegates to` por linha
@@ -366,36 +367,42 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Decisões:** Parameter e Secret são artefatos separados; `type` aponta para Shape; `source` removido; `required` e `default` mutuamente exclusivos; Secret sem default; `min`/`max`/`maxLength` no Parameter/Secret; sem referência entre Parameters; `set` de Secret usa `secret.NOME`.
 
-## 6. Service 🟡
+## 6. Service ✅
 
 **Depende de:** outros services, imports, capabilities.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `service "<uri>" { ... }`
-- [ ] `title: I18n`
-- [ ] `version`, `owner`
-- [ ] `imports { service "<uri>" as Alias; integration X }`
-- [ ] `override "<uri>#<Artifact>.<member>" { with: ... }`
-- [ ] `requires { capabilities }`
-- [ ] `provides { contracts }`
-- [ ] `roles { ... }` ou roles em arquivo
-- [ ] Sem `exports`; todo artefato de topo é público
-- [ ] Serviço é conceito de negócio, não biblioteca/package/módulo
-- [ ] Não criar serviço para Shapes/Icons/Themes/Locales compartilhados
-- [ ] Theme/Locale são do construtor
+- [x] `service "<uri>" { ... }`
+- [x] `title: I18n`
+- [x] `version`, `owner`
+- [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
+- [x] `override "<uri>#<Artifact>.<member>" { with: ... }`
+- [x] `capabilities { ... }`; falha de build se ausente
+- [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
+- [x] Sem `provides`; contrato são os artefatos públicos
+- [x] Sem `roles` inline; roles no `*-organograms.bpcms`
+- [x] Sem `source`; publicação/origem no Release/lock
+- [x] Sem `exports`; todo artefato de topo é público
+- [x] Serviço é conceito de negócio, não biblioteca/package/módulo
+- [x] Não criar serviço para Shapes/Icons/Themes/Locales compartilhados
+- [x] Theme/Locale são do construtor
 
 **Exemplos:** S.1–S.8; `examples/services/*/*-service.bpcms`.
 
 **Foco da revisão:**
 
-- [ ] `imports` vazio é permitido?
-- [ ] `roles` inline vs arquivo de organogram?
-- [ ] `requires` vs `provides`: vocabulário fechado?
-- [ ] Override de view/action/doc: o que é permitido?
-- [ ] Serviço de negócio pode ter `Shape`/`Icon` locais? Sim, se forem do domínio.
+- [x] `imports` vazio é permitido? — sim.
+- [x] `roles` inline vs arquivo de organogram? — apenas arquivo.
+- [x] `capabilities` vs `provides`? — `capabilities` exige do ambiente; `provides` não existe no Service.
+- [x] Override é permitido? — sim; um por alvo, mesmo import, LSP.
+- [x] Serviço de negócio pode ter `Shape`/`Icon` locais? — sim, se forem do domínio.
+- [x] `reintroduce` pode alterar qualquer parte de qualquer artefato importado? — sim, aditivo; conflito é erro.
+- [x] `capabilities` pode existir em qualquer artefato? — sim; role de equipamento exemplifica.
 
-**Status:** 🟡 em revisão.
+**Status:** ✅ revisado e aprovado para a v0.1.
+
+**Decisões:** Service sem `provides`, `roles`, `source` ou `requires`; usa `capabilities`, `imports`, `override` e `reintroduce`; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam apenas no arquivo de organograma.
 
 ## 7. Document 🟡
 
@@ -970,9 +977,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-Próximo: **Service** 🟡.
+Próximo: **Document** 🟡.
 
-Parameter/Secret revisado; seguimos para **Service**.
+Service revisado; seguimos para **Document**.
 
 ## Pendências de revisão de keywords
 
