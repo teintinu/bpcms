@@ -18,7 +18,7 @@ document User {
       required
     }
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
-    avatar: Image? { title: { pt-BR: "Avatar", en: "Avatar" }, lookup }
+    avatar: Image { title: { pt-BR: "Avatar", en: "Avatar" }, lookup }
     email: Email { title: { pt-BR: "E-mail", en: "Email" }, unique }
     status: UserStatus { title: { pt-BR: "Status", en: "Status" } }
     private loginAttempts: std.Count { title: { pt-BR: "Tentativas de login", en: "Login attempts" } }
@@ -50,7 +50,7 @@ document Consumer extends User {
   sync: read
 
   fields {
-    citizen: link Citizen? {
+    citizen: link Citizen {
       title: { pt-BR: "Cidadão", en: "Citizen" }
       snapshot: [displayName, avatar]
     }

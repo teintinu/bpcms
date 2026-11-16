@@ -1,6 +1,5 @@
 // service: example.com/services/catalog
 view ProductForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de produto", en: "Product form" }
   type: form
   document: Product
@@ -12,6 +11,11 @@ view ProductForm {
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
     status: ProductStatus { title: { pt-BR: "Status", en: "Status" }, readonly }
+    image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
+    video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
+    audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
+    manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
+    richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
   }
 
   actions {
@@ -21,12 +25,19 @@ view ProductForm {
 }
 
 view ProductTable {
-  capabilities { gui }
   title: { pt-BR: "Tabela de produtos", en: "Product table" }
   type: table
   source: Product
 
-  columns { sku; name; price; weight; status; createdAt }
+  columns {
+    image
+    sku
+    name
+    price
+    weight
+    status
+    createdAt
+  }
   filters { status; categoryId; period }
   pagination: 50
 

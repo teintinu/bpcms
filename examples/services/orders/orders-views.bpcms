@@ -1,6 +1,5 @@
 // service: example.com/services/orders
 view OrderForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de pedido", en: "Order form" }
   type: form
   document: Order
@@ -20,7 +19,6 @@ view OrderForm {
 }
 
 view OrderDetail {
-  capabilities { gui }
   title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
   type: detail
   document: Order

@@ -15,8 +15,8 @@ document Payment {
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
     status: PaymentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    authorizedAt: DateTime? { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
-    capturedAt: DateTime? { title: { pt-BR: "Capturado em", en: "Captured at" } }
+    authorizedAt: DateTime { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
+    capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
   }
 
   indexes {

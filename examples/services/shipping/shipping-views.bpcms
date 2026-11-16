@@ -1,6 +1,5 @@
 // service: example.com/services/shipping
 view ShipmentForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de remessa", en: "Shipment form" }
   type: form
   document: Shipment
@@ -21,7 +20,6 @@ view ShipmentForm {
 }
 
 view DispatchBoard {
-  capabilities { gui }
   title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
   type: kanban
   source: Shipment

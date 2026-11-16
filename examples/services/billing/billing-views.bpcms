@@ -1,6 +1,5 @@
 // service: example.com/services/billing
 view InvoiceForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de nota", en: "Invoice form" }
   type: form
   document: Invoice
@@ -20,7 +19,6 @@ view InvoiceForm {
 }
 
 view InvoiceDetail {
-  capabilities { gui }
   title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
   type: detail
   document: Invoice

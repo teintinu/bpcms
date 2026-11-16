@@ -196,6 +196,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `shape <Name> { ... }`
 - [x] `title: I18n`
 - [x] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
+- [x] Shapes de `audio`/`image`/`video` declaram `capabilities { gui }`
 - [x] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
 - [x] `currency`
 - [x] `dimension`, `units { unidade: { factor, title } }`
@@ -415,7 +416,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
-- [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`
+- [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`; sem `required` = opcional; sem `?`
 - [ ] `link Target { title; snapshot; lookup }`; não é FK
 - [ ] link para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
@@ -493,7 +494,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `type: form | table | dashboard | wizard | detail | kanban`
 - [ ] `document`, `source`, `sources`
 - [ ] `roles`
-- [ ] `fields` com `title`, `required`, `readonly`
+- [ ] `fields` com `title`, `required`, `readonly`; sem `required` = opcional; sem `?`
 - [ ] `columns`, `filters`, `filter`, `pagination`
 - [ ] `actions`
 - [ ] `metrics`, `freshness`, `units`, `export`
@@ -501,6 +502,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `sections`, `computed`, `device`
 - [ ] `groupBy`, `card`
 - [ ] `mode`
+- [ ] `capabilities { gui }` na View apenas se a tela inteira exigir GUI por outro motivo
+- [ ] Shapes de áudio/imagem/vídeo declaram `capabilities { gui }`
 
 **Exemplos:** V.1–V.6; `*-views.bpcms`.
 
@@ -511,6 +514,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `actions` de view podem apontar para Job/Integration?
 - [ ] `computed` de view vs Document computed?
 - [ ] View pode ter `device` sem capability?
+- [ ] `gui` aparece no Shape de mídia?
+- [ ] `gui` aparece na View apenas quando a tela inteira não funciona em TUI?
 
 **Status:** ⬜ pendente.
 

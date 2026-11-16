@@ -50,7 +50,7 @@ document Sample {
       title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
       snapshot: [name]
     }
-    controlLot: string? { title: { pt-BR: "Lote de controle", en: "Control lot" } }
+    controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
     status: SampleStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
     collectedBy: link User {
@@ -91,16 +91,16 @@ document ExamOrder {
     }
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
     status: ExamOrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    assignedTo: link User? {
+    assignedTo: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
       snapshot: [name]
     }
-    referredTo: link SupportLab? {
+    referredTo: link SupportLab {
       title: { pt-BR: "Encaminhado para", en: "Referred to" }
       snapshot: [name]
     }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
-    resultedAt: DateTime? { title: { pt-BR: "Resultado em", en: "Resulted at" } }
+    resultedAt: DateTime { title: { pt-BR: "Resultado em", en: "Resulted at" } }
   }
 
   rules {
@@ -138,7 +138,7 @@ document ExamResult {
       snapshot: [code]
     }
     value: string { title: { pt-BR: "Valor", en: "Value" } }
-    unit: string? { title: { pt-BR: "Unidade", en: "Unit" } }
+    unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
     releasedBy: link User {
       title: { pt-BR: "Liberado por", en: "Released by" }

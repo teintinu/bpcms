@@ -44,11 +44,11 @@ document Shipment {
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
     volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
-    frete: std.Money? { title: { pt-BR: "Frete", en: "Freight" }, currency: BRL }
-    tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    frete: std.Money { title: { pt-BR: "Frete", en: "Freight" }, currency: BRL }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    readAt: DateTime? { title: { pt-BR: "Lido em", en: "Read at" } }
-    calculatedAt: DateTime? { title: { pt-BR: "Calculado em", en: "Calculated at" } }
+    readAt: DateTime { title: { pt-BR: "Lido em", en: "Read at" } }
+    calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 

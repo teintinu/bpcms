@@ -1,6 +1,5 @@
 // service: example.com/services/support
 view TicketKanban {
-  capabilities { gui }
   title: { pt-BR: "Kanban de chamados", en: "Ticket kanban" }
   type: kanban
   source: Ticket
@@ -17,7 +16,6 @@ view TicketKanban {
 }
 
 view ReturnForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de devolução", en: "Return form" }
   type: form
   document: ReturnRequest
@@ -25,8 +23,8 @@ view ReturnForm {
 
   fields {
     orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, required }
-    paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
-    shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
+    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" } }
+    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, currency: BRL }
   }

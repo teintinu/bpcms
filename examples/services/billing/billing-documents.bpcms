@@ -54,8 +54,8 @@ document Invoice {
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
     status: InvoiceStatus { title: { pt-BR: "Status", en: "Status" } }
-    issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
-    dueAt: DateTime? { title: { pt-BR: "Vence em", en: "Due at" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
   }
 
   indexes {
@@ -93,7 +93,7 @@ document CreditNote {
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    issuedAt: DateTime? { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
   }
 
   indexes {
@@ -124,7 +124,7 @@ document Bill {
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
     status: BillStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    paidAt: DateTime? { title: { pt-BR: "Pago em", en: "Paid at" } }
+    paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
   }
 
   indexes {

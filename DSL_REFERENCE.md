@@ -10,7 +10,7 @@
 | `<name>` | identificador simples, sem URI: `Customer`, `OrderApproval` |
 | `<expr>` | expressão segura, sem código arbitrário |
 | `[A, B]` | lista |
-| `T?` | opcional |
+| `T?` | parâmetro de ação opcional |
 | `A \| B` | alternativa |
 | `...` | repetição |
 | `//` | comentário de linha |
@@ -119,7 +119,7 @@ stream.readStreamArray(): stream[]
 | `Role` | roles/role | `role: Manager` | Referência a papel. |
 | `Event` | start/end/on | `start on OrderApproved` | Referência a evento de negócio. |
 | `Integration` | task/integration | `integration: Carrier` | Referência a integração. |
-| `T?` | campos | `phone: Phone?` | Opcional; ausência ≠ vazio. |
+| `T` | campos | `phone: Phone` | Sem `required` = opcional; `?` não é usado no field. |
 | `T[]` | coleções | `items: InvoiceItem[]` | Lista ordenada de `T`. |
 | `A \| B` | binds | `binds: Mass \| Length` | União de tipos aceitos pelo widget. |
 
@@ -230,7 +230,7 @@ service "example.com/services/field" {
 }
 
 view VisitForm {
-  capabilities { gui, location, timezone, regionalization, units }
+  capabilities { location, timezone, regionalization, units }
   type: form
   computed {
     scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
@@ -415,7 +415,8 @@ service "example.com/services/catalog" {
 **Capabilities não ficam no Service.** Cada artefato declara as capacidades que usa:
 
 - `Job` → `scheduling`;
-- `View` → `gui`;
+- `Shape` de `audio`/`image`/`video` → `gui`;
+- `View` → `gui` somente se a tela inteira exigir GUI por outro motivo;
 - `Shape` de anexo → `attachments`;
 - `Document` com device → `capture`/`units`;
 - `Integration` de equipamento → `equipment`;
@@ -575,6 +576,7 @@ task RefundPayment {
 | `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega snapshot. |
 | `audit` | `audit: true` | Registra autor, diff e timestamp. |
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
+| `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
 | `actions` | `actions { create(...): Document; private recalcScore(): Score }` | Comandos tipados; `private` restringe a chamada ao serviço dono. |
@@ -589,7 +591,7 @@ task RefundPayment {
 
 **Publicação/subscrição.** O `link`/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
 
-**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image? { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
+**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
 
 **`scopable document`.** Um documento marcado como `scopable` é um tipo de escopo. Ele mantém o `id` interno implícito e pode ter chaves de negócio como `code`/`year`:
 
@@ -639,7 +641,7 @@ document Invoice {
 **Forma completa do link.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
 
 ```bpcms
-assignedTo: link User? {
+assignedTo: link User {
   title: { pt-BR: "Responsável", en: "Assignee" }
   lookup
   snapshot: [name]
@@ -649,7 +651,7 @@ assignedTo: link User? {
 - `title`, `lookup`, `required`, `sensitive`, `default` etc. são atributos do field;
 - `snapshot: [...]` lista os campos copiados;
 - `id` é sempre implícito;
-- a forma curta `link User { name }?` só vale quando não há atributos.
+- a forma curta `link User { name }` só vale quando não há atributos.
 
 **`link` não é ForeignKey.** É uma referência lógica:
 
@@ -704,7 +706,7 @@ number: InvoiceNumber {
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen? { title; snapshot: [displayName, avatar] }`;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { title; snapshot: [displayName, avatar] }`;
 - mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
 - fica no mesmo serviço do pai (v1);
 - pode ser referenciada como `UserId`; o link `citizen` carrega o snapshot do cidadão, e `UserId` sozinho entrega o lookup herdado.
@@ -712,7 +714,7 @@ number: InvoiceNumber {
 
 `citizen` é um link para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
 
-**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category? { title; snapshot: [name] }`). O id interno continua implícito.
+**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { title; snapshot: [name] }`). O id interno continua implícito.
 
 **Parâmetros de campo:**
 
@@ -749,7 +751,7 @@ document Shipment {
       snapshot: [status, createdAt]
     }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
-    tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
@@ -784,6 +786,7 @@ document Shipment {
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
+| `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
 | `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. Exceção: values-base de `std.Currency` não exigem metadados. |
@@ -1339,6 +1342,7 @@ convert(value: number, from: Unit, to: Unit): number
 | `type` | `type: form \| table \| dashboard \| wizard \| detail \| kanban` | Discriminador da view. |
 | `document` | `document: Customer` | Documento principal da tela. |
 | `source` | `source: Order` | Fonte de tabela/kanban. |
+| `capabilities` | `capabilities { gui }` | Só quando a View inteira exige GUI por outro motivo; `audio`/`image`/`video` declaram `gui` no próprio Shape. |
 | `sources` | `sources: [Invoice, Order]` | Fontes de dashboard/relatório. |
 | `roles` | `roles: [Clerk, Manager]` | Quem pode abrir/executar. |
 | `fields` | `fields { name: string { title: { pt-BR: "Nome", en: "Name" }, required } }` | Campos exibidos/editados; `title` é obrigatório; aceita `required`, `readonly` e parâmetros do Shape. |
@@ -1962,6 +1966,7 @@ release "example.com/app/loja-com-antifraude"@1.0.0 {
 | :--- | :--- | :--- |
 | `integration` | `integration <Name> { ... }` | Conector com sistema/dispositivo. |
 | `protocol` | `protocol: rest \| smtp \| webhook \| mqtt` | Protocolo de transporte. |
+| `capabilities` | `capabilities { equipment }` | Capacidades exigidas pela integração. |
 | `baseUrl` | `baseUrl: env.ERP_URL` | Endpoint base; resolvido por ambiente. |
 | `host` | `host: env.SMTP_HOST` | Host de protocolo não-HTTP. |
 | `topic` | `topic: "scales/+/reading"` | Tópico de mensageria. |

@@ -70,4 +70,5 @@ shape Phone {
 shape Image {
   title: { pt-BR: "Imagem", en: "Image" }
   base: image
+  capabilities { gui }
 }

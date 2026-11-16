@@ -1,6 +1,5 @@
 // service: example.com/services/payments
 view PaymentForm {
-  capabilities { gui }
   title: { pt-BR: "Formulário de pagamento", en: "Payment form" }
   type: form
   document: Payment
@@ -20,7 +19,6 @@ view PaymentForm {
 }
 
 view PaymentDetail {
-  capabilities { gui }
   title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
   type: detail
   document: Payment

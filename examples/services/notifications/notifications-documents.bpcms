@@ -39,8 +39,8 @@ document Notification {
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
     status: NotificationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
-    sentAt: DateTime? { title: { pt-BR: "Enviado em", en: "Sent at" } }
-    error: string? { title: { pt-BR: "Erro", en: "Error" } }
+    sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
+    error: string { title: { pt-BR: "Erro", en: "Error" } }
   }
 
   indexes {

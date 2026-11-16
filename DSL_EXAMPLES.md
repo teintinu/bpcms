@@ -21,7 +21,7 @@ Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 | Campo | `nome: Shape` | `Shape` é o tipo de dado, não uma forma visual |
 | Campo com parâmetros | `peso: Mass { unit: kg, min: 0 }` | o campo só passa parâmetros simples |
 | Lista | `[A, B, C]` | ordem preservada quando importa |
-| Opcional | `T?` | ausência é diferente de vazio |
+| Opcional | `T` | ausência é diferente de vazio |
 | Referência | `Document`, `View`, `Role` | por nome; o `check` valida existência e ciclo |
 | Ação | `criar(...): Retorno` | comando tipado, não método OO |
 | Índice | `byStatus: [status, criadoEm] range` | `unique`, `range`, `search`, `hash` |
@@ -867,7 +867,7 @@ document Customer {
   fields {
     name: string { maxLength: 120, required, lookup }
     email: Email { unique, lookup }
-    phone: Phone?
+    phone: Phone
     status: CustomerStatus
     private internalScore: Score
     createdAt: DateTime
@@ -945,7 +945,7 @@ document Invoice {
     tax: std.Money
     total: std.Money { lookup }
     status: InvoiceStatus
-    issuedAt: DateTime?
+    issuedAt: DateTime
   }
 
   indexes {
@@ -987,10 +987,10 @@ document Shipment {
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
     volume: Volume { unit: m3, min: 0 }
-    frete: std.Money?
-    tracking: TrackingCode? { lookup }
+    frete: std.Money
+    tracking: TrackingCode { lookup }
     status: ShipmentStatus { lookup }
-    readAt: DateTime?
+    readAt: DateTime
     createdAt: DateTime
   }
 
@@ -1039,11 +1039,11 @@ document LabExam {
     }
     type: ExamType { lookup }
     status: ExamStatus { lookup }
-    result: string?
-    resultFile: FileRef?
-    signature: Signature?
+    result: string
+    resultFile: FileRef
+    signature: Signature
     collectedAt: DateTime
-    releasedAt: DateTime?
+    releasedAt: DateTime
   }
 
   indexes {
@@ -1085,7 +1085,7 @@ document SupportTicket {
     description: string
     priority: TicketPriority { lookup }
     status: TicketStatus { lookup }
-    assignee: link User? {
+    assignee: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
       snapshot: [name]
     }
@@ -1262,7 +1262,7 @@ shape Address {
   fields {
     street: string { title: { pt-BR: "Rua", en: "Street" } }
     number: string { title: { pt-BR: "Número", en: "Number" } }
-    complement: string? { title: { pt-BR: "Complemento", en: "Complement" } }
+    complement: string { title: { pt-BR: "Complemento", en: "Complement" } }
     district: string { title: { pt-BR: "Bairro", en: "District" } }
     city: string { title: { pt-BR: "Cidade", en: "City" } }
     state: StateCode { title: { pt-BR: "Estado", en: "State" } }
@@ -1358,7 +1358,7 @@ view CustomerForm {
   fields {
     name: string { required }
     email: Email { required }
-    phone: Phone?
+    phone: Phone
     status: CustomerStatus { readonly }
   }
 
@@ -2452,7 +2452,7 @@ service "example.com/services/field" {
 }
 
 view VisitForm {
-  capabilities { gui, location, timezone, regionalization, units }
+  capabilities { location, timezone, regionalization, units }
   type: form
 }
 ```
@@ -3728,44 +3728,44 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | # | Pergunta | Exemplos para olhar |
 | :--- | :--- | :--- |
 | 1 | `shape` deve ser nomeado por dimensão (`Mass`, `Length`) ou genérico (`Quantity<Mass>`)? | H.2, H.3, H.4 |
-| 2 | O campo deve carregar `unit` ou o `Shape` já define a unidade? | H.2, D.3, W.4 |
-| 3 | Documento agregado deve listar itens como `Document[]` ou ter um bloco `items` próprio? | D.2, D.3 |
-| 4 | O `lookup` automático + projeção só de campos extras cobrem o antigo snapshot manual? | D.1, D.2 |
+| 2 | O campo deve carregar `unit` ou o `Shape` já define a unidade | H.2, D.3, W.4 |
+| 3 | Documento agregado deve listar itens como `Document[]` ou ter um bloco `items` próprio | D.2, D.3 |
+| 4 | O `lookup` automático + projeção só de campos extras cobrem o antigo snapshot manual | D.1, D.2 |
 | 5 | O processo deve ser declarado por nós (`task`, `gateway`) ou por XML BPMN com extensões? | P.1–P.6 |
-| 6 | `reads`/`writes` por tarefa são úteis ou ruído? | P.1–P.6 |
+| 6 | `reads`/`writes` por tarefa são úteis ou ruído | P.1–P.6 |
 | 7 | Expressões (`sum`, `count`, `by`, `bucket`, `percentage`) são suficientes? | R.1–R.6, N.1–N.6 |
-| 8 | `view` deve listar campos ou compor widgets? | V.1–V.6 |
-| 9 | `role` deve ter permissões inline ou só referenciar um catálogo? | R.1–R.6 |
-| 10 | `evidence` deve carregar o conteúdo extraído ou só o vínculo e a confiança? | E.1–E.6 |
+| 8 | `view` deve listar campos ou compor widgets | V.1–V.6 |
+| 9 | `role` deve ter permissões inline ou só referenciar um catálogo | R.1–R.6 |
+| 10 | `evidence` deve carregar o conteúdo extraído ou só o vínculo e a confiança | E.1–E.6 |
 | 11 | `environment` deve declarar `promoteTo` ou a promoção é definida no `release`? | N.1–N.6, V.1–V.6 |
-| 12 | `builder` deve declarar `limitations` por plataforma? | B.1–B.6 |
+| 12 | `builder` deve declarar `limitations` por plataforma | B.1–B.6 |
 | 13 | `widget` deve mapear `platforms` ou só declarar `capabilities`? | W.1–W.6 |
-| 14 | `conversation` deve ter `coverage` por dimensão ou por artefato? | C.1–C.6 |
+| 14 | `conversation` deve ter `coverage` por dimensão ou por artefato | C.1–C.6 |
 | 15 | `release` deve apontar para o lock do app (uma versão/serviço) em vez de listar includes? | V.1–V.6 |
 | 16 | Cálculo deve ser campo computado (`computed frete`) ou documento (`document FreightQuote`)? | D.3, D.6 |
 | 17 | Shape composto (`fields`) é Shape ou Document embutido? | H.8, D.2 |
-| 18 | URI literal em todas as referências é verboso; quer alias local? | A.1, S.2 |
-| 19 | A página `/index.html` deve listar SOs/APIs/iframe a partir do builder? | A.1, S.1, B.1–B.6 |
+| 18 | URI literal em todas as referências é verboso; quer alias local | A.1, S.2 |
+| 19 | A página `/index.html` deve listar SOs/APIs/iframe a partir do builder | A.1, S.1, B.1–B.6 |
 | 20 | URI entre aspas é aceitável ou prefere uma sintaxe sem aspas (ex.: `@example.com/...`)? | A.1, S.1 |
 | 21 | Repositório Git deve ser detectado por host (`source: auto`) ou sempre explícito? | A.7, S.7 |
-| 22 | Versão default de repo: commit, tag ou branch? Produção deve exigir pin? | S.7, V.1–V.6 |
-| 23 | A app deve listar só entry points e derivar a closure dos imports? | A.1, S.2 |
-| 24 | Uma versão por serviço por app é suficiente? Como tratar conflito de contrato? | lock, V.1–V.6 |
-| 25 | IDs no lock devem cobrir todos os identificadores ou só os serializados? | lock |
-| 26 | Override ativo por closure é suficiente, ou precisa de prioridade explícita? | A.8, S.8 |
+| 22 | Versão default de repo: commit, tag ou branch Produção deve exigir pin | S.7, V.1–V.6 |
+| 23 | A app deve listar só entry points e derivar a closure dos imports | A.1, S.2 |
+| 24 | Uma versão por serviço por app é suficiente Como tratar conflito de contrato | lock, V.1–V.6 |
+| 25 | IDs no lock devem cobrir todos os identificadores ou só os serializados | lock |
+| 26 | Override ativo por closure é suficiente, ou precisa de prioridade explícita | A.8, S.8 |
 | 27 | Serviço sem `exports` e privacidade só por membro (`private`) está certo? | D.1, S.1–S.8 |
 | 28 | Alias local (`"uri" as Nome`) ajuda ou polui? | A.1, S.2 |
-| 29 | Sem `extends` na v1 e reuso só por composição/override está bom? | S.8 |
-| 30 | Migração como `release` do tipo `migration` é suficiente? | V.4 |
+| 29 | Sem `extends` na v1 e reuso só por composição/override está bom | S.8 |
+| 30 | Migração como `release` do tipo `migration` é suficiente | V.4 |
 | 31 | Capabilities de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`…) cobrem os casos? | S.1–S.8, B.1–B.6 |
-| 32 | Compensação como `type: compensation` + `for` está correta? | P.7 |
+| 32 | Compensação como `type: compensation` + `for` está correta | P.7 |
 | 33 | `Parameter` cobre configuração/segredo com `type`, `source`, `required` e `default`? | PR.1–PR.6 |
 | 34 | Capabilities customizadas (`llm`, `google-maps`) devem ser nomes abertos/contrato do construtor? | B.1, S.1 |
 | 35 | `main` deve ser só `set` de Parameter de serviço e `start`, sem `wire`? | A.1 |
-| 36 | `location`, `timezone`, `regionalization` e `units` devem ser capabilities essenciais, não imports? | U.1–U.3 |
-| 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos? | U.3 |
+| 36 | `location`, `timezone`, `regionalization` e `units` devem ser capabilities essenciais, não imports | U.1–U.3 |
+| 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos | U.3 |
 | 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
-| 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK? | D.1–D.3 |
+| 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK | D.1–D.3 |
 | 40 | A projeção `UserId(citizenId)` (só o extra) e o lookup automático de `UserId` (`nickname`, `avatar`) estão claros? | D.2, árvores |
 | 41 | `Consumer extends User` compartilha `UserId`; `ConsumerId` é alias (mesmo valor) e `citizenId` é o extra? | árvores |
 | 42 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
@@ -3804,13 +3804,13 @@ Se for validar só alguns, comece por estes seis — eles cobrem as decisões ma
 
 ### Checklist de validação
 
-- [ ] A sintaxe parece legível para um analista, não só para um dev?
-- [ ] `Shape` resolve validação/unidade sem espalhar regra pelo campo?
-- [ ] Documento agregado com snapshot faz sentido para o negócio?
-- [ ] O processo orquestra sem virar código?
-- [ ] `View` e `Report` são claramente projeções, não donas do dado?
-- [ ] `Role`/`Policy` expressam quatro-olhos, alçada e retenção?
-- [ ] `Environment`/`Builder`/`Release` dão segurança para dev/QA/prod?
-- [ ] Falta algum artefato para representar seu domínio?
+- [ ] A sintaxe parece legível para um analista, não só para um dev
+- [ ] `Shape` resolve validação/unidade sem espalhar regra pelo campo
+- [ ] Documento agregado com snapshot faz sentido para o negócio
+- [ ] O processo orquestra sem virar código
+- [ ] `View` e `Report` são claramente projeções, não donas do dado
+- [ ] `Role`/`Policy` expressam quatro-olhos, alçada e retenção
+- [ ] `Environment`/`Builder`/`Release` dão segurança para dev/QA/prod
+- [ ] Falta algum artefato para representar seu domínio
 
 > Se algo aqui parecer “código demais” para o dono do processo, o problema é de sintaxe/experiência — não do conceito. O próximo passo é escolher 3–5 exemplos como **golden examples** e usá-los como teste de aceitação da DSL no SPECS.

@@ -12,16 +12,19 @@ shape SKU {
 shape ProductImage {
   title: { pt-BR: "Imagem do produto", en: "Product image" }
   base: image
+  capabilities { gui }
 }
 
 shape ProductVideo {
   title: { pt-BR: "Vídeo do produto", en: "Product video" }
   base: video
+  capabilities { gui }
 }
 
 shape ProductAudio {
   title: { pt-BR: "Áudio do produto", en: "Product audio" }
   base: audio
+  capabilities { gui }
 }
 
 shape ProductManual {
