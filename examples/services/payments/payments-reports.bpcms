@@ -1,17 +1,19 @@
 // service: example.com/services/payments
-report PaymentReconciliation {
+document PaymentReconciliation {
+  title: { pt-BR: "Conciliação de pagamentos", en: "Payment reconciliation" }
   type: report
-  sources: [Payment, Refund]
-  roles: [Manager]
+  computed from Payment, Refund
+  freshness: 5m
 
-  filters { period; status; method }
-  dimensions { method; status }
-  metrics {
+  report {
+    filters { period; status; method }
+    dimensions { method; status }
+    metrics {
     captured: sum(Payment.amount) where status == captured
     refunded: sum(Refund.amount) where status == completed
     failed: count(Payment) where status == failed
+    }
+    units { captured: BRL; refunded: BRL }
+    export: [csv, pdf]
   }
-  freshness: 5m
-  units { captured: BRL; refunded: BRL }
-  export: [csv, pdf]
 }

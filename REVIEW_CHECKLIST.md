@@ -85,7 +85,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 | 11 | Policy | Document, Role | P.1–P.6 | ⬜ |
 | 12 | Job | Service/ação | J.1–J.6 | ⬜ |
 | 13 | Integration | Shape, Service | I.1–I.6 | ⬜ |
-| 14 | Report | Document, Shape, View | R.1–R.6 | ⬜ |
+| 14 | Report | Document | R.1–R.6 | ✅ merged em Document |
 | 15 | Process | Event, Document, Role, Integration, View | P.1–P.7 | ⬜ |
 | 16 | Evidence | Process, Document, Service | E.1–E.6 | ⬜ |
 | 17 | Assumption | links ao modelo | U.1–U.6 | ⬜ |
@@ -415,13 +415,16 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
 - [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`; sem `required` = opcional; sem `?`
-- [ ] `link Target { title; snapshot; lookup }`; não é FK
+- [ ] `link Target { title; lookup }`; projeção automática do `lookup` do alvo; não é FK
 - [ ] link para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
 - [ ] ID interno × `number` de negócio
 - [ ] `number` com `format`, `sequence`, `unique`
 - [ ] `indexes` (unique/range/search/hash), inclusive `link.id`
-- [ ] `actions` (públicas/private)
+- [ ] `actions` (públicas/private) com `title`, `permission` e corpo de negócio
+- [ ] `status => <estado>` em ações que mudam workflow
+- [ ] UI recebe botão habilitado/desabilitado e motivo
+- [ ] `report` como `document type: report`
 - [ ] `rules`
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
@@ -429,8 +432,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] duplicidade de id, `<Doc>Id` e link para si mesmo
 - [ ] PII em `private` quando aplicável
 - [ ] regras de leitura e edição por field
-- [ ] permissões por documento: buscar, criar, atualizar, excluir e ações próprias
-- [ ] permissões por campo: leitura e edição
+- [ ] sem bloco de permissões no documento
+- [ ] permissões por ação: `permission`
+- [ ] permissões por campo: `read`/`edit`
+- [ ] search via processo que declara `reads`
 - [ ] combinação documento × campo × role × scope
 - [ ] `dataMasking`/`masked` em field/link
 - [ ] `limits`/`unlimited` por role/field
@@ -448,8 +453,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `private` é suficiente para PII ou precisa `sensitive`?
 - [ ] `Date`/`DateTime`/`YearMonth` são tipos internos?
 - [ ] `dataMasking`, `limits`, `segregation` e `signature` pertencem ao Document ou ao Organogram?
-- [ ] Permissões de documento e de campo usam `permissions` da role, `scopes` ou uma policy própria?
-- [ ] `buscar`, `criar`, `atualizar`, `excluir` e ações próprias têm permissões separadas?
+- [ ] Permissões de field/ação usam `permissions` da role, `scopes` ou policy?
+- [ ] UI recebe motivo genérico de permissão e de workflow?
+- [ ] Ação que muda workflow declara `status =>`?
 
 **Status:** 🟡 em revisão.
 
@@ -636,36 +642,24 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ⬜ pendente.
 
-## 14. Report ⬜
+## 14. Report ✅ (merged into Document)
 
-**Depende de:** Document, Shape, View.
+**Depende de:** Document.
 
-**Sintaxe/cláusulas:**
+**Decisão:** Report é um `document type: report` com caching de cálculo, não um artefato separado.
 
-- [ ] `report <Name> { ... }`
-- [ ] `title`? (decidir)
-- [ ] `type`
-- [ ] `sources`
-- [ ] `roles`
-- [ ] `filters`
-- [ ] `dimensions`
-- [ ] `metrics`
-- [ ] `sort`
-- [ ] `freshness`
-- [ ] `units`
-- [ ] `export`
-- [ ] `alert`
+- [x] `document ReportName { type: report; ... }`
+- [x] `computed from`
+- [x] `freshness`
+- [x] `exposes`
+- [x] `report { ... }` opcional
+- [x] sem `report` como artefato de topo
+- [x] permissões por field/ação
+- [x] sem CRUD automático
 
-**Exemplos:** R.1–R.6; `*-reports.bpcms`.
+**Exemplos:** R.1–R.6 migram para Document.
 
-**Foco da revisão:**
-
-- [ ] Report precisa de `title`?
-- [ ] `metrics` usam `sum/count/avg` e `where`?
-- [ ] `units` referencia Shape?
-- [ ] `alert` é Policy/Job?
-
-**Status:** ⬜ pendente.
+**Status:** ✅ merged.
 
 ## 15. Process ⬜
 
@@ -1014,10 +1008,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 Motivo:
 
 - Document é a base de `link`, `scope`, `id`, `number`, permissões e leitura/edição;
-- Event, View, Decision, Policy, Job, Report e Process dependem de Document;
+- Event, View, Decision, Policy, Job e Process dependem de Document;
 - Process também depende de Event, Role, Integration e View;
 - revisar Process antes de Document criaria decisões sobre nós/eventos sem o contrato de dados fechado;
-- Process fica para depois de Document, Event, View, Decision, Integration e Report.
+- Process fica para depois de Document, Event, View, Decision e Integration.
 
 Ordem recomendada:
 
@@ -1028,8 +1022,7 @@ Ordem recomendada:
 5. Policy
 6. Job
 7. Integration
-8. Report
-9. Process
+8. Process
 
 O item 27 (`reintroduce`) fica como revisão transversal depois das keywords.
 

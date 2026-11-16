@@ -8,12 +8,10 @@ document OrderItem {
   fields {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
-      snapshot: [status, createdAt]
     }
     product: link Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-      snapshot: [sku, name]
     }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup, min: 1, max: 1000 }
     unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
@@ -42,7 +40,6 @@ document Order {
     customer: link User {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
-      snapshot: [name, nickname]
     }
     items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
@@ -50,7 +47,7 @@ document Order {
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
     status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
-    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" }, lookup }
   }
 
   indexes {
@@ -59,11 +56,46 @@ document Order {
   }
 
   actions {
-    create(customerId: UserId, discount: std.Percentage): Order
-    addItem(productId: ProductId, quantity: std.Count): Order
-    place(): Order
-    cancel(reason: string): Order
-    expireDraft(): Order
+    create(customerId: UserId, discount: std.Percentage): Order {
+      title: { pt-BR: "Criar", en: "Create" }
+      permission: Clerk
+      customer = customerId
+      audit("order.created", discount)
+      return self
+    }
+
+    addItem(productId: ProductId, quantity: std.Count): Order {
+      title: { pt-BR: "Adicionar item", en: "Add item" }
+      permission: Clerk
+      require quantity > 0
+      return self
+    }
+
+    place(): Order {
+      title: { pt-BR: "Realizar pedido", en: "Place order" }
+      permission: Clerk
+      require items.length > 0
+      status => placed
+      placedAt = now()
+      audit("order.placed")
+      return self
+    }
+
+    cancel(reason: string): Order {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      permission: Manager
+      require reason.length >= 10
+      status => cancelled
+      audit("order.cancelled", reason)
+      return self
+    }
+
+    expireDraft(): Order {
+      title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
+      permission: Manager
+      status => cancelled
+      return self
+    }
   }
 
   rules {

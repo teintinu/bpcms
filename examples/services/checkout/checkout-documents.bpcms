@@ -10,7 +10,6 @@ document CheckoutSession {
     customer: link User {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
-      snapshot: [name, nickname]
     }
     total: std.Money {
       title: { pt-BR: "Total", en: "Total" }
@@ -23,9 +22,24 @@ document CheckoutSession {
   }
 
   actions {
-    validateCart(): CheckoutSession
-    quoteShipping(): CheckoutSession
-    authorizePayment(): CheckoutSession
-    confirmOrder(): CheckoutSession
+    validateCart(): CheckoutSession {
+      title: { pt-BR: "Validar carrinho", en: "Validate cart" }
+      permission: Customer
+    }
+
+    quoteShipping(): CheckoutSession {
+      title: { pt-BR: "Cotar frete", en: "Quote shipping" }
+      permission: Customer
+    }
+
+    authorizePayment(): CheckoutSession {
+      title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
+      permission: Customer
+    }
+
+    confirmOrder(): CheckoutSession {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      permission: Customer
+    }
   }
 }

@@ -8,13 +8,11 @@ document InvoiceItem {
   fields {
     invoice: link Invoice {
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
-      snapshot: [number]
     }
     product: link Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-      snapshot: [sku, name]
-    } // TODO quando estiver revisando documento, rever sobre lookup-indices de lookup-snapshot/searchable, view de lookup...
+    } // TODO quando estiver revisando documento, rever sobre lookup-indices de lookup/searchable, view de lookup...
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
@@ -42,12 +40,10 @@ document Invoice {
     series: string { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
-      snapshot: [status, createdAt]
     }
     customer: link User {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
-      snapshot: [name, nickname]
     }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
@@ -65,9 +61,31 @@ document Invoice {
   }
 
   actions {
-    issue(series: string, number: string): Invoice
-    cancel(reason: string): Invoice
-    closeMonth(): void
+    issue(series: string, number: string): Invoice {
+      title: { pt-BR: "Emitir", en: "Issue" }
+      permission: Manager
+
+      require total > 0 BRL
+      status => issued
+      issuedAt = now()
+      audit("invoice.issued", number)
+      return self
+    }
+
+    cancel(reason: string): Invoice {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      permission: Manager
+
+      require reason.length >= 10
+      status => cancelled
+      audit("invoice.cancelled", reason)
+      return self
+    }
+
+    closeMonth(): void {
+      title: { pt-BR: "Fechar mês", en: "Close month" }
+      permission: Manager
+    }
   }
 
   rules {
@@ -88,7 +106,6 @@ document CreditNote {
     invoice: link Invoice {
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
       lookup
-      snapshot: [number]
     }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
@@ -102,8 +119,19 @@ document CreditNote {
   }
 
   actions {
-    issue(): CreditNote
-    apply(): CreditNote
+    issue(): CreditNote {
+      title: { pt-BR: "Emitir", en: "Issue" }
+      permission: Manager
+      status => issued
+      return self
+    }
+
+    apply(): CreditNote {
+      title: { pt-BR: "Aplicar", en: "Apply" }
+      permission: Manager
+      status => applied
+      return self
+    }
   }
 
   rules {
@@ -132,7 +160,13 @@ document Bill {
   }
 
   actions {
-    pay(): Bill
+    pay(): Bill {
+      title: { pt-BR: "Pagar", en: "Pay" }
+      permission: Manager
+      status => paid
+      paidAt = now()
+      return self
+    }
   }
 
   rules {
@@ -151,14 +185,17 @@ document OrderCancellation {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
 
   actions {
-    cancel(reason: string): Order
+    cancel(reason: string): Order {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      permission: Manager
+      require reason.length >= 10
+    }
   }
 
   rules {
@@ -183,7 +220,12 @@ document MonthlyRevenue {
 
   indexes { month: [month] unique }
 
-  actions { refresh(): MonthlyRevenue }
+  actions {
+    refresh(): MonthlyRevenue {
+      title: { pt-BR: "Atualizar", en: "Refresh" }
+      permission: Manager
+    }
+  }
 
   rules { month >= 2026-01 }
 }

@@ -492,7 +492,7 @@ Um serviço **não é só backend**. Ele é uma **fatia vertical**:
 
 **Privacidade.** O artefato de topo é sempre público; o que pode ser privado é o **membro**. `private` em um campo esconde o campo do contrato/API/serialização para outros serviços; `private` em uma ação impede chamada externa. O dado continua existindo para o serviço dono e para as regras internas.
 
-**Dono do dado.** Um documento tem um serviço dono. Outros serviços referenciam por ID, copiam um snapshot (ex.: dados do cliente numa nota fiscal) ou reagem a eventos. Não há escrita compartilhada nem transação distribuída; processos que atravessam serviços usam saga/compensação.
+**Dono do dado.** Um documento tem um serviço dono. Outros serviços referenciam por ID, materializam o lookup (ex.: dados do cliente numa nota fiscal) ou reagem a eventos. Não há escrita compartilhada nem transação distribuída; processos que atravessam serviços usam saga/compensação.
 
 > **Serviço ≠ microserviço.** SOA aqui é sobre **contrato e reuso**, não sobre número de processos na rede. Vários serviços podem ser implantados juntos na v1; a fronteira é lógica e de propriedade.
 
@@ -705,13 +705,13 @@ Um **documento** é como uma entidade ou tabela, mas atravessa todas as camadas.
 
 Ele **não é** uma tabela, nem um DTO, nem uma view, nem um banco. Ele **projeta** tabelas, APIs, caches, estado de UI, índices de busca e relatórios. A tabela é uma realização; o documento é o contrato. Ele também não é um evento, embora possa **emitir** eventos.
 
-Um documento pode ser realizado como **uma tabela, uma junção de várias ou um agregado** (ex.: nota fiscal + itens + snapshot do cliente). O documento define o agregado e as invariantes; o construtor decide a normalização física. Duplicar dados de propósito (snapshot) é permitido quando o histórico precisa sobreviver à mudança da origem.
+Um documento pode ser realizado como **uma tabela, uma junção de várias ou um agregado** (ex.: nota fiscal + itens + snapshot do cliente). O documento define o agregado e as invariantes; o construtor decide a normalização física. Materializar o lookup é permitido quando o histórico precisa sobreviver à mudança da origem.
 
 Um documento também pode ser:
 
 * **um cálculo** (dashboard, totalizador, cotação) — com expiração e recálculo;
 * **uma leitura de dispositivo** (balança, sensor, medidor) — com releitura, não recálculo;
-* **um snapshot histórico** (nota fiscal, laudo) — que continua válido mesmo se a origem mudar.
+* **um lookup materializado histórico** (nota fiscal, laudo) — que continua válido mesmo se a origem mudar.
 
 #### 2.6.2 Atravessa todas as camadas
 
@@ -1839,7 +1839,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-41** | Serviços essenciais como capabilities? | **Sim**: `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` depende de `regionalization` e oferece Shapes métrico/imperial com conversões. | Evita reimplementar GPS/fuso/formatação/unidades em cada serviço. | ✅ |
 | **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
 | **B-43** | Id de document é declarado? | **Não.** Todo document base gera `id: <Doc>Id` e o Shape de id implícito; extensão compartilha o id do pai. Declarar `id`/`<Doc>Id` é duplicidade. | Menos ruído e consistência de identidade. | ✅ |
-| **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência grava o snapshot; projeções puxam só campos extras; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
+| **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; todo link recebe automaticamente a projeção do alvo; archive pode materializar; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId` que referencia o Citizen; `ConsumerId` é alias de `UserId`. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |

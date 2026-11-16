@@ -1,15 +1,19 @@
 // service: example.com/services/inventory
-report InventoryAging {
+document InventoryAging {
+  title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
   type: report
-  sources: [StockItem, Product]
+  computed from StockItem, Product
+  freshness: 15m
 
-  filters { warehouse; category }
-  dimensions { productId; warehouse; ageBucket }
-  metrics {
+  report {
+    filters { warehouse; category }
+    dimensions { productId; warehouse; ageBucket }
+    metrics {
     quantity: sum(StockItem.available)
     value: sum(StockItem.available * Product.price)
     aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
+    }
+    sort { value: desc }
+    export: [csv, xlsx]
   }
-  sort { value: desc }
-  export: [csv, xlsx]
 }

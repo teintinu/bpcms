@@ -1,15 +1,17 @@
 // service: example.com/services/support
-report SlaCompliance {
-  type: dashboard
-  sources: [Ticket]
-  roles: [Manager]
+document SlaCompliance {
+  title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
+  type: report
+  computed from Ticket
+  freshness: 5m
 
-  filters { period; team; priority }
-  metrics {
+  report {
+    filters { period; team; priority }
+    metrics {
     compliance: percentage(Ticket.slaMet)
     breached: count(Ticket) where breached == true
     avgResolution: avg(Ticket.resolutionTime)
+    }
+    alert { compliance < 90% -> NotifyManager }
   }
-  freshness: 5m
-  alert { compliance < 90% -> NotifyManager }
 }

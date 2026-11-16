@@ -10,7 +10,6 @@ document Payment {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
@@ -25,10 +24,22 @@ document Payment {
   }
 
   actions {
-    authorize(): Payment
-    capture(): Payment
-    refund(): Refund
-    retryFailed(): void
+    authorize(): Payment {
+      title: { pt-BR: "Autorizar", en: "Authorize" }
+      permission: Manager
+    }
+    capture(): Payment {
+      title: { pt-BR: "Capturar", en: "Capture" }
+      permission: Manager
+    }
+    refund(): Refund {
+      title: { pt-BR: "Reembolsar", en: "Refund" }
+      permission: Manager
+    }
+    retryFailed(): void {
+      title: { pt-BR: "Repetir falhas", en: "Retry failed" }
+      permission: Manager
+    }
   }
 
   rules {
@@ -48,7 +59,6 @@ document Refund {
     payment: link Payment {
       title: { pt-BR: "Pagamento", en: "Payment" }
       lookup
-      snapshot: [status, amount]
     }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
@@ -62,9 +72,19 @@ document Refund {
   }
 
   actions {
-    request(reason: string): Refund
-    approve(): Refund
-    complete(): Refund
+    request(reason: string): Refund {
+      title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
+      permission: Manager
+      require reason.length >= 10
+    }
+    approve(): Refund {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      permission: Manager
+    }
+    complete(): Refund {
+      title: { pt-BR: "Concluir", en: "Complete" }
+      permission: Manager
+    }
   }
 
   rules {

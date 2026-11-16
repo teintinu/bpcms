@@ -1,16 +1,18 @@
 // service: example.com/services/shipping
-report FreightCost {
-  type: dashboard
-  sources: [Shipment]
-  roles: [Manager]
+document FreightCost {
+  title: { pt-BR: "Custo de frete", en: "Freight cost" }
+  type: report
+  computed from Shipment
+  freshness: 15m
 
-  filters { period; carrier; status }
-  metrics {
+  report {
+    filters { period; carrier; status }
+    metrics {
     shipments: count(Shipment)
     freight: sum(Shipment.frete)
     avgWeight: avg(Shipment.pesoBruto)
     late: count(Shipment) where status == delivered and DeliveryDelayed
+    }
+    units { freight: BRL; avgWeight: kg }
   }
-  freshness: 15m
-  units { freight: BRL; avgWeight: kg }
 }

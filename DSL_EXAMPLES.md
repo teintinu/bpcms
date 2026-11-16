@@ -924,16 +924,13 @@ document Invoice {
   fields {
     store: link Store {
       title: { pt-BR: "Loja", en: "Store" }
-      snapshot: [code, name]
     }
     fiscalYear: link FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
-      snapshot: [year]
     }
     customer: link Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
-      snapshot: [name, email]
     }
     number: InvoiceNumber {
       format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
@@ -944,7 +941,12 @@ document Invoice {
     items: InvoiceItem[]
     subtotal: std.Money
     tax: std.Money
-    total: std.Money { lookup }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      lookup
+      read: [Clerk, Manager]
+      edit: [Manager]
+    }
     status: InvoiceStatus
     issuedAt: DateTime
   }
@@ -957,8 +959,30 @@ document Invoice {
   }
 
   actions {
-    issue(): Invoice
-    cancel(reason: string): Invoice
+    issue(): Invoice {
+      title: { pt-BR: "Emitir", en: "Issue" }
+      permission: Manager
+
+      require items.length > 0
+      require total > 0 BRL
+
+      status => issued
+      issuedAt = now()
+      audit("invoice.issued")
+      return self
+    }
+
+    cancel(reason: string): Invoice {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      permission: Manager
+
+      require reason.length >= 10
+      require status == issued
+
+      status => cancelled
+      audit("invoice.cancelled", reason)
+      return self
+    }
   }
 
   rules {
@@ -969,12 +993,13 @@ document Invoice {
 }
 ```
 
-*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, snapshot de cliente e regra de total.*
+*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, lookup automático do cliente, ação com `status =>` e regra de total.*
 
 ### D.3 Remessa com dispositivo, unidades e cálculo
 
 ```bpcms
 document Shipment {
+  title: { pt-BR: "Remessa", en: "Shipment" }
   version: 1
   owner: "Dispatch"
   sync: live
@@ -983,7 +1008,6 @@ document Shipment {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
@@ -1027,6 +1051,7 @@ document Shipment {
 
 ```bpcms
 document LabExam {
+  title: { pt-BR: "Exame laboratorial", en: "Lab exam" }
   version: 1
   owner: "Laboratório"
   sync: live
@@ -1036,7 +1061,6 @@ document LabExam {
     patient: link Citizen {
       title: { pt-BR: "Paciente", en: "Patient" }
       lookup
-      snapshot: [displayName, avatar]
     }
     type: ExamType { lookup }
     status: ExamStatus { lookup }
@@ -1072,6 +1096,7 @@ document LabExam {
 
 ```bpcms
 document SupportTicket {
+  title: { pt-BR: "Chamado de atendimento", en: "Support ticket" }
   version: 1
   owner: "Support"
   sync: live
@@ -1080,7 +1105,6 @@ document SupportTicket {
     customer: link Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
-      snapshot: [name, email]
     }
     subject: string { maxLength: 160, lookup }
     description: string
@@ -1088,7 +1112,6 @@ document SupportTicket {
     status: TicketStatus { lookup }
     assignee: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
-      snapshot: [name]
     }
     slaDue: DateTime
     createdAt: DateTime
@@ -1106,10 +1129,50 @@ document SupportTicket {
   }
 
   actions {
-    assign(user: UserId): SupportTicket
-    comment(body: string): SupportTicket
-    resolve(): SupportTicket
-    reopen(reason: string): SupportTicket
+    assign(user: UserId): SupportTicket {
+      title: { pt-BR: "Atribuir", en: "Assign" }
+      permission: Agent
+
+      require user != null
+      assignee = user
+      audit("ticket.assigned", user)
+      return self
+    }
+
+    comment(body: string): SupportTicket {
+      title: { pt-BR: "Comentar", en: "Comment" }
+      permission: Agent
+
+      require body.length > 0
+      audit("ticket.commented", body)
+      return self
+    }
+
+    resolve(): SupportTicket {
+      title: { pt-BR: "Resolver", en: "Resolve" }
+      permission: Agent
+
+      require assignee != null
+      require status.canTransitionTo(resolved)
+
+      status => resolved
+      resolvedAt = now()
+      audit("ticket.resolved")
+      return self
+    }
+
+    reopen(reason: string): SupportTicket {
+      title: { pt-BR: "Reabrir", en: "Reopen" }
+      permission: Manager
+
+      require reason.length >= 10
+      require status.canTransitionTo(open)
+
+      status => open
+      reopenedAt = now()
+      audit("ticket.reopened", reason)
+      return self
+    }
   }
 
   rules {
@@ -1124,6 +1187,7 @@ document SupportTicket {
 
 ```bpcms
 document MonthlyRevenue {
+  title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   version: 1
   owner: "Finance"
   computed from Invoice, Payment
@@ -2190,7 +2254,7 @@ assumption A-002 {
 
 *Valida: suposição rejeitada com evidência que a derruba.*
 
-### U.3 Nota fiscal preserva snapshot do cliente
+### U.3 Nota fiscal preserva os dados do cliente na emissão
 
 ```bpcms
 assumption A-003 {
@@ -2203,7 +2267,7 @@ assumption A-003 {
 }
 ```
 
-*Valida: suposição confirmada que vira requisito de snapshot.*
+*Valida: suposição confirmada que vira requisito de materialização do lookup na emissão.*
 
 ### U.4 Assinatura do laudo
 
@@ -3194,19 +3258,21 @@ integration ScaleDevice {
 ### R.1 Vendas por região
 
 ```bpcms
-report SalesByRegion {
-  type: dashboard
-  sources: [Invoice, Customer]
-  roles: [Manager]
+document SalesByRegion {
+  title: { pt-BR: "Vendas por região", en: "Sales by region" }
+  type: report
+  computed from Invoice, Customer
+  freshness: 15m
 
-  filters { period; region }
-  metrics {
+  report {
+    filters { period; region }
+    metrics {
     revenue: sum(Invoice.total) by region
     orders: count(Invoice) by region
+    }
+    units { revenue: BRL }
+    export: [pdf, csv]
   }
-  freshness: 15m
-  units { revenue: BRL }
-  export: [pdf, csv]
 }
 ```
 
@@ -3215,20 +3281,23 @@ report SalesByRegion {
 ### R.2 Envelhecimento de estoque
 
 ```bpcms
-report InventoryAging {
+document InventoryAging {
+  title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
   type: report
-  sources: [StockItem, Product]
-  roles: [WarehouseManager]
+  computed from StockItem, Product
+  freshness: 15m
 
-  filters { warehouse; category }
-  dimensions { product; warehouse; ageBucket }
-  metrics {
+  report {
+    filters { warehouse; category }
+    dimensions { product; warehouse; ageBucket }
+    metrics {
     quantity: sum(StockItem.quantity)
     value: sum(StockItem.value)
     aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
+    }
+    sort { value: desc }
+    export: [csv, xlsx]
   }
-  sort { value: desc }
-  export: [csv, xlsx]
 }
 ```
 
@@ -3237,19 +3306,21 @@ report InventoryAging {
 ### R.3 Cumprimento de SLA
 
 ```bpcms
-report SlaCompliance {
-  type: dashboard
-  sources: [SupportTicket]
-  roles: [SupportLead, Manager]
+document SlaCompliance {
+  title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
+  type: report
+  computed from SupportTicket
+  freshness: 5m
 
-  filters { period; team; priority }
-  metrics {
+  report {
+    filters { period; team; priority }
+    metrics {
     compliance: percentage(SupportTicket.slaMet)
     breached: count(SupportTicket.breached)
     avgResolution: avg(SupportTicket.resolutionTime)
+    }
+    alert { compliance < 90% -> NotifyLead }
   }
-  freshness: 5m
-  alert { compliance < 90% -> NotifyLead }
 }
 ```
 
@@ -3258,21 +3329,23 @@ report SlaCompliance {
 ### R.4 Fluxo de caixa
 
 ```bpcms
-report CashFlow {
+document CashFlow {
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
-  sources: [Invoice, Payment, Bill]
-  roles: [FinanceAnalyst, Controller]
+  computed from Invoice, Payment, Bill
+  freshness: 1h
 
-  filters { period; account }
-  dimensions { month; account }
-  metrics {
+  report {
+    filters { period; account }
+    dimensions { month; account }
+    metrics {
     inflow: sum(Payment.received)
     outflow: sum(Bill.paid)
     balance: inflow - outflow
+    }
+    units { inflow: BRL; outflow: BRL; balance: BRL }
+    export: [pdf, csv]
   }
-  units { inflow: BRL; outflow: BRL; balance: BRL }
-  freshness: 1h
-  export: [pdf, csv]
 }
 ```
 
@@ -3281,20 +3354,22 @@ report CashFlow {
 ### R.5 Qualidade laboratorial
 
 ```bpcms
-report LabQuality {
-  type: dashboard
-  sources: [LabExam, LabNonConformity]
-  roles: [Pathologist, Manager]
+document LabQuality {
+  title: { pt-BR: "Qualidade laboratorial", en: "Lab quality" }
+  type: report
+  computed from LabExam, LabNonConformity
+  freshness: 10m
 
-  filters { period; examType }
-  metrics {
+  report {
+    filters { period; examType }
+    metrics {
     released: count(LabExam.released)
     rework: percentage(LabExam.rework)
     avgTurnaround: avg(LabExam.turnaround)
     critical: count(LabExam.critical)
+    }
+    export: [pdf]
   }
-  freshness: 10m
-  export: [pdf]
 }
 ```
 
@@ -3303,23 +3378,25 @@ report LabQuality {
 ### R.6 Controle operacional em tempo real
 
 ```bpcms
-report OperationsControl {
-  type: dashboard
-  sources: [Shipment, Incident, DeviceReading]
-  roles: [Ops, Manager]
-  mode: live
+document OperationsControl {
+  title: { pt-BR: "Controle operacional", en: "Operations control" }
+  type: report
+  computed from Shipment, Incident, DeviceReading
+  freshness: live
 
-  filters { site; status }
-  metrics {
+  report {
+    mode: live
+    filters { site; status }
+    metrics {
     openShipments: count(Shipment.open)
     lateShipments: count(Shipment.late)
     deviceOffline: count(DeviceReading.offline)
     incidents: count(Incident.open)
-  }
-  freshness: live
-  alert {
+    }
+    alert {
     lateShipments > 20 -> PageOps
     deviceOffline > 5 -> NotifyOps
+    }
   }
 }
 ```
@@ -3731,7 +3808,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 | 1 | `shape` deve ser nomeado por dimensão (`Mass`, `Length`) ou genérico (`Quantity<Mass>`)? | H.2, H.3, H.4 |
 | 2 | O campo deve carregar `unit` ou o `Shape` já define a unidade | H.2, D.3, W.4 |
 | 3 | Documento agregado deve listar itens como `Document[]` ou ter um bloco `items` próprio | D.2, D.3 |
-| 4 | O `lookup` automático + projeção só de campos extras cobrem o antigo snapshot manual | D.1, D.2 |
+| 4 | O `lookup` automático cobre a projeção manual antiga | D.1, D.2 |
 | 5 | O processo deve ser declarado por nós (`task`, `gateway`) ou por XML BPMN com extensões? | P.1–P.6 |
 | 6 | `reads`/`writes` por tarefa são úteis ou ruído | P.1–P.6 |
 | 7 | Expressões (`sum`, `count`, `by`, `bucket`, `percentage`) são suficientes? | R.1–R.6, N.1–N.6 |
@@ -3774,7 +3851,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 ## Padrões que os exemplos já sugerem
 
 * **Shape** é o único lugar com validação/formatação/conversão; o campo só parametriza.
-* **Document** agrega, referencia ou congela (snapshot); computed/device são variações do mesmo conceito.
+* **Document** agrega, referencia ou materializa lookup; computed/device são variações do mesmo conceito.
 * **Process** orquestra, mas não implementa regra: chama `action`, `view`, `integration` e `role`.
 * **View/Report** são projeções; não são donas de dados.
 * **Environment/Builder/Release** são artefatos de plataforma, não de negócio.
@@ -3795,7 +3872,7 @@ Estas não são pendências da baseline; são **decisões de sintaxe** que os ex
 Se for validar só alguns, comece por estes seis — eles cobrem as decisões mais estruturais:
 
 1. **H.2 Mass** — dimensão, unidade, projeção e agregação.
-2. **D.2 Invoice** — agregado, snapshot, itens e regra de total.
+2. **D.2 Invoice** — agregado, lookup, itens e regra de total.
 3. **P.2 OrderFulfillment** — processo, paralelismo, integração e erro.
 4. **V.3 SalesDashboard** — métricas, frescor, unidade e exportação.
 5. **R.4 FinanceRoles** — permissões, quatro-olhos e limite.
@@ -3807,7 +3884,7 @@ Se for validar só alguns, comece por estes seis — eles cobrem as decisões ma
 
 - [ ] A sintaxe parece legível para um analista, não só para um dev
 - [ ] `Shape` resolve validação/unidade sem espalhar regra pelo campo
-- [ ] Documento agregado com snapshot faz sentido para o negócio
+- [ ] Documento agregado com lookup automático faz sentido para o negócio
 - [ ] O processo orquestra sem virar código
 - [ ] `View` e `Report` são claramente projeções, não donas do dado
 - [ ] `Role`/`Policy` expressam quatro-olhos, alçada e retenção

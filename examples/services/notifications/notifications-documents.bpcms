@@ -9,7 +9,7 @@ document NotificationTemplate {
   fields {
     key: string { title: { pt-BR: "Chave", en: "Key" }, maxLength: 80, required, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
-    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160 }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
     locale: LocaleTag { title: { pt-BR: "Idioma", en: "Locale" }, lookup }
   }
@@ -19,8 +19,14 @@ document NotificationTemplate {
   }
 
   actions {
-    create(key: string, channel: Channel, locale: LocaleTag): NotificationTemplate
-    update(subject: string, body: string): NotificationTemplate
+    create(key: string, channel: Channel, locale: LocaleTag): NotificationTemplate {
+      title: { pt-BR: "Criar modelo", en: "Create template" }
+      permission: Manager
+    }
+    update(subject: string, body: string): NotificationTemplate {
+      title: { pt-BR: "Atualizar", en: "Update" }
+      permission: Manager
+    }
   }
 }
 
@@ -33,7 +39,6 @@ document Notification {
   fields {
     template: link NotificationTemplate {
       title: { pt-BR: "Modelo", en: "Template" }
-      snapshot: [key, channel, subject]
     }
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
@@ -49,10 +54,22 @@ document Notification {
   }
 
   actions {
-    send(): Notification
-    retry(): Notification
-    sendDigest(): void
-    retryFailed(): void
+    send(): Notification {
+      title: { pt-BR: "Enviar", en: "Send" }
+      permission: Manager
+    }
+    retry(): Notification {
+      title: { pt-BR: "Repetir", en: "Retry" }
+      permission: Manager
+    }
+    sendDigest(): void {
+      title: { pt-BR: "Enviar resumo", en: "Send digest" }
+      permission: Manager
+    }
+    retryFailed(): void {
+      title: { pt-BR: "Repetir falhas", en: "Retry failed" }
+      permission: Manager
+    }
   }
 
   rules {

@@ -9,11 +9,9 @@ document Ticket {
   fields {
     customer: link User {
       title: { pt-BR: "Cliente", en: "Customer" }
-      snapshot: [name, nickname]
     }
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
-      snapshot: [status, createdAt]
     }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
@@ -23,7 +21,6 @@ document Ticket {
     status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     assignee: link User {
       title: { pt-BR: "Responsável", en: "Assignee" }
-      snapshot: [name]
     }
     slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
     resolutionTime: std.Duration { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
@@ -43,11 +40,45 @@ document Ticket {
   }
 
   actions {
-    assign(user: UserId): Ticket
-    comment(body: string): Ticket
-    resolve(): Ticket
-    reopen(reason: string): Ticket
-    escalateBreached(): void
+    assign(user: UserId): Ticket {
+      title: { pt-BR: "Atribuir", en: "Assign" }
+      permission: Agent
+      require user != null
+      assignee = user
+      audit("ticket.assigned", user)
+      return self
+    }
+
+    comment(body: string): Ticket {
+      title: { pt-BR: "Comentar", en: "Comment" }
+      permission: Agent
+      require body.length > 0
+      audit("ticket.commented", body)
+      return self
+    }
+
+    resolve(): Ticket {
+      title: { pt-BR: "Resolver", en: "Resolve" }
+      permission: Agent
+      require assignee != null
+      status => resolved
+      audit("ticket.resolved")
+      return self
+    }
+
+    reopen(reason: string): Ticket {
+      title: { pt-BR: "Reabrir", en: "Reopen" }
+      permission: Manager
+      require reason.length >= 10
+      status => open
+      audit("ticket.reopened", reason)
+      return self
+    }
+
+    escalateBreached(): void {
+      title: { pt-BR: "Escalar prazo", en: "Escalate SLA" }
+      permission: Manager
+    }
   }
 
   rules {
@@ -66,15 +97,12 @@ document ReturnRequest {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     payment: link Payment {
       title: { pt-BR: "Pagamento", en: "Payment" }
-      snapshot: [status, amount]
     }
     shipment: link Shipment {
       title: { pt-BR: "Remessa", en: "Shipment" }
-      snapshot: [tracking, status]
     }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: ReturnStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
@@ -88,10 +116,35 @@ document ReturnRequest {
   }
 
   actions {
-    request(reason: string): ReturnRequest
-    approve(): ReturnRequest
-    reject(reason: string): ReturnRequest
-    refund(): ReturnRequest
+    request(reason: string): ReturnRequest {
+      title: { pt-BR: "Solicitar devolução", en: "Request return" }
+      permission: Clerk
+      require reason.length >= 10
+      status => requested
+      return self
+    }
+
+    approve(): ReturnRequest {
+      title: { pt-BR: "Aprovar devolução", en: "Approve return" }
+      permission: Manager
+      status => approved
+      return self
+    }
+
+    reject(reason: string): ReturnRequest {
+      title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
+      permission: Manager
+      require reason.length >= 10
+      status => rejected
+      return self
+    }
+
+    refund(): ReturnRequest {
+      title: { pt-BR: "Reembolsar", en: "Refund" }
+      permission: Manager
+      status => refunded
+      return self
+    }
   }
 
   rules {

@@ -10,7 +10,6 @@ document StockItem {
     product: link Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-      snapshot: [sku, name]
     }
     warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
     available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
@@ -27,9 +26,19 @@ document StockItem {
   }
 
   actions {
-    adjust(quantity: std.Count, reason: string): StockItem
-    reserve(quantity: std.Count): Reservation
-    release(quantity: std.Count): StockItem
+    adjust(quantity: std.Count, reason: string): StockItem {
+      title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
+      permission: Manager
+      require reason.length >= 10
+    }
+    reserve(quantity: std.Count): Reservation {
+      title: { pt-BR: "Reservar", en: "Reserve" }
+      permission: Manager
+    }
+    release(quantity: std.Count): StockItem {
+      title: { pt-BR: "Liberar", en: "Release" }
+      permission: Manager
+    }
   }
 
   rules {
@@ -48,7 +57,6 @@ document Reservation {
     product: link Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-      snapshot: [sku, name]
     }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
@@ -62,9 +70,18 @@ document Reservation {
   }
 
   actions {
-    request(productId: ProductId, quantity: std.Count, externalRef: string): Reservation
-    release(): Reservation
-    expire(): Reservation
+    request(productId: ProductId, quantity: std.Count, externalRef: string): Reservation {
+      title: { pt-BR: "Reservar", en: "Reserve" }
+      permission: Clerk
+    }
+    release(): Reservation {
+      title: { pt-BR: "Liberar", en: "Release" }
+      permission: Manager
+    }
+    expire(): Reservation {
+      title: { pt-BR: "Expirar", en: "Expire" }
+      permission: Manager
+    }
   }
 
   rules {

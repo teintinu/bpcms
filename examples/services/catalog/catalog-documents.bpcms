@@ -9,7 +9,6 @@ document Category {
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
     parent: link Category {
       title: { pt-BR: "Categoria pai", en: "Parent category" }
-      snapshot: [name]
     }
   }
 
@@ -19,8 +18,14 @@ document Category {
   }
 
   actions {
-    create(name: string, parentId: CategoryId?): Category
-    rename(name: string): Category
+    create(name: string, parentId: CategoryId?): Category {
+      title: { pt-BR: "Criar categoria", en: "Create category" }
+      permission: Manager
+    }
+    rename(name: string): Category {
+      title: { pt-BR: "Renomear", en: "Rename" }
+      permission: Manager
+    }
   }
 }
 
@@ -36,7 +41,6 @@ document Product {
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
     category: link Category {
       title: { pt-BR: "Categoria", en: "Category" }
-      snapshot: [name]
     }
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
@@ -58,10 +62,22 @@ document Product {
   }
 
   actions {
-    create(sku: SKU, name: string, price: std.Money): Product
-    update(name: string, price: std.Money): Product
-    publish(): Product
-    archive(): Product
+    create(sku: SKU, name: string, price: std.Money): Product {
+      title: { pt-BR: "Criar produto", en: "Create product" }
+      permission: Manager
+    }
+    update(name: string, price: std.Money): Product {
+      title: { pt-BR: "Atualizar", en: "Update" }
+      permission: Manager
+    }
+    publish(): Product {
+      title: { pt-BR: "Publicar", en: "Publish" }
+      permission: Manager
+    }
+    archive(): Product {
+      title: { pt-BR: "Arquivar", en: "Archive" }
+      permission: Manager
+    }
   }
 
   rules {

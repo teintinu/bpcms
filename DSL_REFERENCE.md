@@ -568,19 +568,19 @@ task RefundPayment {
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
 | `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
 | `scopable` | `scopable document Store { ... }` | Documento também é um tipo de escopo. |
-| `link` | `store: link Store { title: {...}; snapshot: [code, name] }` | Referência lógica com `id` + snapshot; não é FK de banco. |
+| `link` | `store: link Store { title: {...} }` | Referência lógica com `id` + lookup automático do alvo. |
 | escopo inferido | `store: link Store` | Todo link direto para `scopable document` cria um escopo. |
 | `number` | `number: InvoiceNumber { format; sequence; unique }` | Chave alternativa de negócio; não é o `id` interno. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
-| `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega snapshot. |
+| `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega leitura materializada. |
 | `audit` | `audit: true` | Registra autor, diff e timestamp. |
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
-| `actions` | `actions { create(...): Document; private recalcScore(): Score }` | Comandos tipados; `private` restringe a chamada ao serviço dono. |
+| `actions` | `actions { approve(): Document { title; permission; status => approved; ... } }` | Comandos/botões tipados; `title` e `permission` obrigatórios; `private` restringe ao serviço dono. |
 | `rules` | `rules { total == items.sum(subtotal) }` | Invariantes/transições; falha = erro de validação. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
@@ -592,7 +592,7 @@ task RefundPayment {
 
 **Publicação/subscrição.** O `link`/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
 
-**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
+**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Todo link para esse document recebe automaticamente esses campos; o builder decide se resolve na leitura ou materializa. Extensões **herdam** os campos marcados e não redeclaram um bloco.
 
 **`scopable document`.** Um documento marcado como `scopable` é um tipo de escopo. Ele mantém o `id` interno implícito e pode ter chaves de negócio como `code`/`year`:
 
@@ -620,11 +620,9 @@ document Invoice {
   fields {
     store: link Store {
       title: { pt-BR: "Loja", en: "Store" }
-      snapshot: [code, name]
     }
     fiscalYear: link FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
-      snapshot: [year]
     }
     number: InvoiceNumber
     issuedAt: DateTime
@@ -634,7 +632,7 @@ document Invoice {
 
 - `Invoice` tem os escopos `Store` e `FiscalYear`;
 - o escopo usa `store.id` e `fiscalYear.id`;
-- `code`/`year` são chaves de negócio e snapshot;
+- `code`/`year` são chaves de negócio e entram no lookup do alvo;
 - links indiretos não inferem escopo;
 - dois links para o mesmo tipo de escopo no mesmo documento são erro;
 - link opcional cria escopo opcional, com política explícita.
@@ -645,12 +643,10 @@ document Invoice {
 assignedTo: link User {
   title: { pt-BR: "Responsável", en: "Assignee" }
   lookup
-  snapshot: [name]
 }
 ```
 
 - `title`, `lookup`, `required`, `sensitive`, `default` etc. são atributos do field;
-- `snapshot: [...]` lista os campos copiados;
 - `id` é sempre implícito;
 - a forma curta `link User { name }` só vale quando não há atributos.
 
@@ -659,32 +655,31 @@ assignedTo: link User {
 ```bpcms
 store: link Store {
   title: { pt-BR: "Loja", en: "Store" }
-  snapshot: [code, name]
 }
 ```
 
-Armazena, conceitualmente:
+O alvo `Store` marca com `lookup` os campos `code` e `name`. O link entrega, conceitualmente:
 
 ```json
 { "id": "st_123", "code": "0001", "name": "Loja 1" }
 ```
 
 - `id` é sempre preservado;
-- campos entre `{}` são snapshot;
+- todos os campos `lookup` do alvo entram automaticamente no link;
+- o link não escolhe nem declara campos;
 - excluir o alvo não quebra o documento;
 - não há cascade;
-- o builder pode normalizar ou manter o snapshot;
-- archive é sempre snapshot e nunca é reescrito;
+- o builder pode resolver o lookup na leitura ou materializar;
+- archive persiste a projeção de lookup;
 - scope usa o `id`, nunca `code`/`name`.
 
 **Modos do builder:**
 
 | Modo | Comportamento |
 | :--- | :--- |
-| `normalized` | Guarda só o id; resolve na leitura |
-| `snapshot` | Guarda id + campos do link |
-| `archive` | Snapshot imutável, sem reescrita |
-| `hybrid` | Guarda snapshot e tenta resolver |
+| `resolved` | Guarda só o id; resolve lookup na leitura |
+| `materialized` | Guarda id + lookup do alvo |
+| `archive` | Lookup materializado e imutável |
 
 **ID interno × número.** Todo documento tem `id` interno implícito. O número de negócio é uma chave alternativa:
 
@@ -707,15 +702,15 @@ number: InvoiceNumber {
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { title; snapshot: [displayName, avatar] }`;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { title }`;
 - mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
 - fica no mesmo serviço do pai (v1);
-- pode ser referenciada como `UserId`; o link `citizen` carrega o snapshot do cidadão, e `UserId` sozinho entrega o lookup herdado.
+- pode ser referenciada como `UserId`; o link `citizen` carrega o lookup do cidadão, e `UserId` sozinho entrega o lookup herdado.
 - `citizen` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
 
 `citizen` é um link para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
 
-**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { title; snapshot: [name] }`). O id interno continua implícito.
+**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { title }`). O id interno continua implícito.
 
 **Parâmetros de campo:**
 
@@ -735,6 +730,72 @@ number: InvoiceNumber {
 | `unit` / `units` | — | `unit` só no Shape de unidade única; `units` só no Shape multiunidade. |
 | `default` | `default: BR` | Valor inicial; não é regra de negócio. |
 | `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
+| `read` | `read: [Clerk, Manager]` | Roles que podem ler o campo. |
+| `edit` | `edit: [Manager]` | Roles que podem alterar o campo. |
+
+**Ações são botões.** Toda ação pública declara `title` e `permission`. Quando muda `workflow`, usa `status => <estado>`.
+
+```bpcms
+document Invoice {
+  fields {
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      read: [Clerk, Manager]
+      edit: [Manager]
+    }
+    status: InvoiceStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+  }
+
+  actions {
+    approve(): Invoice {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      permission: Manager
+
+      status => approved
+      audit("invoice.approved")
+      return self
+    }
+
+    cancel(reason: string): Invoice {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      permission: Manager
+
+      require reason.length > 0
+      status => cancelled
+      audit("invoice.cancelled", reason)
+      return self
+    }
+  }
+}
+```
+
+- `title` é o label do botão;
+- `permission` é a role exigida;
+- `status => approved` declara a transição;
+- o build valida `approved` em `status.next`;
+- a UI desabilita se a transição não for possível;
+- permissão negada = botão desabilitado;
+- a mensagem de permissão é genérica e definida pelo construtor;
+- a mensagem de workflow é genérica e definida pelo construtor;
+- não existe `enabledWhen`;
+- o corpo é lógica de negócio, não implementação final.
+
+**Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`permission`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
+
+**Relatórios.** `type: report` é um Document calculado com cache:
+
+```bpcms
+document CashFlow {
+  type: report
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
+  computed from Invoice, Payment, Bill
+  freshness: 1h
+  exposes: [balance, calculatedAt]
+}
+```
 
 **Índices:** `unique` (unicidade), `range` (ordenação/faixa), `search` (texto), `hash` (igualdade/partição). O campo referenciado precisa existir e ser indexável no `Shape`.
 
@@ -749,7 +810,6 @@ document Shipment {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
     tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
@@ -2007,37 +2067,38 @@ integration ERP {
 
 # 21. Report / Dashboard
 
+Report é um **Document com caching de cálculo**, não um artefato separado.
+
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `report` | `report <Name> { ... }` | Relatório/dashboard. |
-| `type` | `type: report \| dashboard` | Forma de apresentação. |
-| `sources` | `sources: [Invoice, Order]` | Documentos/fontes. |
-| `roles` | `roles: [Manager]` | Quem pode ver. |
-| `filters` | `filters { period; region }` | Filtros disponíveis. |
-| `dimensions` | `dimensions { region; month }` | Agrupamentos. |
-| `metrics` | `metrics { revenue: sum(Invoice.total) by region }` | Métricas e agregações. |
-| `units` | `units { revenue: BRL }` | Unidade de exibição. |
-| `freshness` | `freshness: 15m` ou `live` | Frescor do resultado. |
-| `export` | `export: [pdf, csv]` | Formatos de exportação. |
-| `alert` | `alert { compliance < 90% -> NotifyLead }` | Alerta condicional. |
-| `sort` | `sort { value: desc }` | Ordenação. |
-| `mode` | `mode: live` | Atualização em tempo real. |
+| `document` | `document CashFlow { ... }` | Documento calculado. |
+| `type` | `type: report` | Marca o Document como relatório/dashboard. |
+| `computed from` | `computed from Invoice, Payment` | Fontes do cálculo. |
+| `freshness` | `freshness: 1h` | TTL do cache. |
+| `exposes` | `exposes: [balance, calculatedAt]` | Campos calculados. |
+| `report` | `report { sources; metrics; filters }` | Configuração de relatório, opcional. |
 
 ```bpcms
-report SalesByRegion {
-  type: dashboard
-  sources: [Invoice, Customer]
-  roles: [Manager]
-  filters { period; region }
-  metrics {
-    revenue: sum(Invoice.total) by region
-    orders: count(Invoice) by region
+document CashFlow {
+  type: report
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
+  computed from Invoice, Payment, Bill
+  freshness: 1h
+  exposes: [balance, calculatedAt]
+
+  report {
+    filters { period; account }
+    metrics {
+      inflow: sum(Payment.amount) where status == captured
+      outflow: sum(Bill.amount) where status == paid
+      balance: inflow - outflow
+    }
   }
-  freshness: 15m
-  units { revenue: BRL }
-  export: [pdf, csv]
 }
 ```
+
+Não há `report <Name> { ... }` como artefato de topo. Os arquivos `*-reports.bpcms` contêm `document` com `type: report`.
+
 
 ---
 

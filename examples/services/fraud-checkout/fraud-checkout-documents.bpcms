@@ -9,7 +9,6 @@ document FraudCheck {
   fields {
     session: link CheckoutSession {
       title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
-      snapshot: [status]
     }
     score: number {
       title: { pt-BR: "Pontuação de risco", en: "Risk score" }
@@ -20,6 +19,9 @@ document FraudCheck {
   }
 
   actions {
-    evaluate(): FraudCheck
+    evaluate(): FraudCheck {
+      title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
+      permission: RiskAnalyst
+    }
   }
 }

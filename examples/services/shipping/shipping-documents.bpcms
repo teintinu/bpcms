@@ -8,12 +8,10 @@ document ShipmentItem {
   fields {
     shipment: link Shipment {
       title: { pt-BR: "Remessa", en: "Shipment" }
-      snapshot: [tracking, status]
     }
     product: link Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-      snapshot: [sku, name]
     }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     pesoUnitario: std.Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
@@ -39,7 +37,6 @@ document Shipment {
     order: link Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
-      snapshot: [status, createdAt]
     }
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
@@ -67,11 +64,26 @@ document Shipment {
   }
 
   actions {
-    create(orderId: OrderId): Shipment
-    addItem(productId: ProductId, quantity: std.Count): Shipment
-    split(): Shipment[]
-    dispatch(): Shipment
-    trackAll(): void
+    create(orderId: OrderId): Shipment {
+      title: { pt-BR: "Criar remessa", en: "Create shipment" }
+      permission: Clerk
+    }
+    addItem(productId: ProductId, quantity: std.Count): Shipment {
+      title: { pt-BR: "Adicionar item", en: "Add item" }
+      permission: Manager
+    }
+    split(): Shipment[] {
+      title: { pt-BR: "Dividir", en: "Split" }
+      permission: Manager
+    }
+    dispatch(): Shipment {
+      title: { pt-BR: "Despachar", en: "Dispatch" }
+      permission: Manager
+    }
+    trackAll(): void {
+      title: { pt-BR: "Rastrear tudo", en: "Track all" }
+      permission: Manager
+    }
   }
 
   rules {

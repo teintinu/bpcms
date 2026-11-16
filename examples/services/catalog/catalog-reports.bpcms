@@ -1,16 +1,18 @@
 // service: example.com/services/catalog
-report CatalogHealth {
-  type: dashboard
-  sources: [Product, Category]
-  roles: [Manager]
+document CatalogHealth {
+  title: { pt-BR: "Saúde do catálogo", en: "Catalog health" }
+  type: report
+  computed from Product, Category
+  freshness: 15m
 
-  filters { category; status }
-  metrics {
+  report {
+    filters { category; status }
+    metrics {
     published: count(Product) where status == published
     drafts: count(Product) where status == draft
     avgPrice: avg(Product.price)
     totalWeight: sum(Product.weight)
+    }
+    units { avgPrice: BRL; totalWeight: kg }
   }
-  freshness: 15m
-  units { avgPrice: BRL; totalWeight: kg }
 }

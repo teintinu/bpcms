@@ -16,6 +16,7 @@ document User {
       }
       maxLength: 120
       required
+      lookup
     }
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
@@ -31,8 +32,14 @@ document User {
   }
 
   actions {
-    create(name: string, email: Email): User
-    disable(): User
+    create(name: string, email: Email): User {
+      title: { pt-BR: "Criar usuário", en: "Create user" }
+      permission: Admin
+    }
+    disable(): User {
+      title: { pt-BR: "Desativar", en: "Disable" }
+      permission: Manager
+    }
     private recalculateRisk(): std.Count
   }
 
@@ -52,7 +59,6 @@ document Consumer extends User {
   fields {
     citizen: link Citizen {
       title: { pt-BR: "Cidadão", en: "Citizen" }
-      snapshot: [displayName, avatar]
     }
   }
 
@@ -61,7 +67,10 @@ document Consumer extends User {
   }
 
   actions {
-    setCitizen(citizen: CitizenId): Consumer
+    setCitizen(citizen: CitizenId): Consumer {
+      title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
+      permission: Admin
+    }
   }
 
   rules {
@@ -78,7 +87,6 @@ document Session {
   fields {
     user: link User {
       title: { pt-BR: "Usuário", en: "User" }
-      snapshot: [name]
     }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
@@ -91,8 +99,14 @@ document Session {
   }
 
   actions {
-    start(email: Email, password: string): Session
-    end(): Session
+    start(email: Email, password: string): Session {
+      title: { pt-BR: "Iniciar sessão", en: "Sign in" }
+      permission: Customer
+    }
+    end(): Session {
+      title: { pt-BR: "Encerrar", en: "End" }
+      permission: Manager
+    }
   }
 
   rules {

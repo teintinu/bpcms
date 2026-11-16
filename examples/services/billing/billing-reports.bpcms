@@ -1,17 +1,19 @@
 // service: example.com/services/billing
-report CashFlow {
+document CashFlow {
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
-  sources: [Invoice, Payment, Bill]
-  roles: [Manager]
+  computed from Invoice, Payment, Bill
+  freshness: 1h
 
-  filters { period; account }
-  dimensions { month; account }
-  metrics {
+  report {
+    filters { period; account }
+    dimensions { month; account }
+    metrics {
     inflow: sum(Payment.amount) where status == captured
     outflow: sum(Bill.amount) where status == paid
     balance: inflow - outflow
+    }
+    units { inflow: BRL; outflow: BRL; balance: BRL }
+    export: [pdf, csv]
   }
-  units { inflow: BRL; outflow: BRL; balance: BRL }
-  freshness: 1h
-  export: [pdf, csv]
 }
