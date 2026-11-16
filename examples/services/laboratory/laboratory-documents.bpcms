@@ -1,5 +1,13 @@
 // service: example.com/services/laboratory
 
+scopable document Laboratory {
+  title: { pt-BR: "Laboratório", en: "Laboratory" }
+  fields {
+    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  }
+}
+
 document SupportLab {
   title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
   version: 1
@@ -28,18 +36,19 @@ document Sample {
 
   fields {
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    laboratory: link Laboratory { code, name }
     kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
-    patientId: CitizenId? { title: { pt-BR: "Paciente", en: "Patient" }, lookup }
-    supportLabId: SupportLabId? { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+    patient: link Citizen { displayName, avatar }
+    supportLab: link SupportLab { name }
     controlLot: string? { title: { pt-BR: "Lote de controle", en: "Control lot" } }
     status: SampleStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
-    collectedBy: UserId { title: { pt-BR: "Coletada por", en: "Collected by" } }
+    collectedBy: link User { name }
   }
 
   rules {
-    kind == patient implies patientId != null
-    kind == support implies supportLabId != null
+    kind == patient implies patient != null
+    kind == support implies supportLab != null
     kind == control implies controlLot != null
   }
 
@@ -58,11 +67,12 @@ document ExamOrder {
   audit: true
 
   fields {
-    sampleId: SampleId { title: { pt-BR: "Amostra", en: "Sample" }, lookup }
+    laboratory: link Laboratory { code, name }
+    sample: link Sample { code }
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
     status: ExamOrderStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    assignedTo: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
-    referredTo: SupportLabId? { title: { pt-BR: "Encaminhado para", en: "Referred to" } }
+    assignedTo: link User { name }?
+    referredTo: link SupportLab { name }?
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
     resultedAt: DateTime? { title: { pt-BR: "Resultado em", en: "Resulted at" } }
   }
@@ -88,12 +98,13 @@ document ExamResult {
   audit: true
 
   fields {
-    examOrderId: ExamOrderId { title: { pt-BR: "Pedido", en: "Exam order" }, lookup }
-    sampleId: SampleId { title: { pt-BR: "Amostra", en: "Sample" }, lookup }
+    laboratory: link Laboratory { code, name }
+    examOrder: link ExamOrder
+    sample: link Sample { code }
     value: string { title: { pt-BR: "Valor", en: "Value" } }
     unit: string? { title: { pt-BR: "Unidade", en: "Unit" } }
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
-    releasedBy: UserId { title: { pt-BR: "Liberado por", en: "Released by" } }
+    releasedBy: link User { name }
   }
 
   actions {

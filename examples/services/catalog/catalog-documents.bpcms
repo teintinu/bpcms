@@ -7,12 +7,12 @@ document Category {
 
   fields {
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
-    parentId: CategoryId? { title: { pt-BR: "Categoria pai", en: "Parent category" } }
+    parent: link Category { name }?
   }
 
   indexes {
     name: [name] unique
-    parent: [parentId] hash
+    parent: [parent.id] hash
   }
 
   actions {
@@ -31,7 +31,7 @@ document Product {
   fields {
     sku: SKU { title: { pt-BR: "SKU", en: "SKU" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
-    categoryId: CategoryId { title: { pt-BR: "Categoria", en: "Category" } }
+    category: link Category { name }
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }

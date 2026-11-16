@@ -7,7 +7,7 @@ document StockItem {
   audit: true
 
   fields {
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    product: link Product { sku, name }
     warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
     available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
     reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
@@ -15,8 +15,9 @@ document StockItem {
     lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
   }
 
+  // TODO quando estiver revisando document, lembrar que todo document tem lookup e que lookup de links sao auto
   indexes {
-    uniqueProduct: [productId, warehouse] unique
+    uniqueProduct: [product.id, warehouse] unique
     byAvailable: [available] range
     byMovement: [lastMovement] range
   }
@@ -40,7 +41,7 @@ document Reservation {
   sync: live
 
   fields {
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    product: link Product { sku, name }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
     status: ReservationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

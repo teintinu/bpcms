@@ -31,7 +31,7 @@ document Notification {
   sync: live
 
   fields {
-    templateId: NotificationTemplateId { title: { pt-BR: "Template", en: "Template" } }
+    template: link NotificationTemplate { key, channel, subject }
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
     status: NotificationStatus { title: { pt-BR: "Status", en: "Status" }, lookup }

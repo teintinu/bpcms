@@ -521,8 +521,10 @@ task RefundPayment {
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `id` | *(implícito)* | Todo document tem `id: <Name>Id`, único e gerado; não declare o campo nem o Shape. |
 | `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
-| referência | `categoryId: CategoryId` | ForeignKey para `Category`; novos vínculos exigem id existente; vínculos antigos continuam válidos. |
-| projeção | `customerId: UserId(citizenId)` | Copia apenas campos **extras**; campos do `lookup` já são automáticos. |
+| `scopable` | `scopable document Store { ... }` | Documento também é um tipo de escopo. |
+| `link` | `store: link Store { code, name }` | Referência lógica com `id` + snapshot; não é FK de banco. |
+| escopo inferido | `store: link Store` | Todo link direto para `scopable document` cria um escopo. |
+| `number` | `number: InvoiceNumber { format; sequence; unique }` | Chave alternativa de negócio; não é o `id` interno. |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
@@ -541,23 +543,108 @@ task RefundPayment {
 
 **ID automático.** O `id` não é declarado: todo `document` base ganha `id: <Name>Id` (ex.: `Product` → `ProductId`). O Shape `<Name>Id` também é implícito e **não pode ser declarado**. Declarar `id` no documento ou `shape ProductId` é `E_DUPLICATE_ID_FIELD`/`E_DUPLICATE_ID_SHAPE`. **Exceção:** extensão (`extends`) compartilha o id do pai; `Consumer extends User` usa `UserId`. Se `ConsumerId` for usado, é **alias de tipo** do mesmo `UserId` — não é um segundo id nem um segundo Shape/valor. Declarar `shape ConsumerId` é `E_DUPLICATE_ID_SHAPE`.
 
+**Publicação/subscrição.** O `link`/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
+
 **Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image? { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Toda referência a esse document grava automaticamente esse snapshot; o builder decide se armazena em objeto embutido, campos prefixados ou outro formato. Extensões **herdam** os campos marcados e não redeclaram um bloco.
 
-**ForeignKey.** Usar `CategoryId` significa ForeignKey para `Category`. Se o id referenciado não existir, **novos vínculos** falham (`E_FK_MISSING`), mas vínculos já gravados continuam válidos e mantêm o lookup. Não há cascade destrutivo.
+**`scopable document`.** Um documento marcado como `scopable` é um tipo de escopo. Ele mantém o `id` interno implícito e pode ter chaves de negócio como `code`/`year`:
 
-**Projeção.** A referência só declara os campos **extras**; o lookup já cobre o resto. Ex.: `customerId: UserId(citizenId)` grava o id + `nickname`/`avatar` (lookup) + `citizenId` (extra). É cópia de exibição, não substitui a identidade; campos projetados são somente leitura.
+```bpcms
+scopable document Store {
+  fields {
+    code: StoreCode { title: { pt-BR: "Código", en: "Code" }, unique }
+    name: string { title: { pt-BR: "Nome", en: "Name" } }
+  }
+}
+
+scopable document FiscalYear {
+  fields {
+    year: integer { title: { pt-BR: "Ano", en: "Year" }, unique }
+    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
+    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
+  }
+}
+```
+
+**Escopo inferido por link.** Todo `link` direto para um `scopable document` cria um escopo no documento consumidor. Não há `scopes { ... }`, `source`, `parentId` nem `path`.
+
+```bpcms
+document Invoice {
+  fields {
+    store: link Store { code, name }
+    fiscalYear: link FiscalYear { year }
+    number: InvoiceNumber
+    issuedAt: DateTime
+  }
+}
+```
+
+- `Invoice` tem os escopos `Store` e `FiscalYear`;
+- o escopo usa `store.id` e `fiscalYear.id`;
+- `code`/`year` são chaves de negócio e snapshot;
+- links indiretos não inferem escopo;
+- dois links para o mesmo tipo de escopo no mesmo documento são erro;
+- link opcional cria escopo opcional, com política explícita.
+
+**`link` não é ForeignKey.** É uma referência lógica:
+
+```bpcms
+store: link Store { code, name }
+```
+
+Armazena, conceitualmente:
+
+```json
+{ "id": "st_123", "code": "0001", "name": "Loja 1" }
+```
+
+- `id` é sempre preservado;
+- campos entre `{}` são snapshot;
+- excluir o alvo não quebra o documento;
+- não há cascade;
+- o builder pode normalizar ou manter o snapshot;
+- archive é sempre snapshot e nunca é reescrito;
+- scope usa o `id`, nunca `code`/`name`.
+
+**Modos do builder:**
+
+| Modo | Comportamento |
+| :--- | :--- |
+| `normalized` | Guarda só o id; resolve na leitura |
+| `snapshot` | Guarda id + campos do link |
+| `archive` | Snapshot imutável, sem reescrita |
+| `hybrid` | Guarda snapshot e tenta resolver |
+
+**ID interno × número.** Todo documento tem `id` interno implícito. O número de negócio é uma chave alternativa:
+
+```bpcms
+number: InvoiceNumber {
+  format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
+  sequence: per(Store, FiscalYear)
+  unique
+}
+```
+
+- `id` é técnico e usado em links;
+- `number` é exibido, pesquisável, etiquetável e rótulo;
+- `number` não substitui o `id`;
+- `sequence` é por escopo;
+- overflow e lacunas têm política explícita;
+- archive preserva o `number`.
+
+**Migração.** `categoryId: CategoryId` e `customerId: UserId(...)` são formas legadas de referência. O modelo novo usa `link`; a migração de cada documento é feita junto com a revisão de Document.
 
 **Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
 
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizenId: CitizenId?`;
+- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: link Citizen { displayName, avatar }?`;
 - mantém o **mesmo id** do pai (`UserId`); `ConsumerId`, se usado, é alias de `UserId`, não um segundo id;
 - fica no mesmo serviço do pai (v1);
-- pode ser referenciada como `UserId`; `UserId(citizenId)` projeta o campo extra da extensão, e `UserId` sozinho entrega o lookup herdado.
-- `citizenId` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
+- pode ser referenciada como `UserId`; o link `citizen` carrega o snapshot do cidadão, e `UserId` sozinho entrega o lookup herdado.
+- `citizen` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
 
-`citizenId` é uma referência ao `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` projeta `null`.
+`citizen` é um link para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
 
-**Referência circular.** Em um documento que referencia a si mesmo, o campo não pode se chamar `<document>Id` (ex.: `categoryId` dentro de `Category`): use outro nome, como `parentId: CategoryId?` (`E_SELF_ID_FIELD`). `Product.categoryId: CategoryId` é válido porque o alvo é `Category`, não `Product`.
+**Referência circular.** Em um link para o próprio documento, use um nome de campo diferente do id (ex.: `parent: link Category { name }`). O id interno continua implícito.
 
 **Parâmetros de campo:**
 
@@ -588,7 +675,7 @@ document Shipment {
   sync: live
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    order: link Order { status, createdAt }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
     tracking: TrackingCode? { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
     status: ShipmentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -666,7 +753,7 @@ shape ProductManual {
 }
 ```
 
-> `<Document>Id` é um Shape implícito de ForeignKey; não declare `shape CategoryId` (ver 5).
+> `<Document>Id` é o Shape implícito de identidade do documento; não declare `shape CategoryId` (ver 5).
 
 **Métodos não usam keyword.** Um identificador seguido de `(` no corpo do Shape declara um método:
 
@@ -1241,11 +1328,15 @@ view SalesDashboard {
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 | `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade. |
 | `inherits` | `inherits: Clerk` | Herda permissões do papel. |
-| `scope` | `scope: store` | Abrangência do papel/organograma. |
+| `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo exigidos pela role. |
 | `roleManagement` | `roleManagement { LabManager manages [Collector, Analyst]; assignment: others-only }` | Papéis que um gerente pode atribuir a outras pessoas. |
 | `manages` | `LabManager manages [Collector, Analyst]` | Relação explícita de gestão de papéis; não concede as permissões do papel gerenciado. |
 | `assignment` | `assignment: others-only` | Atribuição apenas a terceiros; auto-atribuição é sempre proibida. |
+| `all` | `Store: {all}` | Todos os escopos do tipo; bare, sem `true`. |
+| `only` | `Store: {only: [id1, id2]}` | Lista explícita; escopo novo não entra. |
+| `except` | `Store: {except: [id1]}` | Todos, exceto a lista; escopo novo entra. |
 | `organogram` | `organogram <Name> { ... }` | Hierarquia e regras de autorização. |
+| `scope` | `scope: Laboratory` | Escopo raiz do organograma. |
 | `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. |
 | `fourEyes` | `fourEyes { payment.approve requires Approver and Approver != Analyst }` | Exige segundo ator; pode comparar atores. |
 | `segregation` | `segregation { shipment.pick != shipment.check }` | Impede que o mesmo ator faça as duas ações. |
@@ -1261,27 +1352,43 @@ view SalesDashboard {
 > Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`.
 
 ```bpcms
-role Manager {
-  title: { pt-BR: "Gerente", en: "Manager" }
-  inherits: Clerk
-  permissions: [customer.manage, report.view, refund.approve]
+role Clerk {
+  title: { pt-BR: "Atendente", en: "Clerk" }
+  permissions: [invoice.view]
 }
+
+role InvoiceManager {
+  title: { pt-BR: "Gerente de notas", en: "Invoice manager" }
+  scopes: [Store, FiscalYear]
+  permissions: [invoice.view, invoice.issue, report.view]
+}
+
 organogram Store {
   title: { pt-BR: "Organograma da loja", en: "Store organogram" }
   hierarchy {
-    Manager > Clerk > Customer
+    InvoiceManager > Clerk
   }
   roleManagement {
-    Manager manages [Clerk]
+    InvoiceManager manages [Clerk]
     assignment: others-only
   }
-  fourEyes { refund.approve requires Manager and Manager != Clerk }
-  delegation { Manager -> Clerk when absent }
 }
+```
+
+```bpcms
+assignRole(user, InvoiceManager, scopes: {
+  Store: {all}
+  FiscalYear: {only: [2026]}
+})
 ```
 
 **Atribuição de papel.** `roleManagement` define autoridade de atribuição, não permissões:
 
+- `all` inclui escopos presentes e futuros;
+- `only` é fail-closed: escopo novo não entra;
+- `except` é fail-open: escopo novo entra, exceto os listados;
+- `all`, `only` e `except` são mutuamente exclusivos por escopo;
+- `except: []` equivale a todos, mas `all` é a forma explícita recomendada;
 - o gerente pode atribuir apenas papéis listados em `manages`;
 - o alvo recebe as permissões do **papel atribuído**, não as do gerente;
 - o gerente não precisa ter as permissões do papel que gerencia;
@@ -1899,7 +2006,7 @@ policy FourEyesPayment {
 | ID duplicado | campo `id` declarado no document | `E_DUPLICATE_ID_FIELD` |
 | ID duplicado | `shape <Document>Id` declarado | `E_DUPLICATE_ID_SHAPE` |
 | ID circular | campo `<document>Id` dentro do próprio document | `E_SELF_ID_FIELD` |
-| ForeignKey | novo vínculo para id inexistente | `E_FK_MISSING` |
+| Link | alvo não encontrado na resolução | `E_LINK_TARGET_MISSING` |
 | Lookup | document base sem campo `lookup` ou campo inválido | `E_LOOKUP_MISSING` / `E_LOOKUP_FIELD` |
 | Enum | value sem `title`/`icon`/`ordinal`, ordinal inválido ou duplicado | `E_ENUM_VALUE_TITLE` / `E_ENUM_VALUE_ICON` / `E_ENUM_VALUE_ORDINAL` / `E_ENUM_VALUE_DUPLICATE` |
 | Icon | value aponta para Icon inexistente | `E_ICON_REFERENCE` |

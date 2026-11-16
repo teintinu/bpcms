@@ -876,6 +876,7 @@ process PaymentCompensation {
 
 ```bpcms
 document Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
   version: 1
   owner: "CRM"
   sync: live
@@ -911,17 +912,42 @@ document Customer {
 
 *Valida: unicidade por índice, campos opcionais, ações tipadas, `private` em campo/ação e sincronização live.*
 
-### D.2 Nota fiscal como agregado com lookup
+### D.2 Nota fiscal com escopos e links
 
 ```bpcms
+scopable document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+  fields {
+    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  }
+}
+
+scopable document FiscalYear {
+  title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
+  fields {
+    year: integer { title: { pt-BR: "Ano", en: "Year" }, unique, lookup }
+    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
+    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
+  }
+}
+
 document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
   version: 1
   owner: "Billing"
   sync: live
 
   fields {
-    number: InvoiceNumber { unique, lookup }
-    customerId: CustomerId { lookup }
+    store: link Store { code, name }
+    fiscalYear: link FiscalYear { year }
+    customer: link Customer { name, email }
+    number: InvoiceNumber {
+      format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
+      sequence: per(Store, FiscalYear)
+      unique
+      lookup
+    }
     items: InvoiceItem[]
     subtotal: std.Money
     tax: std.Money
@@ -932,7 +958,8 @@ document Invoice {
 
   indexes {
     number: [number] unique
-    customerId: [customerId] hash
+    store: [store.id] hash
+    fiscalYear: [fiscalYear.id] hash
     byStatusDate: [status, issuedAt] range
   }
 
@@ -949,7 +976,7 @@ document Invoice {
 }
 ```
 
-*Valida: documento como agregado, lookup do cliente, itens e regra de consistência do total.*
+*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, snapshot de cliente e regra de total.*
 
 ### D.3 Remessa com dispositivo, unidades e cálculo
 
@@ -960,7 +987,7 @@ document Shipment {
   sync: live
 
   fields {
-    orderId: OrderId { lookup }
+    order: link Order { status, createdAt }
     items: ShipmentItem[]
     pesoBruto: Mass { unit: kg, min: 0.001 }
     volume: Volume { unit: m3, min: 0 }
@@ -979,7 +1006,7 @@ document Shipment {
   }
 
   indexes {
-    order: [orderId] hash
+    order: [order.id] hash
     byStatus: [status, createdAt] range
     peso_normalizado: [pesoBruto.normalized] range
   }
@@ -1009,7 +1036,7 @@ document LabExam {
   retention: 5y
 
   fields {
-    patientId: PatientId { lookup }
+    patient: link Citizen { displayName, avatar }
     type: ExamType { lookup }
     status: ExamStatus { lookup }
     result: string?
@@ -1020,7 +1047,7 @@ document LabExam {
   }
 
   indexes {
-    patient: [patientId, collectedAt] range
+    patient: [patient.id, collectedAt] range
     byStatus: [status, collectedAt] range
   }
 
@@ -1049,12 +1076,12 @@ document SupportTicket {
   sync: live
 
   fields {
-    customerId: CustomerId
+    customer: link Customer { name, email }
     subject: string { maxLength: 160, lookup }
     description: string
     priority: TicketPriority { lookup }
     status: TicketStatus { lookup }
-    assignee: UserId?
+    assignee: link User { name }?
     slaDue: DateTime
     createdAt: DateTime
   }
@@ -1066,7 +1093,7 @@ document SupportTicket {
 
   indexes {
     byStatusPriority: [status, priority, slaDue] range
-    assignee: [assignee] hash
+    assignee: [assignee.id] hash
     search: [subject, description] search
   }
 
@@ -1591,6 +1618,7 @@ organogram Support {
 ```bpcms
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
+  scopes: [Laboratory]
   permissions: [sample.collect, exam.viewOwn]
 }
 role Analyst {
@@ -1618,6 +1646,7 @@ organogram Lab {
 ```bpcms
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
+  scopes: [Laboratory]
   permissions: [
     sample.collect.hemogram,
     sample.collect.glucose,
@@ -1654,7 +1683,7 @@ role LabManager {
 
 organogram Laboratory {
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scope: laboratory
+  scope: Laboratory
 
   hierarchy {
     LabManager > Pathologist > Analyst > Collector
@@ -1666,6 +1695,14 @@ organogram Laboratory {
     assignment: others-only
   }
 
+  limits {
+    LabManager: unlimited
+  }
+
+  dataMasking {
+    Collector: Sample.patient masked
+  }
+
   segregation { exam.perform != exam.release }
   delegation { LabManager -> Pathologist when absent }
   signature { Pathologist }
@@ -1674,7 +1711,7 @@ organogram Laboratory {
 
 *Valida: coletor que também executa alguns exames, analista com escopo maior, apoio externo e assinatura.*
 
-No serviço `laboratory`, `Sample.kind` distingue `patient`, `support` e `control`. Amostras de apoio e controle não referenciam paciente; usam `supportLabId`/`controlLot`.
+No serviço `laboratory`, `Sample.kind` distingue `patient`, `support` e `control`. Amostras de apoio e controle não referenciam paciente; usam `supportLab`/`controlLot`.
 
 O `LabManager` pode atribuir `Collector`, `Analyst` e `SupportLiaison` a outras pessoas, mas nunca a si mesmo. Quem recebe a role ganha as permissões da role atribuída, não as permissões do gerente; o gerente não precisa ter as permissões da role gerenciada.
 

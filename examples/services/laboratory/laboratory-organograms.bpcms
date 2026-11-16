@@ -2,6 +2,7 @@
 
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
+  scopes: [Laboratory]
   permissions: [
     sample.collect.hemogram,
     sample.collect.glucose,
@@ -12,6 +13,7 @@ role Collector {
 
 role Analyst {
   title: { pt-BR: "Analista", en: "Analyst" }
+  scopes: [Laboratory]
   inherits: Collector
   permissions: [
     sample.collect.culture,
@@ -24,23 +26,26 @@ role Analyst {
 
 role Pathologist {
   title: { pt-BR: "Patologista", en: "Pathologist" }
+  scopes: [Laboratory]
   permissions: [exam.review, exam.release, result.release]
 }
 
 role SupportLiaison {
   title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
+  scopes: [Laboratory]
   permissions: [sample.receive, support.refer]
 }
 
 role LabManager {
   title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
+  scopes: [Laboratory]
   inherits: Pathologist
   permissions: [lab.manage, support.refer]
 }
 
 organogram Laboratory {
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scope: laboratory
+  scope: Laboratory
 
   hierarchy {
     LabManager > Pathologist > Analyst > Collector
@@ -50,6 +55,14 @@ organogram Laboratory {
   roleManagement {
     LabManager manages [Collector, Analyst, SupportLiaison]
     assignment: others-only
+  }
+
+  limits {
+    LabManager: unlimited
+  }
+
+  dataMasking {
+    Collector: Sample.patient masked
   }
 
   segregation {

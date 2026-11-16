@@ -6,16 +6,16 @@ document OrderItem {
   sync: live
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    order: link Order { status, createdAt }
+    product: link Product { sku, name }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup, min: 1, max: 1000 }
     unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
   }
 
   indexes {
-    byOrder: [orderId] hash
-    byProduct: [productId] hash
+    byOrder: [order.id] hash
+    byProduct: [product.id] hash
   }
 
   rules {
@@ -32,7 +32,7 @@ document Order {
   audit: true
 
   fields {
-    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    customer: link User { name, nickname }
     items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
     discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
@@ -43,7 +43,7 @@ document Order {
   }
 
   indexes {
-    byCustomer: [customerId, createdAt] range
+    byCustomer: [customer.id, createdAt] range
     byStatus: [status, createdAt] range
   }
 

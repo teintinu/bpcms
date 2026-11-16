@@ -50,19 +50,19 @@ document Consumer extends User {
   sync: read
 
   fields {
-    citizenId: CitizenId? { title: { pt-BR: "Cidadão", en: "Citizen" } }
+    citizen: link Citizen { displayName, avatar }?
   }
 
   indexes {
-    byCitizen: [citizenId] hash
+    byCitizen: [citizen.id] hash
   }
 
   actions {
-    setCitizenId(citizenId: CitizenId): Consumer
+    setCitizen(citizen: CitizenId): Consumer
   }
 
   rules {
-    citizenId != null implies status == active
+    citizen != null implies status == active
   }
 }
 
@@ -73,14 +73,14 @@ document Session {
   sync: read
 
   fields {
-    userId: UserId { title: { pt-BR: "Usuário", en: "User" } }
+    user: link User { name }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
     status: SessionStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
   }
 
   indexes {
-    byUser: [userId, issuedAt] range
+    byUser: [user.id, issuedAt] range
     byExpiry: [expiresAt] range
   }
 

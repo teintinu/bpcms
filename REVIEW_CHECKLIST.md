@@ -265,63 +265,70 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
-## 3. Role 🟡
+## 3. Role ✅
 
 **Depende de:** permissões/capabilities.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `role <Name> { ... }`
-- [ ] `title: I18n`
-- [ ] `permissions: [...]`
-- [ ] `inherits: Role`
-- [x] `scope`
-- [ ] `roleManagement` / `manages`
-- [ ] `assignment: others-only`; auto-atribuição proibida
-- [ ] Papel público; sem `private` de topo
-- [ ] Papel definido no serviço ou no organogram
+- [x] `role <Name> { ... }`
+- [x] `title: I18n`
+- [x] `permissions: [...]`
+- [x] `inherits: Role`
+- [x] `scopes`
+- [x] `roleManagement` / `manages`
+- [x] `all` / `only` / `except`
+- [x] `assignment: others-only`; auto-atribuição proibida
+- [x] Papel público; sem `private` de topo
+- [x] Papel definido no serviço ou no organogram
 
-**Exemplos:** R.1–R.6; `identity-organograms`, `support-organograms`.
+**Exemplos:** R.1–R.7; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
 
 **Foco da revisão:**
 
-- [ ] Papéis são escopados ao serviço ou globais?
-- [ ] `permissions` é lista de namespaces ou catálogo?
-- [ ] Herança de papel é suficiente?
-- [ ] Role e organogram no mesmo arquivo está funcionando?
-- [ ] O gerente atribui apenas papéis em `manages`, nunca a si mesmo?
-- [ ] As permissões do papel atribuído são independentes das permissões do gerente?
+- [x] Papéis são escopados ao serviço ou globais?
+- [x] `permissions` é lista de namespaces ou catálogo?
+- [x] Herança de papel é suficiente?
+- [x] Role e organogram no mesmo arquivo está funcionando?
+- [x] O gerente atribui apenas papéis em `manages`, nunca a si mesmo?
+- [x] As permissões do papel atribuído são independentes das permissões do gerente?
 
-**Status:** 🟡 em revisão.
+**Status:** ✅ revisado e aprovado para a v0.1.
 
-## 4. Organogram ⬜
+**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits`, `scopes` e `roleManagement.manages` com `assignment: others-only`; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; roles e organograma no mesmo arquivo; Support tem `Manager` local; exemplos R.1–R.7 com títulos e hierarquia padronizada.
+
+## 4. Organogram 🟡
 
 **Depende de:** Role.
 
 **Sintaxe/cláusulas:**
 
-- [ ] `organogram <Name> { ... }`
-- [ ] `title: I18n`
-- [ ] `hierarchy { A > B > C }`
-- [ ] `fourEyes`
-- [ ] `segregation`
-- [ ] `delegation` / `when absent`
-- [ ] `limits` / `unlimited`
-- [ ] `dataMasking` / `masked`
-- [ ] `signature`
-- [ ] `requires`
-- [ ] mesmo arquivo dos roles (`*-organograms.bpcms`)
+- [x] `organogram <Name> { ... }`
+- [x] `scope`
+- [x] `roleManagement` / `manages` / `assignment`
+- [x] `title: I18n`
+- [x] `hierarchy { A > B > C }`
+- [x] `fourEyes`
+- [x] `segregation`
+- [x] `delegation` / `when absent`
+- [x] `limits` / `unlimited`
+- [x] `dataMasking` / `masked`
+- [x] `signature`
+- [x] `requires`
+- [x] mesmo arquivo dos roles (`*-organograms.bpcms`)
 
-**Exemplos:** R.1–R.6; `identity-organograms`, `support-organograms`.
+**Exemplos:** R.1–R.7; `identity-organograms`, `support-organograms`, `laboratory-organograms`.
 
 **Foco da revisão:**
 
-- [ ] `Manager > SupportAgent` em Support pode referenciar role de Identity?
-- [ ] `title` de organogram é obrigatório?
+- [x] `Manager > SupportAgent` em Support pode referenciar role de Identity?
+- [x] `title` de organogram é obrigatório?
 - [ ] `fourEyes`/`segregation` são avaliados no runtime ou no build?
-- [ ] Limites por papel usam Shape/Money?
+- [x] Limites por papel usam Shape/Money?
 
-**Status:** ⬜ pendente.
+**Status:** 🟡 em revisão.
+
+**Cobertura:** `title`, `hierarchy`, `fourEyes`, `segregation`, `delegation`, `limits`/`unlimited`, `dataMasking`/`masked`, `signature`, `requires`, `roleManagement`, `scope` e mesmo arquivo têm exemplos reais. `Support` usa `Manager` local; `Laboratory` usa `LabManager: unlimited`, `Collector.scope` e mascaramento de `Sample.patientId`.
 
 ## 5. Parameter ⬜
 
@@ -943,9 +950,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
 
-Próximo: **Role** 🟡.
+Próximo: **Organogram** 🟡.
 
-Shape revisado; seguimos para **Role**.
+Role revisado; seguimos para **Organogram**.
 
 ## Pendências de revisão de keywords
 

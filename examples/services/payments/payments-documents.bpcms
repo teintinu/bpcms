@@ -7,7 +7,7 @@ document Payment {
   audit: true
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    order: link Order { status, createdAt }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
     status: PaymentStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -16,7 +16,7 @@ document Payment {
   }
 
   indexes {
-    byOrder: [orderId] hash
+    byOrder: [order.id] hash
     byStatus: [status, capturedAt] range
   }
 
@@ -41,7 +41,7 @@ document Refund {
   audit: true
 
   fields {
-    paymentId: PaymentId { title: { pt-BR: "Pagamento", en: "Payment" }, lookup }
+    payment: link Payment { status, amount }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: RefundStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -49,7 +49,7 @@ document Refund {
   }
 
   indexes {
-    byPayment: [paymentId] hash
+    byPayment: [payment.id] hash
     byStatus: [status, requestedAt] range
   }
 

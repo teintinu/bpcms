@@ -6,15 +6,15 @@ document InvoiceItem {
   sync: live
 
   fields {
-    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" } }
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    invoice: link Invoice { number }
+    product: link Product { sku, name } // TODO quando estiver revisando documento, rever sobre lookup-indices de lookup, view de lookup...
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
     total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
   }
 
   indexes {
-    byInvoice: [invoiceId] hash
+    byInvoice: [invoice.id] hash
   }
 
   rules {
@@ -33,8 +33,8 @@ document Invoice {
   fields {
     number: string { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
     series: string { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" } }
-    customerId: UserId(citizenId) { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    order: link Order { status, createdAt }
+    customer: link User { name, nickname }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
     subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
@@ -46,7 +46,7 @@ document Invoice {
 
   indexes {
     number: [series, number] unique
-    byOrder: [orderId] hash
+    byOrder: [order.id] hash
     byStatus: [status, dueAt] range
   }
 
@@ -71,7 +71,7 @@ document CreditNote {
   audit: true
 
   fields {
-    invoiceId: InvoiceId { title: { pt-BR: "Nota fiscal", en: "Invoice" }, lookup }
+    invoice: link Invoice { number }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: CreditNoteStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
@@ -79,7 +79,7 @@ document CreditNote {
   }
 
   indexes {
-    byInvoice: [invoiceId] hash
+    byInvoice: [invoice.id] hash
     byStatus: [status, issuedAt] range
   }
 
@@ -130,7 +130,7 @@ document OrderCancellation {
   audit: true
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    order: link Order { status, createdAt }
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }

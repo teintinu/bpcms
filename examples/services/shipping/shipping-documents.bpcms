@@ -6,14 +6,14 @@ document ShipmentItem {
   sync: live
 
   fields {
-    shipmentId: ShipmentId { title: { pt-BR: "Remessa", en: "Shipment" } }
-    productId: ProductId { title: { pt-BR: "Produto", en: "Product" }, lookup }
+    shipment: link Shipment { tracking, status }
+    product: link Product { sku, name }
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
     pesoUnitario: std.Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
   }
 
   indexes {
-    byShipment: [shipmentId] hash
+    byShipment: [shipment.id] hash
   }
 
   rules {
@@ -29,7 +29,7 @@ document Shipment {
   audit: true
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
+    order: link Order { status, createdAt }
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
     volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
@@ -49,7 +49,7 @@ document Shipment {
   }
 
   indexes {
-    byOrder: [orderId] hash
+    byOrder: [order.id] hash
     byStatus: [status, createdAt] range
     byWeight: [pesoBruto.normalized] range
   }

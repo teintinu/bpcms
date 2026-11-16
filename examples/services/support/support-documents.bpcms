@@ -7,15 +7,15 @@ document Ticket {
   audit: true
 
   fields {
-    customerId: UserId { title: { pt-BR: "Cliente", en: "Customer" } }
-    orderId: OrderId? { title: { pt-BR: "Pedido", en: "Order" } }
+    customer: link User { name, nickname }
+    order: link Order { status, createdAt }?
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
     budget: std.Money? { title: { pt-BR: "Orçamento", en: "Budget" } }
     status: TicketStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
-    assignee: UserId? { title: { pt-BR: "Responsável", en: "Assignee" } }
+    assignee: link User { name }?
     slaDue: DateTime { title: { pt-BR: "SLA até", en: "SLA due" } }
     resolutionTime: std.Duration? { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
     slaMet: boolean? { title: { pt-BR: "SLA cumprido", en: "SLA met" } }
@@ -29,7 +29,7 @@ document Ticket {
 
   indexes {
     byStatus: [status, priority, slaDue] range
-    byAssignee: [assignee] hash
+    byAssignee: [assignee.id] hash
     search: [subject, description] search
   }
 
@@ -54,9 +54,9 @@ document ReturnRequest {
   audit: true
 
   fields {
-    orderId: OrderId { title: { pt-BR: "Pedido", en: "Order" }, lookup }
-    paymentId: PaymentId? { title: { pt-BR: "Pagamento", en: "Payment" } }
-    shipmentId: ShipmentId? { title: { pt-BR: "Remessa", en: "Shipment" } }
+    order: link Order { status, createdAt }
+    payment: link Payment { status, amount }?
+    shipment: link Shipment { tracking, status }?
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: ReturnStatus { title: { pt-BR: "Status", en: "Status" }, lookup }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }
@@ -64,7 +64,7 @@ document ReturnRequest {
   }
 
   indexes {
-    byOrder: [orderId] hash
+    byOrder: [order.id] hash
     byStatus: [status, requestedAt] range
   }
 
