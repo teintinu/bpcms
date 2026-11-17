@@ -28,22 +28,42 @@ document StockItem {
   actions {
     adjust(quantity: std.Count, reason: string){
       title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
-      permission: Manager
-      require reason.length >= 10
+      roles: [Manager]
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
     reserve(quantity: std.Count){
       title: { pt-BR: "Reservar", en: "Reserve" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     release(quantity: std.Count){
       title: { pt-BR: "Liberar", en: "Release" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    available >= 0
-    reserved >= 0
+    available >= 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    reserved >= 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -72,19 +92,29 @@ document Reservation {
   actions {
     request(product: Product, quantity: std.Count, externalRef: string){
       title: { pt-BR: "Reservar", en: "Reserve" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     release(){
       title: { pt-BR: "Liberar", en: "Release" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     expire(){
       title: { pt-BR: "Expirar", en: "Expire" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    quantity > 0
+    quantity > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

@@ -23,7 +23,11 @@ document InvoiceItem {
   }
 
   rules {
-    total == quantity * unitPrice
+    total == quantity * unitPrice: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -64,33 +68,61 @@ document Invoice {
   actions {
     issue(series: string, number: string){
       title: { pt-BR: "Emitir", en: "Issue" }
-      permission: Manager
-
-      require total > 0 BRL
-      status => issued
+      roles: [Manager]
+      transition: Issued
+      rules {
+        total > 0 BRL: {
+          fields: [total]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       issuedAt = now()
       audit("invoice.issued", number)
+      }
     }
 
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      permission: Manager
-
-      require reason.length >= 10
-      status => cancelled
+      roles: [Manager]
+      transition: Cancelled
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       audit("invoice.cancelled", reason)
+      }
     }
 
     closeMonth(){
       title: { pt-BR: "Fechar mês", en: "Close month" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    total == subtotal + tax
-    total == items.sum(total)
-    status == issued implies issuedAt != null
+    total == subtotal + tax: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    total == items.sum(total): {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == issued implies issuedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -121,20 +153,32 @@ document CreditNote {
   actions {
     issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
-      permission: Manager
-      status => issued
+      roles: [Manager]
+      transition: Issued
+      {
+      }
     }
 
     apply(){
       title: { pt-BR: "Aplicar", en: "Apply" }
-      permission: Manager
-      status => applied
+      roles: [Manager]
+      transition: Applied
+      {
+      }
     }
   }
 
   rules {
-    amount > 0
-    amount <= 100000 BRL
+    amount > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    amount <= 100000 BRL: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -161,14 +205,20 @@ document Bill {
   actions {
     pay(){
       title: { pt-BR: "Pagar", en: "Pay" }
-      permission: Manager
-      emit Paid { amount: amount }
+      roles: [Manager]
+      transition: Paid
+      {
       paidAt = now()
+      }
     }
   }
 
   rules {
-    amount > 0
+    amount > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -191,13 +241,25 @@ document OrderCancellation {
   actions {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      permission: Manager
-      require reason.length >= 10
+      roles: [Manager]
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
   }
 
   rules {
-    reason != null
+    reason != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -221,7 +283,9 @@ document MonthlyRevenue {
   actions {
     refresh(){
       title: { pt-BR: "Atualizar", en: "Refresh" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 

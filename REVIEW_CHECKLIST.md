@@ -414,32 +414,32 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
-- [ ] `fields { name: Shape { title; required; lookup; unique; ... } }`; sem `required` = opcional; sem `?`
+- [ ] `fields { name: Shape { title; lookup; unique; rules; ... } }`; sem `required`; sem `?`
 - [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `link`/`XxxId`; não é FK
-- [ ] link para `scopable document` infere escopo
+- [ ] campo para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
 - [ ] ID interno × `number` de negócio
 - [ ] `number` com `format`, `sequence`, `unique`
-- [ ] `indexes` (unique/range/search/hash), inclusive `link.id`
-- [ ] `actions` (públicas/private) com `title`, `permission`, corpo de negócio e sem retorno
-- [ ] `events { ... }` dentro do Document
-- [ ] `emit <Event>` em toda action que muda estado
-- [ ] `status => <estado>` em ações que mudam workflow; exige `emit`
-- [ ] UI recebe botão habilitado/desabilitado e motivo
+- [ ] `indexes` (unique/range/search/hash), inclusive `.id`
+- [ ] `actions` (públicas/private) com `title`, `roles`/`roles: public`, `transition`, `rules`, body e sem retorno
+- [ ] `events { ... }` apenas para eventos sem workflow
+- [ ] `emit <Event>` apenas em action sem workflow
+- [ ] `transition: <Event>` em ações que mudam workflow
+- [ ] UI recebe botão habilitado/desabilitado, `fields` e motivo
 - [ ] `report` como `document type: report`
-- [ ] `rules`
+- [ ] `rules` no Document, action e field; condição verdadeira = permitido
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
 - [ ] link circular usa nome diferente do id (`parent`)
-- [ ] duplicidade de id, `<Doc>Id` e link para si mesmo
+- [ ] duplicidade de id e referência para si mesmo
 - [ ] PII em `private` quando aplicável
 - [ ] regras de leitura e edição por field
 - [ ] sem bloco de permissões no documento
-- [ ] permissões por ação: `permission`
+- [ ] permissões por ação: `roles` ou `roles: public`
 - [ ] permissões por campo: `read`/`edit`
 - [ ] search via processo que declara `reads`
 - [ ] combinação documento × campo × role × scope
-- [ ] `dataMasking`/`masked` em field/link
+- [ ] `dataMasking`/`masked` em field
 - [ ] `limits`/`unlimited` por role/field
 - [ ] `segregation` e `signature` no documento, se aplicável
 

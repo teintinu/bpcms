@@ -43,26 +43,34 @@ document CheckoutSession {
   actions {
     validateCart() {
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
-      permission: Customer
+      roles: [Customer]
+      {
       emit Validated
+      }
     }
 
     quoteShipping() {
       title: { pt-BR: "Cotar frete", en: "Quote shipping" }
-      permission: Customer
+      roles: [Customer]
+      {
       emit ShippingQuoted
+      }
     }
 
     authorizePayment() {
       title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
-      permission: Customer
+      roles: [Customer]
+      {
       emit PaymentAuthorized
+      }
     }
 
     confirmOrder() {
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
-      permission: Customer
+      roles: [Customer]
+      {
       emit OrderConfirmed
+      }
     }
   }
 }

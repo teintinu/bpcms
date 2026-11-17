@@ -7,7 +7,18 @@ document NotificationTemplate {
   audit: true
 
   fields {
-    key: string { title: { pt-BR: "Chave", en: "Key" }, maxLength: 80, required, lookup }
+    key: string {
+      title: { pt-BR: "Chave", en: "Key" }
+      maxLength: 80
+      lookup
+      rules {
+        value != null: {
+          fields: [key]
+          pt-BR: "Informe a chave do modelo"
+          en: "Enter the template key"
+        }
+      }
+    }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
@@ -21,11 +32,15 @@ document NotificationTemplate {
   actions {
     create(key: string, channel: Channel, locale: LocaleTag){
       title: { pt-BR: "Criar modelo", en: "Create template" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     update(subject: string, body: string){
       title: { pt-BR: "Atualizar", en: "Update" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 }
@@ -56,23 +71,35 @@ document Notification {
   actions {
     send(){
       title: { pt-BR: "Enviar", en: "Send" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     retry(){
       title: { pt-BR: "Repetir", en: "Retry" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     sendDigest(){
       title: { pt-BR: "Enviar resumo", en: "Send digest" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    status == sent implies sentAt != null
+    status == sent implies sentAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

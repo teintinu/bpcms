@@ -43,43 +43,81 @@ document Ticket {
   actions {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
-      permission: Agent
-      require user != null
+      roles: [Agent]
+      rules {
+        user != null: {
+          fields: [user]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       assignee = user
       audit("ticket.assigned", user)
+      }
     }
 
     comment(body: string){
       title: { pt-BR: "Comentar", en: "Comment" }
-      permission: Agent
-      require body.length > 0
+      roles: [Agent]
+      rules {
+        body.length > 0: {
+          fields: [body]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       audit("ticket.commented", body)
+      }
     }
 
     resolve(){
       title: { pt-BR: "Resolver", en: "Resolve" }
-      permission: Agent
-      require assignee != null
-      status => resolved
+      roles: [Agent]
+      transition: Resolved
+      rules {
+        assignee != null: {
+          fields: [assignee]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       audit("ticket.resolved")
+      }
     }
 
     reopen(reason: string){
       title: { pt-BR: "Reabrir", en: "Reopen" }
-      permission: Manager
-      require reason.length >= 10
-      status => open
+      roles: [Manager]
+      transition: Reopened
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       audit("ticket.reopened", reason)
+      }
     }
 
     escalateBreached(){
       title: { pt-BR: "Escalar prazo", en: "Escalate SLA" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    status == resolved implies assignee != null
+    status == resolved implies assignee != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -116,32 +154,60 @@ document ReturnRequest {
   actions {
     request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
-      permission: Clerk
-      require reason.length >= 10
+      roles: [Clerk]
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
 
     approve(){
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
-      permission: Manager
-      status => approved
+      roles: [Manager]
+      transition: Approved
+      {
+      }
     }
 
     reject(reason: string){
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
-      permission: Manager
-      require reason.length >= 10
-      status => rejected
+      roles: [Manager]
+      transition: Rejected
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
 
     refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
-      permission: Manager
-      status => refunded
+      roles: [Manager]
+      transition: Refunded
+      {
+      }
     }
   }
 
   rules {
-    refundAmount >= 0
-    status == approved implies refundAmount > 0
+    refundAmount >= 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == approved implies refundAmount > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

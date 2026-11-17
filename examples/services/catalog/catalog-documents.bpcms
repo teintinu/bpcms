@@ -20,11 +20,11 @@ document Category {
   actions {
     create(name: string, parent: Category?){
       title: { pt-BR: "Criar categoria", en: "Create category" }
-      permission: Manager
+      roles: [Manager]
     }
     rename(name: string){
       title: { pt-BR: "Renomear", en: "Rename" }
-      permission: Manager
+      roles: [Manager]
     }
   }
 }
@@ -64,24 +64,40 @@ document Product {
   actions {
     create(sku: SKU, name: string, price: std.Money){
       title: { pt-BR: "Criar produto", en: "Create product" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     update(name: string, price: std.Money){
       title: { pt-BR: "Atualizar", en: "Update" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     publish(){
       title: { pt-BR: "Publicar", en: "Publish" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     archive(){
       title: { pt-BR: "Arquivar", en: "Archive" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    price > 0
-    status == published implies price > 0
+    price > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == published implies price > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

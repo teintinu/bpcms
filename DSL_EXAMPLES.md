@@ -866,7 +866,12 @@ document Customer {
   audit: true
 
   fields {
-    name: string { maxLength: 120, required, lookup }
+    name: string {
+      title: { pt-BR: "Nome", en: "Name" }
+      maxLength: 120
+      lookup
+      required,
+    }
     email: Email { unique, lookup }
     phone: Phone
     status: CustomerStatus
@@ -882,25 +887,39 @@ document Customer {
   actions {
     create(name: string, email: Email) {
       title: { pt-BR: "Criar", en: "Create" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     update(name: string, phone: Phone?) {
       title: { pt-BR: "Atualizar", en: "Update" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     archive() {
       title: { pt-BR: "Arquivar", en: "Archive" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     private recalcScore() {
       title: { pt-BR: "Recalcular", en: "Recalculate" }
-      permission: System
+      roles: [System]
     }
   }
 
   rules {
-    email != null
-    status in [active, inactive, archived]
+    email != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status in [active, inactive, archived]: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
@@ -973,39 +992,73 @@ document Invoice {
   actions {
     issue() {
       title: { pt-BR: "Emitir", en: "Issue" }
-      permission: Manager
+      roles: [Manager]
+      transition: Issued
 
-      require items.length > 0
-      require total > 0 BRL
+      rules {
+        items.length > 0: {
+          fields: [items]
+          pt-BR: "Adicione itens antes de emitir a fatura"
+          en: "Add items before issuing the invoice"
+        }
+        total > 0 BRL: {
+          fields: [total]
+          pt-BR: "Fatura sem valor"
+          en: "Invoice has no value"
+        }
+      }
 
-      status => issued
-      issuedAt = now()
-      audit("invoice.issued")
-
+      {
+        issuedAt = now()
+        audit("invoice.issued")
+      }
     }
 
     cancel(reason: string) {
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      permission: Manager
+      roles: [Manager]
+      transition: Cancelled
 
-      require reason.length >= 10
-      require status == issued
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+          en: "Enter a reason with at least 10 characters"
+        }
+        status == issued: {
+          fields: [status]
+          pt-BR: "A nota precisa estar emitida"
+          en: "Invoice must be issued"
+        }
+      }
 
-      status => cancelled
-      audit("invoice.cancelled", reason)
-
+      {
+        audit("invoice.cancelled", reason)
+      }
     }
   }
 
   rules {
-    total == subtotal + tax
-    total == items.sum(subtotal)
-    status == issued implies issuedAt != null
+    total == subtotal + tax: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    total == items.sum(subtotal): {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == issued implies issuedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
 
-*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, lookup automático do cliente, ação com `status =>` e regra de total.*
+*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, lookup automático do cliente, ação com `transition` e regra de total.*
 
 ### D.3 Remessa com dispositivo, unidades e cálculo
 
@@ -1047,21 +1100,35 @@ document Shipment {
   actions {
     addItem(item: ShipmentItem) {
       title: { pt-BR: "Adicionar item", en: "Add item" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     split() {
       title: { pt-BR: "Dividir", en: "Split" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     dispatch(carrier: CarrierRef) {
       title: { pt-BR: "Despachar", en: "Dispatch" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    pesoBruto <= carrier.limitDePeso
-    status == dispatched implies tracking != null
+    pesoBruto <= carrier.limitDePeso: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == dispatched implies tracking != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
@@ -1100,25 +1167,41 @@ document LabExam {
   actions {
     collect(sample: SampleRef) {
       title: { pt-BR: "Coletar", en: "Collect" }
-      permission: Analyst
+      roles: [Analyst]
+      {
+      }
     }
     result(value: string, file: FileRef) {
       title: { pt-BR: "Registrar resultado", en: "Record result" }
-      permission: Analyst
+      roles: [Analyst]
+      {
+      }
     }
     review(pathologist: User, signature: Signature) {
       title: { pt-BR: "Revisar", en: "Review" }
-      permission: Pathologist
+      roles: [Pathologist]
+      {
+      }
     }
     release() {
       title: { pt-BR: "Liberar", en: "Release" }
-      permission: Pathologist
+      roles: [Pathologist]
+      {
+      }
     }
   }
 
   rules {
-    status == released implies signature != null and result != null
-    status == released implies releasedAt != null
+    status == released implies signature != null and result != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == released implies releasedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
@@ -1164,46 +1247,82 @@ document SupportTicket {
   actions {
     assign(user: User) {
       title: { pt-BR: "Atribuir", en: "Assign" }
-      permission: Agent
+      roles: [Agent]
 
-      require user != null
-      assignee = user
-      audit("ticket.assigned", user)
+      rules {
+        user != null: {
+          fields: [assignee]
+          pt-BR: "Selecione o responsável"
+          en: "Select the assignee"
+        }
+      }
+
+      {
+        assignee = user
+        audit("ticket.assigned", user)
+      }
     }
 
     comment(body: string) {
       title: { pt-BR: "Comentar", en: "Comment" }
-      permission: Agent
+      roles: [Agent]
 
-      require body.length > 0
-      audit("ticket.commented", body)
+      rules {
+        body.length > 0: {
+          fields: []
+          pt-BR: "Escreva um comentário"
+          en: "Write a comment"
+        }
+      }
+
+      {
+        audit("ticket.commented", body)
+      }
     }
 
     resolve() {
       title: { pt-BR: "Resolver", en: "Resolve" }
-      permission: Agent
+      roles: [Agent]
+      transition: Resolved
 
-      require assignee != null
-      require status.canTransitionTo(resolved)
+      rules {
+        assignee != null: {
+          fields: [assignee]
+          pt-BR: "Atribua o chamado antes de resolver"
+          en: "Assign the ticket before resolving"
+        }
+      }
 
-      status => resolved
-      audit("ticket.resolved")
+      {
+        audit("ticket.resolved")
+      }
     }
 
     reopen(reason: string) {
       title: { pt-BR: "Reabrir", en: "Reopen" }
-      permission: Manager
+      roles: [Manager]
+      transition: Reopened
 
-      require reason.length >= 10
-      require status.canTransitionTo(open)
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+          en: "Enter a reason with at least 10 characters"
+        }
+      }
 
-      status => open
-      audit("ticket.reopened", reason)
+      {
+        audit("ticket.reopened", reason)
+      }
     }
   }
 
   rules {
-    status == resolved implies assignee != null
+    status == resolved implies assignee != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
@@ -1233,12 +1352,18 @@ document MonthlyRevenue {
   actions {
     refresh() {
       title: { pt-BR: "Atualizar", en: "Refresh" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    month >= 2026-01
+    month >= 2026-01: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 ```
@@ -3483,7 +3608,7 @@ document Store {
   actions {
     rename(name: string) {
       title: { pt-BR: "Renomear", en: "Rename" }
-      permission: Manager
+      roles: [Manager]
       emit Renamed {
         oldName: old.name
         newName: new.name

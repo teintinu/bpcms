@@ -16,7 +16,17 @@ document SupportLab {
   audit: true
 
   fields {
-    name: string { title: { pt-BR: "Nome", en: "Name" }, required, lookup }
+    name: string {
+      title: { pt-BR: "Nome", en: "Name" }
+      lookup
+      rules {
+        value != null: {
+          fields: [name]
+          pt-BR: "Informe o nome do laboratório de apoio"
+          en: "Enter the support lab name"
+        }
+      }
+    }
     accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
     active: boolean { title: { pt-BR: "Ativo", en: "Active" } }
   }
@@ -24,11 +34,15 @@ document SupportLab {
   actions {
     activate(){
       title: { pt-BR: "Ativar", en: "Activate" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     deactivate(){
       title: { pt-BR: "Desativar", en: "Deactivate" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 }
@@ -62,23 +76,41 @@ document Sample {
   }
 
   rules {
-    kind == patient implies patient != null
-    kind == support implies supportLab != null
-    kind == control implies controlLot != null
+    kind == patient implies patient != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    kind == support implies supportLab != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    kind == control implies controlLot != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 
   actions {
     collect(by: User){
       title: { pt-BR: "Coletar", en: "Collect" }
-      permission: Analyst
+      roles: [Analyst]
+      {
+      }
     }
     receive(){
       title: { pt-BR: "Receber", en: "Receive" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 }
@@ -111,26 +143,42 @@ document ExamOrder {
   }
 
   rules {
-    status == resulted implies resultedAt != null
-    status == referred implies referredTo != null
+    status == resulted implies resultedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == referred implies referredTo != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 
   actions {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
-      permission: Pathologist
+      roles: [Pathologist]
+      {
+      }
     }
     start(){
       title: { pt-BR: "Iniciar", en: "Start" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     result(){
       title: { pt-BR: "Resultar", en: "Result" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 }
@@ -165,7 +213,9 @@ document ExamResult {
   actions {
     release(by: User){
       title: { pt-BR: "Liberar", en: "Release" }
-      permission: Pathologist
+      roles: [Pathologist]
+      {
+      }
     }
   }
 }

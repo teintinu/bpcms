@@ -578,9 +578,9 @@ task RefundPayment {
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
-| `actions` | `actions { approve() { title; permission; status => approved; ... } }` | Comandos/botões tipados; `title` e `permission` obrigatórios; sem retorno; `private` restringe ao serviço dono. |
+| `actions` | `actions { issue() { title; roles; transition: Issued; rules; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
 | `events` | `events { Approved { title; key; payload } }` | Eventos do Document; `emit` na action. |
-| `rules` | `rules { total == items.sum(subtotal) }` | Invariantes/transições; falha = erro de validação. |
+| `rules` | `rules { total == subtotal + tax: { fields; message } }` | Regras de documento, action e field; condição verdadeira = permitido. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
 | `computed <Name> from` | `computed frete from Shipment, CarrierTable { ... }` | Cálculo nomeado (campo/subdocumento) com frescor. |
@@ -716,9 +716,9 @@ number: InvoiceNumber {
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
-| `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
+| `rules` | `rules { value != null: { fields; message } }` | Regras do field; substituem `required`. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
-| booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
+| booleanos | `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
 | `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |
@@ -732,69 +732,98 @@ number: InvoiceNumber {
 | `read` | `read: [Clerk, Manager]` | Roles que podem ler o campo. |
 | `edit` | `edit: [Manager]` | Roles que podem alterar o campo. |
 
-**Ações são botões.** Toda ação pública declara `title` e `permission`. Quando muda `workflow`, usa `status => <estado>`.
+**Ações são botões.** Toda ação declara `title`, `roles` e, opcionalmente, `transition` e `rules`.
 
 ```bpcms
-document Invoice {
-  fields {
-    total: std.Money {
-      title: { pt-BR: "Total", en: "Total" }
-      read: [Clerk, Manager]
-      edit: [Manager]
+actions {
+  issue() {
+    title: { pt-BR: "Emitir", en: "Issue" }
+    roles: [Manager]
+    transition: Issued
+
+    rules {
+      items.length > 0: {
+        fields: [items]
+        pt-BR: "Adicione itens antes de emitir a fatura"
+        en: "Add items before issuing the invoice"
+      }
+
+      total > 0 BRL: {
+        fields: [total]
+        pt-BR: "Fatura sem valor"
+        en: "Invoice has no value"
+      }
     }
-    status: InvoiceStatus {
-      title: { pt-BR: "Situação", en: "Status" }
-      lookup
+
+    {
+      issuedAt = now()
+      audit("invoice.issued")
     }
   }
 
-  events {
-    Approved {
-      title: { pt-BR: "Nota aprovada", en: "Invoice approved" }
-      key: invoiceId
-    }
-    Cancelled {
-      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      key: invoiceId
-      payload { reason: string }
-    }
-  }
+  rename(name: string) {
+    title: { pt-BR: "Renomear", en: "Rename" }
+    roles: [Manager]
 
-  actions {
-    approve() {
-      title: { pt-BR: "Aprovar", en: "Approve" }
-      permission: Manager
-
-      status => approved
-      audit("invoice.approved")
-      emit Approved
-    }
-
-    cancel(reason: string) {
-      title: { pt-BR: "Cancelar", en: "Cancel" }
-      permission: Manager
-
-      require reason.length > 0
-      status => cancelled
-      audit("invoice.cancelled", reason)
-      emit Cancelled { reason: reason }
+    {
+      oldName = this.name
+      this.name = name
+      emit Renamed {
+        oldName: old.name
+        newName: new.name
+      }
     }
   }
 }
 ```
 
-- `title` é o label do botão;
-- `permission` é a role exigida;
-- `status => approved` declara a transição;
-- o build valida `approved` nas transições do workflow;
-- a UI desabilita se a transição não for possível;
-- permissão negada = botão desabilitado;
-- a mensagem de permissão é genérica e definida pelo construtor;
-- a mensagem de workflow é genérica e definida pelo construtor;
-- não existe `enabledWhen`;
-- o corpo é lógica de negócio, não implementação final.
+- `title`: label do botão;
+- `roles: [Manager]`; `roles: public` quando não há restrição;
+- `roles` é obrigatório;
+- `roles: public` é explícito;
+- `roles: []` é erro;
+- `transition: Issued` liga a ação à transição;
+- action de workflow não usa `status =>`;
+- action de workflow não usa `emit`;
+- `rules` são pré-condições;
+- condição verdadeira = permitido;
+- `fields` aponta os campos usados;
+- body é o bloco de statements;
+- body sem retorno;
+- evento vem da transição ou de `emit` sem workflow.
 
-**Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`permission`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
+**Rules.** A mesma sintaxe vale no Document, na action e no field.
+
+```bpcms
+rules {
+  total == subtotal + tax: {
+    fields: [total, subtotal, tax]
+    pt-BR: "Total da nota não confere"
+    en: "Invoice total does not match"
+  }
+}
+```
+
+```bpcms
+customer: User {
+  title: { pt-BR: "Cliente", en: "Customer" }
+
+  rules {
+    value != null: {
+      fields: [customer]
+      pt-BR: "Selecione o cliente da nota"
+      en: "Select the invoice customer"
+    }
+  }
+}
+```
+
+- `fields` lista os campos usados;
+- a UI usa `fields` para navegar;
+- `code` não existe;
+- permissão e workflow têm motivo genérico do builder.
+
+**Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`roles`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
 
 **Relatórios.** `type: report` é um Document calculado com cache:
 
@@ -2181,7 +2210,7 @@ document Store {
   actions {
     rename(name: string) {
       title: { pt-BR: "Renomear", en: "Rename" }
-      permission: Manager
+      roles: [Manager]
       emit Renamed {
         oldName: old.name
         newName: new.name

@@ -24,8 +24,16 @@ document OrderItem {
   }
 
   rules {
-    quantity > 0
-    total == quantity * unitPrice
+    quantity > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    total == quantity * unitPrice: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -59,43 +67,83 @@ document Order {
   actions {
     create(customer: User, discount: std.Percentage){
       title: { pt-BR: "Criar", en: "Create" }
-      permission: Clerk
+      roles: [Clerk]
+      {
       audit("order.created", discount)
+      }
     }
 
     addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
-      permission: Clerk
-      require quantity > 0
+      roles: [Clerk]
+      rules {
+        quantity > 0: {
+          fields: [quantity]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
 
     place(){
       title: { pt-BR: "Realizar pedido", en: "Place order" }
-      permission: Clerk
-      require items.length > 0
-      status => placed
+      roles: [Clerk]
+      transition: Placed
+      rules {
+        items.length > 0: {
+          fields: []
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       placedAt = now()
       audit("order.placed")
+      }
     }
 
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      permission: Manager
-      require reason.length >= 10
-      status => cancelled
+      roles: [Manager]
+      transition: Cancelled
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
       audit("order.cancelled", reason)
+      }
     }
 
     expireDraft(){
       title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
-      permission: Manager
-      status => cancelled
+      roles: [Manager]
+      transition: Cancelled
+      {
+      }
     }
   }
 
   rules {
-    total == subtotal - discount
-    status == placed implies placedAt != null
-    items.count <= 50
+    total == subtotal - discount: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == placed implies placedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    items.count <= 50: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

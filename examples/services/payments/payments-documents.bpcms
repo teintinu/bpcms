@@ -27,28 +27,44 @@ document Payment {
   actions {
     authorize() {
       title: { pt-BR: "Autorizar", en: "Authorize" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     capture() {
       title: { pt-BR: "Capturar", en: "Capture" }
-      permission: Manager
-      status => captured
+      roles: [Manager]
+      transition: Succeeded
+      {
       capturedAt = now()
+      }
     }
     refund() {
       title: { pt-BR: "Reembolsar", en: "Refund" }
-      permission: Manager
-      status => refunded
+      roles: [Manager]
+      transition: RefundIssued
+      {
+      }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    amount > 0
-    status == captured implies capturedAt != null
+    amount > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == captured implies capturedAt != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -78,21 +94,41 @@ document Refund {
   actions {
     request(reason: string){
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
-      permission: Manager
-      require reason.length >= 10
+      roles: [Manager]
+      rules {
+        reason.length >= 10: {
+          fields: [reason]
+          pt-BR: "Requisito não atendido"
+          en: "Requirement not met"
+        }
+      }
+      {
+      }
     }
     approve(){
       title: { pt-BR: "Aprovar", en: "Approve" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     complete(){
       title: { pt-BR: "Concluir", en: "Complete" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    amount > 0
-    amount <= 100000 BRL
+    amount > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    amount <= 100000 BRL: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

@@ -15,8 +15,14 @@ document User {
         tooltip: { pt-BR: "Nome completo da pessoa", en: "Full person name" }
       }
       maxLength: 120
-      required
       lookup
+      rules {
+        value != null: {
+          fields: [name]
+          pt-BR: "Informe o nome da pessoa"
+          en: "Enter the person name"
+        }
+      }
     }
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
@@ -34,17 +40,25 @@ document User {
   actions {
     create(name: string, email: Email){
       title: { pt-BR: "Criar usuário", en: "Create user" }
-      permission: Admin
+      roles: [Admin]
+      {
+      }
     }
     disable(){
       title: { pt-BR: "Desativar", en: "Disable" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     private recalculateRisk(): std.Count
   }
 
   rules {
-    status in [active, suspended, disabled]
+    status in [active, suspended, disabled]: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -69,12 +83,18 @@ document Consumer extends User {
   actions {
     setCitizen(citizen: Citizen){
       title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
-      permission: Admin
+      roles: [Admin]
+      {
+      }
     }
   }
 
   rules {
-    citizen != null implies status == active
+    citizen != null implies status == active: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -101,15 +121,23 @@ document Session {
   actions {
     start(email: Email, password: string){
       title: { pt-BR: "Iniciar sessão", en: "Sign in" }
-      permission: Customer
+      roles: [Customer]
+      {
+      }
     }
     end(){
       title: { pt-BR: "Encerrar", en: "End" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    expiresAt > issuedAt
+    expiresAt > issuedAt: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

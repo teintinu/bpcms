@@ -22,7 +22,11 @@ document ShipmentItem {
   }
 
   rules {
-    quantity > 0
+    quantity > 0: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
 
@@ -67,29 +71,47 @@ document Shipment {
   actions {
     create(order: Order){
       title: { pt-BR: "Criar remessa", en: "Create shipment" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     split(){
       title: { pt-BR: "Dividir", en: "Split" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     dispatch(){
       title: { pt-BR: "Despachar", en: "Dispatch" }
-      permission: Manager
-      status => dispatched
+      roles: [Manager]
+      transition: Dispatched
+      {
+      }
     }
     trackAll(){
       title: { pt-BR: "Rastrear tudo", en: "Track all" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    pesoBruto <= MaxWeight
-    status == dispatched implies tracking != null
+    pesoBruto <= MaxWeight: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    status == dispatched implies tracking != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }

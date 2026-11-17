@@ -29,8 +29,10 @@ document FraudCheck {
   actions {
     evaluate(){
       title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
-      permission: RiskAnalyst
+      roles: [RiskAnalyst]
+      {
       emit Evaluated { approved: approved; score: score }
+      }
     }
   }
 }

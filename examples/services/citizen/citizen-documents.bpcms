@@ -8,9 +8,30 @@ document Citizen {
 
   fields {
     kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, lookup }
-    displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" }, maxLength: 160, required, lookup }
+    displayName: string {
+      title: { pt-BR: "Nome de exibição", en: "Display name" }
+      maxLength: 160
+      lookup
+      rules {
+        value != null: {
+          fields: [displayName]
+          pt-BR: "Informe o nome de exibição"
+          en: "Enter the display name"
+        }
+      }
+    }
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" } }
-    country: string { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
+    country: string {
+      title: { pt-BR: "País", en: "Country" }
+      maxLength: 2
+      rules {
+        value != null: {
+          fields: [country]
+          pt-BR: "Selecione o país"
+          en: "Select the country"
+        }
+      }
+    }
     status: CitizenStatus { title: { pt-BR: "Situação", en: "Status" } }
     private legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
     private birthDate: Date { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
@@ -27,28 +48,46 @@ document Citizen {
   actions {
     register(kind: CitizenKind, displayName: string, country: string, legalName: string?, birthDate: Date?){
       title: { pt-BR: "Cadastrar cidadão", en: "Register citizen" }
-      permission: Clerk
+      roles: [Clerk]
+      {
+      }
     }
     registerPerson(displayName: string, country: string, legalName: string, birthDate: Date?){
       title: { pt-BR: "Cadastrar pessoa", en: "Register person" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     registerOrganization(displayName: string, country: string, legalName: string){
       title: { pt-BR: "Cadastrar organização", en: "Register organization" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     merge(target: Citizen){
       title: { pt-BR: "Mesclar", en: "Merge" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
     block(reason: string){
       title: { pt-BR: "Bloquear", en: "Block" }
-      permission: Manager
+      roles: [Manager]
+      {
+      }
     }
   }
 
   rules {
-    displayName != null
-    country.length == 2
+    displayName != null: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
+    country.length == 2: {
+      fields: []
+      pt-BR: "Regra do documento não atendida"
+      en: "Document rule not met"
+    }
   }
 }
