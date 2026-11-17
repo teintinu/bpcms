@@ -21,6 +21,16 @@ document NotificationTemplate {
     uniqueKey: [key, channel, locale] unique
   }
 
+  seed {
+    Welcome {
+      key: "welcome"
+      channel: Email
+      subject: "Bem-vindo"
+      body: "Sua conta foi criada"
+      locale: pt-BR
+    }
+  }
+
   actions {
     create(key: string, channel: Channel, locale: LocaleTag){
       title: { pt-BR: "Criar modelo", en: "Create template" }
@@ -76,7 +86,8 @@ document Notification {
   }
 
   rule status == Sent implies sentAt != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe a data de envio"
+    en: "Enter the sent date"
+
   }
 }

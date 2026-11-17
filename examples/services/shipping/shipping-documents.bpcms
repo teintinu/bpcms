@@ -1,29 +1,20 @@
 // service: example.com/services/shipping
-document ShipmentItem {
+shape ShipmentItem {
   title: { pt-BR: "Item de remessa", en: "Shipment item" }
-  version: 1
-  owner: "Shipping"
-  sync: live
 
   fields {
-    shipment: Shipment {
-      title: { pt-BR: "Remessa", en: "Shipment" }
-    }
     product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
     }
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    pesoUnitario: std.Mass { title: { pt-BR: "Peso unitário", en: "Unit weight" } }
-  }
-
-  indexes {
-    byShipment: [shipment.id] hash
-  }
-
-  rule quantity > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    quantity: std.Count {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      lookup
+      required
+    }
+    pesoUnitario: std.Mass {
+      title: { pt-BR: "Peso unitário", en: "Unit weight" }
+    }
   }
 }
 
@@ -88,11 +79,13 @@ document Shipment {
   }
 
   rule pesoBruto <= MaxWeight {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+
   }
   rule status == Dispatched implies tracking != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe o rastreio após o despacho"
+    en: "Enter tracking after dispatch"
+
   }
 }

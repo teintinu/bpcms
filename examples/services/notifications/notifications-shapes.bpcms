@@ -14,7 +14,7 @@ shape Channel {
     icon: WhatsApp
     ordinal: 20
   }
-    in-app {
+    value InApp {
       title: { pt-BR: "No aplicativo", en: "In-app" }
       icon: InApp
       ordinal: 30

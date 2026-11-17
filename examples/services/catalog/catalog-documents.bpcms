@@ -17,6 +17,12 @@ document Category {
     parent: [parent.id] hash
   }
 
+  seed {
+    General {
+      name: "Geral"
+    }
+  }
+
   actions {
     create(name: string, parent: Category?){
       title: { pt-BR: "Criar categoria", en: "Create category" }
@@ -79,11 +85,13 @@ document Product {
   }
 
   rule price > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "O preço deve ser maior que zero"
+    en: "Price must be greater than zero"
+
   }
   rule status == Published implies price > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Publique apenas produtos com preço"
+    en: "Publish only products with a price"
+
   }
 }

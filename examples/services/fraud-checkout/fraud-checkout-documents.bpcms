@@ -18,7 +18,7 @@ document FraudCheck {
 
   events {
 Evaluated {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
       key: this.id
       payload { approved: boolean; score: number }
     }

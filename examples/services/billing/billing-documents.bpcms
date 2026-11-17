@@ -137,11 +137,12 @@ document Invoice {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
       transition: Issued
-  rule total > 0 BRL {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule total > 0 BRL {
+        pt-BR: "O valor deve ser maior que zero"
+        en: "Value must be greater than zero"
+
   }
+
       {
       issuedAt = now()
       }
@@ -151,10 +152,10 @@ document Invoice {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-  rule reason.length >= 10 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+
   }
     }
 
@@ -165,8 +166,9 @@ document Invoice {
   }
 
   rule status == Issued implies issuedAt != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe a data de emissão"
+    en: "Enter the issue date"
+
   }
 }
 
@@ -207,12 +209,14 @@ document CreditNote {
   }
 
   rule amount > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+
   }
   rule amount <= 100000 BRL {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "O valor excede o limite de 100.000 BRL"
+    en: "Amount exceeds the 100,000 BRL limit"
+
   }
 }
 
@@ -246,8 +250,9 @@ document Bill {
   }
 
   rule amount > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+
   }
 }
 
@@ -269,17 +274,18 @@ document OrderCancellation {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
-  rule reason.length >= 10 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+
   }
     }
   }
 
   rule reason != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Preencha os campos obrigatórios"
+    en: "Fill the required fields"
+
   }
 }
 
@@ -308,7 +314,8 @@ document MonthlyRevenue {
   }
 
   rule month >= 2026-01 {
-    pt-BR: "O mês deve ser igual ou posterior a janeiro de 2026"
-    en: "Month must be January 2026 or later"
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+
   }
 }

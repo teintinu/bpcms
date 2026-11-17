@@ -422,7 +422,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] ID interno × `number` de negócio
 - [ ] `number` com `format`, `sequence`, `unique`
 - [ ] `indexes` (unique/range/search/hash), inclusive `.id`
-- [ ] `actions` (públicas/private) com `title`, `roles`/`roles: public`, `transition`, `rules`, body e sem retorno
+- [ ] `actions` (públicas/private) com `title`, `roles`/`roles: public`, `transition`, `rule`, body e sem retorno
 - [ ] `events { ... }` apenas para eventos sem workflow
 - [ ] `emit <Event>` apenas em action sem workflow
 - [ ] `transition: <Event>` em ações que mudam workflow
@@ -432,8 +432,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `Document.Seed` é `DocumentRef` válido e determinístico
 - [ ] `Store.SP` pode ser usado como valor/default em fields, actions e processos
 - [ ] renomear seed é breaking change
-- [ ] `rules` no Document, action e field; condição verdadeira = permitido
-- [ ] `required` para obrigatoriedade simples; `rules` para condicional
+- [ ] `rule` no Document, action e field; condição verdadeira = permitido
+- [ ] `required` para obrigatoriedade simples; `rule` para condicional
+- [ ] `default` aplica antes de `required`; default inválido = erro
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
 - [ ] link circular usa nome diferente do id (`parent`)
@@ -1033,6 +1034,9 @@ Próximo: **Document** 🟡.
 Service revisado; seguimos para **Document**.
 
 ## Pendências ao final do checklist
+
+- [ ] Revisar `mask`, `limits`, `segregation` e `signature` com exemplos reais.
+
 
 - [ ] Riscos da migração `next` → `transition`: payload perdido, processos escutando evento renomeado, workflows compartilhados, ações em estados sem transição.
 - [ ] Validar FQN canônico versus alias local na aplicação.

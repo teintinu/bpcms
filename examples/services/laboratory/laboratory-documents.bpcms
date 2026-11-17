@@ -62,16 +62,19 @@ document Sample {
   }
 
   rule kind == patient implies patient != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Selecione o paciente"
+    en: "Select the patient"
+
   }
   rule kind == support implies supportLab != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Selecione o laboratório de apoio"
+    en: "Select the support lab"
+
   }
   rule kind == control implies controlLot != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe o lote de controle"
+    en: "Enter the control lot"
+
   }
 
   actions {
@@ -116,12 +119,14 @@ document ExamOrder {
   }
 
   rule status == Resulted implies resultedAt != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe a data do resultado"
+    en: "Enter the result date"
+
   }
   rule status == Referred implies referredTo != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Selecione o laboratório de destino"
+    en: "Select the destination lab"
+
   }
 
   actions {

@@ -55,11 +55,13 @@ document Citizen {
   }
 
   rule displayName != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Informe o nome de exibição"
+    en: "Enter the display name"
+
   }
   rule country.length == 2 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Verifique o tamanho do texto informado"
+    en: "Check the informed text length"
+
   }
 }

@@ -20,51 +20,51 @@ document CheckoutSession {
   }
 
   events {
-Validated {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    Validated {
+      title: { pt-BR: "Carrinho validado", en: "Cart validated" }
       key: this.id
     }
-ShippingQuoted {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    ShippingQuoted {
+      title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
       key: this.id
     }
-PaymentAuthorized {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    PaymentAuthorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
       key: this.id
     }
-OrderConfirmed {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    OrderConfirmed {
+      title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
       key: this.id
     }
   }
 
   actions {
-validateCart() {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    validateCart() {
+      title: { pt-BR: "Validar carrinho", en: "Validate cart" }
       roles: [Customer]
       {
       emit Validated
       }
     }
 
-quoteShipping() {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    quoteShipping() {
+      title: { pt-BR: "Cotar frete", en: "Quote shipping" }
       roles: [Customer]
       {
       emit ShippingQuoted
       }
     }
 
-authorizePayment() {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    authorizePayment() {
+      title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
       roles: [Customer]
       {
       emit PaymentAuthorized
       }
     }
 
-confirmOrder() {
-      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
+    confirmOrder() {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
       roles: [Customer]
       {
       emit OrderConfirmed

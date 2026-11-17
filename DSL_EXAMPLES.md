@@ -905,7 +905,7 @@ document Customer {
     pt-BR: "Regra do documento não atendida"
     en: "Document rule not met"
   }
-  rule status in [active, inactive, archived] {
+  rule status in [Active, Inactive, Archived] {
     pt-BR: "Regra do documento não atendida"
     en: "Document rule not met"
   }

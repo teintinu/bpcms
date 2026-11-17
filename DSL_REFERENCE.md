@@ -578,10 +578,10 @@ task RefundPayment {
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
-| `actions` | `actions { issue() { title; roles; transition: Issued; rules; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
-| `events` | `events { Approved { title; key; payload } }` | Eventos sem workflow; `emit` na action. |
+| `actions` | `actions { issue() { title; roles; transition: Issued; rule; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
+| `events` | `events { Approved { title; key; payload } }` | Eventos **sem workflow**; workflow fica na `transition`. |
 | `seed` | `seed { SP { code: "SP"; name: "São Paulo" } }` | Documentos pré-criados/idempotentes para bootstrap. |
-| `rules` | `rules { total == subtotal + tax: { message } }` | Regras de documento, action e field; condição verdadeira = permitido. |
+| `rule` | `rule total == subtotal + tax { message }` | Regras de documento, action e field; condição verdadeira = permitido; repete `rule`. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
 | `computed <Name> from` | `computed frete from Shipment, CarrierTable { ... }` | Cálculo nomeado (campo/subdocumento) com frescor. |
@@ -616,7 +616,9 @@ document Invoice {
 - `subtotal` soma os itens;
 - `total` soma subtotal + imposto;
 - computed é somente leitura;
-- não repetir a conta em `rules`.
+- não repetir a conta em `rule`;
+- `default` é aplicado antes de `required`; `required` valida o valor final;
+- default incompatível com tipo é erro de build.
 
 **Seed.** `seed` declara documentos pré-criados necessários para o funcionamento:
 
@@ -642,7 +644,7 @@ Regras:
 
 - o builder aplica o seed no bootstrap/migração;
 - é idempotente;
-- valida `required`, rules, unique e referências;
+- valida `required`, `rule`, unique e referências;
 - usa um `id` determinístico por serviço/Document/chave;
 - não executa actions;
 - não emite eventos de domínio;
@@ -659,7 +661,7 @@ FiscalYear.Y2026
 
 - carrega o `id` determinístico;
 - carrega os campos `lookup` do Store;
-- pode ser usado em fields, actions, rules, outros seeds e processos;
+- pode ser usado em fields, actions, rule, outros seeds e processos;
 - é resolvido em tempo de build;
 - não é string;
 - não é ID solto.
@@ -822,7 +824,7 @@ number: InvoiceNumber {
 | :--- | :--- | :--- |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
 | `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
-| `rules` | `rules { value != null: { message } }` | Regras condicionais do field. |
+| `rule` | `rule value != null { message }` | Regra condicional do field; repete `rule`. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
 | booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
@@ -833,7 +835,7 @@ number: InvoiceNumber {
 | `scale` | `scale: 2` | Casas decimais do field. |
 | `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
 | `unit` / `units` | — | `unit` só no Shape de unidade única; `units` só no Shape multiunidade. |
-| `default` | `default: BR` | Valor inicial; não é regra de negócio. |
+| `default` | `default: BR` | Valor inicial; aplicado antes de `required`; não é regra de negócio. |
 | `computed` | `computed: quantity * unitPrice` | Campo derivado; somente leitura; calculado a partir de outros campos. |
 | `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
 | `read` | `read: [Clerk, Manager]` | Roles que podem ler o campo. |
@@ -864,7 +866,7 @@ shape InvoiceItem {
 - dependências circulares são erro;
 - não precisa de rule de consistência.
 
-**Ações são botões.** Toda ação declara `title`, `roles` e, opcionalmente, `transition` e `rules`.
+**Ações são botões.** Toda ação declara `title`, `roles` e, opcionalmente, `transition` e `rule`.
 
 ```bpcms
 actions {
@@ -911,7 +913,7 @@ actions {
 - `transition: Issued` liga a ação à transição;
 - action de workflow não usa `status =>`;
 - action de workflow não usa `emit`;
-- `rules` são pré-condições;
+- `rule` são pré-condições;
 - condição verdadeira = permitido;
 - o compilador extrai os campos usados na expressão;
 - body é o bloco de statements;
@@ -930,7 +932,7 @@ archive() {
 
 `roles: public` é explícito; `roles` ausente e `roles: []` são erros.
 
-**Rules.** A mesma sintaxe vale no Document, na action e no field.
+**Rule.** A mesma sintaxe vale no Document, na action e no field.
 
 ```bpcms
 rule total == subtotal + tax {
@@ -953,9 +955,12 @@ customer: User {
 - o compilador extrai os campos usados na expressão;
 - a UI usa os campos extraídos para navegar;
 - `code` não existe;
-- permissão e workflow têm motivo genérico do builder.
+- permissão e workflow têm motivo genérico do builder;
+- a API devolve `{ type, fields, message }`;
+- `fields` é calculado pelo compilador;
+- `code` não existe.
 
-**`required` e rules de field.** Obrigatoriedade simples usa `required`; regra condicional usa `rules`:
+**`required` e rule de field.** Obrigatoriedade simples usa `required`; regra condicional usa `rule`:
 
 ```bpcms
 customer: User {

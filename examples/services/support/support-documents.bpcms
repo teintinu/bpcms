@@ -42,11 +42,12 @@ document Ticket {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Agent]
-  rule user != null {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule user != null {
+        pt-BR: "Preencha os campos obrigatórios"
+        en: "Fill the required fields"
+
   }
+
       {
       assignee = user
       }
@@ -55,10 +56,10 @@ document Ticket {
     comment(body: string){
       title: { pt-BR: "Comentar", en: "Comment" }
       roles: [Agent]
-  rule body.length > 0 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule body.length > 0 {
+        pt-BR: "Verifique o tamanho do texto informado"
+        en: "Check the informed text length"
+
   }
     }
 
@@ -66,10 +67,10 @@ document Ticket {
       title: { pt-BR: "Resolver", en: "Resolve" }
       roles: [Agent]
       transition: Resolved
-  rule assignee != null {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule assignee != null {
+        pt-BR: "Preencha os campos obrigatórios"
+        en: "Fill the required fields"
+
   }
     }
 
@@ -77,10 +78,10 @@ document Ticket {
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
       transition: Open
-  rule reason.length >= 10 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+
   }
     }
 
@@ -91,8 +92,9 @@ document Ticket {
   }
 
   rule status == Resolved implies assignee != null {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Atribua o chamado antes de resolver"
+    en: "Assign the ticket before resolving"
+
   }
 }
 
@@ -128,10 +130,10 @@ document ReturnRequest {
     request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
       roles: [Clerk]
-  rule reason.length >= 10 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+
   }
     }
 
@@ -145,10 +147,10 @@ document ReturnRequest {
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
       roles: [Manager]
       transition: Rejected
-  rule reason.length >= 10 {
-        pt-BR: "Operação não permitida"
-        en: "Operation not allowed"
-      }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+
   }
     }
 
@@ -160,11 +162,13 @@ document ReturnRequest {
   }
 
   rule refundAmount >= 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+
   }
   rule status == Approved implies refundAmount > 0 {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "A devolução aprovada precisa ter valor"
+    en: "Approved return must have a value"
+
   }
 }

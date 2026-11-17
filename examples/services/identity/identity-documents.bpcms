@@ -42,8 +42,9 @@ document User {
   }
 
   rule status in [Active, Suspended, Disabled] {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Situação de usuário inválida"
+    en: "Invalid user status"
+
   }
 }
 
@@ -73,8 +74,9 @@ document Consumer extends User {
   }
 
   rule citizen != null implies status == Active {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "Cidadão vinculado deve estar ativo"
+    en: "Linked citizen must be active"
+
   }
 }
 
@@ -110,7 +112,8 @@ document Session {
   }
 
   rule expiresAt > issuedAt {
-    pt-BR: "Documento inválido"
-    en: "Invalid document"
+    pt-BR: "A expiração deve ser posterior à emissão"
+    en: "Expiration must be after issuance"
+
   }
 }
