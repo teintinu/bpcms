@@ -4,14 +4,13 @@
 shape OrderStatus {
   title: { pt-BR: "Situação do pedido", en: "Order status" }
   base: workflow
-  initial: draft
-  value draft {
+  initial: Draft
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
     transition Placed {
       title: { pt-BR: "Realizado", en: "Placed" }
-      to: placed
       payload {
         customer: User
         total: std.Money
@@ -19,31 +18,28 @@ shape OrderStatus {
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
       payload {
         reason: string
       }
     }
   }
-  value placed {
+  value Placed {
     title: { pt-BR: "Realizado", en: "Placed" }
     icon: Placed
     ordinal: 20
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
     }
     transition Fulfilled {
       title: { pt-BR: "Atendido", en: "Fulfilled" }
-      to: fulfilled
     }
   }
-  value cancelled {
+  value Cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 30
   }
-  value fulfilled {
+  value Fulfilled {
     title: { pt-BR: "Atendido", en: "Fulfilled" }
     icon: Fulfilled
     ordinal: 40

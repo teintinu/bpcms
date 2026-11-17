@@ -2,12 +2,12 @@
 shape CitizenKind {
   title: { pt-BR: "Tipo de cidadão", en: "Citizen kind" }
   base: classification
-  value person {
+  value Person {
     title: { pt-BR: "Pessoa", en: "Person" }
     icon: Person
     ordinal: 10
   }
-  value organization {
+  value Organization {
     title: { pt-BR: "Organização", en: "Organization" }
     icon: Organization
     ordinal: 20
@@ -19,26 +19,24 @@ shape CitizenKind {
 shape CitizenStatus {
   title: { pt-BR: "Situação do cidadão", en: "Citizen status" }
   base: workflow
-  initial: active
-  value active {
+  initial: Active
+  value Active {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
     ordinal: 10
     transition Merged {
       title: { pt-BR: "Mesclado", en: "Merged" }
-      to: merged
     }
     transition Blocked {
       title: { pt-BR: "Bloqueado", en: "Blocked" }
-      to: blocked
     }
   }
-  value merged {
+  value Merged {
     title: { pt-BR: "Mesclado", en: "Merged" }
     icon: Merged
     ordinal: 20
   }
-  value blocked {
+  value Blocked {
     title: { pt-BR: "Bloqueado", en: "Blocked" }
     icon: Blocked
     ordinal: 30

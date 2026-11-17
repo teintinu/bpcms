@@ -78,8 +78,7 @@ document Notification {
   }
 
   rules {
-    status == sent implies sentAt != null: {
-      fields: []
+    status == Sent implies sentAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

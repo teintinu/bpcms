@@ -580,7 +580,7 @@ task RefundPayment {
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
 | `actions` | `actions { issue() { title; roles; transition: Issued; rules; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
 | `events` | `events { Approved { title; key; payload } }` | Eventos do Document; `emit` na action. |
-| `rules` | `rules { total == subtotal + tax: { fields; message } }` | Regras de documento, action e field; condição verdadeira = permitido. |
+| `rules` | `rules { total == subtotal + tax: { message } }` | Regras de documento, action e field; condição verdadeira = permitido. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
 | `computed <Name> from` | `computed frete from Shipment, CarrierTable { ... }` | Cálculo nomeado (campo/subdocumento) com frescor. |
@@ -717,7 +717,7 @@ number: InvoiceNumber {
 | :--- | :--- | :--- |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
 | `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
-| `rules` | `rules { value != null: { fields; message } }` | Regras condicionais do field. |
+| `rules` | `rules { value != null: { message } }` | Regras condicionais do field. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
 | booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
@@ -744,13 +744,11 @@ actions {
 
     rules {
       items.length > 0: {
-        fields: [items]
         pt-BR: "Adicione itens antes de emitir a fatura"
         en: "Add items before issuing the invoice"
       }
 
       total > 0 BRL: {
-        fields: [total]
         pt-BR: "Fatura sem valor"
         en: "Invoice has no value"
       }
@@ -788,7 +786,7 @@ actions {
 - action de workflow não usa `emit`;
 - `rules` são pré-condições;
 - condição verdadeira = permitido;
-- `fields` aponta os campos usados;
+- o compilador extrai os campos usados na expressão;
 - body é o bloco de statements;
 - body sem retorno;
 - evento vem da transição ou de `emit` sem workflow.
@@ -798,7 +796,6 @@ actions {
 ```bpcms
 rules {
   total == subtotal + tax: {
-    fields: [total, subtotal, tax]
     pt-BR: "Total da nota não confere"
     en: "Invoice total does not match"
   }
@@ -811,7 +808,6 @@ customer: User {
 
   rules {
     value != null: {
-      fields: [customer]
       pt-BR: "Selecione o cliente da nota"
       en: "Select the invoice customer"
     }
@@ -820,7 +816,7 @@ customer: User {
 ```
 
 - `fields` lista os campos usados;
-- a UI usa `fields` para navegar;
+- a UI usa os campos extraídos para navegar;
 - `code` não existe;
 - permissão e workflow têm motivo genérico do builder.
 
@@ -891,7 +887,7 @@ document Shipment {
 | `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
-| `value` | `value draft { title; icon; ordinal; transition Issued { to: issued; payload { ... } } }` | Enum; `classification`/`workflow`; repete `value` por estado. Exceção: `value` base de `std.Currency` não exige metadados. |
+| `value` | `value Draft { title; icon; ordinal; transition Issued { payload { ... } } }` | Enum; `classification`/`workflow`; a transição é nomeada pelo destino; `event:` opcional. Exceção: `value` base de `std.Currency` não exige metadados. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
@@ -950,15 +946,14 @@ Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: workflow
-  initial: draft
+  initial: Draft
   format: plain
-  value draft {
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
     transition Issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      to: issued
       payload {
         number: InvoiceNumber
         total: std.Money
@@ -966,47 +961,41 @@ shape InvoiceStatus {
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
       payload { reason: string }
     }
   }
-  value issued {
+  value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
     transition Overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      to: overdue
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value paid {
+  value Paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: Paid
     ordinal: 30
 
   }
-  value overdue {
+  value Overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 40
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value cancelled {
+  value Cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 50
@@ -1112,7 +1101,7 @@ shape TaxRegimeCode {
 - `classification` não tem `initial` nem transições.
 - `workflow` tem exatamente um `initial`.
 - `transition` define as arestas; estado sem transição é terminal.
-- `to` referencia apenas states do mesmo workflow.
+- a chave da transição referencia apenas states do mesmo workflow.
 - Self-transition é inválida no v1.
 - `canTransitionTo` usa o `next` gerado pelo compilador.
 - `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
@@ -2174,12 +2163,11 @@ Eventos de workflow ficam na `transition` do `value`. Eventos sem workflow ficam
 ## 22.1 Evento de workflow
 
 ```bpcms
-value issued {
+value Issued {
   title: { pt-BR: "Emitida", en: "Issued" }
 
   transition Paid {
     title: { pt-BR: "Nota paga", en: "Invoice paid" }
-    to: paid
     payload {
       paidAt: DateTime
     }
@@ -2187,10 +2175,11 @@ value issued {
 }
 ```
 
-- o nome da transição é o evento;
-- `to` é o destino;
+- a chave da transição é o estado de destino;
+- o evento padrão é o destino em PascalCase;
+- `event:` sobrescreve o nome do evento;
 - `payload` é o contrato do evento;
-- a action usa `status => paid`;
+- a action usa `transition: Paid`;
 - a action não usa `emit` para workflow.
 
 ## 22.2 Evento sem workflow
@@ -2266,7 +2255,7 @@ example.com/services/billing#Invoice.Paid
 
 - evento de workflow não fica em `events`;
 - evento sem workflow fica em `events` e usa `emit`;
-- action com `status =>` não usa `emit`;
+- action com `transition:` não usa `emit`;
 - payload de workflow fica na transição;
 - payload sem workflow fica em `events`;
 - `key` usa `this.id` ou `referencia.id`;
@@ -2501,12 +2490,12 @@ services/billing/
 
 ```bpcms
 shape InvoiceStatus {
-  value draft {
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: status.draft
     ordinal: 10
   }
-  value issued {
+  value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: finance.invoice.issued
     ordinal: 20

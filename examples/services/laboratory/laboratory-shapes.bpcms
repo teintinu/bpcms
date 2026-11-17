@@ -11,17 +11,17 @@ shape SampleCode {
 shape SampleKind {
   title: { pt-BR: "Origem da amostra", en: "Sample origin" }
   base: classification
-  value patient {
+  value Patient {
     title: { pt-BR: "Paciente", en: "Patient" }
     icon: Patient
     ordinal: 10
   }
-  value support {
+  value Support {
     title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
     icon: Support
     ordinal: 20
   }
-  value control {
+  value Control {
     title: { pt-BR: "Controle", en: "Control" }
     icon: Control
     ordinal: 30
@@ -32,61 +32,54 @@ shape SampleKind {
 shape SampleStatus {
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
   base: workflow
-  initial: collected
-  value collected {
+  initial: Collected
+  value Collected {
     title: { pt-BR: "Coletada", en: "Collected" }
     icon: Collected
     ordinal: 10
     transition Received {
       title: { pt-BR: "Recebida", en: "Received" }
-      to: received
     }
     transition Rejected {
       title: { pt-BR: "Rejeitada", en: "Rejected" }
-      to: rejected
     }
   }
-  value received {
+  value Received {
     title: { pt-BR: "Recebida", en: "Received" }
     icon: Received
     ordinal: 20
     transition Processing {
       title: { pt-BR: "Em processamento", en: "Processing" }
-      to: processing
     }
     transition Referred {
       title: { pt-BR: "Encaminhada", en: "Referred" }
-      to: referred
     }
     transition Rejected {
       title: { pt-BR: "Rejeitada", en: "Rejected" }
-      to: rejected
     }
   }
-  value processing {
+  value Processing {
     title: { pt-BR: "Em processamento", en: "Processing" }
     icon: Processing
     ordinal: 30
     transition Resulted {
       title: { pt-BR: "Resultada", en: "Resulted" }
-      to: resulted
     }
   }
-  value resulted {
+  value Resulted {
     title: { pt-BR: "Resultada", en: "Resulted" }
     icon: Resulted
     ordinal: 40
   }
-  value referred {
+  value Referred {
     title: { pt-BR: "Encaminhada", en: "Referred" }
     icon: Referred
     ordinal: 50
     transition Resulted {
       title: { pt-BR: "Resultada", en: "Resulted" }
-      to: resulted
     }
   }
-  value rejected {
+  value Rejected {
     title: { pt-BR: "Rejeitada", en: "Rejected" }
     icon: Rejected
     ordinal: 60
@@ -97,22 +90,22 @@ shape SampleStatus {
 shape ExamCode {
   title: { pt-BR: "Exame", en: "Exam" }
   base: classification
-  value hemogram {
+  value Hemogram {
     title: { pt-BR: "Hemograma", en: "Complete blood count" }
     icon: Hemogram
     ordinal: 10
   }
-  value glucose {
+  value Glucose {
     title: { pt-BR: "Glicemia", en: "Glucose" }
     icon: Glucose
     ordinal: 20
   }
-  value culture {
+  value Culture {
     title: { pt-BR: "Cultura", en: "Culture" }
     icon: Culture
     ordinal: 30
   }
-  value hba1c {
+  value Hba1c {
     title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
     icon: Hba1c
     ordinal: 40
@@ -123,73 +116,63 @@ shape ExamCode {
 shape ExamOrderStatus {
   title: { pt-BR: "Situação do exame", en: "Exam order status" }
   base: workflow
-  initial: requested
-  value requested {
+  initial: Requested
+  value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
     transition Collected {
       title: { pt-BR: "Coletado", en: "Collected" }
-      to: collected
     }
     transition Cancelled {
       title: { pt-BR: "Cancelado", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value collected {
+  value Collected {
     title: { pt-BR: "Coletado", en: "Collected" }
     icon: Collected
     ordinal: 20
     transition Processing {
       title: { pt-BR: "Em processamento", en: "Processing" }
-      to: processing
     }
     transition Referred {
       title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
-      to: referred
     }
     transition Cancelled {
       title: { pt-BR: "Cancelado", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value processing {
+  value Processing {
     title: { pt-BR: "Em processamento", en: "Processing" }
     icon: Processing
     ordinal: 30
     transition Resulted {
       title: { pt-BR: "Resultado emitido", en: "Resulted" }
-      to: resulted
     }
     transition Referred {
       title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
-      to: referred
     }
     transition Cancelled {
       title: { pt-BR: "Cancelado", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value resulted {
+  value Resulted {
     title: { pt-BR: "Resultado emitido", en: "Resulted" }
     icon: Resulted
     ordinal: 40
   }
-  value referred {
+  value Referred {
     title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
     icon: Referred
     ordinal: 50
     transition Resulted {
       title: { pt-BR: "Resultado emitido", en: "Resulted" }
-      to: resulted
     }
     transition Cancelled {
       title: { pt-BR: "Cancelado", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value cancelled {
+  value Cancelled {
     title: { pt-BR: "Cancelado", en: "Cancelled" }
     icon: Cancelled
     ordinal: 60

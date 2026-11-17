@@ -44,8 +44,7 @@ document User {
   }
 
   rules {
-    status in [active, suspended, disabled]: {
-      fields: []
+    status in [Active, Suspended, Disabled]: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -78,8 +77,7 @@ document Consumer extends User {
   }
 
   rules {
-    citizen != null implies status == active: {
-      fields: []
+    citizen != null implies status == Active: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -119,7 +117,6 @@ document Session {
 
   rules {
     expiresAt > issuedAt: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

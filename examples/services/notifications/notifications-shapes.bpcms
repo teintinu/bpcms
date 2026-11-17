@@ -4,12 +4,12 @@
 shape Channel {
   title: { pt-BR: "Canal", en: "Channel" }
   base: classification
-  value email {
+  value Email {
     title: { pt-BR: "Correio eletrônico", en: "Email" }
     icon: channels.email
     ordinal: 10
   }
-  value whatsapp {
+  value Whatsapp {
     title: { pt-BR: "WhatsApp", en: "WhatsApp" }
     icon: WhatsApp
     ordinal: 20
@@ -26,43 +26,38 @@ shape Channel {
 shape NotificationStatus {
   title: { pt-BR: "Situação da notificação", en: "Notification status" }
   base: workflow
-  initial: queued
-  value queued {
+  initial: Queued
+  value Queued {
     title: { pt-BR: "Na fila", en: "Queued" }
     icon: Queued
     ordinal: 10
     transition Sent {
       title: { pt-BR: "Enviada", en: "Sent" }
-      to: sent
     }
     transition Failed {
       title: { pt-BR: "Falhou", en: "Failed" }
-      to: failed
     }
   }
-  value sent {
+  value Sent {
     title: { pt-BR: "Enviada", en: "Sent" }
     icon: Sent
     ordinal: 20
     transition Read {
       title: { pt-BR: "Lida", en: "Read" }
-      to: read
     }
     transition Failed {
       title: { pt-BR: "Falhou", en: "Failed" }
-      to: failed
     }
   }
-  value failed {
+  value Failed {
     title: { pt-BR: "Falhou", en: "Failed" }
     icon: Failed
     ordinal: 30
     transition Queued {
       title: { pt-BR: "Na fila", en: "Queued" }
-      to: queued
     }
   }
-  value read {
+  value Read {
     title: { pt-BR: "Lida", en: "Read" }
     icon: Read
     ordinal: 40

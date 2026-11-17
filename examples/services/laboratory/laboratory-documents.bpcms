@@ -67,17 +67,14 @@ document Sample {
 
   rules {
     kind == patient implies patient != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     kind == support implies supportLab != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     kind == control implies controlLot != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -127,13 +124,11 @@ document ExamOrder {
   }
 
   rules {
-    status == resulted implies resultedAt != null: {
-      fields: []
+    status == Resulted implies resultedAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == referred implies referredTo != null: {
-      fields: []
+    status == Referred implies referredTo != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

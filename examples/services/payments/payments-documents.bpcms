@@ -32,7 +32,7 @@ document Payment {
     capture() {
       title: { pt-BR: "Capturar", en: "Capture" }
       roles: [Manager]
-      transition: Succeeded
+      transition: Captured
       {
       capturedAt = now()
       }
@@ -40,7 +40,7 @@ document Payment {
     refund() {
       title: { pt-BR: "Reembolsar", en: "Refund" }
       roles: [Manager]
-      transition: RefundIssued
+      transition: Refunded
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
@@ -50,12 +50,10 @@ document Payment {
 
   rules {
     amount > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == captured implies capturedAt != null: {
-      fields: []
+    status == Captured implies capturedAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -91,7 +89,6 @@ document Refund {
       roles: [Manager]
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -109,12 +106,10 @@ document Refund {
 
   rules {
     amount > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     amount <= 100000 BRL: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

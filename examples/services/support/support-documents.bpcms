@@ -46,7 +46,6 @@ document Ticket {
       roles: [Agent]
       rules {
         user != null: {
-          fields: [user]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -62,7 +61,6 @@ document Ticket {
       roles: [Agent]
       rules {
         body.length > 0: {
-          fields: [body]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -78,7 +76,6 @@ document Ticket {
       transition: Resolved
       rules {
         assignee != null: {
-          fields: [assignee]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -91,10 +88,9 @@ document Ticket {
     reopen(reason: string){
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
-      transition: Reopened
+      transition: Open
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -111,8 +107,7 @@ document Ticket {
   }
 
   rules {
-    status == resolved implies assignee != null: {
-      fields: []
+    status == Resolved implies assignee != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -155,7 +150,6 @@ document ReturnRequest {
       roles: [Clerk]
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -174,7 +168,6 @@ document ReturnRequest {
       transition: Rejected
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -190,12 +183,10 @@ document ReturnRequest {
 
   rules {
     refundAmount >= 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == approved implies refundAmount > 0: {
-      fields: []
+    status == Approved implies refundAmount > 0: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

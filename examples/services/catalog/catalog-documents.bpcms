@@ -82,12 +82,10 @@ document Product {
 
   rules {
     price > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == published implies price > 0: {
-      fields: []
+    status == Published implies price > 0: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

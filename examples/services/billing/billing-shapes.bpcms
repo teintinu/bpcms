@@ -5,59 +5,53 @@
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: workflow
-  initial: draft
-  value draft {
+  initial: Draft
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: status.draft
     ordinal: 10
     transition Issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      to: issued
       payload {
         number: InvoiceNumber
         total: std.Money
       }
     }
   }
-  value issued {
+  value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: finance.invoice.issued
     ordinal: 20
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
     transition Overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      to: overdue
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
       payload {
         reason: string
       }
     }
   }
-  value paid {
+  value Paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: status.paid
     ordinal: 30
   }
-  value overdue {
+  value Overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: status.overdue
     ordinal: 40
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
     transition Cancelled {
       title: { pt-BR: "Cancelada", en: "Cancelled" }
-      to: cancelled
     }
   }
-  value cancelled {
+  value Cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 50
@@ -69,26 +63,24 @@ shape InvoiceStatus {
 shape CreditNoteStatus {
   title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
   base: workflow
-  initial: draft
-  value draft {
+  initial: Draft
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
     transition Issued {
       title: { pt-BR: "Emitida", en: "Issued" }
-      to: issued
     }
   }
-  value issued {
+  value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
     transition Applied {
       title: { pt-BR: "Aplicada", en: "Applied" }
-      to: applied
     }
   }
-  value applied {
+  value Applied {
     title: { pt-BR: "Aplicada", en: "Applied" }
     icon: Applied
     ordinal: 30
@@ -101,32 +93,29 @@ shape CreditNoteStatus {
 shape BillStatus {
   title: { pt-BR: "Situação da conta", en: "Bill status" }
   base: workflow
-  initial: open
-  value open {
+  initial: Open
+  value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
     transition Overdue {
       title: { pt-BR: "Vencida", en: "Overdue" }
-      to: overdue
     }
   }
-  value paid {
+  value Paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: Paid
     ordinal: 20
   }
-  value overdue {
+  value Overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 30
     transition Paid {
       title: { pt-BR: "Paga", en: "Paid" }
-      to: paid
     }
   }
   format: plain

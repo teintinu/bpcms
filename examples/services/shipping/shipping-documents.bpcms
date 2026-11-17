@@ -23,7 +23,6 @@ document ShipmentItem {
 
   rules {
     quantity > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -94,12 +93,10 @@ document Shipment {
 
   rules {
     pesoBruto <= MaxWeight: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == dispatched implies tracking != null: {
-      fields: []
+    status == Dispatched implies tracking != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

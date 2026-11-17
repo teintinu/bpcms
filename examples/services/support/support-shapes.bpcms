@@ -4,70 +4,62 @@
 shape TicketStatus {
   title: { pt-BR: "Situação do chamado", en: "Ticket status" }
   base: workflow
-  initial: open
-  value open {
+  initial: Open
+  value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
     transition InProgress {
       title: { pt-BR: "Em andamento", en: "In progress" }
-      to: in_progress
     }
     transition Waiting {
       title: { pt-BR: "Aguardando", en: "Waiting" }
-      to: waiting
     }
     transition Resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
-      to: resolved
       payload {
         assignee: User
       }
     }
   }
-  value in_progress {
+  value InProgress {
     title: { pt-BR: "Em andamento", en: "In progress" }
     icon: InProgress
     ordinal: 20
     transition Waiting {
       title: { pt-BR: "Aguardando", en: "Waiting" }
-      to: waiting
     }
     transition Resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
-      to: resolved
     }
   }
-  value waiting {
+  value Waiting {
     title: { pt-BR: "Aguardando", en: "Waiting" }
     icon: Waiting
     ordinal: 30
     transition InProgress {
       title: { pt-BR: "Em andamento", en: "In progress" }
-      to: in_progress
     }
     transition Resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
-      to: resolved
     }
   }
-  value resolved {
+  value Resolved {
     title: { pt-BR: "Resolvido", en: "Resolved" }
     icon: Resolved
     ordinal: 40
     transition Closed {
       title: { pt-BR: "Fechado", en: "Closed" }
-      to: closed
     }
-    transition Reopened {
+    transition Open {
       title: { pt-BR: "Reaberto", en: "Reopened" }
-      to: open
+      event: Reopened
       payload {
         reason: string
       }
     }
   }
-  value closed {
+  value Closed {
     title: { pt-BR: "Fechado", en: "Closed" }
     icon: Closed
     ordinal: 50
@@ -79,44 +71,40 @@ shape TicketStatus {
 shape ReturnStatus {
   title: { pt-BR: "Situação da devolução", en: "Return status" }
   base: workflow
-  initial: requested
-  value requested {
+  initial: Requested
+  value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
     transition Approved {
       title: { pt-BR: "Aprovado", en: "Approved" }
-      to: approved
     }
     transition Rejected {
       title: { pt-BR: "Rejeitado", en: "Rejected" }
-      to: rejected
     }
   }
-  value approved {
+  value Approved {
     title: { pt-BR: "Aprovado", en: "Approved" }
     icon: Approved
     ordinal: 20
     transition Received {
       title: { pt-BR: "Recebida", en: "Received" }
-      to: received
     }
   }
-  value rejected {
+  value Rejected {
     title: { pt-BR: "Rejeitado", en: "Rejected" }
     icon: Rejected
     ordinal: 30
   }
-  value received {
+  value Received {
     title: { pt-BR: "Recebida", en: "Received" }
     icon: Received
     ordinal: 40
     transition Refunded {
       title: { pt-BR: "Reembolsado", en: "Refunded" }
-      to: refunded
     }
   }
-  value refunded {
+  value Refunded {
     title: { pt-BR: "Reembolsado", en: "Refunded" }
     icon: Refunded
     ordinal: 50

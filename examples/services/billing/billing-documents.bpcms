@@ -24,7 +24,6 @@ document InvoiceItem {
 
   rules {
     total == quantity * unitPrice: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -72,7 +71,6 @@ document Invoice {
       transition: Issued
       rules {
         total > 0 BRL: {
-          fields: [total]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -89,7 +87,6 @@ document Invoice {
       transition: Cancelled
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -107,17 +104,14 @@ document Invoice {
 
   rules {
     total == subtotal + tax: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     total == items.sum(total): {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == issued implies issuedAt != null: {
-      fields: []
+    status == Issued implies issuedAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -164,12 +158,10 @@ document CreditNote {
 
   rules {
     amount > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     amount <= 100000 BRL: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -209,7 +201,6 @@ document Bill {
 
   rules {
     amount > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -238,7 +229,6 @@ document OrderCancellation {
       roles: [Manager]
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -248,7 +238,6 @@ document OrderCancellation {
 
   rules {
     reason != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

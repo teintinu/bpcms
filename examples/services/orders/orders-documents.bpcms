@@ -25,12 +25,10 @@ document OrderItem {
 
   rules {
     quantity > 0: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     total == quantity * unitPrice: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -78,7 +76,6 @@ document Order {
       roles: [Clerk]
       rules {
         quantity > 0: {
-          fields: [quantity]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -91,7 +88,6 @@ document Order {
       transition: Placed
       rules {
         items.length > 0: {
-          fields: []
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -108,7 +104,6 @@ document Order {
       transition: Cancelled
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
@@ -127,17 +122,14 @@ document Order {
 
   rules {
     total == subtotal - discount: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
-    status == placed implies placedAt != null: {
-      fields: []
+    status == Placed implies placedAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     items.count <= 50: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

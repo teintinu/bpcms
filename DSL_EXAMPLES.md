@@ -905,12 +905,10 @@ document Customer {
 
   rules {
     email != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     status in [active, inactive, archived]: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -991,12 +989,10 @@ document Invoice {
 
       rules {
         items.length > 0: {
-          fields: [items]
           pt-BR: "Adicione itens antes de emitir a fatura"
           en: "Add items before issuing the invoice"
         }
         total > 0 BRL: {
-          fields: [total]
           pt-BR: "Fatura sem valor"
           en: "Invoice has no value"
         }
@@ -1015,12 +1011,10 @@ document Invoice {
 
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Informe um motivo com pelo menos 10 caracteres"
           en: "Enter a reason with at least 10 characters"
         }
         status == issued: {
-          fields: [status]
           pt-BR: "A nota precisa estar emitida"
           en: "Invoice must be issued"
         }
@@ -1034,17 +1028,14 @@ document Invoice {
 
   rules {
     total == subtotal + tax: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     total == items.sum(subtotal): {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     status == issued implies issuedAt != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -1108,12 +1099,10 @@ document Shipment {
 
   rules {
     pesoBruto <= carrier.limitDePeso: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     status == dispatched implies tracking != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -1173,12 +1162,10 @@ document LabExam {
 
   rules {
     status == released implies signature != null and result != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
     status == released implies releasedAt != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -1231,7 +1218,6 @@ document SupportTicket {
 
       rules {
         user != null: {
-          fields: [assignee]
           pt-BR: "Selecione o responsável"
           en: "Select the assignee"
         }
@@ -1249,7 +1235,6 @@ document SupportTicket {
 
       rules {
         body.length > 0: {
-          fields: []
           pt-BR: "Escreva um comentário"
           en: "Write a comment"
         }
@@ -1267,7 +1252,6 @@ document SupportTicket {
 
       rules {
         assignee != null: {
-          fields: [assignee]
           pt-BR: "Atribua o chamado antes de resolver"
           en: "Assign the ticket before resolving"
         }
@@ -1281,11 +1265,10 @@ document SupportTicket {
     reopen(reason: string) {
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
-      transition: Reopened
+      transition: Open
 
       rules {
         reason.length >= 10: {
-          fields: [reason]
           pt-BR: "Informe um motivo com pelo menos 10 caracteres"
           en: "Enter a reason with at least 10 characters"
         }
@@ -1299,7 +1282,6 @@ document SupportTicket {
 
   rules {
     status == resolved implies assignee != null: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -1338,7 +1320,6 @@ document MonthlyRevenue {
 
   rules {
     month >= 2026-01: {
-      fields: []
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }
@@ -3545,14 +3526,13 @@ document OperationsControl {
 ```bpcms
 shape OrderStatus {
   base: workflow
-  initial: draft
+  initial: Draft
 
-  value draft {
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
 
     transition Placed {
       title: { pt-BR: "Pedido realizado", en: "Order placed" }
-      to: placed
       payload {
         customer: User
         total: std.Money
@@ -3560,7 +3540,7 @@ shape OrderStatus {
     }
   }
 
-  value placed {
+  value Placed {
     title: { pt-BR: "Realizado", en: "Placed" }
   }
 }
@@ -3614,7 +3594,6 @@ process PaymentSaga {
 ```bpcms
 transition Placed {
   title: { pt-BR: "Pedido realizado", en: "Order placed" }
-  to: placed
   payload {
     customer: User
     total: std.Money
@@ -3629,7 +3608,6 @@ transition Placed {
 ```bpcms
 transition Closed {
   title: { pt-BR: "Fechado", en: "Closed" }
-  to: closed
 }
 ```
 

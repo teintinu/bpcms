@@ -42,30 +42,27 @@ shape ProductRichDescription {
 shape ProductStatus {
   title: { pt-BR: "Situação do produto", en: "Product status" }
   base: workflow
-  initial: draft
-  value draft {
+  initial: Draft
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
     transition Published {
       title: { pt-BR: "Publicado", en: "Published" }
-      to: published
     }
     transition Archived {
       title: { pt-BR: "Arquivado", en: "Archived" }
-      to: archived
     }
   }
-  value published {
+  value Published {
     title: { pt-BR: "Publicado", en: "Published" }
     icon: Published
     ordinal: 20
     transition Archived {
       title: { pt-BR: "Arquivado", en: "Archived" }
-      to: archived
     }
   }
-  value archived {
+  value Archived {
     title: { pt-BR: "Arquivado", en: "Archived" }
     icon: Archived
     ordinal: 30

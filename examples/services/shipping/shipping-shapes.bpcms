@@ -4,27 +4,24 @@
 shape ShipmentStatus {
   title: { pt-BR: "Situação da remessa", en: "Shipment status" }
   base: workflow
-  initial: draft
-  value draft {
+  initial: Draft
+  value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
     transition Packed {
       title: { pt-BR: "Embalada", en: "Packed" }
-      to: packed
     }
     transition Returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
-      to: returned
     }
   }
-  value packed {
+  value Packed {
     title: { pt-BR: "Embalada", en: "Packed" }
     icon: Packed
     ordinal: 20
     transition Dispatched {
       title: { pt-BR: "Despachada", en: "Dispatched" }
-      to: dispatched
       payload {
         order: Order
         tracking: TrackingCode
@@ -32,28 +29,25 @@ shape ShipmentStatus {
     }
     transition Returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
-      to: returned
     }
   }
-  value dispatched {
+  value Dispatched {
     title: { pt-BR: "Despachada", en: "Dispatched" }
     icon: Dispatched
     ordinal: 30
     transition Delivered {
       title: { pt-BR: "Entregue", en: "Delivered" }
-      to: delivered
     }
     transition Returned {
       title: { pt-BR: "Devolvida", en: "Returned" }
-      to: returned
     }
   }
-  value delivered {
+  value Delivered {
     title: { pt-BR: "Entregue", en: "Delivered" }
     icon: Delivered
     ordinal: 40
   }
-  value returned {
+  value Returned {
     title: { pt-BR: "Devolvida", en: "Returned" }
     icon: Returned
     ordinal: 50
