@@ -75,10 +75,8 @@ document Notification {
     }
   }
 
-  rules {
-    status == Sent implies sentAt != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule status == Sent implies sentAt != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

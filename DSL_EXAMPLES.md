@@ -901,15 +901,13 @@ document Customer {
     }
   }
 
-  rules {
-    email != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    status in [active, inactive, archived]: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule email != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
+  }
+  rule status in [active, inactive, archived] {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```
@@ -1009,15 +1007,13 @@ document Invoice {
       roles: [Manager]
       transition: Issued
 
-      rules {
-        items.length > 0: {
-          pt-BR: "Adicione itens antes de emitir a fatura"
-          en: "Add items before issuing the invoice"
-        }
-        total > 0 BRL: {
-          pt-BR: "Fatura sem valor"
-          en: "Invoice has no value"
-        }
+      rule items.length > 0 {
+        pt-BR: "Adicione itens antes de emitir a fatura"
+        en: "Add items before issuing the invoice"
+      }
+      rule total > 0 BRL {
+        pt-BR: "Fatura sem valor"
+        en: "Invoice has no value"
       }
 
       {
@@ -1030,15 +1026,13 @@ document Invoice {
       roles: [Manager]
       transition: Cancelled
 
-      rules {
-        reason.length >= 10: {
-          pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-          en: "Enter a reason with at least 10 characters"
-        }
-        status == Issued: {
-          pt-BR: "A nota precisa estar emitida"
-          en: "Invoice must be issued"
-        }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      rule status == Issued {
+        pt-BR: "A nota precisa estar emitida"
+        en: "Invoice must be issued"
       }
 
       {
@@ -1046,11 +1040,9 @@ document Invoice {
     }
   }
 
-  rules {
-    status == Issued implies issuedAt != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule status == Issued implies issuedAt != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```
@@ -1109,15 +1101,13 @@ document Shipment {
     }
   }
 
-  rules {
-    pesoBruto <= carrier.limitDePeso: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    status == dispatched implies tracking != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule pesoBruto <= carrier.limitDePeso {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
+  }
+  rule status == dispatched implies tracking != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```
@@ -1172,15 +1162,13 @@ document LabExam {
     }
   }
 
-  rules {
-    status == released implies signature != null and result != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    status == released implies releasedAt != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule status == released implies signature != null and result != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
+  }
+  rule status == released implies releasedAt != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```
@@ -1228,11 +1216,9 @@ document SupportTicket {
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Agent]
 
-      rules {
-        user != null: {
-          pt-BR: "Selecione o responsável"
-          en: "Select the assignee"
-        }
+      rule user != null {
+        pt-BR: "Selecione o responsável"
+        en: "Select the assignee"
       }
 
       {
@@ -1244,11 +1230,9 @@ document SupportTicket {
       title: { pt-BR: "Comentar", en: "Comment" }
       roles: [Agent]
 
-      rules {
-        body.length > 0: {
-          pt-BR: "Escreva um comentário"
-          en: "Write a comment"
-        }
+      rule body.length > 0 {
+        pt-BR: "Escreva um comentário"
+        en: "Write a comment"
       }
 
       {
@@ -1260,11 +1244,9 @@ document SupportTicket {
       roles: [Agent]
       transition: Resolved
 
-      rules {
-        assignee != null: {
-          pt-BR: "Atribua o chamado antes de resolver"
-          en: "Assign the ticket before resolving"
-        }
+      rule assignee != null {
+        pt-BR: "Atribua o chamado antes de resolver"
+        en: "Assign the ticket before resolving"
       }
 
       {
@@ -1276,11 +1258,9 @@ document SupportTicket {
       roles: [Manager]
       transition: Open
 
-      rules {
-        reason.length >= 10: {
-          pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-          en: "Enter a reason with at least 10 characters"
-        }
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
       }
 
       {
@@ -1288,11 +1268,9 @@ document SupportTicket {
     }
   }
 
-  rules {
-    status == resolved implies assignee != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule status == resolved implies assignee != null {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```
@@ -1326,11 +1304,9 @@ document MonthlyRevenue {
     }
   }
 
-  rules {
-    month >= 2026-01: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
+  rule month >= 2026-01 {
+    pt-BR: "Regra do documento não atendida"
+    en: "Document rule not met"
   }
 }
 ```

@@ -27,12 +27,11 @@ document StockItem {
     adjust(quantity: std.Count, reason: string){
       title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
       roles: [Manager]
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
     reserve(quantity: std.Count){
       title: { pt-BR: "Reservar", en: "Reserve" }
@@ -44,15 +43,13 @@ document StockItem {
     }
   }
 
-  rules {
-    available >= 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    reserved >= 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule available >= 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule reserved >= 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -93,10 +90,8 @@ document Reservation {
     }
   }
 
-  rules {
-    quantity > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule quantity > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

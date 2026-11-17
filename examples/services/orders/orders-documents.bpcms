@@ -23,15 +23,13 @@ document OrderItem {
     byProduct: [product.id] hash
   }
 
-  rules {
-    quantity > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    total == quantity * unitPrice: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule quantity > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule total == quantity * unitPrice {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -69,24 +67,22 @@ document Order {
     addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       roles: [Clerk]
-  rules {
-        quantity > 0: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     quantity > 0 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     place(){
       title: { pt-BR: "Realizar pedido", en: "Place order" }
       roles: [Clerk]
       transition: Placed
-  rules {
-        items.length > 0: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     items.length > 0 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
       {
       placedAt = now()
       }
@@ -96,12 +92,11 @@ document Order {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     expireDraft(){
@@ -111,18 +106,16 @@ document Order {
     }
   }
 
-  rules {
-    total == subtotal - discount: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Placed implies placedAt != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    items.count <= 50: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule total == subtotal - discount {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Placed implies placedAt != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule items.count <= 50 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

@@ -54,14 +54,12 @@ document Citizen {
     }
   }
 
-  rules {
-    displayName != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    country.length == 2: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule displayName != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule country.length == 2 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

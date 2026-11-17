@@ -137,12 +137,11 @@ document Invoice {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
       transition: Issued
-  rules {
-        total > 0 BRL: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     total > 0 BRL {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
       {
       issuedAt = now()
       }
@@ -152,12 +151,11 @@ document Invoice {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     closeMonth(){
@@ -166,11 +164,9 @@ document Invoice {
     }
   }
 
-  rules {
-    status == Issued implies issuedAt != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule status == Issued implies issuedAt != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -210,15 +206,13 @@ document CreditNote {
     }
   }
 
-  rules {
-    amount > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    amount <= 100000 BRL: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule amount > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule amount <= 100000 BRL {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -251,11 +245,9 @@ document Bill {
     }
   }
 
-  rules {
-    amount > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule amount > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -277,20 +269,17 @@ document OrderCancellation {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
   }
 
-  rules {
-    reason != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule reason != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 

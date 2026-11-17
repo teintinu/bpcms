@@ -873,16 +873,13 @@ actions {
     roles: [Manager]
     transition: Issued
 
-    rules {
-      items.length > 0: {
-        pt-BR: "Adicione itens antes de emitir a fatura"
-        en: "Add items before issuing the invoice"
-      }
-
-      total > 0 BRL: {
-        pt-BR: "Fatura sem valor"
-        en: "Invoice has no value"
-      }
+    rule items.length > 0 {
+      pt-BR: "Adicione itens antes de emitir a fatura"
+      en: "Add items before issuing the invoice"
+    }
+    rule total > 0 BRL {
+      pt-BR: "Fatura sem valor"
+      en: "Invoice has no value"
     }
 
     {
@@ -936,11 +933,9 @@ archive() {
 **Rules.** A mesma sintaxe vale no Document, na action e no field.
 
 ```bpcms
-rules {
-  total == subtotal + tax: {
-    pt-BR: "Total da nota não confere"
-    en: "Invoice total does not match"
-  }
+rule total == subtotal + tax {
+  pt-BR: "Total da nota não confere"
+  en: "Invoice total does not match"
 }
 ```
 
@@ -948,11 +943,9 @@ rules {
 customer: User {
   title: { pt-BR: "Cliente", en: "Customer" }
 
-  rules {
-    value != null: {
-      pt-BR: "Selecione o cliente da nota"
-      en: "Select the invoice customer"
-    }
+  rule value != null {
+    pt-BR: "Selecione o cliente da nota"
+    en: "Select the invoice customer"
   }
 }
 ```
@@ -973,11 +966,9 @@ customer: User {
 tracking: TrackingCode {
   title: { pt-BR: "Rastreio", en: "Tracking" }
 
-  rules {
-    status != Dispatched || value != null: {
-      pt-BR: "Informe o rastreio após o despacho"
-      en: "Enter tracking after dispatch"
-    }
+  rule status != Dispatched || value != null {
+    pt-BR: "Informe o rastreio após o despacho"
+    en: "Enter tracking after dispatch"
   }
 }
 ```
@@ -1115,9 +1106,6 @@ document Shipment {
     dispatch(carrier: CarrierRef)
   }
 
-  rules {
-    status == dispatched implies tracking != null
-  }
 }
 ```
 

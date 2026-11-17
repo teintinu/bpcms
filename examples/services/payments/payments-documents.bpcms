@@ -46,15 +46,13 @@ refund() {
     }
   }
 
-  rules {
-    amount > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Captured implies capturedAt != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule amount > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Captured implies capturedAt != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -83,12 +81,11 @@ document Refund {
     request(reason: string){
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
       roles: [Manager]
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
     approve(){
       title: { pt-BR: "Aprovar", en: "Approve" }
@@ -100,14 +97,12 @@ document Refund {
     }
   }
 
-  rules {
-    amount > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    amount <= 100000 BRL: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule amount > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule amount <= 100000 BRL {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

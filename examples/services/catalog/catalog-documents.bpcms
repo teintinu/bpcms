@@ -78,14 +78,12 @@ document Product {
     }
   }
 
-  rules {
-    price > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Published implies price > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule price > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Published implies price > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

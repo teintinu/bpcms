@@ -61,19 +61,17 @@ document Sample {
     }
   }
 
-  rules {
-    kind == patient implies patient != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    kind == support implies supportLab != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    kind == control implies controlLot != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule kind == patient implies patient != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule kind == support implies supportLab != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule kind == control implies controlLot != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 
   actions {
@@ -117,15 +115,13 @@ document ExamOrder {
     resultedAt: DateTime { title: { pt-BR: "Resultado em", en: "Resulted at" } }
   }
 
-  rules {
-    status == Resulted implies resultedAt != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Referred implies referredTo != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule status == Resulted implies resultedAt != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Referred implies referredTo != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 
   actions {

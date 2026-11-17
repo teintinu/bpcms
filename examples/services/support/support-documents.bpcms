@@ -42,12 +42,11 @@ document Ticket {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Agent]
-  rules {
-        user != null: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     user != null {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
       {
       assignee = user
       }
@@ -56,36 +55,33 @@ document Ticket {
     comment(body: string){
       title: { pt-BR: "Comentar", en: "Comment" }
       roles: [Agent]
-  rules {
-        body.length > 0: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     body.length > 0 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     resolve(){
       title: { pt-BR: "Resolver", en: "Resolve" }
       roles: [Agent]
       transition: Resolved
-  rules {
-        assignee != null: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     assignee != null {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     reopen(reason: string){
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
       transition: Open
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     escalateBreached(){
@@ -94,11 +90,9 @@ document Ticket {
     }
   }
 
-  rules {
-    status == Resolved implies assignee != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule status == Resolved implies assignee != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -134,12 +128,11 @@ document ReturnRequest {
     request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
       roles: [Clerk]
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     approve(){
@@ -152,12 +145,11 @@ document ReturnRequest {
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
       roles: [Manager]
       transition: Rejected
-  rules {
-        reason.length >= 10: {
-          pt-BR: "Operação não permitida"
-          en: "Operation not allowed"
-        }
+  rule     reason.length >= 10 {
+        pt-BR: "Operação não permitida"
+        en: "Operation not allowed"
       }
+  }
     }
 
     refund(){
@@ -167,14 +159,12 @@ document ReturnRequest {
     }
   }
 
-  rules {
-    refundAmount >= 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Approved implies refundAmount > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule refundAmount >= 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Approved implies refundAmount > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }

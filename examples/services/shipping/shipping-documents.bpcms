@@ -21,11 +21,9 @@ document ShipmentItem {
     byShipment: [shipment.id] hash
   }
 
-  rules {
-    quantity > 0: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule quantity > 0 {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
 
@@ -89,14 +87,12 @@ document Shipment {
     }
   }
 
-  rules {
-    pesoBruto <= MaxWeight: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
-    status == Dispatched implies tracking != null: {
-      pt-BR: "Documento inválido"
-      en: "Invalid document"
-    }
+  rule pesoBruto <= MaxWeight {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
+  }
+  rule status == Dispatched implies tracking != null {
+    pt-BR: "Documento inválido"
+    en: "Invalid document"
   }
 }
