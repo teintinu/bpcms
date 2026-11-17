@@ -23,20 +23,20 @@ document Payment {
 
 
   actions {
-    authorize() {
-      title: { pt-BR: "Autorizar", en: "Authorize" }
+authorize() {
+      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
       roles: [Manager]
     }
-    capture() {
-      title: { pt-BR: "Capturar", en: "Capture" }
+capture() {
+      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
       roles: [Manager]
       transition: Captured
       {
       capturedAt = now()
       }
     }
-    refund() {
-      title: { pt-BR: "Reembolsar", en: "Refund" }
+refund() {
+      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
       roles: [Manager]
       transition: Refunded
     }
@@ -48,12 +48,12 @@ document Payment {
 
   rules {
     amount > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     status == Captured implies capturedAt != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -83,10 +83,10 @@ document Refund {
     request(reason: string){
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
       roles: [Manager]
-      rules {
+  rules {
         reason.length >= 10: {
-          pt-BR: "Requisito não atendido"
-          en: "Requirement not met"
+          pt-BR: "Operação não permitida"
+          en: "Operation not allowed"
         }
       }
     }
@@ -102,12 +102,12 @@ document Refund {
 
   rules {
     amount > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     amount <= 100000 BRL: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

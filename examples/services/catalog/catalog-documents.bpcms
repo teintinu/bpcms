@@ -80,12 +80,12 @@ document Product {
 
   rules {
     price > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     status == Published implies price > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

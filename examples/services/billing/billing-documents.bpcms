@@ -1,31 +1,76 @@
 // service: example.com/services/billing
-document InvoiceItem {
+shape InvoiceItem {
   title: { pt-BR: "Item da nota", en: "Invoice item" }
-  version: 1
-  owner: "Billing"
-  sync: live
 
   fields {
-    invoice: Invoice {
-      title: { pt-BR: "Nota fiscal", en: "Invoice" }
-    }
     product: Product {
       title: { pt-BR: "Produto", en: "Product" }
       lookup
-    } // TODO quando estiver revisando documento, rever sobre lookup-indices de lookup/searchable, view de lookup...
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }, currency: BRL }
-    total: std.Money { title: { pt-BR: "Total", en: "Total" }, currency: BRL }
+    }
+    quantity: std.Count {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      lookup
+    }
+    unitPrice: std.Money {
+      title: { pt-BR: "Preço unitário", en: "Unit price" }
+      currency: BRL
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+      computed: quantity * unitPrice
+    }
+  }
+}
+
+scopable document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+  fields {
+    code: string {
+      title: { pt-BR: "Código", en: "Code" }
+      maxLength: 8
+      unique
+      lookup
+      required
+    }
+    name: string {
+      title: { pt-BR: "Nome", en: "Name" }
+      maxLength: 120
+      lookup
+      required
+    }
   }
 
-  indexes {
-    byInvoice: [invoice.id] hash
+  seed {
+    SP {
+      code: "SP"
+      name: "São Paulo"
+    }
+    RJ {
+      code: "RJ"
+      name: "Rio de Janeiro"
+    }
+  }
+}
+
+scopable document FiscalYear {
+  title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
+  fields {
+    year: integer {
+      title: { pt-BR: "Ano", en: "Year" }
+      unique
+      lookup
+      required
+    }
+    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
+    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
   }
 
-  rules {
-    total == quantity * unitPrice: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+  seed {
+    Y2026 {
+      year: 2026
+      startsAt: 2026-01-01
+      endsAt: 2026-12-31
     }
   }
 }
@@ -38,8 +83,23 @@ document Invoice {
   retention: 5y
 
   fields {
-    number: string { title: { pt-BR: "Número", en: "Number" }, maxLength: 40, unique, lookup }
-    series: string { title: { pt-BR: "Série", en: "Series" }, maxLength: 10 }
+    store: Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      required
+      default: Store.SP
+    }
+    fiscalYear: FiscalYear {
+      title: { pt-BR: "Exercício", en: "Fiscal year" }
+      required
+      default: FiscalYear.Y2026
+    }
+    number: InvoiceNumber {
+      title: { pt-BR: "Número", en: "Number" }
+      format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
+      sequence: per(Store, FiscalYear)
+      unique
+      lookup
+    }
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
     }
@@ -48,30 +108,39 @@ document Invoice {
       lookup
     }
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
-    subtotal: std.Money { title: { pt-BR: "Subtotal", en: "Subtotal" }, currency: BRL }
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: items.sum(total)
+    }
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
-    total: std.Money { title: { pt-BR: "Total", en: "Total" }, lookup, currency: BRL }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      lookup
+      currency: BRL
+      computed: subtotal + tax
+    }
     status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" } }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
   }
 
   indexes {
-    number: [series, number] unique
+    number: [number] unique
     byOrder: [order.id] hash
     byStatus: [status, dueAt] range
   }
 
 
   actions {
-    issue(series: string, number: string){
+    issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
       transition: Issued
-      rules {
+  rules {
         total > 0 BRL: {
-          pt-BR: "Requisito não atendido"
-          en: "Requirement not met"
+          pt-BR: "Operação não permitida"
+          en: "Operation not allowed"
         }
       }
       {
@@ -83,10 +152,10 @@ document Invoice {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-      rules {
+  rules {
         reason.length >= 10: {
-          pt-BR: "Requisito não atendido"
-          en: "Requirement not met"
+          pt-BR: "Operação não permitida"
+          en: "Operation not allowed"
         }
       }
     }
@@ -98,17 +167,9 @@ document Invoice {
   }
 
   rules {
-    total == subtotal + tax: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    total == items.sum(total): {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
     status == Issued implies issuedAt != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -151,12 +212,12 @@ document CreditNote {
 
   rules {
     amount > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     amount <= 100000 BRL: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -184,7 +245,7 @@ document Bill {
       title: { pt-BR: "Pagar", en: "Pay" }
       roles: [Manager]
       transition: Paid
-      {
+  {
       paidAt = now()
       }
     }
@@ -192,8 +253,8 @@ document Bill {
 
   rules {
     amount > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -216,10 +277,10 @@ document OrderCancellation {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
-      rules {
+  rules {
         reason.length >= 10: {
-          pt-BR: "Requisito não atendido"
-          en: "Requirement not met"
+          pt-BR: "Operação não permitida"
+          en: "Operation not allowed"
         }
       }
     }
@@ -227,8 +288,8 @@ document OrderCancellation {
 
   rules {
     reason != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

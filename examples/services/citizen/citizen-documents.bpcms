@@ -56,12 +56,12 @@ document Citizen {
 
   rules {
     displayName != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     country.length == 2: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

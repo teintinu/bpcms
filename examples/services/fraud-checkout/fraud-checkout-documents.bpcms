@@ -17,8 +17,8 @@ document FraudCheck {
   }
 
   events {
-    Evaluated {
-      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
+Evaluated {
+      title: { pt-BR: "Operação não permitida", en: "Operation not allowed" }
       key: this.id
       payload { approved: boolean; score: number }
     }
@@ -28,7 +28,7 @@ document FraudCheck {
     evaluate(){
       title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
       roles: [RiskAnalyst]
-      {
+  {
       emit Evaluated { approved: approved; score: score }
       }
     }

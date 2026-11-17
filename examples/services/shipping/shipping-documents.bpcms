@@ -23,8 +23,8 @@ document ShipmentItem {
 
   rules {
     quantity > 0: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -91,12 +91,12 @@ document Shipment {
 
   rules {
     pesoBruto <= MaxWeight: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
     status == Dispatched implies tracking != null: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

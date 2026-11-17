@@ -43,8 +43,8 @@ document User {
 
   rules {
     status in [Active, Suspended, Disabled]: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -76,8 +76,8 @@ document Consumer extends User {
 
   rules {
     citizen != null implies status == Active: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }
@@ -115,8 +115,8 @@ document Session {
 
   rules {
     expiresAt > issuedAt: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
+      pt-BR: "Documento inválido"
+      en: "Invalid document"
     }
   }
 }

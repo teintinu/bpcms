@@ -579,13 +579,118 @@ task RefundPayment {
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
 | `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
 | `actions` | `actions { issue() { title; roles; transition: Issued; rules; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
-| `events` | `events { Approved { title; key; payload } }` | Eventos do Document; `emit` na action. |
+| `events` | `events { Approved { title; key; payload } }` | Eventos sem workflow; `emit` na action. |
+| `seed` | `seed { SP { code: "SP"; name: "São Paulo" } }` | Documentos pré-criados/idempotentes para bootstrap. |
 | `rules` | `rules { total == subtotal + tax: { message } }` | Regras de documento, action e field; condição verdadeira = permitido. |
 | `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
 | `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
 | `computed <Name> from` | `computed frete from Shipment, CarrierTable { ... }` | Cálculo nomeado (campo/subdocumento) com frescor. |
 | `freshness` | `freshness: 15m` | TTL/agenda do cálculo; expõe `calculatedAt`. |
 | `exposes` | `exposes: [frete, calculatedAt]` | Campos resultantes do cálculo. |
+
+**Campos calculados no Document.** A mesma cláusula vale para fields do Document:
+
+```bpcms
+document Invoice {
+  fields {
+    items: InvoiceItem[]
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: items.sum(total)
+    }
+    tax: std.Money {
+      title: { pt-BR: "Imposto", en: "Tax" }
+      currency: BRL
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+      computed: subtotal + tax
+    }
+  }
+}
+```
+
+- `total` de cada item pode ser calculado;
+- `subtotal` soma os itens;
+- `total` soma subtotal + imposto;
+- computed é somente leitura;
+- não repetir a conta em `rules`.
+
+**Seed.** `seed` declara documentos pré-criados necessários para o funcionamento:
+
+```bpcms
+scopable document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+
+  fields {
+    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  }
+
+  seed {
+    SP {
+      code: "SP"
+      name: "São Paulo"
+    }
+  }
+}
+```
+
+Regras:
+
+- o builder aplica o seed no bootstrap/migração;
+- é idempotente;
+- valida `required`, rules, unique e referências;
+- usa um `id` determinístico por serviço/Document/chave;
+- não executa actions;
+- não emite eventos de domínio;
+- `seed` não é `initial` de workflow.
+
+**Identificador de seed.** A chave do seed vira uma referência válida:
+
+```text
+Store.SP
+FiscalYear.Y2026
+```
+
+`Store.SP` é um `DocumentRef` imutável para a loja de São Paulo:
+
+- carrega o `id` determinístico;
+- carrega os campos `lookup` do Store;
+- pode ser usado em fields, actions, rules, outros seeds e processos;
+- é resolvido em tempo de build;
+- não é string;
+- não é ID solto.
+
+Exemplo:
+
+```bpcms
+document Invoice {
+  fields {
+    store: Store { default: Store.SP }
+    fiscalYear: FiscalYear { default: FiscalYear.Y2026 }
+  }
+}
+```
+
+```bpcms
+seed {
+  DefaultInvoiceConfig {
+    store: Store.SP
+    fiscalYear: FiscalYear.Y2026
+  }
+}
+```
+
+Identidade canônica:
+
+```text
+example.com/services/billing#Store/SP
+```
+
+Se o seed for renomeado, a referência quebra; renomear seed é mudança incompatível.
 
 **Identidade e `DocumentRef`.** Todo `document` tem um `id` interno implícito; ele não é declarado. Um campo cujo tipo é um Document é implicitamente um `DocumentRef`: carrega `id` + todos os campos `lookup` do alvo. Não existe Shape `<Name>Id` nem tipo `XxxId` na DSL. **Exceção:** extensão (`extends`) compartilha o `id` do pai; `Consumer extends User` usa o mesmo `id` de `User`.
 
@@ -729,9 +834,35 @@ number: InvoiceNumber {
 | `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
 | `unit` / `units` | — | `unit` só no Shape de unidade única; `units` só no Shape multiunidade. |
 | `default` | `default: BR` | Valor inicial; não é regra de negócio. |
+| `computed` | `computed: quantity * unitPrice` | Campo derivado; somente leitura; calculado a partir de outros campos. |
 | `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
 | `read` | `read: [Clerk, Manager]` | Roles que podem ler o campo. |
 | `edit` | `edit: [Manager]` | Roles que podem alterar o campo. |
+
+**Campo calculado em Shape.** Shape composto pode ter campo derivado:
+
+```bpcms
+shape InvoiceItem {
+  title: { pt-BR: "Item da nota", en: "Invoice item" }
+
+  fields {
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+    unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }; currency: BRL }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+      computed: quantity * unitPrice
+    }
+  }
+}
+```
+
+- o campo é somente leitura;
+- não pode ser atribuído;
+- é calculado a partir dos demais campos;
+- é incluído na serialização;
+- dependências circulares são erro;
+- não precisa de rule de consistência.
 
 **Ações são botões.** Toda ação declara `title`, `roles` e, opcionalmente, `transition` e `rules`.
 
@@ -790,6 +921,18 @@ actions {
 - body sem retorno;
 - evento vem da transição ou de `emit` sem workflow.
 
+**Ação pública.** Quando não há restrição de role:
+
+```bpcms
+archive() {
+  title: { pt-BR: "Arquivar", en: "Archive" }
+  roles: public
+  transition: Archived
+}
+```
+
+`roles: public` é explícito; `roles` ausente e `roles: []` são erros.
+
 **Rules.** A mesma sintaxe vale no Document, na action e no field.
 
 ```bpcms
@@ -819,6 +962,26 @@ customer: User {
 - `code` não existe;
 - permissão e workflow têm motivo genérico do builder.
 
+**`required` e rules de field.** Obrigatoriedade simples usa `required`; regra condicional usa `rules`:
+
+```bpcms
+customer: User {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  required
+}
+
+tracking: TrackingCode {
+  title: { pt-BR: "Rastreio", en: "Tracking" }
+
+  rules {
+    status != Dispatched || value != null: {
+      pt-BR: "Informe o rastreio após o despacho"
+      en: "Enter tracking after dispatch"
+    }
+  }
+}
+```
+
 **Auditoria automática.** Não existe comando `audit()` na DSL.
 
 Toda action é um comando e o compilador gera um nó de auditoria no AST para o builder registrar:
@@ -836,7 +999,74 @@ Toda action é um comando e o compilador gera um nó de auditoria no AST para o 
 
 O registro é responsabilidade do builder. A DSL não declara `audit(...)` nem `audit: true` no Document.
 
+O AST do compilador expõe:
+
+```text
+CommandAudit {
+  command: "Billing.Invoice.issue"
+  document: "Billing.Invoice"
+  documentId: ...
+  actorId: ...
+  scope: ...
+  occurredAt: ...
+  correlationId: ...
+  before: ...
+  after: ...
+  result: success | denied | error
+  reasons: [...]
+  event: "Billing.Invoice.Issued"?
+}
+```
+
+
+
 **Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`roles`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
+
+**Mascaramento.** Aplicado na leitura do field:
+
+```bpcms
+customer: User {
+  title: { pt-BR: "Cliente", en: "Customer" }
+
+  mask {
+    roles: [Clerk]
+    fields: [name, email]
+  }
+}
+```
+
+**Limites.** Aplicados em actions:
+
+```bpcms
+refund(amount: std.Money) {
+  title: { pt-BR: "Reembolsar", en: "Refund" }
+  roles: [Manager]
+
+  limits {
+    amount <= 50000 BRL: {
+      roles: [Manager]
+      pt-BR: "Acima do limite de reembolso"
+      en: "Above the refund limit"
+    }
+  }
+}
+```
+
+**Segregação e assinatura.** No Document:
+
+```bpcms
+segregation {
+  issue != cancel
+}
+
+signature {
+  release: Pathologist
+}
+```
+
+- `segregation` impede o mesmo ator nas duas ações;
+- `signature` exige role com autoridade de assinatura;
+- ambos são validados no build e no runtime.
 
 **Relatórios.** `type: report` é um Document calculado com cache:
 
@@ -2266,6 +2496,28 @@ Todos resolvem para:
 ```text
 example.com/services/billing#Invoice.Paid
 ```
+
+## 22.3.1 Evento duplicado
+
+O mesmo evento pode aparecer em transições de origens diferentes:
+
+```bpcms
+value Issued {
+  transition Paid { ... }
+}
+
+value Overdue {
+  transition Paid { ... }
+}
+```
+
+O compilador:
+
+- exige o mesmo `event`;
+- exige o mesmo payload;
+- exige o mesmo título;
+- funde em `Invoice.Paid`;
+- gera `E_EVENT_SCHEMA_CONFLICT` se divergir.
 
 ## 22.4 Regras
 

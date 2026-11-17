@@ -925,6 +925,13 @@ scopable document Store {
     code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
   }
+
+  seed {
+    SP {
+      code: "SP"
+      name: "São Paulo"
+    }
+  }
 }
 
 scopable document FiscalYear {
@@ -933,6 +940,14 @@ scopable document FiscalYear {
     year: integer { title: { pt-BR: "Ano", en: "Year" }, unique, lookup }
     startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
     endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
+  }
+
+  seed {
+    Y2026 {
+      year: 2026
+      startsAt: 2026-01-01
+      endsAt: 2026-12-31
+    }
   }
 }
 
@@ -945,9 +960,11 @@ document Invoice {
   fields {
     store: Store {
       title: { pt-BR: "Loja", en: "Store" }
+      default: Store.SP
     }
     fiscalYear: FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
+      default: FiscalYear.Y2026
     }
     customer: Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
@@ -960,13 +977,20 @@ document Invoice {
       lookup
     }
     items: InvoiceItem[]
-    subtotal: std.Money
-    tax: std.Money
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: items.sum(total)
+    }
+    tax: std.Money {
+      title: { pt-BR: "Imposto", en: "Tax" }
+      currency: BRL
+    }
     total: std.Money {
       title: { pt-BR: "Total", en: "Total" }
       lookup
-      read: [Clerk, Manager]
-      edit: [Manager]
+      currency: BRL
+      computed: subtotal + tax
     }
     status: InvoiceStatus
     issuedAt: DateTime
@@ -1011,7 +1035,7 @@ document Invoice {
           pt-BR: "Informe um motivo com pelo menos 10 caracteres"
           en: "Enter a reason with at least 10 characters"
         }
-        status == issued: {
+        status == Issued: {
           pt-BR: "A nota precisa estar emitida"
           en: "Invoice must be issued"
         }
@@ -1023,15 +1047,7 @@ document Invoice {
   }
 
   rules {
-    total == subtotal + tax: {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    total == items.sum(subtotal): {
-      pt-BR: "Regra do documento não atendida"
-      en: "Document rule not met"
-    }
-    status == issued implies issuedAt != null: {
+    status == Issued implies issuedAt != null: {
       pt-BR: "Regra do documento não atendida"
       en: "Document rule not met"
     }

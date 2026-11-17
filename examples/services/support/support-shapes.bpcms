@@ -31,6 +31,9 @@ shape TicketStatus {
     }
     transition Resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
+      payload {
+        assignee: User
+      }
     }
   }
   value Waiting {
@@ -42,6 +45,9 @@ shape TicketStatus {
     }
     transition Resolved {
       title: { pt-BR: "Resolvido", en: "Resolved" }
+      payload {
+        assignee: User
+      }
     }
   }
   value Resolved {

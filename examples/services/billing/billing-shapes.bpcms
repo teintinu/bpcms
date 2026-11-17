@@ -150,3 +150,9 @@ shape YearMonth {
   validate: year-month
   format: plain
 }
+
+shape InvoiceNumber {
+  title: { pt-BR: "Número da nota", en: "Invoice number" }
+  base: string
+  maxLength: 40
+}

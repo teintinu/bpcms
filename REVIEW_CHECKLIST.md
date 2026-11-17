@@ -253,6 +253,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `Percentage` agora é `std.Percentage`; a assinatura de `Order.create` está correta?
 - [x] `default`, `private` e `sensitive` exemplificados em `Ticket`; semântica de field.
 - [x] Shape composto tem serialização JSON canônica por default; `format`/`parse` sobrescrevem.
+- [x] Campo calculado em Shape e Document: `computed: expression`; somente leitura; sem rule redundante.
 - [x] `std.Money` substitui `MoneyBRL`; `currency` é restrição de field; valor carrega moeda; multi-moeda exemplificado em `Ticket.budget`.
 - [x] `std.Count` substitui o Count de Identity; a migração está correta?
 - [x] `LocaleTag` em Notifications é tipo de negócio ou detalhe de regionalização?
@@ -427,6 +428,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `transition: <Event>` em ações que mudam workflow
 - [ ] UI recebe botão habilitado/desabilitado, `fields` e motivo
 - [ ] `report` como `document type: report`
+- [ ] `seed` para documentos pré-criados idempotentes
+- [ ] `Document.Seed` é `DocumentRef` válido e determinístico
+- [ ] `Store.SP` pode ser usado como valor/default em fields, actions e processos
+- [ ] renomear seed é breaking change
 - [ ] `rules` no Document, action e field; condição verdadeira = permitido
 - [ ] `required` para obrigatoriedade simples; `rules` para condicional
 - [ ] `source: device ...`
@@ -440,8 +445,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] permissões por campo: `read`/`edit`
 - [ ] search via processo que declara `reads`
 - [ ] combinação documento × campo × role × scope
-- [ ] `dataMasking`/`masked` em field
-- [ ] `limits`/`unlimited` por role/field
+- [ ] `mask` em field
+- [ ] `limits` em action
 - [ ] `segregation` e `signature` no documento, se aplicável
 
 **Exemplos:** D.1–D.6; `*-documents.bpcms`.
