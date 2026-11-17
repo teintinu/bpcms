@@ -1,16 +1,5 @@
 // service: example.com/services/catalog
 
-role Curator {
-  title: { pt-BR: "Editor de catálogo", en: "Catalog editor" }
-  permissions: [product.edit, product.submitForReview, catalog.view]
-}
-
-role Publisher {
-  title: { pt-BR: "Gerente de catálogo", en: "Catalog manager" }
-  inherits: Curator
-  permissions: [product.publish, product.reject, report.view]
-}
-
 organogram Merchandising {
   title: { pt-BR: "Organograma de merchandising", en: "Merchandising organogram" }
 
@@ -27,4 +16,15 @@ organogram Merchandising {
   segregation {
     product.submitForReview != product.publish
   }
+}
+
+role Curator {
+  title: { pt-BR: "Editor de catálogo", en: "Catalog editor" }
+  permissions: [product.edit, product.submitForReview, catalog.view]
+}
+
+role Publisher {
+  title: { pt-BR: "Gerente de catálogo", en: "Catalog manager" }
+  inherits: Curator
+  permissions: [product.publish, product.reject, report.view]
 }

@@ -1,5 +1,27 @@
 // service: example.com/services/laboratory
 
+organogram Laboratory {
+  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
+  scopes: [Laboratory]
+
+  hierarchy {
+    LabManager > Pathologist > Analyst > Collector
+    LabManager > SupportLiaison
+    LabManager > AnalyzerDevice
+  }
+
+  LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
+  LabManager delegates to Pathologist when absent for 7d
+
+  segregation {
+    exam.perform != exam.release
+  }
+
+  signature {
+    Pathologist
+  }
+}
+
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
   scopes: [Laboratory]
@@ -48,26 +70,4 @@ role LabManager {
   scopes: [Laboratory]
   inherits: Pathologist
   permissions: [lab.manage, support.refer]
-}
-
-organogram Laboratory {
-  title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scopes: [Laboratory]
-
-  hierarchy {
-    LabManager > Pathologist > Analyst > Collector
-    LabManager > SupportLiaison
-    LabManager > AnalyzerDevice
-  }
-
-  LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
-  LabManager delegates to Pathologist when absent for 7d
-
-  segregation {
-    exam.perform != exam.release
-  }
-
-  signature {
-    Pathologist
-  }
 }

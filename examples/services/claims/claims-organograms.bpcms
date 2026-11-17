@@ -1,5 +1,23 @@
 // service: example.com/services/claims
 
+organogram Indemnity {
+  title: { pt-BR: "Organograma de sinistros", en: "Claims organogram" }
+
+  hierarchy {
+    Manager > Adjuster > Clerk
+    Manager > FraudAnalyst
+    Manager > FinanceAnalyst
+    Clerk > Policyholder
+  }
+
+  Manager manages [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst]
+  Manager delegates to Adjuster when absent for 7d
+
+  segregation {
+    settlement.approve != settlement.pay
+  }
+}
+
 role Clerk {
   title: { pt-BR: "Atendente de sinistros", en: "Claims clerk" }
   permissions: [
@@ -60,22 +78,4 @@ role Manager {
 role Policyholder {
   title: { pt-BR: "Segurado", en: "Policyholder" }
   permissions: [claim.viewOwn, claim.register, claim.describe]
-}
-
-organogram Indemnity {
-  title: { pt-BR: "Organograma de sinistros", en: "Claims organogram" }
-
-  hierarchy {
-    Manager > Adjuster > Clerk
-    Manager > FraudAnalyst
-    Manager > FinanceAnalyst
-    Clerk > Policyholder
-  }
-
-  Manager manages [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst]
-  Manager delegates to Adjuster when absent for 7d
-
-  segregation {
-    settlement.approve != settlement.pay
-  }
 }

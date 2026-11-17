@@ -1782,7 +1782,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-034 | ForeignKey soft + projeção de campos na referência | ✅ | baseline atual |
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
-| D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
+| D-037 | Roles e organogram no mesmo `<service>-organograms.bpcms`, com o organogram antes das roles | ✅ | baseline atual |
 | D-038 | Enum `value` tem `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
 | D-044 | Shape tem `write/read` em stream, `format/parse` com flags, `toNumber` e métodos próprios; `convert` removido | ✅ | baseline atual |
 | D-045 | `units` no Shape com fatores; `unit`/`min`/`precision` no field; sem `convert` | ✅ | baseline atual |
@@ -1790,7 +1790,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-047 | Enums divididos em `classification` e `workflow`; workflow tem `initial`/`next` | ✅ | baseline atual |
 | D-048 | Bases de mídia, formula to/from, Duration, unitStyle e operadores tipados | ✅ | baseline atual |
 | D-049 | Money/Currency na stdlib; `MoneyBRL` removido; sem câmbio | ✅ | baseline atual |
-| D-050 | Arquivos organizados por contexto principal (`application`/`document`/`process`), não por tipo de artefato | ✅ | pedido |
+| D-050 | Arquivos organizados por contexto principal (`application`/`service`/`document`/`process`), com um único principal, primeiro artefato e nome equivalente; compartilhado com um único tipo por arquivo, exceto organogram + roles | ✅ | pedido |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
@@ -1851,7 +1851,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência recebe automaticamente a projeção do alvo; archive pode materializar; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha o `id`, herda lookup e adiciona `citizen` que referencia o Citizen. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
-| **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
+| **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém o organogram e as roles, com o organogram **antes** das roles. | A hierarquia e seus papéis são lidos juntos; o organogram primeiro mantém o contrato legível. | ✅ |
 | **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n, `icon` e `ordinal`.** O primeiro ordinal é 10; incrementos de 10. `Icon` é token semântico do serviço; o Theme/builder resolve a imagem. | Labels, imagens e binário estáveis. | ✅ |
 | **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
 | **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
@@ -1864,7 +1864,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-57** | Enum é classificação ou workflow? | **`base: classification`** para categorias; **`base: workflow`** para máquina de estados, com um `initial`, `next` obrigatório e `[]` terminal. Self-transition proibida; `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`. | Separa categoria de ciclo de vida. | ✅ |
 | **B-58** | Como representar mídia, unidades e operadores? | Bases `string`/`richtext`/`attachment`/`audio`/`image`/`video`; units com referência factor1 e `formula { to/from }`; `convert` inteligente; `unitStyle`; `Duration` std; operadores explícitos por Shape. | Cobre mídia, unidades não lineares e aritmética dimensional. | ✅ |
 | **B-59** | Como representar dinheiro? | `std.Money` com `base: decimal`, valor com `raw` + `currency`; `std.Currency` classification ISO com `scale`; `reintroduce` adiciona metadados e `prefix`/`suffix`/`infix`. Sem conversão cambial. | Dinheiro é valor + moeda, não número solto. | ✅ |
-| **B-60** | Como organizar os arquivos de um serviço? | Por **contexto principal** (`document`/`process`), não por tipo de artefato: `<service>-<contexto>-<tipo>.bpcms`. Arquivo compartilhado só para artefato sem dono único ou de escopo do serviço. | O arquivo passa a contar uma história de negócio; arquivos por tipo espalham um mesmo contexto. | ✅ |
+| **B-60** | Como organizar os arquivos de um serviço? | Por **contexto principal** (`application`/`service`/`document`/`process`), não por tipo de artefato: app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`. Exatamente um principal por arquivo, como primeiro artefato, com nome equivalente. Compartilhado: `<service>-<tipo-no-plural>.bpcms`, zero principais e um único tipo por arquivo, exceto `-organograms.bpcms` (organogram antes das roles). | O arquivo conta uma história de negócio; o principal primeiro e nomeado evita arquivo ambíguo e facilita o check. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 

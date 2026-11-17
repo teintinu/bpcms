@@ -375,7 +375,7 @@ name: string {
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
 
-**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `<app>-application.bpcms`; a própria aplicação é o contexto principal do arquivo (30).
+**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `<app>-application.bpcms`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
 ```bpcms
 application "example.com/app/loja-do-joao" {
@@ -443,9 +443,9 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 **Sem `provides`.** O serviço não declara o que oferece ao construtor; `provides` é responsabilidade do construtor. O contrato de negócio continua sendo os artefatos públicos do serviço.
 
-**Sem `roles` inline.** Roles ficam no arquivo `*-organograms.bpcms`; a lista inline duplicava a fonte de verdade.
+**Sem `roles` inline.** Roles ficam no arquivo `*-organograms.bpcms`, depois do organogram; a lista inline duplicava a fonte de verdade.
 
-**Arquivos por contexto principal.** O manifesto é `<service>-service.bpcms`; os demais arquivos são contextos principais (`document`/`process`) ou arquivos compartilhados. A regra completa está na seção 30.
+**Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `<service>-service.bpcms`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process` ou arquivos compartilhados. A regra completa está na seção 30.
 
 **Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
 
@@ -2790,7 +2790,7 @@ view TeamQueue {
 | `requires` | `fourEyes { X requires Role }` | Papel/condição exigida. |
 | `when absent` | `... when absent for 7d` | Condição e vigência da delegação. |
 
-> Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`.
+> Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`, com o organogram antes das roles.
 
 ```bpcms
 role Clerk {
@@ -3690,7 +3690,7 @@ process CloseMonth for FiscalPeriod {
 
 **Por que.** Agendamento não é um tipo de trabalho diferente: é um gatilho. Modelá-lo como processo dá andamento, auditoria, SLA, retry por task, cancelamento e histórico de graça — e evita um segundo motor com regras próprias.
 
-`*-jobs.bpcms` não existe mais: os agendamentos viram `start { schedule: }` no arquivo `<service>-<contexto>-process.bpcms` do processo (30).
+`*-jobs.bpcms` não existe mais: os agendamentos viram `start { schedule: }` no arquivo `<service>-<nome>-process.bpcms` do processo (30).
 
 ---
 # 24. Policy / Rule
@@ -3815,9 +3815,12 @@ policy FourEyesPayment {
 | Chamada | filho sem `start { called }`, com gatilho de topo, ou processo de topo com `called` | `E_PROCESS_TRIGGER_CONFLICT` |
 | Subprocesso | ciclo entre processos | `E_SUBPROCESS_CYCLE` |
 | View | tipo inválido, cláusula incompatível, seção desconhecida | `E_VIEW_TYPE` / `E_VIEW_CLAUSE` / `E_VIEW_SECTION` |
-| Arquivo | nome fora de `<service>-<contexto>-<tipo>.bpcms` (`tipo` = `document`/`process`) ou de `<service>-<tipo>.bpcms` | `E_FILE_NAME` |
-| Arquivo | contexto sem exatamente um principal, ou principal com nome/tipo diferente do arquivo | `E_FILE_CONTEXT` |
-| Arquivo | arquivo compartilhado declara `application`, `document` ou `process` | `E_FILE_SHARED` |
+| Arquivo | nome fora do padrão (app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`), `<nome>`/`<tipo>` divergente do principal, ou slug da pasta diferente do último segmento da URI (app/service) | `E_FILE_NAME` |
+| Arquivo | arquivo de contexto principal (app/service/document/process) sem exatamente um principal | `E_FILE_PRINCIPAL` |
+| Arquivo | principal não é o primeiro artefato do arquivo | `E_FILE_PRINCIPAL_FIRST` |
+| Arquivo | arquivo compartilhado declara `application`, `service`, `document` ou `process` | `E_FILE_SHARED` |
+| Arquivo | arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`; `parameter` em `-secrets.bpcms`; `role` fora de `-organograms.bpcms`) | `E_FILE_SHARED_TYPE` |
+| Arquivo | em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe) | `E_FILE_ORGANOGRAM_FIRST` |
 
 **Classes de runtime:** `validation_error` (400), `conflict` (409), `forbidden` (403), `not_found` (404), `dependency_unavailable` (503), `rate_limited` (429), `internal` (500). Erros de linguagem são bloqueantes no `check`; erros de runtime seguem o modelo do BRAINSTORM (2.6.11).
 
@@ -4096,6 +4099,7 @@ Regionalization {
 ## 29.3 Onde fica
 
 - Definição: `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`.
+- Segue a regra de service: `std-service.bpcms` é o arquivo do principal e `std-shapes.bpcms` é compartilhado (30).
 - Fica na pasta normal `examples/services/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
 - Não é versionado pelo lock; a versão da std é a do construtor/DSL.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
@@ -4107,35 +4111,39 @@ Regionalization {
 
 # 30. Organização dos arquivos
 
-A unidade de organização do fonte é o **contexto principal**, não o tipo de artefato. Contexto principal é o artefato que dá sentido ao arquivo: uma `application`, um `document` ou um `process`.
+A unidade de organização do fonte é o **contexto principal**, não o tipo de artefato. Contexto principal é o artefato que dá sentido ao arquivo: uma `application`, um `service`, um `document` ou um `process`.
 
-| Origem | Contexto principal | Nome do arquivo |
+| Arquivo | Contexto principal | Nome do arquivo |
 | :--- | :--- | :--- |
-| Serviço | `document` ou `process` | `<service>-<contexto>-<tipo>.bpcms`, com `tipo` = `document` ou `process` |
-| Aplicação | a própria `application` | `<app>-application.bpcms` |
-| Serviço (manifesto) | — | `<service>-service.bpcms` |
+| Aplicação | `application` | `<app>-application.bpcms` |
+| Serviço | `service` | `<service>-service.bpcms` |
+| Documento | `document` | `<service>-<nome>-document.bpcms` |
+| Processo | `process` | `<service>-<nome>-process.bpcms` |
 
-`<service>` é o slug da pasta em kebab-case; `<contexto>` é o nome do artefato principal em kebab-case. Exemplos:
+Em `document`/`process`, o arquivo é `SERVICE-<NAME>-<TIPO>.bpcms`; em `application`/`service`, é `<NAME>-<TIPO>.bpcms`, sem repetir o slug.
+
+`<app>`/`<service>` é o slug da pasta e o último segmento da URI, em kebab-case; `<nome>` é o nome do artefato principal em kebab-case. O slug da pasta deve ser igual ao último segmento da URI. Exemplos:
 
 ```text
 billing-invoice-document.bpcms          -> document Invoice
 billing-invoice-issuance-process.bpcms  -> process InvoiceIssuance
 billing-month-close-process.bpcms       -> process MonthClose
 loja-do-joao-application.bpcms          -> application "example.com/app/loja-do-joao"
-billing-service.bpcms                   -> manifesto do serviço
+billing-service.bpcms                   -> service "example.com/services/billing"
 ```
 
 **Regras.**
 
-- Um arquivo de contexto declara **exatamente um** artefato principal (`document` ou `process`); o nome e o tipo do principal formam o nome do arquivo (`E_FILE_CONTEXT`).
+- Um arquivo de **contexto principal** declara **exatamente um** artefato principal (`application`, `service`, `document` ou `process`) (`E_FILE_PRINCIPAL`).
+- O principal é o **primeiro artefato** do arquivo, antes de shapes, forms, views, mensagens, policies, decisions e integrations (`E_FILE_PRINCIPAL_FIRST`).
+- O `<nome>` do arquivo é equivalente ao nome do principal: kebab-case do identificador em `document`/`process`; slug da pasta/URI em `application`/`service` (`E_FILE_NAME`).
 - O arquivo de contexto contém o principal e os auxiliares cujo contrato pertence a ele:
   - no documento: shapes de campo/estado, views com `document`/`source`/`sources` de um único documento, policies que se aplicam a ele, mensagens cujo `about` é ele;
   - no processo: forms de suas tasks, views com `process:`, decisions/integrations que ele chama, mensagens que ele envia/recebe sem `about`.
 - **Referência entre arquivos é permitida.** O fato de outro contexto usar um artefato não o torna compartilhado; o dono é definido pelo contrato. Ex.: `InvoiceNumber` fica no arquivo do `Invoice` e pode aparecer no payload de uma mensagem de cobrança.
-- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.bpcms`: `shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `organograms`, `icons`. Ex.: `billing-shapes.bpcms`, `billing-views.bpcms`.
-- O arquivo compartilhado **não declara** `application`, `document` ou `process` (`E_FILE_SHARED`).
-- `*-service.bpcms` é o manifesto do serviço; `*-application.bpcms` é a aplicação. São as exceções ao padrão de contexto de serviço.
-- `bpcms.org/std` mantém `std-service.bpcms` + `std-shapes.bpcms`; é pseudo-serviço do construtor e não tem contexto principal.
+- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.bpcms`: `shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `roles`, `organograms`, `icons`. Ex.: `billing-shapes.bpcms`, `billing-views.bpcms`.
+- O arquivo compartilhado **não declara** `application`, `service`, `document` ou `process` (`E_FILE_SHARED`).
+- `bpcms.org/std` é pseudo-serviço do construtor e segue a regra de service: `std-service.bpcms` é o arquivo do principal; `std-shapes.bpcms` é compartilhado.
 - `report` não é arquivo: relatório é `view type: report`; views compartilhadas ficam em `<service>-views.bpcms`.
 - Nesta fase os arquivos `.bpcms` ficam na raiz do serviço; a regra de subpastas como namespace segue anotada e não se aplica ainda.
 
@@ -4149,9 +4157,42 @@ billing-service.bpcms                   -> manifesto do serviço
 | `message` | documento do `about`; sem documento → processo que envia/recebe; múltiplos ou nenhum → compartilhado |
 | `policy` | alvo do `appliesTo`; múltiplos ou nenhum → compartilhado |
 | `decision` / `integration` | processo que usa; múltiplos ou nenhum → compartilhado |
-| `parameter` / `secret`, `role` / `organogram`, `icon` | compartilhado (escopo do serviço) |
+| `parameter`, `secret`, `role`, `organogram`, `icon` | `parameter` em `-parameters`, `secret` em `-secrets`, `icon` em `-icons`; `role` e `organogram` no mesmo `-organograms`, com o organogram antes |
 
-**Validação.** O `check` valida a estrutura, não a semântica da atribuição: `E_FILE_NAME` (nome fora do padrão), `E_FILE_CONTEXT` (contexto sem um principal, ou principal divergente) e `E_FILE_SHARED` (principal em arquivo compartilhado), conforme a seção 26. Manifestos (`*-service.bpcms`) e aplicações (`*-application.bpcms`) são reconhecidos à parte. A escolha do dono de um auxiliar é convenção de modelagem; o check não tenta inferir dono semântico.
+## 30.2 Arquivos compartilhados
+
+Artefato compartilhado — sem dono único ou de escopo do serviço — fica em `<SERVICE>-<TIPO ARTEFATO NO PLURAL>.bpcms`:
+
+| Sufixo | Tipos aceitos |
+| :--- | :--- |
+| `shapes` | `shape` |
+| `forms` | `form` |
+| `views` | `view` (inclusive `report`/`dashboard`) |
+| `messages` | `message` |
+| `policies` | `policy` |
+| `decisions` | `decision` |
+| `integrations` | `integration` |
+| `parameters` | `parameter` |
+| `secrets` | `secret` |
+| `organograms` | `organogram`, `role` |
+| `icons` | `icon` |
+
+- O arquivo compartilhado tem **zero** artefatos principais.
+- Cada arquivo compartilhado contém **um único tipo de artefato**, exceto `-organograms.bpcms`, que contém exatamente um `organogram` e as `role`s. O `organogram` vem **antes** das `role`s.
+- Não misture `parameter` com `secret`, nem `shape` com `view`. Roles não têm arquivo próprio (`-roles.bpcms` não existe).
+- Exemplos: `std-shapes.bpcms` só com shapes; `billing-views.bpcms` só com views; `billing-organograms.bpcms` com o organogram primeiro e as roles depois; `notifications-parameters.bpcms` e `notifications-secrets.bpcms` separados.
+- `reports` não é sufixo: relatório é `view` e fica em `-views.bpcms`.
+
+**Validação.** O `check` percorre todos os `.bpcms` de serviços e aplicações; `application` e `service` também contam como principal. Ele valida a estrutura, não a semântica da atribuição:
+
+- `E_FILE_NAME`: nome fora do padrão (incluindo sufixo compartilhado fora da §30.2), `<nome>`/`<tipo>` divergente do principal ou slug da pasta diferente do último segmento da URI (app/service);
+- `E_FILE_PRINCIPAL`: arquivo de contexto principal sem exatamente um principal;
+- `E_FILE_PRINCIPAL_FIRST`: principal não é o primeiro artefato do arquivo;
+- `E_FILE_SHARED`: arquivo compartilhado declara `application`, `service`, `document` ou `process`;
+- `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`, `parameter` em `-secrets.bpcms`, `role` fora de `-organograms.bpcms`);
+- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe).
+
+A escolha do dono de um auxiliar é convenção de modelagem; o check não tenta inferir dono semântico. `application`/`service` usam o slug da pasta/URI como `<nome>`; `document`/`process` usam o identificador do artefato.
 
 **Exemplo de árvore.**
 
@@ -4167,7 +4208,7 @@ billing/
   billing-shapes.bpcms                   // shapes usados por mais de um contexto
   billing-views.bpcms                    // views sem dono único
   billing-parameters.bpcms
-  billing-organograms.bpcms
+  billing-organograms.bpcms             // organogram primeiro, depois as roles
   billing-icons.bpcms
 ```
 

@@ -5,9 +5,3 @@ parameter FromEmail {
   type: Citizen.Email
   default: "no-reply@lojadojoao.com"
 }
-
-secret WhatsAppToken {
-  title: { pt-BR: "Credencial do WhatsApp", en: "WhatsApp token" }
-  type: string
-  required
-}

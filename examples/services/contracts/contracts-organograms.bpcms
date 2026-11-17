@@ -1,20 +1,5 @@
 // service: example.com/services/contracts
 
-role ContractManager {
-  title: { pt-BR: "Gestor de contratos", en: "Contract manager" }
-  permissions: [contract.view, contract.approve, contract.terminate, report.view]
-}
-
-role ContractAnalyst {
-  title: { pt-BR: "Analista de contratos", en: "Contract analyst" }
-  permissions: [contract.view, contract.prepare, contract.renew]
-}
-
-role LegalCounsel {
-  title: { pt-BR: "Advogado", en: "Legal counsel" }
-  permissions: [contract.view, contract.review, contract.sign]
-}
-
 organogram Agreements {
   title: { pt-BR: "Organograma de contratos", en: "Contracts organogram" }
 
@@ -28,4 +13,19 @@ organogram Agreements {
   signature {
     LegalCounsel
   }
+}
+
+role ContractManager {
+  title: { pt-BR: "Gestor de contratos", en: "Contract manager" }
+  permissions: [contract.view, contract.approve, contract.terminate, report.view]
+}
+
+role ContractAnalyst {
+  title: { pt-BR: "Analista de contratos", en: "Contract analyst" }
+  permissions: [contract.view, contract.prepare, contract.renew]
+}
+
+role LegalCounsel {
+  title: { pt-BR: "Advogado", en: "Legal counsel" }
+  permissions: [contract.view, contract.review, contract.sign]
 }

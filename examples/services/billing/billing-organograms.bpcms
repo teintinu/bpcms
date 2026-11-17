@@ -1,5 +1,15 @@
 // service: example.com/services/billing
 
+organogram Finance {
+  title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
+
+  hierarchy {
+    FinanceManager > CollectionAgent > Clerk
+  }
+
+  FinanceManager manages [CollectionAgent, Clerk]
+}
+
 role Clerk {
   title: { pt-BR: "Faturista", en: "Billing clerk" }
   permissions: [invoice.view, invoice.create, invoice.issue, invoice.collect]
@@ -15,14 +25,4 @@ role FinanceManager {
   title: { pt-BR: "Gerente financeiro", en: "Finance manager" }
   inherits: CollectionAgent
   permissions: [invoice.approve, period.close, report.view]
-}
-
-organogram Finance {
-  title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
-
-  hierarchy {
-    FinanceManager > CollectionAgent > Clerk
-  }
-
-  FinanceManager manages [CollectionAgent, Clerk]
 }

@@ -1,5 +1,25 @@
 // service: example.com/services/procurement
 
+organogram Sourcing {
+  title: { pt-BR: "Organograma de compras", en: "Procurement organogram" }
+
+  hierarchy {
+    ProcurementManager > Approver
+    ProcurementManager > Buyer
+    Buyer > Requester
+    ProcurementManager > ComplianceAnalyst
+    ProcurementManager > PayablesClerk
+    ProcurementManager > ReceivingClerk
+    ProcurementManager > QualityInspector
+  }
+
+  ProcurementManager manages [Buyer, Approver, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
+
+  segregation {
+    purchaseRequest.submit != purchaseRequest.approve
+  }
+}
+
 role Requester {
   title: { pt-BR: "Solicitante", en: "Requester" }
   permissions: [purchase.request, purchase.view]
@@ -43,24 +63,4 @@ role QualityInspector {
 role SupplierUser {
   title: { pt-BR: "Usuário do fornecedor", en: "Supplier user" }
   permissions: [supplier.registration, supplier.portal]
-}
-
-organogram Sourcing {
-  title: { pt-BR: "Organograma de compras", en: "Procurement organogram" }
-
-  hierarchy {
-    ProcurementManager > Approver
-    ProcurementManager > Buyer
-    Buyer > Requester
-    ProcurementManager > ComplianceAnalyst
-    ProcurementManager > PayablesClerk
-    ProcurementManager > ReceivingClerk
-    ProcurementManager > QualityInspector
-  }
-
-  ProcurementManager manages [Buyer, Approver, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
-
-  segregation {
-    purchaseRequest.submit != purchaseRequest.approve
-  }
 }

@@ -1,5 +1,16 @@
 // service: example.com/services/shipping
 
+organogram Logistics {
+  title: { pt-BR: "Organograma de logística", en: "Logistics organogram" }
+
+  hierarchy {
+    Manager > Dispatcher > Packer
+  }
+
+  Manager manages [Dispatcher]
+  Dispatcher manages [Packer]
+}
+
 role Packer {
   title: { pt-BR: "Embalador", en: "Packer" }
   permissions: [shipment.pack, shipment.view]
@@ -20,15 +31,4 @@ role Manager {
 role ShipmentEngine {
   title: { pt-BR: "Motor de expedição", en: "Shipment engine" }
   permissions: [shipment.capture, shipment.deliver]
-}
-
-organogram Logistics {
-  title: { pt-BR: "Organograma de logística", en: "Logistics organogram" }
-
-  hierarchy {
-    Manager > Dispatcher > Packer
-  }
-
-  Manager manages [Dispatcher]
-  Dispatcher manages [Packer]
 }

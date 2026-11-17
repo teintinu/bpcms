@@ -1,5 +1,15 @@
 // service: example.com/services/payments
 
+organogram Treasury {
+  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" }
+
+  hierarchy {
+    Manager > Analyst
+  }
+
+  Manager manages [Analyst]
+}
+
 role Analyst {
   title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
   permissions: [payment.view, refund.request, chargeback.respond]
@@ -14,14 +24,4 @@ role Manager {
 role PaymentEngine {
   title: { pt-BR: "Motor de pagamentos", en: "Payment engine" }
   permissions: [payment.capture, chargeback.receive]
-}
-
-organogram Treasury {
-  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" }
-
-  hierarchy {
-    Manager > Analyst
-  }
-
-  Manager manages [Analyst]
 }

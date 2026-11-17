@@ -1,5 +1,15 @@
 // service: example.com/services/inventory
 
+organogram Supply {
+  title: { pt-BR: "Organograma de suprimentos", en: "Supply organogram" }
+
+  hierarchy {
+    StockManager > WarehouseOperator
+  }
+
+  StockManager manages [WarehouseOperator]
+}
+
 role WarehouseOperator {
   title: { pt-BR: "Operador de armazém", en: "Warehouse operator" }
   permissions: [stock.view, stock.count, stock.adjust, stock.reserve]
@@ -9,14 +19,4 @@ role StockManager {
   title: { pt-BR: "Gerente de estoque", en: "Inventory manager" }
   inherits: WarehouseOperator
   permissions: [stock.approve, stock.replenish, stock.block, report.view]
-}
-
-organogram Supply {
-  title: { pt-BR: "Organograma de suprimentos", en: "Supply organogram" }
-
-  hierarchy {
-    StockManager > WarehouseOperator
-  }
-
-  StockManager manages [WarehouseOperator]
 }

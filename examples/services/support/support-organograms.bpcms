@@ -1,5 +1,13 @@
 // service: example.com/services/support
 
+organogram Support {
+  title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
+  hierarchy {
+    Manager > SupportAgent
+  }
+  Manager manages [SupportAgent]
+}
+
 role Manager {
   title: { pt-BR: "Gerente de suporte", en: "Support manager" }
   permissions: [
@@ -30,12 +38,4 @@ role SupportAgent {
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [ticket.viewOwn, ticket.commentOwn, return.requestOwn]
-}
-
-organogram Support {
-  title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
-  hierarchy {
-    Manager > SupportAgent
-  }
-  Manager manages [SupportAgent]
 }

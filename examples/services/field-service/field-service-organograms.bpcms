@@ -1,5 +1,21 @@
 // service: example.com/services/field-service
 
+organogram FieldOperations {
+  title: { pt-BR: "Organograma de campo", en: "Field operations organogram" }
+
+  hierarchy {
+    Supervisor > Dispatcher > FieldTechnician
+    Dispatcher > Customer
+  }
+
+  Supervisor manages [Dispatcher, FieldTechnician]
+  Supervisor delegates to Dispatcher when absent for 3d
+
+  signature {
+    FieldTechnician
+  }
+}
+
 role Dispatcher {
   title: { pt-BR: "Despachante", en: "Dispatcher" }
   permissions: [
@@ -39,20 +55,4 @@ role Supervisor {
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [visit.viewOwn, visit.confirm, visit.withdraw]
-}
-
-organogram FieldOperations {
-  title: { pt-BR: "Organograma de campo", en: "Field operations organogram" }
-
-  hierarchy {
-    Supervisor > Dispatcher > FieldTechnician
-    Dispatcher > Customer
-  }
-
-  Supervisor manages [Dispatcher, FieldTechnician]
-  Supervisor delegates to Dispatcher when absent for 3d
-
-  signature {
-    FieldTechnician
-  }
 }

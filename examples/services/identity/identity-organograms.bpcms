@@ -1,5 +1,16 @@
 // service: example.com/services/identity
 
+organogram Platform {
+  title: { pt-BR: "Organograma da plataforma", en: "Platform organogram" }
+  hierarchy {
+    Admin > Manager > Clerk > Customer
+    Manager > Dispatcher > Driver
+  }
+  fourEyes {
+    refund.approve requires Manager
+  }
+}
+
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [catalog.view, order.create, order.viewOwn]
@@ -31,15 +42,4 @@ role Dispatcher {
 role Driver {
   title: { pt-BR: "Motorista", en: "Driver" }
   permissions: [shipment.track, shipment.deliver]
-}
-
-organogram Platform {
-  title: { pt-BR: "Organograma da plataforma", en: "Platform organogram" }
-  hierarchy {
-    Admin > Manager > Clerk > Customer
-    Manager > Dispatcher > Driver
-  }
-  fourEyes {
-    refund.approve requires Manager
-  }
 }

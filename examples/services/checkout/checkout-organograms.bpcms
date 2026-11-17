@@ -1,5 +1,13 @@
 // service: example.com/services/checkout
 
+organogram Storefront {
+  title: { pt-BR: "Organograma da loja", en: "Storefront organogram" }
+
+  hierarchy {
+    SupportAgent > Customer
+  }
+}
+
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [checkout.start, checkout.pay]
@@ -14,12 +22,4 @@ role SupportAgent {
 role SessionEngine {
   title: { pt-BR: "Motor de finalização", en: "Session engine" }
   permissions: [checkout.quote, checkout.authorize, checkout.confirm]
-}
-
-organogram Storefront {
-  title: { pt-BR: "Organograma da loja", en: "Storefront organogram" }
-
-  hierarchy {
-    SupportAgent > Customer
-  }
 }

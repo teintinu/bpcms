@@ -1,5 +1,20 @@
 // service: example.com/services/hr
 
+organogram People {
+  title: { pt-BR: "Organograma de pessoas", en: "People organogram" }
+
+  hierarchy {
+    HiringManager > PeopleOps > Recruiter
+    PeopleOps > ITAdmin
+    Recruiter > Candidate
+    PeopleOps > NewHire
+  }
+
+  PeopleOps manages [Recruiter, ITAdmin]
+  HiringManager manages [PeopleOps]
+  HiringManager delegates to PeopleOps when absent for 5d
+}
+
 role Recruiter {
   title: { pt-BR: "Recrutador", en: "Recruiter" }
   permissions: [
@@ -58,19 +73,4 @@ role Candidate {
 role NewHire {
   title: { pt-BR: "Nova contratação", en: "New hire" }
   permissions: [employee.viewOwn, employee.documents, employee.confirmAccess]
-}
-
-organogram People {
-  title: { pt-BR: "Organograma de pessoas", en: "People organogram" }
-
-  hierarchy {
-    HiringManager > PeopleOps > Recruiter
-    PeopleOps > ITAdmin
-    Recruiter > Candidate
-    PeopleOps > NewHire
-  }
-
-  PeopleOps manages [Recruiter, ITAdmin]
-  HiringManager manages [PeopleOps]
-  HiringManager delegates to PeopleOps when absent for 5d
 }
