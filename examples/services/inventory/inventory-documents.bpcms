@@ -4,8 +4,6 @@ document StockItem {
   version: 1
   owner: "Inventory"
   sync: live
-  audit: true
-
   fields {
     product: Product {
       title: { pt-BR: "Produto", en: "Product" }

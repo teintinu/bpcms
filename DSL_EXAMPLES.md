@@ -863,8 +863,6 @@ document Customer {
   version: 1
   owner: "CRM"
   sync: live
-  audit: true
-
   fields {
     name: string {
       title: { pt-BR: "Nome", en: "Name" }
@@ -1000,7 +998,6 @@ document Invoice {
 
       {
         issuedAt = now()
-        audit("invoice.issued")
       }
     }
 
@@ -1021,7 +1018,6 @@ document Invoice {
       }
 
       {
-        audit("invoice.cancelled", reason)
       }
     }
   }
@@ -1225,7 +1221,6 @@ document SupportTicket {
 
       {
         assignee = user
-        audit("ticket.assigned", user)
       }
     }
 
@@ -1241,7 +1236,6 @@ document SupportTicket {
       }
 
       {
-        audit("ticket.commented", body)
       }
     }
 
@@ -1258,7 +1252,6 @@ document SupportTicket {
       }
 
       {
-        audit("ticket.resolved")
       }
     }
 
@@ -1275,7 +1268,6 @@ document SupportTicket {
       }
 
       {
-        audit("ticket.reopened", reason)
       }
     }
   }
@@ -3734,7 +3726,6 @@ policy FourEyesPayment {
   rule: approver != creator
   severity: block
   message: "Pagamento exige segundo aprovador"
-  audit: true
 }
 ```
 
@@ -3748,7 +3739,6 @@ policy DiscountLimit {
   rule: discount <= 10% or approver.role == Manager
   severity: require
   message: "Desconto acima de 10% exige gerente"
-  audit: true
 }
 ```
 
@@ -3762,7 +3752,6 @@ policy Retention {
   rule: retainFor(5y) then anonymize
   severity: enforce
   exception: legalHold
-  audit: true
 }
 ```
 
@@ -3776,7 +3765,6 @@ policy SlaEscalation {
   rule: if breached then escalateTo(Lead) within 15m
   severity: enforce
   notification: [Email, WhatsApp]
-  audit: true
 }
 ```
 
@@ -3790,7 +3778,6 @@ policy SensitiveFieldAccess {
   rule: role in [Doctor, Nurse] and purpose == treatment
   severity: block
   mask: default
-  audit: true
 }
 ```
 
@@ -3804,7 +3791,6 @@ policy ApprovalSegregation {
   rule: requester != approver and approver != payer
   severity: block
   message: "Solicitante, aprovador e pagador devem ser distintos"
-  audit: true
 }
 ```
 

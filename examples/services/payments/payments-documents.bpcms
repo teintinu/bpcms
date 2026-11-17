@@ -4,8 +4,6 @@ document Payment {
   version: 1
   owner: "Payments"
   sync: live
-  audit: true
-
   fields {
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
@@ -65,8 +63,6 @@ document Refund {
   version: 1
   owner: "Payments"
   sync: live
-  audit: true
-
   fields {
     payment: Payment {
       title: { pt-BR: "Pagamento", en: "Payment" }

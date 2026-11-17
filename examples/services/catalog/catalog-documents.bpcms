@@ -34,8 +34,6 @@ document Product {
   version: 1
   owner: "Catalog"
   sync: live
-  audit: true
-
   fields {
     sku: SKU { title: { pt-BR: "Código", en: "SKU" }, unique, lookup }
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }

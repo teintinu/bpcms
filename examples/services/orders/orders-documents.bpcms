@@ -40,8 +40,6 @@ document Order {
   version: 1
   owner: "Orders"
   sync: live
-  audit: true
-
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
@@ -66,9 +64,6 @@ document Order {
     create(customer: User, discount: std.Percentage){
       title: { pt-BR: "Criar", en: "Create" }
       roles: [Clerk]
-      {
-      audit("order.created", discount)
-      }
     }
 
     addItem(product: Product, quantity: std.Count){
@@ -94,7 +89,6 @@ document Order {
       }
       {
       placedAt = now()
-      audit("order.placed")
       }
     }
 
@@ -107,9 +101,6 @@ document Order {
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
-      }
-      {
-      audit("order.cancelled", reason)
       }
     }
 

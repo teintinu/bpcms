@@ -35,7 +35,6 @@ document Invoice {
   version: 1
   owner: "Billing"
   sync: live
-  audit: true
   retention: 5y
 
   fields {
@@ -77,7 +76,6 @@ document Invoice {
       }
       {
       issuedAt = now()
-      audit("invoice.issued", number)
       }
     }
 
@@ -90,9 +88,6 @@ document Invoice {
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
-      }
-      {
-      audit("invoice.cancelled", reason)
       }
     }
 
@@ -123,8 +118,6 @@ document CreditNote {
   version: 1
   owner: "Billing"
   sync: live
-  audit: true
-
   fields {
     invoice: Invoice {
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
@@ -173,8 +166,6 @@ document Bill {
   version: 1
   owner: "Billing"
   sync: read
-  audit: true
-
   fields {
     supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
@@ -212,8 +203,6 @@ document OrderCancellation {
   version: 1
   owner: "Billing"
   sync: live
-  audit: true
-
   fields {
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }

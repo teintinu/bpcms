@@ -13,8 +13,6 @@ document SupportLab {
   version: 1
   owner: "Laboratory"
   sync: live
-  audit: true
-
   fields {
     name: string {
       title: { pt-BR: "Nome", en: "Name" }
@@ -42,8 +40,6 @@ document Sample {
   version: 1
   owner: "Laboratory"
   sync: live
-  audit: true
-
   fields {
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
     laboratory: Laboratory {
@@ -101,8 +97,6 @@ document ExamOrder {
   version: 1
   owner: "Laboratory"
   sync: live
-  audit: true
-
   fields {
     laboratory: Laboratory {
       title: { pt-BR: "Laboratório", en: "Laboratory" }
@@ -159,8 +153,6 @@ document ExamResult {
   version: 1
   owner: "Laboratory"
   sync: live
-  audit: true
-
   fields {
     laboratory: Laboratory {
       title: { pt-BR: "Laboratório", en: "Laboratory" }

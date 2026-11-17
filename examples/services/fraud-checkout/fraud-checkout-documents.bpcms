@@ -4,8 +4,6 @@ document FraudCheck {
   version: 1
   owner: "Risk"
   sync: live
-  audit: true
-
   fields {
     session: CheckoutSession {
       title: { pt-BR: "Sessão de finalização", en: "Checkout session" }

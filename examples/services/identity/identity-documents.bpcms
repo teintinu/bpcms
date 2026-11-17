@@ -4,8 +4,6 @@ document User {
   version: 1
   owner: "Identity"
   sync: read
-  audit: true
-
   fields {
     name: string {
       title: {

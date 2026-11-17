@@ -4,8 +4,6 @@ document CheckoutSession {
   version: 1
   owner: "Checkout"
   sync: live
-  audit: true
-
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }

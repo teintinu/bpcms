@@ -4,8 +4,6 @@ document NotificationTemplate {
   version: 1
   owner: "Notifications"
   sync: read
-  audit: true
-
   fields {
     key: string {
       title: { pt-BR: "Chave", en: "Key" }

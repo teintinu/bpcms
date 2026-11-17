@@ -4,8 +4,6 @@ document Citizen {
   version: 1
   owner: "Citizen"
   sync: read
-  audit: true
-
   fields {
     kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, lookup }
     displayName: string {

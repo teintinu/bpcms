@@ -34,8 +34,6 @@ document Shipment {
   version: 1
   owner: "Shipping"
   sync: live
-  audit: true
-
   fields {
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }

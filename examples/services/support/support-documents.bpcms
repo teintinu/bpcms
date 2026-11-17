@@ -4,8 +4,6 @@ document Ticket {
   version: 1
   owner: "Support"
   sync: live
-  audit: true
-
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
@@ -52,7 +50,6 @@ document Ticket {
       }
       {
       assignee = user
-      audit("ticket.assigned", user)
       }
     }
 
@@ -64,9 +61,6 @@ document Ticket {
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
-      }
-      {
-      audit("ticket.commented", body)
       }
     }
 
@@ -80,9 +74,6 @@ document Ticket {
           en: "Requirement not met"
         }
       }
-      {
-      audit("ticket.resolved")
-      }
     }
 
     reopen(reason: string){
@@ -94,9 +85,6 @@ document Ticket {
           pt-BR: "Requisito não atendido"
           en: "Requirement not met"
         }
-      }
-      {
-      audit("ticket.reopened", reason)
       }
     }
 
@@ -119,8 +107,6 @@ document ReturnRequest {
   version: 1
   owner: "Support"
   sync: live
-  audit: true
-
   fields {
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }

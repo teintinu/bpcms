@@ -92,7 +92,7 @@ stream.readStreamArray(): stream[]
 | `type` | task, view, release, report | `type: service`, `type: form`, `type: migration` | Discriminador; os valores válidos dependem do artefato. |
 | `mode` | builder, theme, report | `mode: [interpret, generate]`, `mode: dark`, `mode: live` | Modo de operação/apresentação. |
 | `links` | evidence, assumption | `links { process X.Y; document X.field; view V; decision D; evidence E; service "<uri>" }` | Liga o artefato de descoberta ao modelo; o `check` valida o alvo. |
-| `audit` | document, policy | `audit: true` | Exige trilha de auditoria. |
+| `audit` | policy | `audit: true` | Exige trilha da avaliação da policy. Document é auditado automaticamente por comando. |
 | `retention` | document | `retention: 5y` | Prazo de retenção antes de anonimizar/expurgar. |
 | `private` | membros de artefatos | `private <field/action>` | Membro interno; não faz parte do contrato público nem da serialização para outros serviços. Artefato de topo nunca é `private`. |
 
@@ -573,7 +573,7 @@ task RefundPayment {
 | `version` | `version: 1` | Versão do schema; migrações comparam. |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
 | `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega leitura materializada. |
-| `audit` | `audit: true` | Registra autor, diff e timestamp. |
+
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
 | `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
@@ -756,7 +756,6 @@ actions {
 
     {
       issuedAt = now()
-      audit("invoice.issued")
     }
   }
 
@@ -819,6 +818,23 @@ customer: User {
 - a UI usa os campos extraídos para navegar;
 - `code` não existe;
 - permissão e workflow têm motivo genérico do builder.
+
+**Auditoria automática.** Não existe comando `audit()` na DSL.
+
+Toda action é um comando e o compilador gera um nó de auditoria no AST para o builder registrar:
+
+- comando executado;
+- documento e `id`;
+- ator;
+- escopo;
+- data/hora;
+- correlation id;
+- resultado: sucesso, negado ou erro;
+- estado antes/depois ou diff;
+- motivo de negação, quando houver;
+- evento emitido, quando houver.
+
+O registro é responsabilidade do builder. A DSL não declara `audit(...)` nem `audit: true` no Document.
 
 **Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`roles`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
 
@@ -2321,7 +2337,6 @@ policy FourEyesPayment {
   rule: approver != creator
   severity: block
   message: "Pagamento exige segundo aprovador"
-  audit: true
 }
 ```
 

@@ -413,7 +413,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `id` interno implícito; não declarar
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
-- [ ] `version`, `owner`, `sync`, `audit`, `retention`
+- [ ] `version`, `owner`, `sync`, `retention`
 - [ ] `fields { name: Shape { title; required; lookup; unique; rules; ... } }`; sem `?`
 - [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `link`/`XxxId`; não é FK
 - [ ] campo para `scopable document` infere escopo
