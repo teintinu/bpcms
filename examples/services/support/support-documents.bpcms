@@ -42,7 +42,7 @@ document Ticket {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Agent]
-  rule     user != null {
+  rule user != null {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -55,7 +55,7 @@ document Ticket {
     comment(body: string){
       title: { pt-BR: "Comentar", en: "Comment" }
       roles: [Agent]
-  rule     body.length > 0 {
+  rule body.length > 0 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -66,7 +66,7 @@ document Ticket {
       title: { pt-BR: "Resolver", en: "Resolve" }
       roles: [Agent]
       transition: Resolved
-  rule     assignee != null {
+  rule assignee != null {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -77,7 +77,7 @@ document Ticket {
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
       transition: Open
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -128,7 +128,7 @@ document ReturnRequest {
     request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
       roles: [Clerk]
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -145,7 +145,7 @@ document ReturnRequest {
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
       roles: [Manager]
       transition: Rejected
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }

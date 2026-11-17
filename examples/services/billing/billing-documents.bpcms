@@ -137,7 +137,7 @@ document Invoice {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
       transition: Issued
-  rule     total > 0 BRL {
+  rule total > 0 BRL {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -151,7 +151,7 @@ document Invoice {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -269,7 +269,7 @@ document OrderCancellation {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -307,5 +307,8 @@ document MonthlyRevenue {
     }
   }
 
-  rules { month >= 2026-01 }
+  rule month >= 2026-01 {
+    pt-BR: "O mês deve ser igual ou posterior a janeiro de 2026"
+    en: "Month must be January 2026 or later"
+  }
 }

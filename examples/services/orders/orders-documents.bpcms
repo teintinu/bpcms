@@ -67,7 +67,7 @@ document Order {
     addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       roles: [Clerk]
-  rule     quantity > 0 {
+  rule quantity > 0 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -78,7 +78,7 @@ document Order {
       title: { pt-BR: "Realizar pedido", en: "Place order" }
       roles: [Clerk]
       transition: Placed
-  rule     items.length > 0 {
+  rule items.length > 0 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
@@ -92,7 +92,7 @@ document Order {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
       transition: Cancelled
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }

@@ -81,7 +81,7 @@ document Refund {
     request(reason: string){
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
       roles: [Manager]
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }

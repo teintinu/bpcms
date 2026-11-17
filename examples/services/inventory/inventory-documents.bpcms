@@ -27,7 +27,7 @@ document StockItem {
     adjust(quantity: std.Count, reason: string){
       title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
       roles: [Manager]
-  rule     reason.length >= 10 {
+  rule reason.length >= 10 {
         pt-BR: "Operação não permitida"
         en: "Operation not allowed"
       }
