@@ -4,6 +4,7 @@ document CheckoutSession {
   version: 1
   owner: "Checkout"
   sync: live
+
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
@@ -13,28 +14,9 @@ document CheckoutSession {
       title: { pt-BR: "Total", en: "Total" }
       currency: BRL
     }
-    status: string {
+    status: CheckoutStatus {
       title: { pt-BR: "Situação", en: "Status" }
       lookup
-    }
-  }
-
-  events {
-    Validated {
-      title: { pt-BR: "Carrinho validado", en: "Cart validated" }
-      key: this.id
-    }
-    ShippingQuoted {
-      title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
-      key: this.id
-    }
-    PaymentAuthorized {
-      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      key: this.id
-    }
-    OrderConfirmed {
-      title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
-      key: this.id
     }
   }
 
@@ -42,33 +24,25 @@ document CheckoutSession {
     validateCart() {
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
       roles: [Customer]
-      {
-      emit Validated
-      }
+      transition: Validated
     }
 
     quoteShipping() {
       title: { pt-BR: "Cotar frete", en: "Quote shipping" }
       roles: [Customer]
-      {
-      emit ShippingQuoted
-      }
+      transition: ShippingQuoted
     }
 
     authorizePayment() {
       title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
       roles: [Customer]
-      {
-      emit PaymentAuthorized
-      }
+      transition: PaymentAuthorized
     }
 
     confirmOrder() {
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
       roles: [Customer]
-      {
-      emit OrderConfirmed
-      }
+      transition: OrderConfirmed
     }
   }
 }

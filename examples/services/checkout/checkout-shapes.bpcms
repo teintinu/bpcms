@@ -1,0 +1,42 @@
+// service: example.com/services/checkout
+shape CheckoutStatus {
+  title: { pt-BR: "Situação da finalização", en: "Checkout status" }
+  base: workflow
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+
+    transition Validated {
+      title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+    }
+  }
+
+  value Validated {
+    title: { pt-BR: "Validado", en: "Validated" }
+
+    transition ShippingQuoted {
+      title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+    }
+  }
+
+  value ShippingQuoted {
+    title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+
+    transition PaymentAuthorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+    }
+  }
+
+  value PaymentAuthorized {
+    title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+
+    transition OrderConfirmed {
+      title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+    }
+  }
+
+  value OrderConfirmed {
+    title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+  }
+}

@@ -45,11 +45,9 @@ document Ticket {
       rule user != null {
         pt-BR: "Preencha os campos obrigatórios"
         en: "Fill the required fields"
-
-  }
-
+      }
       {
-      assignee = user
+        assignee = user
       }
     }
 
@@ -59,8 +57,7 @@ document Ticket {
       rule body.length > 0 {
         pt-BR: "Verifique o tamanho do texto informado"
         en: "Check the informed text length"
-
-  }
+      }
     }
 
     resolve(){
@@ -70,8 +67,7 @@ document Ticket {
       rule assignee != null {
         pt-BR: "Preencha os campos obrigatórios"
         en: "Fill the required fields"
-
-  }
+      }
     }
 
     reopen(reason: string){
@@ -81,8 +77,7 @@ document Ticket {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+      }
     }
 
     escalateBreached(){
@@ -133,8 +128,7 @@ document ReturnRequest {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+      }
     }
 
     approve(){
@@ -150,8 +144,7 @@ document ReturnRequest {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+      }
     }
 
     refund(){

@@ -415,8 +415,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `retention`
-- [ ] `fields { name: Shape { title; required; lookup; unique; rules; ... } }`; sem `?`
-- [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `link`/`XxxId`; não é FK
+- [ ] `fields { name: Shape { title; required; lookup; unique; rule; ... } }`; sem `?`
+- [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `XxxId`; não é FK
 - [ ] campo para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
 - [ ] ID interno × `number` de negócio
@@ -437,7 +437,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `default` aplica antes de `required`; default inválido = erro
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
-- [ ] link circular usa nome diferente do id (`parent`)
+- [ ] referência circular usa nome diferente do id (`parent`)
 - [ ] duplicidade de id e referência para si mesmo
 - [ ] PII em `private` quando aplicável
 - [ ] regras de leitura e edição por field
@@ -457,7 +457,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` é tag de campo; `short`/`tooltip` são do title.
 - [ ] `extends` restrito a documento no mesmo serviço.
 - [ ] `id` implícito e `<Doc>Id` implícito.
-- [ ] `link` não é FK; exclusão da origem não invalida vínculos antigos.
+- [ ] `DocumentRef` não é FK; exclusão da origem não invalida vínculos antigos.
 - [ ] `computed` + `lookup` + `title` interagem bem?
 - [ ] `private` é suficiente para PII ou precisa `sensitive`?
 - [ ] `Date`/`DateTime`/`YearMonth` são tipos internos?
@@ -704,6 +704,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Compensação sempre em ordem reversa?
 - [ ] `reads`/`writes` são obrigatórios?
 - [ ] `role` de task é Role do app?
+- [ ] É possível mesclar workflow e process em um único artefato?
 
 **Status:** ⬜ pendente.
 
@@ -994,6 +995,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Revisar uso para cada atributo.
 - [ ] Revisar uso para métodos/ações.
 - [ ] Revisar uso em Process: `task`, `insert`, transições, gateways, eventos.
+- [ ] Revisar `insert` em workflow: como resolver ordinal do novo estado?
 - [ ] Reintrodução é aditiva e altera só a parte declarada.
 - [ ] Conflito de metadados/nós = erro.
 - [ ] Validar dependências, ciclo, alvo existente e assinatura.
@@ -1001,13 +1003,24 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Definir como o construtor materializa a alteração.
 - [ ] Revisar depois de todas as keywords.
 
+### Ordinal do `insert` em workflow
+
+- [ ] O novo estado recebe ordinal gerado ou declarado?
+- [ ] O ordinal é posicional antes/depois do alvo?
+- [ ] Como evitar colisão de ordinal com estados existentes?
+- [ ] O ordinal é estável entre builds/migrações?
+- [ ] `insert` recalcula ordinais dos vizinhos?
+- [ ] O AST guarda a posição lógica ou apenas ordinal?
+- [ ] O diff mostra inserção sem reordenar o restante?
+- [ ] O lock preserva IDs/ordinais dos estados existentes?
+
 ## Reavaliação da ordem
 
 **Próximo: Document.**
 
 Motivo:
 
-- Document é a base de `link`, `scope`, `id`, `number`, permissões e leitura/edição;
+- Document é a base de `DocumentRef`, `scope`, `id`, `number`, permissões e leitura/edição;
 - View, Decision, Policy, Job e Process dependem de Document;
 - Process também depende de eventos do Document, Role, Integration e View;
 - revisar Process antes de Document criaria decisões sobre nós/eventos sem o contrato de dados fechado;

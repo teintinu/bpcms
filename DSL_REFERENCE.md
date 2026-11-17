@@ -458,10 +458,30 @@ service "example.com/services/fraud-checkout" {
     service "example.com/services/checkout" as Checkout
   }
 
+  reintroduce Checkout.CheckoutStatus {
+    value FraudChecked {
+      title: { pt-BR: "Risco verificado", en: "Risk checked" }
+
+      transition PaymentAuthorized {
+        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      }
+    }
+
+    insert FraudChecked before PaymentAuthorized
+  }
+
+  reintroduce Checkout.CheckoutSession {
+    action checkFraud() {
+      title: { pt-BR: "Verificar risco", en: "Check risk" }
+      roles: [RiskAnalyst]
+      transition: FraudChecked
+    }
+  }
+
   reintroduce Checkout.Checkout {
     task FraudCheck {
       type: service
-      action: FraudCheck.evaluate
+      action: CheckoutSession.checkFraud
     }
 
     insert FraudCheck before AuthorizePayment
@@ -469,10 +489,11 @@ service "example.com/services/fraud-checkout" {
 }
 ```
 
-- `FraudCheck` é adicionado ao processo existente;
-- `insert ... before ...` religa o fluxo;
-- os demais passos permanecem;
-- não há substituição total do processo.
+- `FraudChecked` é adicionado ao workflow;
+- `FraudCheck` é adicionado ao processo;
+- `insert ... before ...` religa a aresta de entrada;
+- os demais estados/passos permanecem;
+- não há substituição total.
 
 
 # 4. Process
@@ -499,7 +520,7 @@ service "example.com/services/fraud-checkout" {
 | `if` | `if <expr> -> <Node>` | Condição do gateway; primeira condição verdadeira vence. |
 | `else` | `else -> <Node>` | Caminho default do gateway. |
 | `->` | `A -> B` | Transição entre nós; também usado em casos/regras. |
-| `insert` | `insert FraudCheck before AuthorizePayment` | Insere um nó no fluxo linear, religando predecessor → novo → alvo. |
+| `insert` | `insert FraudCheck before AuthorizePayment` | Insere nó/estado antes do alvo e religa predecessor → novo → alvo. |
 | `parallel` | `parallel { task A { ... }; task B { ... } }` | Divide o fluxo; ambos os ramos executam. |
 | `subprocess` | `subprocess Name { process: OtherProcess }` | Chama outro processo como subprocesso. |
 | `process` | `process: ProvisionAccess` | Referência ao processo chamado. |
@@ -739,8 +760,8 @@ document Invoice {
 - `Invoice` tem os escopos `Store` e `FiscalYear`;
 - o escopo usa `store.id` e `fiscalYear.id`;
 - `code`/`year` são chaves de negócio e entram no lookup do alvo;
-- links indiretos não inferem escopo;
-- dois links para o mesmo tipo de escopo no mesmo documento são erro;
+- referências indiretas não inferem escopo;
+- duas referências ao mesmo tipo de escopo no mesmo documento são erro;
 - opcional cria escopo opcional, com política explícita.
 
 **Forma completa da referência.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
@@ -954,11 +975,9 @@ customer: User {
 
 - o compilador extrai os campos usados na expressão;
 - a UI usa os campos extraídos para navegar;
-- `code` não existe;
 - permissão e workflow têm motivo genérico do builder;
 - a API devolve `{ type, fields, message }`;
-- `fields` é calculado pelo compilador;
-- `code` não existe.
+- `fields` é calculado pelo compilador.
 
 **`required` e rule de field.** Obrigatoriedade simples usa `required`; regra condicional usa `rule`:
 

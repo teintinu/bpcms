@@ -906,7 +906,7 @@ stateDiagram-v2
   deleted --> [*]
 
   note right of valid
-    Só documentos valid podem ser alvo de link.
+    Só documentos valid podem ser alvo de referência.
     Arquivar não invalida quem já copiou os dados.
   end note
 ```
@@ -1838,9 +1838,9 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-40** | A Application pode declarar artefatos? | **Não.** Todo artefato vive em `Service`; a app só compõe, configura e inicializa parâmetros no `main`. | Uma única fronteira de negócio; evita duplicação app/serviço. | ✅ |
 | **B-41** | Serviços essenciais como capabilities? | **Sim**: `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` depende de `regionalization` e oferece Shapes métrico/imperial com conversões. | Evita reimplementar GPS/fuso/formatação/unidades em cada serviço. | ✅ |
 | **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
-| **B-43** | Id de document é declarado? | **Não.** Todo document base gera `id: <Doc>Id` e o Shape de id implícito; extensão compartilha o id do pai. Declarar `id`/`<Doc>Id` é duplicidade. | Menos ruído e consistência de identidade. | ✅ |
-| **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; todo link recebe automaticamente a projeção do alvo; archive pode materializar; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
-| **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId` que referencia o Citizen; `ConsumerId` é alias de `UserId`. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
+| **B-43** | Id de document é declarado? | **Não.** Todo document tem `id` implícito; referência usa `Document.id`. Extensão compartilha o id do pai. | Menos ruído e consistência de identidade. | ✅ |
+| **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência recebe automaticamente a projeção do alvo; archive pode materializar; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
+| **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha o `id`, herda lookup e adiciona `citizen` que referencia o Citizen. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
 | **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.bpcms` contém roles + organogram. | Menos arquivos e leitura única da hierarquia. | ✅ |
 | **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n, `icon` e `ordinal`.** O primeiro ordinal é 10; incrementos de 10. `Icon` é token semântico do serviço; o Theme/builder resolve a imagem. | Labels, imagens e binário estáveis. | ✅ |

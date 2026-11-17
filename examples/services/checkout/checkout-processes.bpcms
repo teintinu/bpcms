@@ -2,14 +2,9 @@
 process Checkout {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
-  goal: "Validar carrinho, cotar frete, autorizar pagamento e confirmar pedido"
+  goal: "Cotar frete, autorizar pagamento e confirmar pedido"
   start on CheckoutSession.Validated
   end on CheckoutSession.OrderConfirmed
-
-  task ValidateCart {
-    type: service
-    action: CheckoutSession.validateCart
-  }
 
   task QuoteShipping {
     type: service
@@ -26,7 +21,6 @@ process Checkout {
     action: CheckoutSession.confirmOrder
   }
 
-  ValidateCart -> QuoteShipping
   QuoteShipping -> AuthorizePayment
   AuthorizePayment -> ConfirmOrder
 }

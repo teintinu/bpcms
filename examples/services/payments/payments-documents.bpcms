@@ -96,8 +96,7 @@ document Refund {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+      }
     }
     approve(){
       title: { pt-BR: "Aprovar", en: "Approve" }

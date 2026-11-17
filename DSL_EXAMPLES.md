@@ -405,10 +405,30 @@ service "example.com/services/fraud-checkout" {
     service "example.com/services/checkout" as Checkout
   }
 
+  reintroduce Checkout.CheckoutStatus {
+    value FraudChecked {
+      title: { pt-BR: "Risco verificado", en: "Risk checked" }
+
+      transition PaymentAuthorized {
+        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      }
+    }
+
+    insert FraudChecked before PaymentAuthorized
+  }
+
+  reintroduce Checkout.CheckoutSession {
+    action checkFraud() {
+      title: { pt-BR: "Verificar risco", en: "Check risk" }
+      roles: [RiskAnalyst]
+      transition: FraudChecked
+    }
+  }
+
   reintroduce Checkout.Checkout {
     task FraudCheck {
       type: service
-      action: FraudCheck.evaluate
+      action: CheckoutSession.checkFraud
     }
 
     insert FraudCheck before AuthorizePayment
@@ -416,7 +436,7 @@ service "example.com/services/fraud-checkout" {
 }
 ```
 
-*Valida: cada passo do checkout é um nó reutilizável; o fraud-checkout acrescenta `FraudCheck` antes de `AuthorizePayment` sem substituir o processo inteiro.*
+*Valida: o workflow e o processo são editados via `reintroduce`; `insert` insere estados/tasks sem substituir o todo.*
 
 ## Lock file do app
 
@@ -1047,7 +1067,7 @@ document Invoice {
 }
 ```
 
-*Valida: `scopable`, escopo inferido por `link`, ID interno, número alternativo, lookup automático do cliente, ação com `transition` e regra de total.*
+*Valida: `scopable`, escopo inferido por referência, ID interno, número alternativo, lookup automático do cliente, ação com `transition` e regra de total.*
 
 ### D.3 Remessa com dispositivo, unidades e cálculo
 

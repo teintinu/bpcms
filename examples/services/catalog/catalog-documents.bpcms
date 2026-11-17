@@ -24,8 +24,8 @@ document Category {
   }
 
   actions {
-    create(name: string, parent: Category?){
-      title: { pt-BR: "Criar categoria", en: "Create category" }
+    add(name: string, parent: Category?){
+      title: { pt-BR: "Cadastrar produto", en: "Add product" }
       roles: [Manager]
     }
     rename(name: string){

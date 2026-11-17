@@ -140,12 +140,10 @@ document Invoice {
       rule total > 0 BRL {
         pt-BR: "O valor deve ser maior que zero"
         en: "Value must be greater than zero"
-
-  }
-
+        }
       {
-      issuedAt = now()
-      }
+        issuedAt = now()
+        }
     }
 
     cancel(reason: string){
@@ -155,8 +153,7 @@ document Invoice {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+        }
     }
 
     closeMonth(){
@@ -243,8 +240,8 @@ document Bill {
       title: { pt-BR: "Pagar", en: "Pay" }
       roles: [Manager]
       transition: Paid
-  {
-      paidAt = now()
+      {
+        paidAt = now()
       }
     }
   }
@@ -277,8 +274,7 @@ document OrderCancellation {
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-
-  }
+        }
     }
   }
 

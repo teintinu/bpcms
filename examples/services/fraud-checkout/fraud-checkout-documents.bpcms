@@ -28,9 +28,9 @@ Evaluated {
     evaluate(){
       title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
       roles: [RiskAnalyst]
-  {
-      emit Evaluated { approved: approved; score: score }
-      }
+      {
+        emit Evaluated { approved: approved; score: score }
+        }
     }
   }
 }

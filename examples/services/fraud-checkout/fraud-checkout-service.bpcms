@@ -7,10 +7,30 @@ service "example.com/services/fraud-checkout" {
     service "example.com/services/checkout" as Checkout
   }
 
+  reintroduce Checkout.CheckoutStatus {
+    value FraudChecked {
+      title: { pt-BR: "Risco verificado", en: "Risk checked" }
+
+      transition PaymentAuthorized {
+        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      }
+    }
+
+    insert FraudChecked before PaymentAuthorized
+  }
+
+  reintroduce Checkout.CheckoutSession {
+    action checkFraud() {
+      title: { pt-BR: "Verificar risco", en: "Check risk" }
+      roles: [RiskAnalyst]
+      transition: FraudChecked
+    }
+  }
+
   reintroduce Checkout.Checkout {
     task FraudCheck {
       type: service
-      action: FraudCheck.evaluate
+      action: CheckoutSession.checkFraud
     }
 
     insert FraudCheck before AuthorizePayment
