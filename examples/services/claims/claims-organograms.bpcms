@@ -1,0 +1,81 @@
+// service: example.com/services/claims
+
+role Clerk {
+  title: { pt-BR: "Atendente de sinistros", en: "Claims clerk" }
+  permissions: [
+    claim.view,
+    claim.register,
+    claim.triage,
+    claim.reject,
+    coverage.view,
+    coverage.manage
+  ]
+}
+
+role Adjuster {
+  title: { pt-BR: "Ajustador", en: "Adjuster" }
+  permissions: [
+    claim.view,
+    claim.review,
+    claim.approve,
+    claim.reject,
+    evidence.record,
+    settlement.view
+  ]
+}
+
+role FraudAnalyst {
+  title: { pt-BR: "Analista antifraude", en: "Fraud analyst" }
+  permissions: [
+    claim.view,
+    fraud.review,
+    fraud.decide,
+    evidence.record
+  ]
+}
+
+role FinanceAnalyst {
+  title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
+  permissions: [
+    claim.view,
+    claim.pay,
+    settlement.view,
+    settlement.approve,
+    settlement.pay
+  ]
+}
+
+role Manager {
+  title: { pt-BR: "Gerente de sinistros", en: "Claims manager" }
+  inherits: Adjuster
+  permissions: [
+    claim.reopen,
+    claim.escalate,
+    settlement.approve,
+    settlement.reverse,
+    report.view
+  ]
+}
+
+role Policyholder {
+  title: { pt-BR: "Segurado", en: "Policyholder" }
+  permissions: [claim.viewOwn, claim.register, claim.describe]
+}
+
+organogram Indemnity {
+  title: { pt-BR: "Organograma de sinistros", en: "Claims organogram" }
+
+  hierarchy {
+    Manager > Adjuster > Clerk
+    Manager > FraudAnalyst
+    Manager > FinanceAnalyst
+    Clerk > Policyholder
+  }
+
+  Manager manages [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst]
+  Manager delegates to Adjuster when absent for 7d
+
+  segregation {
+    settlement.approve != settlement.pay
+  }
+}

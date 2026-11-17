@@ -1,36 +1,31 @@
 // service: example.com/services/citizen
-view CitizenRegistrationForm {
-  title: { pt-BR: "Cadastro de cidadão", en: "Citizen registration" }
-  type: form
-  document: Citizen
 
-  fields {
-    kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, required }
-    displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" }, required }
-    avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" } }
-    country: string { title: { pt-BR: "País", en: "Country" }, maxLength: 2, required }
-    legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
-    birthDate: Date { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
-  }
-
-  actions {
-    save -> Citizen.register
-    cancel -> none
-  }
-}
-
-view CitizenSearch {
+view Registry {
   title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
   type: table
   source: Citizen
+  roles: [Clerk, Manager, Auditor]
 
-  columns {
-    avatar
-    displayName
-    kind
-    country
-    status
-  }
+  columns { avatar; displayName; kind; country; status }
   filters { kind; country; status }
   pagination: 50
+}
+
+view Duplicates {
+  title: { pt-BR: "Fila de duplicados", en: "Duplicate queue" }
+  type: inbox
+  roles: [Clerk, Manager, Auditor]
+  scope: lanes
+  groupBy: lane
+  filter { lane in currentUser.lanes }
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view MergeProgress {
+  title: { pt-BR: "Andamento da mesclagem", en: "Merge progress" }
+  type: process
+  process: CitizenMerge
+  roles: [Clerk, Manager, Auditor]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
 }

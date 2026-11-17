@@ -1,6 +1,6 @@
 service "example.com/services/orders" {
   title: { pt-BR: "Pedidos", en: "Orders" }
-  version: 1.0.0
+  version: 1.1.0
   owner: "Orders"
   imports {
     service "bpcms.org/std" as std

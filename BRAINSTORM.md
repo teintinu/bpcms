@@ -1,9 +1,11 @@
 # BPCMS — Brainstorm
 
 *Documento vivo.* As decisões de baseline estão fechadas; o detalhe de implementação evolui por versão.
-Última atualização: **2026-11-13 — Rodada 4: baseline decisória v1, sem perguntas abertas, pronta para PRD/SPECS/PLAN.**
+Última atualização: **2026-11-17 — Rodada 5: DSL v0.2 orientada a Process + Document; 24 processos de exemplo; `job`, `report`, `type: user`, `reads`/`writes` removidos.**
 
-> **O que mudou nesta rodada.** As perguntas de desenho foram fechadas. O documento agora tem uma **baseline v1**: cada decisão tem um default, uma razão e, quando ainda há incerteza real, um **experimento com critério de sucesso**. Não há mais “a decidir”: há decisões tomadas (✅), defaults vetáveis (🔶), hipóteses testáveis (🔬) e itens fora de escopo (🧊). O objetivo é destravar a transformação em **PRD.md + SPECS.md + PLAN.md**.
+> **O que mudou nesta rodada.** A DSL foi reconstruída em torno de dois eixos: **Process** (trabalho) e **Document** (estado). A revisão foi feita com cinco pareceres independentes (BPM/BPMN/DMN/CMMN, gestão por processos/PMI, UX de workflow, gramática/compilador e governança/KPIs) e aplicada de ponta a ponta — referência, exemplos e `examples/`. O resultado está em [DSL_REFERENCE.md](DSL_REFERENCE.md) §4 (Process, com Form e Message), §5 (Document), §7 (View) e no registro de decisões em [REVIEW_CHECKLIST.md](REVIEW_CHECKLIST.md).
+>
+> **Resumo da v0.2:** tipo de task inferido do contrato (sem `type:`); `lane` obrigatória; `start`/`end` nomeados e `outcome` classificado; fluxo por arestas explícitas com `gateway`/`fork`/`join`/`wait`/`rollback`; `runs:` como único subpasso visível; `form` como artefato (contrato da tarefa humana) e `view` sem `type: form`; **estado, transições e eventos definidos no workflow** (`transition` no `value`, com `title`/`payload`/`event:`); a action só aponta o destino (`to:`); `job` virou `start { schedule: }` e `report` virou `view type: report`; `message` com correlação por documento.
 
 ### Resumo da baseline v1
 
@@ -27,10 +29,14 @@
 | **Nomes** | Sem repetir o serviço no nome (`Draft`, não `BillingDraft`); escopo é o serviço; sem duplicidade dentro do mesmo tipo/serviço. |
 | **Stdlib** | `bpcms.org/std` é pseudo-serviço do construtor; import + alias; `std.Mass` etc.; sem lock. |
 | **Parameter** | Configuração/segredo tipados, sempre dentro de um `Service`; `source: config \| secret`; valor nunca no lock. |
-| **Compensação** | Task `type: compensation` com `for` e `action`; disparo por erro/cancelamento, ordem reversa, idempotência. |
+| **Compensação** | `compensates:` no handler (sem arestas) + nó `rollback`; ordem reversa de conclusão; idempotência. |
 | **Usuário** | Dono do processo conversa e valida; analista revisa; dev estende; QA aprova release. |
-| **Documento** | Dados + ações + regras + sync + ciclo de vida; `Shape` é dono da semântica; unidade original + projeção + snapshot. |
-| **Processo** | As-is primeiro; to-be como versão comparável; BPMN interativo/simulável; manual executável antes de automação. |
+| **Documento** | Estado durável + ações + regras + sync + ciclo de vida; `Shape` é dono da semântica, das transições e dos eventos do workflow (`transition` no `value`); a action só aponta o destino (`to:`). |
+| **Processo** | Grafo de tarefas com `lane` obrigatória e arestas explícitas; tipo da task inferido do contrato; BPMN é visão; as-is primeiro; to-be como versão. |
+| **Form** | Contrato da tarefa humana: campos + botões que chamam actions + desfecho; não é tela, não tem roles, não escreve campo direto. |
+| **View/Report** | Projeção de leitura (table/detail/report/dashboard/kanban/calendar/process/inbox); relatório não é documento. |
+| **Job** | Não é artefato: agendamento é `start { schedule: }` de processo; scheduler é runtime. |
+| **DSL v0.2** | Orientada a Process + Document; 24 exemplos de processo como teste de aceitação; `job`/`report`/`type: user`/`reads`/`writes` removidos. |
 | **Ambientes** | Dev sem build; QA determinístico; produção otimizada; mesmo artefato promovido. |
 | **Fora de escopo** | Marketplace, multi-plataforma, CRDT/offline, process mining, BPMN 2.0 completo. |
 | **Próximo passo** | Gerar PRD.md, SPECS.md e PLAN.md sem reabrir o escopo. |
@@ -1436,7 +1442,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 ## Nível 3 — Artefatos em detalhe
 
-> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 151 exemplos cobrindo os 24 tipos de artefato. A [DSL_REFERENCE.md](DSL_REFERENCE.md) documenta cada cláusula com sintaxe e funcionamento; use as duas como teste de aceitação da sintaxe antes de fechar o SPECS.
+> **Exemplos de DSL:** [DSL_EXAMPLES.md](DSL_EXAMPLES.md) reúne 185 exemplos cobrindo os 23 tipos de artefato, incluindo 24 processos. A [DSL_REFERENCE.md](DSL_REFERENCE.md) documenta cada cláusula com sintaxe e funcionamento; use as duas como teste de aceitação da sintaxe antes de fechar o SPECS.
 
 ### 3.1 Catálogo de artefatos
 
@@ -1444,10 +1450,12 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 | :--- | :--- | :--- | :--- |
 | **Application** | composição voltada ao usuário | URI, source, version, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
 | **Service** | capacidade de negócio reutilizável | URI, source, version, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
-| **Process** | processo BPMN as-is/to-be | nós, fluxos, raias, eventos, SLAs, regras, vínculos | Núcleo |
-| **Document** | unidade de dados + ações + sync | campos, índices, ações, regras, frescor, dono | Núcleo |
+| **Process** | orquestração de trabalho (as-is/to-be) | `for`, pools/lanes, start/end nomeados, tasks com contrato inferido, gateway/fork/join, wait, rollback, mensagens, SLAs, desfechos | Núcleo |
+| **Form** | contrato da tarefa humana | documento, campos (herdados ou novos), botões com `calls`, `stay` | Núcleo |
+| **Document** | estado durável + ações + sync | campos, índices, estados com `transition` (aresta + evento), ações com `to:`, regras, frescor, dono | Núcleo |
 | **Shape** | semântica de valor | parse, validação, formato, unidade, índice, agregação | Núcleo |
-| **View** | tela/relatório | widgets, layout, papéis, dados, navegação | Núcleo |
+| **View** | tela de leitura/projeção | tipo, fontes, colunas, filtros, métricas, ações de navegação/comando, andamento de processo, inbox | Núcleo |
+| **Message** | contrato entre participantes | `about`, payload tipado, correlação por documento | Núcleo |
 | **Role / Organogram** | autorização e hierarquia | papéis, herança, delegação, quatro-olhos | Núcleo |
 | **Evidence** | fonte para entendimento | tipo, arquivo, hash, confidencialidade, extração, proveniência | Suporte |
 | **Parameter** | configuração e segredo tipados | shape, source, required, default, min/max, secret; declarado em Service | Suporte |
@@ -1459,9 +1467,9 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 | **Decision** | decisão registrada | alternativas, motivo, dono, data | Suporte |
 | **Assumption** | suposição | impacto, validação, status | Suporte |
 | **Integration** | conexão com sistema/dispositivo | contrato, auth, mapeamento, erros, idempotência | Suporte |
-| **Report/Dashboard** | análise | fontes, agregações, unidades, frescor | Suporte |
-| **Event** | fato de negócio | nome, payload, produtor, consumidores | Suporte |
-| **Job/Schedule** | tarefa assíncrona | gatilho, idempotência, retry, DLQ | Depois |
+| **Report/Dashboard** | análise (é View) | `view type: report`/`dashboard`: fontes, métricas, unidades, frescor, export | Suporte |
+| **Event** | fato de negócio | declarado no Document (`events`), emitido por `emits`/`emit`; envelope do builder | Suporte |
+| **Schedule** | gatilho agendado (não é artefato) | `start { schedule: "cron" [select: expr] }`; fan-out por sujeito | — |
 | **Policy/Rule** | decisão automatizada | condições, ações, prioridade, versão | Depois |
 | **Widget custom** | interação de alto nível criada pelo dev | tipo, dados, ações, capacidades por plataforma | Depois |
 | **Release/Version** | artefato promovido | versão, diff, aprovação, migração | Suporte |

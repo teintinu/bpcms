@@ -1,0 +1,17 @@
+// service: example.com/services/fraud-checkout
+
+icon Pending {
+  title: { pt-BR: "Pendente", en: "Pending" }
+}
+
+icon Evaluated {
+  title: { pt-BR: "Avaliada", en: "Evaluated" }
+}
+
+icon Approved {
+  title: { pt-BR: "Aprovada", en: "Approved" }
+}
+
+icon Rejected {
+  title: { pt-BR: "Rejeitada", en: "Rejected" }
+}

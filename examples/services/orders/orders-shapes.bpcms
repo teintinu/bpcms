@@ -1,25 +1,28 @@
 // service: example.com/services/orders
-
-
 shape OrderStatus {
   title: { pt-BR: "Situação do pedido", en: "Order status" }
-  base: workflow
+  base: state
   initial: Draft
+
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
+
     transition Placed {
-      title: { pt-BR: "Realizado", en: "Placed" }
+      title: { pt-BR: "Pedido realizado", en: "Order placed" }
       payload {
-        customer: User
-        total: std.Money
+        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+        placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
       }
     }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
       payload {
-        reason: string
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
       }
     }
   }
@@ -27,23 +30,91 @@ shape OrderStatus {
     title: { pt-BR: "Realizado", en: "Placed" }
     icon: Placed
     ordinal: 20
-    transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
+
+    transition Reserved {
+      title: { pt-BR: "Estoque reservado", en: "Stock reserved" }
+      payload {
+        reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
+      }
     }
+
+    transition CancellationRequested {
+      title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    icon: Reserved
+    ordinal: 30
+
+    transition CancellationRequested {
+      title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
     transition Fulfilled {
-      title: { pt-BR: "Atendido", en: "Fulfilled" }
+      title: { pt-BR: "Pedido atendido", en: "Order fulfilled" }
+      payload {
+        fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
+      }
+    }
+  }
+  value CancellationRequested {
+    title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+    icon: CancellationRequested
+    ordinal: 40
+
+    transition CancellationApproved {
+      title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+      payload {
+        cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Placed {
+      event: CancellationRejected
+      title: { pt-BR: "Cancelamento recusado", en: "Cancellation rejected" }
+      payload {
+        cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value CancellationApproved {
+    title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+    icon: CancellationApproved
+    ordinal: 50
+
+    transition Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+      }
     }
   }
   value Cancelled {
-    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
     icon: Cancelled
-    ordinal: 30
+    ordinal: 60
+
+    transition Placed {
+      event: Reopened
+      title: { pt-BR: "Pedido reaberto", en: "Order reopened" }
+      payload {
+        reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+      }
+    }
   }
   value Fulfilled {
     title: { pt-BR: "Atendido", en: "Fulfilled" }
     icon: Fulfilled
-    ordinal: 40
+    ordinal: 70
   }
-  format: plain
 
+  format: plain
 }

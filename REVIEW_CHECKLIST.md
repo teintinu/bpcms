@@ -78,15 +78,17 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
 | 5 | Parameter | Shape/Secret | PR.1–PR.6 | ⬜ |
 | 6 | Service | outros services, imports | S.1–S.8 | ⬜ |
-| 7 | Document | Shape, Icon | D.1–D.6 | ⬜ |
-| 8 | Event | Document | E.1–E.6 | ✅ merged em Document |
-| 9 | View | Document, Role | V.1–V.6 | ⬜ |
+| 7 | Document | Shape, Icon | D.1–D.8 | ✅ |
+| 8 | Event | Document | E.1–E.6 | ✅ declarado no Document |
+| 9 | View | Document, Role | V.1–V.8 | ✅ |
 | 10 | Decision | Document, Role | N.1–N.6 | ⬜ |
 | 11 | Policy | Document, Role | P.1–P.6 | ⬜ |
-| 12 | Job | Service/ação | J.1–J.6 | ⬜ |
+| 12 | Schedule | Process | S.1–S.4 | ✅ não é artefato (start) |
 | 13 | Integration | Shape, Service | I.1–I.6 | ⬜ |
-| 14 | Report | Document | R.1–R.6 | ✅ merged em Document |
-| 15 | Process | Document (eventos), Role, Integration, View | P.1–P.7 | ⬜ |
+| 14 | Report | View | R.1–R.6 | ✅ view type: report |
+| 15 | Process | Document (eventos), Role, Integration, View | P.1–P.24 | ✅ |
+| 15.1 | Form | Document, View | F.1–F.8 | ✅ |
+| 15.2 | Message | Document | M.1–M.4 | ✅ |
 | 16 | Evidence | Process, Document, Service | E.1–E.6 | ⬜ |
 | 17 | Assumption | links ao modelo | U.1–U.6 | ⬜ |
 | 18 | Conversation | Process, Role, Evidence, Assumption | C.1–C.6 | ⬜ |
@@ -518,10 +520,23 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `actions` de view podem apontar para Job/Integration?
 - [ ] `computed` de view vs Document computed?
 - [ ] View pode ter `device` sem capability?
+- [ ] `type: form` é suficiente para user task?
+- [ ] View precisa de vínculo explícito com process task?
 - [ ] `gui` aparece no Shape de mídia?
 - [ ] `gui` aparece na View apenas quando a tela inteira não funciona em TUI?
 
-**Status:** ⬜ pendente.
+**Decisões propostas:**
+
+- View `type: form` é a UI de user task.
+- A task referencia a View via `view:`.
+- A View não executa a task.
+- O processo mantém o andamento.
+- A View reutiliza fields/actions/document.
+- Form não é artefato; é `View type: form`.
+- View `type: process` exibe andamento; não substitui o processo.
+- View de user task é referenciada por `view:`.
+
+**Status:** 🟡 design inicial.
 
 ## 10. Decision ⬜
 
@@ -608,8 +623,19 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `schedule` aceita cron + linguagem natural?
 - [ ] `filter`/`condition` são expressões DSL?
 - [ ] `idempotent` deve ser obrigatório em ação mutante?
+- [ ] Job pode iniciar `process` em vez de `action`?
+- [ ] Job deve continuar separado de Process?
 
-**Status:** ⬜ pendente.
+**Decisões propostas:**
+
+- Job é invocação agendada, não processo.
+- Não tem lanes, user task ou progresso.
+- Pode executar action.
+- Pode iniciar processo no futuro.
+- Auditoria é automática.
+- Job não tem UI própria.
+
+**Status:** 🟡 design inicial.
 
 ## 13. Integration ⬜
 
@@ -671,7 +697,11 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `title`
 - [ ] `version`, `goal`, `roles`
 - [ ] `start on Document.Event`, `end on Document.Event`
-- [ ] `task` (role/form/reads/writes/sla)
+- [ ] `task` (type/lane/view/reads/writes/sla/progress)
+- [ ] `pool` interno/externo/system
+- [ ] `lane` com role/integration/system
+- [ ] `variables` locais tipadas
+- [ ] `view` como UI da user task
 - [ ] People task / User task
 - [ ] Form task / `form`
 - [ ] Service task
@@ -686,6 +716,14 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `gateway` exclusivo, inclusivo, paralelo, event-based, complexo
 - [ ] `if/else`, default flow, conditional flow
 - [ ] `insert`
+- [ ] `assignment` (claim/delegate/reassign)
+- [ ] `interventions` (pause/resume/cancel/retry/skip)
+- [ ] `milestone` e `discretionary`
+- [ ] `event subprocess`
+- [ ] `send`/`receive` + `correlation`
+- [ ] `loop`/multi-instance
+- [ ] DMN `decision` + outputs
+- [ ] coreografia/conversação via pools/mensagens
 - [ ] Multi-instance / loop
 - [ ] Pools / lanes / participantes
 - [ ] Collaboration diagram
@@ -694,6 +732,10 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Decision diagram / DMN
 - [ ] BPMN DI (formas e conexões)
 - [ ] `integration`
+- [ ] `type: external` (parceiro/device)
+- [ ] `type: manual`
+- [ ] `type: decision` / DMN
+- [ ] `message` em send/receive
 
 **Exemplos:** P.1–P.7; `*-processes.bpcms`.
 
@@ -705,8 +747,30 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `reads`/`writes` são obrigatórios?
 - [ ] `role` de task é Role do app?
 - [ ] É possível mesclar workflow e process em um único artefato?
+- [ ] `value` deve continuar sendo estado, não task?
+- [ ] Processo pode disparar workflow via action?
+- [ ] Subprocesso é o mecanismo de progresso/subpasso?
+- [ ] View de user task é reutilizável?
+- [ ] Pools/lanes cobrem externo e automação?
+- [ ] Variáveis locais passam para actions?
+- [ ] Document é armazenamento durável?
+- [ ] Quais diagramas BPMN/DMN/CMMN suportar?
 
-**Status:** ⬜ pendente.
+**Decisões propostas:**
+
+- Workflow continua sendo máquina de estados do Document; não é process.
+- Process é orquestração de tarefas.
+- `value` não vira task.
+- `pool`/`lane` definem executor interno/externo/sistema.
+- User task usa `view`.
+- Variables são locais da instância; Document é armazenamento durável.
+- `reads`/`writes` são data objects do BPMN.
+- Subprocesso é o mecanismo de progresso/subpasso.
+- Tarefa automática pode ter `progress`.
+- DMN via `decision`.
+- Choreography/conversation/CMMN ficam fora da v1.
+
+**Status:** 🟡 design inicial; exemplos/documentação em revisão.
 
 ## 16. Evidence ⬜
 
@@ -1009,7 +1073,15 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] O ordinal é posicional antes/depois do alvo?
 - [ ] Como evitar colisão de ordinal com estados existentes?
 - [ ] O ordinal é estável entre builds/migrações?
-- [ ] `insert` recalcula ordinais dos vizinhos?
+- [ ] `insert`
+- [ ] `assignment` (claim/delegate/reassign)
+- [ ] `interventions` (pause/resume/cancel/retry/skip)
+- [ ] `milestone` e `discretionary`
+- [ ] `event subprocess`
+- [ ] `send`/`receive` + `correlation`
+- [ ] `loop`/multi-instance
+- [ ] DMN `decision` + outputs
+- [ ] coreografia/conversação via pools/mensagens recalcula ordinais dos vizinhos?
 - [ ] O AST guarda a posição lógica ou apenas ordinal?
 - [ ] O diff mostra inserção sem reordenar o restante?
 - [ ] O lock preserva IDs/ordinais dos estados existentes?
@@ -1061,3 +1133,89 @@ Service revisado; seguimos para **Document**.
 - [ ] `classification: <url>`: revisar junto com `reintroduce`; por enquanto só na stdlib.
 - [x] `prefix`/`suffix`/`infix` definidos: prefixo/sufixo e infix decimal (CVE).
 - [ ] CPF nao pode ser um tipo, revizar Citizen
+
+---
+
+## Rodada Process + Document — 2026-11-17 (aprovada por solicitação direta do usuário)
+
+**Pedido:** revisar tudo com a aplicação orientada a **Process** e **Document**, refazer os exemplos, criar pelo menos 20 processos, rever tipos de diagrama/tarefa e documentação BPM/BPMN/DMN/CMMN, e implementar a melhor solução mantendo consistência.
+
+**Como foi feito:** quatro revisões independentes (BPM/BPMN/DMN/CMMN, gestão por processos/PMI, UX de workflow, gramática/compilador) + uma revisão de governança/KPIs. As decisões abaixo sintetizam o que foi aceito, o que foi recusado e o que ficou deferido. O usuário autorizou explicitamente a aplicação das mudanças nesta rodada; os artefatos anteriores permanecem no histórico do Git.
+
+### Perguntas do usuário e resposta adotada
+
+| Pergunta | Resposta | Consequência na DSL |
+| :--- | :--- | :--- |
+| "porque precisa `type: user` + `view: form`, está verboso?" | Porque a v1 dizia duas vezes a mesma coisa. O tipo é **inferido do contrato** e o form é o contrato, não a tela. | Removido `type:` de task; `task Review { lane: Sales; form: OrderReview }`. |
+| "porque precisamos de Document e Report?" | Não precisamos dos dois: **documento é estado**, **relatório é projeção**. Relatório não tem identidade, lifecycle nem escrita. | Removido `document type: report` e o bloco `report { }`; relatório é `view type: report`/`dashboard`. Documento calculado durável continua (5.10). |
+| "porque precisamos de Form e View?" | Form é **contrato de escrita/desfecho de uma tarefa humana**; View é **tela de leitura**. Só há duplicação quando o form redeclara tipo/título do documento — o que foi proibido. | `form` é artefato próprio; `view` perde `type: form` (e `wizard`); campos de form herdam do documento. |
+| "Job seria só um evento para iniciar processo? Runtime?" | Sim. Agendamento é **gatilho de início**, não tipo de trabalho; o scheduler é runtime. | Removido o artefato `job`; `start { schedule: "cron" [select:] }`. Rotina em lote é fan-out por sujeito. |
+| "podemos transformar workflow em processo, cada value como task?" | Não: estado não tem executor, fila, prazo nem form, e precisa valer fora de processo. **O workflow continua dono dos estados, das transições e dos eventos**; a action só executa o comando e aponta o destino. | `value` mantém `transition <Destino> { title; payload; event? }`; a action declara só `to:` (sem `from`, sem `emits: <Evento>`); Shape vira `base: state`. |
+| "lane e pool: é importante saber quem executa, inclusive externo e automatizado" | Pool é participante; lane é executor. Externo é **natureza de pool**, não tipo de task. | `lane` obrigatória; `lane: System` para automação; pool externo com portal (form) ou caixa-preta (só mensagem). |
+| "abrir o processo mostra andamento; se for user task, preenche; senão, progresso dentro do passo; subpassos = outro processo" | A unidade de progresso é a **instância de processo**. Subpasso com passos próprios é `runs:`. | Removido `progress: true`; `runs:` é call activity; tela de andamento derivada (4.13). |
+| "variáveis locais alimentam actions; documento é armazenamento definitivo; ícones de leitura/escrita" | Variável é contexto transitório; documento é durável; leitura/escrita é **derivada** do contrato. | `reads`/`writes` removidos; AST deriva data objects e ícones; `with`/`gives` fazem a ligação. |
+
+### Decisões estruturais
+
+| # | Decisão | Razão | Impacto |
+| :--- | :--- | :--- | :--- |
+| 1 | Dois eixos: Process (trabalho) + Document (estado) | Evita dois modelos concorrentes de "onde estou" | referência §§4–5 |
+| 2 | Tipo de task inferido de um contrato exclusivo | Removeu a redundância do `type:`; erro de build em conflito | §4.1, §4.7 |
+| 3 | `lane` obrigatória em toda task | Trabalho sem dono não entra; alimenta KPI de handoff | §4.3 |
+| 4 | Fluxo 100% por arestas explícitas | Ordem de declaração não é semântica; diff e merge não mudam comportamento | §4.10 |
+| 5 | `start`/`end` são nós nomeados | Desfecho categorizado (`outcome`) alimenta KPI e UI; substitui `start on`/`end on` | §4.5, §4.6 |
+| 6 | `runs:` como único subpasso visível | Uma árvore de instâncias, um histórico, um dono por passo | §4.7, §4.13 |
+| 6a | Processo chamado declara `start Begin { called }` | Deixa explícita a entrada do filho (inclusive em fluxo com laço) e impede dupla instância (evento + chamada) | §4.5, §4.7 |
+| 7 | `form` é artefato; View não tem form/wizard | Separa escrita (contrato) de leitura (tela); wizard é processo | §4.14, §7 |
+| 8 | Transições **e eventos** no workflow (`transition` no `value`); action só aponta `to:` | Evento de workflow definido no workflow, como na v1; sem `from`/`emits:` na action, sem declaração duplicada | §5.3–5.5, §5.7, §22 |
+| 9 | `job` removido; `schedule` é start | Um motor só; andamento/auditoria/SLA de graça | §4.5, §23 |
+| 10 | `report` removido; relatório é View | Estado ≠ projeção; remove `metrics` duplicado | §21, §7.3 |
+| 11 | `reads`/`writes` derivados | Sem drift; ícones BPMN saem do contrato; autorização fica no Document | §4.7, §5.6 |
+| 12 | Erro aborta a tentativa e compensa | Evita deadlock de ramo paralelo; semântica de saga | §4.8 |
+| 13 | Compensação = `compensates:` + `rollback` | Ordem reversa automática, handler sem aresta (BPMN-fiel) | §4.11 |
+| 14 | `cancel on` substitui event sub-process | Cobre "cancelar a qualquer momento" com um nó de destino | §4.8 |
+| 15 | `decision` DMN mínima (1 saída, primeiro-que-casa) | Puro, testável, exportável; sem FEEL/DRD na v1 | §4.17 |
+| 16 | `assign: pull \| auto \| named` substitui `assignment` | Remove duplicidade com lane/role e com runtime | §4.7 |
+| 17 | Inclusivo/complexo/event-based recusados ou deferidos | Ambíguos/caros de validar; "A ou B" fica para v2 | §4.18 |
+| 18 | `milestone on:` evento (não `when`) | Marco carimbado no log vira KPI | §4.12 |
+| 19 | `sla` do caso + `on breach` do processo | Lead time e escalonamento de caso | §4.2, §4.8 |
+| 20 | `foreach` sem agregação declarada (v1) | Agregação é efeito no documento; simplicidade | §4.7 |
+| 21 | **Correção:** evento de workflow volta para o `value` (`transition` com `title`/`payload`/`event:`) | A v0.2 tinha posto o evento em `events { }`, violando a regra "evento de workflow é definido no workflow"; a aresta pertence ao Shape e o evento é da aresta | §5.3, §5.7, §22; 213 transições migradas em `examples/` |
+
+### O que foi removido (e por quê)
+
+`type:` em task; `view type: form`; `view type: wizard`; artefato `job`; `document type: report`; bloco `report { metrics }`; `from:` na action; `emits: <Evento> { ... }` (virou `emits { ... }` só de mapeamento); `emit` em action com `to:`; `reads`/`writes`; `assignment { candidates; claim; delegate; reassign }`; `interventions`; `progress: true`; `parallel { }`; `subprocess { }`; `event subprocess`; `end on` / `start on`; `roles:` no processo; `role:` na task; `type: compensation` + `for:`; `outputs { }`.
+
+Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime vazando para a DSL, ou construção que o compilador não consegue validar.
+
+### O que foi adicionado
+
+`for <Document>` (sujeito); `start`/`end` como nós; `outcome` no end; `sla` do caso + `on breach`; `fork`/`join`; `wait { for \| until }`; `rollback`; `compensates:`; `cancel on`; `milestone on:`; `receives:` + `apply:` + `partner:`; artefato `message` com `about`; artefato `form`; `assign:`; `foreach { over; as; mode }`; `gives:`; `returns:` na action; `transition` no `value` (com `title`/`payload`/`event:`); `to:` na action; `emits { ... }` (só mapeamento); `view type: inbox`; `view type: report` (consolidado); `select:` em start agendado.
+
+### Deferido (v2, com gatilho)
+
+- `group` (subprocesso embutido) para escopo de boundary/compensação — gatilho: primeiro caso real de erro tratado dentro de `fork` que não possa ser um processo filho.
+- Gateway inclusivo/event-based ("A ou B") — gatilho: dois catches concorrentes no mesmo passo.
+- Variantes (`variant of`) e as-is/to-be como delta — gatilho: segundo cliente com variação regional.
+- `compute` puro (script task determinística) — gatilho: transformação que não caiba em expressão/`with`.
+- Agregação de multi-instância (`collect`/`until`) — gatilho: necessidade de resultado agregado sem gravar no documento.
+- Coreografia/conversação como visão derivada — gatilho: primeiro contrato B2B com mais de dois participantes.
+- DMN com múltiplas saídas/hit policy — gatilho: decisão que não caiba em um enum de retorno.
+
+### Estado dos exemplos ao final da rodada
+
+- `examples/services/`: **35 processos** em 19 serviços (14 existentes + 6 novos: procurement, contracts, credit, claims, field-service, hr).
+- `examples/applications/`: 3 apps existentes + 2 novos (central-de-compras, claims-desk).
+- 66 forms, 21 mensagens, 131 views, 55 documentos, **213 transições de estado** (com evento declarado na aresta).
+- 165 eventos de transição saíram de `events { }` e voltaram para o `value` do estado de origem; `events { }` ficou só com eventos sem transição.
+- `*-jobs.bpcms` removidos; agendamentos viraram `start { schedule: }` nos processos.
+- Validação estrutural dos 35 processos: todo nó alcançável, toda aresta com destino existente, toda task com exatamente um contrato e lane, sem beco sem saída (exceto `end`, compensação, discricionária e task lateral de `keep`).
+
+### Pendências desta rodada
+
+- [ ] Validar com o usuário a remoção de `*-jobs.bpcms` (conteúdo migrado para processos agendados).
+- [ ] Revisar `reintroduce` para as novas construções (nós, arestas, `runs`, `form`).
+- [ ] Definir IDs estáveis por caminho de nomes no lock (renomear nó hoje quebra histórico).
+- [ ] Decidir se `sla` é obrigatório (erro) ou recomendado (aviso) para task humana.
+- [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.bpcms`/SVGs. É asset de builder, por isso ficou fora desta rodada.
+- [ ] Diagramas: BPMN DI, DMN, CMMN — passo futuro; AST já separa modelo de layout.

@@ -1,38 +1,33 @@
 // service: example.com/services/support
 
-
 shape TicketStatus {
   title: { pt-BR: "Situação do chamado", en: "Ticket status" }
-  base: workflow
+  base: state
   initial: Open
   value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
+
     transition InProgress {
-      title: { pt-BR: "Em andamento", en: "In progress" }
-    }
-    transition Waiting {
-      title: { pt-BR: "Aguardando", en: "Waiting" }
-    }
-    transition Resolved {
-      title: { pt-BR: "Resolvido", en: "Resolved" }
-      payload {
-        assignee: User
-      }
+      event: Claimed
+      title: { pt-BR: "Chamado assumido", en: "Ticket claimed" }
     }
   }
   value InProgress {
     title: { pt-BR: "Em andamento", en: "In progress" }
     icon: InProgress
     ordinal: 20
+
     transition Waiting {
-      title: { pt-BR: "Aguardando", en: "Waiting" }
+      event: Held
+      title: { pt-BR: "Chamado aguardando", en: "Ticket held" }
     }
+
     transition Resolved {
-      title: { pt-BR: "Resolvido", en: "Resolved" }
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
       payload {
-        assignee: User
+        assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
       }
     }
   }
@@ -40,13 +35,16 @@ shape TicketStatus {
     title: { pt-BR: "Aguardando", en: "Waiting" }
     icon: Waiting
     ordinal: 30
+
     transition InProgress {
-      title: { pt-BR: "Em andamento", en: "In progress" }
+      event: Resumed
+      title: { pt-BR: "Chamado retomado", en: "Ticket resumed" }
     }
+
     transition Resolved {
-      title: { pt-BR: "Resolvido", en: "Resolved" }
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
       payload {
-        assignee: User
+        assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
       }
     }
   }
@@ -54,14 +52,16 @@ shape TicketStatus {
     title: { pt-BR: "Resolvido", en: "Resolved" }
     icon: Resolved
     ordinal: 40
+
     transition Closed {
-      title: { pt-BR: "Fechado", en: "Closed" }
+      title: { pt-BR: "Chamado fechado", en: "Ticket closed" }
     }
+
     transition Open {
-      title: { pt-BR: "Reaberto", en: "Reopened" }
       event: Reopened
+      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
       payload {
-        reason: string
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
@@ -71,30 +71,52 @@ shape TicketStatus {
     ordinal: 50
   }
   format: plain
-
 }
 
 shape ReturnStatus {
   title: { pt-BR: "Situação da devolução", en: "Return status" }
-  base: workflow
+  base: state
   initial: Requested
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
+
     transition Approved {
-      title: { pt-BR: "Aprovado", en: "Approved" }
+      title: { pt-BR: "Devolução aprovada", en: "Return approved" }
+      payload {
+        refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
+      }
     }
+
     transition Rejected {
-      title: { pt-BR: "Rejeitado", en: "Rejected" }
+      title: { pt-BR: "Devolução rejeitada", en: "Return rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Approved {
     title: { pt-BR: "Aprovado", en: "Approved" }
     icon: Approved
     ordinal: 20
+
     transition Received {
-      title: { pt-BR: "Recebida", en: "Received" }
+      title: { pt-BR: "Devolução recebida", en: "Return received" }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Rejected {
@@ -106,8 +128,19 @@ shape ReturnStatus {
     title: { pt-BR: "Recebida", en: "Received" }
     icon: Received
     ordinal: 40
+
     transition Refunded {
-      title: { pt-BR: "Reembolsado", en: "Refunded" }
+      title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
+      payload {
+        refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Refunded {
@@ -115,8 +148,12 @@ shape ReturnStatus {
     icon: Refunded
     ordinal: 50
   }
+  value Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 60
+  }
   format: plain
-
 }
 
 shape TicketPriority {
@@ -143,5 +180,46 @@ shape TicketPriority {
     ordinal: 40
   }
   format: plain
+}
 
+shape TicketCategory {
+  title: { pt-BR: "Categoria do chamado", en: "Ticket category" }
+  base: classification
+  value Technical {
+    title: { pt-BR: "Técnico", en: "Technical" }
+    icon: Technical
+    ordinal: 10
+  }
+  value Billing {
+    title: { pt-BR: "Cobrança", en: "Billing" }
+    icon: Billing
+    ordinal: 20
+  }
+  value General {
+    title: { pt-BR: "Geral", en: "General" }
+    icon: General
+    ordinal: 30
+  }
+  format: plain
+}
+
+shape RefundVerdict {
+  title: { pt-BR: "Parecer da devolução", en: "Refund verdict" }
+  base: classification
+  value Eligible {
+    title: { pt-BR: "Elegível", en: "Eligible" }
+    icon: Eligible
+    ordinal: 10
+  }
+  value ApprovalRequired {
+    title: { pt-BR: "Exige aprovação", en: "Approval required" }
+    icon: ApprovalRequired
+    ordinal: 20
+  }
+  value NotEligible {
+    title: { pt-BR: "Não elegível", en: "Not eligible" }
+    icon: NotEligible
+    ordinal: 30
+  }
+  format: plain
 }

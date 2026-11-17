@@ -1,0 +1,48 @@
+// service: example.com/services/checkout
+view Sessions {
+  title: { pt-BR: "Sessões de finalização", en: "Checkout sessions" }
+  type: table
+  source: CheckoutSession
+  roles: [SupportAgent, Customer]
+
+  columns { customer; total; status; createdAt }
+  filters { status; period; customer }
+  pagination: 50
+
+  actions {
+    open -> SessionDetail
+    startCheckout -> CheckoutSession.create(customer, total)
+    validate -> CheckoutSession.validateCart
+    abandon -> CheckoutSession.abandon(reason)
+  }
+}
+
+view SessionDetail {
+  title: { pt-BR: "Detalhe da sessão", en: "Session detail" }
+  type: detail
+  document: CheckoutSession
+  roles: [SupportAgent, Customer]
+
+  sections { summary; timeline }
+  actions {
+    progress -> CheckoutProgress
+  }
+}
+
+view CheckoutProgress {
+  title: { pt-BR: "Andamento da finalização", en: "Checkout progress" }
+  type: process
+  process: Checkout
+  roles: [SupportAgent, Customer]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+view MyCheckouts {
+  title: { pt-BR: "Minhas finalizações", en: "My checkouts" }
+  type: inbox
+  roles: [Customer, SupportAgent]
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}

@@ -1,17 +1,17 @@
 // service: example.com/services/support
-document SlaCompliance {
+
+view SlaCompliance {
   title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
   type: report
-  computed from Ticket
-  freshness: 5m
+  sources: [Ticket]
+  roles: [Manager]
 
-  report {
-    filters { period; team; priority }
-    metrics {
+  filters { period; priority }
+  metrics {
     compliance: percentage(Ticket.slaMet)
     breached: count(Ticket) where breached == true
     avgResolution: avg(Ticket.resolutionTime)
-    }
-    alert { compliance < 90% -> NotifyManager }
   }
+  freshness: 5m
+  export: [pdf, csv]
 }

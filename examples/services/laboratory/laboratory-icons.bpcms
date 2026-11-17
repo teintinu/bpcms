@@ -44,6 +44,22 @@ icon Cancelled {
   title: { pt-BR: "Cancelada", en: "Cancelled" }
 }
 
+icon Draft {
+  title: { pt-BR: "Registrado", en: "Recorded" }
+}
+
+icon Validated {
+  title: { pt-BR: "Validado", en: "Validated" }
+}
+
+icon Signed {
+  title: { pt-BR: "Assinado", en: "Signed" }
+}
+
+icon Released {
+  title: { pt-BR: "Liberado", en: "Released" }
+}
+
 icon Hemogram {
   title: { pt-BR: "Hemograma", en: "Complete blood count" }
 }

@@ -1,6 +1,8 @@
 # BPCMS — Referência de Cláusulas da DSL
 
-*Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. Esta referência cobre **todas as cláusulas usadas em [DSL_EXAMPLES.md](DSL_EXAMPLES.md)** e serve de base para o SPECS.
+*Sintaxe ilustrativa v0.2 (Process + Document).* Não é gramática final nem código executável. Esta referência cobre **todas as cláusulas usadas em [DSL_EXAMPLES.md](DSL_EXAMPLES.md)** e serve de base para o SPECS.
+
+**O que mudou na v0.2 (resumo):** a aplicação é orientada a **Process** (trabalho) e **Document** (estado). A task não tem `type:` (o tipo é inferido do contrato), a lane é obrigatória, o fluxo é um grafo de arestas explícitas com `start`/`end` nomeados, o subpasso é sempre outro processo (`runs:`), `form` é artefato (contrato da tarefa humana) e `view` não tem `type: form`. `job` virou `start { schedule: }`; `report` virou `view type: report`; **o workflow define estados, transições e eventos** (`transition` no `value`, com `title`/`payload`/`event:`); a action só aponta o destino (`to:`) e executa o comando; `reads`/`writes`, `assignment`, `interventions`, `progress` e `type: user` deixaram de existir.
 
 **A DSL é uma abstração de módulos.** O código-fonte descreve contratos, capacidades, dados e políticas; a implementação concreta é responsabilidade dos construtores. O compilador da DSL deve produzir um **AST simples, estável e poderoso**, validar dependências e impedir incoerências antes de qualquer geração de código.
 
@@ -24,10 +26,10 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | Seção | Artefatos |
 | :--- | :--- |
 | 1 | Léxico, metadados, origem, versão, lock/IDs, capabilities e serviços essenciais |
-| 2–8 | Application, Service, Process, Document, Shape, View, Role/Organogram |
+| 2–8 | Application, Service, Process (com Form e Message), Document, Shape, View, Role/Organogram |
 | 9–12 | Evidence, Conversation, Decision, Assumption |
 | 13–19 | Parameter, Secret, Environment, Builder, Theme, Locale, Widget, Release/Version |
-| 20–24 | Integration, Job, Policy |
+| 20–24 | Integration, Report, Event, Schedule, Policy |
 | 25 | Expressões, operadores e valores |
 | 26 | Validação e erros |
 | 27 | Cobertura |
@@ -89,7 +91,7 @@ stream.readStreamArray(): stream[]
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
 | `source` | app, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
 | `status` | evidence, conversation, assumption | `status: proposed \| confirmed \| ...` | Estado do artefato de descoberta. Valores variam por artefato. |
-| `type` | task, view, release, report | `type: service`, `type: form`, `type: migration` | Discriminador; os valores válidos dependem do artefato. |
+| `type` | view, release | `type: table`, `type: report`, `type: migration` | Discriminador; **não existe em task** (o tipo é inferido do contrato) nem em document (relatório é view). |
 | `mode` | builder, theme, report | `mode: [interpret, generate]`, `mode: dark`, `mode: live` | Modo de operação/apresentação. |
 | `links` | evidence, assumption | `links { process X.Y; document X.field; view V; decision D; evidence E; service "<uri>" }` | Liga o artefato de descoberta ao modelo; o `check` valida o alvo. |
 | `audit` | policy | `audit: true` | Exige trilha da avaliação da policy. Document é auditado automaticamente por comando. |
@@ -116,11 +118,14 @@ stream.readStreamArray(): stream[]
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
 | `Shape` | campos, binds | `peso: Mass` | Tipo de dado; dono de parse/validação/formato/unidade. |
-| `Document` | reads/writes/source | `reads: [Order]` | Referência a documento; o `check` valida existência e dono. |
-| `View` | form, actions | `form: ReviewForm` | Referência a uma view. |
-| `Role` | roles/role | `role: Manager` | Referência a papel. |
-| `Event` | start/end/on | `start on Order.Approved` | Referência a evento de Document. |
-| `Integration` | task/integration | `integration: Carrier` | Referência a integração. |
+| `Document` | variáveis, with, actions | `shipment: Shipment` | Referência a documento; o `check` valida existência, dono e tipo. |
+| `Form` | task humana | `form: OrderReview` | Contrato da tarefa (4.14). |
+| `View` | navegação, telas | `open -> OrderDetail` | Tela/projeção (7). |
+| `Process` | runs | `runs: DeliveryTracking` | Subprocesso (call activity). |
+| `Message` | sends/receives | `sends: PickupRequest` | Contrato entre participantes (4.15). |
+| `Role` | lane, by, roles | `lane Sales { role: Clerk }` | Referência a papel. |
+| `Event` | start, cancel on, milestone on | `event: Order.Approved` | Referência a evento de Document. |
+| `Integration` | call | `call: Carrier.quote` | Referência a operação de integração. |
 | `T` | campos | `phone: Phone` | Sem `required` = opcional; `?` não é usado no field. |
 | `T[]` | coleções | `items: InvoiceItem[]` | Lista ordenada de `T`. |
 | `A \| B` | binds | `binds: Mass \| Length` | União de tipos aceitos pelo widget. |
@@ -201,10 +206,12 @@ builder AiRuntime {
   capabilities: [llm, oltp, sync]
 }
 
-job RefreshAssistant {
-  capabilities { scheduling, llm }
-  schedule: "0 * * * *"
-  action: Assistant.refresh()
+process AssistantRefresh {
+  title: { pt-BR: "Atualização do assistente", en: "Assistant refresh" }
+  start Hourly { schedule: "0 * * * *" }
+  task Refresh { lane: System; action: AssistantProfile.refresh }
+  Hourly -> Refresh
+  end Done { title: { pt-BR: "Atualizado", en: "Refreshed" } }
 }
 ```
 
@@ -224,9 +231,24 @@ service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
 }
 
-view VisitForm {
+form VisitReport {
+  title: { pt-BR: "Relato da visita", en: "Visit report" }
+  document: Visit
+  fields {
+    notes: string { title: { pt-BR: "Observações", en: "Notes" }, maxLength: 2000 }
+    signature: Signature { title: { pt-BR: "Assinatura", en: "Signature" }, required }
+  }
+  actions {
+    complete { calls: Visit.complete(notes, signature) }
+    cancel { calls: Visit.cancel(notes) }
+  }
+}
+
+view VisitDetail {
+  title: { pt-BR: "Visita técnica", en: "Field visit" }
+  type: detail
+  document: Visit
   capabilities { location, timezone, regionalization, units }
-  type: form
   computed {
     scheduledLocal: regionalization.formatDate(visit.scheduledAt, timezone.current())
     distance: units.format(location.distance(tech.position, visit.position), regionalization.system())
@@ -459,12 +481,16 @@ service "example.com/services/fraud-checkout" {
   }
 
   reintroduce Checkout.CheckoutStatus {
+    value ShippingQuoted {
+      transition FraudChecked {
+        title: { pt-BR: "Risco verificado", en: "Risk checked" }
+      }
+    }
+
     value FraudChecked {
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
-
-      transition PaymentAuthorized {
-        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      }
+      icon: status.fraudChecked
+      ordinal: 25
     }
 
     insert FraudChecked before PaymentAuthorized
@@ -474,13 +500,13 @@ service "example.com/services/fraud-checkout" {
     action checkFraud() {
       title: { pt-BR: "Verificar risco", en: "Check risk" }
       roles: [RiskAnalyst]
-      transition: FraudChecked
+      to: status.FraudChecked
     }
   }
 
   reintroduce Checkout.Checkout {
     task FraudCheck {
-      type: service
+      lane: System
       action: CheckoutSession.checkFraud
     }
 
@@ -489,7 +515,8 @@ service "example.com/services/fraud-checkout" {
 }
 ```
 
-- `FraudChecked` é adicionado ao workflow;
+- `FraudChecked` é adicionado ao ciclo de vida (valor do Shape de estado);
+- a transição é declarada na action reintroduzida (`from`/`to`), não no valor;
 - `FraudCheck` é adicionado ao processo;
 - `insert ... before ...` religa a aresta de entrada;
 - os demais estados/passos permanecem;
@@ -498,317 +525,879 @@ service "example.com/services/fraud-checkout" {
 
 # 4. Process
 
-| Cláusula | Sintaxe | Funcionamento |
+**Processo é trabalho; Documento é estado.** O processo orquestra quem faz o quê, em que ordem, com que prazo e com que desvio. O documento guarda o dado durável, as invariantes e o ciclo de vida. Tudo o mais — form, view, mensagem, decisão — é contrato de trabalho ou projeção.
+
+Um processo não é:
+
+- uma máquina de estados do documento (isso é o **workflow** do Document, seção 5);
+- um formulário (isso é o **Form**, seção 4.14);
+- uma tela (isso é a **View**, seção 7);
+- um agendador (agendamento é um **start**; o scheduler é runtime);
+- um relatório (isso é uma **View type: report**).
+
+## 4.1 As duas perguntas de um processo
+
+Todo processo responde a duas perguntas, e a DSL exige que as duas estejam explícitas:
+
+| Pergunta | Cláusula | Onde vive |
 | :--- | :--- | :--- |
-| declaração | `process <Name> { ... }` | Processo executável/descritivo; BPMN é uma visão. |
-| `version` | `version: 1` | Versão do processo; releases e diff usam. |
-| `goal` | `goal: "..."` | Objetivo de negócio; usado na entrevista e no review. |
-| `roles` | `roles: [Requester, Manager, Buyer]` | Atores que podem receber tarefas; referenciam `Role`. |
-| `start on` | `start on PurchaseRequest.Requested` | Evento que inicia uma instância. |
-| `task` | `task ReviewRequest { ... }` | Nó de trabalho humano (default) ou automático. |
-| `type` | `type: service` ou `type: compensation` | Na task, distingue humana (default), automática e compensação. |
-| `role` | `role: Manager` | Papel responsável pela tarefa humana. |
-| `form` | `form: PurchaseReview` | View usada para executar a tarefa. |
-| `reads` | `reads: [PurchaseRequest]` | Documentos/campos consultados; o `check` valida acesso. |
-| `writes` | `writes: [PurchaseRequest]` | Documentos/campos alterados pela tarefa. |
-| `sla` | `sla: 1d` | Prazo esperado; alimenta painel, escalonamento e simulação. |
-| `action` | `action: PurchaseRequest.approve` | Ação de documento executada pela task de serviço. |
-| `integration` | `integration: Carrier` | Integração chamada pela task de serviço. |
-| `for` | `for: ChargePayment` | Na task de compensação, nó concluído que será compensado. |
-| `retry` | `retry: exponential(3)` | Política de retry para task de serviço/erro. |
-| `gateway` | `gateway Amount { ... }` | Decisão exclusiva; um caminho por vez. |
-| `if` | `if <expr> -> <Node>` | Condição do gateway; primeira condição verdadeira vence. |
-| `else` | `else -> <Node>` | Caminho default do gateway. |
-| `->` | `A -> B` | Transição entre nós; também usado em casos/regras. |
-| `insert` | `insert FraudCheck before AuthorizePayment` | Insere nó/estado antes do alvo e religa predecessor → novo → alvo. |
-| `parallel` | `parallel { task A { ... }; task B { ... } }` | Divide o fluxo; ambos os ramos executam. |
-| `subprocess` | `subprocess Name { process: OtherProcess }` | Chama outro processo como subprocesso. |
-| `process` | `process: ProvisionAccess` | Referência ao processo chamado. |
-| `end on` | `end on Shipment.Dispatched` | Evento que encerra a instância. |
-| `on timer` | `on timer 2d after ReviewRequest -> Escalate` | Boundary timer: dispara após duração, a partir do nó. |
-| `after` | `after <Node>` | Nó de referência do timer. |
-| `on error` | `on error CarrierUnavailable -> ManualQuote` | Boundary error: desvia quando a task/serviço falha. |
+| **Quem executa cada passo?** | `lane:` em toda task | pool/lane do processo |
+| **O que cada passo faz?** | um contrato: form, action, call, decision, sends, receives, runs, manual | no artefato referenciado |
 
-**Funcionamento:** a task humana cria uma inbox para o papel; a task de serviço chama `action`/`integration`. `reads`/`writes` limitam o que a tarefa pode tocar. Gateways não executam regra própria: usam `Decision`/`Rule` ou expressão segura. `parallel` espera todos os ramos; `subprocess` herda o caso. `on timer`/`on error` são boundaries do nó anterior. Uma instância mantém variáveis (`purchase.amount`, `shipment.pesoBruto`) e histórico.
+O **tipo** da task é derivado do contrato — não existe `type:`. A tabela abaixo é total e determinística: exatamente um contrato por task.
 
-```bpcms
-process PurchaseApproval {
-  version: 1
-  goal: "Comprar com alçada e rastro"
-  roles: [Requester, Manager, Buyer]
-  start on PurchaseRequest.Requested
-
-  task ReviewRequest {
-    role: Manager
-    form: PurchaseReview
-    reads: [PurchaseRequest]
-    writes: [PurchaseRequest]
-    sla: 1d
-  }
-
-  gateway Amount {
-    if purchase.amount <= 5000 -> AutoApprove
-    else -> BuyerQuote
-  }
-
-  task AutoApprove {
-    type: service
-    action: PurchaseRequest.approve
-  }
-
-  end on PurchaseRequest.Approved
-}
-```
-
-**Compensação:** uma task `type: compensation` declara `for: <Node>` (atividade concluída a compensar) e `action`. É disparada por `on error`/cancelamento, executa em ordem reversa e deve ser idempotente. `retry` não substitui compensação.
-
-```bpcms
-task ChargePayment {
-  type: service
-  integration: Payment
-  action: Payment.charge
-}
-on error StockUnavailable -> RefundPayment
-task RefundPayment {
-  type: compensation
-  for: ChargePayment
-  action: Payment.refund
-}
-```
-
----
-
-# 5. Document
-
-| Cláusula | Sintaxe | Funcionamento |
+| Contrato | Tipo da task | Executor |
 | :--- | :--- | :--- |
-| declaração | `document <Name> { ... }` | Unidade de dados + ações + regras + sync. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `id` | *(implícito)* | Todo document tem `id` único gerado; não declare o campo. |
-| `lookup` | `nickname: string { lookup }` | Marca o campo para o lookup de exibição; a ordem dos campos marcados define a ordem. Extensões herdam os campos marcados. |
-| `scopable` | `scopable document Store { ... }` | Documento também é um tipo de escopo. |
-| referência | `store: Store { title: {...} }` | Campo de Document é implicitamente um `DocumentRef` com `id` + lookup do alvo. |
-| escopo inferido | `store: Store` | Todo direto para `scopable document` cria um escopo. |
-| `number` | `number: InvoiceNumber { format; sequence; unique }` | Chave alternativa de negócio; não é o `id` interno. |
-| `extends` | `document Consumer extends User { ... }` | Especialização aditiva; herda campos, ações, regras e lookup; usa o mesmo id do pai. |
-| `version` | `version: 1` | Versão do schema; migrações comparam. |
-| `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
-| `sync` | `sync: live` ou `sync: read` | `live` assina patches; `read` entrega leitura materializada. |
-
-| `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
-| `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo Document. |
-| `fields` | `fields { name: Shape { ... } }` | Campos tipados; o campo só passa parâmetros simples. |
-| `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos; o builder realiza. |
-| `actions` | `actions { issue() { title; roles; transition: Issued; rule; body } }` | Comandos/botões; `title` e `roles` obrigatórios; sem retorno. |
-| `events` | `events { Approved { title; key; payload } }` | Eventos **sem workflow**; workflow fica na `transition`. |
-| `seed` | `seed { SP { code: "SP"; name: "São Paulo" } }` | Documentos pré-criados/idempotentes para bootstrap. |
-| `rule` | `rule total == subtotal + tax { message }` | Regras de documento, action e field; condição verdadeira = permitido; repete `rule`. |
-| `source: device` | `source: device "scale-01" for pesoBruto` | Campo é lido de dispositivo; atualização = releitura. |
-| `computed from` | `computed from Invoice, Payment` | Documento inteiro é cálculo de outras fontes. |
-| `computed <Name> from` | `computed frete from Shipment, CarrierTable { ... }` | Cálculo nomeado (campo/subdocumento) com frescor. |
-| `freshness` | `freshness: 15m` | TTL/agenda do cálculo; expõe `calculatedAt`. |
-| `exposes` | `exposes: [frete, calculatedAt]` | Campos resultantes do cálculo. |
-
-**Campos calculados no Document.** A mesma cláusula vale para fields do Document:
-
-```bpcms
-document Invoice {
-  fields {
-    items: InvoiceItem[]
-    subtotal: std.Money {
-      title: { pt-BR: "Subtotal", en: "Subtotal" }
-      currency: BRL
-      computed: items.sum(total)
-    }
-    tax: std.Money {
-      title: { pt-BR: "Imposto", en: "Tax" }
-      currency: BRL
-    }
-    total: std.Money {
-      title: { pt-BR: "Total", en: "Total" }
-      currency: BRL
-      computed: subtotal + tax
-    }
-  }
-}
-```
-
-- `total` de cada item pode ser calculado;
-- `subtotal` soma os itens;
-- `total` soma subtotal + imposto;
-- computed é somente leitura;
-- não repetir a conta em `rule`;
-- `default` é aplicado antes de `required`; `required` valida o valor final;
-- default incompatível com tipo é erro de build.
-
-**Seed.** `seed` declara documentos pré-criados necessários para o funcionamento:
-
-```bpcms
-scopable document Store {
-  title: { pt-BR: "Loja", en: "Store" }
-
-  fields {
-    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
-    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
-  }
-
-  seed {
-    SP {
-      code: "SP"
-      name: "São Paulo"
-    }
-  }
-}
-```
+| `form:` | user task (pessoa) | lane interna ou de portal |
+| `manual:` | manual task (fora do sistema) | lane interna |
+| `action:` | service task (comando de documento) | `System` |
+| `call:` | service task (operação de integração) | `System` |
+| `decision:` | business rule task (DMN) | `System` |
+| `sends:` | send task (mensagem para participante) | `System` |
+| `receives:` | receive task (espera mensagem de participante) | `System` |
+| `runs:` | subprocesso / call activity (outra instância) | `System` |
 
 Regras:
 
-- o builder aplica o seed no bootstrap/migração;
-- é idempotente;
-- valida `required`, `rule`, unique e referências;
-- usa um `id` determinístico por serviço/Document/chave;
-- não executa actions;
-- não emite eventos de domínio;
-- `seed` não é `initial` de workflow.
+- zero contratos = `E_TASK_CONTRACT_MISSING`; dois contratos = `E_TASK_KIND_CONFLICT`;
+- `type:` não existe em task: inferência única, sem asserção redundante;
+- o kind inferido é visível no `check --explain` e no builder (nunca é um default silencioso);
+- task humana, manual, de mensagem ou de subprocesso **sempre** declara `lane:`;
+- task automatizada declara `lane: System`, o único valor permitido.
 
-**Identificador de seed.** A chave do seed vira uma referência válida:
-
-```text
-Store.SP
-FiscalYear.Y2026
-```
-
-`Store.SP` é um `DocumentRef` imutável para a loja de São Paulo:
-
-- carrega o `id` determinístico;
-- carrega os campos `lookup` do Store;
-- pode ser usado em fields, actions, rule, outros seeds e processos;
-- é resolvido em tempo de build;
-- não é string;
-- não é ID solto.
-
-Exemplo:
+## 4.2 Cabeçalho
 
 ```bpcms
-document Invoice {
-  fields {
-    store: Store { default: Store.SP }
-    fiscalYear: FiscalYear { default: FiscalYear.Y2026 }
-  }
+process OrderFulfillment for Order {
+  title: { pt-BR: "Atendimento do pedido", en: "Order fulfillment" }
+  version: 1
+  goal: "Entregar o pedido no prazo, com frete e rastreio conhecidos"
+  owner: "Logística"
+  timezone: America/Fortaleza
 }
 ```
 
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `process` | `process <Name> for <Document> { ... }` | Unidade de orquestração. O `for` declara o **documento-sujeito** (o caso). |
+| `title` | `title: I18n` | I18n obrigatório (1.9). |
+| `version` | `version: 1` | Versão do processo; diff e release comparam. |
+| `goal` | `goal: "..."` | Objetivo de negócio; usado na revisão e no painel do processo. |
+| `owner` | `owner: "..."` | Dono humano/time; usado em revisão, SLA e promoção. |
+| `timezone` | `timezone: America/Fortaleza` | Fuso do processo (cron, prazos exibidos). Default: fuso do tenant. |
+
+**Processo chamado (`runs:`).** `start` de topo (evento, mensagem, agenda, manual) existe para instância criada por gatilho. Um processo chamado por `runs:` declara **exatamente um** `start Begin { called }` e nenhum gatilho de topo; é por ele que o pai entra, mesmo que o fluxo tenha laço. Se você precisa das duas formas, faça um processo de topo fino que chama o interno. Processo com `called` e gatilho de topo ao mesmo tempo = `E_PROCESS_TRIGGER_CONFLICT`.
+
+**Documento-sujeito (`for`).** Quando presente:
+
+- declara implicitamente a variável do sujeito (`Order` → `order`), que o processo não precisa redeclarar;
+- é a identidade do caso exibida na tela de andamento e nos painéis;
+- é a chave de correlação de eventos e mensagens;
+- restringe os starts: o gatilho precisa produzir o sujeito (evento do próprio sujeito, mensagem cujo `about` é o sujeito, seleção por `select`, ou início manual);
+- **sem `for`,** o processo só pode ser iniciado por `runs:` de outro processo ou por start que não produza sujeito — nesse caso todas as variáveis precisam ser `gives:` de tasks.
+
 ```bpcms
-seed {
-  DefaultInvoiceConfig {
-    store: Store.SP
-    fiscalYear: FiscalYear.Y2026
-  }
+process CloseMonth for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  goal: "Fechar o período com números conferidos"
+  owner: "Controladoria"
 }
 ```
 
-Identidade canônica:
+## 4.3 Pools e lanes — quem executa
 
-```text
-example.com/services/billing#Store/SP
-```
-
-Se o seed for renomeado, a referência quebra; renomear seed é mudança incompatível.
-
-**Identidade e `DocumentRef`.** Todo `document` tem um `id` interno implícito; ele não é declarado. Um campo cujo tipo é um Document é implicitamente um `DocumentRef`: carrega `id` + todos os campos `lookup` do alvo. Não existe Shape `<Name>Id` nem tipo `XxxId` na DSL. **Exceção:** extensão (`extends`) compartilha o `id` do pai; `Consumer extends User` usa o mesmo `id` de `User`.
-
-**Publicação/subscrição.** A referência/scope não define replicação. Publicação, subscrição, cópia e tier de armazenamento são conceitos separados, revisados com Document. O scope apenas determina a qual partição o dado pertence e quem pode vê-lo.
-
-**Lookup/description.** Todo document base marca com `lookup` os campos que o representam para o usuário. Ex.: `nickname: string { lookup }` e `avatar: Image { lookup }` em `User`. A ordem dos campos marcados é a ordem do lookup. Todo para esse document recebe automaticamente esses campos; o builder decide se resolve na leitura ou materializa. Extensões **herdam** os campos marcados e não redeclaram um bloco.
-
-**`scopable document`.** Um documento marcado como `scopable` é um tipo de escopo. Ele mantém o `id` interno implícito e pode ter chaves de negócio como `code`/`year`:
+Pool é o **participante**; lane é **quem executa** dentro dele. Toda task tem lane. A tela de andamento mostra, para cada passo, o participante, a lane, o papel e o dono atual.
 
 ```bpcms
-scopable document Store {
-  fields {
-    code: StoreCode { title: { pt-BR: "Código", en: "Code" }, unique }
-    name: string { title: { pt-BR: "Nome", en: "Name" } }
-  }
+pool Company {
+  internal
+  lane Sales { role: Clerk }
+  lane Warehouse { role: Packer }
+  lane Management { role: Manager }
 }
 
-scopable document FiscalYear {
-  fields {
-    year: integer { title: { pt-BR: "Ano", en: "Year" }, unique }
-    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
-    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
-  }
+pool Customer {
+  external
+  lane Client { role: Customer }
+}
+
+pool Carrier {
+  external
 }
 ```
 
-**Escopo inferido por referência.** Todo campo direto para um `scopable document` cria um escopo no documento consumidor. Não há `scopes { ... }`, `source`, `parentId` nem `path`.
+| Natureza | Significado | Pode conter |
+| :--- | :--- | :--- |
+| `internal` | pessoa/role da empresa, executando no app | lanes com `role` |
+| `external` com lanes | pessoa de fora executando **no nosso app** (portal do cliente, do fornecedor) | lanes com `role` |
+| `external` sem lanes | participante **caixa-preta** (transportadora, banco, órgão): só troca mensagem | nada |
+| `System` | automação do próprio serviço (reservado, não se declara) | — |
+
+Regras:
+
+- `lane: <Name>` referencia uma lane declarada, ou o nome de um pool sem lanes, ou o literal reservado `System`;
+- pool externo sem lanes não recebe task: a interação é só por `sends:`/`receives:`;
+- task automatizada usa `lane: System`; task humana nunca usa;
+- duas lanes com o mesmo nome no mesmo processo = `E_LANE_DUPLICATE`;
+- `role` da lane precisa existir no serviço/app (`E_ROLE`);
+- a lane é a **autoridade de execução**; permissão de campo/ação continua no Document (5.6).
+
+**Não existe `type: external`.** "Externo" é natureza de pool, não tipo de task. Uma user task executada pelo cliente é `form:` + lane em pool externo com portal; o andamento mostra "Cliente · João" e o prazo, igual a uma task interna.
+
+## 4.4 Variáveis — contexto transitório
 
 ```bpcms
-document Invoice {
+variables {
+  shipment: Shipment
+  quote: FreightQuote
+  approved: boolean
+  totalApproved: std.Money
+}
+```
+
+- tipadas por Shape ou Document; variável de Document é um `DocumentRef`;
+- a variável do sujeito (`for`) é implícita e não se redeclara;
+- a instância é o escopo: variáveis **não** são duráveis nem visíveis para outros processos;
+- **o Documento é o armazenamento durável**; variável guarda referência e decisão transitória;
+- task só altera documento por `action:`/`apply:`; task não escreve campo direto (nem no form);
+- toda variável precisa ser atribuída antes do uso em todos os caminhos (`E_DEFINITELY_ASSIGNED`);
+- atribuição vem de: sujeito, `with` de start, `gives:` de task, ou `apply:`;
+- `gives:` só aceita o retorno declarado do contrato (`E_GIVES_TYPE`).
+
+## 4.5 Starts — como a instância nasce
+
+```bpcms
+start Placed { event: Order.Placed }
+start Manual { by: [Clerk, Manager] }
+start Monthly {
+  schedule: "0 2 1 * *"
+  select: fiscalPeriod.status == Open
+}
+start FromCarrier { message: PickupConfirmed }
+```
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `start` | `start <Name> { ... }` | Nó de início (0 entradas, 1 saída). |
+| `event` | `event: Document.Event` | Inicia quando o evento do documento-sujeito (ou de outro documento) ocorre. |
+| `message` | `message: <Message>` | Inicia quando a mensagem chega; exige `about` compatível com o sujeito. |
+| `schedule` | `schedule: "0 2 1 * *"` | Cron no fuso do processo; o scheduler é runtime. |
+| `select` | `select: <expr>` | Só com `schedule`: seleciona os sujeitos e **inicia uma instância por sujeito** (fan-out). |
+| `by` | `by: [Role, ...]` | Início manual por papéis; o usuário escolhe o sujeito. |
+| `called` | `start Begin { called }` | Entrada de processo chamado por `runs:`; não é gatilho de topo. |
+
+Regras:
+
+- exatamente um dos cinco gatilhos por `start` (`event`, `message`, `schedule`, `by`, `called`);
+- `select` só existe em `schedule` e exige `for`;
+- processo sem `start` = `E_PROCESS_NO_START`;
+- processo chamado sem `start { called }` ou com gatilho de topo = `E_PROCESS_TRIGGER_CONFLICT`;
+- processo de topo com `called` = `E_PROCESS_TRIGGER_CONFLICT`;
+- dois `start` para o mesmo evento = `E_START_DUPLICATE`;
+- `schedule` não é `job`: não há artefato de agendamento. O runtime agenda, dispara, audita e mostra a execução como qualquer instância.
+
+**Por que não existe `job`.** Um agendamento é um **gatilho de início**, não um tipo de trabalho. Modelá-lo como processo dá de graça: andamento, auditoria, retry por task, SLA, painel, cancelamento e histórico — coisas que um job isolado teria de reimplementar. Rotinas em lote usam `for` + `select` (uma instância por sujeito), não `batch`.
+
+## 4.6 End — como a instância termina
+
+```bpcms
+end Delivered {
+  title: { pt-BR: "Entregue", en: "Delivered" }
+  outcome: success
+}
+end Cancelled {
+  title: { pt-BR: "Cancelado", en: "Cancelled" }
+  outcome: cancelled
+}
+end Failed {
+  title: { pt-BR: "Falhou", en: "Failed" }
+  outcome: failure
+}
+```
+
+- `end` é nó terminal: N entradas, 0 saídas;
+- `title` é obrigatório: é o desfecho mostrado no histórico, nos filtros e nos KPIs;
+- todo caminho a partir de um `start` precisa alcançar um `end` (`E_FLOW_DEAD_END`);
+- o desfecho é a dimensão de análise do processo ("quantos terminaram em `Cancelled` e por quê");
+- erro não tratado termina a instância no desfecho reservado `Failed`, depois de rodar a compensação (4.11);
+- `end on Document.Event` **não existe**: terminar é chegar a um nó, não esperar um evento.
+
+## 4.7 Task
+
+```bpcms
+task Review {
+  lane: Sales
+  form: OrderReview
+  sla: 4h
+  assign: pull
+  on breach -> Chase
+}
+
+task Reserve {
+  lane: System
+  action: Stock.reserve
+  with { order }
+}
+
+task Freight {
+  lane: System
+  call: Carrier.quote
+  with { shipment }
+  gives: quote
+  sla: 5m
+  on error CarrierUnavailable -> ManualQuote
+}
+```
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `lane` | `lane: Warehouse` | Quem executa. Obrigatória. |
+| `form` | `form: OrderReview` | Contrato humano (4.14). |
+| `manual` | `manual: "Ligar ao cliente e confirmar"` | Trabalho fora do sistema; a descrição é a instrução exibida. |
+| `action` | `action: Stock.reserve` | Comando de documento; efeito durável e evento. |
+| `call` | `call: Carrier.quote` | Operação de integração; efeito externo. |
+| `decision` | `decision: RefundEligibility` | Tabela de decisão (4.17). |
+| `sends` | `sends: PickupRequest` | Envia mensagem; exige `partner:`. |
+| `receives` | `receives: PickupConfirmed` | Espera mensagem correlacionada; exige `partner:`. |
+| `runs` | `runs: DeliveryTracking` | Inicia outro processo (subpasso); o filho declara `start Begin { called }`. |
+| `partner` | `partner: Carrier` | Participante do outro lado da mensagem. |
+| `apply` | `apply: Shipment.applyPickup` | Em `receives:`: ação executada com o payload ao receber. |
+| `with` | `with { amount: order.total }` | Liga variáveis/expressões aos parâmetros do contrato. |
+| `gives` | `gives: quote` | Atribui o retorno do contrato a uma variável. |
+| `sla` | `sla: 4h` | Prazo esperado; alimenta fila, painel, atraso e KPI. |
+| `priority` | `priority: 50` | Prioridade na fila (maior primeiro). |
+| `assign` | `assign: pull \| auto \| named(<expr>)` | Distribuição da task humana. |
+| `discretionary` | `discretionary` | Task opcional de caso (CMMN): não bloqueia o fluxo. |
+| `when` | `when: order.total > 10000 BRL` | Habilita a task discricionária. |
+| `foreach` | `foreach { over: order.items; as: item; mode: parallel }` | Multi-instância sobre coleção. |
+| `compensates` | `compensates: Charge` | Handler de compensação (sem arestas). |
+| `on error` | `on error StockOut -> Undo` | Desvio por erro; aborta a tentativa. |
+| `on timer` | `on timer 2d -> Escalate` | Prazo interruptivo; `keep` = não interruptivo. |
+| `on breach` | `on breach -> Escalate` | Reação exatamente no `sla`. |
+| `title` | `title: I18n` | Opcional: herda o título do contrato. |
+
+**Contratos e executor.** `action`, `call`, `decision`, `sends` e `receives` rodam em `lane: System`. `form` e `manual` rodam em lane humana. `runs` é disparado pelo processo pai e executa no processo filho (o pai fica em `System` enquanto espera).
+
+**Uma task, uma responsabilidade.** Duas ações de documento na mesma task = duas tasks. O passo visível é a task; se você quer duas coisas visíveis, são duas tasks.
+
+**`with`.** Liga parâmetros do contrato a expressões sobre variáveis e campos:
+
+```bpcms
+task Refund {
+  lane: System
+  action: Payment.refund
+  with {
+    amount: returnRequest.refundAmount
+    payment: returnRequest.payment
+  }
+  gives: refund
+}
+```
+
+- a chave é o parâmetro declarado no contrato;
+- parâmetro obrigatório sem `with` e sem valor default = `E_WITH_MISSING`;
+- `with` em parâmetro inexistente = `E_WITH_UNKNOWN`;
+- expressão só usa variáveis, campos do sujeito, campos de variáveis, `Parameter` do serviço e funções declaradas (seção 25); `Secret` nunca aparece em expressão;
+- atalho `with { order }` quando o nome da variável é o do parâmetro.
+
+**`gives`.** O contrato declara no máximo um retorno (`returns:` na action, tipo na operação de integração, tipo da decisão). `gives:` atribui esse retorno a uma variável de tipo compatível. Subprocesso não retorna valor: dados fluem pelo documento.
+
+**Prazo.** `sla` é brando (exibição, fila, KPI, aviso). `on timer` e `on error` são duros (fluxo). `on breach` é o duro no instante do `sla`. Não se desugara um no outro: você pode ter aviso em 1d e escalonamento em 2d.
+
+```bpcms
+task Review {
+  lane: Management
+  form: ApprovePurchase
+  sla: 1d
+  on breach -> Remind
+  on timer 2d -> Escalate
+}
+```
+
+**Distribuição.** `assign:` substitui `assignment { candidates; claim; ... }`:
+
+- `pull` (default): qualquer um com a role da lane pega a task na inbox;
+- `auto`: o runtime escolhe um elegível (carga/menor fila);
+- `named(<expr>)`: dono definido por expressão (ex.: `order.owner`), validado por role.
+
+Delegar, reatribuir e devolver são **intervenções de runtime**, autorizadas por role e auditadas; não são cláusulas de DSL.
+
+**Discricionária (CMMN).**
+
+```bpcms
+task OfferExtendedWarranty {
+  lane: Sales
+  form: WarrantyOffer
+  discretionary
+  when: order.total > 5000 BRL
+}
+```
+
+- não tem aresta de entrada: aparece como disponível quando `when` é verdadeiro;
+- concluir a task não avança o fluxo; ela registra trabalho;
+- se tiver aresta de saída, ela vira um caminho alternativo — use com cuidado e documente;
+- `discretionary` sem `when` = `E_DISCRETIONARY_WHEN`.
+
+**Multi-instância.**
+
+```bpcms
+task InspectItem {
+  lane: Quality
+  form: InspectItemForm
+  foreach { over: shipment.items; as: item; mode: parallel }
+  sla: 30m
+}
+```
+
+- `over` precisa ser coleção (`E_FOREACH_TYPE`);
+- `as` nomeia o item no escopo da task (form/with/expressões);
+- `mode`: `sequential` (default) ou `parallel`;
+- a task só conclui quando todas as instâncias concluem; cada instância aparece na tela como "3 de 5";
+- agregação não é cláusula: o efeito de cada instância é uma `action` que grava no documento; o gateway lê o documento depois;
+- `foreach` não combina com `discretionary`, `manual` nem `receives`.
+
+## 4.8 Handlers — erro, prazo e cancelamento
+
+```bpcms
+task Charge {
+  lane: System
+  action: Payment.capture
+  with { order }
+  sla: 2m
+  on error Declined -> RetryOrCancel
+  on timer 5m keep -> WarnFinance
+}
+```
+
+| Handler | Interruptivo | Escopo | Uso |
+| :--- | :--- | :--- | :--- |
+| `on error <Name>` | sim, **aborta a tentativa inteira** | instância | falha de action/integração/decisão |
+| `on timer <dur>` | sim (default) | task | prazo duro, escalonamento |
+| `on timer <dur> keep` | não | task + task lateral | lembrete, aviso, SLA brando (o alvo não tem aresta de saída) |
+| `on breach` | sim | task | reação no instante do `sla` |
+
+**Semântica de erro (deliberada).** Erro é falha de tentativa, não desvio local: ao disparar `on error`, o runtime cancela **todo o trabalho ativo da instância**, roda a compensação das tasks concluídas (4.11) e segue o desvio. Isso evita o deadlock clássico de "um ramo do paralelo falhou e o outro ficou esperando" e é o comportamento que o negócio espera de uma saga. Recuperação local pertence à integração/ação (retry, fallback), não ao processo. Anotado como simplificação vs BPMN (boundary error é local ao escopo).
+
+**Semântica de timer.** O timer conta da **entrada** na task. `on timer` interruptivo cancela só a task; `keep` mantém a task viva e dispara uma **task lateral**: o alvo de um `keep` não tem aresta de saída, roda uma vez e é registrado no histórico (lembrete, aviso, notificação). Isso evita merge de tokens concorrentes no fluxo principal.
+
+```bpcms
+task Track {
+  lane: System
+  runs: DeliveryTracking
+  with { shipment }
+  sla: 30d
+  on timer 30d -> Escalate
+  on error TrackingLost -> Replan
+}
+```
+
+**Prazo do caso.**
+
+```bpcms
+process PurchaseApproval for PurchaseRequest {
+  sla: 5d
+
+  on breach -> Escalate
+}
+```
+
+- `sla` no cabeçalho é o prazo do caso (lead time alvo);
+- `on breach -> <Nó>` é a reação: escalonamento, aviso ou cancelamento;
+- o breach é evento auditado (não é cálculo de relatório).
+
+**Cancelamento do caso inteiro.**
+
+```bpcms
+cancel on Order.Cancelled -> Undo
+```
+
+- quando o evento ocorre, o runtime cancela todo o trabalho ativo e coloca um token no nó alvo;
+- o alvo normalmente é um `rollback` que leva a um `end Cancelled`;
+- `cancel on` é a forma de "a qualquer momento, se X acontecer, encerre assim" (substituto mínimo do event sub-process do BPMN);
+- só um `cancel on` por evento; o evento precisa existir (`E_TRIGGER_UNKNOWN_EVENT`).
+
+## 4.9 Roteamento — gateway, fork, join, wait, rollback
+
+**Gateway exclusivo (XOR).** Sempre com `else`; o primeiro `if` verdadeiro vence.
+
+```bpcms
+gateway Amount {
+  if order.total <= 5000 BRL -> AutoApprove
+  if order.total <= 50000 BRL -> ManagerReview
+  else -> DirectorReview
+}
+```
+
+- `if` só existe em gateway; não há `if` como statement no fluxo;
+- gateway sem `else` = `E_GATEWAY_NO_ELSE`; dois `else` = `E_GATEWAY_DUP_ELSE`;
+- condição é expressão pura sobre variáveis/campos (sem efeito, sem I/O);
+- `gateway` tem 1 entrada e N saídas declaradas no corpo.
+
+**Paralelismo (AND).** `fork` divide; `join` espera todos.
+
+```bpcms
+fork Prepare
+join Prepared
+
+Prepare -> Pick
+Prepare -> Reserve
+Pick -> Prepared
+Reserve -> Prepared
+```
+
+- `fork`: 1 entrada, N ≥ 2 saídas;
+- `join`: N ≥ 2 entradas, 1 saída; espera **todos** os tokens;
+- todo ramo do `fork` precisa alcançar o `join` sem passar por um `end` (`E_JOIN_DEADLOCK`);
+- `join` não pareia com um fork específico: ele espera o número de entradas; o compilador valida alcançabilidade;
+- gateway inclusivo (OR) e complexo **não existem** na v1: são ambíguos e caros de validar. Use XOR ou AND.
+
+**Espera por tempo (timer catch).**
+
+```bpcms
+wait Cooldown { for: 30d }
+wait DueDate { until: invoice.dueAt }
+```
+
+- `for`: duração a partir da entrada; `until`: data/hora calculada;
+- 1 entrada, 1 saída; sem executor (a tela mostra "aguardando até ...");
+- espera por mensagem é `receives:`, não `wait`.
+
+**Rollback (compensação).**
+
+```bpcms
+rollback Undo
+```
+
+- executa, em **ordem reversa de conclusão**, os handlers `compensates:` das tasks concluídas na instância;
+- 1 entrada, 1 saída; depois segue o fluxo normal;
+- não desfaz efeito externo sozinho: o handler é que chama a ação de estorno.
+
+## 4.10 Fluxo — arestas explícitas
+
+```bpcms
+Placed -> Review
+Review -> Pick
+Review.rejected -> Closed
+Pick -> Prepare
+```
+
+- a ordem de declaração **não** é semântica; o grafo vem só das arestas;
+- aresta comum: `<Node> -> <Node>`;
+- aresta por desfecho de task humana: `<Task>.<action> -> <Node>`;
+- toda ação de form que avança precisa de aresta; ação `stay` não tem;
+- ação de form sem aresta e sem `stay` = `E_FORM_ACTION_NO_EDGE`;
+- nó não terminal com saída ≠ 1 = `E_FLOW_ARITY` (use `fork`/`gateway`);
+- exceções à saída obrigatória: `end` (0), handler de compensação (0), task lateral de `keep` (0) e task discricionária (0 ou 1);
+- nó inexistente = `E_FLOW_UNKNOWN_NODE`; nó inalcançável = `W_FLOW_UNREACHABLE`;
+- nó sem entrada e sem ser `start`/discricionário = `E_FLOW_ORPHAN`;
+- mais de uma entrada só é legal para caminhos **alternativos** (starts, laço, desfechos); entradas que podem concorrer exigem `join` (`E_CONCURRENT_MERGE`);
+- ciclo sem saída = `E_FLOW_LOOP_NO_EXIT`.
+
+## 4.11 Compensação
+
+```bpcms
+task Charge {
+  lane: System
+  action: Payment.capture
+  with { order }
+}
+
+task Refund {
+  lane: System
+  action: Payment.refund
+  with { order; payment: order.payment }
+  compensates: Charge
+}
+```
+
+- `compensates:` declara o handler de uma task concluída;
+- handler **não tem arestas**: só roda por `rollback`, em ordem reversa de conclusão;
+- handler só roda se a task alvo concluiu e ainda não foi compensada;
+- a ação do handler precisa ser idempotente (`W_COMPENSATION_IDEMPOTENT` se a integração não declarar idempotência);
+- retry não substitui compensação: retry repete; compensação desfaz;
+- handler fora do escopo da task alvo = `E_COMPENSATION_SCOPE`;
+- `runs:` concluído é compensado pelo pai com um handler explícito (ex.: `action: Shipping.cancelShipment`); a instância filha não compensa sozinha.
+
+## 4.12 Milestones e caso
+
+```bpcms
+milestone DeliveryConfirmed {
+  title: { pt-BR: "Entrega confirmada", en: "Delivery confirmed" }
+  on: Shipment.Delivered
+}
+```
+
+- milestone não é task: não tem executor, fila nem prazo;
+- representa conquista do caso, aparece na tela de andamento e libera tasks discricionárias;
+- `when` é expressão pura, avaliada quando o estado muda;
+- CMMN completo (stages, sentries, case file como metamodelo) fica fora da v1: `milestone` + `discretionary` + `when` cobrem o necessário.
+
+## 4.12.1 Indicadores derivados
+
+O modelo já carrega o necessário para os KPIs; nada é instrumentado à mão:
+
+| Indicador | De onde sai |
+| :--- | :--- |
+| lead time / cycle time | hora do `start` e do `end` nomeado por instância |
+| fila × toque por task | entrada/saída do nó + `assign`/`claim` no log |
+| retrabalho / first-pass yield | aresta de retorno (ciclo) + reentrada de nó; devolução por ação |
+| conformidade de caminho | aresta percorrida × aresta declarada; `gateway` com `if`/`else` |
+| violação de SLA | disparo de `on timer`/`on breach` (evento), não cálculo |
+| handoffs | sequência de `lane` no log (lane obrigatória) |
+| taxa de automação | kind do nó × `pool system` |
+| mix de desfecho e motivo | `end outcome` + `cancel on` + payload do evento |
+
+## 4.13 Progresso, subpassos e a tela do processo
+
+**Regra única:** a unidade de progresso visível é a **instância de processo**. Todo subpasso com passos próprios é um `runs:` — outra instância, com sua própria tela, seu histórico e seu dono. Não existe `progress: true`, nem fases declaradas: se o passo tem fases, ele é um processo.
+
+O que a tela de andamento mostra (contrato do builder, derivado do AST):
+
+| Seção | Conteúdo | Origem |
+| :--- | :--- | :--- |
+| identidade | sujeito, número da instância, início, prazo, desfecho | `for`, `title`, `end` |
+| passo atual | 1 cartão por passo ativo: título, participante, lane, papel, dono, prazo | `task`, `pool`, `lane`, `assign`, `sla` |
+| formulário | form embutido quando o passo é humano | `form` |
+| participantes | pools, lanes, papéis e filas | `pool`, `lane` |
+| histórico | passo, ator, hora, resultado, motivo de devolução/falha | arestas + auditoria |
+| prazos e falhas | atraso, escalonamento previsto, tentativas, erro legível | `sla`, `on timer`, `on error` |
+| subprocesso | cartão do filho: passo atual, marcos, drill-down, breadcrumb | `runs` |
+| documentos | lido/escrito por passo (ícones BPMN de data object) | derivado de `form`/`action`/`decision`/`runs` |
+| próximos passos | sucessores com o porquê e marca "previsto" | arestas + gateways |
+| marcos | conquistas do caso | `milestone` |
+
+Regras de apresentação (o builder não inventa):
+
+- com paralelismo, **N cartões** de passo atual e "aguardando 2 de 3" no `join` nomeado;
+- com `foreach`, "3 de 5", dono e prazo por item;
+- task automatizada mostra tentativa N/M, próximo retry, heartbeat e erro legível — nunca um spinner eterno;
+- todo nó mostra `title` (herdado do contrato quando não declarado);
+- documentos aparecem com ícone de leitura/escrita derivado do contrato — não se declara `reads`/`writes`.
+
+## 4.14 Form — contrato da tarefa humana
+
+Form não é tela: é o **contrato de admissão e desfecho** de uma tarefa. Ele declara o que a pessoa vê, o que ela pode fazer e qual ação de documento cada botão executa. A tela é do builder; a tela de andamento embute o form quando o passo atual é humano.
+
+```bpcms
+form OrderReview {
+  title: { pt-BR: "Revisar pedido", en: "Review order" }
+  document: Order
+
   fields {
-    store: Store {
-      title: { pt-BR: "Loja", en: "Store" }
+    customer
+    items
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
     }
-    fiscalYear: FiscalYear {
-      title: { pt-BR: "Exercício", en: "Fiscal year" }
-    }
-    number: InvoiceNumber
-    issuedAt: DateTime
+  }
+
+  actions {
+    approve { calls: Order.approve }
+    reject { calls: Order.reject(note) }
+    save { calls: Order.update; stay }
   }
 }
 ```
 
-- `Invoice` tem os escopos `Store` e `FiscalYear`;
-- o escopo usa `store.id` e `fiscalYear.id`;
-- `code`/`year` são chaves de negócio e entram no lookup do alvo;
-- referências indiretas não inferem escopo;
-- duas referências ao mesmo tipo de escopo no mesmo documento são erro;
-- opcional cria escopo opcional, com política explícita.
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `form` | `form <Name> { ... }` | Contrato de tarefa humana; referenciado por `form:`. |
+| `title` | `title: I18n` | Obrigatório. |
+| `document` | `document: Order` | Documento de contexto; define a linha da inbox e os campos herdados. |
+| `fields` | `fields { customer; note: string { ... } }` | Campos exibidos/editados. Nome simples herda tipo e `title` do Document. |
+| `actions` | `actions { approve { calls: Order.approve } }` | Botões. Cada botão executa **um** comando de documento. |
+| `calls` | `calls: Order.reject(note)` | Comando e argumentos (campos do form). |
+| `stay` | `save { calls: Order.update; stay }` | Botão que não avança o passo. |
+| `title` (botão) | `approve { title: I18n; ... }` | Opcional; herda o título da action. |
 
-**Forma completa da referência.** Quando o campo tem `title`, `lookup`, `required` ou outros atributos, use o bloco:
+Regras:
+
+- **campo não redeclara tipo nem título**: `customer` herda de `Order.customer`; só declare `nome: Shape { title }` para campo que não existe no documento (entrada de parâmetro);
+- obrigatoriedade é monotônica: o form pode endurecer (`required`), nunca relaxar;
+- o form **não escreve campo direto**: toda escrita é um `calls:` de action; isso mantém invariantes, regras e eventos;
+- os argumentos do `calls:` são campos do form (ou literais); todo parâmetro obrigatório precisa de argumento (`E_FORM_PARAM`);
+- campo declarado e não usado por nenhum botão é `W_FORM_UNUSED_FIELD`;
+- papel/permissão vêm da lane e das roles da action — form não tem `roles`;
+- rascunho não grava no documento: o runtime guarda o rascunho da task (idempotente por `taskId`); só o botão persiste;
+- a conclusão é atômica: escrita do documento + evento + auditoria + avanço do passo no mesmo commit;
+- botão irreversível (terminal, assinatura, envio externo) exige confirmação com resumo do efeito, derivada do contrato;
+- devolver é uma ação (`calls: Order.reject(reason)`), com motivo obrigatório, contabilizada como retrabalho.
+
+**Form não é View.** Form é escrita e desfecho dentro de um passo; View é leitura e navegação. Não existe `view type: form`.
+
+## 4.15 Message — contrato entre participantes
 
 ```bpcms
-assignedTo: User {
-  title: { pt-BR: "Responsável", en: "Assignee" }
-  lookup
+message PickupRequest {
+  title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
+  about: Shipment
+  payload {
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em" } }
+    window: Duration { title: { pt-BR: "Janela" } }
+  }
+}
+
+message PickupConfirmed {
+  title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+  about: Shipment
+  payload {
+    pickupAt: DateTime { title: { pt-BR: "Coletado em" } }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio" } }
+  }
 }
 ```
 
-- `title`, `lookup`, `required`, `sensitive`, `default` etc. são atributos do field;
-- `id` é sempre implícito;
-- a forma curta `User { name }` só vale quando não há atributos.
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `message` | `message <Name> { ... }` | Contrato de mensagem entre participantes. |
+| `title` | `title: I18n` | Obrigatório. |
+| `about` | `about: Shipment` | Documento de correlação: a mensagem pertence a um caso. |
+| `payload` | `payload { campo: Shape { title } }` | Contrato tipado do conteúdo. |
 
-**`DocumentRef` não é ForeignKey.** É uma referência lógica:
+Regras:
+
+- a correlação é **por documento** (`about`): o runtime entrega a mensagem à instância que tem variável daquele documento. Chave avaliada na abertura da subscrição, não reavaliada depois;
+- envio: `sends:` + `partner:`; `with { }` mapeia **campos do payload** (o documento de correlação vem do `about`);
+- recebimento: `receives:` + `partner:`; `apply:` aplica o payload por nome e `with { }` completa os parâmetros que não vêm do payload;
+- mensagem sem `about` = `E_MESSAGE_ABOUT`; `about` que não é o sujeito do processo = erro (a instância não seria correlacionável);
+- mensagem duplicada (mesmo nome) = `E_MESSAGE_DUPLICATE`; payload divergente na mesma mensagem = erro;
+- `from`/`to` não existem na mensagem: o participante é declarado na task (`partner:`), que é quem sabe com quem fala;
+- coreografia e conversação são **visões derivadas** das mensagens + partners; não são outro motor.
 
 ```bpcms
-store: Store {
-  title: { pt-BR: "Loja", en: "Store" }
+task RequestPickup {
+  lane: System
+  sends: PickupRequest
+  partner: Carrier
+  with { shipment }
+}
+
+task AwaitPickup {
+  lane: System
+  receives: PickupConfirmed
+  partner: Carrier
+  apply: Shipment.applyPickup
+  sla: 2d
+  on timer 2d -> ManualPickup
 }
 ```
 
-O alvo `Store` marca com `lookup` os campos `code` e `name`. O campo entrega, conceitualmente:
+## 4.16 Workflow × processo
+
+**Workflow é do Documento; processo é do trabalho.** A pergunta "podemos transformar workflow em processo, sendo cada value uma task?" tem resposta **não**, e a razão é de modelagem:
+
+- um estado não tem executor, fila, prazo nem formulário: ele é uma propriedade do dado;
+- transformar `Issued` em task daria um "passo" sem trabalho, e o andamento mostraria trabalho que ninguém faz;
+- o estado precisa valer **fora de qualquer processo**: uma action chamada por uma View, por uma integração ou por outro serviço também muda o estado.
+
+O que fizemos para eliminar a duplicação:
+
+- **as transições saíram do `value`** e vivem na action (`from:`/`to:`); o grafo de estados é derivado das actions (5.5);
+- **o workflow define as transições e os eventos**: `transition` no valor de origem, com `title`/`payload`/`event:`; a action só aponta `to:` e executa o comando; `events { }` fica só para eventos sem transição;
+- o processo **não duplica** o estado: a task chama a action, o documento decide se a transição é legal;
+- a tela de andamento mostra as duas coisas no mesmo lugar: **passo do processo** (trabalho) e **situação do documento** (dado).
+
+Regra dura: **só action muda estado.** Não existe `status =` em expressão, form ou task. `status` é somente leitura fora da action que o transiciona.
+
+## 4.17 Decision — regra de negócio (DMN)
+
+```bpcms
+decision ApprovalLimit {
+  title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
+  returns: ApproverTier
+  inputs {
+    amount: std.Money
+    supplier: Supplier
+  }
+  cases {
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier.risk == Low -> Manager
+    else -> Director
+  }
+}
+```
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `returns` | `returns: ApproverTier` | Um único retorno; normalmente um enum (classification). |
+| `inputs` | `inputs { amount: std.Money }` | Entradas tipadas; o `with` da task liga os valores. |
+| `cases` | `<cond> -> <value>` | Primeira condição verdadeira vence; `else` obrigatório. |
+| `title` | `title: I18n` | Obrigatório. |
+
+- decisão é **pura**: não altera documento, não chama integração, não emite evento;
+- o resultado vira variável (`gives:`) e o gateway decide o caminho;
+- toda decisão tem `else` (`E_DECISION_NO_ELSE`) e todo `case` tem valor do tipo de retorno, na grafia declarada do enum (`E_DECISION_VALUE`);
+- DMN completo (DRD executável, FEEL, BKM, múltiplas saídas) fica fora da v1: hit policy única (primeiro que casa), uma saída;
+- a tabela é documentável e exportável em DMN 1.3 pelo builder.
+
+## 4.18 Cobertura BPMN / DMN / CMMN
+
+| Conceito | v1 | Como |
+| :--- | :--- | :--- |
+| Start event (none, message, timer, schedule) | ✅ | `start { event \| message \| schedule \| by }` |
+| End event (none, nomeado) | ✅ | `end <Name>` com título |
+| User task / people task | ✅ | `form:` |
+| Manual task | ✅ | `manual: "..."` |
+| Service task (documento) | ✅ | `action:` |
+| Service task (integração) | ✅ | `call:` |
+| Send / receive task | ✅ | `sends:` / `receives:` + `partner:` |
+| Business rule task (DMN) | ✅ | `decision:` |
+| Call activity / subprocesso | ✅ | `runs:` (outra instância) |
+| Multi-instance | ✅ | `foreach { over; as; mode }` (conclusão = todas) |
+| Exclusive gateway | ✅ | `gateway { if ... else }` |
+| Parallel gateway | ✅ | `fork` / `join` |
+| Event-based gateway | ⏸️ | use `receives:` + `on timer`; "A ou B" fica para a v2 |
+| Inclusive gateway | ❌ | ambíguo e caro de validar; use XOR ou AND |
+| Complex gateway | ❌ | nenhum motor de mercado implementa |
+| Boundary timer / error | ✅ | `on timer` / `on error` (aninhados na task) |
+| Boundary message / signal / escalation | ⏸️ | use `receives:` ou `cancel on` |
+| Event sub-process | 🟡 | `cancel on <Evento> -> <Nó>` (só cancelamento) |
+| Intermediate timer catch | ✅ | `wait { for \| until }` |
+| Intermediate message catch | ✅ | `receives:` |
+| Compensation | ✅ | `compensates:` + `rollback` |
+| Terminate | 🟡 | `cancel on`/erro não tratado encerram a instância |
+| Pools / lanes / message flows | ✅ | `pool`, `lane`, `sends`/`receives` + `partner` |
+| Collaboration diagram | ✅ | derivado de pools + mensagens |
+| Choreography / conversation | ⏸️ | visão derivada do mesmo contrato de mensagens (v2) |
+| CMMN (case) | 🟡 | `milestone`, `discretionary`, `when` |
+| BPMN DI (layout) | ⏸️ | passo futuro; o AST separa modelo de diagrama |
+| DMN 1.3 (tabela única) | ✅ | `decision` (exportável) |
+
+## 4.19 Validações do processo
+
+| Regra | Erro |
+| :--- | :--- |
+| task sem contrato / com dois contratos | `E_TASK_CONTRACT_MISSING` / `E_TASK_KIND_CONFLICT` |
+| task humana/manual/mensagem/subprocesso sem lane | `E_TASK_EXECUTOR_MISSING` |
+| lane inexistente ou duplicada | `E_LANE` / `E_LANE_DUPLICATE` |
+| task em pool externo caixa-preta | `E_TASK_BLACKBOX_POOL` |
+| aresta para nó inexistente | `E_FLOW_UNKNOWN_NODE` |
+| saída ≠ 1 em nó que não é fork/gateway/end | `E_FLOW_ARITY` |
+| nó sem entrada (não start/discricionário) | `E_FLOW_ORPHAN` |
+| entradas concorrentes sem `join` | `E_CONCURRENT_MERGE` |
+| caminho sem `end` | `E_FLOW_DEAD_END` |
+| nó inalcançável | `W_FLOW_UNREACHABLE` |
+| gateway sem `else` / dois `else` | `E_GATEWAY_NO_ELSE` / `E_GATEWAY_DUP_ELSE` |
+| ramo de fork que não alcança o join | `E_JOIN_DEADLOCK` |
+| ação de form sem aresta nem `stay` | `E_FORM_ACTION_NO_EDGE` |
+| parâmetro obrigatório sem `with`/campo | `E_WITH_MISSING` / `E_FORM_PARAM` |
+| variável usada sem atribuição em algum caminho | `E_DEFINITELY_ASSIGNED` |
+| `gives` incompatível com o retorno | `E_GIVES_TYPE` |
+| handler sem alvo válido / boundary duplicado | `E_BOUNDARY` |
+| compensação fora de escopo ou com arestas | `E_COMPENSATION_SCOPE` |
+| processo chamado em ciclo | `E_SUBPROCESS_CYCLE` |
+| start duplicado para o mesmo gatilho | `E_START_DUPLICATE` |
+| `select` sem `schedule`/`for` | `E_SELECT` |
+| mensagem sem `about` ou incompatível | `E_MESSAGE_ABOUT` |
+
+---
+# 5. Document
+
+Um **documento** é a unidade de estado durável: campos tipados por Shape, identidade, invariantes, ações, eventos, ciclo de vida e sincronização. Ele **não é** tabela, DTO, tela, evento nem relatório: ele **projeta** tabelas, APIs, caches, estado de UI, índices e relatórios. O documento é o **armazenamento definitivo dos dados do processo**: a variável do processo é contexto transitório; o dado que precisa sobreviver, ser consultado e ser auditado mora no documento.
+
+| Parte | O que declara | Exemplo |
+| :--- | :--- | :--- |
+| **Identidade** | id implícito, versão, etag, timestamps | `RemessaId` implícito |
+| **Campos** | nome, Shape, parâmetros simples, lookup | `weight: std.Mass` |
+| **Ciclo de vida** | campo de estado, valor inicial, transições | `status: ShipmentStatus` |
+| **Ações** | comandos, parâmetros, papéis, transição, evento, retorno | `dispatch()` |
+| **Eventos** | contrato do que o documento publica | `Dispatched` |
+| **Regras** | invariantes | `weight <= limit` |
+| **Índices** | único, range, composto, textual | `status + createdAt` |
+| **Frescor** | TTL, agenda, estado | `FreightQuote` a cada 15 min |
+| **Origem** | normal, calculado, dispositivo, snapshot | balança, nota fiscal |
+| **Sync** | read/live, política de conflito | documento aberto por 3 pessoas |
+| **Auditoria** | comando, ator, diff, correlação | automática por action |
+
+## 5.1 Declaração e metadados
+
+```bpcms
+document Shipment {
+  title: { pt-BR: "Remessa", en: "Shipment" }
+  version: 1
+  owner: "Logística"
+  sync: live
+  retention: 5y
+}
+```
+
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `document` | `document <Name> { ... }` | Declara o documento. |
+| `scopable document` | `scopable document Store { ... }` | Documento que é tipo de escopo (5.9). |
+| `extends` | `document Consumer extends User { ... }` | Especialização aditiva, mesmo id (5.9). |
+| `title` | `title: I18n` | I18n obrigatório (1.9). |
+| `version` | `version: 1` | Versão do schema; migrações comparam. |
+| `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
+| `sync` | `sync: live \| read` | `live` assina patches; `read` entrega leitura materializada. |
+| `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
+| `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo documento. |
+| `fields` | `fields { name: Shape { ... } }` | Campos tipados (5.2). |
+| `actions` | `actions { issue() { ... } }` | Comandos (5.4). |
+| `events` | `events { Issued { ... } }` | Eventos publicados (5.7). |
+| `indexes` | `indexes { byStatus: [status, createdAt] range }` | Índices declarativos (5.8). |
+| `rule` | `rule total == subtotal + tax { message }` | Invariante (5.11). |
+| `seed` | `seed { SP { code: "SP" } }` | Documentos pré-criados idempotentes (5.9). |
+| `computed from` | `computed from Invoice, Payment` | Documento derivado (5.10). |
+| `freshness` | `freshness: 15m` | TTL do derivado; expõe `calculatedAt`. |
+| `exposes` | `exposes: [balance, calculatedAt]` | Campos resultantes do derivado. |
+| `source: device` | `source: device "scale-01" for weight` | Campo lido de dispositivo (5.10). |
+| `segregation` | `segregation { issue != cancel }` | Impede o mesmo ator nas duas ações (5.6). |
+| `signature` | `signature { release: Pathologist }` | Exige role com autoridade de assinatura (5.6). |
+
+## 5.2 Campos, Shape e DocumentRef
+
+**Campo = nome + Shape + parâmetros simples.** O campo não valida, não formata e não converte: isso é do Shape. O campo só parametriza.
+
+```bpcms
+fields {
+  code: StoreCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+  name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" }, unit: kg, min: 0.001 }
+  items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
+}
+```
+
+| Parâmetro | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `title` | `title: I18n` | Obrigatório; `short`/`tooltip` opcionais. |
+| `required` | `required` | Campo obrigatório; `required: true` também é aceito. |
+| `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem de declaração. |
+| `unique` | `unique` | Unicidade lógica; índice realizando. |
+| `readonly` | `readonly` | Campo não editável por action; derivado de `computed` ou de dispositivo. |
+| `private` | `private internalScore: Score` | Campo interno; fora do contrato/API/serialização. |
+| `sensitive` | `sensitive` | PII; mascara na leitura e proíbe log/export. |
+| `read` / `edit` | `read: [Clerk, Manager]` | Papéis que podem ler/editar o campo. |
+| `mask` | `mask { roles: [Clerk]; fields: [name] }` | Mascaramento na leitura (5.6). |
+| `rule` | `rule value != null { message }` | Regra condicional do campo. |
+| `default` | `default: BR` | Valor inicial; aplicado antes de `required`; não é regra de negócio. |
+| `computed` | `computed: quantity * unitPrice` | Campo derivado; somente leitura; sem dependência circular. |
+| `min` / `max` | `min: 0.001, max: 50000` | Faixa validada pelo Shape. |
+| `maxLength` | `maxLength: 120` | Limite de texto. |
+| `scale` / `precision` | `scale: 2` | Casas decimais e precisão. |
+| `unit` / `currency` | `unit: kg` | Unidade/moeda do valor; default é a base do Shape. |
+
+**`id` implícito.** Todo documento tem `id` interno, gerado, que não se declara. Um campo cujo tipo é um Document é um **`DocumentRef`**: carrega `id` + todos os campos `lookup` do alvo. Não existe Shape `<Name>Id` nem tipo `XxxId`. Exceção: `extends` compartilha o `id` do pai.
+
+```bpcms
+store: Store { title: { pt-BR: "Loja", en: "Store" } }
+```
+
+O valor conceitual:
 
 ```json
 { "id": "st_123", "code": "0001", "name": "Loja 1" }
 ```
 
-- `id` é sempre preservado;
-- todos os campos `lookup` do alvo entram automaticamente na referência;
-- o campo não escolhe nem declara campos;
-- excluir o alvo não quebra o documento;
-- não há cascade;
-- o builder pode resolver o lookup na leitura ou materializar;
+- o campo não escolhe campos: o alvo marca com `lookup`;
+- excluir o alvo não quebra o documento (referência lógica, sem cascade);
+- o builder resolve o lookup na leitura ou materializa;
 - archive persiste a projeção de lookup;
-- scope usa o `id`, nunca `code`/`name`.
+- escopo usa o `id`, nunca `code`/`name`.
 
-**Modos do builder:**
-
-| Modo | Comportamento |
-| :--- | :--- |
-| `resolved` | Guarda só o `id`; resolve lookup na leitura |
-| `materialized` | Guarda `id` + lookup do alvo |
-| `archive` | Lookup materializado e imutável |
-
-**`id` × número.** Todo documento tem `id` interno implícito. O número de negócio é uma chave alternativa:
+**Número de negócio.** `id` é técnico; `number` é a chave exibida:
 
 ```bpcms
 number: InvoiceNumber {
@@ -818,154 +1407,445 @@ number: InvoiceNumber {
 }
 ```
 
-- `id` é técnico e usado em referências;
-- `number` é exibido, pesquisável, etiquetável e rótulo;
-- `number` não substitui o `id`;
-- `sequence` é por escopo;
-- overflow e lacunas têm política explícita;
-- archive preserva o `number`.
+## 5.3 Ciclo de vida — estados e transições no Shape, comandos na action
 
-**Migração.** Campos `customer: User` são `DocumentRef`; formas antigas `customerId: User` são legadas. O modelo novo usa `DocumentRef` implícito; a migração de cada documento é feita junto com a revisão de Document.
+O Shape de estado declara os **valores** e as **transições**, e cada transição carrega o **evento do workflow** (nome, título e payload). A action executa o comando e aponta o estado de destino; ela **não redefine a aresta nem o evento**.
 
-**Extensão.** `document Consumer extends User` modela dois conceitos: `User` é o usuário do sistema (login/papéis) e `Consumer` é o consumidor pagante. A extensão:
-
-- é aditiva: herda campos, ações, regras e lookup; adiciona `citizen: Citizen { title }`;
-- mantém o **mesmo `id`** do pai; `Consumer` não cria um segundo id;
-- fica no mesmo serviço do pai (v1);
-- pode ser referenciada como `User`; o `citizen` carrega o lookup do cidadão, e `User` sozinho entrega o lookup herdado.
-- `citizen` **não é unique**: vários `Consumer`/`User` podem referenciar o mesmo `Citizen`; o `identity` mantém o vínculo 1:N; `CitizenMerged` reatribui os Users.
-
-`citizen` é um para o `Citizen`, dono da identificação/PII; não é CPF/CNPJ nem taxa. É opcional: um `User` sem perfil `Consumer` tem `null`.
-
-**Referência circular.** Em uma referência para o próprio documento, use um nome de campo diferente do id (ex.: `parent: Category { title }`). O id interno continua implícito.
-
-**Parâmetros de campo:**
-
-| Parâmetro | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
-| `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
-| `rule` | `rule value != null { message }` | Regra condicional do field; repete `rule`. |
-| `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
-| booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
-| `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
-| `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
-| `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |
-| `currency` | `currency: BRL` | Restringe/default da moeda de `std.Money`. |
-| `min` / `max` | `min: 0.001, max: 50000` | Faixa validada no field. |
-| `scale` | `scale: 2` | Casas decimais do field. |
-| `precision` | `precision: 3` | Precisão de armazenamento/exibição do field. |
-| `unit` / `units` | — | `unit` só no Shape de unidade única; `units` só no Shape multiunidade. |
-| `default` | `default: BR` | Valor inicial; aplicado antes de `required`; não é regra de negócio. |
-| `computed` | `computed: quantity * unitPrice` | Campo derivado; somente leitura; calculado a partir de outros campos. |
-| `private` | `private internalScore: Score` | Campo interno; não é exposto a outros serviços/API/serialização. |
-| `read` | `read: [Clerk, Manager]` | Roles que podem ler o campo. |
-| `edit` | `edit: [Manager]` | Roles que podem alterar o campo. |
-
-**Campo calculado em Shape.** Shape composto pode ter campo derivado:
+Isso restaura a regra: **evento de workflow é definido no workflow**. O bloco `events { }` do documento fica só para eventos **sem transição** (5.7).
 
 ```bpcms
-shape InvoiceItem {
-  title: { pt-BR: "Item da nota", en: "Invoice item" }
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Draft
+  format: plain
 
-  fields {
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
-    unitPrice: std.Money { title: { pt-BR: "Preço unitário", en: "Unit price" }; currency: BRL }
-    total: std.Money {
-      title: { pt-BR: "Total", en: "Total" }
-      currency: BRL
-      computed: quantity * unitPrice
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em" } }
+        number: InvoiceNumber { title: { pt-BR: "Número" } }
+      }
     }
+  }
+
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: Issued
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em" } }
+        amount: std.Money { title: { pt-BR: "Valor" } }
+      }
+    }
+    transition Overdue {
+      title: { pt-BR: "Nota vencida", en: "Invoice overdue" }
+    }
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo" } }
+      }
+    }
+  }
+
+  value Overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: Overdue
+    ordinal: 40
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em" } }
+        amount: std.Money { title: { pt-BR: "Valor" } }
+      }
+    }
+  }
+
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: Paid
+    ordinal: 30
+  }
+
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 50
   }
 }
 ```
 
-- o campo é somente leitura;
-- não pode ser atribuído;
-- é calculado a partir dos demais campos;
-- é incluído na serialização;
-- dependências circulares são erro;
-- não precisa de rule de consistência.
+Regras do Shape de estado:
 
-**Ações são botões.** Toda ação declara `title`, `roles` e, opcionalmente, `transition` e `rule`.
+- `base: state` e exatamente um `initial`; valores com `title` + `icon` + `ordinal`;
+- `transition <Destino>` é declarada **no valor de origem**; o destino é valor do mesmo Shape;
+- a transição pode ser **sem evento** (`transition Cancelled`, uma linha) ou **com evento** (bloco com `title` obrigatório, `payload` opcional e `event: <Nome>` opcional);
+- **nome do evento**: o do estado de destino (`Issued` → `Invoice.Issued`); `event: RefundIssued` sobrescreve;
+- **título do evento**: o `title` da transição (é o rótulo mostrado em histórico, integração e assinatura);
+- **payload**: contrato tipado do evento; é o mesmo para todas as origens que chegam ao mesmo evento;
+- duas transições para o **mesmo evento** precisam declarar o **mesmo payload** (`E_EVENT_SCHEMA_CONFLICT`);
+- o mesmo destino pode ser alcançado por origens diferentes com **eventos diferentes** (`Contract.Active` vindo de `Signed` e de `Renewed`);
+- não existe `self-transition`; `to` que não é valor do Shape = `E_TRANSITION_STATE`;
+- `status` é **somente leitura** fora da action que o transiciona; não existe `status = ...` em expressão, form ou task;
+- estado sem transição de saída é terminal (legítimo, sem aviso);
+- estado sem caminho a partir do `initial` = `W_STATE_UNREACHABLE`;
+- transição sem nenhuma action que a execute = `W_TRANSITION_UNUSED`.
+
+## 5.4 Actions — comandos que executam transições
 
 ```bpcms
 actions {
   issue() {
     title: { pt-BR: "Emitir", en: "Issue" }
     roles: [Manager]
-    transition: Issued
+    to: status.Issued
 
     rule items.length > 0 {
       pt-BR: "Adicione itens antes de emitir a fatura"
       en: "Add items before issuing the invoice"
     }
-    rule total > 0 BRL {
-      pt-BR: "Fatura sem valor"
-      en: "Invoice has no value"
-    }
 
+    returns: Invoice
     {
       issuedAt = now()
     }
   }
 
+  pay(paidAt: DateTime) {
+    title: { pt-BR: "Pagar", en: "Pay" }
+    roles: [Clerk]
+    to: status.Paid
+    emits { amount: total }
+  }
+
   rename(name: string) {
     title: { pt-BR: "Renomear", en: "Rename" }
-    roles: [Manager]
+    roles: public
+  }
+}
+```
 
-    {
-      oldName = this.name
-      this.name = name
-      emit Renamed {
-        oldName: old.name
-        newName: new.name
+| Cláusula | Sintaxe | Funcionamento |
+| :--- | :--- | :--- |
+| `title` | `title: I18n` | Rótulo do comando/botão; obrigatório. |
+| `roles` | `roles: [Manager]` ou `roles: public` | Quem pode executar; obrigatório. |
+| `to` | `to: status.Issued` | Estado de destino; a aresta e o evento vêm do `transition` do Shape (5.3). |
+| `emits` | `emits { amount: total }` | Mapeia campos do payload cujo nome difere da origem. Não declara evento. |
+| `returns` | `returns: Invoice` | Valor de retorno (um único tipo); usado por `gives:` no processo. |
+| `rule` | `rule <expr> { I18n }` | Pré-condição; verdadeira = permitido. |
+| `limits` | `limits { amount <= 50000 BRL: { roles: [Manager] } }` | Limite por papel (5.6). |
+| `body` | `{ issuedAt = now() }` | Statements: atribuição de campo, `emit`, chamada interna. |
+
+Regras:
+
+- ação com `to:` executa a transição declarada no Shape; ação **sem** `to` é comando comum (`rename`, `create`) e não muda estado;
+- a ação é legal apenas nos estados que declaram `transition <destino>` (`E_TRANSITION_MISSING`);
+- a ação **não** declara `from:`: a origem permitida é a que tem a aresta, e o runtime valida o estado atual;
+- `emits { ... }` só mapeia valores do payload: campo sem mapeamento vem **pelo nome** do escopo (parâmetros + campos do documento); mapear campo que não é do payload = `E_EMITS_UNKNOWN`;
+- campo do payload sem origem (nem por nome, nem em `emits`) = `E_EVENT_PAYLOAD`;
+- ação com `to:` **não** usa `emit` no body: o evento é o da transição;
+- `emit <Event>` no body só vale para evento declarado em `events { }` (evento sem workflow);
+- criação é comando (`create(...)`) e declara `returns:` com o documento criado;
+- toda ação mutante é auditada automaticamente (5.12);
+- `roles: public` é explícito; `roles: []` é erro;
+- ação privada usa `private action` e não é chamável de fora do serviço;
+- parâmetros são tipados por Shape/Document e viram campos de form automaticamente (4.14);
+- o retorno é único; para múltiplos valores, retorne um Shape composto.
+
+**Atomicidade.** Concluir uma action (e concluir a task que a chamou) é um único commit: campos + estado + evento + auditoria + avanço do passo. Não existe estado meio-gravado. Rascunho de formulário é do runtime, não do documento.
+
+
+## 5.5 Grafo de estados (derivado)
+
+O compilador deriva o grafo de **duas** fontes, sem duplicação:
+
+- **forma**: os valores do Shape de estado;
+- **arestas**: as `transition` declaradas em cada valor (origem = o valor que a declara; destino = o alvo), com o evento da aresta;
+- **comandos**: as actions cujo `to:` é o destino (quais comandos executam a aresta);
+- **rótulos**: `title` da transição (rótulo do evento) e `title` das actions (botões);
+- **órfãs**: transição sem nenhuma action que a execute (`W_TRANSITION_UNUSED`);
+- **inalcançáveis**: valor sem caminho a partir do `initial` (`W_STATE_UNREACHABLE`);
+- **sumidouros**: valor sem `transition` de saída (terminal legítimo).
+
+Esse grafo alimenta o diagrama de estados, o botão habilitado/desabilitado na UI, o histórico e o teste de transição.
+
+```text
+Invoice: Draft --issue--> Issued --pay--> Paid
+                  \--cancel--> Cancelled
+         Issued --markOverdue--> Overdue --pay--> Paid
+```
+
+| Origem | Evento | Destino | Comando |
+| :--- | :--- | :--- | :--- |
+| `Draft` | `Invoice.Issued` | `Issued` | `issue` |
+| `Issued` | `Invoice.Paid` | `Paid` | `pay` |
+| `Overdue` | `Invoice.Paid` | `Paid` | `pay` |
+| `Issued` | `Invoice.Cancelled` | `Cancelled` | `cancel` |
+
+## 5.6 Permissões, mascaramento e limites
+
+Não existe bloco `permissions` no documento. A autoridade é composta por:
+
+| Nível | Onde | Efeito |
+| :--- | :--- | :--- |
+| execução | lane da task (processo) | quem recebe o passo |
+| comando | `roles` da action | quem pode executar |
+| campo — leitura | `read` do field | quem vê |
+| campo — escrita | `edit` do field | quem altera |
+| mascaramento | `mask` do field | o que aparece mascarado |
+| limite | `limits` da action | faixa por papel |
+| segregação | `segregation` do documento | atores diferentes em ações incompatíveis |
+| assinatura | `signature` do documento | papel com autoridade de assinatura |
+
+```bpcms
+refund(amount: std.Money) {
+  title: { pt-BR: "Reembolsar", en: "Refund" }
+  roles: [Manager]
+
+  limits {
+    amount <= 50000 BRL: {
+      roles: [Manager]
+      pt-BR: "Acima do limite de reembolso"
+      en: "Above the refund limit"
+    }
+  }
+}
+
+segregation {
+  issue != cancel
+}
+
+signature {
+  release: Pathologist
+}
+```
+
+- `read`/`edit` escondem o campo do contrato e da serialização para outros serviços? Não: `private` faz isso. `read`/`edit` são autorização de UI/API;
+- `mask` mascara na leitura para os papéis indicados (dado continua íntegro);
+- `limits` é faixa por papel, avaliada em ordem no build e no runtime; o primeiro limite excedido aplica a restrição e a mensagem;
+- `segregation` impede o mesmo ator nas duas ações; a ação pode ser qualificada pelo documento quando houver ambiguidade (`PurchaseRequest.submit != PurchaseRequest.approve`);
+- `signature` exige role com autoridade de assinatura e registra ator + hora + hash do conteúdo assinado.
+
+**Documento não é fronteira de segurança de task.** `reads`/`writes` não existem: a task não "ganha" permissão por declarar acesso. Quem autoriza é o documento (campo/comando) e quem executa é a lane. O AST deriva o conjunto lido/escrito para exibir os ícones de data object — **para exibir, nunca para autorizar**.
+
+## 5.7 Eventos
+
+**Evento de workflow fica no workflow.** O evento é declarado na `transition` do valor de origem (5.3) e publicado quando a action executa a transição. O bloco `events { }` do documento existe **só** para eventos sem transição. Não existe artefato `event` de topo.
+
+### 5.7.1 Evento de workflow
+
+```bpcms
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em" } }
+        number: InvoiceNumber { title: { pt-BR: "Número" } }
+      }
+    }
+  }
+}
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+
+  fields {
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+  }
+
+  actions {
+    issue() {
+      title: { pt-BR: "Emitir", en: "Issue" }
+      roles: [Manager]
+      to: status.Issued
+      { issuedAt = now() }
+    }
+  }
+}
+```
+
+- a action não declara evento: `to: status.Issued` executa a transição `Draft → Issued`, que publica `Invoice.Issued`;
+- o payload vem por nome do escopo (`issuedAt`, `number` são campos do documento);
+- nome do evento = estado de destino; `event: <Nome>` na transição sobrescreve;
+- o valor do evento é a `title` da transição;
+- duas origens para o mesmo destino podem emitir **o mesmo** evento (`Issued` e `Overdue` → `Paid`): o payload precisa ser idêntico (`E_EVENT_SCHEMA_CONFLICT`);
+- origens diferentes podem emitir **eventos diferentes** para o mesmo destino (`Signed` e `Renewed` → `Active`);
+- transição sem bloco (`transition Cancelled`) não publica evento.
+
+### 5.7.2 Evento sem workflow
+
+```bpcms
+document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+
+  events {
+    Renamed {
+      title: { pt-BR: "Loja renomeada", en: "Store renamed" }
+      payload {
+        oldName: string { title: { pt-BR: "Nome anterior" } }
+        newName: string { title: { pt-BR: "Nome novo" } }
+      }
+    }
+  }
+
+  actions {
+    rename(name: string) {
+      title: { pt-BR: "Renomear", en: "Rename" }
+      roles: [Manager]
+      {
+        oldName = this.name
+        this.name = name
+        emit Renamed { oldName; newName: name }
       }
     }
   }
 }
 ```
 
-- `title`: label do botão;
-- `roles: [Manager]`; `roles: public` quando não há restrição;
-- `roles` é obrigatório;
-- `roles: public` é explícito;
-- `roles: []` é erro;
-- `transition: Issued` liga a ação à transição;
-- action de workflow não usa `status =>`;
-- action de workflow não usa `emit`;
-- `rule` são pré-condições;
-- condição verdadeira = permitido;
-- o compilador extrai os campos usados na expressão;
-- body é o bloco de statements;
-- body sem retorno;
-- evento vem da transição ou de `emit` sem workflow.
+- `events { }` declara o contrato (título + payload) do evento que **não** é transição;
+- `emit <Event> { campo: expr }` no body publica; campo não mapeado vem por nome;
+- `emit` é proibido em action com `to:` (o evento de transição já é o da aresta);
+- evento declarado e nunca emitido = `W_EVENT_UNUSED`; emitido e não declarado = `E_EVENT_UNKNOWN`.
 
-**Ação pública.** Quando não há restrição de role:
+### 5.7.3 Identidade e regras
+
+- o envelope (documento, id, ator, hora, correlação) é do builder; o `payload` é só negócio;
+- o evento pertence ao serviço dono do documento; a referência é `SERVICO.DOCUMENTO.EVENTO` (`Billing.Invoice.Paid`); canônica: `example.com/services/billing#Invoice.Paid`;
+- não existe `key`: a chave é o documento (id) + correlação do envelope;
+- dois eventos com o mesmo nome no documento = `E_EVENT_DUPLICATE`;
+- processos assinam `Document.Event` no `start { event: }`, `cancel on` e `milestone on`;
+- renomear estado (ou `event: <Nome>`) renomeia o evento: é breaking change para quem assina.
+
+## 5.8 Índices e número
 
 ```bpcms
-archive() {
-  title: { pt-BR: "Arquivar", en: "Archive" }
-  roles: public
-  transition: Archived
+indexes {
+  byStore: [store.id, createdAt] range
+  byStatus: [status, createdAt] range
+  byNumber: [number] unique
 }
 ```
 
-`roles: public` é explícito; `roles` ausente e `roles: []` são erros.
+- `unique` (unicidade), `range` (ordenação/faixa), `search` (texto), `hash` (igualdade/partição);
+- o campo precisa existir e ser indexável no Shape (`E_INDEX`);
+- `.id` de referência é indexável;
+- índice é declaração semântica; o builder escolhe a realização.
 
-**Rule.** A mesma sintaxe vale no Document, na action e no field.
+## 5.9 Escopos, extensão e seed
+
+**`scopable document`.** Um documento marcado é um tipo de escopo. Todo campo direto para ele **infere um escopo** no documento consumidor; não há bloco `scopes`, `parentId` nem `path`.
+
+```bpcms
+scopable document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+  fields {
+    code: StoreCode { title: { pt-BR: "Código", en: "Code" }, unique }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  }
+}
+
+document Invoice {
+  fields {
+    store: Store { title: { pt-BR: "Loja", en: "Store" } }
+    fiscalYear: FiscalYear { title: { pt-BR: "Exercício", en: "Fiscal year" } }
+  }
+}
+```
+
+- o escopo usa `store.id` e `fiscalYear.id`;
+- `code`/`year` são chaves de negócio e entram no lookup;
+- referências indiretas não inferem escopo;
+- duas referências ao mesmo tipo de escopo no mesmo documento = erro;
+- opcional cria escopo opcional, com política explícita.
+
+**`extends`.** Especialização aditiva, no mesmo serviço:
+
+```bpcms
+document Consumer extends User {
+  fields {
+    citizen: Citizen { title: { pt-BR: "Cidadão", en: "Citizen" } }
+  }
+}
+```
+
+- herda campos, ações, regras e lookup;
+- mantém o **mesmo `id`** do pai (não cria segundo id);
+- não redeclara campo herdado; `citizen` não é unique.
+
+**`seed`.** Documentos pré-criados e idempotentes:
+
+```bpcms
+scopable document Store {
+  seed {
+    SP { code: "SP"; name: "São Paulo" }
+  }
+}
+```
+
+- aplicado no bootstrap/migração; idempotente; valida `required`, `rule`, unique e referências;
+- id determinístico por serviço/documento/chave; não executa actions; não emite eventos;
+- a chave vira referência: `Store.SP` é um `DocumentRef` resolvido em build, usável em fields, actions e processos;
+- renomear seed é breaking change.
+
+## 5.10 Documentos derivados e dispositivos
+
+**Derivado (cálculo).** Um documento pode ser o resultado de um cálculo sobre outros documentos. Ele é **estado durável** (não é relatório): serve quando o número precisa ser consultado, versionado ou auditado depois.
+
+```bpcms
+document CustomerScore {
+  title: { pt-BR: "Score do cliente", en: "Customer score" }
+  computed from Order, Payment, Ticket
+  freshness: 15m
+  exposes: [score, tier, calculatedAt]
+
+  fields {
+    score: std.Count { title: { pt-BR: "Score", en: "Score" } }
+    tier: RiskTier { title: { pt-BR: "Faixa", en: "Tier" } }
+  }
+}
+```
+
+- o cálculo de cada campo é declarado no próprio campo com `computed:` (expressão sobre as fontes de `computed from`); `exposes` apenas lista o que é público;
+- expõe `calculatedAt`, `state` (`fresh`, `stale`, `recalculating`, `error`) e `lastGood`;
+- recálculo é um processo agendado (`start { schedule: }`) ou um comando `refresh()`;
+- o consumidor exibe "calculado há X" e "recalculando";
+- **relatório é View** (seção 7), não documento: se o número é só leitura agregada, não crie documento.
+
+**Dispositivo.** `source: device "scale-01" for weight`: o campo é lido, não calculado; a atualização é releitura, com `readAt`, `staleAfter` e qualidade. A leitura pode gerar um documento derivado de negócio (`Pesagem` → `Shipment.weight`).
+
+## 5.11 Regras
+
+A mesma sintaxe vale no Document, na action e no field. Condição verdadeira = permitido.
 
 ```bpcms
 rule total == subtotal + tax {
   pt-BR: "Total da nota não confere"
   en: "Invoice total does not match"
 }
-```
 
-```bpcms
 customer: User {
   title: { pt-BR: "Cliente", en: "Customer" }
-
   rule value != null {
     pt-BR: "Selecione o cliente da nota"
     en: "Select the invoice customer"
@@ -973,48 +1853,15 @@ customer: User {
 }
 ```
 
-- o compilador extrai os campos usados na expressão;
-- a UI usa os campos extraídos para navegar;
-- permissão e workflow têm motivo genérico do builder;
+- o compilador extrai os campos usados na expressão (para navegação/foco na UI);
 - a API devolve `{ type, fields, message }`;
-- `fields` é calculado pelo compilador.
+- `required` para obrigatoriedade simples; `rule` para condicional;
+- `default` aplica antes de `required`; default incompatível com tipo = erro;
+- permissão e workflow continuam com mensagem genérica do builder.
 
-**`required` e rule de field.** Obrigatoriedade simples usa `required`; regra condicional usa `rule`:
+## 5.12 Auditoria
 
-```bpcms
-customer: User {
-  title: { pt-BR: "Cliente", en: "Customer" }
-  required
-}
-
-tracking: TrackingCode {
-  title: { pt-BR: "Rastreio", en: "Tracking" }
-
-  rule status != Dispatched || value != null {
-    pt-BR: "Informe o rastreio após o despacho"
-    en: "Enter tracking after dispatch"
-  }
-}
-```
-
-**Auditoria automática.** Não existe comando `audit()` na DSL.
-
-Toda action é um comando e o compilador gera um nó de auditoria no AST para o builder registrar:
-
-- comando executado;
-- documento e `id`;
-- ator;
-- escopo;
-- data/hora;
-- correlation id;
-- resultado: sucesso, negado ou erro;
-- estado antes/depois ou diff;
-- motivo de negação, quando houver;
-- evento emitido, quando houver.
-
-O registro é responsabilidade do builder. A DSL não declara `audit(...)` nem `audit: true` no Document.
-
-O AST do compilador expõe:
+Não existe `audit()` na DSL. Toda action é um comando auditado automaticamente:
 
 ```text
 CommandAudit {
@@ -1033,120 +1880,62 @@ CommandAudit {
 }
 ```
 
+O registro é responsabilidade do builder. A DSL não declara `audit` no documento.
 
+## 5.13 Sync, ciclo de vida e conflito
 
-**Permissões.** Não existe bloco `permissions` no Document. Permissões ficam no `field` (`read`/`edit`) e na `action` (`roles`). Busca é feita por um processo que declara `reads`; não existe permissão `search` no documento.
+| Modo | O que o consumidor pede | O que recebe | Quando usar |
+| :--- | :--- | :--- | :--- |
+| `read` | consulta/snapshot | retrato com versão | relatório, consulta, integração |
+| `live` | assinatura do documento | snapshot + patches | edição colaborativa, painel |
 
-**Mascaramento.** Aplicado na leitura do field:
+- o servidor é autoritativo; o cliente pode ser otimista e reconcilia;
+- concorrência otimista por versão/etag; conflito devolve o estado atual e rejeita a ação;
+- merge por campo e offline ficam para a v2;
+- lifecycle de armazenamento: `draft`, `valid`, `stale`, `conflict`, `archived`, `deleted` (5.10).
 
-```bpcms
-customer: User {
-  title: { pt-BR: "Cliente", en: "Customer" }
+## 5.14 Erros e idempotência
 
-  mask {
-    roles: [Clerk]
-    fields: [name, email]
-  }
-}
-```
+- action pode falhar com `throw <Error> { ... }`; o erro tem nome estável e mensagem i18n;
+- `on error` no processo reage ao nome do erro;
+- `Integration` declara idempotência; actions mutantes devem ser idempotentes por `(documentId, command, requestId)`;
+- retry de action não pode duplicar efeito;
+- `E_INVALID_TRANSITION` em runtime quando o estado mudou entre a leitura e o commit.
 
-**Limites.** Aplicados em actions:
+## 5.15 Validações do documento
 
-```bpcms
-refund(amount: std.Money) {
-  title: { pt-BR: "Reembolsar", en: "Refund" }
-  roles: [Manager]
-
-  limits {
-    amount <= 50000 BRL: {
-      roles: [Manager]
-      pt-BR: "Acima do limite de reembolso"
-      en: "Above the refund limit"
-    }
-  }
-}
-```
-
-**Segregação e assinatura.** No Document:
-
-```bpcms
-segregation {
-  issue != cancel
-}
-
-signature {
-  release: Pathologist
-}
-```
-
-- `segregation` impede o mesmo ator nas duas ações;
-- `signature` exige role com autoridade de assinatura;
-- ambos são validados no build e no runtime.
-
-**Relatórios.** `type: report` é um Document calculado com cache:
-
-```bpcms
-document CashFlow {
-  type: report
-  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
-  computed from Invoice, Payment, Bill
-  freshness: 1h
-  exposes: [balance, calculatedAt]
-}
-```
-
-**Índices:** `unique` (unicidade), `range` (ordenação/faixa), `search` (texto), `hash` (igualdade/partição). O campo referenciado precisa existir e ser indexável no `Shape`.
-
-```bpcms
-document Shipment {
-  title: { pt-BR: "Remessa", en: "Shipment" }
-  version: 1
-  owner: "Dispatch"
-  sync: live
-
-  fields {
-    order: Order {
-      title: { pt-BR: "Pedido", en: "Order" }
-      lookup
-    }
-    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, unit: kg, min: 0.001, precision: 3 }
-    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
-    status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
-  }
-
-  source: device "scale-01" for pesoBruto
-
-  computed frete from Shipment, CarrierTable {
-    freshness: 15m
-    exposes: [frete, calculatedAt]
-  }
-
-  indexes {
-    byStatus: [status, createdAt] range
-  }
-
-  actions {
-    dispatch(carrier: CarrierRef)
-  }
-
-}
-```
+| Regra | Erro |
+| :--- | :--- |
+| campo `id` declarado | `E_DUPLICATE_ID_FIELD` |
+| campo de estado sem `base: state` ou sem `initial` | `E_STATE_SHAPE` |
+| `transition` na value para estado inexistente | `E_TRANSITION_STATE` |
+| self-transition | `E_TRANSITION_SELF` |
+| ação com `to:` para destino sem transição declarada | `E_TRANSITION_MISSING` |
+| ação sem `title` ou sem `roles` | `E_ACTION` |
+| evento sem declaração (`emit`) / payload sem origem / mapeamento inválido | `E_EVENT_UNKNOWN` / `E_EVENT_PAYLOAD` / `E_EMITS_UNKNOWN` |
+| evento do mesmo nome com payload divergente / `emit` em ação com `to:` | `E_EVENT_SCHEMA_CONFLICT` / `E_EMIT_WITH_TRANSITION` |
+| transição sem ação que a execute | `W_TRANSITION_UNUSED` |
+| dois eventos com o mesmo nome | `E_EVENT_DUPLICATE` |
+| valor de estado inalcançável | `W_STATE_UNREACHABLE` |
+| `extends` fora do serviço / redeclaração | `E_EXTENDS` |
+| documento sem campo `lookup` | `E_LOOKUP_MISSING` |
+| índice em campo inexistente/não indexável | `E_INDEX` |
+| campo `computed` com ciclo | `E_CYCLE` |
+| `computed from` sem `freshness` | `W_DERIVED_NO_FRESHNESS` |
 
 ---
-
 # 6. Shape
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `base` | `base: decimal \| integer \| string \| classification \| workflow \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. |
+| `base` | `base: decimal \| integer \| string \| classification \| state \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. `state` é o enum de ciclo de vida (com `initial`). |
 | `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
-| `value` | `value Draft { title; icon; ordinal; transition Issued { payload { ... } } }` | Enum; `classification`/`workflow`; a transição é nomeada pelo destino; `event:` opcional. Exceção: `value` base de `std.Currency` não exige metadados. |
-| `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
+| `value` | `value Draft { title; icon; ordinal }` | Enum; `classification` ou `state`. **Não declara transição**: a aresta vive na action do Document (`from:`/`to:`); o **evento do workflow** é declarado aqui (`event`), não em `events { }`. Exceção: `value` base de `std.Currency` não exige metadados. |
+| `initial` | `initial: Draft` | Estado inicial do `state`; obrigatório e único. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
 | `unit` | `unit: %` | Unidade única; mutuamente exclusivo com `units`. |
@@ -1198,66 +1987,39 @@ toNumber(value) {
 
 ## 6.1 Valores enumerados
 
-Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
+Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório. Um Shape `classification` enumera categorias; um Shape `state` declara o ciclo de vida (valores + `initial`) e **não declara transições** — elas ficam nas actions do Document (5.3–5.5).
 
 ```bpcms
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
-  base: workflow
+  base: state
   initial: Draft
   format: plain
+
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    transition Issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
-      payload {
-        number: InvoiceNumber
-        total: std.Money
-      }
-    }
-    transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
-      payload { reason: string }
-    }
   }
   value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
-    transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-    }
-    transition Overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
-    }
-    transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
-    }
   }
   value Paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: Paid
     ordinal: 30
-
   }
   value Overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 40
-    transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-    }
-    transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
-    }
   }
   value Cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 50
-
   }
 }
 ```
@@ -1266,6 +2028,8 @@ shape InvoiceStatus {
 - `ordinal` é único, inteiro e estável; inserir um value no meio usa um ordinal livre.
 - O ordinal é usado no stream binário; o title/icon são para UI.
 - `value` sem `title`/`icon`/`ordinal` é erro, exceto `std.Currency`.
+- `state` tem exatamente um `initial`; a legalidade de cada transição é validada pela action do Document (`E_TRANSITION_STATE`).
+- `classification` não tem `initial` nem participa de ciclo de vida.
 
 ## 6.1.1 Units
 
@@ -1340,30 +2104,58 @@ shape TrackingEvent {
 - Campos `sensitive` são omitidos/redigidos na serialização pública.
 - Campos `private` não são serializados.
 
-## 6.1.2 classification e workflow
+## 6.1.2 classification e state
 
-`base: classification` enumera categorias; `base: workflow` modela estados e transições.
+`base: classification` enumera categorias; `base: state` declara o **ciclo de vida** de um documento: valores possíveis e valor inicial. **As transições não ficam no Shape**: ficam nas actions do Document (5.3–5.5).
 
 ```bpcms
+shape OrderStatus {
+  title: { pt-BR: "Situação do pedido", en: "Order status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+  }
+  value Placed {
+    title: { pt-BR: "Realizado", en: "Placed" }
+    icon: status.placed
+    ordinal: 20
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: status.cancelled
+    ordinal: 30
+  }
+}
+
 shape TaxRegimeCode {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: classification
   value SIMPLES {
     title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
-    icon: Simples
+    icon: tax.simples
     ordinal: 10
   }
 }
 ```
 
-- `classification` não tem `initial` nem transições.
-- `workflow` tem exatamente um `initial`.
-- `transition` define as arestas; estado sem transição é terminal.
-- a chave da transição referencia apenas states do mesmo workflow.
-- Self-transition é inválida no v1.
-- `canTransitionTo` usa o `next` gerado pelo compilador.
-- `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
-- Ordinal continua explícito, 10, 20, 30...
+Regras:
+
+- `state` tem exatamente um `initial`; `classification` não tem `initial`;
+- `transition` **não existe** em `value`: a aresta é declarada na action com `from:`/`to:` (5.4);
+- a **transição e o evento do workflow** são declarados no próprio `value` de origem (`transition <Destino> { title; payload; event? }`); a action só aponta `to:` (5.3, 5.7);
+- o grafo de estados é derivado das actions; estado inalcançável gera `W_STATE_UNREACHABLE`;
+- estado sem action de saída é terminal (legítimo, sem aviso);
+- self-transition é inválida (`E_TRANSITION_SELF`);
+- ordinal continua explícito (10, 20, 30…) e é usado na ordenação de UI/relatório;
+- `canTransitionTo` é gerado pelo compilador a partir das actions;
+- `toOrdinal` é gerado para `classification`/`state`;
+- `base: state` só tem efeito em campo de Document; um Shape `state` fora de documento é um enum comum.
+
+---
 
 ### 6.1.1.3 formula e convert
 
@@ -1708,67 +2500,201 @@ convert(value: number, from: Unit, to: Unit): number
 
 # 7. View
 
+View é **apresentação**: ela lê documentos, processos ou tarefas e não é dona de nada. Não tem ciclo de vida, não tem permissão própria além da de leitura, não grava dado e não executa passo. Quando precisa mudar algo, chama uma action do documento (que valida a transição) ou navega.
+
+**View não é form.** Form é o contrato de escrita e desfecho de uma tarefa humana (4.14); View é tela de leitura e navegação. Não existe `view type: form`.
+
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| declaração | `view <Name> { ... }` | Projeção de dados/interação; não é dona do dado. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
-| `type` | `type: form \| table \| dashboard \| wizard \| detail \| kanban` | Discriminador da view. |
-| `document` | `document: Customer` | Documento principal da tela. |
-| `source` | `source: Order` | Fonte de tabela/kanban. |
-| `capabilities` | `capabilities { gui }` | Só quando a View inteira exige GUI por outro motivo; `audio`/`image`/`video` declaram `gui` no próprio Shape. |
-| `sources` | `sources: [Invoice, Order]` | Fontes de dashboard/relatório. |
-| `roles` | `roles: [Clerk, Manager]` | Quem pode abrir/executar. |
-| `fields` | `fields { name: string { title: { pt-BR: "Nome", en: "Name" }, required } }` | Campos exibidos/editados; `title` é obrigatório; aceita `required`, `readonly` e parâmetros do Shape. |
-| `readonly` | `readonly` | Campo apenas leitura na view; `readonly: true` também é aceito. |
-| `columns` | `columns { number; customer.name; total }` | Colunas de tabela. |
-| `filters` | `filters { status; period; customer }` | Filtros de tabela/relatório. |
-| `filter` | `filter { assignee = currentUser }` | Filtro fixo/contextual (kanban). |
-| `pagination` | `pagination: 50` | Tamanho de página. |
-| `actions` | `actions { save -> Customer.create; cancel -> none }` | Ações disponíveis e alvo/comando; `none` significa sem efeito. |
-| `metrics` | `metrics { revenue: sum(Invoice.total) by region }` | Métricas de dashboard. |
-| `freshness` | `freshness: 15m` | Frescor dos dados calculados. |
+| `view` | `view <Name> { ... }` | Tela/projeção. |
+| `title` | `title: I18n` | Obrigatório (1.9). |
+| `type` | `type: table \| detail \| report \| dashboard \| kanban \| calendar \| process \| inbox` | Discriminador. |
+| `document` | `document: Customer` | Documento principal (`detail`). |
+| `process` | `process: OrderFulfillment` | Processo exibido (`process`). |
+| `source` | `source: Order` | Fonte de `table`/`kanban`/`calendar`. |
+| `sources` | `sources: [Invoice, Order]` | Fontes de `report`/`dashboard`. |
+| `roles` | `roles: [Clerk, Manager]` | Quem pode abrir a tela. |
+| `columns` | `columns { number; customer; total; status }` | Colunas; herdam título/tipo do campo do documento. |
+| `filters` | `filters { status; period; customer }` | Filtros disponíveis. |
+| `filter` | `filter { assignee = currentUser }` | Filtro fixo/contextual. |
+| `pagination` | `pagination: 50` | Tamanho da página. |
+| `actions` | `actions { open -> OrderDetail; cancel -> Order.cancel(reason) }` | Navegação ou comando (um por linha). |
+| `date` | `date: scheduledAt` | Campo de data exibido no `calendar`. |
+| `groupBy` | `groupBy: status` | Agrupamento (`kanban`, `inbox`). |
+| `card` | `card { subject; priority; slaDue; assignee }` | Campos do cartão (`kanban`). |
+| `sections` | `sections { summary; items; timeline }` | Seções (`detail`, `process`). |
+| `computed` | `computed { frete }` | Campos calculados exibidos (`detail`). |
+| `device` | `device { scale-01 }` | Dispositivo exibido/consultado (`detail`). |
+| `metrics` | `metrics { revenue: sum(Invoice.total) by region }` | Métricas (`report`, `dashboard`). |
+| `freshness` | `freshness: 15m` | Frescor do resultado; exibe "atualizado há X". |
 | `units` | `units { revenue: BRL }` | Unidade de exibição por métrica. |
 | `export` | `export: [pdf, csv]` | Formatos de exportação. |
-| `steps` | `steps { Cart -> Address -> Payment -> Review }` | Etapas de wizard. |
-| `data` | `data { Cart; Address; Payment }` | Dados compartilhados entre etapas. |
-| `integration` | `integration: Payment` | Integração usada por uma etapa/ação. |
-| `sections` | `sections { summary; items; timeline }` | Seções de detail. |
-| `computed` | `computed { frete }` | Campos calculados exibidos. |
-| `device` | `device { scale-01 }` | Dispositivo exibido/consultado. |
-| `groupBy` | `groupBy: status` | Agrupamento de kanban. |
-| `card` | `card { subject; priority; slaDue }` | Campos do cartão. |
-| `mode` | `mode: live` | Dashboard em tempo real. |
+| `mode` | `mode: live` | `dashboard` em tempo real. |
+| `scope` | `scope: mine \| lanes \| all` | Escopo da `inbox`. |
+| `capabilities` | `capabilities { gui }` | Só quando a tela inteira exige GUI por outro motivo. |
 
-**Tipos de view:**
+## 7.1 Tipos de View
 
-| Tipo | Cláusulas típicas |
-| :--- | :--- |
-| `form` | `document`, `fields`, `actions` |
-| `table` | `source`, `columns`, `filters`, `pagination`, `actions` |
-| `dashboard` | `sources`, `metrics`, `filters`, `freshness`, `units`, `export` |
-| `wizard` | `steps`, `data`, `actions`, `integration` |
-| `detail` | `document`, `sections`, `actions`, `computed`, `device` |
-| `kanban` | `source`, `groupBy`, `columns`, `card`, `filter`, `actions` |
+| Tipo | Fonte | Cláusulas típicas | Para quê |
+| :--- | :--- | :--- | :--- |
+| `table` | documento | `source`, `columns`, `filters`, `pagination`, `actions` | lista operacional |
+| `detail` | documento | `document`, `sections`, `computed`, `device`, `actions` | ficha/visão 360 |
+| `report` | documentos | `sources`, `metrics`, `filters`, `units`, `export`, `freshness` | relatório tabular/agregado |
+| `dashboard` | documentos | `sources`, `metrics`, `filters`, `mode`, `freshness` | painel |
+| `kanban` | documento | `source`, `groupBy`, `columns`, `card`, `filter`, `actions` | quadro por estado |
+| `calendar` | documento | `source`, `date`, `filters`, `actions` | agenda/ocupação |
+| `process` | processo | `process`, `roles`, `sections` | andamento de instâncias |
+| `inbox` | tarefas | `scope`, `groupBy`, `columns`, `filter` | minhas tarefas / fila |
+
+## 7.2 Leitura, comando e navegação
 
 ```bpcms
-view SalesDashboard {
-  title: { pt-BR: "Painel de vendas", en: "Sales dashboard" }
-  type: dashboard
+view Orders {
+  title: { pt-BR: "Pedidos", en: "Orders" }
+  type: table
+  source: Order
+  roles: [Clerk, Manager]
+
+  columns { number; customer; total; status; placedAt }
+  filters { status; period; customer }
+  pagination: 50
+
+  actions {
+    open -> OrderDetail
+    cancel -> Order.cancel(reason)
+  }
+}
+```
+
+- `open -> <View>` navega;
+- `cancel -> Document.action` executa comando; o builder pede os parâmetros ao usuário;
+- a View não grava campo: só a action grava, e o documento valida a transição;
+- ação de View que não é possível no estado atual aparece desabilitada com o motivo do documento;
+- `roles` da View é autorização de **abertura**; a autorização do comando continua na action.
+
+## 7.3 Relatório e dashboard
+
+**Relatório é View.** Não existe `document type: report` nem bloco `report { }` dentro de documento. O documento é estado; a agregação é projeção.
+
+```bpcms
+view SalesByRegion {
+  title: { pt-BR: "Vendas por região", en: "Sales by region" }
+  type: report
   sources: [Invoice, Order]
   roles: [Manager]
+
   filters { period; region }
   metrics {
     revenue: sum(Invoice.total) by region
     orders: count(Order) by region
   }
-  freshness: 15m
   units { revenue: BRL }
+  freshness: 15m
   export: [pdf, csv]
 }
 ```
 
----
+- métrica é agregação pura (`sum`, `count`, `avg`, `percentage`, `bucket`) com `where`/`by`;
+- `units` define a unidade de exibição; a conversão acontece na leitura;
+- `freshness` é do cache de leitura, não do dado;
+- a tela mostra "atualizado há X" e permite recálculo;
+- quando o número precisa ser **durável** (fechamento contábil, laudo, score), ele é um **documento derivado** (5.10) — aí sim há estado, versionamento e auditoria.
 
+```bpcms
+view OperationsControl {
+  title: { pt-BR: "Controle operacional", en: "Operations control" }
+  type: dashboard
+  sources: [Shipment, Incident]
+  roles: [Supervisor]
+  mode: live
+  filters { site; status }
+  metrics {
+    late: count(Shipment) where status != Delivered and dueAt < now()
+    openIncidents: count(Incident) where status != Closed
+  }
+}
+```
+
+## 7.4 Andamento de processo
+
+```bpcms
+view OrderProgress {
+  title: { pt-BR: "Andamento do pedido", en: "Order progress" }
+  type: process
+  process: OrderFulfillment
+  roles: [Clerk, Manager, Customer]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}
+```
+
+- lista as instâncias do processo e abre o andamento de uma;
+- `sections` usa o vocabulário fixo de 4.13 (o builder não inventa seções);
+- quando o passo atual é humano e o usuário tem a lane, o form é embutido e a pessoa preenche ali;
+- quando o passo é automático ou externo, mostra o andamento **dentro do passo** (tentativas, heartbeat, último erro, prazo);
+- subprocesso aparece como cartão com drill-down para a instância filha;
+- a View não cria transição, não cancela e não reatribui: intervenções são runtime, autorizadas por role;
+- documentos lidos/escritos aparecem com ícone de data object derivado do contrato.
+
+## 7.5 Inbox e filas
+
+A inbox é projeção de **tarefas**, não de documentos. Ela é gerada pelo builder; a View só configura escopo e apresentação.
+
+```bpcms
+view MyWork {
+  title: { pt-BR: "Minhas tarefas", en: "My work" }
+  type: inbox
+  roles: [Clerk, Manager, SupportAgent]
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view TeamQueue {
+  title: { pt-BR: "Fila do time", en: "Team queue" }
+  type: inbox
+  roles: [Manager]
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: lane
+}
+```
+
+- `scope: mine` — tasks atribuídas ou pegáveis pelo usuário;
+- `scope: lanes` — tasks das lanes do usuário (gestor vê a fila, não executa);
+- `scope: all` — auditoria/operação;
+- o cartão mostra título do passo, sujeito do caso, lane, prazo e prioridade — todos derivados do processo;
+- claim, delegate e reassign são ações de runtime; a inbox só as expõe conforme a política do papel.
+
+## 7.6 Regras
+
+- View não tem `fields`: campo de formulário é do Form (4.14);
+- View não tem `wizard`: fluxo guiado com passos é **processo** (cada passo é uma task com form);
+- colunas e cartões herdam `title`/`tipo` do campo; nomes qualificados (`customer.name`) são permitidos;
+- `computed` de View é só exibição; cálculo durável é campo `computed` do documento;
+- `metrics`/`filters`/`units`/`export` só em `report`/`dashboard`;
+- `sections`/`computed`/`device` só em `detail`; `sections` de `process` usa o vocabulário fixo;
+- `groupBy`/`card`/`filter` em `kanban`; `columns` lista os valores de `groupBy` exibidos (opcional, default = todos);
+- `scope`/`groupBy` em `inbox`;
+- `sections` de `detail` é lista livre de campos/seções do documento; em `process` usa o vocabulário fixo de 4.13;
+- `computed { }` de View apenas nomeia campos computados do documento — a expressão mora no documento;
+- `capabilities { gui }` só quando a tela inteira exige GUI por outro motivo; mídia declara `gui` no Shape;
+- View não declara `integration`: integração é do processo ou da action.
+
+## 7.7 Validações
+
+| Regra | Erro |
+| :--- | :--- |
+| `type` inválido ou ausente | `E_VIEW_TYPE` |
+| cláusula incompatível com o tipo (`metrics` em `table`) | `E_VIEW_CLAUSE` |
+| `source`/`document`/`process` inexistente | `E_REFERENCE` |
+| coluna/cartão com campo inexistente | `E_VIEW_FIELD` |
+| `type: process` sem `process` | `E_VIEW_PROCESS` |
+| `sections` fora do vocabulário | `E_VIEW_SECTION` |
+| ação de View para alvo não chamável | `E_VIEW_ACTION` |
+| `type: form` ou `type: wizard` | `E_VIEW_TYPE` |
+
+---
 # 8. Role / Organogram
 
 | Cláusula | Sintaxe | Funcionamento |
@@ -1973,31 +2899,56 @@ conversation PurchaseDiscovery {
 
 # 11. Decision
 
+A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primeira-condição-verdadeira e um único retorno tipado. O processo a executa com `decision:`; o gateway roteia pelo valor.
+
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `decision` | `decision <Name> { ... }` | Tabela de decisão segura. |
-| `appliesTo` | `appliesTo: PurchaseRequest.approve` | Ação/documento onde a decisão atua. |
-| `when` | `when: amount` ou `when: [tier, margin]` | Entrada(s) avaliadas. |
-| `cases` | `cases { <= 5000 BRL -> auto; else -> director }` | Condição → resultado; primeira verdadeira vence. |
-| `default` | `default: GeneralQueue` | Resultado quando nenhum caso casa; opcional. |
-| `source` | `source: "Política de Compras v3"` | Norma/política que fundamenta. |
+| `decision` | `decision <Name> { ... }` | Tabela de decisão. |
+| `title` | `title: I18n` | Obrigatório. |
+| `returns` | `returns: ApproverTier` | Um único retorno (normalmente `classification`). |
+| `inputs` | `inputs { amount: std.Money; supplier: Supplier }` | Entradas tipadas. |
+| `cases` | `cases { <cond> -> <value> }` | Primeira condição verdadeira vence. |
+| `else` | `else -> <value>` | Obrigatório. |
+| `source` | `source: "Política de Compras v3"` | Norma/política que fundamenta (auditoria). |
 | `owner` | `owner: Finance` | Dono da decisão. |
-| `->` | `<condição> -> <resultado>` | Mapeia condição a ação/valor. |
-| `else` | `else -> <resultado>` | Caso default inline. |
 
 ```bpcms
 decision ApprovalLimit {
-  appliesTo: PurchaseRequest.approve
-  when: amount
+  title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
+  returns: ApproverTier
+  inputs {
+    amount: std.Money
+    supplier: Supplier
+  }
   cases {
-    <= 5000 BRL -> auto
-    <= 50000 BRL -> manager
-    else -> director
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier.risk == Low -> Manager
+    else -> Director
   }
   source: "Política de Compras v3"
   owner: Finance
 }
 ```
+
+```bpcms
+task DecideApproval {
+  lane: System
+  decision: ApprovalLimit
+  with { amount: purchaseRequest.amount; supplier: purchaseRequest.supplier }
+  gives: approverTier
+}
+
+gateway Tier {
+  if approverTier == Manager -> ManagerReview
+  if approverTier == Director -> DirectorReview
+  else -> AutoApprove
+}
+```
+
+- decisão não altera documento nem chama integração;
+- `appliesTo` não existe: quem usa a decisão é a task, e é ela que declara `with`;
+- `default` não existe: o `else` é obrigatório;
+- a tabela é exportável em DMN 1.3 pelo builder.
 
 ---
 
@@ -2379,78 +3330,142 @@ integration ERP {
 
 # 21. Report / Dashboard
 
-Report é um **Document com caching de cálculo**, não um artefato separado.
+**Relatório é View; não é documento.** Não existe artefato `report`, `document type: report` nem bloco `report { metrics }` dentro de documento.
 
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `document` | `document CashFlow { ... }` | Documento calculado. |
-| `type` | `type: report` | Marca o Document como relatório/dashboard. |
-| `computed from` | `computed from Invoice, Payment` | Fontes do cálculo. |
-| `freshness` | `freshness: 1h` | TTL do cache. |
-| `exposes` | `exposes: [balance, calculatedAt]` | Campos calculados. |
-| `report` | `report { sources; metrics; filters }` | Configuração de relatório, opcional. |
+| Necessidade | Onde fica |
+| :--- | :--- |
+| número agregado para ler, filtrar e exportar | `view type: report` / `type: dashboard` |
+| número que precisa durar, versionar e ser auditado | `document` derivado (`computed from`, `freshness`, `exposes`) |
+| número que precisa de histórico por período | documento derivado com `for` de período (ex.: `FiscalPeriod`) |
+| painel operacional em tempo real | `view type: dashboard` com `mode: live` |
 
 ```bpcms
-document CashFlow {
-  type: report
+view CashFlow {
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
-  computed from Invoice, Payment, Bill
+  type: report
+  sources: [Invoice, Payment, Bill]
+  roles: [Manager]
+  filters { period; account }
+  metrics {
+    inflow: sum(Payment.amount) where status == captured
+    outflow: sum(Bill.amount) where status == paid
+    balance: inflow - outflow
+  }
+  units { inflow: BRL; outflow: BRL; balance: BRL }
   freshness: 1h
-  exposes: [balance, calculatedAt]
+  export: [pdf, csv]
+}
+```
 
-  report {
-    filters { period; account }
-    metrics {
-      inflow: sum(Payment.amount) where status == captured
-      outflow: sum(Bill.amount) where status == paid
-      balance: inflow - outflow
-    }
+```bpcms
+document MonthlyRevenue {
+  title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
+  computed from Invoice, Payment
+  freshness: 1h
+  exposes: [revenue, calculatedAt]
+
+  fields {
+    period: FiscalPeriod { title: { pt-BR: "Período", en: "Period" }, lookup }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, currency: BRL }
   }
 }
 ```
 
-Não há `report <Name> { ... }` como artefato de topo. Os arquivos `*-reports.bpcms` contêm `document` com `type: report`.
+Regras:
 
+- `metrics`/`filters`/`units`/`export` pertencem à View;
+- `computed from`/`freshness`/`exposes`/`calculatedAt` pertencem ao documento derivado;
+- a View mostra "atualizado há X" e oferece recálculo; o documento guarda o resultado e o frescor;
+- `*-reports.bpcms` contém `view`; documentos calculados duráveis ficam em `*-documents.bpcms`;
+- não há CRUD automático de relatório: leitura é projeção.
 
 ---
-
 # 22. Event
 
-Eventos de workflow ficam na `transition` do `value`. Eventos sem workflow ficam em `events` no Document.
+**Evento de workflow fica no workflow.** O evento é declarado na `transition` do valor de origem, dentro do Shape de estado, e publicado quando uma action executa a transição (5.3 e 5.7). O bloco `events { }` do documento é só para eventos **sem** transição. Não existe artefato `event` de topo.
 
 ## 22.1 Evento de workflow
 
 ```bpcms
-value Issued {
-  title: { pt-BR: "Emitida", en: "Issued" }
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Draft
 
-  transition Paid {
-    title: { pt-BR: "Nota paga", en: "Invoice paid" }
-    payload {
-      paidAt: DateTime
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em" } }
+        number: InvoiceNumber { title: { pt-BR: "Número" } }
+      }
+    }
+  }
+
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: Issued
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em" } }
+        amount: std.Money { title: { pt-BR: "Valor" } }
+      }
+    }
+  }
+
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: Paid
+    ordinal: 30
+  }
+}
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+
+  fields {
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+  }
+
+  actions {
+    issue() {
+      title: { pt-BR: "Emitir", en: "Issue" }
+      roles: [Manager]
+      to: status.Issued
+      { issuedAt = now() }
     }
   }
 }
 ```
 
-- a chave da transição é o estado de destino;
-- o evento padrão é o destino em PascalCase;
-- `event:` sobrescreve o nome do evento;
-- `payload` é o contrato do evento;
-- a action usa `transition: Paid`;
-- a action não usa `emit` para workflow.
+- o evento é **da aresta**: `Draft --Issued--> Issued` publica `Invoice.Issued`;
+- nome do evento = estado de destino; `event: RefundIssued` sobrescreve quando o nome de negócio difere do estado;
+- `title` da transição é o título do evento; `payload` é o contrato;
+- a action só aponta `to: status.Issued`; não existe `emits: <Evento>` nem `from:`;
+- `emits { campo: expr }` na action só mapeia valores do payload cujo nome difere do escopo;
+- duas origens para o mesmo evento exigem o mesmo payload (`E_EVENT_SCHEMA_CONFLICT`); origens diferentes podem emitir eventos diferentes para o mesmo destino.
 
 ## 22.2 Evento sem workflow
 
 ```bpcms
 document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+
   events {
     Renamed {
       title: { pt-BR: "Loja renomeada", en: "Store renamed" }
-      key: this.id
       payload {
-        oldName: string
-        newName: string
+        oldName: string { title: { pt-BR: "Nome anterior" } }
+        newName: string { title: { pt-BR: "Nome novo" } }
       }
     }
   }
@@ -2459,128 +3474,97 @@ document Store {
     rename(name: string) {
       title: { pt-BR: "Renomear", en: "Rename" }
       roles: [Manager]
-      emit Renamed {
-        oldName: old.name
-        newName: new.name
+      {
+        oldName = this.name
+        this.name = name
+        emit Renamed { oldName; newName: name }
       }
     }
   }
 }
 ```
 
-## 22.3 FQN
+- `events { }` declara título e payload do evento sem transição;
+- `emit` no body publica; `emit` em action com `to:` é erro.
+
+## 22.3 Identidade
 
 ```text
 SERVICO.DOCUMENTO.EVENTO
-```
-
-Exemplo:
-
-```text
 Billing.Invoice.Paid
-```
-
-Canônico:
-
-```text
 example.com/services/billing#Invoice.Paid
 ```
 
-- `SERVICO` é o dono do Document;
-- alias é sintaxe local;
-- em cada serviço, o código usa o alias daquele serviço;
-- na aplicação, o código usa o alias da aplicação;
-- o alias não altera a identidade canônica;
-- o envelope publica a forma canônica;
-- `producer` é implícito;
-- `consumers` não pertencem ao evento.
-
-Exemplo:
-
-```text
-App1: BillingOnApp1.Invoice.Paid
-S1:   BillingOnS1.Invoice.Paid
-S2:   BillingOnS2.Invoice.Paid
-```
-
-Todos resolvem para:
-
-```text
-example.com/services/billing#Invoice.Paid
-```
-
-## 22.3.1 Evento duplicado
-
-O mesmo evento pode aparecer em transições de origens diferentes:
-
-```bpcms
-value Issued {
-  transition Paid { ... }
-}
-
-value Overdue {
-  transition Paid { ... }
-}
-```
-
-O compilador:
-
-- exige o mesmo `event`;
-- exige o mesmo payload;
-- exige o mesmo título;
-- funde em `Invoice.Paid`;
-- gera `E_EVENT_SCHEMA_CONFLICT` se divergir.
+- `SERVICO` é o dono do documento; alias é sintaxe local e não altera a identidade canônica;
+- o envelope publica a forma canônica; `producer` é implícito; `consumers` não pertencem ao evento;
+- o evento carrega o documento (id + lookup) e a correlação; o `payload` é só negócio;
+- `key` não existe: a chave é o documento.
 
 ## 22.4 Regras
 
-- evento de workflow não fica em `events`;
-- evento sem workflow fica em `events` e usa `emit`;
-- action com `transition:` não usa `emit`;
-- payload de workflow fica na transição;
-- payload sem workflow fica em `events`;
-- `key` usa `this.id` ou `referencia.id`;
-- processo/integração/job assinam `Document.Event`;
-- evento inexistente = erro.
+- evento de workflow: declarado na `transition` do Shape; publicado pela action que executa a transição;
+- evento sem workflow: declarado em `events { }`; publicado por `emit` no body;
+- `emit` é proibido em action com `to:`; `emits { }` só mapeia payload;
+- processo/integração assinam `Document.Event` (`start { event: }`, `cancel on`, `milestone on`);
+- evento não declarado = `E_EVENT_UNKNOWN`; declarado e nunca emitido = `W_EVENT_UNUSED`;
+- dois eventos com o mesmo nome no documento = `E_EVENT_DUPLICATE`;
+- renomear o estado (ou o `event: <Nome>`) renomeia o evento: breaking change para quem assina.
 
----
+# 23. Schedule
 
-# 23. Job / Schedule
-
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `job` | `job <Name> { ... }` | Tarefa assíncrona/agendada. |
-| `capabilities` | `capabilities { scheduling }` | Capacidades exigidas pelo Job; falha de build se ausentes. |
-| `schedule` | `schedule: "0 2 1 * *"` | Cron; `*/15 * * * *` para intervalo. |
-| `timezone` | `timezone: America/Fortaleza` | Fuso do cron. |
-| `action` | `action: Billing.closeMonth()` | Operação executada. |
-| `timeout` | `timeout: 30m` | Tempo máximo. |
-| `retry` | `retry: 3` | Tentativas. |
-| `idempotent` | `idempotent: true` | Pode repetir sem duplicar efeito. |
-| `deadLetter` | `deadLetter: true` | Envia falha para DLQ. |
-| `input` | `input { audience: [Manager] }` | Dados de entrada. |
-| `batch` | `batch: 500` | Tamanho do lote. |
-| `dryRun` | `dryRun: env == "qa"` | Simula sem aplicar. |
-| `filter` | `filter { failedAt > now() - 24h }` | Seleção de itens. |
-| `maxAttempts` | `maxAttempts: 5` | Limite de tentativas. |
-| `backoff` | `backoff: exponential` | Estratégia de espera. |
-| `cursor` | `cursor: "erp.supplier.cursor"` | Checkpoint incremental. |
-| `condition` | `condition: SalesDashboard.viewers > 0` | Executa só se verdadeiro. |
+**Agendamento é um gatilho de início de processo, não um artefato.** Não existe `job`.
 
 ```bpcms
-job CloseMonth {
-  capabilities { scheduling }
-  schedule: "Todo último dia útil do mês"
-  timezone: America/Fortaleza
-  action: Billing.closeMonth()
-  timeout: 30m
-  retry: 3
-  idempotent: true
-  deadLetter: true
+process CloseMonth for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  owner: "Controladoria"
+  sla: 6h
+
+  start Monthly {
+    schedule: "0 2 1 * *"
+    select: fiscalPeriod.status == Open
+  }
+
+  task PostEntries {
+    lane: System
+    action: Ledger.postPeriod
+    with { fiscalPeriod }
+  }
+
+  task Review {
+    lane: Controllership
+    form: MonthCloseReview
+    sla: 4h
+  }
+
+  Monthly -> PostEntries
+  PostEntries -> Review
+  Review.approved -> Closed
+  Review.rejected -> PostEntries
+
+  end Closed { title: { pt-BR: "Fechado", en: "Closed" }, outcome: success }
+  end Failed { title: { pt-BR: "Falhou", en: "Failed" }, outcome: failure }
 }
 ```
 
----
+| O que era `job` | Como fica |
+| :--- | :--- |
+| `schedule` | `start { schedule: "cron" }` |
+| `action` | `task { lane: System; action: ... }` |
+| `filter` de registros | `start { schedule; select }` com `for` (fan-out: 1 instância por sujeito) |
+| `retry`/`timeout`/`deadLetter` | `on error`, `sla`, `on timer` da task; DLQ é runtime |
+| `batch`/`cursor` | runtime/integração; cursor durável, se necessário, é um documento |
+| `dryRun` | `Environment` |
+| `condition` (audiência) | `gateway` no início |
+| `input` | `variables`/`with` do processo |
+| painel, histórico, auditoria | a tela de andamento do processo |
 
+**Por que.** Agendamento não é um tipo de trabalho diferente: é um gatilho. Modelá-lo como processo dá andamento, auditoria, SLA, retry por task, cancelamento e histórico de graça — e evita um segundo motor com regras próprias.
+
+`*-jobs.bpcms` não existe mais: os agendamentos viram processos nos arquivos `*-processes.bpcms` do serviço.
+
+---
 # 24. Policy / Rule
 
 | Cláusula | Sintaxe | Funcionamento |
@@ -2625,7 +3609,9 @@ policy FourEyesPayment {
 | Filtro | `... where cond` | Filtra registros antes de agregar. |
 | Aritmética | `quantity * unitPrice`, `subtotal * 10%` | Multiplicação/divisão com unidade; resultado tipado. |
 | Propriedade | `items.count` | Cardinalidade de coleção. |
-| Relógio | `now()`, `now() - 24h` | Relógio do runtime (virtual em QA). |
+| Relógio | `now()`, `now() - 24h`, `today()` | Relógio do runtime (virtual em QA); `today()` é a data local do processo. |
+| Data + duração | `openedAt + slaWindow`, `dueAt - now()` | Aritmética entre `DateTime`/`Date` e `Duration`; resultado tipado (`DateTime` ou `Duration`). |
+| Comparação de duração | `slaWindow <= 4h` | Durações comparáveis; unidade normalizada pelo Shape. |
 | Usuário | `currentUser` | Ator autenticado. |
 | Moeda | `5000 BRL`, `10,00 BRL` | Valor + unidade; não é string. |
 | Percentual | `10%`, `< 1%` | Razão; cuidado com 0,1 x 10%. |
@@ -2663,7 +3649,7 @@ policy FourEyesPayment {
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
 | Constructor | propriedade/valor inválido em `new` | `E_CONSTRUCTOR_PROPERTY` |
-| Workflow | initial/transition inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_TRANSITION` |
+| State | `initial` ausente/duplicado; `value` com `transition` | `E_STATE_INITIAL` / `E_STATE_TRANSITION` |
 | Classification | `initial`/`transition` em classification | `E_CLASSIFICATION_TRANSITION` |
 | Runtime | mudança de estado não permitida | `E_INVALID_TRANSITION` |
 | Moeda | metadado ausente, moeda incompatível, parse/scale inválido | `E_CURRENCY_METADATA_MISSING` / `E_CURRENCY_MISMATCH` / `E_MONEY_PARSE` / `E_CURRENCY_INFIX_SCALE` |
@@ -2686,6 +3672,21 @@ policy FourEyesPayment {
 | Tipo reservado | `shape I18n` declarado | `E_RESERVED_TYPE` |
 | Locale | chave de `title` fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Título | sem entrada para o locale default | `E_TITLE_MISSING` |
+| Task | sem contrato, com dois contratos, executor ausente ou inválido | `E_TASK_CONTRACT_MISSING` / `E_TASK_KIND_CONFLICT` / `E_TASK_EXECUTOR_MISSING` / `E_TASK_BLACKBOX_POOL` |
+| Fluxo | nó órfão, saída ≠ 1, nó inalcançável, caminho sem `end` | `E_FLOW_ORPHAN` / `E_FLOW_ARITY` / `W_FLOW_UNREACHABLE` / `E_FLOW_DEAD_END` |
+| Gateway | sem `else`, dois `else`, alvo inexistente | `E_GATEWAY_NO_ELSE` / `E_GATEWAY_DUP_ELSE` / `E_FLOW_UNKNOWN_NODE` |
+| Fork/join | ramo que não alcança o join; join sem duas entradas | `E_JOIN_DEADLOCK` |
+| Boundary | handler órfão, duplicado ou alvo fora do escopo | `E_BOUNDARY` |
+| Compensação | handler com aresta, fora de escopo ou alvo não concluído | `E_COMPENSATION_SCOPE` |
+| Form | ação sem aresta nem `stay`, argumento sem campo, campo não usado | `E_FORM_ACTION_NO_EDGE` / `E_FORM_PARAM` / `W_FORM_UNUSED_FIELD` |
+| Dados | `with` desconhecido/ausente, `gives` incompatível, variável não atribuída | `E_WITH_UNKNOWN` / `E_WITH_MISSING` / `E_GIVES_TYPE` / `E_DEFINITELY_ASSIGNED` |
+| Estado | `from`/`to` inválido, incompleto, self-transition ou estado inalcançável | `E_TRANSITION_STATE` / `E_TRANSITION_INCOMPLETE` / `E_TRANSITION_SELF` / `W_STATE_UNREACHABLE` |
+| Evento | não declarado, duplicado, payload sem origem, schema divergente, nunca emitido | `E_EVENT_UNKNOWN` / `E_EVENT_DUPLICATE` / `E_EVENT_PAYLOAD` / `E_EMITS_UNKNOWN` / `E_EVENT_SCHEMA_CONFLICT` / `W_EVENT_UNUSED` |
+| Mensagem | sem `about`, `about` incompatível, duplicada | `E_MESSAGE_ABOUT` / `E_MESSAGE_DUPLICATE` |
+| Start | sem gatilho, dois gatilhos, duplicado, `select` inválido | `E_START_DUPLICATE` / `E_SELECT` / `E_PROCESS_NO_START` |
+| Chamada | filho sem `start { called }`, com gatilho de topo, ou processo de topo com `called` | `E_PROCESS_TRIGGER_CONFLICT` |
+| Subprocesso | ciclo entre processos | `E_SUBPROCESS_CYCLE` |
+| View | tipo inválido, cláusula incompatível, seção desconhecida | `E_VIEW_TYPE` / `E_VIEW_CLAUSE` / `E_VIEW_SECTION` |
 
 **Classes de runtime:** `validation_error` (400), `conflict` (409), `forbidden` (403), `not_found` (404), `dependency_unavailable` (503), `rate_limited` (429), `internal` (500). Erros de linguagem são bloqueantes no `check`; erros de runtime seguem o modelo do BRAINSTORM (2.6.11).
 
@@ -2697,11 +3698,12 @@ policy FourEyesPayment {
 | :--- | :--- | :--- |
 | Application | ✅ | 8 |
 | Service | ✅ | 8 |
-| Process | ✅ | 7 |
-| Document | ✅ | 6 |
+| Process | ✅ | 24 |
+| Form | ✅ | 8 |
+| Document | ✅ | 8 |
 | Shape | ✅ | 9 |
-| View | ✅ | 6 |
-| Role/Organogram | ✅ | 6 |
+| View | ✅ | 8 |
+| Role/Organogram | ✅ | 8 |
 | Evidence | ✅ | 6 |
 | Conversation | ✅ | 6 |
 | Decision | ✅ | 6 |
@@ -2714,12 +3716,16 @@ policy FourEyesPayment {
 | Widget | ✅ | 6 |
 | Release | ✅ | 6 |
 | Integration | ✅ | 6 |
-| Report | ✅ | 6 |
-| Job | ✅ | 6 |
+| Message | ✅ | 4 |
+| Report/Dashboard | ✅ | 7 |
+| Event | ✅ | 6 |
+| Schedule (não é artefato) | ✅ | 4 |
 | Policy | ✅ | 6 |
 | Icon | ✅ | 6 |
 
-> Cobertura = todas as cláusulas de linguagem usadas nos exemplos estão documentadas. Campos de domínio (`name`, `email`, `id`) não entram na contagem. As cláusulas comuns (version/source/type/mode/status) aparecem na seção 1 e são referenciadas nas seções seguintes.
+> Cobertura = todas as cláusulas de linguagem usadas nos exemplos estão documentadas. Campos de domínio (`name`, `email`, `id`) não entram na contagem. `Report` e `Job` deixaram de ser artefatos: viraram `View` e `start { schedule: }`.
+
+---
 
 # 28. Icon
 

@@ -8,12 +8,16 @@ service "example.com/services/fraud-checkout" {
   }
 
   reintroduce Checkout.CheckoutStatus {
+    value ShippingQuoted {
+      transition FraudChecked {
+        title: { pt-BR: "Risco verificado", en: "Risk checked" }
+      }
+    }
+
     value FraudChecked {
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
-
-      transition PaymentAuthorized {
-        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      }
+      icon: status.fraudChecked
+      ordinal: 25
     }
 
     insert FraudChecked before PaymentAuthorized
@@ -23,13 +27,13 @@ service "example.com/services/fraud-checkout" {
     action checkFraud() {
       title: { pt-BR: "Verificar risco", en: "Check risk" }
       roles: [RiskAnalyst]
-      transition: FraudChecked
+      to: status.FraudChecked
     }
   }
 
   reintroduce Checkout.Checkout {
     task FraudCheck {
-      type: service
+      lane: System
       action: CheckoutSession.checkFraud
     }
 

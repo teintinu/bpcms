@@ -12,10 +12,34 @@ icon Dispatched {
   title: { pt-BR: "Despachada", en: "Dispatched" }
 }
 
+icon OutForDelivery {
+  title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+}
+
+icon AttemptFailed {
+  title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+}
+
 icon Delivered {
   title: { pt-BR: "Entregue", en: "Delivered" }
 }
 
 icon Returned {
   title: { pt-BR: "Devolvida", en: "Returned" }
+}
+
+icon Split {
+  title: { pt-BR: "Dividida", en: "Split" }
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelada", en: "Cancelled" }
+}
+
+icon InTransit {
+  title: { pt-BR: "Em trânsito", en: "In transit" }
+}
+
+icon Completed {
+  title: { pt-BR: "Entrega concluída", en: "Delivery completed" }
 }

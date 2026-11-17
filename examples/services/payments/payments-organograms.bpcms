@@ -1,0 +1,26 @@
+// service: example.com/services/payments
+role Analyst {
+  title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
+  permissions: [payment.view, refund.request, chargeback.respond]
+}
+
+role Manager {
+  title: { pt-BR: "Gerente financeiro", en: "Finance manager" }
+  inherits: Analyst
+  permissions: [payment.refund, chargeback.decide, report.view]
+}
+
+role PaymentEngine {
+  title: { pt-BR: "Motor de pagamentos", en: "Payment engine" }
+  permissions: [payment.capture, chargeback.receive]
+}
+
+organogram Treasury {
+  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" }
+
+  hierarchy {
+    Manager > Analyst
+  }
+
+  Manager manages [Analyst]
+}

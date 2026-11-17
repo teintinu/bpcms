@@ -1,18 +1,34 @@
 // service: example.com/services/orders
-document OrderPipeline {
+view OrderPipeline {
   title: { pt-BR: "Funil de pedidos", en: "Order pipeline" }
   type: report
-  computed from Order
-  freshness: 10m
+  sources: [Order]
+  roles: [Manager]
 
-  report {
-    filters { period; status }
-    metrics {
-    placed: count(Order) where status == placed
-    cancelled: count(Order) where status == cancelled
-    revenue: sum(Order.total) where status == placed
+  filters { period; status }
+  metrics {
+    placed: count(Order) where status == Placed
+    cancelled: count(Order) where status == Cancelled
+    revenue: sum(Order.total) where status != Cancelled
     avgTicket: avg(Order.total)
-    }
-    units { revenue: BRL; avgTicket: BRL }
   }
+  units { revenue: BRL; avgTicket: BRL }
+  freshness: 10m
+  export: [pdf, csv]
+}
+
+view OrderPulse {
+  title: { pt-BR: "Pulso dos pedidos", en: "Order pulse" }
+  type: dashboard
+  sources: [Order]
+  roles: [Manager]
+  mode: live
+
+  filters { status }
+  metrics {
+    awaitingReview: count(Order) where status == Draft
+    awaitingReservation: count(Order) where status == Placed
+    awaitingDecision: count(Order) where status == CancellationRequested
+  }
+  freshness: 5m
 }

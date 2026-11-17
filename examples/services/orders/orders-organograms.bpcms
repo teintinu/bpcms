@@ -1,0 +1,32 @@
+// service: example.com/services/orders
+role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  permissions: [order.viewOwn, order.requestCancellation]
+}
+
+role Clerk {
+  title: { pt-BR: "Atendente de pedidos", en: "Order clerk" }
+  inherits: Customer
+  permissions: [order.manage, order.create, order.cancel]
+}
+
+role Manager {
+  title: { pt-BR: "Gerente de pedidos", en: "Order manager" }
+  inherits: Clerk
+  permissions: [order.cancel, order.reopen, report.view]
+}
+
+role OrderEngine {
+  title: { pt-BR: "Motor de pedidos", en: "Order engine" }
+  permissions: [order.reserve, order.fulfill]
+}
+
+organogram Sales {
+  title: { pt-BR: "Organograma de vendas", en: "Sales organogram" }
+
+  hierarchy {
+    Manager > Clerk > Customer
+  }
+
+  Manager manages [Clerk]
+}

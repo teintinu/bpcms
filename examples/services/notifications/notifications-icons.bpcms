@@ -28,6 +28,10 @@ icon Read {
   title: { pt-BR: "Lida", en: "Read" }
 }
 
+icon Suppressed {
+  title: { pt-BR: "Suprimida", en: "Suppressed" }
+}
+
 icon LocalePtBr {
   title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
 }

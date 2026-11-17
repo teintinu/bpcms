@@ -1,0 +1,54 @@
+// service: example.com/services/identity
+
+form SignIn {
+  title: { pt-BR: "Formulário de acesso", en: "Sign in" }
+  document: Session
+
+  fields {
+    email: Email {
+      title: { pt-BR: "Correio eletrônico", en: "Email" }
+      required
+    }
+    password: string {
+      title: { pt-BR: "Senha", en: "Password" }
+      maxLength: 128
+      required
+    }
+  }
+
+  actions {
+    signIn { calls: Session.start(email, password) }
+  }
+}
+
+form IdentityVerification {
+  title: { pt-BR: "Verificação de identidade", en: "Identity verification" }
+  document: User
+
+  fields {
+    name
+    email
+    nickname
+    status
+  }
+
+  actions {
+    confirm { calls: User.confirmIdentity }
+  }
+}
+
+form RecoveryApproval {
+  title: { pt-BR: "Aprovação da recuperação", en: "Recovery approval" }
+  document: User
+
+  fields {
+    name
+    email
+    status
+    identityVerifiedAt
+  }
+
+  actions {
+    approve { calls: User.approveRecovery }
+  }
+}

@@ -1,20 +1,18 @@
 // service: example.com/services/payments
-view PaymentForm {
-  title: { pt-BR: "Formulário de pagamento", en: "Payment form" }
-  type: form
-  document: Payment
-  roles: [Manager]
+view Charges {
+  title: { pt-BR: "Cobranças", en: "Charges" }
+  type: table
+  source: Payment
+  roles: [Analyst, Manager]
 
-  fields {
-    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
-    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, required, currency: BRL }
-    method: PaymentMethod { title: { pt-BR: "Método", en: "Method" }, required }
-  }
+  columns { order; amount; method; status; capturedAt }
+  filters { status; period; method }
+  pagination: 50
 
   actions {
-    authorize -> Payment.authorize
-    capture -> Payment.capture
-    cancel -> none
+    open -> PaymentDetail
+    charge -> Payment.create(order, amount, method)
+    refund -> Payment.refund(refundAmount)
   }
 }
 
@@ -22,8 +20,63 @@ view PaymentDetail {
   title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
   type: detail
   document: Payment
-  roles: [Manager]
+  roles: [Analyst, Manager]
 
   sections { summary; refunds; timeline }
-  actions { refund; print }
+  actions {
+    progress -> PaymentProgress
+  }
+}
+
+view Chargebacks {
+  title: { pt-BR: "Contestações", en: "Chargebacks" }
+  type: table
+  source: Chargeback
+  roles: [Analyst, Manager]
+
+  columns { payment; amount; status; dueAt }
+  filters { status; period }
+  actions {
+    open -> ChargebackDetail
+  }
+}
+
+view ChargebackDetail {
+  title: { pt-BR: "Detalhe da contestação", en: "Chargeback detail" }
+  type: detail
+  document: Chargeback
+  roles: [Analyst, Manager]
+
+  sections { summary; evidence; timeline }
+  actions {
+    progress -> ChargebackProgress
+  }
+}
+
+view PaymentProgress {
+  title: { pt-BR: "Andamento da captura", en: "Capture progress" }
+  type: process
+  process: PaymentCapture
+  roles: [Analyst, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+view ChargebackProgress {
+  title: { pt-BR: "Andamento da contestação", en: "Chargeback progress" }
+  type: process
+  process: ChargebackDispute
+  roles: [Analyst, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+view FinanceInbox {
+  title: { pt-BR: "Fila do financeiro", en: "Finance queue" }
+  type: inbox
+  roles: [Analyst, Manager]
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: lane
+  columns { title; subject; lane; dueAt; priority }
 }

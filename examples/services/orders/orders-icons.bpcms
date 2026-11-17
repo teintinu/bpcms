@@ -8,8 +8,20 @@ icon Placed {
   title: { pt-BR: "Realizado", en: "Placed" }
 }
 
+icon Reserved {
+  title: { pt-BR: "Reservado", en: "Reserved" }
+}
+
+icon CancellationRequested {
+  title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+}
+
+icon CancellationApproved {
+  title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+}
+
 icon Cancelled {
-  title: { pt-BR: "Cancelada", en: "Cancelled" }
+  title: { pt-BR: "Cancelado", en: "Cancelled" }
 }
 
 icon Fulfilled {

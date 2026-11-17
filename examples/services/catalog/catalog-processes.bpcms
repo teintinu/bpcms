@@ -1,0 +1,39 @@
+// service: example.com/services/catalog
+process ProductPublish for Product {
+  title: { pt-BR: "Publicação de produto", en: "Product publish" }
+  version: 1
+  goal: "Revisar e publicar o produto com aprovação em quatro olhos"
+  owner: "Merchandising"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Merchandising { role: Publisher }
+  }
+
+  start Submitted {
+    event: Product.SubmittedForReview
+  }
+
+  task Review {
+    lane: Merchandising
+    form: ProductReview
+    sla: 1d
+    assign: pull
+  }
+
+  end Published {
+    title: { pt-BR: "Publicado", en: "Published" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Rejeitado", en: "Rejected" }
+    outcome: cancelled
+  }
+
+  Submitted -> Review
+  Review.approve -> Published
+  Review.reject -> Rejected
+}

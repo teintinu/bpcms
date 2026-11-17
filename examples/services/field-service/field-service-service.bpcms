@@ -1,0 +1,11 @@
+// service: example.com/services/field-service
+service "example.com/services/field-service" {
+  title: { pt-BR: "Serviço de campo", en: "Field service" }
+  version: 1.0.0
+  owner: "Field Service"
+
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/identity" as Identity
+  }
+}

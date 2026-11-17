@@ -1,0 +1,9 @@
+service "example.com/services/procurement" {
+  title: { pt-BR: "Compras", en: "Procurement" }
+  version: 1.0.0
+  owner: "Procurement"
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/identity" as Identity
+  }
+}

@@ -1,19 +1,18 @@
 // service: example.com/services/billing
-view InvoiceForm {
-  title: { pt-BR: "Formulário de nota", en: "Invoice form" }
-  type: form
-  document: Invoice
-  roles: [Manager]
+view InvoiceTable {
+  title: { pt-BR: "Notas fiscais", en: "Invoices" }
+  type: table
+  source: Invoice
+  roles: [Clerk, CollectionAgent, FinanceManager]
 
-  fields {
-    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
-    number: string { title: { pt-BR: "Número", en: "Number" }, required }
-    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
-  }
+  columns { number; customer; total; status; dueAt }
+  filters { status; period; customer }
+  pagination: 50
 
   actions {
-    save -> Invoice.issue
-    cancel -> none
+    open -> InvoiceDetail
+    issue -> Invoice.issue
+    cancel -> Invoice.cancel(reason)
   }
 }
 
@@ -21,8 +20,56 @@ view InvoiceDetail {
   title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
   type: detail
   document: Invoice
-  roles: [Manager]
+  roles: [Clerk, CollectionAgent, FinanceManager]
 
   sections { summary; items; customer; timeline }
-  actions { issue; print; cancel }
+
+  actions {
+    pay -> Invoice.pay(paidAt)
+    cancel -> Invoice.cancel(reason)
+  }
+}
+
+view InvoiceKanban {
+  title: { pt-BR: "Notas por situação", en: "Invoices by status" }
+  type: kanban
+  source: Invoice
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  groupBy: status
+  columns { number; customer; total; dueAt }
+  card { number; customer; total; dueAt }
+
+  actions {
+    open -> InvoiceDetail
+  }
+}
+
+view InvoiceProgress {
+  title: { pt-BR: "Andamento da emissão", en: "Invoice issuance progress" }
+  type: process
+  process: InvoiceIssuance
+  roles: [Clerk, FinanceManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view DunningInbox {
+  title: { pt-BR: "Fila de cobrança", en: "Dunning queue" }
+  type: inbox
+  roles: [CollectionAgent, FinanceManager]
+
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view MonthCloseProgress {
+  title: { pt-BR: "Andamento do fechamento", en: "Month close progress" }
+  type: process
+  process: MonthClose
+  roles: [FinanceManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
 }

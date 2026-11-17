@@ -1,0 +1,10 @@
+// service: example.com/services/identity
+
+message AccessRestored {
+  title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+  about: User
+  payload {
+    name: string { title: { pt-BR: "Nome", en: "Name" } }
+    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" } }
+  }
+}

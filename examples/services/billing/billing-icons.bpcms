@@ -28,6 +28,14 @@ icon Open {
   title: { pt-BR: "Aberta", en: "Open" }
 }
 
+icon Closed {
+  title: { pt-BR: "Fechado", en: "Closed" }
+}
+
+icon Failed {
+  title: { pt-BR: "Falhou", en: "Failed" }
+}
+
 icon Simples {
   title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
 }

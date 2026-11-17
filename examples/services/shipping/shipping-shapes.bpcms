@@ -1,66 +1,186 @@
 // service: example.com/services/shipping
-
-
 shape ShipmentStatus {
   title: { pt-BR: "Situação da remessa", en: "Shipment status" }
-  base: workflow
+  base: state
   initial: Draft
+
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
+
     transition Packed {
-      title: { pt-BR: "Embalada", en: "Packed" }
+      title: { pt-BR: "Remessa embalada", en: "Shipment packed" }
+      payload {
+        packedAt: DateTime { title: { pt-BR: "Embalada em", en: "Packed at" } }
+      }
     }
-    transition Returned {
-      title: { pt-BR: "Devolvida", en: "Returned" }
+
+    transition Split {
+      title: { pt-BR: "Remessa dividida", en: "Shipment split" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Packed {
     title: { pt-BR: "Embalada", en: "Packed" }
     icon: Packed
     ordinal: 20
-    transition Dispatched {
-      title: { pt-BR: "Despachada", en: "Dispatched" }
+
+    transition Split {
+      title: { pt-BR: "Remessa dividida", en: "Shipment split" }
       payload {
-        order: Order
-        tracking: TrackingCode
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
       }
     }
-    transition Returned {
-      title: { pt-BR: "Devolvida", en: "Returned" }
+
+    transition Dispatched {
+      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+        tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Dispatched {
     title: { pt-BR: "Despachada", en: "Dispatched" }
     icon: Dispatched
     ordinal: 30
-    transition Delivered {
-      title: { pt-BR: "Entregue", en: "Delivered" }
+
+    transition OutForDelivery {
+      event: PickedUp
+      title: { pt-BR: "Remessa coletada", en: "Shipment picked up" }
+      payload {
+        pickedUpAt: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+      }
     }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value OutForDelivery {
+    title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    icon: OutForDelivery
+    ordinal: 40
+
+    transition AttemptFailed {
+      title: { pt-BR: "Tentativa de entrega falhou", en: "Delivery attempt failed" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Delivered {
+      title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      payload {
+        deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+      }
+    }
+  }
+  value AttemptFailed {
+    title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    icon: AttemptFailed
+    ordinal: 50
+
+    transition OutForDelivery {
+      event: RetryScheduled
+      title: { pt-BR: "Reentrega agendada", en: "Retry scheduled" }
+      payload {
+        nextAttemptAt: DateTime { title: { pt-BR: "Próxima tentativa", en: "Next attempt" } }
+      }
+    }
+
+    transition Delivered {
+      title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      payload {
+        deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+      }
+    }
+
     transition Returned {
-      title: { pt-BR: "Devolvida", en: "Returned" }
+      title: { pt-BR: "Remessa devolvida", en: "Shipment returned" }
+      payload {
+        returnedAt: DateTime { title: { pt-BR: "Devolvida em", en: "Returned at" } }
+      }
     }
   }
   value Delivered {
     title: { pt-BR: "Entregue", en: "Delivered" }
     icon: Delivered
-    ordinal: 40
+    ordinal: 60
   }
   value Returned {
     title: { pt-BR: "Devolvida", en: "Returned" }
     icon: Returned
-    ordinal: 50
+    ordinal: 70
   }
-  format: plain
+  value Split {
+    title: { pt-BR: "Dividida", en: "Split" }
+    icon: Split
+    ordinal: 80
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 90
+  }
 
+  format: plain
+}
+
+shape TrackingKind {
+  title: { pt-BR: "Tipo de evento de rastreio", en: "Tracking event kind" }
+  base: classification
+
+  value InTransit {
+    title: { pt-BR: "Em trânsito", en: "In transit" }
+    icon: InTransit
+    ordinal: 10
+  }
+  value OutForDelivery {
+    title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    icon: OutForDelivery
+    ordinal: 20
+  }
+  value AttemptFailed {
+    title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    icon: AttemptFailed
+    ordinal: 30
+  }
+  value Completed {
+    title: { pt-BR: "Entrega concluída", en: "Delivery completed" }
+    icon: Completed
+    ordinal: 40
+  }
+
+  format: plain
 }
 
 shape TrackingEvent {
   title: { pt-BR: "Evento de rastreio", en: "Tracking event" }
+
   fields {
     at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
-    status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" } }
+    kind: TrackingKind { title: { pt-BR: "Tipo", en: "Kind" } }
     description: string { title: { pt-BR: "Descrição", en: "Description" } }
   }
 }

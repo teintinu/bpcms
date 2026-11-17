@@ -1,5 +1,9 @@
 // service: example.com/services/payments
 
+icon Pending {
+  title: { pt-BR: "Pendente", en: "Pending" }
+}
+
 icon Authorized {
   title: { pt-BR: "Autorizado", en: "Authorized" }
 }
@@ -30,6 +34,22 @@ icon Completed {
 
 icon Rejected {
   title: { pt-BR: "Rejeitado", en: "Rejected" }
+}
+
+icon Open {
+  title: { pt-BR: "Aberta", en: "Open" }
+}
+
+icon UnderReview {
+  title: { pt-BR: "Em análise", en: "Under review" }
+}
+
+icon Won {
+  title: { pt-BR: "Ganha", en: "Won" }
+}
+
+icon Lost {
+  title: { pt-BR: "Perdida", en: "Lost" }
 }
 
 icon CreditCard {

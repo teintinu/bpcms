@@ -1,0 +1,108 @@
+// service: example.com/services/claims
+
+form ClaimTriage {
+  title: { pt-BR: "Triagem do sinistro", en: "Claim triage" }
+  document: Claim
+
+  fields {
+    claimant
+    coverage
+    type
+    amount
+    description
+    covered
+    adjuster
+    reason: string {
+      title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    triage { calls: Claim.triage(covered, type, adjuster) }
+    reject { calls: Claim.reject(reason) }
+  }
+}
+
+form ClaimStatement {
+  title: { pt-BR: "Declaração do segurado", en: "Policyholder statement" }
+  document: Claim
+
+  fields {
+    text: string {
+      title: { pt-BR: "Declaração", en: "Statement" }
+      maxLength: 2000
+      required
+    }
+  }
+
+  actions {
+    describe { calls: Claim.describe(text) }
+  }
+}
+
+form ClaimRejection {
+  title: { pt-BR: "Recusa do sinistro", en: "Claim rejection" }
+  document: Claim
+
+  fields {
+    reason: string {
+      title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      maxLength: 500
+      required
+    }
+  }
+
+  actions {
+    reject { calls: Claim.reject(reason) }
+  }
+}
+
+form ClaimDecision {
+  title: { pt-BR: "Decisão do ajustador", en: "Adjuster decision" }
+  document: Claim
+
+  fields {
+    approvedAmount
+    reason: string {
+      title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    approve { calls: Claim.approve(approvedAmount) }
+    reject { calls: Claim.reject(reason) }
+  }
+}
+
+form FraudReassessment {
+  title: { pt-BR: "Reavaliação de fraude", en: "Fraud reassessment" }
+  document: Claim
+
+  fields {
+    evidenceKind: EvidenceKind {
+      title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+      required
+    }
+    evidenceSummary
+  }
+
+  actions {
+    record { calls: Claim.recordEvidence(evidenceKind, evidenceSummary) }
+  }
+}
+
+form FraudDecision {
+  title: { pt-BR: "Parecer de fraude", en: "Fraud decision" }
+  document: Claim
+
+  fields {
+    fraudNote
+  }
+
+  actions {
+    confirm { calls: Claim.confirmFraud(fraudNote) }
+    clear { calls: Claim.clearFraud(fraudNote) }
+  }
+}

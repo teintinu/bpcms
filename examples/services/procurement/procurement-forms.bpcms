@@ -1,0 +1,125 @@
+// service: example.com/services/procurement
+
+form ApprovalDecision {
+  title: { pt-BR: "Decisão de aprovação", en: "Approval decision" }
+  document: PurchaseRequest
+
+  fields {
+    amount { readonly }
+    supplier { readonly }
+    justification { readonly }
+    rejectionReason
+  }
+
+  actions {
+    approved { calls: PurchaseRequest.approve }
+    rejected { calls: PurchaseRequest.reject(rejectionReason) }
+  }
+}
+
+form SupplierRegistration {
+  title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
+  document: Supplier
+
+  fields {
+    legalName { required }
+    tradeName
+    email { required }
+    phone
+    category { required }
+  }
+
+  actions {
+    submit { calls: Supplier.submitRegistration(legalName, tradeName, email, phone, category) }
+  }
+}
+
+form DocumentVerification {
+  title: { pt-BR: "Verificação documental", en: "Document verification" }
+  document: Supplier
+
+  fields {
+    risk
+    blockedReason
+  }
+
+  actions {
+    verified { calls: Supplier.verifyDocuments }
+    classify { calls: Supplier.classifyRisk(risk); stay }
+    rejected { calls: Supplier.block(blockedReason) }
+  }
+}
+
+form ComplianceApproval {
+  title: { pt-BR: "Aprovação de fornecedor", en: "Supplier approval" }
+  document: Supplier
+
+  fields {
+    legalName { readonly }
+    risk { readonly }
+    blockedReason
+  }
+
+  actions {
+    approved { calls: Supplier.approve }
+    rejected { calls: Supplier.block(blockedReason) }
+  }
+}
+
+form PayablesSetup {
+  title: { pt-BR: "Configuração de contas a pagar", en: "Payables setup" }
+  document: Supplier
+
+  fields {
+    legalName { readonly }
+    paymentTerms
+  }
+
+  actions {
+    enable { calls: Supplier.enablePayables(paymentTerms) }
+  }
+}
+
+form BlockSupplier {
+  title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+  document: Supplier
+
+  fields {
+    blockedReason
+  }
+
+  actions {
+    block { calls: Supplier.block(blockedReason) }
+  }
+}
+
+form ReceiveGoods {
+  title: { pt-BR: "Receber mercadoria", en: "Receive goods" }
+  document: GoodsReceipt
+
+  fields {
+    order { readonly }
+    expectedWeight { readonly }
+    receivedWeight { readonly }
+  }
+
+  actions {
+    receive { calls: GoodsReceipt.receive }
+  }
+}
+
+form InspectGoods {
+  title: { pt-BR: "Inspecionar recebimento", en: "Inspect goods receipt" }
+  document: GoodsReceipt
+
+  fields {
+    expectedWeight { readonly }
+    receivedWeight { readonly }
+    divergenceReason
+  }
+
+  actions {
+    accept { calls: GoodsReceipt.accept }
+    diverge { calls: GoodsReceipt.markDivergent(divergenceReason) }
+  }
+}

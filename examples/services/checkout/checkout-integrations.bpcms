@@ -1,0 +1,24 @@
+// service: example.com/services/checkout
+integration FreightGateway {
+  protocol: rest
+  baseUrl: env.FREIGHT_URL
+  auth: api-key
+  timeout: 10s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    quote(session: CheckoutSession): FreightOffer
+  }
+}
+
+integration PaymentGateway {
+  protocol: rest
+  baseUrl: env.PAYMENT_URL
+  auth: oauth2
+  timeout: 15s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    authorize(total: std.Money, method: PaymentMethod): string
+  }
+}

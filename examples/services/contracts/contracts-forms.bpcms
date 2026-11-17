@@ -1,0 +1,75 @@
+// service: example.com/services/contracts
+
+form LegalReview {
+  title: { pt-BR: "Revisão jurídica do contrato", en: "Contract legal review" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    endsAt { readonly }
+    cancellationReason
+  }
+
+  actions {
+    approve { calls: Contract.clearLegal }
+    reject { calls: Contract.cancel(cancellationReason) }
+  }
+}
+
+form CancelContract {
+  title: { pt-BR: "Cancelar contrato", en: "Cancel contract" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    cancellationReason
+  }
+
+  actions {
+    cancel { calls: Contract.cancel(cancellationReason) }
+  }
+}
+
+form TerminateContract {
+  title: { pt-BR: "Encerrar contrato", en: "Terminate contract" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    terminationReason
+  }
+
+  actions {
+    terminate { calls: Contract.terminate(terminationReason) }
+  }
+}
+
+form RenewalReview {
+  title: { pt-BR: "Decisão de renovação", en: "Renewal decision" }
+  document: Contract
+
+  fields {
+    endsAt { readonly }
+    amount { readonly }
+    terminationReason
+  }
+
+  actions {
+    renew { calls: Contract.markExpiring }
+    decline { calls: Contract.terminate(terminationReason) }
+  }
+}
+
+form RenewalTerms {
+  title: { pt-BR: "Termos da renovação", en: "Renewal terms" }
+  document: Contract
+
+  fields {
+    endsAt { readonly }
+    proposedEndsAt
+  }
+
+  actions {
+    propose { calls: Contract.proposeRenewal(proposedEndsAt) }
+  }
+}

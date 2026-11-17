@@ -5,9 +5,25 @@ integration SupportLabGateway {
   baseUrl: env.SUPPORT_LAB_URL
   auth: oauth2
   timeout: 20s
+  retry: exponential(3)
 
   operations {
     sendSample(sample: Sample): string
     receiveResult(sample: Sample): ExamResult
+  }
+}
+
+integration Analyzer {
+  protocol: mqtt
+  topic: "analyzers/+/reading"
+  capabilities { equipment }
+  timeout: 30s
+  quality {
+    staleAfter: 5m
+    calibrate: monthly
+  }
+
+  operations {
+    readResult(order: ExamOrder): ExamReading
   }
 }

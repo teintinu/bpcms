@@ -12,7 +12,7 @@
 
 ## Modelo: fronteira Application/Service
 
-**A `Application` não declara artefatos.** Todo artefato de negócio — `Parameter`, `Document`, `Shape`, `View`, `Process`, `Role`, `Event`, `Report`, `Job`, `Policy`, etc. — vive dentro de um `Service`. `Theme`/`Locale` são assets do construtor, não artefatos de serviço.
+**A `Application` não declara artefatos.** Todo artefato de negócio — `Parameter`, `Document`, `Shape`, `View`, `Form`, `Process`, `Message`, `Role`, `Policy`, `Decision`, `Integration`, `Icon`, etc. — vive dentro de um `Service`. `Theme`/`Locale` são assets do construtor, não artefatos de serviço.
 
 A `Application` só pode:
 
@@ -78,7 +78,7 @@ Regras:
 - O prefixo é o slug da pasta, não o tipo do artefato. `identity-documents.bpcms`, nunca `documents.bpcms`.
 - O arquivo `*-service.bpcms` é o manifesto do serviço; não use `service.bpcms` genérico.
 - O arquivo `*-application.bpcms` é a aplicação; não use `application.bpcms` genérico.
-- O restante do nome é o tipo do artefato (`documents`, `views`, `events`, `parameters`, `policies`, `jobs`, `reports`, `integrations`, `processes`, `decisions`, `organograms`, `icons`, `shapes`, `themes`, `locales`).
+- O restante do nome é o tipo do artefato (`documents`, `forms`, `messages`, `views`, `events`, `parameters`, `policies`, `reports`, `integrations`, `processes`, `decisions`, `organograms`, `icons`, `shapes`, `themes`, `locales`). Agendamento não tem arquivo próprio: é `start { schedule: }` em `*-processes.bpcms`.
 - Roles e organogram ficam no **mesmo** arquivo `<service>-organograms.bpcms`; não crie `<service>-roles.bpcms` separado.
 - Use kebab-case e não repita o prefixo dentro da pasta.
 - **Nomes de artefatos não repetem o serviço.** O serviço já é o escopo: `Draft`, não `BillingDraft`. O mesmo nome pode existir em serviços diferentes; não duplique dentro do mesmo tipo/serviço.

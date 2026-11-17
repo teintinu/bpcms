@@ -1,10 +1,16 @@
 // service: example.com/services/inventory
 decision ReorderPoint {
-  appliesTo: StockItem.reserve
-  when: [available, reorderPoint]
+  title: { pt-BR: "Ponto de pedido", en: "Reorder point" }
+  owner: "Supply Chain"
+  returns: ReorderDecision
+
+  inputs {
+    available: std.Count
+    reorderPoint: std.Count
+  }
+
   cases {
     available <= reorderPoint -> Reorder
-    available > reorderPoint -> Ok
+    else -> Ok
   }
-  owner: SupplyChain
 }

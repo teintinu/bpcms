@@ -1,27 +1,203 @@
 // service: example.com/services/payments
-process PaymentSaga {
+process PaymentCapture for Payment {
+  title: { pt-BR: "Captura do pagamento", en: "Payment capture" }
   version: 1
-  goal: "Cobrar o pedido e reverter se a captura falhar"
-  roles: [Manager]
-  start on Order.Placed
+  goal: "Autorizar, capturar e estornar o valor quando a captura não puder ser registrada"
+  owner: "Payments"
+  timezone: America/Fortaleza
+  sla: 1d
 
-  task ChargePayment {
-    type: service
-    integration: PaymentGateway
+  pool Company {
+    internal
+    lane Finance { role: Analyst }
+  }
+
+  pool Acquirer {
+    external
+  }
+
+  variables {
+    authorization: string
+    receipt: string
+  }
+
+  start Created { event: Payment.Created }
+
+  task Authorize {
+    lane: System
+    call: PaymentGateway.authorize
+    with {
+      order: payment.order
+      amount: payment.amount
+    }
+    gives: authorization
+    sla: 2m
+    on error Declined -> FailPayment
+  }
+
+  task RecordAuthorization {
+    lane: System
+    action: Payment.authorize
+    with { authorization }
+    sla: 1m
+  }
+
+  task Capture {
+    lane: System
+    call: PaymentGateway.capture
+    with { payment }
+    gives: receipt
+    sla: 2m
+    on error CaptureDeclined -> Retry
+  }
+
+  task RecordCapture {
+    lane: System
     action: Payment.capture
-    reads: [Payment]
-    writes: [Payment]
+    with { receipt }
+    sla: 1m
+    on error ReceiptRejected -> Undo
   }
 
-  on error Failed -> RefundPayment
+  task Retry {
+    lane: Finance
+    manual: "Contatar o adquirente e repetir a captura no portal"
+    sla: 4h
+    on timer 8h -> Undo
+  }
 
-  task RefundPayment {
-    type: compensation
-    for: ChargePayment
+  task RefundCapture {
+    lane: System
     action: Payment.refund
-    reads: [Payment]
-    writes: [Refund]
+    with { refundAmount: payment.amount }
+    compensates: Capture
+    sla: 5m
   }
 
-  end on Payment.Succeeded
+  task FailPayment {
+    lane: System
+    action: Payment.fail
+    with { failureReason: "Autorização recusada pelo adquirente" }
+    sla: 1m
+  }
+
+  rollback Undo
+
+  end Captured {
+    title: { pt-BR: "Capturado", en: "Captured" }
+    outcome: success
+  }
+  end Failed {
+    title: { pt-BR: "Não capturado", en: "Not captured" }
+    outcome: failure
+  }
+
+  Created -> Authorize
+  Authorize -> RecordAuthorization
+  RecordAuthorization -> Capture
+  Capture -> RecordCapture
+  RecordCapture -> Captured
+  Retry -> Capture
+  Undo -> FailPayment
+  FailPayment -> Failed
+}
+
+process ChargebackDispute for Chargeback {
+  title: { pt-BR: "Contestação da bandeira", en: "Chargeback dispute" }
+  version: 1
+  goal: "Responder a contestação dentro do prazo, com evidências"
+  owner: "Payments"
+  timezone: America/Fortaleza
+  sla: 20d
+
+  pool Company {
+    internal
+    lane Finance { role: Analyst }
+    lane Management { role: Manager }
+  }
+
+  pool Network {
+    external
+  }
+
+  start Opened { event: Chargeback.Opened }
+
+  task GatherEvidence {
+    lane: Finance
+    form: ChargebackEvidence
+    sla: 5d
+    priority: 90
+    assign: pull
+    on timer 10d -> Concede
+  }
+
+  task SendEvidence {
+    lane: System
+    sends: EvidencePackage
+    partner: Network
+    with { chargeback }
+    sla: 1h
+    on error NetworkUnavailable -> ManualSend
+  }
+
+  task ManualSend {
+    lane: Finance
+    manual: "Enviar as evidências pelo portal da bandeira"
+    sla: 4h
+    on timer 4h -> Concede
+  }
+
+  task AwaitDecision {
+    lane: System
+    receives: ChargebackResult
+    partner: Network
+    apply: Chargeback.registerDecision
+    sla: 30d
+    on timer 30d -> Concede
+  }
+
+  task ConfirmWin {
+    lane: System
+    action: Chargeback.win
+    sla: 1m
+  }
+
+  task ConfirmLoss {
+    lane: System
+    action: Chargeback.lose
+    sla: 1m
+  }
+
+  task Concede {
+    lane: Management
+    form: ChargebackConcession
+    sla: 1h
+    assign: pull
+  }
+
+  gateway Decision {
+    if chargeback.networkFavorable -> ConfirmWin
+    else -> ConfirmLoss
+  }
+
+  end Won {
+    title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+    outcome: success
+  }
+  end Lost {
+    title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+    outcome: failure
+  }
+
+  Opened -> GatherEvidence
+  GatherEvidence.submit -> SendEvidence
+  GatherEvidence.concede -> Concede
+  SendEvidence -> AwaitDecision
+  ManualSend -> AwaitDecision
+  AwaitDecision -> Decision
+  Decision -> ConfirmWin
+  Decision -> ConfirmLoss
+  ConfirmWin -> Won
+  ConfirmLoss -> Lost
+  Concede.accept -> Lost
 }

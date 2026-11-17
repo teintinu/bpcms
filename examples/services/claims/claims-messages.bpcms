@@ -1,0 +1,20 @@
+// service: example.com/services/claims
+
+message PaymentInstruction {
+  title: { pt-BR: "Instrução de pagamento", en: "Payment instruction" }
+  about: Claim
+
+  payload {
+    settlementNumber: string { title: { pt-BR: "Liquidação", en: "Settlement" } }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+  }
+}
+
+message PaymentConfirmation {
+  title: { pt-BR: "Confirmação de pagamento", en: "Payment confirmation" }
+  about: Claim
+
+  payload {
+    reference: string { title: { pt-BR: "Referência bancária", en: "Bank reference" } }
+  }
+}

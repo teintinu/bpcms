@@ -1,0 +1,514 @@
+// service: example.com/services/procurement
+
+document PurchaseRequest {
+  title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    requester: Identity.User {
+      title: { pt-BR: "Solicitante", en: "Requester" }
+      lookup
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      required
+    }
+    justification: string {
+      title: { pt-BR: "Justificativa", en: "Justification" }
+      maxLength: 500
+      required
+    }
+    neededBy: Date {
+      title: { pt-BR: "Necessário até", en: "Needed by" }
+    }
+    costCenter: string {
+      title: { pt-BR: "Centro de custo", en: "Cost center" }
+      maxLength: 60
+    }
+    status: PurchaseRequestStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviada em", en: "Submitted at" }
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovada em", en: "Approved at" }
+    }
+    rejectedAt: DateTime {
+      title: { pt-BR: "Rejeitada em", en: "Rejected at" }
+    }
+    rejectionReason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 280
+    }
+    orderedAt: DateTime {
+      title: { pt-BR: "Pedido emitido em", en: "Ordered at" }
+    }
+    purchaseOrder: PurchaseOrder {
+      title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+    }
+  }
+
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar solicitação", en: "Submit request" }
+      roles: [Requester]
+      to: status.Submitted
+      {
+        submittedAt = now()
+      }
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar solicitação", en: "Approve request" }
+      roles: [Approver, ProcurementManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    reject(rejectionReason: string) {
+      title: { pt-BR: "Rejeitar solicitação", en: "Reject request" }
+      roles: [Approver, ProcurementManager]
+      to: status.Rejected
+      emits { reason: rejectionReason }
+      {
+        rejectedAt = now()
+      }
+    }
+
+    order(purchaseOrder: PurchaseOrder) {
+      title: { pt-BR: "Emitir pedido de compra", en: "Issue purchase order" }
+      roles: [Buyer]
+      to: status.Ordered
+      {
+        orderedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, submittedAt] range
+    bySupplier: [supplier.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "A solicitação precisa ter valor positivo"
+    en: "The request must have a positive amount"
+  }
+
+  segregation {
+    submit != approve
+  }
+}
+
+document PurchaseOrder {
+  title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    items: PurchaseItem[] {
+      title: { pt-BR: "Itens", en: "Items" }
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor total", en: "Total amount" }
+      currency: BRL
+      required
+    }
+    paymentTerms: string {
+      title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      maxLength: 120
+    }
+    status: PurchaseOrderStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    sentAt: DateTime {
+      title: { pt-BR: "Enviado em", en: "Sent at" }
+    }
+    confirmedAt: DateTime {
+      title: { pt-BR: "Confirmado em", en: "Confirmed at" }
+    }
+    receivedAt: DateTime {
+      title: { pt-BR: "Recebido em", en: "Received at" }
+    }
+    cancelledAt: DateTime {
+      title: { pt-BR: "Cancelado em", en: "Cancelled at" }
+    }
+    cancellationReason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    send() {
+      title: { pt-BR: "Enviar pedido", en: "Send order" }
+      roles: [Buyer]
+      to: status.Sent
+      {
+        sentAt = now()
+      }
+    }
+
+    confirm() {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      roles: [Buyer]
+      to: status.Confirmed
+      {
+        confirmedAt = now()
+      }
+    }
+
+    receive() {
+      title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
+      roles: [ReceivingClerk]
+      to: status.Received
+      {
+        receivedAt = now()
+      }
+    }
+
+    cancel(cancellationReason: string) {
+      title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      roles: [Buyer, ProcurementManager]
+      to: status.Cancelled
+      emits { reason: cancellationReason }
+      {
+        cancelledAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, sentAt] range
+    bySupplier: [supplier.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "O pedido precisa ter valor positivo"
+    en: "The order must have a positive amount"
+  }
+}
+
+document Supplier {
+  title: { pt-BR: "Fornecedor", en: "Supplier" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    legalName: string {
+      title: { pt-BR: "Razão social", en: "Legal name" }
+      maxLength: 160
+      unique
+      lookup
+      required
+    }
+    tradeName: string {
+      title: { pt-BR: "Nome fantasia", en: "Trade name" }
+      maxLength: 120
+    }
+    email: string {
+      title: { pt-BR: "Correio eletrônico", en: "Email" }
+      maxLength: 254
+    }
+    phone: string {
+      title: { pt-BR: "Telefone", en: "Phone" }
+      maxLength: 40
+    }
+    category: SupplierCategory {
+      title: { pt-BR: "Categoria", en: "Category" }
+      lookup
+    }
+    risk: RiskLevel {
+      title: { pt-BR: "Risco", en: "Risk" }
+      lookup
+    }
+    status: SupplierStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    documentsVerified: boolean {
+      title: { pt-BR: "Documentos verificados", en: "Documents verified" }
+    }
+    paymentTerms: string {
+      title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      maxLength: 120
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovado em", en: "Approved at" }
+    }
+    blockedAt: DateTime {
+      title: { pt-BR: "Bloqueado em", en: "Blocked at" }
+    }
+    blockedReason: string {
+      title: { pt-BR: "Motivo do bloqueio", en: "Block reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    submitRegistration(legalName: string, tradeName: string, email: string, phone: string, category: SupplierCategory) {
+      title: { pt-BR: "Enviar cadastro", en: "Submit registration" }
+      roles: [SupplierUser, Buyer]
+    }
+
+    verifyDocuments() {
+      title: { pt-BR: "Verificar documentos", en: "Verify documents" }
+      roles: [ComplianceAnalyst]
+      {
+        documentsVerified = true
+      }
+    }
+
+    classifyRisk(risk: RiskLevel) {
+      title: { pt-BR: "Classificar risco", en: "Classify risk" }
+      roles: [ComplianceAnalyst]
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar fornecedor", en: "Approve supplier" }
+      roles: [Approver, ProcurementManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    block(blockedReason: string) {
+      title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+      roles: [ComplianceAnalyst, Approver, ProcurementManager]
+      to: status.Blocked
+      emits { reason: blockedReason }
+      {
+        blockedAt = now()
+      }
+    }
+
+    enablePayables(paymentTerms: string) {
+      title: { pt-BR: "Habilitar contas a pagar", en: "Enable payables" }
+      roles: [PayablesClerk]
+    }
+  }
+
+  indexes {
+    byLegalName: [legalName] unique
+    byStatus: [status, legalName] range
+  }
+
+  rule status == Approved implies documentsVerified {
+    pt-BR: "Verifique os documentos antes de aprovar o fornecedor"
+    en: "Verify the documents before approving the supplier"
+  }
+}
+
+document RFQ {
+  title: { pt-BR: "Cotação", en: "Request for quotation" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    request: PurchaseRequest {
+      title: { pt-BR: "Solicitação", en: "Purchase request" }
+      lookup
+    }
+    dueAt: DateTime {
+      title: { pt-BR: "Prazo da cotação", en: "Quote deadline" }
+    }
+    status: RFQStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    quotedAmount: std.Money {
+      title: { pt-BR: "Valor cotado", en: "Quoted amount" }
+      currency: BRL
+    }
+    quotedAt: DateTime {
+      title: { pt-BR: "Cotado em", en: "Quoted at" }
+    }
+    awardedSupplier: Supplier {
+      title: { pt-BR: "Fornecedor adjudicado", en: "Awarded supplier" }
+    }
+    awardedAt: DateTime {
+      title: { pt-BR: "Adjudicado em", en: "Awarded at" }
+    }
+  }
+
+
+  actions {
+    quote(quotedAmount: std.Money) {
+      title: { pt-BR: "Registrar cotação", en: "Record quote" }
+      roles: [Buyer]
+      to: status.Quoted
+      emits { amount: quotedAmount }
+      {
+        quotedAt = now()
+      }
+    }
+
+    award(awardedSupplier: Supplier) {
+      title: { pt-BR: "Adjudicar cotação", en: "Award quote" }
+      roles: [Buyer, ProcurementManager]
+      to: status.Awarded
+      emits { supplier: awardedSupplier }
+      {
+        awardedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, dueAt] range
+  }
+}
+
+document GoodsReceipt {
+  title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    order: PurchaseOrder {
+      title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+      lookup
+    }
+    expectedWeight: std.Mass {
+      title: { pt-BR: "Peso esperado", en: "Expected weight" }
+      unit: kg
+    }
+    receivedWeight: std.Mass {
+      title: { pt-BR: "Peso recebido", en: "Received weight" }
+      unit: kg
+      readonly
+    }
+    receivedAt: DateTime {
+      title: { pt-BR: "Recebido em", en: "Received at" }
+    }
+    inspectedAt: DateTime {
+      title: { pt-BR: "Inspecionado em", en: "Inspected at" }
+    }
+    reservedAt: DateTime {
+      title: { pt-BR: "Reservado em", en: "Reserved at" }
+    }
+    releasedAt: DateTime {
+      title: { pt-BR: "Liberado em", en: "Released at" }
+    }
+    status: GoodsReceiptStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    divergenceReason: string {
+      title: { pt-BR: "Motivo da divergência", en: "Divergence reason" }
+      maxLength: 280
+    }
+    divergedAt: DateTime {
+      title: { pt-BR: "Divergência registrada em", en: "Divergence recorded at" }
+    }
+    warehouse: string {
+      title: { pt-BR: "Depósito", en: "Warehouse" }
+      maxLength: 60
+    }
+  }
+
+  source: device "scale-01" for receivedWeight
+
+
+  actions {
+    receive() {
+      title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
+      roles: [ReceivingClerk]
+      to: status.Received
+      {
+        receivedAt = now()
+      }
+    }
+
+    reserveStock() {
+      title: { pt-BR: "Reservar estoque", en: "Reserve stock" }
+      roles: [ReceivingClerk]
+      {
+        reservedAt = now()
+      }
+    }
+
+    releaseStock() {
+      title: { pt-BR: "Liberar reserva de estoque", en: "Release stock reservation" }
+      roles: [ReceivingClerk]
+      {
+        releasedAt = now()
+      }
+    }
+
+    accept() {
+      title: { pt-BR: "Aceitar recebimento", en: "Accept receipt" }
+      roles: [QualityInspector, ReceivingClerk]
+      {
+        inspectedAt = now()
+      }
+    }
+
+    markDivergent(divergenceReason: string) {
+      title: { pt-BR: "Registrar divergência", en: "Record divergence" }
+      roles: [QualityInspector, ReceivingClerk]
+      to: status.Divergent
+      emits { reason: divergenceReason }
+      {
+        divergedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, receivedAt] range
+    byOrder: [order.id] hash
+  }
+}

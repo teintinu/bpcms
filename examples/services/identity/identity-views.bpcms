@@ -1,19 +1,4 @@
 // service: example.com/services/identity
-view LoginForm {
-  title: { pt-BR: "Formulário de acesso", en: "Login form" }
-  type: form
-  document: User
-
-  fields {
-    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" }, required }
-    password: string { title: { pt-BR: "Senha", en: "Password" }, maxLength: 128, required }
-  }
-
-  actions {
-    login -> Session.start
-    cancel -> none
-  }
-}
 
 view CitizenAccounts {
   title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
@@ -24,4 +9,23 @@ view CitizenAccounts {
   columns { nickname; email; citizen; status }
   filters { citizen; status }
   pagination: 50
+}
+
+view RecoveryQueue {
+  title: { pt-BR: "Fila de recuperação de acesso", en: "Account recovery queue" }
+  type: inbox
+  roles: [Clerk, Manager]
+  scope: lanes
+  groupBy: lane
+  filter { lane in currentUser.lanes }
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view RecoveryProgress {
+  title: { pt-BR: "Andamento da recuperação", en: "Recovery progress" }
+  type: process
+  process: AccountRecovery
+  roles: [Clerk, Manager, Customer]
+
+  sections { current; participants; history; deadlines; documents; next }
 }

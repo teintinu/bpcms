@@ -1,0 +1,77 @@
+// service: example.com/services/contracts
+
+view Contracts {
+  title: { pt-BR: "Contratos", en: "Contracts" }
+  type: table
+  source: Contract
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  columns { number; subject; supplier; amount; status; endsAt }
+  filters { status; supplier; kind }
+  pagination: 50
+
+  actions {
+    open -> ContractDetail
+  }
+}
+
+view ContractDetail {
+  title: { pt-BR: "Detalhe do contrato", en: "Contract detail" }
+  type: detail
+  document: Contract
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  sections { summary; timeline }
+}
+
+view ContractVersions {
+  title: { pt-BR: "Versões do contrato", en: "Contract versions" }
+  type: table
+  source: ContractVersion
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  columns { contract; versionNumber; status; summary; approvedAt }
+  filters { status; contract }
+  pagination: 50
+}
+
+view RenewalCalendar {
+  title: { pt-BR: "Calendário de renovação", en: "Renewal calendar" }
+  type: calendar
+  source: Contract
+  date: endsAt
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  filters { status; supplier }
+  actions {
+    open -> ContractDetail
+  }
+}
+
+view ContractRenewalProgress {
+  title: { pt-BR: "Andamento da renovação", en: "Contract renewal progress" }
+  type: process
+  process: ContractRenewal
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view ContractSignatureProgress {
+  title: { pt-BR: "Andamento da assinatura", en: "Contract signature progress" }
+  type: process
+  process: ContractSignature
+  roles: [ContractManager, LegalCounsel]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view MyContractTasks {
+  title: { pt-BR: "Minhas tarefas de contratos", en: "My contract tasks" }
+  type: inbox
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}

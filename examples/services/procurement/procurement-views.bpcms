@@ -1,0 +1,148 @@
+// service: example.com/services/procurement
+
+view PurchaseRequests {
+  title: { pt-BR: "Solicitações de compra", en: "Purchase requests" }
+  type: table
+  source: PurchaseRequest
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  columns { number; requester; supplier; amount; status; neededBy }
+  filters { status; requester; supplier }
+  pagination: 50
+
+  actions {
+    open -> PurchaseRequestDetail
+  }
+}
+
+view PurchaseRequestDetail {
+  title: { pt-BR: "Detalhe da solicitação", en: "Purchase request detail" }
+  type: detail
+  document: PurchaseRequest
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  sections { summary; timeline }
+}
+
+view PurchaseOrders {
+  title: { pt-BR: "Pedidos de compra", en: "Purchase orders" }
+  type: table
+  source: PurchaseOrder
+  roles: [Buyer, ProcurementManager, ReceivingClerk]
+
+  columns { number; supplier; amount; status; sentAt }
+  filters { status; supplier }
+  pagination: 50
+
+  actions {
+    open -> PurchaseOrderDetail
+    send -> PurchaseOrder.send
+    cancel -> PurchaseOrder.cancel(cancellationReason)
+  }
+}
+
+view PurchaseOrderDetail {
+  title: { pt-BR: "Detalhe do pedido de compra", en: "Purchase order detail" }
+  type: detail
+  document: PurchaseOrder
+  roles: [Buyer, ProcurementManager, ReceivingClerk]
+
+  sections { summary; items; timeline }
+}
+
+view Suppliers {
+  title: { pt-BR: "Fornecedores", en: "Suppliers" }
+  type: table
+  source: Supplier
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager]
+
+  columns { legalName; tradeName; category; risk; status }
+  filters { status; category; risk }
+  pagination: 50
+
+  actions {
+    open -> SupplierDetail
+  }
+}
+
+view SupplierDetail {
+  title: { pt-BR: "Detalhe do fornecedor", en: "Supplier detail" }
+  type: detail
+  document: Supplier
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
+
+  sections { summary; timeline }
+}
+
+view QuotationsBoard {
+  title: { pt-BR: "Cotações em aberto", en: "Open quotations" }
+  type: kanban
+  source: RFQ
+  roles: [Buyer, ProcurementManager]
+
+  groupBy: status
+  columns { number; dueAt; quotedAmount }
+  card { number; dueAt; status }
+  filter { status != Awarded }
+}
+
+view GoodsReceipts {
+  title: { pt-BR: "Recebimentos", en: "Goods receipts" }
+  type: table
+  source: GoodsReceipt
+  roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
+
+  columns { number; order; expectedWeight; receivedWeight; status; receivedAt }
+  filters { status; order }
+  pagination: 50
+
+  actions {
+    open -> GoodsReceiptDetail
+  }
+}
+
+view GoodsReceiptDetail {
+  title: { pt-BR: "Detalhe do recebimento", en: "Goods receipt detail" }
+  type: detail
+  document: GoodsReceipt
+  roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
+
+  sections { summary; timeline }
+}
+
+view PurchaseApprovalProgress {
+  title: { pt-BR: "Andamento da aprovação de compra", en: "Purchase approval progress" }
+  type: process
+  process: PurchaseApproval
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view SupplierOnboardingProgress {
+  title: { pt-BR: "Andamento da habilitação de fornecedor", en: "Supplier onboarding progress" }
+  type: process
+  process: SupplierOnboarding
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view GoodsReceiptProgress {
+  title: { pt-BR: "Andamento do recebimento", en: "Goods receipt progress" }
+  type: process
+  process: GoodsReceipt
+  roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view MyProcurementTasks {
+  title: { pt-BR: "Minhas tarefas de compras", en: "My procurement tasks" }
+  type: inbox
+  roles: [Requester, Buyer, Approver, ProcurementManager, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
+
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}

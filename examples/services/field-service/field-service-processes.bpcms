@@ -1,0 +1,178 @@
+// service: example.com/services/field-service
+
+
+process ServiceVisit for Visit {
+  title: { pt-BR: "Atendimento da visita", en: "Service visit" }
+  version: 1
+  goal: "Executar a visita no local, com check-in por localização, assinatura do cliente e SLA"
+  owner: "Field Service"
+  timezone: America/Fortaleza
+  sla: 3d
+
+  on breach -> Escalate
+  cancel on Visit.Withdrawn -> Undo
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane Field { role: FieldTechnician }
+    lane Supervision { role: Supervisor }
+  }
+
+  start Request { by: [Dispatcher] }
+
+  task ScheduleVisit {
+    lane: Dispatch
+    form: VisitSchedule
+    sla: 4h
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task DispatchVisit {
+    lane: System
+    action: Visit.dispatch
+    sla: 2h
+  }
+
+  task Travel {
+    lane: Field
+    manual: "Deslocar até o site com as peças separadas para o atendimento"
+    sla: 1h
+  }
+
+  task CheckIn {
+    lane: Field
+    form: VisitCheckIn
+    sla: 30m
+  }
+
+  task FieldReport {
+    lane: Field
+    form: VisitFieldReport
+    sla: 2h
+    assign: pull
+    priority: 60
+  }
+
+  task Reschedule {
+    lane: System
+    runs: VisitReschedule
+    with { visit }
+    sla: 3d
+    on timer 3d -> NotCompleted
+  }
+
+  task Escalate {
+    lane: Supervision
+    manual: "Falar com o despachante, renegociar a janela e registrar a decisão"
+    sla: 1h
+  }
+
+  rollback Undo
+
+  milestone Arrived {
+    title: { pt-BR: "Técnico no local", en: "Technician on site" }
+    on: Visit.CheckedIn
+  }
+
+  end Completed {
+    title: { pt-BR: "Visitada", en: "Completed" }
+    outcome: success
+  }
+
+  end NotCompleted {
+    title: { pt-BR: "Não concluída", en: "Not completed" }
+    outcome: failure
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    outcome: cancelled
+  }
+
+  Request -> ScheduleVisit
+  ScheduleVisit.schedule -> DispatchVisit
+  DispatchVisit -> Travel
+  Travel -> CheckIn
+  CheckIn.checkIn -> FieldReport
+  FieldReport.complete -> Completed
+  FieldReport.fail -> Reschedule
+  Reschedule -> DispatchVisit
+  Undo -> Cancelled
+  Escalate -> ScheduleVisit
+}
+
+process VisitReschedule for Visit {
+  title: { pt-BR: "Reagendamento da visita", en: "Visit reschedule" }
+  version: 1
+  goal: "Reagendar a visita falhada e avisar o cliente com a nova janela"
+  owner: "Field Service"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane Supervision { role: Supervisor }
+  }
+
+  pool Customer {
+    external
+    lane Portal { role: Customer }
+  }
+
+  start Begin { called }
+
+  task ReviewFailure {
+    lane: Dispatch
+    form: RescheduleReview
+    sla: 4h
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task NotifyCustomer {
+    lane: System
+    sends: VisitRescheduled
+    partner: Customer
+    with {
+      visit
+      windowStart: visit.windowStart
+      windowEnd: visit.windowEnd
+    }
+    sla: 30m
+  }
+
+  task CustomerConfirmation {
+    lane: Portal
+    form: VisitConfirmation
+    sla: 1d
+    on timer 2d -> Escalate
+  }
+
+  task Escalate {
+    lane: Supervision
+    manual: "Ligar para o cliente e confirmar a nova janela"
+    sla: 1h
+  }
+
+  end Rescheduled {
+    title: { pt-BR: "Reagendada", en: "Rescheduled" }
+    outcome: success
+  }
+
+  end Abandoned {
+    title: { pt-BR: "Abandonada", en: "Abandoned" }
+    outcome: cancelled
+  }
+
+  ReviewFailure.reschedule -> NotifyCustomer
+  ReviewFailure.abandon -> Abandoned
+  NotifyCustomer -> CustomerConfirmation
+  CustomerConfirmation.acknowledge -> Rescheduled
+  Escalate -> CustomerConfirmation
+  Begin -> ReviewFailure
+}

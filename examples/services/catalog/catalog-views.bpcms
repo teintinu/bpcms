@@ -1,49 +1,68 @@
 // service: example.com/services/catalog
-view ProductForm {
-  title: { pt-BR: "Formulário de produto", en: "Product form" }
-  type: form
-  document: Product
-
-  fields {
-    sku: SKU { title: { pt-BR: "Código", en: "SKU" }, required }
-    name: string { title: { pt-BR: "Nome", en: "Name" }, required }
-    price: std.Money { title: { pt-BR: "Preço", en: "Price" }, required, currency: BRL }
-    weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
-    length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
-    status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
-    image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
-    video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
-    audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
-    manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
-    richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
-  }
-
-  actions {
-    save -> Product.create
-    cancel -> none
-  }
-}
-
 view ProductTable {
-  title: { pt-BR: "Tabela de produtos", en: "Product table" }
+  title: { pt-BR: "Produtos", en: "Products" }
   type: table
   source: Product
+  roles: [Curator, Publisher]
 
-  columns {
-    image
-    sku
-    name
-    price
-    weight
-    status
-    createdAt
-  }
+  columns { image; sku; name; price; weight; status; createdAt }
   filters { status; category; period }
   pagination: 50
 
   actions {
-    open -> ProductForm
+    open -> ProductDetail
+    submit -> Product.submitForReview
     publish -> Product.publish
-    export -> Csv
+    archive -> Product.archive
   }
+}
+
+view ProductDetail {
+  title: { pt-BR: "Detalhe do produto", en: "Product detail" }
+  type: detail
+  document: Product
+  roles: [Curator, Publisher]
+
+  sections { summary; pricing; media }
+
+  actions {
+    submit -> Product.submitForReview
+    publish -> Product.publish
+    archive -> Product.archive
+  }
+}
+
+view ProductKanban {
+  title: { pt-BR: "Produtos por situação", en: "Products by status" }
+  type: kanban
+  source: Product
+  roles: [Curator, Publisher]
+
+  groupBy: status
+  columns { sku; name; price }
+  card { sku; name; price; status }
+
+  actions {
+    open -> ProductDetail
+  }
+}
+
+view ProductProgress {
+  title: { pt-BR: "Andamento da publicação", en: "Publish progress" }
+  type: process
+  process: ProductPublish
+  roles: [Curator, Publisher]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view PublishInbox {
+  title: { pt-BR: "Fila de publicação", en: "Publish queue" }
+  type: inbox
+  roles: [Publisher]
+
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
 }

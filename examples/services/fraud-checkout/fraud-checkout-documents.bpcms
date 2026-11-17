@@ -4,33 +4,100 @@ document FraudCheck {
   version: 1
   owner: "Risk"
   sync: live
+
   fields {
     session: CheckoutSession {
       title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+      lookup
     }
     score: number {
       title: { pt-BR: "Pontuação de risco", en: "Risk score" }
+      min: 0
+      max: 100
+      lookup
     }
     approved: boolean {
       title: { pt-BR: "Aprovado", en: "Approved" }
     }
+    status: FraudCheckStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    rejectionReason: string { title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" } }
+    evaluatedAt: DateTime { title: { pt-BR: "Avaliada em", en: "Evaluated at" } }
+    reviewedAt: DateTime { title: { pt-BR: "Revisada em", en: "Reviewed at" } }
+  }
+
+  indexes {
+    bySession: [session.id] hash
+    byStatus: [status, evaluatedAt] range
   }
 
   events {
-Evaluated {
-      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
-      key: this.id
-      payload { approved: boolean; score: number }
+    Created {
+      title: { pt-BR: "Verificação criada", en: "Fraud check created" }
+      payload {
+        session: CheckoutSession { title: { pt-BR: "Sessão", en: "Session" } }
+      }
     }
   }
 
   actions {
+    create(session: CheckoutSession, riskScore: number){
+      title: { pt-BR: "Criar verificação", en: "Create check" }
+      roles: [RiskAnalyst]
+      returns: FraudCheck
+      {
+        score = riskScore
+        emit Created { session: session }
+      }
+    }
+
     evaluate(){
       title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
       roles: [RiskAnalyst]
+
+      to: status.Evaluated
+
       {
-        emit Evaluated { approved: approved; score: score }
-        }
+        evaluatedAt = now()
+      }
     }
+
+    approve(){
+      title: { pt-BR: "Aprovar risco", en: "Approve risk" }
+      roles: [RiskAnalyst]
+
+      to: status.Approved
+      emits { approvedAt: now() }
+
+      {
+        approved = true
+        reviewedAt = now()
+      }
+    }
+
+    reject(reason: string){
+      title: { pt-BR: "Rejeitar risco", en: "Reject risk" }
+      roles: [RiskAnalyst]
+
+      to: status.Rejected
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
+
+      {
+        approved = false
+        rejectionReason = reason
+        reviewedAt = now()
+      }
+    }
+  }
+
+  rule score >= 0 and score <= 100 {
+    pt-BR: "A pontuação deve ficar entre 0 e 100"
+    en: "Score must be between 0 and 100"
   }
 }

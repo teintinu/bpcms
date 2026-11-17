@@ -1,7 +1,7 @@
 // service: example.com/services/notifications
 parameter FromEmail {
   title: { pt-BR: "Remetente", en: "From email" }
-  type: Email
+  type: Citizen.Email
   default: "no-reply@lojadojoao.com"
 }
 

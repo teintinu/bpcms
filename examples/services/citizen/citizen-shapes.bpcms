@@ -1,4 +1,5 @@
 // service: example.com/services/citizen
+
 shape CitizenKind {
   title: { pt-BR: "Tipo de cidadão", en: "Citizen kind" }
   base: classification
@@ -13,22 +14,29 @@ shape CitizenKind {
     ordinal: 20
   }
   format: plain
-
 }
 
 shape CitizenStatus {
   title: { pt-BR: "Situação do cidadão", en: "Citizen status" }
-  base: workflow
+  base: state
   initial: Active
   value Active {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
     ordinal: 10
+
     transition Merged {
-      title: { pt-BR: "Mesclado", en: "Merged" }
+      title: { pt-BR: "Cidadão mesclado", en: "Citizen merged" }
+      payload {
+        target: Citizen { title: { pt-BR: "Cidadão de destino", en: "Target citizen" } }
+      }
     }
+
     transition Blocked {
-      title: { pt-BR: "Bloqueado", en: "Blocked" }
+      title: { pt-BR: "Cidadão bloqueado", en: "Citizen blocked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Merged {
@@ -42,7 +50,6 @@ shape CitizenStatus {
     ordinal: 30
   }
   format: plain
-
 }
 
 shape Email {
@@ -55,7 +62,6 @@ shape Email {
   index: exact
 }
 
-
 shape Phone {
   title: { pt-BR: "Telefone", en: "Phone" }
   base: string
@@ -64,7 +70,6 @@ shape Phone {
   maxLength: 20
   format: masked("+## (##) #####-####")
 }
-
 
 shape Image {
   title: { pt-BR: "Imagem", en: "Image" }

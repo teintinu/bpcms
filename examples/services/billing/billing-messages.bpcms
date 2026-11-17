@@ -1,0 +1,22 @@
+// service: example.com/services/billing
+message InvoiceIssued {
+  title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+  about: Invoice
+
+  payload {
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+  }
+}
+
+message PaymentReminder {
+  title: { pt-BR: "Lembrete de pagamento", en: "Payment reminder" }
+  about: Invoice
+
+  payload {
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    dueAt: DateTime { title: { pt-BR: "Vencimento", en: "Due at" } }
+  }
+}

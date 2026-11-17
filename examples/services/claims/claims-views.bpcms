@@ -1,0 +1,121 @@
+// service: example.com/services/claims
+
+view ClaimsTable {
+  title: { pt-BR: "Sinistros", en: "Claims" }
+  type: table
+  source: Claim
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager]
+
+  columns { number; claimant; type; amount; status; openedAt }
+  filters { status; type; period; coverage }
+  pagination: 50
+
+  actions {
+    open -> ClaimDetail
+    triage -> Claim.triage(coveredNow, claimType, assignedAdjuster)
+    reject -> Claim.reject(reason)
+  }
+}
+
+view ClaimDetail {
+  title: { pt-BR: "Detalhe do sinistro", en: "Claim detail" }
+  type: detail
+  document: Claim
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager, Policyholder]
+
+  sections { summary; coverage; evidence; settlement; timeline }
+
+  actions {
+    startReview -> Claim.startReview
+    approve -> Claim.approve(approvedTotal)
+    reject -> Claim.reject(reason)
+    open -> ClaimProgress
+  }
+}
+
+view ClaimsKanban {
+  title: { pt-BR: "Quadro de sinistros", en: "Claims board" }
+  type: kanban
+  source: Claim
+  roles: [Clerk, Adjuster, Manager]
+  groupBy: status
+
+  columns { number; amount; type }
+  card { number; amount; adjuster }
+  filter { adjuster = currentUser }
+
+  actions {
+    open -> ClaimDetail
+  }
+}
+
+view ClaimProgress {
+  title: { pt-BR: "Andamento do sinistro", en: "Claim progress" }
+  type: process
+  process: ClaimSettlement
+  roles: [Clerk, Adjuster, FinanceAnalyst, Manager, Policyholder]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}
+
+view ClaimsDashboard {
+  title: { pt-BR: "Painel de sinistros", en: "Claims dashboard" }
+  type: dashboard
+  sources: [Claim, Settlement]
+  roles: [Manager, FinanceAnalyst]
+  mode: live
+
+  filters { status; type; period }
+  metrics {
+    openClaims: count(Claim) where Claim.status != Paid and Claim.status != Rejected
+    claimedAmount: sum(Claim.amount) where Claim.status != Rejected
+    settledAmount: sum(Settlement.amount) where Settlement.status == Paid
+    highRisk: count(Claim) where Claim.fraudBand == High and Claim.status != Rejected
+  }
+  units { claimedAmount: BRL; settledAmount: BRL }
+  freshness: 5m
+}
+
+view ClaimsWork {
+  title: { pt-BR: "Minhas tarefas de sinistro", en: "My claim work" }
+  type: inbox
+  roles: [Clerk, Adjuster, FraudAnalyst]
+  scope: mine
+  groupBy: process
+
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view SettlementReport {
+  title: { pt-BR: "Relatório de liquidações", en: "Settlement report" }
+  type: report
+  sources: [Claim, Settlement]
+  roles: [Manager, FinanceAnalyst]
+
+  filters { status; type; method; period }
+  metrics {
+    settledAmount: sum(Settlement.amount) where Settlement.status == Paid by method
+    rejectedClaims: count(Claim) where Claim.status == Rejected by type
+    averageApproved: avg(Claim.approvedAmount) where Claim.status == Paid
+  }
+  units { settledAmount: BRL; averageApproved: BRL }
+  freshness: 1h
+  export: [pdf, csv]
+}
+
+view SettlementsTable {
+  title: { pt-BR: "Liquidações", en: "Settlements" }
+  type: table
+  source: Settlement
+  roles: [FinanceAnalyst, Manager]
+
+  columns { number; amount; method; status; approvedAt; paidAt }
+  filters { status; method; period }
+  pagination: 50
+
+  actions {
+    approve -> Settlement.approve
+    pay -> Settlement.pay
+    reverse -> Settlement.reverse(reason)
+  }
+}

@@ -1,0 +1,45 @@
+// application: Central de Compras (procurement + contracts + credit)
+application "example.com/app/central-de-compras" {
+  source: registry
+  version: 1.0.0
+  title: {
+    pt-BR: "Central de Compras"
+    en-US: "Procurement Hub"
+  }
+
+  services {
+    "example.com/services/identity" as Identity
+    "example.com/services/procurement" as Procurement
+    "example.com/services/contracts" as Contracts
+    "example.com/services/credit" as Credit
+  }
+
+  roles {
+    Requester
+    Buyer
+    Approver
+    ProcurementManager
+    ComplianceAnalyst
+    PayablesClerk
+    ReceivingClerk
+    QualityInspector
+    SupplierUser
+    ContractManager
+    ContractAnalyst
+    LegalCounsel
+    CreditAnalyst
+    CreditManager
+    ProcurementManager > Buyer > Requester
+    Approver > Buyer
+    ContractManager > ContractAnalyst
+    CreditManager > CreditAnalyst
+  }
+
+  theme: Compras
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
+  main {
+    start ["example.com/services/identity"]
+  }
+}

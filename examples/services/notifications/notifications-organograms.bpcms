@@ -1,0 +1,21 @@
+// service: example.com/services/notifications
+role SuccessAgent {
+  title: { pt-BR: "Agente de sucesso do cliente", en: "Customer success agent" }
+  permissions: [notification.view, notification.review, notification.suppress]
+}
+
+role SuccessManager {
+  title: { pt-BR: "Gerente de sucesso do cliente", en: "Customer success manager" }
+  inherits: SuccessAgent
+  permissions: [notification.manage, notification.template.manage, report.view]
+}
+
+organogram CustomerSuccess {
+  title: { pt-BR: "Organograma de sucesso do cliente", en: "Customer success organogram" }
+
+  hierarchy {
+    SuccessManager > SuccessAgent
+  }
+
+  SuccessManager manages [SuccessAgent]
+}

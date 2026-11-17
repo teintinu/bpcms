@@ -1,75 +1,118 @@
 // service: example.com/services/payments
-
-
 shape PaymentStatus {
   title: { pt-BR: "Situação do pagamento", en: "Payment status" }
-  base: workflow
-  initial: Authorized
+  base: state
+  initial: Pending
+
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: Pending
+    ordinal: 10
+
+    transition Authorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      payload {
+        failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
   value Authorized {
     title: { pt-BR: "Autorizado", en: "Authorized" }
     icon: Authorized
-    ordinal: 10
+    ordinal: 20
+
     transition Captured {
-      title: { pt-BR: "Capturado", en: "Captured" }
-      event: Succeeded
+      title: { pt-BR: "Pagamento capturado", en: "Payment captured" }
       payload {
-        amount: std.Money
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
       }
     }
+
     transition Failed {
-      title: { pt-BR: "Falhou", en: "Failed" }
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
       payload {
-        reason: string
+        failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Refunded {
+      event: RefundIssued
+      title: { pt-BR: "Estorno emitido", en: "Refund issued" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
   value Captured {
     title: { pt-BR: "Capturado", en: "Captured" }
     icon: Captured
-    ordinal: 20
+    ordinal: 30
+
     transition Refunded {
-      title: { pt-BR: "Reembolsado", en: "Refunded" }
       event: RefundIssued
+      title: { pt-BR: "Estorno emitido", en: "Refund issued" }
       payload {
-        amount: std.Money
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
   value Failed {
     title: { pt-BR: "Falhou", en: "Failed" }
     icon: Failed
-    ordinal: 30
+    ordinal: 40
   }
   value Refunded {
     title: { pt-BR: "Reembolsado", en: "Refunded" }
-    icon: status.refunded
-    ordinal: 40
+    icon: Refunded
+    ordinal: 50
   }
-  format: plain
 
+  format: plain
 }
 
 shape RefundStatus {
   title: { pt-BR: "Situação do reembolso", en: "Refund status" }
-  base: workflow
+  base: state
   initial: Requested
+
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
+
     transition Approved {
-      title: { pt-BR: "Aprovado", en: "Approved" }
+      title: { pt-BR: "Reembolso aprovado", en: "Refund approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
     }
+
     transition Rejected {
-      title: { pt-BR: "Rejeitado", en: "Rejected" }
+      title: { pt-BR: "Reembolso rejeitado", en: "Refund rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Approved {
     title: { pt-BR: "Aprovado", en: "Approved" }
     icon: Approved
     ordinal: 20
+
     transition Completed {
-      title: { pt-BR: "Concluído", en: "Completed" }
+      title: { pt-BR: "Reembolso concluído", en: "Refund completed" }
+      payload {
+        completedAt: DateTime { title: { pt-BR: "Concluído em", en: "Completed at" } }
+      }
     }
   }
   value Completed {
@@ -82,18 +125,84 @@ shape RefundStatus {
     icon: Rejected
     ordinal: 40
   }
-  format: plain
 
+  format: plain
+}
+
+shape ChargebackStatus {
+  title: { pt-BR: "Situação da contestação", en: "Chargeback status" }
+  base: state
+  initial: Open
+
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition UnderReview {
+      event: EvidenceSubmitted
+      title: { pt-BR: "Evidências enviadas", en: "Evidence submitted" }
+      payload {
+        evidenceNote: string { title: { pt-BR: "Resumo", en: "Summary" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+  }
+  value UnderReview {
+    title: { pt-BR: "Em análise", en: "Under review" }
+    icon: UnderReview
+    ordinal: 20
+
+    transition Won {
+      title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+  }
+  value Won {
+    title: { pt-BR: "Ganha", en: "Won" }
+    icon: Won
+    ordinal: 30
+  }
+  value Lost {
+    title: { pt-BR: "Perdida", en: "Lost" }
+    icon: Lost
+    ordinal: 40
+  }
+
+  format: plain
 }
 
 shape PaymentMethod {
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
   base: classification
-    credit-card {
-      title: { pt-BR: "Cartão de crédito", en: "Credit card" }
-      icon: CreditCard
-      ordinal: 10
-    }
+
+  value CreditCard {
+    title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    icon: CreditCard
+    ordinal: 10
+  }
   value Pix {
     title: { pt-BR: "Pix", en: "Pix" }
     icon: Pix
@@ -104,6 +213,12 @@ shape PaymentMethod {
     icon: Boleto
     ordinal: 30
   }
-  format: plain
 
+  format: plain
+}
+
+shape EvidenceDocument {
+  title: { pt-BR: "Documento de evidência", en: "Evidence document" }
+  base: attachment
+  mime: [application/pdf, image/*]
 }

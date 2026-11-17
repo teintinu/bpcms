@@ -1,49 +1,76 @@
 // service: example.com/services/inventory
 view StockTable {
-  title: { pt-BR: "Tabela de estoque", en: "Stock table" }
+  title: { pt-BR: "Itens de estoque", en: "Stock items" }
   type: table
   source: StockItem
+  roles: [WarehouseOperator, StockManager]
 
-  columns { product; warehouse; available; reserved; reorderPoint }
-  filters { warehouse; available }
+  columns { product; warehouse; available; reserved; reorderPoint; status }
+  filters { warehouse; status; available }
   pagination: 50
 
   actions {
-    adjust -> StockAdjustmentForm
-    export -> Csv
+    open -> StockDetail
+    adjust -> StockItem.adjust(quantity, reason)
+    block -> StockItem.block(reason)
   }
 }
 
-view StockAdjustmentForm {
-  title: { pt-BR: "Ajuste de estoque", en: "Stock adjustment" }
-  type: form
+view StockDetail {
+  title: { pt-BR: "Detalhe do item", en: "Stock item detail" }
+  type: detail
   document: StockItem
+  roles: [WarehouseOperator, StockManager]
 
-  fields {
-    product: Product { title: { pt-BR: "Produto", en: "Product" }, required }
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
-    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
-  }
+  sections { summary; movements }
 
   actions {
-    save -> StockItem.adjust
-    cancel -> none
+    adjust -> StockItem.adjust(quantity, reason)
+    block -> StockItem.block(reason)
+    unblock -> StockItem.unblock
   }
 }
 
-view ReservationForm {
-  title: { pt-BR: "Formulário de reserva", en: "Reservation form" }
-  type: form
-  document: Reservation
+view StockKanban {
+  title: { pt-BR: "Estoque por situação", en: "Stock by status" }
+  type: kanban
+  source: StockItem
+  roles: [WarehouseOperator, StockManager]
 
-  fields {
-    product: Product { title: { pt-BR: "Produto", en: "Product" }, required }
-    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, required }
-    externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
-  }
+  groupBy: status
+  columns { product; warehouse; available; reorderPoint }
+  card { product; warehouse; available; status }
 
   actions {
-    save -> Reservation.request
-    cancel -> none
+    open -> StockDetail
   }
+}
+
+view StockProgress {
+  title: { pt-BR: "Andamento da reposição", en: "Replenishment progress" }
+  type: process
+  process: StockReplenishment
+  roles: [WarehouseOperator, StockManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view CycleCountProgress {
+  title: { pt-BR: "Andamento da contagem", en: "Count progress" }
+  type: process
+  process: CycleCount
+  roles: [WarehouseOperator, StockManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view CountInbox {
+  title: { pt-BR: "Fila de contagens", en: "Count queue" }
+  type: inbox
+  roles: [WarehouseOperator, StockManager]
+
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
 }

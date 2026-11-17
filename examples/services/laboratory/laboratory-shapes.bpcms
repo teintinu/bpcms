@@ -31,39 +31,54 @@ shape SampleKind {
 
 shape SampleStatus {
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
-  base: workflow
+  base: state
   initial: Collected
   value Collected {
     title: { pt-BR: "Coletada", en: "Collected" }
     icon: Collected
     ordinal: 10
+
     transition Received {
-      title: { pt-BR: "Recebida", en: "Received" }
+      title: { pt-BR: "Amostra recebida", en: "Sample received" }
     }
+
     transition Rejected {
-      title: { pt-BR: "Rejeitada", en: "Rejected" }
+      title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Received {
     title: { pt-BR: "Recebida", en: "Received" }
     icon: Received
     ordinal: 20
-    transition Processing {
-      title: { pt-BR: "Em processamento", en: "Processing" }
-    }
-    transition Referred {
-      title: { pt-BR: "Encaminhada", en: "Referred" }
-    }
+
     transition Rejected {
-      title: { pt-BR: "Rejeitada", en: "Rejected" }
+      title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Processing {
+      title: { pt-BR: "Amostra em processamento", en: "Sample processing" }
+    }
+
+    transition Referred {
+      title: { pt-BR: "Amostra encaminhada", en: "Sample referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
     }
   }
   value Processing {
     title: { pt-BR: "Em processamento", en: "Processing" }
     icon: Processing
     ordinal: 30
+
     transition Resulted {
-      title: { pt-BR: "Resultada", en: "Resulted" }
+      title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
   value Resulted {
@@ -75,14 +90,20 @@ shape SampleStatus {
     title: { pt-BR: "Encaminhada", en: "Referred" }
     icon: Referred
     ordinal: 50
+
     transition Resulted {
-      title: { pt-BR: "Resultada", en: "Resulted" }
+      title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
   value Rejected {
     title: { pt-BR: "Rejeitada", en: "Rejected" }
     icon: Rejected
     ordinal: 60
+
+    transition Collected {
+      event: Recollected
+      title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
+    }
   }
   format: plain
 }
@@ -115,45 +136,68 @@ shape ExamCode {
 
 shape ExamOrderStatus {
   title: { pt-BR: "Situação do exame", en: "Exam order status" }
-  base: workflow
+  base: state
   initial: Requested
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
+
     transition Collected {
-      title: { pt-BR: "Coletado", en: "Collected" }
+      title: { pt-BR: "Exame coletado", en: "Exam collected" }
     }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelado", en: "Cancelled" }
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Collected {
     title: { pt-BR: "Coletado", en: "Collected" }
     icon: Collected
     ordinal: 20
+
     transition Processing {
-      title: { pt-BR: "Em processamento", en: "Processing" }
+      title: { pt-BR: "Exame em processamento", en: "Exam processing" }
     }
+
     transition Referred {
-      title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
+      title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
     }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelado", en: "Cancelled" }
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Processing {
     title: { pt-BR: "Em processamento", en: "Processing" }
     icon: Processing
     ordinal: 30
-    transition Resulted {
-      title: { pt-BR: "Resultado emitido", en: "Resulted" }
-    }
+
     transition Referred {
-      title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
+      title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
     }
+
+    transition Resulted {
+      title: { pt-BR: "Resultado emitido", en: "Result issued" }
+    }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelado", en: "Cancelled" }
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Resulted {
@@ -165,11 +209,16 @@ shape ExamOrderStatus {
     title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
     icon: Referred
     ordinal: 50
+
     transition Resulted {
-      title: { pt-BR: "Resultado emitido", en: "Resulted" }
+      title: { pt-BR: "Resultado emitido", en: "Result issued" }
     }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelado", en: "Cancelled" }
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Cancelled {
@@ -178,4 +227,57 @@ shape ExamOrderStatus {
     ordinal: 60
   }
   format: plain
+}
+
+shape ExamResultStatus {
+  title: { pt-BR: "Situação do resultado", en: "Exam result status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Registrado", en: "Recorded" }
+    icon: Draft
+    ordinal: 10
+
+    transition Validated {
+      title: { pt-BR: "Resultado validado", en: "Result validated" }
+    }
+  }
+  value Validated {
+    title: { pt-BR: "Validado", en: "Validated" }
+    icon: Validated
+    ordinal: 20
+
+    transition Signed {
+      title: { pt-BR: "Resultado assinado", en: "Result signed" }
+    }
+  }
+  value Signed {
+    title: { pt-BR: "Assinado", en: "Signed" }
+    icon: Signed
+    ordinal: 30
+
+    transition Released {
+      title: { pt-BR: "Resultado liberado", en: "Result released" }
+      payload {
+        value: string { title: { pt-BR: "Valor", en: "Value" } }
+        unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
+      }
+    }
+  }
+  value Released {
+    title: { pt-BR: "Liberado", en: "Released" }
+    icon: Released
+    ordinal: 40
+  }
+  format: plain
+}
+
+shape ExamReading {
+  title: { pt-BR: "Leitura do analisador", en: "Analyzer reading" }
+  fields {
+    value: string
+    unit: string
+    critical: boolean
+    readAt: DateTime
+  }
 }

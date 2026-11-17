@@ -1,19 +1,34 @@
 // service: example.com/services/payments
-document PaymentReconciliation {
+view Reconciliation {
   title: { pt-BR: "Conciliação de pagamentos", en: "Payment reconciliation" }
   type: report
-  computed from Payment, Refund
-  freshness: 5m
+  sources: [Payment, Refund, Chargeback]
+  roles: [Manager]
 
-  report {
-    filters { period; status; method }
-    dimensions { method; status }
-    metrics {
-    captured: sum(Payment.amount) where status == captured
-    refunded: sum(Refund.amount) where status == completed
-    failed: count(Payment) where status == failed
-    }
-    units { captured: BRL; refunded: BRL }
-    export: [csv, pdf]
+  filters { period; status; method }
+  metrics {
+    captured: sum(Payment.amount) where Payment.status == Captured
+    refunded: sum(Refund.amount) where Refund.status == Completed
+    failed: count(Payment) where Payment.status == Failed
+    disputes: count(Chargeback) where Chargeback.status != Lost
   }
+  units { captured: BRL; refunded: BRL }
+  freshness: 5m
+  export: [csv, pdf]
+}
+
+view RiskPulse {
+  title: { pt-BR: "Pulso de risco", en: "Risk pulse" }
+  type: dashboard
+  sources: [Chargeback, Payment]
+  roles: [Manager]
+  mode: live
+
+  filters { status }
+  metrics {
+    openDisputes: count(Chargeback) where Chargeback.status == Open
+    overdue: count(Chargeback) where Chargeback.status == Open and Chargeback.dueAt < now()
+    lost: count(Chargeback) where Chargeback.status == Lost
+  }
+  freshness: 5m
 }

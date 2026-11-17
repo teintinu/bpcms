@@ -1,0 +1,180 @@
+// service: example.com/services/billing
+process InvoiceIssuance for Invoice {
+  title: { pt-BR: "Emissão de nota", en: "Invoice issuance" }
+  version: 1
+  goal: "Emitir a nota a partir do pedido, com imposto aplicado e envio ao cliente"
+  owner: "Faturamento"
+  timezone: America/Fortaleza
+
+  pool Customer {
+    external
+  }
+
+  start Requested {
+    event: Invoice.Requested
+  }
+
+  task Derive {
+    lane: System
+    action: Invoice.deriveFromOrder
+    sla: 5m
+  }
+
+  task ApplyTax {
+    lane: System
+    action: Invoice.applyTax
+    sla: 5m
+  }
+
+  task Issue {
+    lane: System
+    action: Invoice.issue
+    sla: 5m
+  }
+
+  task Send {
+    lane: System
+    sends: InvoiceIssued
+    partner: Customer
+    with { invoice }
+    sla: 10m
+  }
+
+  end Issued {
+    title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+    outcome: success
+  }
+
+  Requested -> Derive
+  Derive -> ApplyTax
+  ApplyTax -> Issue
+  Issue -> Send
+  Send -> Issued
+}
+
+process Dunning for Invoice {
+  title: { pt-BR: "Cobrança", en: "Dunning" }
+  version: 1
+  goal: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
+  owner: "Cobrança"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Collections { role: CollectionAgent }
+    lane Finance { role: FinanceManager }
+  }
+
+  pool Customer {
+    external
+  }
+
+  start Daily {
+    schedule: "0 6 * * *"
+    select: invoice.status == Overdue
+  }
+
+  task Remind {
+    lane: System
+    sends: PaymentReminder
+    partner: Customer
+    with { invoice }
+    sla: 1h
+  }
+
+  wait Grace {
+    for: 5d
+  }
+
+  gateway CheckPaid {
+    if invoice.status == Overdue -> Escalate
+    else -> Settled
+  }
+
+  task Escalate {
+    lane: Collections
+    manual: "Ligar ao cliente e negociar o pagamento"
+    sla: 2d
+    assign: pull
+  }
+
+  wait Final {
+    for: 7d
+  }
+
+  gateway StillOverdue {
+    if invoice.status == Overdue -> Cancel
+    else -> Settled
+  }
+
+  task Cancel {
+    lane: Finance
+    form: DunningCancellation
+    sla: 1d
+  }
+
+  end Settled {
+    title: { pt-BR: "Liquidada", en: "Settled" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    outcome: cancelled
+  }
+
+  Daily -> Remind
+  Remind -> Grace
+  Grace -> CheckPaid
+  Escalate -> Final
+  Final -> StillOverdue
+  Cancel.cancel -> Cancelled
+}
+
+process MonthClose for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  goal: "Consolidar o período, revisar os números e fechar ou registrar a falha"
+  owner: "Controladoria"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  pool Company {
+    internal
+    lane Finance { role: FinanceManager }
+  }
+
+  start Monthly {
+    schedule: "0 3 1 * *"
+    select: fiscalPeriod.status == Open
+  }
+
+  task Consolidate {
+    lane: System
+    action: FiscalPeriod.consolidate
+    sla: 1h
+  }
+
+  task Review {
+    lane: Finance
+    form: MonthCloseReview
+    sla: 2d
+    assign: pull
+  }
+
+  end Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    outcome: success
+  }
+
+  end Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    outcome: failure
+  }
+
+  Monthly -> Consolidate
+  Consolidate -> Review
+  Review.close -> Closed
+  Review.fail -> Failed
+}

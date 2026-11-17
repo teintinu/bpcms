@@ -1,0 +1,117 @@
+// service: example.com/services/shipping
+form Packing {
+  title: { pt-BR: "Embalar remessa", en: "Pack shipment" }
+  document: Shipment
+
+  fields {
+    order
+    items
+    pesoBruto
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar embalagem", en: "Confirm packing" }
+      calls: Shipment.pack
+    }
+  }
+}
+
+form SplitShipment {
+  title: { pt-BR: "Dividir remessa", en: "Split shipment" }
+  document: Shipment
+
+  fields {
+    order
+    items
+    pesoBruto
+    reason: string {
+      title: { pt-BR: "Motivo", en: "Reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    split {
+      title: { pt-BR: "Dividir", en: "Split" }
+      calls: Shipment.split
+    }
+    cancel {
+      title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+      calls: Shipment.cancel(reason)
+    }
+  }
+}
+
+form FreightOverride {
+  title: { pt-BR: "Informar frete", en: "Enter freight" }
+  document: Shipment
+
+  fields {
+    order
+    pesoBruto
+    carrier: string {
+      title: { pt-BR: "Transportadora", en: "Carrier" }
+      maxLength: 60
+      required
+    }
+    amount: std.Money {
+      title: { pt-BR: "Frete", en: "Freight" }
+      currency: BRL
+      required
+    }
+  }
+
+  actions {
+    apply {
+      title: { pt-BR: "Aplicar frete", en: "Apply freight" }
+      calls: Shipment.applyFreight(carrier, amount)
+    }
+  }
+}
+
+form PickupConfirmation {
+  title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+  document: Shipment
+
+  fields {
+    order
+    tracking
+    pickedUpOn: DateTime {
+      title: { pt-BR: "Coletada em", en: "Picked up at" }
+      required
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+      calls: Shipment.confirmPickup(pickedUpOn)
+    }
+  }
+}
+
+form DeliveryRetry {
+  title: { pt-BR: "Reagendar entrega", en: "Reschedule delivery" }
+  document: Shipment
+
+  fields {
+    order
+    tracking
+    attemptOn: DateTime {
+      title: { pt-BR: "Nova tentativa", en: "New attempt" }
+      required
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Agendar reentrega", en: "Schedule retry" }
+      calls: Shipment.scheduleRetry(attemptOn)
+    }
+    sendBack {
+      title: { pt-BR: "Devolver ao remetente", en: "Return to sender" }
+      calls: Shipment.returnToSender
+    }
+  }
+}

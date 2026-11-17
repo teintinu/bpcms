@@ -7,13 +7,14 @@ integration PaymentGateway {
   idempotency: header "Idempotency-Key"
 
   operations {
-    authorize(order: Order, amount: std.Money): Payment
-    capture(payment: Payment): Payment
-    refund(payment: Payment, amount: std.Money): Refund
+    authorize(order: Order, amount: std.Money): string
+    capture(payment: Payment): string
+    refund(payment: Payment, amount: std.Money): string
   }
 
   webhooks {
-    payment.succeeded -> Payment.Succeeded
+    payment.succeeded -> Payment.Captured
     payment.failed -> Payment.Failed
+    chargeback.opened -> Chargeback.Opened
   }
 }

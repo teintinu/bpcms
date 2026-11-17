@@ -1,0 +1,131 @@
+// service: example.com/services/hr
+
+view CandidatesKanban {
+  title: { pt-BR: "Quadro de candidatos", en: "Candidates board" }
+  type: kanban
+  source: Candidate
+  roles: [Recruiter, HiringManager]
+  groupBy: status
+
+  columns { name; position; department }
+  card { name; position; appliedAt }
+
+  actions {
+    open -> CandidateDetail
+  }
+}
+
+view CandidateDetail {
+  title: { pt-BR: "Detalhe do candidato", en: "Candidate detail" }
+  type: detail
+  document: Candidate
+  roles: [Recruiter, HiringManager, Candidate]
+
+  sections { summary; interviews; timeline }
+
+  actions {
+    screen -> Candidate.screen
+    scheduleInterview -> Candidate.scheduleInterview
+    extendOffer -> Candidate.extendOffer
+    hire -> Candidate.hire
+    reject -> Candidate.reject(reason)
+  }
+}
+
+view EmployeesTable {
+  title: { pt-BR: "Colaboradores", en: "Employees" }
+  type: table
+  source: Employee
+  roles: [PeopleOps, HiringManager, ITAdmin]
+
+  columns { number; person; position; department; status; startedAt }
+  filters { status; department; period }
+  pagination: 50
+
+  actions {
+    open -> EmployeeDetail
+    startOffboarding -> Employee.startOffboarding(reason, lastDay)
+  }
+}
+
+view EmployeeDetail {
+  title: { pt-BR: "Detalhe do colaborador", en: "Employee detail" }
+  type: detail
+  document: Employee
+  roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
+
+  sections { summary; onboarding; access; equipment; timeline }
+
+  actions {
+    open -> OnboardingProgress
+    cancelOnboarding -> Employee.cancelOnboarding(reason)
+    terminate -> Employee.terminate
+  }
+}
+
+view OnboardingProgress {
+  title: { pt-BR: "Andamento da integração", en: "Onboarding progress" }
+  type: process
+  process: Onboarding
+  roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}
+
+view AccessGrantsTable {
+  title: { pt-BR: "Acessos", en: "Access grants" }
+  type: table
+  source: AccessGrant
+  roles: [ITAdmin, PeopleOps]
+
+  columns { employee; system; profile; status; requestedAt }
+  filters { status; system }
+
+  actions {
+    provision -> AccessGrant.provision
+    revoke -> AccessGrant.revoke(reason)
+  }
+}
+
+view EquipmentOrdersTable {
+  title: { pt-BR: "Equipamentos", en: "Equipment orders" }
+  type: table
+  source: EquipmentOrder
+  roles: [ITAdmin, PeopleOps]
+
+  columns { employee; kind; vendor; serial; status }
+  filters { status; kind }
+
+  actions {
+    deliver -> EquipmentOrder.deliver(serialNumber)
+    returnItem -> EquipmentOrder.returnItem
+  }
+}
+
+view PeopleDashboard {
+  title: { pt-BR: "Painel de pessoas", en: "People dashboard" }
+  type: dashboard
+  sources: [Employee, Candidate, AccessGrant]
+  roles: [PeopleOps, HiringManager]
+  mode: live
+
+  filters { department; status; period }
+  metrics {
+    headcount: count(Employee) where Employee.status == Active
+    onboarding: count(Employee) where Employee.status == Onboarding
+    offboarding: count(Employee) where Employee.status == Offboarding
+    openCandidates: count(Candidate) where Candidate.status != Hired and Candidate.status != Rejected
+    pendingAccess: count(AccessGrant) where AccessGrant.status == Requested
+  }
+  freshness: 15m
+}
+
+view PeopleWork {
+  title: { pt-BR: "Minhas tarefas de pessoas", en: "My people work" }
+  type: inbox
+  roles: [PeopleOps, ITAdmin, HiringManager]
+  scope: mine
+  groupBy: process
+
+  columns { title; subject; lane; dueAt; priority }
+}

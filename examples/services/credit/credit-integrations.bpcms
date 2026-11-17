@@ -1,0 +1,14 @@
+// service: example.com/services/credit
+
+integration CreditBureau {
+  protocol: rest
+  baseUrl: env.CREDIT_BUREAU_URL
+  auth: api-key
+  timeout: 5s
+  retry: exponential(3)
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    score(application: CreditApplication): std.Count
+  }
+}

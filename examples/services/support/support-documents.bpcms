@@ -1,4 +1,5 @@
 // service: example.com/services/support
+
 document Ticket {
   title: { pt-BR: "Chamado", en: "Ticket" }
   version: 1
@@ -7,6 +8,7 @@ document Ticket {
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
     }
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
@@ -14,6 +16,7 @@ document Ticket {
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
     description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
+    category: TicketCategory { title: { pt-BR: "Categoria", en: "Category" }, lookup, default: General }
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
     budget: std.Money { title: { pt-BR: "Orçamento", en: "Budget" } }
     status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
@@ -23,12 +26,17 @@ document Ticket {
     slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
     resolutionTime: std.Duration { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
     slaMet: boolean { title: { pt-BR: "Prazo cumprido", en: "SLA met" } }
+    breached: boolean {
+      title: { pt-BR: "Prazo estourado", en: "SLA breached" }
+      computed: slaDue < now()
+      readonly
+    }
+    remaining: std.Duration {
+      title: { pt-BR: "Tempo restante", en: "Time remaining" }
+      computed: slaDue - now()
+      readonly
+    }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
-  }
-
-  computed SlaBreach from Ticket {
-    freshness: 1m
-    exposes: [breached, remaining]
   }
 
   indexes {
@@ -37,52 +45,119 @@ document Ticket {
     search: [subject, description] search
   }
 
+  events {
+    Opened {
+      title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
+      payload {
+        subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+      }
+    }
+    Escalated {
+      title: { pt-BR: "Chamado escalonado", en: "Ticket escalated" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
 
   actions {
-    assign(user: User){
-      title: { pt-BR: "Atribuir", en: "Assign" }
-      roles: [Agent]
-      rule user != null {
-        pt-BR: "Preencha os campos obrigatórios"
-        en: "Fill the required fields"
+    open(subject: string, customer: User){
+      title: { pt-BR: "Abrir chamado", en: "Open ticket" }
+      roles: [SupportAgent]
+      rule subject.length > 0 {
+        pt-BR: "Informe o assunto do chamado"
+        en: "Enter the ticket subject"
       }
       {
-        assignee = user
+        createdAt = now()
+        emit Opened { subject }
       }
     }
 
-    comment(body: string){
-      title: { pt-BR: "Comentar", en: "Comment" }
-      roles: [Agent]
-      rule body.length > 0 {
-        pt-BR: "Verifique o tamanho do texto informado"
-        en: "Check the informed text length"
-      }
+    claim(){
+      title: { pt-BR: "Assumir", en: "Claim" }
+      roles: [SupportAgent]
+      to: status.InProgress
+    }
+
+    hold(){
+      title: { pt-BR: "Aguardar", en: "Hold" }
+      roles: [SupportAgent, Manager]
+      to: status.Waiting
+    }
+
+    resume(){
+      title: { pt-BR: "Retomar", en: "Resume" }
+      roles: [SupportAgent]
+      to: status.InProgress
     }
 
     resolve(){
       title: { pt-BR: "Resolver", en: "Resolve" }
-      roles: [Agent]
-      transition: Resolved
+      roles: [SupportAgent, Manager]
+      to: status.Resolved
       rule assignee != null {
-        pt-BR: "Preencha os campos obrigatórios"
-        en: "Fill the required fields"
+        pt-BR: "Atribua o chamado antes de resolver"
+        en: "Assign the ticket before resolving"
+      }
+      {
+        resolutionTime = now() - createdAt
+        slaMet = now() <= slaDue
       }
     }
 
-    reopen(reason: string){
+    close(){
+      title: { pt-BR: "Fechar", en: "Close" }
+      roles: [SupportAgent]
+      to: status.Closed
+    }
+
+    reopen(justification: string){
       title: { pt-BR: "Reabrir", en: "Reopen" }
       roles: [Manager]
-      transition: Open
-      rule reason.length >= 10 {
+      to: status.Open
+      emits { reason: justification }
+      rule justification.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
       }
     }
 
-    escalateBreached(){
-      title: { pt-BR: "Escalar prazo", en: "Escalate SLA" }
-      roles: [Manager]
+    assign(user: User){
+      title: { pt-BR: "Atribuir", en: "Assign" }
+      roles: [SupportAgent]
+      {
+        assignee = user
+      }
+    }
+
+    categorize(target: TicketCategory){
+      title: { pt-BR: "Categorizar", en: "Categorize" }
+      roles: [SupportAgent]
+      {
+        category = target
+      }
+    }
+
+    comment(note: string){
+      title: { pt-BR: "Comentar", en: "Comment" }
+      roles: [SupportAgent]
+      rule note.length > 0 {
+        pt-BR: "Escreva o comentário"
+        en: "Write the comment"
+      }
+      {
+        internalNote = note
+      }
+    }
+
+    escalate(justification: string){
+      title: { pt-BR: "Escalar", en: "Escalate" }
+      roles: [SupportAgent, Manager]
+      {
+        internalNote = justification
+        emit Escalated { reason: justification }
+      }
     }
   }
 
@@ -113,6 +188,8 @@ document ReturnRequest {
     status: ReturnStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    reviewedAt: DateTime { title: { pt-BR: "Conferido em", en: "Reviewed at" } }
+    refundedAt: DateTime { title: { pt-BR: "Reembolsado em", en: "Refunded at" } }
   }
 
   indexes {
@@ -120,37 +197,75 @@ document ReturnRequest {
     byStatus: [status, requestedAt] range
   }
 
+  events {
+    Requested {
+      title: { pt-BR: "Devolução solicitada", en: "Return requested" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
 
   actions {
-    request(reason: string){
+    request(justification: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
-      roles: [Clerk]
-      rule reason.length >= 10 {
+      roles: [SupportAgent]
+      rule justification.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
+      }
+      {
+        reason = justification
+        requestedAt = now()
+        emit Requested { reason: justification }
+      }
+    }
+
+    review(){
+      title: { pt-BR: "Conferir devolução", en: "Review return" }
+      roles: [SupportAgent]
+      {
+        reviewedAt = now()
       }
     }
 
     approve(){
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
       roles: [Manager]
-      transition: Approved
+      to: status.Approved
     }
 
-    reject(reason: string){
+    reject(justification: string){
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
       roles: [Manager]
-      transition: Rejected
-      rule reason.length >= 10 {
+      to: status.Rejected
+      emits { reason: justification }
+      rule justification.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
       }
     }
 
+    receive(){
+      title: { pt-BR: "Receber devolução", en: "Receive return" }
+      roles: [SupportAgent]
+      to: status.Received
+    }
+
     refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
       roles: [Manager]
-      transition: Refunded
+      to: status.Refunded
+      {
+        refundedAt = now()
+      }
+    }
+
+    cancel(justification: string){
+      title: { pt-BR: "Cancelar devolução", en: "Cancel return" }
+      roles: [Manager]
+      to: status.Cancelled
+      emits { reason: justification }
     }
   }
 

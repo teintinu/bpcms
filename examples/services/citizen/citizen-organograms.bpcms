@@ -1,0 +1,28 @@
+// service: example.com/services/citizen
+
+role Clerk {
+  title: { pt-BR: "Atendente de cadastro", en: "Registration clerk" }
+  permissions: [citizen.view, citizen.register, citizen.search]
+}
+
+role Manager {
+  title: { pt-BR: "Gestor de cadastro", en: "Registration manager" }
+  inherits: Clerk
+  permissions: [citizen.merge, citizen.block, citizen.approve]
+}
+
+role Auditor {
+  title: { pt-BR: "Auditor de cadastro", en: "Registration auditor" }
+  permissions: [citizen.audit, citizen.view, report.view]
+}
+
+organogram Citizen {
+  title: { pt-BR: "Organograma do cidadão", en: "Citizen organogram" }
+  hierarchy {
+    Manager > Clerk
+  }
+  Manager manages [Clerk]
+  fourEyes {
+    citizen.merge requires Manager
+  }
+}

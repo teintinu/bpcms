@@ -1,12 +1,35 @@
 // service: example.com/services/support
+
 role Manager {
   title: { pt-BR: "Gerente de suporte", en: "Support manager" }
-  permissions: [ticket.view, ticket.assign, ticket.escalate, report.view]
+  permissions: [
+    ticket.view,
+    ticket.assign,
+    ticket.escalate,
+    ticket.close,
+    return.approve,
+    return.reject,
+    return.cancel,
+    return.refund,
+    report.view
+  ]
 }
 
 role SupportAgent {
   title: { pt-BR: "Agente de suporte", en: "Support agent" }
-  permissions: [ticket.view, ticket.comment, ticket.assign, return.review]
+  permissions: [
+    ticket.view,
+    ticket.comment,
+    ticket.assign,
+    ticket.resolve,
+    return.review,
+    return.receive
+  ]
+}
+
+role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  permissions: [ticket.viewOwn, ticket.commentOwn, return.requestOwn]
 }
 
 organogram Support {
@@ -14,4 +37,5 @@ organogram Support {
   hierarchy {
     Manager > SupportAgent
   }
+  Manager manages [SupportAgent]
 }

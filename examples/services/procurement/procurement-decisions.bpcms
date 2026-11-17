@@ -1,0 +1,17 @@
+// service: example.com/services/procurement
+
+decision ApprovalLimit {
+  title: { pt-BR: "Alçada de aprovação de compra", en: "Purchase approval limit" }
+  returns: ApproverTier
+  inputs {
+    amount: std.Money
+    supplier: Supplier
+  }
+  cases {
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier != null and supplier.risk == Low -> Manager
+    else -> Director
+  }
+  source: "Política de Compras v3"
+  owner: "Procurement"
+}

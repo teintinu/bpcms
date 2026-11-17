@@ -1,30 +1,65 @@
 // service: example.com/services/notifications
-view TemplateEditor {
-  title: { pt-BR: "Editor de modelo", en: "Template editor" }
-  type: form
-  document: NotificationTemplate
-  roles: [Manager]
-
-  fields {
-    key: string { title: { pt-BR: "Chave", en: "Key" }, required }
-    channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
-    subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
-    body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
-  }
-
-  actions {
-    save -> NotificationTemplate.update
-    cancel -> none
-  }
-}
-
-view NotificationLog {
-  title: { pt-BR: "Histórico de notificações", en: "Notification log" }
+view NotificationTable {
+  title: { pt-BR: "Notificações", en: "Notifications" }
   type: table
   source: Notification
-  roles: [Manager]
+  roles: [SuccessAgent, SuccessManager]
 
   columns { recipient; channel; status; sentAt; error }
   filters { status; channel; period }
   pagination: 50
+
+  actions {
+    open -> NotificationDetail
+  }
+}
+
+view NotificationDetail {
+  title: { pt-BR: "Detalhe da notificação", en: "Notification detail" }
+  type: detail
+  document: Notification
+  roles: [SuccessAgent, SuccessManager]
+
+  sections { summary; delivery; timeline }
+
+  actions {
+    send -> Notification.send
+    retry -> Notification.retry
+    suppress -> Notification.suppress(reason)
+  }
+}
+
+view NotificationKanban {
+  title: { pt-BR: "Notificações por situação", en: "Notifications by status" }
+  type: kanban
+  source: Notification
+  roles: [SuccessAgent, SuccessManager]
+
+  groupBy: status
+  columns { recipient; channel; sentAt }
+  card { recipient; channel; status; sentAt }
+
+  actions {
+    open -> NotificationDetail
+  }
+}
+
+view DigestProgress {
+  title: { pt-BR: "Andamento do resumo", en: "Digest progress" }
+  type: process
+  process: DailyDigest
+  roles: [SuccessAgent, SuccessManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view NotificationInbox {
+  title: { pt-BR: "Fila de notificações", en: "Notification queue" }
+  type: inbox
+  roles: [SuccessAgent, SuccessManager]
+
+  scope: lanes
+  filter { lane in currentUser.lanes }
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
 }

@@ -1,0 +1,254 @@
+// service: example.com/services/claims
+
+
+
+
+process ClaimSettlement for Claim {
+  title: { pt-BR: "Liquidação do sinistro", en: "Claim settlement" }
+  version: 1
+  goal: "Indenizar o sinistro com cobertura verificada, risco rastreável e compensação"
+  owner: "Claims"
+  timezone: America/Fortaleza
+  sla: 10d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Intake { role: Clerk }
+    lane Adjusting { role: Adjuster }
+    lane Fraud { role: FraudAnalyst }
+    lane Finance { role: FinanceAnalyst }
+    lane Management { role: Manager }
+  }
+
+  pool Insured {
+    external
+    lane Portal { role: Policyholder }
+  }
+
+  pool Bank {
+    external
+  }
+
+  variables {
+    fraudBand: FraudBand
+    settlement: Settlement
+  }
+
+  start Notice { event: Claim.Opened }
+
+  task Triage {
+    lane: Intake
+    form: ClaimTriage
+    sla: 4h
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task Statement {
+    lane: Portal
+    form: ClaimStatement
+    sla: 2d
+    on timer 3d -> ScoreFraud
+  }
+
+  task ScoreFraud {
+    lane: System
+    decision: FraudRisk
+    with {
+      amount: claim.amount
+      type: claim.type
+    }
+    gives: fraudBand
+    sla: 5m
+  }
+
+  task RecordRisk {
+    lane: System
+    action: Claim.recordRisk
+    with { band: fraudBand }
+  }
+
+  task StartReview {
+    lane: System
+    action: Claim.startReview
+  }
+
+  gateway Risk {
+    if fraudBand == High -> FraudReview
+    else -> Coverage
+  }
+
+  task FraudReview {
+    lane: System
+    runs: ClaimFraudReview
+    with { claim }
+    sla: 5d
+    on timer 7d -> Escalate
+  }
+
+  gateway FraudVerdict {
+    if claim.fraudConfirmed -> RejectClaim
+    else -> Coverage
+  }
+
+  gateway Coverage {
+    if claim.covered -> AdjustingReview
+    else -> RejectClaim
+  }
+
+  task RejectClaim {
+    lane: Adjusting
+    form: ClaimRejection
+    sla: 1d
+  }
+
+  task AdjustingReview {
+    lane: Adjusting
+    form: ClaimDecision
+    sla: 2d
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task OpenSettlement {
+    lane: System
+    action: Claim.openSettlement
+    gives: settlement
+  }
+
+  task SendPayment {
+    lane: System
+    sends: PaymentInstruction
+    partner: Bank
+    with {
+      settlementNumber: settlement.number
+      amount: claim.approvedAmount
+    }
+  }
+
+  task AwaitPayment {
+    lane: System
+    receives: PaymentConfirmation
+    partner: Bank
+    apply: Claim.confirmPayment
+    sla: 2d
+    on timer 2d -> Undo
+    on error PaymentRejected -> Undo
+  }
+
+  task ReopenClaim {
+    lane: System
+    action: Claim.reopen
+    compensates: AdjustingReview
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Revisar o caso com o ajustador e registrar a decisão de prazo"
+    sla: 1d
+  }
+
+  rollback Undo
+
+  milestone Triaged {
+    title: { pt-BR: "Sinistro triado", en: "Claim triaged" }
+    on: Claim.Triaged
+  }
+
+  end Settled {
+    title: { pt-BR: "Indenizado", en: "Settled" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Recusado", en: "Rejected" }
+    outcome: failure
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: cancelled
+  }
+
+  Notice -> Triage
+  Triage.triage -> Statement
+  Triage.reject -> Rejected
+  Statement.describe -> ScoreFraud
+  ScoreFraud -> RecordRisk
+  RecordRisk -> StartReview
+  StartReview -> Risk
+  FraudReview -> FraudVerdict
+  RejectClaim.reject -> Rejected
+  AdjustingReview.approve -> OpenSettlement
+  AdjustingReview.reject -> Rejected
+  OpenSettlement -> SendPayment
+  SendPayment -> AwaitPayment
+  AwaitPayment -> Settled
+  Undo -> Cancelled
+  Escalate -> AdjustingReview
+}
+
+process ClaimFraudReview for Claim {
+  title: { pt-BR: "Análise de fraude do sinistro", en: "Claim fraud review" }
+  version: 1
+  goal: "Confirmar ou descartar a fraude com evidências registradas e prazo"
+  owner: "Claims"
+  timezone: America/Fortaleza
+  sla: 7d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Fraud { role: FraudAnalyst }
+    lane Management { role: Manager }
+  }
+
+  start Begin { called }
+
+  task ReviewEvidence {
+    lane: Fraud
+    form: FraudReassessment
+    sla: 1d
+    assign: pull
+    on timer 2d -> Escalate
+  }
+
+  task Decide {
+    lane: Fraud
+    form: FraudDecision
+    sla: 1d
+    assign: pull
+  }
+
+  task RequestPoliceReport {
+    lane: Fraud
+    manual: "Solicitar o boletim de ocorrência e anexar ao caso"
+    discretionary
+    when: claim.amount > 50000 BRL
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Revisar a evidência com o analista e definir o parecer"
+    sla: 1d
+  }
+
+  end FraudConfirmed {
+    title: { pt-BR: "Fraude confirmada", en: "Fraud confirmed" }
+    outcome: failure
+  }
+
+  end Cleared {
+    title: { pt-BR: "Fraude descartada", en: "Cleared" }
+    outcome: success
+  }
+
+  ReviewEvidence.record -> Decide
+  Escalate -> Decide
+  Decide.confirm -> FraudConfirmed
+  Decide.clear -> Cleared
+  Begin -> ReviewEvidence
+}

@@ -1,0 +1,356 @@
+// service: example.com/services/hr
+
+shape CandidateStatus {
+  title: { pt-BR: "Situação do candidato", en: "Candidate status" }
+  base: state
+  initial: Applied
+
+  value Applied {
+    title: { pt-BR: "Inscrito", en: "Applied" }
+    icon: status.applied
+    ordinal: 10
+
+    transition Screening {
+      event: Screened
+      title: { pt-BR: "Candidato triado", en: "Candidate screened" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Screening {
+    title: { pt-BR: "Em triagem", en: "Screening" }
+    icon: status.screening
+    ordinal: 20
+
+    transition Interview {
+      event: InterviewScheduled
+      title: { pt-BR: "Entrevista agendada", en: "Interview scheduled" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Interview {
+    title: { pt-BR: "Em entrevista", en: "Interview" }
+    icon: status.interview
+    ordinal: 30
+
+    transition Offer {
+      event: OfferExtended
+      title: { pt-BR: "Proposta enviada", en: "Offer extended" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Offer {
+    title: { pt-BR: "Com proposta", en: "Offer" }
+    icon: status.offer
+    ordinal: 40
+
+    transition Hired {
+      title: { pt-BR: "Candidato contratado", en: "Candidate hired" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Hired {
+    title: { pt-BR: "Contratado", en: "Hired" }
+    icon: status.hired
+    ordinal: 50
+  }
+  value Rejected {
+    title: { pt-BR: "Recusado", en: "Rejected" }
+    icon: status.rejected
+    ordinal: 60
+  }
+}
+
+shape EmployeeStatus {
+  title: { pt-BR: "Situação do colaborador", en: "Employee status" }
+  base: state
+  initial: Onboarding
+
+  value Onboarding {
+    title: { pt-BR: "Em integração", en: "Onboarding" }
+    icon: status.onboarding
+    ordinal: 10
+
+    transition Active {
+      event: Activated
+      title: { pt-BR: "Integração concluída", en: "Onboarding completed" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Terminated {
+      event: OnboardingCancelled
+      title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: status.active
+    ordinal: 20
+
+    transition Offboarding {
+      event: OffboardingStarted
+      title: { pt-BR: "Desligamento iniciado", en: "Offboarding started" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Offboarding {
+    title: { pt-BR: "Em desligamento", en: "Offboarding" }
+    icon: status.offboarding
+    ordinal: 30
+
+    transition Active {
+      event: OffboardingCancelled
+      title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Colaborador desligado", en: "Employee terminated" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value Terminated {
+    title: { pt-BR: "Desligado", en: "Terminated" }
+    icon: status.terminated
+    ordinal: 40
+  }
+}
+
+shape AccessGrantStatus {
+  title: { pt-BR: "Situação do acesso", en: "Access grant status" }
+  base: state
+  initial: Requested
+
+  value Requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: status.requested
+    ordinal: 10
+
+    transition Provisioned {
+      title: { pt-BR: "Acesso provisionado", en: "Access provisioned" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Revoked {
+      title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Provisioned {
+    title: { pt-BR: "Provisionado", en: "Provisioned" }
+    icon: status.provisioned
+    ordinal: 20
+
+    transition Revoked {
+      title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Revoked {
+    title: { pt-BR: "Revogado", en: "Revoked" }
+    icon: status.revoked
+    ordinal: 30
+  }
+}
+
+shape EquipmentOrderStatus {
+  title: { pt-BR: "Situação do equipamento", en: "Equipment order status" }
+  base: state
+  initial: Ordered
+
+  value Ordered {
+    title: { pt-BR: "Pedido", en: "Ordered" }
+    icon: status.ordered
+    ordinal: 10
+
+    transition Delivered {
+      title: { pt-BR: "Equipamento entregue", en: "Equipment delivered" }
+      payload {
+        serial: string { title: { pt-BR: "Número de série", en: "Serial number" } }
+      }
+    }
+  }
+  value Delivered {
+    title: { pt-BR: "Entregue", en: "Delivered" }
+    icon: status.delivered
+    ordinal: 20
+
+    transition Returned {
+      title: { pt-BR: "Equipamento devolvido", en: "Equipment returned" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value Returned {
+    title: { pt-BR: "Devolvido", en: "Returned" }
+    icon: status.returned
+    ordinal: 30
+  }
+}
+
+shape Department {
+  title: { pt-BR: "Área", en: "Department" }
+  base: classification
+
+  value Engineering {
+    title: { pt-BR: "Engenharia", en: "Engineering" }
+    icon: department.engineering
+    ordinal: 10
+  }
+  value Sales {
+    title: { pt-BR: "Comercial", en: "Sales" }
+    icon: department.sales
+    ordinal: 20
+  }
+  value Operations {
+    title: { pt-BR: "Operações", en: "Operations" }
+    icon: department.operations
+    ordinal: 30
+  }
+  value Finance {
+    title: { pt-BR: "Financeiro", en: "Finance" }
+    icon: department.finance
+    ordinal: 40
+  }
+  value People {
+    title: { pt-BR: "Pessoas", en: "People" }
+    icon: department.people
+    ordinal: 50
+  }
+}
+
+shape EmploymentType {
+  title: { pt-BR: "Vínculo", en: "Employment type" }
+  base: classification
+
+  value FullTime {
+    title: { pt-BR: "Tempo integral", en: "Full time" }
+    icon: employment.fullTime
+    ordinal: 10
+  }
+  value PartTime {
+    title: { pt-BR: "Meio período", en: "Part time" }
+    icon: employment.partTime
+    ordinal: 20
+  }
+  value Contractor {
+    title: { pt-BR: "Prestador", en: "Contractor" }
+    icon: employment.contractor
+    ordinal: 30
+  }
+}
+
+shape AccessSystem {
+  title: { pt-BR: "Sistema de acesso", en: "Access system" }
+  base: classification
+
+  value Email {
+    title: { pt-BR: "E-mail corporativo", en: "Corporate email" }
+    icon: access.email
+    ordinal: 10
+  }
+  value ERP {
+    title: { pt-BR: "ERP", en: "ERP" }
+    icon: access.erp
+    ordinal: 20
+  }
+  value VPN {
+    title: { pt-BR: "VPN", en: "VPN" }
+    icon: access.vpn
+    ordinal: 30
+  }
+  value Badge {
+    title: { pt-BR: "Crachá", en: "Badge" }
+    icon: access.badge
+    ordinal: 40
+  }
+  value Payroll {
+    title: { pt-BR: "Folha de pagamento", en: "Payroll" }
+    icon: access.payroll
+    ordinal: 50
+  }
+}
+
+shape EquipmentKind {
+  title: { pt-BR: "Tipo de equipamento", en: "Equipment kind" }
+  base: classification
+
+  value Laptop {
+    title: { pt-BR: "Notebook", en: "Laptop" }
+    icon: equipment.laptop
+    ordinal: 10
+  }
+  value Monitor {
+    title: { pt-BR: "Monitor", en: "Monitor" }
+    icon: equipment.monitor
+    ordinal: 20
+  }
+  value Phone {
+    title: { pt-BR: "Celular", en: "Phone" }
+    icon: equipment.phone
+    ordinal: 30
+  }
+  value Headset {
+    title: { pt-BR: "Fone", en: "Headset" }
+    icon: equipment.headset
+    ordinal: 40
+  }
+  value Badge {
+    title: { pt-BR: "Crachá", en: "Badge" }
+    icon: equipment.badge
+    ordinal: 50
+  }
+}

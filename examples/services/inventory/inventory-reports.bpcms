@@ -1,19 +1,35 @@
 // service: example.com/services/inventory
-document InventoryAging {
+view StockAging {
   title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
   type: report
-  computed from StockItem, Product
-  freshness: 15m
+  sources: [StockItem, Product]
+  roles: [StockManager]
 
-  report {
-    filters { warehouse; category }
-    dimensions { product; warehouse; ageBucket }
-    metrics {
+  filters { warehouse; category }
+
+  metrics {
     quantity: sum(StockItem.available)
     value: sum(StockItem.available * Product.price)
     aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
-    }
-    sort { value: desc }
-    export: [csv, xlsx]
   }
+
+  freshness: 15m
+  export: [csv, xlsx]
+}
+
+view StockControl {
+  title: { pt-BR: "Controle de estoque", en: "Stock control" }
+  type: dashboard
+  sources: [StockItem]
+  roles: [StockManager]
+  mode: live
+
+  filters { warehouse }
+
+  metrics {
+    lowStock: count(StockItem) where available <= reorderPoint
+    reserved: sum(StockItem.reserved)
+  }
+
+  freshness: 15m
 }

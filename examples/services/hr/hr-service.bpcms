@@ -1,0 +1,11 @@
+// service: example.com/services/hr
+service "example.com/services/hr" {
+  title: { pt-BR: "Recursos humanos", en: "Human resources" }
+  version: 1.0.0
+  owner: "People"
+
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/identity" as Identity
+  }
+}

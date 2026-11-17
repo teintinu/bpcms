@@ -1,0 +1,25 @@
+// service: example.com/services/credit
+
+role CreditAnalyst {
+  title: { pt-BR: "Analista de crédito", en: "Credit analyst" }
+  permissions: [credit.view, credit.review, credit.decide]
+}
+
+role CreditManager {
+  title: { pt-BR: "Gerente de crédito", en: "Credit manager" }
+  permissions: [credit.view, credit.decide, credit.limit, report.view]
+}
+
+organogram RiskDesk {
+  title: { pt-BR: "Organograma de crédito", en: "Credit organogram" }
+
+  hierarchy {
+    CreditManager > CreditAnalyst
+  }
+
+  CreditManager manages [CreditAnalyst]
+
+  segregation {
+    creditApplication.submit != creditApplication.approve
+  }
+}

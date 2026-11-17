@@ -4,7 +4,6 @@ service "example.com/services/catalog" {
   owner: "Catalog"
   imports {
     service "bpcms.org/std" as std
-    service "example.com/services/identity" as Identity
   }
 
   reintroduce std.Currency {

@@ -1,6 +1,5 @@
 // service: example.com/services/catalog
 
-
 shape SKU {
   title: { pt-BR: "Código", en: "SKU" }
   base: string
@@ -41,32 +40,61 @@ shape ProductRichDescription {
 
 shape ProductStatus {
   title: { pt-BR: "Situação do produto", en: "Product status" }
-  base: workflow
+  base: state
   initial: Draft
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    transition Published {
-      title: { pt-BR: "Publicado", en: "Published" }
+
+    transition InReview {
+      event: SubmittedForReview
+      title: { pt-BR: "Produto em revisão", en: "Product submitted for review" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
+      }
     }
-    transition Archived {
-      title: { pt-BR: "Arquivado", en: "Archived" }
+  }
+  value InReview {
+    title: { pt-BR: "Em revisão", en: "In review" }
+    icon: InReview
+    ordinal: 20
+
+    transition Published {
+      title: { pt-BR: "Produto publicado", en: "Product published" }
+      payload {
+        publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Produto rejeitado", en: "Product rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Published {
     title: { pt-BR: "Publicado", en: "Published" }
     icon: Published
-    ordinal: 20
+    ordinal: 30
+
     transition Archived {
-      title: { pt-BR: "Arquivado", en: "Archived" }
+      title: { pt-BR: "Produto arquivado", en: "Product archived" }
+      payload {
+        archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
+      }
     }
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitado", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
   }
   value Archived {
     title: { pt-BR: "Arquivado", en: "Archived" }
     icon: Archived
-    ordinal: 30
+    ordinal: 50
   }
   format: plain
-
 }

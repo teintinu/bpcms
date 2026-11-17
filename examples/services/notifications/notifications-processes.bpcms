@@ -1,0 +1,66 @@
+// service: example.com/services/notifications
+process DailyDigest for Notification {
+  title: { pt-BR: "Resumo diário", en: "Daily digest" }
+  version: 1
+  goal: "Enviar o resumo diário somente para quem deu opt-in"
+  owner: "Customer Success"
+  timezone: America/Fortaleza
+
+  pool Company {
+    internal
+    lane Support { role: SuccessAgent }
+  }
+
+  pool Customer {
+    external
+  }
+
+  start Daily {
+    schedule: "0 7 * * *"
+    select: notification.status == Queued
+  }
+
+  gateway Consent {
+    if notification.consent -> Digest
+    else -> Suppress
+  }
+
+  task Digest {
+    lane: System
+    sends: DigestSummary
+    partner: Customer
+    with {
+      recipient: notification.recipient
+      channel: notification.channel
+    }
+    sla: 1h
+  }
+
+  task Record {
+    lane: System
+    action: Notification.sendDigest
+    sla: 5m
+  }
+
+  task Suppress {
+    lane: Support
+    form: OptOutReview
+    sla: 1d
+    assign: pull
+  }
+
+  end Sent {
+    title: { pt-BR: "Resumo enviado", en: "Digest sent" }
+    outcome: success
+  }
+
+  end Suppressed {
+    title: { pt-BR: "Envio suprimido", en: "Delivery suppressed" }
+    outcome: cancelled
+  }
+
+  Daily -> Consent
+  Digest -> Record
+  Record -> Sent
+  Suppress.suppress -> Suppressed
+}

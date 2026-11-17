@@ -1,0 +1,295 @@
+// service: example.com/services/field-service
+
+document Site {
+  title: { pt-BR: "Site", en: "Site" }
+  version: 1
+  owner: "Field Service"
+
+  fields {
+    code: string {
+      title: { pt-BR: "Código", en: "Code" }
+      lookup
+      unique
+      maxLength: 20
+    }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup, maxLength: 120 }
+    address: string { title: { pt-BR: "Endereço", en: "Address" }, maxLength: 240 }
+    point: GeoPoint { title: { pt-BR: "Coordenadas", en: "Coordinates" } }
+    accessNote: string { title: { pt-BR: "Instrução de acesso", en: "Access note" }, maxLength: 500 }
+    active: boolean { title: { pt-BR: "Ativo", en: "Active" }, default: true }
+  }
+
+  indexes {
+    byCode: [code] unique
+    byName: [name] search
+  }
+
+  actions {
+    deactivate() {
+      title: { pt-BR: "Desativar site", en: "Deactivate site" }
+      roles: [Supervisor]
+      { active = false }
+    }
+
+    reactivate() {
+      title: { pt-BR: "Reativar site", en: "Reactivate site" }
+      roles: [Supervisor]
+      { active = true }
+    }
+  }
+}
+
+document Technician {
+  title: { pt-BR: "Técnico", en: "Technician" }
+  version: 1
+  owner: "Field Service"
+  sync: live
+
+  fields {
+    registration: string {
+      title: { pt-BR: "Matrícula", en: "Registration" }
+      lookup
+      unique
+      maxLength: 20
+    }
+    person: Identity.User { title: { pt-BR: "Pessoa", en: "Person" }, lookup }
+    skills: ServiceSkill[] { title: { pt-BR: "Especialidades", en: "Skills" } }
+    zone: string { title: { pt-BR: "Região", en: "Zone" }, lookup, maxLength: 60 }
+    availability: TechnicianAvailability { title: { pt-BR: "Disponibilidade", en: "Availability" }, lookup }
+    dailyCapacity: std.Count { title: { pt-BR: "Capacidade diária", en: "Daily capacity" } }
+    availableFrom: DateTime { title: { pt-BR: "Disponível a partir de", en: "Available from" } }
+    dutyNote: string { title: { pt-BR: "Observação", en: "Note" }, maxLength: 240 }
+  }
+
+  indexes {
+    byRegistration: [registration] unique
+    byAvailability: [availability, zone] range
+  }
+
+
+  actions {
+    assign() {
+      title: { pt-BR: "Colocar em atendimento", en: "Assign technician" }
+      roles: [Dispatcher]
+      to: availability.Assigned
+      emits { at: now() }
+    }
+
+    release() {
+      title: { pt-BR: "Liberar técnico", en: "Release technician" }
+      roles: [Dispatcher]
+      to: availability.Available
+      emits { at: now() }
+    }
+
+    goOffDuty(reason: string) {
+      title: { pt-BR: "Fora de turno", en: "Go off duty" }
+      roles: [Supervisor]
+      to: availability.OffDuty
+      { dutyNote = reason }
+    }
+
+    returnToDuty() {
+      title: { pt-BR: "Voltar ao turno", en: "Return to duty" }
+      roles: [Supervisor]
+      to: availability.Available
+      emits { at: now() }
+    }
+  }
+}
+
+document WorkOrder {
+  title: { pt-BR: "Ordem de serviço", en: "Work order" }
+  version: 1
+  owner: "Field Service"
+  sync: live
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    site: Site { title: { pt-BR: "Site", en: "Site" }, lookup }
+    customer: Identity.User { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    priority: WorkOrderPriority {
+      title: { pt-BR: "Prioridade", en: "Priority" }
+      lookup
+      default: Normal
+    }
+    description: string { title: { pt-BR: "Descrição", en: "Description" }, maxLength: 1000 }
+    status: WorkOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    technician: Technician { title: { pt-BR: "Técnico", en: "Technician" } }
+    openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" }, readonly }
+    dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due at" } }
+    cancelReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }, maxLength: 500 }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, dueAt] range
+    bySite: [site.id] hash
+  }
+
+
+  actions {
+    assign(assignedTechnician: Technician) {
+      title: { pt-BR: "Atribuir técnico", en: "Assign technician" }
+      roles: [Dispatcher]
+      to: status.Assigned
+      emits { technician: assignedTechnician }
+      { technician = assignedTechnician }
+    }
+
+    start() {
+      title: { pt-BR: "Iniciar execução", en: "Start work" }
+      roles: [FieldTechnician, Dispatcher]
+      to: status.InProgress
+      emits { at: now() }
+    }
+
+    finish() {
+      title: { pt-BR: "Concluir ordem", en: "Finish work order" }
+      roles: [Dispatcher, Supervisor]
+      to: status.Done
+      emits { at: now() }
+    }
+
+    cancel(reason: string) {
+      title: { pt-BR: "Cancelar ordem", en: "Cancel work order" }
+      roles: [Supervisor]
+      to: status.Cancelled
+      { cancelReason = reason }
+    }
+  }
+}
+
+document Visit {
+  title: { pt-BR: "Visita técnica", en: "Visit" }
+  version: 1
+  owner: "Field Service"
+  sync: live
+  retention: 5y
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    workOrder: WorkOrder { title: { pt-BR: "Ordem de serviço", en: "Work order" }, lookup }
+    site: Site { title: { pt-BR: "Site", en: "Site" }, lookup }
+    customer: Identity.User { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    technician: Technician { title: { pt-BR: "Técnico", en: "Technician" }, lookup }
+    status: VisitStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    windowStart: DateTime { title: { pt-BR: "Janela de", en: "Window from" }, lookup }
+    windowEnd: DateTime { title: { pt-BR: "Janela até", en: "Window to" } }
+    dispatchedAt: DateTime { title: { pt-BR: "Despachada em", en: "Dispatched at" }, readonly }
+    checkedInAt: DateTime { title: { pt-BR: "Check-in em", en: "Checked in at" }, readonly }
+    checkInPoint: GeoPoint { title: { pt-BR: "Check-in por localização", en: "Check-in location" } }
+    completedAt: DateTime { title: { pt-BR: "Concluída em", en: "Completed at" }, readonly }
+    windowAcknowledgedAt: DateTime {
+      title: { pt-BR: "Janela confirmada em", en: "Window acknowledged at" }
+      readonly
+    }
+    outcome: VisitOutcome { title: { pt-BR: "Desfecho", en: "Outcome" }, lookup }
+    signedBy: string { title: { pt-BR: "Assinado por", en: "Signed by" }, maxLength: 120 }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, maxLength: 500 }
+    notes: string { title: { pt-BR: "Anotações", en: "Notes" }, maxLength: 1000 }
+    rescheduleCount: std.Count { title: { pt-BR: "Reagendamentos", en: "Reschedules" } }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, windowStart] range
+    byTechnician: [technician.id] hash
+    bySite: [site.id] hash
+  }
+
+
+  signature {
+    complete: FieldTechnician
+  }
+
+  actions {
+    schedule(assignedTechnician: Technician, windowFrom: DateTime, windowTo: DateTime) {
+      title: { pt-BR: "Agendar visita", en: "Schedule visit" }
+      roles: [Dispatcher]
+      {
+        technician = assignedTechnician
+        windowStart = windowFrom
+        windowEnd = windowTo
+      }
+    }
+
+    reschedule(newWindowStart: DateTime, newWindowEnd: DateTime) {
+      title: { pt-BR: "Reagendar visita", en: "Reschedule visit" }
+      roles: [Dispatcher]
+      to: status.Scheduled
+      emits { windowStart: newWindowStart; windowEnd: newWindowEnd }
+      {
+        windowStart = newWindowStart
+        windowEnd = newWindowEnd
+        rescheduleCount = rescheduleCount + 1
+      }
+    }
+
+    dispatch() {
+      title: { pt-BR: "Despachar visita", en: "Dispatch visit" }
+      roles: [Dispatcher]
+      to: status.Dispatched
+      emits { at: now() }
+      { dispatchedAt = now() }
+    }
+
+    checkIn(point: GeoPoint) {
+      title: { pt-BR: "Check-in no site", en: "Check in on site" }
+      roles: [FieldTechnician]
+      to: status.OnSite
+      emits { at: now() }
+      { checkedInAt = now(); checkInPoint = point }
+    }
+
+    complete(visitOutcome: VisitOutcome, signedByName: string) {
+      title: { pt-BR: "Concluir visita", en: "Complete visit" }
+      roles: [FieldTechnician]
+      to: status.Completed
+      emits { outcome: visitOutcome; signedBy: signedByName }
+      {
+        outcome = visitOutcome
+        signedBy = signedByName
+        completedAt = now()
+      }
+    }
+
+    fail(failureReason: string) {
+      title: { pt-BR: "Registrar falha", en: "Report failure" }
+      roles: [FieldTechnician, Dispatcher]
+      to: status.Failed
+      emits { reason: failureReason }
+      { reason = failureReason }
+    }
+
+    withdraw(withdrawReason: string) {
+      title: { pt-BR: "Cancelar visita", en: "Withdraw visit" }
+      roles: [Customer, Dispatcher]
+      to: status.Failed
+      emits { reason: withdrawReason }
+      { reason = withdrawReason }
+    }
+
+    saveNote(note: string) {
+      title: { pt-BR: "Salvar anotação", en: "Save note" }
+      roles: [FieldTechnician]
+      { notes = note }
+    }
+
+    acknowledgeWindow(note: string) {
+      title: { pt-BR: "Confirmar janela", en: "Acknowledge window" }
+      roles: [Customer]
+      { windowAcknowledgedAt = now(); notes = note }
+    }
+  }
+}

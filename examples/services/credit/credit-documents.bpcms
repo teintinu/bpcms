@@ -1,0 +1,269 @@
+// service: example.com/services/credit
+
+document CreditApplication {
+  title: { pt-BR: "Proposta de crédito", en: "Credit application" }
+  version: 1
+  owner: "Credit"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    applicant: Identity.User {
+      title: { pt-BR: "Proponente", en: "Applicant" }
+      lookup
+    }
+    requestedAmount: std.Money {
+      title: { pt-BR: "Valor solicitado", en: "Requested amount" }
+      currency: BRL
+      required
+    }
+    monthlyIncome: std.Money {
+      title: { pt-BR: "Renda mensal", en: "Monthly income" }
+      currency: BRL
+    }
+    existingExposure: std.Money {
+      title: { pt-BR: "Exposição atual", en: "Existing exposure" }
+      currency: BRL
+    }
+    purpose: string {
+      title: { pt-BR: "Finalidade", en: "Purpose" }
+      maxLength: 240
+    }
+    status: CreditApplicationStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    bureauScore: std.Count {
+      title: { pt-BR: "Score do bureau", en: "Bureau score" }
+    }
+    riskBand: RiskBand {
+      title: { pt-BR: "Faixa de risco", en: "Risk band" }
+      lookup
+    }
+    approvedLimit: std.Money {
+      title: { pt-BR: "Limite aprovado", en: "Approved limit" }
+      currency: BRL
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviada em", en: "Submitted at" }
+    }
+    reviewStartedAt: DateTime {
+      title: { pt-BR: "Análise iniciada em", en: "Review started at" }
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovada em", en: "Approved at" }
+    }
+    rejectedAt: DateTime {
+      title: { pt-BR: "Rejeitada em", en: "Rejected at" }
+    }
+    rejectionReason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 280
+    }
+    analyst: Identity.User {
+      title: { pt-BR: "Analista", en: "Analyst" }
+    }
+  }
+
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar proposta", en: "Submit application" }
+      roles: public
+      to: status.Submitted
+      {
+        submittedAt = now()
+      }
+    }
+
+    startReview() {
+      title: { pt-BR: "Iniciar análise", en: "Start review" }
+      roles: [CreditAnalyst]
+      to: status.UnderReview
+      {
+        reviewStartedAt = now()
+      }
+    }
+
+    recordRisk(bureauScore: std.Count, riskBand: RiskBand) {
+      title: { pt-BR: "Registrar risco", en: "Record risk" }
+      roles: [CreditAnalyst]
+    }
+
+    approve(approvedLimit: std.Money) {
+      title: { pt-BR: "Aprovar crédito", en: "Approve credit" }
+      roles: [CreditAnalyst, CreditManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    reject(rejectionReason: string) {
+      title: { pt-BR: "Rejeitar crédito", en: "Reject credit" }
+      roles: [CreditAnalyst, CreditManager]
+      to: status.Rejected
+      emits { reason: rejectionReason }
+      {
+        rejectedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, submittedAt] range
+    byApplicant: [applicant.id] hash
+  }
+
+  rule requestedAmount > 0 BRL {
+    pt-BR: "O valor solicitado precisa ser positivo"
+    en: "Requested amount must be positive"
+  }
+
+  segregation {
+    submit != approve
+  }
+}
+
+document CreditLimit {
+  title: { pt-BR: "Limite de crédito", en: "Credit limit" }
+  version: 1
+  owner: "Credit"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    application: CreditApplication {
+      title: { pt-BR: "Proposta", en: "Application" }
+      lookup
+    }
+    holder: Identity.User {
+      title: { pt-BR: "Titular", en: "Holder" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Limite", en: "Limit" }
+      currency: BRL
+      required
+    }
+    used: std.Money {
+      title: { pt-BR: "Utilizado", en: "Used" }
+      currency: BRL
+    }
+    status: CreditLimitStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    activatedAt: DateTime {
+      title: { pt-BR: "Ativado em", en: "Activated at" }
+    }
+    expiresAt: Date {
+      title: { pt-BR: "Validade", en: "Expiry date" }
+    }
+    suspendedAt: DateTime {
+      title: { pt-BR: "Suspenso em", en: "Suspended at" }
+    }
+    suspendedReason: string {
+      title: { pt-BR: "Motivo da suspensão", en: "Suspension reason" }
+      maxLength: 280
+    }
+    reinstatedAt: DateTime {
+      title: { pt-BR: "Reativado em", en: "Reinstated at" }
+    }
+    revokedAt: DateTime {
+      title: { pt-BR: "Revogado em", en: "Revoked at" }
+    }
+    revocationReason: string {
+      title: { pt-BR: "Motivo da revogação", en: "Revocation reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    set(application: CreditApplication, holder: Identity.User, amount: std.Money) {
+      title: { pt-BR: "Definir limite", en: "Set limit" }
+      roles: [CreditManager]
+      {
+        activatedAt = now()
+      }
+    }
+
+    suspend(suspendedReason: string) {
+      title: { pt-BR: "Suspender limite", en: "Suspend limit" }
+      roles: [CreditManager]
+      to: status.Suspended
+      emits { reason: suspendedReason }
+      {
+        suspendedAt = now()
+      }
+    }
+
+    reinstate() {
+      title: { pt-BR: "Reativar limite", en: "Reinstate limit" }
+      roles: [CreditManager]
+      to: status.Active
+      {
+        reinstatedAt = now()
+      }
+    }
+
+    revoke(revocationReason: string) {
+      title: { pt-BR: "Revogar limite", en: "Revoke limit" }
+      roles: [CreditManager]
+      to: status.Revoked
+      emits { reason: revocationReason }
+      {
+        revokedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status] hash
+    byHolder: [holder.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "O limite precisa ser positivo"
+    en: "The limit must be positive"
+  }
+}
+
+document RiskAssessment {
+  title: { pt-BR: "Avaliação de risco", en: "Risk assessment" }
+  version: 1
+  owner: "Credit"
+  computed from CreditApplication
+  freshness: 10m
+  exposes: [score, band, calculatedAt]
+
+  fields {
+    application: CreditApplication {
+      title: { pt-BR: "Proposta", en: "Application" }
+      lookup
+    }
+    score: std.Count {
+      title: { pt-BR: "Score", en: "Score" }
+    }
+    band: RiskBand {
+      title: { pt-BR: "Faixa", en: "Band" }
+    }
+  }
+
+  indexes {
+    byApplication: [application.id] hash
+  }
+}

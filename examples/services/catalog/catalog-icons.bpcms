@@ -4,8 +4,16 @@ icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
+icon InReview {
+  title: { pt-BR: "Em revisão", en: "In review" }
+}
+
 icon Published {
   title: { pt-BR: "Publicado", en: "Published" }
+}
+
+icon Rejected {
+  title: { pt-BR: "Rejeitado", en: "Rejected" }
 }
 
 icon Archived {

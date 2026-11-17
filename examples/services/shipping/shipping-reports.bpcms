@@ -1,18 +1,34 @@
 // service: example.com/services/shipping
-document FreightCost {
+view FreightCost {
   title: { pt-BR: "Custo de frete", en: "Freight cost" }
   type: report
-  computed from Shipment
-  freshness: 15m
+  sources: [Shipment]
+  roles: [Manager]
 
-  report {
-    filters { period; carrier; status }
-    metrics {
+  filters { period; carrierName; status }
+  metrics {
     shipments: count(Shipment)
     freight: sum(Shipment.frete)
     avgWeight: avg(Shipment.pesoBruto)
-    late: count(Shipment) where status == delivered and DeliveryDelayed
-    }
-    units { freight: BRL; avgWeight: kg }
+    failedAttempts: count(Shipment) where status == AttemptFailed
   }
+  units { freight: BRL; avgWeight: kg }
+  freshness: 15m
+  export: [pdf, csv]
+}
+
+view DeliveryPulse {
+  title: { pt-BR: "Pulso das entregas", en: "Delivery pulse" }
+  type: dashboard
+  sources: [Shipment]
+  roles: [Manager]
+  mode: live
+
+  filters { status; carrierName }
+  metrics {
+    outForDelivery: count(Shipment) where status == OutForDelivery
+    failedAttempts: count(Shipment) where status == AttemptFailed
+    returned: count(Shipment) where status == Returned
+  }
+  freshness: 5m
 }

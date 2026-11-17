@@ -1,41 +1,307 @@
 // service: example.com/services/support
-process ReturnFlow {
+
+process TicketTriage for Ticket {
+  title: { pt-BR: "Triagem do chamado", en: "Ticket triage" }
   version: 1
-  goal: "Analisar devolução e reembolsar quando elegível"
-  roles: [SupportAgent, Manager]
-  start on ReturnRequest.Requested
+  goal: "Classificar, encaminhar e responder o chamado dentro do prazo"
+  owner: "Support"
+  timezone: America/Fortaleza
+  sla: 8h
+
+  pool Company {
+    internal
+
+    lane Support {
+      role: SupportAgent
+    }
+
+    lane Management {
+      role: Manager
+    }
+  }
+
+  pool Customer {
+    external
+
+    lane Client {
+      role: Customer
+    }
+  }
+
+  pool BackOffice {
+    external
+  }
+
+  variables {
+    queue: TicketCategory
+  }
+
+  start Opened {
+    event: Ticket.Opened
+  }
+
+  task Triage {
+    lane: Support
+    form: TicketIntake
+    sla: 4h
+    priority: 50
+    assign: pull
+    on breach -> Escalate
+    on timer 1d -> Escalate
+  }
+
+  task Route {
+    lane: System
+    decision: TicketRouting
+    with {
+      category: ticket.category
+      priority: ticket.priority
+    }
+    gives: queue
+  }
+
+  gateway Destination {
+    if queue == Technical -> Technical
+    if queue == Billing -> Billing
+    else -> General
+  }
+
+  task Technical {
+    lane: Support
+    form: TicketResolution
+    sla: 1d
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task Billing {
+    lane: Management
+    form: TicketResolution
+    sla: 1d
+    assign: pull
+  }
+
+  task General {
+    lane: Support
+    form: TicketResolution
+    sla: 2d
+    assign: pull
+  }
+
+  fork Notify
+  join Notified
+
+  task TellCustomer {
+    lane: System
+    sends: TicketAcknowledged
+    partner: Customer
+    with {
+      subject: ticket.subject
+      priority: ticket.priority
+    }
+  }
+
+  task TellBackOffice {
+    lane: System
+    sends: TicketUpdate
+    partner: BackOffice
+    with {
+      subject: ticket.subject
+      queue
+    }
+  }
+
+  task Close {
+    lane: System
+    action: Ticket.close
+  }
+
+  task Escalate {
+    lane: Management
+    form: TicketEscalation
+    sla: 4h
+    assign: pull
+  }
+
+  end Done {
+    title: { pt-BR: "Chamado encerrado", en: "Ticket closed" }
+    outcome: success
+  }
+
+  Opened -> Triage
+  Triage.claim -> Route
+  Route -> Destination
+  Destination -> Technical
+  Destination -> Billing
+  Destination -> General
+  Technical.resolve -> Close
+  Billing.resolve -> Close
+  General.resolve -> Close
+  Close -> Notify
+  Notify -> TellCustomer
+  Notify -> TellBackOffice
+  TellCustomer -> Notified
+  TellBackOffice -> Notified
+  Notified -> Done
+  Escalate.escalate -> Triage
+
+  on breach -> Escalate
+}
+
+process RefundCase for ReturnRequest {
+  title: { pt-BR: "Caso de devolução", en: "Refund case" }
+  version: 1
+  goal: "Decidir a elegibilidade, aprovar por alçada e reembolsar o cliente"
+  owner: "Support"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  pool Company {
+    internal
+
+    lane Support {
+      role: SupportAgent
+    }
+
+    lane Finance {
+      role: Manager
+    }
+  }
+
+  pool Customer {
+    external
+
+    lane Client {
+      role: Customer
+    }
+  }
+
+  variables {
+    verdict: RefundVerdict
+  }
+
+  start Requested {
+    event: ReturnRequest.Requested
+  }
 
   task Review {
-    role: SupportAgent
-    form: ReturnForm
-    reads: [ReturnRequest, Order, Payment]
-    writes: [ReturnRequest]
+    lane: Support
+    form: RefundReview
+    sla: 4h
+    assign: pull
+    on breach -> Escalate
   }
 
-  gateway Eligible {
-    if refundEligible.eligible -> Approve
-    else -> Reject
+  task Eligibility {
+    lane: System
+    decision: RefundEligibility
+    with {
+      amount: returnRequest.refundAmount
+      orderAgeDays: order.ageDays
+    }
+    gives: verdict
   }
 
-  task Approve {
-    role: Manager
-    form: ReturnForm
-    reads: [ReturnRequest]
-    writes: [ReturnRequest]
+  gateway Vote {
+    if verdict == Eligible -> AutoApprove
+    if verdict == ApprovalRequired -> ManagerApprove
+    else -> RejectCase
+  }
+
+  task AutoApprove {
+    lane: System
+    action: ReturnRequest.approve
+  }
+
+  task ManagerApprove {
+    lane: Finance
+    form: RefundApproval
+    sla: 2d
+    assign: pull
+  }
+
+  task RejectCase {
+    lane: Finance
+    form: RefundRejection
+    sla: 3d
+    assign: pull
+  }
+
+  task Receive {
+    lane: System
+    action: ReturnRequest.receive
+  }
+
+  task Settle {
+    lane: System
+    action: Payment.refund
+    with {
+      payment: returnRequest.payment
+    }
   }
 
   task Refund {
-    type: service
-    action: Payment.refund
-    reads: [Payment]
-    writes: [Refund]
+    lane: System
+    action: ReturnRequest.refund
   }
 
-  task Reject {
-    role: SupportAgent
-    form: ReturnForm
-    writes: [ReturnRequest]
+  task NotifyCustomer {
+    lane: System
+    sends: RefundDecision
+    partner: Customer
+    with {
+      verdict
+      amount: returnRequest.refundAmount
+    }
   }
 
-  end on ReturnRequest.Approved
+  task Escalate {
+    lane: Finance
+    form: RefundApproval
+    sla: 1d
+    assign: pull
+  }
+
+  milestone Decided {
+    title: { pt-BR: "Decisão registrada", en: "Decision recorded" }
+    on: ReturnRequest.Approved
+  }
+
+  rollback Undo
+
+  end Refunded {
+    title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Devolução recusada", en: "Return rejected" }
+    outcome: failure
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
+    outcome: cancelled
+  }
+
+  Requested -> Review
+  Review.confirm -> Eligibility
+  Eligibility -> Vote
+  Vote -> AutoApprove
+  Vote -> ManagerApprove
+  Vote -> RejectCase
+  AutoApprove -> Receive
+  ManagerApprove.approve -> Receive
+  ManagerApprove.reject -> Rejected
+  Escalate.approve -> Receive
+  Escalate.reject -> Rejected
+  RejectCase.reject -> Rejected
+  Receive -> Settle
+  Settle -> Refund
+  Refund -> NotifyCustomer
+  NotifyCustomer -> Refunded
+  Undo -> Cancelled
+
+  cancel on ReturnRequest.Cancelled -> Undo
+  on breach -> Escalate
 }

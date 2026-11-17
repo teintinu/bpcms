@@ -1,0 +1,91 @@
+// service: example.com/services/field-service
+
+form VisitSchedule {
+  title: { pt-BR: "Agendar visita", en: "Schedule visit" }
+  document: Visit
+
+  fields {
+    technician
+    windowStart
+    windowEnd
+  }
+
+  actions {
+    schedule { calls: Visit.schedule(technician, windowStart, windowEnd) }
+  }
+}
+
+form VisitCheckIn {
+  title: { pt-BR: "Check-in no site", en: "On-site check-in" }
+  document: Visit
+
+  fields {
+    point: GeoPoint {
+      title: { pt-BR: "Local do check-in", en: "Check-in location" }
+      required
+    }
+  }
+
+  actions {
+    checkIn { calls: Visit.checkIn(point) }
+  }
+}
+
+form VisitFieldReport {
+  title: { pt-BR: "Relatório de campo", en: "Field report" }
+  document: Visit
+
+  fields {
+    outcome
+    signedBy
+    reason: string {
+      title: { pt-BR: "Motivo da falha", en: "Failure reason" }
+      maxLength: 500
+    }
+    note: string {
+      title: { pt-BR: "Anotação", en: "Note" }
+      maxLength: 1000
+    }
+  }
+
+  actions {
+    complete { calls: Visit.complete(outcome, signedBy) }
+    fail { calls: Visit.fail(reason) }
+    save { calls: Visit.saveNote(note); stay }
+  }
+}
+
+form RescheduleReview {
+  title: { pt-BR: "Reagendar visita", en: "Reschedule visit" }
+  document: Visit
+
+  fields {
+    windowStart
+    windowEnd
+    reason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Withdrawal reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    reschedule { calls: Visit.reschedule(windowStart, windowEnd) }
+    abandon { calls: Visit.withdraw(reason) }
+  }
+}
+
+form VisitConfirmation {
+  title: { pt-BR: "Confirmar nova janela", en: "Confirm new window" }
+  document: Visit
+
+  fields {
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    acknowledge { calls: Visit.acknowledgeWindow(note) }
+  }
+}

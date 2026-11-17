@@ -1,0 +1,11 @@
+// service: example.com/services/claims
+service "example.com/services/claims" {
+  title: { pt-BR: "Sinistros", en: "Claims" }
+  version: 1.0.0
+  owner: "Claims"
+
+  imports {
+    service "bpcms.org/std" as std
+    service "example.com/services/identity" as Identity
+  }
+}

@@ -1,19 +1,36 @@
 // service: example.com/services/billing
-document CashFlow {
+view CashFlow {
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
-  computed from Invoice, Payment, Bill
-  freshness: 1h
+  sources: [Invoice, Payment, Bill]
+  roles: [FinanceManager]
 
-  report {
-    filters { period; account }
-    dimensions { month; account }
-    metrics {
-    inflow: sum(Payment.amount) where status == captured
-    outflow: sum(Bill.amount) where status == paid
+  filters { period; store }
+
+  metrics {
+    inflow: sum(Payment.amount) where status == Captured
+    outflow: sum(Bill.amount) where status == Paid
     balance: inflow - outflow
-    }
-    units { inflow: BRL; outflow: BRL; balance: BRL }
-    export: [pdf, csv]
   }
+
+  units { inflow: BRL; outflow: BRL; balance: BRL }
+  freshness: 1h
+  export: [pdf, csv]
+}
+
+view RevenueControl {
+  title: { pt-BR: "Controle de faturamento", en: "Billing control" }
+  type: dashboard
+  sources: [Invoice, Bill]
+  roles: [FinanceManager]
+  mode: live
+
+  filters { status; period }
+
+  metrics {
+    overdue: count(Invoice) where status == Overdue
+    openBills: count(Bill) where status != Paid
+  }
+
+  freshness: 15m
 }

@@ -1,0 +1,41 @@
+// application: Mesa de Sinistros (claims + field-service + payments)
+application "example.com/app/claims-desk" {
+  source: registry
+  version: 1.0.0
+  title: {
+    pt-BR: "Mesa de Sinistros"
+    en-US: "Claims Desk"
+  }
+
+  services {
+    "example.com/services/identity" as Identity
+    "example.com/services/claims" as Claims
+    "example.com/services/field-service" as FieldService
+    "example.com/services/payments" as Payments
+  }
+
+  roles {
+    Clerk
+    Adjuster
+    FraudAnalyst
+    FinanceAnalyst
+    Manager
+    Policyholder
+    Dispatcher
+    FieldTechnician
+    Supervisor
+    Customer
+    Manager > Adjuster > Clerk
+    Manager > FraudAnalyst
+    Supervisor > FieldTechnician
+    Supervisor > Dispatcher
+  }
+
+  theme: Claims
+  locales: [pt-BR, en-US]
+  environments: [dev, qa, prod]
+
+  main {
+    start ["example.com/services/identity"]
+  }
+}

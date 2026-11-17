@@ -23,3 +23,35 @@ icon Released {
 icon Expired {
   title: { pt-BR: "Expirada", en: "Expired" }
 }
+
+icon Open {
+  title: { pt-BR: "Aberta", en: "Open" }
+}
+
+icon Counted {
+  title: { pt-BR: "Contada", en: "Counted" }
+}
+
+icon Approved {
+  title: { pt-BR: "Aprovada", en: "Approved" }
+}
+
+icon Rejected {
+  title: { pt-BR: "Rejeitada", en: "Rejected" }
+}
+
+icon Requested {
+  title: { pt-BR: "Solicitada", en: "Requested" }
+}
+
+icon Cancelled {
+  title: { pt-BR: "Cancelada", en: "Cancelled" }
+}
+
+icon Reorder {
+  title: { pt-BR: "Repor", en: "Reorder" }
+}
+
+icon Ok {
+  title: { pt-BR: "Suficiente", en: "Sufficient" }
+}

@@ -1,0 +1,282 @@
+// service: example.com/services/claims
+
+shape ClaimStatus {
+  title: { pt-BR: "Situação do sinistro", en: "Claim status" }
+  base: state
+  initial: Opened
+
+  value Opened {
+    title: { pt-BR: "Aviso aberto", en: "Opened" }
+    icon: status.opened
+    ordinal: 10
+
+    transition Triaged {
+      title: { pt-BR: "Sinistro triado", en: "Claim triaged" }
+      payload {
+        covered: boolean { title: { pt-BR: "Cobertura confirmada", en: "Coverage confirmed" } }
+        type: ClaimType { title: { pt-BR: "Tipo de sinistro", en: "Claim type" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value Triaged {
+    title: { pt-BR: "Triado", en: "Triaged" }
+    icon: status.triaged
+    ordinal: 20
+
+    transition UnderReview {
+      event: ReviewStarted
+      title: { pt-BR: "Análise iniciada", en: "Review started" }
+      payload {
+        at: DateTime { title: { pt-BR: "Iniciada em", en: "Started at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value UnderReview {
+    title: { pt-BR: "Em análise", en: "Under review" }
+    icon: status.underReview
+    ordinal: 30
+
+    transition Approved {
+      title: { pt-BR: "Sinistro aprovado", en: "Claim approved" }
+      payload {
+        approvedAmount: std.Money { title: { pt-BR: "Valor aprovado", en: "Approved amount" } }
+        at: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovado", en: "Approved" }
+    icon: status.approved
+    ordinal: 40
+
+    transition Paid {
+      title: { pt-BR: "Sinistro pago", en: "Claim paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor pago", en: "Paid amount" } }
+      }
+    }
+
+    transition UnderReview {
+      event: Reopened
+      title: { pt-BR: "Sinistro reaberto", en: "Claim reopened" }
+      payload {
+        at: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+      }
+    }
+  }
+  value Rejected {
+    title: { pt-BR: "Recusado", en: "Rejected" }
+    icon: status.rejected
+    ordinal: 50
+  }
+  value Paid {
+    title: { pt-BR: "Pago", en: "Paid" }
+    icon: status.paid
+    ordinal: 60
+  }
+}
+
+shape CoverageStatus {
+  title: { pt-BR: "Situação da cobertura", en: "Coverage status" }
+  base: state
+  initial: Active
+
+  value Active {
+    title: { pt-BR: "Vigente", en: "Active" }
+    icon: status.active
+    ordinal: 10
+
+    transition Expired {
+      title: { pt-BR: "Cobertura expirada", en: "Coverage expired" }
+      payload {
+        expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" } }
+      }
+    }
+  }
+  value Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: status.expired
+    ordinal: 20
+
+    transition Active {
+      event: Renewed
+      title: { pt-BR: "Cobertura renovada", en: "Coverage renewed" }
+      payload {
+        validTo: DateTime { title: { pt-BR: "Nova vigência", en: "New validity" } }
+      }
+    }
+  }
+}
+
+shape SettlementStatus {
+  title: { pt-BR: "Situação da liquidação", en: "Settlement status" }
+  base: state
+  initial: Pending
+
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: status.pending
+    ordinal: 10
+
+    transition Approved {
+      title: { pt-BR: "Liquidação aprovada", en: "Settlement approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: status.approved
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Liquidação paga", en: "Settlement paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+      }
+    }
+
+    transition Pending {
+      event: Reversed
+      title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      payload {
+        reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+
+    transition Pending {
+      event: Reversed
+      title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      payload {
+        reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+}
+
+shape ClaimType {
+  title: { pt-BR: "Tipo de sinistro", en: "Claim type" }
+  base: classification
+
+  value Collision {
+    title: { pt-BR: "Colisão", en: "Collision" }
+    icon: claim.collision
+    ordinal: 10
+  }
+  value Theft {
+    title: { pt-BR: "Furto", en: "Theft" }
+    icon: claim.theft
+    ordinal: 20
+  }
+  value Fire {
+    title: { pt-BR: "Incêndio", en: "Fire" }
+    icon: claim.fire
+    ordinal: 30
+  }
+  value Other {
+    title: { pt-BR: "Outro", en: "Other" }
+    icon: claim.other
+    ordinal: 40
+  }
+}
+
+shape FraudBand {
+  title: { pt-BR: "Faixa de risco de fraude", en: "Fraud risk band" }
+  base: classification
+
+  value Low {
+    title: { pt-BR: "Baixo", en: "Low" }
+    icon: fraud.low
+    ordinal: 10
+  }
+  value Medium {
+    title: { pt-BR: "Médio", en: "Medium" }
+    icon: fraud.medium
+    ordinal: 20
+  }
+  value High {
+    title: { pt-BR: "Alto", en: "High" }
+    icon: fraud.high
+    ordinal: 30
+  }
+}
+
+shape EvidenceKind {
+  title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+  base: classification
+
+  value Document {
+    title: { pt-BR: "Documento", en: "Document" }
+    icon: evidence.document
+    ordinal: 10
+  }
+  value Photo {
+    title: { pt-BR: "Foto", en: "Photo" }
+    icon: evidence.photo
+    ordinal: 20
+  }
+  value Witness {
+    title: { pt-BR: "Testemunha", en: "Witness" }
+    icon: evidence.witness
+    ordinal: 30
+  }
+  value Report {
+    title: { pt-BR: "Laudo", en: "Report" }
+    icon: evidence.report
+    ordinal: 40
+  }
+}
+
+shape PaymentMethod {
+  title: { pt-BR: "Forma de pagamento", en: "Payment method" }
+  base: classification
+
+  value BankTransfer {
+    title: { pt-BR: "Transferência bancária", en: "Bank transfer" }
+    icon: payment.transfer
+    ordinal: 10
+  }
+  value Pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: payment.pix
+    ordinal: 20
+  }
+  value Check {
+    title: { pt-BR: "Cheque", en: "Check" }
+    icon: payment.check
+    ordinal: 30
+  }
+}

@@ -1,20 +1,20 @@
 // service: example.com/services/billing
 
-
-
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
-  base: workflow
+  base: state
   initial: Draft
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: status.draft
     ordinal: 10
+
     transition Issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
       payload {
-        number: InvoiceNumber
-        total: std.Money
+        issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+        number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
       }
     }
   }
@@ -22,16 +22,26 @@ shape InvoiceStatus {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: finance.invoice.issued
     ordinal: 20
+
     transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-    }
-    transition Overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
-    }
-    transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
       payload {
-        reason: string
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Overdue {
+      title: { pt-BR: "Nota vencida", en: "Invoice overdue" }
+      payload {
+        dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
@@ -44,11 +54,20 @@ shape InvoiceStatus {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: status.overdue
     ordinal: 40
+
     transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
     }
+
     transition Cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
   value Cancelled {
@@ -57,27 +76,34 @@ shape InvoiceStatus {
     ordinal: 50
   }
   format: plain
-
 }
 
 shape CreditNoteStatus {
   title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
-  base: workflow
+  base: state
   initial: Draft
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
+
     transition Issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
+      title: { pt-BR: "Nota de crédito emitida", en: "Credit note issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+      }
     }
   }
   value Issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
+
     transition Applied {
-      title: { pt-BR: "Aplicada", en: "Applied" }
+      title: { pt-BR: "Nota de crédito aplicada", en: "Credit note applied" }
+      payload {
+        appliedAt: DateTime { title: { pt-BR: "Aplicada em", en: "Applied at" } }
+      }
     }
   }
   value Applied {
@@ -86,23 +112,30 @@ shape CreditNoteStatus {
     ordinal: 30
   }
   format: plain
-
 }
-
 
 shape BillStatus {
   title: { pt-BR: "Situação da conta", en: "Bill status" }
-  base: workflow
+  base: state
   initial: Open
   value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
+
     transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
+      title: { pt-BR: "Conta paga", en: "Bill paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
     }
+
     transition Overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
+      title: { pt-BR: "Conta vencida", en: "Bill overdue" }
+      payload {
+        dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
+      }
     }
   }
   value Paid {
@@ -114,12 +147,52 @@ shape BillStatus {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 30
+
     transition Paid {
-      title: { pt-BR: "Paga", en: "Paid" }
+      title: { pt-BR: "Conta paga", en: "Bill paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
     }
   }
   format: plain
+}
 
+shape FiscalPeriodStatus {
+  title: { pt-BR: "Situação do período fiscal", en: "Fiscal period status" }
+  base: state
+  initial: Open
+  value Open {
+    title: { pt-BR: "Aberto", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition Closed {
+      title: { pt-BR: "Período fechado", en: "Period closed" }
+      payload {
+        closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Fechamento falhou", en: "Period close failed" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    icon: Closed
+    ordinal: 20
+  }
+  value Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    icon: Failed
+    ordinal: 30
+  }
+  format: plain
 }
 
 shape TaxRegimeCode {
@@ -141,7 +214,6 @@ shape TaxRegimeCode {
     ordinal: 30
   }
   format: plain
-
 }
 
 shape YearMonth {

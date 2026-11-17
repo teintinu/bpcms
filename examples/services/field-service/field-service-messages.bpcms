@@ -1,0 +1,11 @@
+// service: example.com/services/field-service
+
+message VisitRescheduled {
+  title: { pt-BR: "Visita reagendada", en: "Visit rescheduled" }
+  about: Visit
+
+  payload {
+    windowStart: DateTime { title: { pt-BR: "Nova janela de", en: "New window from" } }
+    windowEnd: DateTime { title: { pt-BR: "Nova janela até", en: "New window to" } }
+  }
+}

@@ -1,12 +1,34 @@
 // service: example.com/services/support
-decision RefundEligibility {
-  appliesTo: ReturnRequest.approve
-  when: [order.ageDays, payment.status, return.refundAmount]
-  cases {
-    order.ageDays <= 30 and payment.status == captured -> eligible
-    order.ageDays > 30 and return.refundAmount <= RefundLimit -> eligible
-    else -> notEligible
+
+decision TicketRouting {
+  title: { pt-BR: "Roteamento do chamado", en: "Ticket routing" }
+  returns: TicketCategory
+  inputs {
+    category: TicketCategory
+    priority: TicketPriority
   }
-  default: notEligible
+  cases {
+    category == Billing -> Billing
+    category == Technical and priority == P1 -> Technical
+    else -> General
+  }
+  source: "Política de atendimento v1"
+  owner: Support
+}
+
+decision RefundEligibility {
+  title: { pt-BR: "Elegibilidade da devolução", en: "Refund eligibility" }
+  returns: RefundVerdict
+  inputs {
+    amount: std.Money
+    orderAgeDays: std.Count
+  }
+  cases {
+    amount <= RefundLimit and orderAgeDays <= 30 -> Eligible
+    amount <= RefundLimit -> NotEligible
+    orderAgeDays <= 30 -> ApprovalRequired
+    else -> NotEligible
+  }
+  source: "Política de devolução v1"
   owner: Support
 }

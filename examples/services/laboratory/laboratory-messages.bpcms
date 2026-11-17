@@ -1,0 +1,28 @@
+// service: example.com/services/laboratory
+
+message RecollectionRequest {
+  title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
+  about: Sample
+  payload {
+    code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+  }
+}
+
+message CriticalResultAlert {
+  title: { pt-BR: "Alerta de resultado crítico", en: "Critical result alert" }
+  about: ExamOrder
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    value: string { title: { pt-BR: "Valor", en: "Value" } }
+  }
+}
+
+message ResultReleased {
+  title: { pt-BR: "Resultado liberado", en: "Result released" }
+  about: ExamOrder
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    sample: Sample { title: { pt-BR: "Amostra", en: "Sample" } }
+  }
+}

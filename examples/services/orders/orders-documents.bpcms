@@ -28,9 +28,10 @@ shape OrderItem {
 
 document Order {
   title: { pt-BR: "Pedido", en: "Order" }
-  version: 1
+  version: 2
   owner: "Orders"
   sync: live
+
   fields {
     customer: User {
       title: { pt-BR: "Cliente", en: "Customer" }
@@ -51,6 +52,18 @@ document Order {
     }
     status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
+    reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
+    cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+    reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+    fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
+    cancellationReason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 500
+    }
+    notes: string {
+      title: { pt-BR: "Observações", en: "Notes" }
+      maxLength: 1000
+    }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" }, lookup }
   }
 
@@ -59,60 +72,140 @@ document Order {
     byStatus: [status, createdAt] range
   }
 
+  events {
+    Drafted {
+      title: { pt-BR: "Pedido criado", en: "Order drafted" }
+      payload {
+        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+      }
+    }
+  }
 
   actions {
-    create(customer: User, discount: std.Percentage){
-      title: { pt-BR: "Criar", en: "Create" }
+    create(customer: User, discount: std.Percentage) {
+      title: { pt-BR: "Criar pedido", en: "Create order" }
       roles: [Clerk]
+      {
+        createdAt = now()
+        emit Drafted
+      }
     }
 
-    addItem(product: Product, quantity: std.Count){
+    addItem(product: Product, quantity: std.Count) {
       title: { pt-BR: "Adicionar item", en: "Add item" }
       roles: [Clerk]
       rule quantity > 0 {
         pt-BR: "A quantidade deve ser maior que zero"
         en: "Quantity must be greater than zero"
-        }
+      }
     }
 
-    place(){
+    annotate(note: string) {
+      title: { pt-BR: "Anotar", en: "Annotate" }
+      roles: [Clerk]
+      {
+        notes = note
+      }
+    }
+
+    place() {
       title: { pt-BR: "Realizar pedido", en: "Place order" }
       roles: [Clerk]
-      transition: Placed
+
+      to: status.Placed
+
       rule items.length > 0 {
         pt-BR: "Adicione ao menos um item"
         en: "Add at least one item"
-        }
+      }
       {
         placedAt = now()
-        }
+      }
     }
 
-    cancel(reason: string){
-      title: { pt-BR: "Cancelar", en: "Cancel" }
-      roles: [Manager]
-      transition: Cancelled
+    confirmReservation() {
+      title: { pt-BR: "Confirmar reserva", en: "Confirm reservation" }
+      roles: [OrderEngine]
+
+      to: status.Reserved
+      {
+        reservedAt = now()
+      }
+    }
+
+    requestCancellation(reason: string) {
+      title: { pt-BR: "Solicitar cancelamento", en: "Request cancellation" }
+      roles: [Clerk, Manager]
+
+      to: status.CancellationRequested
+
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-        }
+      }
+      {
+        cancellationReason = reason
+      }
     }
 
-    expireDraft(){
-      title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
+    approveCancellation() {
+      title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
       roles: [Manager]
-      transition: Cancelled
+
+      to: status.CancellationApproved
+    }
+
+    rejectCancellation() {
+      title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      roles: [Manager]
+
+      to: status.Placed
+    }
+
+    cancel(reason: string) {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      roles: [Clerk, Manager, OrderEngine]
+
+      to: status.Cancelled
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      {
+        cancellationReason = reason
+        cancelledAt = now()
+      }
+    }
+
+    reopen() {
+      title: { pt-BR: "Reabrir", en: "Reopen" }
+      roles: [Manager, OrderEngine]
+
+      to: status.Placed
+      {
+        reopenedAt = now()
+      }
+    }
+
+    fulfill() {
+      title: { pt-BR: "Atender", en: "Fulfill" }
+      roles: [OrderEngine]
+
+      to: status.Fulfilled
+      {
+        fulfilledAt = now()
+      }
     }
   }
 
   rule status == Placed implies placedAt != null {
     pt-BR: "Informe a data do pedido"
     en: "Enter the order date"
-
   }
   rule items.count <= 50 {
     pt-BR: "O pedido excede o limite de 50 itens"
     en: "Order exceeds the 50 item limit"
-
   }
 }

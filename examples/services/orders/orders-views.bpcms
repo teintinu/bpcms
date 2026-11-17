@@ -1,20 +1,18 @@
 // service: example.com/services/orders
-view OrderForm {
-  title: { pt-BR: "Formulário de pedido", en: "Order form" }
-  type: form
-  document: Order
-  roles: [Clerk]
+view OrderList {
+  title: { pt-BR: "Pedidos", en: "Orders" }
+  type: table
+  source: Order
+  roles: [Clerk, Manager]
 
-  fields {
-    customer: User { title: { pt-BR: "Cliente", en: "Customer" }, required }
-    discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
-    status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
-  }
+  columns { customer; total; status; placedAt }
+  filters { status; period; customer }
+  pagination: 50
 
   actions {
-    save -> Order.create
-    place -> Order.place
-    cancel -> none
+    open -> OrderDetail
+    newOrder -> Order.create(customer, discount)
+    requestCancellation -> Order.requestCancellation(reason)
   }
 }
 
@@ -24,6 +22,42 @@ view OrderDetail {
   document: Order
   roles: [Clerk, Manager]
 
-  sections { summary; items; timeline; documents }
-  actions { place; cancel; print }
+  sections { summary; items; timeline }
+  actions {
+    progress -> OrderProgress
+    cancel -> Order.cancel(reason)
+    reopen -> Order.reopen
+  }
+}
+
+view OrderBoard {
+  title: { pt-BR: "Quadro de pedidos", en: "Order board" }
+  type: kanban
+  source: Order
+  roles: [Clerk, Manager]
+
+  groupBy: status
+  card { customer; total; placedAt }
+  filter { status != Cancelled }
+  actions {
+    open -> OrderDetail
+  }
+}
+
+view OrderProgress {
+  title: { pt-BR: "Andamento do pedido", en: "Order progress" }
+  type: process
+  process: OrderIntake
+  roles: [Clerk, Manager, Customer]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view SalesInbox {
+  title: { pt-BR: "Minha fila de pedidos", en: "My order queue" }
+  type: inbox
+  roles: [Clerk]
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
 }

@@ -1,0 +1,24 @@
+// service: example.com/services/checkout
+role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  permissions: [checkout.start, checkout.pay]
+}
+
+role SupportAgent {
+  title: { pt-BR: "Agente de atendimento", en: "Support agent" }
+  inherits: Customer
+  permissions: [checkout.view, checkout.recover, report.view]
+}
+
+role SessionEngine {
+  title: { pt-BR: "Motor de finalização", en: "Session engine" }
+  permissions: [checkout.quote, checkout.authorize, checkout.confirm]
+}
+
+organogram Storefront {
+  title: { pt-BR: "Organograma da loja", en: "Storefront organogram" }
+
+  hierarchy {
+    SupportAgent > Customer
+  }
+}

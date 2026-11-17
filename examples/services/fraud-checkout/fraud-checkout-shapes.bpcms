@@ -1,0 +1,48 @@
+// service: example.com/services/fraud-checkout
+shape FraudCheckStatus {
+  title: { pt-BR: "Situação da verificação antifraude", en: "Fraud check status" }
+  base: state
+  initial: Pending
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: Pending
+    ordinal: 10
+
+    transition Evaluated {
+      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
+      payload {
+        score: number { title: { pt-BR: "Pontuação", en: "Score" } }
+      }
+    }
+  }
+  value Evaluated {
+    title: { pt-BR: "Avaliada", en: "Evaluated" }
+    icon: Evaluated
+    ordinal: 20
+
+    transition Approved {
+      title: { pt-BR: "Risco aprovado", en: "Risk approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Risco rejeitado", en: "Risk rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 30
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+  format: plain
+}

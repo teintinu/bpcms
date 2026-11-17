@@ -1,0 +1,21 @@
+// service: example.com/services/payments
+message EvidencePackage {
+  title: { pt-BR: "Pacote de evidências", en: "Evidence package" }
+  about: Chargeback
+
+  payload {
+    submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+    note: string { title: { pt-BR: "Resumo", en: "Summary" } }
+    evidence: EvidenceDocument { title: { pt-BR: "Documento", en: "Document" } }
+  }
+}
+
+message ChargebackResult {
+  title: { pt-BR: "Resultado da contestação", en: "Chargeback result" }
+  about: Chargeback
+
+  payload {
+    favorable: boolean { title: { pt-BR: "Favorável", en: "Favorable" } }
+    decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+  }
+}

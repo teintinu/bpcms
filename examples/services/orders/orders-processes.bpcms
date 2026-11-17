@@ -1,0 +1,151 @@
+// service: example.com/services/orders
+process OrderIntake for Order {
+  title: { pt-BR: "Entrada de pedido", en: "Order intake" }
+  version: 1
+  goal: "Levar o rascunho à confirmação e reservar o estoque"
+  owner: "Orders"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Sales { role: Clerk }
+  }
+
+  start Drafted { event: Order.Drafted }
+
+  task ReviewDraft {
+    lane: Sales
+    form: DraftReview
+    sla: 4h
+    priority: 50
+    assign: pull
+    on timer 2d -> ExpireDraft
+  }
+
+  task ReserveStock {
+    lane: System
+    action: Reservation.request
+    foreach { over: order.items; as: item; mode: parallel }
+    with {
+      product: item.product
+      quantity: item.quantity
+      externalRef: order.id
+    }
+    sla: 5m
+    on error StockOut -> Unavailable
+  }
+
+  task ConfirmReservation {
+    lane: System
+    action: Order.confirmReservation
+    sla: 1m
+  }
+
+  task ExpireDraft {
+    lane: System
+    action: Order.cancel
+    with { reason: "Rascunho expirado sem confirmação do cliente" }
+    sla: 1m
+  }
+
+  task Unavailable {
+    lane: Sales
+    manual: "Avisar o cliente da falta de estoque e sugerir substitutos"
+    sla: 2h
+  }
+
+  milestone Placed {
+    title: { pt-BR: "Pedido confirmado", en: "Order placed" }
+    on: Order.Placed
+  }
+
+  end Reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    outcome: success
+  }
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: cancelled
+  }
+  end OutOfStock {
+    title: { pt-BR: "Sem estoque", en: "Out of stock" }
+    outcome: failure
+  }
+  end Expired {
+    title: { pt-BR: "Expirado", en: "Expired" }
+    outcome: failure
+  }
+
+  Drafted -> ReviewDraft
+  ReviewDraft.confirm -> ReserveStock
+  ReviewDraft.cancel -> Cancelled
+  ReserveStock -> ConfirmReservation
+  ConfirmReservation -> Reserved
+  Unavailable -> OutOfStock
+  ExpireDraft -> Expired
+}
+
+process OrderCancellation for Order {
+  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
+  version: 1
+  goal: "Cancelar o pedido com motivo, liberar a reserva e reverter se falhar"
+  owner: "Orders"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Management { role: Manager }
+  }
+
+  start Requested { event: Order.CancellationRequested }
+
+  task Review {
+    lane: Management
+    form: CancellationReview
+    sla: 1d
+    priority: 70
+    assign: pull
+    on timer 2d -> Undo
+  }
+
+  task CancelOrder {
+    lane: System
+    action: Order.cancel
+    with { reason: order.cancellationReason }
+    sla: 1m
+  }
+
+  task ReleaseStock {
+    lane: System
+    action: Reservation.release
+    sla: 5m
+    on error ReservationLocked -> Undo
+  }
+
+  task UndoCancel {
+    lane: System
+    action: Order.reopen
+    compensates: CancelOrder
+    sla: 1m
+  }
+
+  rollback Undo
+
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: cancelled
+  }
+  end Rejected {
+    title: { pt-BR: "Não cancelado", en: "Not cancelled" }
+    outcome: failure
+  }
+
+  Requested -> Review
+  Review.approve -> CancelOrder
+  Review.reject -> Rejected
+  CancelOrder -> ReleaseStock
+  ReleaseStock -> Cancelled
+  Undo -> Rejected
+}

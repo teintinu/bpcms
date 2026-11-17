@@ -120,7 +120,7 @@ document Invoice {
       currency: BRL
       computed: subtotal + tax
     }
-    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" } }
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
   }
@@ -131,41 +131,84 @@ document Invoice {
     byStatus: [status, dueAt] range
   }
 
+  events {
+    Requested {
+      title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      }
+    }
+  }
 
   actions {
+    create(order: Order){
+      title: { pt-BR: "Solicitar nota", en: "Request invoice" }
+      roles: [Clerk]
+      returns: Invoice
+      {
+        customer = order.customer
+        emit Requested { order: order }
+      }
+    }
+
+    deriveFromOrder(){
+      title: { pt-BR: "Derivar do pedido", en: "Derive from order" }
+      roles: [Clerk]
+    }
+
+    applyTax(){
+      title: { pt-BR: "Aplicar imposto", en: "Apply tax" }
+      roles: [Clerk]
+    }
+
     issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
-      roles: [Manager]
-      transition: Issued
+      roles: [FinanceManager]
+
+      to: status.Issued
+      emits { issuedAt: now() }
+
       rule total > 0 BRL {
         pt-BR: "O valor deve ser maior que zero"
         en: "Value must be greater than zero"
-        }
+      }
+
       {
         issuedAt = now()
-        }
+      }
+    }
+
+    pay(paidAt: DateTime){
+      title: { pt-BR: "Pagar", en: "Pay" }
+      roles: [Clerk]
+
+      to: status.Paid
+      emits { amount: total }
+    }
+
+    markOverdue(){
+      title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
+      roles: [Clerk]
+
+      to: status.Overdue
     }
 
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      roles: [Manager]
-      transition: Cancelled
+      roles: [FinanceManager]
+
+      to: status.Cancelled
+
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-        }
-    }
-
-    closeMonth(){
-      title: { pt-BR: "Fechar mês", en: "Close month" }
-      roles: [Manager]
+      }
     }
   }
 
   rule status == Issued implies issuedAt != null {
     pt-BR: "Informe a data de emissão"
     en: "Enter the issue date"
-
   }
 }
 
@@ -183,6 +226,7 @@ document CreditNote {
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     status: CreditNoteStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    appliedAt: DateTime { title: { pt-BR: "Aplicado em", en: "Applied at" } }
   }
 
   indexes {
@@ -194,26 +238,36 @@ document CreditNote {
   actions {
     issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
-      roles: [Manager]
-      transition: Issued
+      roles: [FinanceManager]
+
+      to: status.Issued
+      emits { issuedAt: now() }
+
+      {
+        issuedAt = now()
+      }
     }
 
     apply(){
       title: { pt-BR: "Aplicar", en: "Apply" }
-      roles: [Manager]
-      transition: Applied
+      roles: [FinanceManager]
+
+      to: status.Applied
+      emits { appliedAt: now() }
+
+      {
+        appliedAt = now()
+      }
     }
   }
 
   rule amount > 0 {
     pt-BR: "O valor deve ser maior que zero"
     en: "Amount must be greater than zero"
-
   }
   rule amount <= 100000 BRL {
     pt-BR: "O valor excede o limite de 100.000 BRL"
     en: "Amount exceeds the 100,000 BRL limit"
-
   }
 }
 
@@ -236,20 +290,29 @@ document Bill {
 
 
   actions {
-    pay(){
+    pay(paidAt: DateTime){
       title: { pt-BR: "Pagar", en: "Pay" }
-      roles: [Manager]
-      transition: Paid
+      roles: [Clerk]
+
+      to: status.Paid
+      emits { paidAt: now() }
+
       {
         paidAt = now()
       }
+    }
+
+    markOverdue(){
+      title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
+      roles: [Clerk]
+
+      to: status.Overdue
     }
   }
 
   rule amount > 0 {
     pt-BR: "O valor deve ser maior que zero"
     en: "Amount must be greater than zero"
-
   }
 }
 
@@ -270,18 +333,85 @@ document OrderCancellation {
   actions {
     cancel(reason: string){
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      roles: [Manager]
+      roles: [FinanceManager]
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
-        }
+      }
     }
   }
 
   rule reason != null {
     pt-BR: "Preencha os campos obrigatórios"
     en: "Fill the required fields"
+  }
+}
 
+document FiscalPeriod {
+  title: { pt-BR: "Período fiscal", en: "Fiscal period" }
+  version: 1
+  owner: "Billing"
+  sync: live
+
+  fields {
+    store: Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      required
+    }
+    month: YearMonth {
+      title: { pt-BR: "Mês", en: "Month" }
+      lookup
+      required
+    }
+    status: FiscalPeriodStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
+    tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
+    closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
+    failureReason: string { title: { pt-BR: "Motivo da falha", en: "Failure reason" } }
+  }
+
+  indexes {
+    byPeriod: [store.id, month] unique
+    byStatus: [status, month] range
+  }
+
+
+  actions {
+    consolidate(){
+      title: { pt-BR: "Consolidar período", en: "Consolidate period" }
+      roles: [FinanceManager]
+    }
+
+    close(){
+      title: { pt-BR: "Fechar período", en: "Close period" }
+      roles: [FinanceManager]
+
+      to: status.Closed
+
+      {
+        closedAt = now()
+      }
+    }
+
+    fail(reason: string){
+      title: { pt-BR: "Registrar falha", en: "Record failure" }
+      roles: [FinanceManager]
+
+      to: status.Failed
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da falha"
+        en: "Enter the failure reason"
+      }
+
+      {
+        failureReason = reason
+      }
+    }
   }
 }
 
@@ -305,13 +435,12 @@ document MonthlyRevenue {
   actions {
     refresh(){
       title: { pt-BR: "Atualizar", en: "Refresh" }
-      roles: [Manager]
+      roles: [FinanceManager]
     }
   }
 
   rule month >= 2026-01 {
     pt-BR: "Verifique os dados informados"
     en: "Check the informed data"
-
   }
 }

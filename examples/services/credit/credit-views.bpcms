@@ -1,0 +1,102 @@
+// service: example.com/services/credit
+
+view CreditApplications {
+  title: { pt-BR: "Propostas de crédito", en: "Credit applications" }
+  type: table
+  source: CreditApplication
+  roles: [CreditAnalyst, CreditManager]
+
+  columns { number; applicant; requestedAmount; monthlyIncome; riskBand; status; submittedAt }
+  filters { status; riskBand; applicant }
+  pagination: 50
+
+  actions {
+    open -> CreditApplicationDetail
+  }
+}
+
+view CreditApplicationDetail {
+  title: { pt-BR: "Detalhe da proposta", en: "Credit application detail" }
+  type: detail
+  document: CreditApplication
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { summary; timeline }
+}
+
+view CreditLimits {
+  title: { pt-BR: "Limites de crédito", en: "Credit limits" }
+  type: table
+  source: CreditLimit
+  roles: [CreditAnalyst, CreditManager]
+
+  columns { number; holder; amount; used; status; expiresAt }
+  filters { status; holder }
+  pagination: 50
+
+  actions {
+    open -> CreditLimitDetail
+  }
+}
+
+view CreditLimitDetail {
+  title: { pt-BR: "Detalhe do limite", en: "Credit limit detail" }
+  type: detail
+  document: CreditLimit
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { summary; timeline }
+}
+
+view RiskReport {
+  title: { pt-BR: "Relatório de risco de crédito", en: "Credit risk report" }
+  type: report
+  sources: [CreditApplication, RiskAssessment]
+  roles: [CreditAnalyst, CreditManager]
+
+  filters { status; period }
+  metrics {
+    applications: count(CreditApplication)
+    highRisk: count(RiskAssessment) where band == High
+    averageScore: avg(RiskAssessment.score)
+  }
+  freshness: 15m
+  export: [pdf, csv]
+}
+
+view CreditDashboard {
+  title: { pt-BR: "Painel de crédito", en: "Credit dashboard" }
+  type: dashboard
+  sources: [CreditApplication, CreditLimit]
+  roles: [CreditAnalyst, CreditManager]
+  mode: live
+
+  filters { status; period }
+  metrics {
+    submitted: count(CreditApplication) where status == Submitted
+    approved: count(CreditApplication) where status == Approved
+    activeLimits: count(CreditLimit) where status == Active
+    averageLimit: avg(CreditLimit.amount)
+  }
+  units { averageLimit: BRL }
+  freshness: 5m
+}
+
+view CreditFlowProgress {
+  title: { pt-BR: "Andamento da análise de crédito", en: "Credit analysis progress" }
+  type: process
+  process: CreditApplicationFlow
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view MyCreditTasks {
+  title: { pt-BR: "Minhas tarefas de crédito", en: "My credit tasks" }
+  type: inbox
+  roles: [CreditAnalyst, CreditManager]
+
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
+}

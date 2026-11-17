@@ -1,0 +1,242 @@
+// service: example.com/services/hr
+
+process Onboarding for Employee {
+  title: { pt-BR: "Integração do colaborador", en: "Employee onboarding" }
+  version: 1
+  goal: "Colocar a pessoa produtiva no primeiro dia, com documentos, acessos e equipamento"
+  owner: "People"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  on breach -> Escalate
+  cancel on Employee.OnboardingCancelled -> Undo
+
+  pool Company {
+    internal
+    lane People { role: PeopleOps }
+    lane IT { role: ITAdmin }
+    lane Management { role: HiringManager }
+  }
+
+  pool NewHire {
+    external
+    lane Portal { role: NewHire }
+  }
+
+  start Hired { event: Employee.Hired }
+
+  fork Prepare
+
+  join Prepared
+
+  task CollectDocuments {
+    lane: Portal
+    form: OnboardingDocuments
+    sla: 3d
+    on timer 5d -> Escalate
+  }
+
+  task ProvisionAccess {
+    lane: System
+    runs: Provisioning
+    with { employee }
+    sla: 2d
+  }
+
+  task OrderEquipment {
+    lane: IT
+    form: EquipmentRequest
+    sla: 1d
+    assign: pull
+  }
+
+  task ManagerCheckin {
+    lane: Management
+    form: ManagerCheckin
+    sla: 2d
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Conversar com a pessoa e destravar o que falta para a integração"
+    sla: 1d
+  }
+
+  rollback Undo
+
+  end Ready {
+    title: { pt-BR: "Pronto para trabalhar", en: "Ready to work" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
+    outcome: cancelled
+  }
+
+  Hired -> Prepare
+  Prepare -> CollectDocuments
+  Prepare -> ProvisionAccess
+  Prepare -> OrderEquipment
+  CollectDocuments.submit -> Prepared
+  ProvisionAccess -> Prepared
+  OrderEquipment.order -> Prepared
+  Prepared -> ManagerCheckin
+  ManagerCheckin.confirm -> Ready
+  Undo -> Cancelled
+  Escalate -> ManagerCheckin
+}
+
+process Provisioning for Employee {
+  title: { pt-BR: "Provisionamento de acessos", en: "Access provisioning" }
+  version: 1
+  goal: "Entregar e-mail e sistemas funcionando para a pessoa contratada"
+  owner: "IT"
+  timezone: America/Fortaleza
+  sla: 3d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane IT { role: ITAdmin }
+  }
+
+  pool NewHire {
+    external
+    lane Portal { role: NewHire }
+  }
+
+  start Begin { called }
+
+  task ProvisionMailbox {
+    lane: System
+    action: Employee.provisionMailbox
+    sla: 2h
+  }
+
+  task ProvisionSystems {
+    lane: System
+    action: Employee.provisionSystems
+    sla: 4h
+    on timer 4h -> Escalate
+  }
+
+  task ConfirmAccess {
+    lane: Portal
+    form: AccessConfirmation
+    sla: 1d
+    on timer 2d -> Escalate
+  }
+
+  task Escalate {
+    lane: IT
+    manual: "Reprovisionar o acesso com a pessoa e registrar o problema"
+    sla: 4h
+  }
+
+  end Ready {
+    title: { pt-BR: "Acessos prontos", en: "Access ready" }
+    outcome: success
+  }
+
+  end Blocked {
+    title: { pt-BR: "Acesso bloqueado", en: "Access blocked" }
+    outcome: failure
+  }
+
+  ProvisionMailbox -> ProvisionSystems
+  ProvisionSystems -> ConfirmAccess
+  ConfirmAccess.confirm -> Ready
+  ConfirmAccess.report -> Blocked
+  Escalate -> ConfirmAccess
+  Begin -> ProvisionMailbox
+}
+
+process Offboarding for Employee {
+  title: { pt-BR: "Desligamento do colaborador", en: "Employee offboarding" }
+  version: 1
+  goal: "Encerrar o vínculo com acessos revogados, equipamento devolvido e entrevista registrada"
+  owner: "People"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  on breach -> Escalate
+  cancel on Employee.OffboardingCancelled -> Undo
+
+  pool Company {
+    internal
+    lane People { role: PeopleOps }
+    lane IT { role: ITAdmin }
+    lane Management { role: HiringManager }
+  }
+
+  start OffboardingRequested { event: Employee.OffboardingStarted }
+
+  fork Departure
+
+  join Departed
+
+  task RevokeAccess {
+    lane: IT
+    form: AccessRevocation
+    sla: 1d
+    assign: pull
+  }
+
+  task ReturnEquipment {
+    lane: IT
+    form: EquipmentReturn
+    sla: 2d
+    assign: pull
+  }
+
+  task ExitInterview {
+    lane: People
+    form: ExitInterview
+    sla: 3d
+    assign: pull
+  }
+
+  wait LastDay {
+    until: employee.lastWorkingDay
+  }
+
+  task Terminate {
+    lane: System
+    action: Employee.terminate
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Falar com a pessoa e concluir o desligamento"
+    sla: 1d
+  }
+
+  rollback Undo
+
+  end Closed {
+    title: { pt-BR: "Desligado", en: "Closed" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
+    outcome: cancelled
+  }
+
+  OffboardingRequested -> Departure
+  Departure -> RevokeAccess
+  Departure -> ReturnEquipment
+  Departure -> ExitInterview
+  RevokeAccess.revoke -> Departed
+  ReturnEquipment.returnItem -> Departed
+  ExitInterview.record -> Departed
+  Departed -> LastDay
+  LastDay -> Terminate
+  Terminate -> Closed
+  Undo -> Cancelled
+  Escalate -> Terminate
+}

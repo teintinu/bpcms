@@ -1,4 +1,5 @@
 // service: example.com/services/support
+
 view TicketKanban {
   title: { pt-BR: "Quadro de chamados", en: "Ticket kanban" }
   type: kanban
@@ -6,32 +7,67 @@ view TicketKanban {
   roles: [SupportAgent, Manager]
   groupBy: status
 
-  columns { open; in_progress; waiting; resolved }
+  columns { subject; priority; slaDue }
   card { subject; priority; slaDue; assignee }
-  filter { assignee = currentUser }
+  filter { status != Closed }
   actions {
-    move -> Ticket.assign
-    resolve -> Ticket.resolve
+    open -> TicketDetail
+    claim -> Ticket.claim
   }
 }
 
-view ReturnForm {
-  title: { pt-BR: "Formulário de devolução", en: "Return form" }
-  type: form
-  document: ReturnRequest
+view TicketDetail {
+  title: { pt-BR: "Detalhe do chamado", en: "Ticket detail" }
+  type: detail
+  document: Ticket
   roles: [SupportAgent, Manager]
 
-  fields {
-    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
-    payment: Payment { title: { pt-BR: "Pagamento", en: "Payment" } }
-    shipment: Shipment { title: { pt-BR: "Remessa", en: "Shipment" } }
-    reason: string { title: { pt-BR: "Motivo", en: "Reason" }, required }
-    refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, currency: BRL }
-  }
-
+  sections { summary; timeline }
+  computed { breached; remaining }
   actions {
-    save -> ReturnRequest.request
-    approve -> ReturnRequest.approve
-    reject -> ReturnRequest.reject
+    resolve -> Ticket.resolve
+    escalate -> Ticket.escalate(justification)
   }
+}
+
+view TicketQueue {
+  title: { pt-BR: "Fila de atendimento", en: "Ticket queue" }
+  type: inbox
+  roles: [SupportAgent, Manager]
+  scope: lanes
+  groupBy: lane
+  filter { lane in currentUser.lanes }
+  columns { title; subject; lane; dueAt; priority }
+}
+
+view ReturnRequests {
+  title: { pt-BR: "Solicitações de devolução", en: "Return requests" }
+  type: table
+  source: ReturnRequest
+  roles: [SupportAgent, Manager]
+
+  columns { order; status; refundAmount; requestedAt }
+  filters { status; period }
+  pagination: 50
+  actions {
+    open -> RefundCaseProgress
+  }
+}
+
+view TicketTriageProgress {
+  title: { pt-BR: "Andamento da triagem", en: "Ticket triage progress" }
+  type: process
+  process: TicketTriage
+  roles: [SupportAgent, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+view RefundCaseProgress {
+  title: { pt-BR: "Andamento da devolução", en: "Refund case progress" }
+  type: process
+  process: RefundCase
+  roles: [SupportAgent, Manager, Customer]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
 }

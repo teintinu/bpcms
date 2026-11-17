@@ -1,7 +1,7 @@
 // service: example.com/services/checkout
 document CheckoutSession {
   title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
-  version: 1
+  version: 2
   owner: "Checkout"
   sync: live
 
@@ -12,37 +12,127 @@ document CheckoutSession {
     }
     total: std.Money {
       title: { pt-BR: "Total", en: "Total" }
+      lookup
       currency: BRL
+    }
+    freight: std.Money {
+      title: { pt-BR: "Frete", en: "Freight" }
+      currency: BRL
+    }
+    deliveryDays: std.Count {
+      title: { pt-BR: "Prazo de entrega", en: "Delivery days" }
+      min: 1
+      max: 90
+    }
+    paymentMethod: PaymentMethod {
+      title: { pt-BR: "Método de pagamento", en: "Payment method" }
+      lookup
+    }
+    authorizationCode: string {
+      title: { pt-BR: "Código de autorização", en: "Authorization code" }
+      maxLength: 60
     }
     status: CheckoutStatus {
       title: { pt-BR: "Situação", en: "Status" }
       lookup
     }
+    createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" } }
+    confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
   }
 
+  indexes {
+    byCustomer: [customer.id, createdAt] range
+    byStatus: [status, createdAt] range
+  }
+
+
   actions {
+    create(customer: User, total: std.Money) {
+      title: { pt-BR: "Abrir sessão", en: "Open session" }
+      roles: [Customer]
+      {
+        createdAt = now()
+      }
+    }
+
     validateCart() {
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
       roles: [Customer]
-      transition: Validated
+
+      to: status.Validated
+
+      rule total > 0 {
+        pt-BR: "O carrinho está vazio"
+        en: "The cart is empty"
+      }
     }
 
-    quoteShipping() {
-      title: { pt-BR: "Cotar frete", en: "Quote shipping" }
-      roles: [Customer]
-      transition: ShippingQuoted
+    quoteShipping(freightAmount: std.Money, days: std.Count) {
+      title: { pt-BR: "Registrar frete", en: "Record shipping" }
+      roles: [SessionEngine]
+
+      to: status.ShippingQuoted
+      emits { freight: freightAmount; deliveryDays: days }
+
+      rule freightAmount >= 0 BRL {
+        pt-BR: "O frete não pode ser negativo"
+        en: "Freight cannot be negative"
+      }
+      {
+        freight = freightAmount
+        deliveryDays = days
+      }
     }
 
-    authorizePayment() {
-      title: { pt-BR: "Autorizar pagamento", en: "Authorize payment" }
+    authorizePayment(authorization: string) {
+      title: { pt-BR: "Registrar autorização", en: "Record authorization" }
+      roles: [SessionEngine]
+
+      to: status.PaymentAuthorized
+      emits { authorizationCode: authorization }
+
+      rule authorization.length >= 4 {
+        pt-BR: "Informe o código de autorização"
+        en: "Enter the authorization code"
+      }
+      {
+        authorizationCode = authorization
+      }
+    }
+
+    retryPayment(method: PaymentMethod) {
+      title: { pt-BR: "Trocar forma de pagamento", en: "Change payment method" }
       roles: [Customer]
-      transition: PaymentAuthorized
+      {
+        paymentMethod = method
+      }
+    }
+
+    abandon(reason: string) {
+      title: { pt-BR: "Abandonar compra", en: "Abandon purchase" }
+      roles: [Customer, SupportAgent, SessionEngine]
+
+      to: status.Abandoned
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
     }
 
     confirmOrder() {
-      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
-      roles: [Customer]
-      transition: OrderConfirmed
+      title: { pt-BR: "Confirmar compra", en: "Confirm purchase" }
+      roles: [SessionEngine]
+
+      to: status.Confirmed
+      {
+        confirmedAt = now()
+      }
     }
+  }
+
+  rule status == Confirmed implies confirmedAt != null {
+    pt-BR: "Informe a data de confirmação"
+    en: "Enter the confirmation date"
   }
 }

@@ -1,11 +1,10 @@
 service "example.com/services/shipping" {
   title: { pt-BR: "Expedição", en: "Shipping" }
-  version: 1.0.0
+  version: 1.1.0
   owner: "Shipping"
   imports {
     service "bpcms.org/std" as std
+    service "example.com/services/catalog" as Catalog
     service "example.com/services/orders" as Orders
-    service "example.com/services/inventory" as Inventory
-    service "example.com/services/identity" as Identity
   }
 }

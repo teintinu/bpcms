@@ -1,21 +1,31 @@
 // service: example.com/services/shipping
-view ShipmentForm {
-  title: { pt-BR: "Formulário de remessa", en: "Shipment form" }
-  type: form
-  document: Shipment
-  roles: [Dispatcher]
+view Shipments {
+  title: { pt-BR: "Remessas", en: "Shipments" }
+  type: table
+  source: Shipment
+  roles: [Packer, Dispatcher, Manager]
 
-  fields {
-    order: Order { title: { pt-BR: "Pedido", en: "Order" }, required }
-    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" }, readonly }
-    volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
-    status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, readonly }
-  }
+  columns { order; carrierName; status; tracking; frete }
+  filters { status; period; carrierName }
+  pagination: 50
 
   actions {
-    save -> Shipment.create
-    dispatch -> Shipment.dispatch
-    cancel -> none
+    open -> ShipmentDetail
+    receive -> Shipment.create(order)
+    requestQuote -> Shipment.requestQuote
+  }
+}
+
+view ShipmentDetail {
+  title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
+  type: detail
+  document: Shipment
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { summary; items; timeline }
+  actions {
+    progress -> DispatchProgress
+    delivery -> DeliveryProgress
   }
 }
 
@@ -23,13 +33,39 @@ view DispatchBoard {
   title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
   type: kanban
   source: Shipment
-  roles: [Dispatcher, Manager]
-  groupBy: status
+  roles: [Packer, Dispatcher, Manager]
 
-  columns { draft; packed; dispatched; delivered }
-  card { order; pesoBruto; volume; tracking }
+  groupBy: status
+  card { order; tracking; frete }
+  filter { status != Cancelled }
   actions {
-    dispatch -> Shipment.dispatch
-    track -> Shipment.trackAll
+    open -> ShipmentDetail
   }
+}
+
+view DispatchProgress {
+  title: { pt-BR: "Andamento do despacho", en: "Dispatch progress" }
+  type: process
+  process: DispatchOrder
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}
+
+view DeliveryProgress {
+  title: { pt-BR: "Andamento da entrega", en: "Delivery progress" }
+  type: process
+  process: DeliveryTracking
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+view LogisticsInbox {
+  title: { pt-BR: "Minha fila de expedição", en: "My dispatch queue" }
+  type: inbox
+  roles: [Packer, Dispatcher]
+  scope: mine
+  groupBy: process
+  columns { title; subject; lane; dueAt; priority }
 }

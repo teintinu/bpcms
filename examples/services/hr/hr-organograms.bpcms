@@ -1,0 +1,76 @@
+// service: example.com/services/hr
+
+role Recruiter {
+  title: { pt-BR: "Recrutador", en: "Recruiter" }
+  permissions: [
+    candidate.view,
+    candidate.screen,
+    candidate.interview,
+    candidate.reject
+  ]
+}
+
+role HiringManager {
+  title: { pt-BR: "Gestor contratante", en: "Hiring manager" }
+  permissions: [
+    candidate.view,
+    candidate.offer,
+    candidate.hire,
+    employee.view,
+    employee.checkin,
+    employee.offboarding,
+    report.view
+  ]
+}
+
+role PeopleOps {
+  title: { pt-BR: "Pessoas e cultura", en: "People operations" }
+  inherits: Recruiter
+  permissions: [
+    employee.view,
+    employee.hire,
+    employee.terminate,
+    employee.documents,
+    access.view,
+    equipment.view,
+    exit.interview,
+    report.view
+  ]
+}
+
+role ITAdmin {
+  title: { pt-BR: "Administrador de TI", en: "IT administrator" }
+  permissions: [
+    access.view,
+    access.provision,
+    access.revoke,
+    equipment.view,
+    equipment.deliver,
+    employee.view
+  ]
+}
+
+role Candidate {
+  title: { pt-BR: "Candidato", en: "Candidate" }
+  permissions: [candidate.viewOwn, candidate.apply]
+}
+
+role NewHire {
+  title: { pt-BR: "Nova contratação", en: "New hire" }
+  permissions: [employee.viewOwn, employee.documents, employee.confirmAccess]
+}
+
+organogram People {
+  title: { pt-BR: "Organograma de pessoas", en: "People organogram" }
+
+  hierarchy {
+    HiringManager > PeopleOps > Recruiter
+    PeopleOps > ITAdmin
+    Recruiter > Candidate
+    PeopleOps > NewHire
+  }
+
+  PeopleOps manages [Recruiter, ITAdmin]
+  HiringManager manages [PeopleOps]
+  HiringManager delegates to PeopleOps when absent for 5d
+}

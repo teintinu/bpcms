@@ -40,6 +40,10 @@ icon Refunded {
   title: { pt-BR: "Reembolsado", en: "Refunded" }
 }
 
+icon Cancelled {
+  title: { pt-BR: "Cancelado", en: "Cancelled" }
+}
+
 icon P1 {
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
 }
@@ -54,4 +58,28 @@ icon P3 {
 
 icon P4 {
   title: { pt-BR: "Prioridade 4", en: "Priority 4" }
+}
+
+icon Technical {
+  title: { pt-BR: "Técnico", en: "Technical" }
+}
+
+icon Billing {
+  title: { pt-BR: "Cobrança", en: "Billing" }
+}
+
+icon General {
+  title: { pt-BR: "Geral", en: "General" }
+}
+
+icon Eligible {
+  title: { pt-BR: "Elegível", en: "Eligible" }
+}
+
+icon ApprovalRequired {
+  title: { pt-BR: "Exige aprovação", en: "Approval required" }
+}
+
+icon NotEligible {
+  title: { pt-BR: "Não elegível", en: "Not eligible" }
 }

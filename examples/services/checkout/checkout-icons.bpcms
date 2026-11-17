@@ -1,0 +1,37 @@
+// service: example.com/services/checkout
+
+icon Draft {
+  title: { pt-BR: "Rascunho", en: "Draft" }
+}
+
+icon Validated {
+  title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+}
+
+icon ShippingQuoted {
+  title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+}
+
+icon PaymentAuthorized {
+  title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+}
+
+icon Confirmed {
+  title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+}
+
+icon Abandoned {
+  title: { pt-BR: "Abandonada", en: "Abandoned" }
+}
+
+icon CreditCard {
+  title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+}
+
+icon Pix {
+  title: { pt-BR: "Pix", en: "Pix" }
+}
+
+icon Boleto {
+  title: { pt-BR: "Boleto", en: "Boleto" }
+}

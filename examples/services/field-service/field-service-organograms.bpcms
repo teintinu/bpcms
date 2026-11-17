@@ -1,0 +1,58 @@
+// service: example.com/services/field-service
+
+role Dispatcher {
+  title: { pt-BR: "Despachante", en: "Dispatcher" }
+  permissions: [
+    visit.view,
+    visit.schedule,
+    visit.reschedule,
+    visit.dispatch,
+    workorder.view,
+    workorder.assign,
+    technician.view
+  ]
+}
+
+role FieldTechnician {
+  title: { pt-BR: "Técnico de campo", en: "Field technician" }
+  permissions: [
+    visit.view,
+    visit.checkin,
+    visit.report,
+    workorder.view,
+    workorder.start
+  ]
+}
+
+role Supervisor {
+  title: { pt-BR: "Supervisor de campo", en: "Field supervisor" }
+  inherits: Dispatcher
+  permissions: [
+    visit.escalate,
+    workorder.finish,
+    workorder.cancel,
+    technician.manage,
+    report.view
+  ]
+}
+
+role Customer {
+  title: { pt-BR: "Cliente", en: "Customer" }
+  permissions: [visit.viewOwn, visit.confirm, visit.withdraw]
+}
+
+organogram FieldOperations {
+  title: { pt-BR: "Organograma de campo", en: "Field operations organogram" }
+
+  hierarchy {
+    Supervisor > Dispatcher > FieldTechnician
+    Dispatcher > Customer
+  }
+
+  Supervisor manages [Dispatcher, FieldTechnician]
+  Supervisor delegates to Dispatcher when absent for 3d
+
+  signature {
+    FieldTechnician
+  }
+}

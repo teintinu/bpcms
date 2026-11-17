@@ -1,8 +1,10 @@
 # BPCMS — Exemplos de DSL
 
-*Sintaxe ilustrativa v0.1.* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
+*Sintaxe ilustrativa v0.2 (Process + Document).* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
 
-Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 152 exemplos de artefatos, porque `Shape` tem 9, Application/Service têm 8 e Process tem 7 (compensação); há também 3 exemplos de uso de serviços essenciais. Alguns exemplos usam o mesmo domínio de propósito, para mostrar composição e reuso; outros mudam de domínio para testar generalidade.
+A aplicação é orientada a **Process** (trabalho) e **Document** (estado). O processo orquestra quem faz o quê; o documento guarda o dado durável; o **Form** é o contrato da tarefa humana; a **View** é tela de leitura; a **Message** é contrato entre participantes. `job` e `report` deixaram de ser artefatos (agendamento é `start`; relatório é `view type: report`), e o ciclo de vida do documento vive nas actions (`from:`/`to:`/`emits:`).
+
+Este documento cobre o catálogo de artefatos com **186 exemplos** (e 3 usos de serviços essenciais), sendo **24 processos** — o teste de aceitação do modelo. Alguns exemplos compartilham o mesmo domínio de propósito (composição e reuso); outros mudam de domínio para testar generalidade.
 
 ## Como ler
 
@@ -11,6 +13,8 @@ Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 * A linha *Valida:* diz o que aquele exemplo quer provocar.
 * Nomes de artefatos são em inglês (`application`, `document`, `shape`); nomes de negócio podem ser em português (`Pedido`, `Remessa`).
 * Nada aqui substitui a baseline do [BRAINSTORM.md](BRAINSTORM.md); os exemplos são um **teste de sintaxe e modelagem**.
+* Fragmentos que usam `std.*` assumem `imports { service "bpcms.org/std" as std }` no serviço; o import não é repetido em todo bloco.
+* Os exemplos são **independentes entre si e das pastas `examples/`**: um bloco pode citar artefatos que não existem no repositório de exemplos (é teste de sintaxe, não um projeto compilável).
 * **Application e Service usam URI web sem protocolo** como identificador: `"example.com/app/..."` e `"example.com/services/..."`. A URL `http://<uri>/index.html` é a página de download (app) ou de documentação (serviço); em produção, `https://`.
 
 ## Convenções usadas
@@ -19,31 +23,38 @@ Cobrimos os **24 tipos de artefato** do catálogo, com **6 exemplos cada** — 1
 | :--- | :--- | :--- |
 | Artefato | `application "example.com/app/x" { ... }` | Application/Service usam URI; os demais usam nome simples |
 | Campo | `nome: Shape` | `Shape` é o tipo de dado, não uma forma visual |
-| Campo com parâmetros | `peso: Mass { unit: kg, min: 0 }` | o campo só passa parâmetros simples |
+| Campo com parâmetros | `weight: std.Mass { unit: kg, min: 0 }` | o campo só passa parâmetros simples |
 | Lista | `[A, B, C]` | ordem preservada quando importa |
 | Opcional | `T` | ausência é diferente de vazio |
-| Referência | `Document`, `View`, `Role` | por nome; o `check` valida existência e ciclo |
-| Ação | `criar(...)` | comando tipado, sem retorno, não método OO |
-| Índice | `byStatus: [status, criadoEm] range` | `unique`, `range`, `search`, `hash` |
-| Regra | `total == itens.sum(subtotal)` | expressão segura, sem código arbitrário |
+| Referência | `Document`, `Form`, `View`, `Role` | por nome; o `check` valida existência e ciclo |
+| Ação | `issue()` | comando tipado; pode declarar `returns:` |
+| Transição | `transition Issued { ... }` no `value` + `to: status.Issued` na action | o workflow define a aresta e o evento; a action só aponta o destino |
+| Índice | `byStatus: [status, createdAt] range` | `unique`, `range`, `search`, `hash` |
+| Regra | `total == subtotal + tax` | expressão segura, sem código arbitrário |
 | Configuração | `env.ERP_URL`, `secret.STRIPE_KEY` | ambiente e segredo são resolvidos na promoção |
-| Processo | `start`, `task`, `gateway`, `end` | nós e transições; BPMN é uma visão |
+| Processo | `start`, `task`, `gateway`, `fork`/`join`, `end` | grafo de arestas explícitas; BPMN é uma visão |
+| Task | `task Review { lane: Sales; form: OrderReview }` | o tipo é inferido do contrato; não existe `type:` |
+| Executor | `lane:` (ou `System`) | toda task tem lane; pool define interno/portal/parceiro/sistema |
+| Subpasso | `runs: DeliveryTracking` | sempre outra instância de processo |
+| Agendamento | `start { schedule: "0 2 1 * *" }` | não existe `job` |
+| Relatório | `view type: report` | agregação é projeção; documento derivado é estado |
 | Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
 | Versão | `version: semver("1.2.3")` / `tag("v1.2.3")` / `commit("9f3a1c")` | `1.4.0` é açúcar para `semver("1.4.0")` |
 | Release | `"<uri>"@1.2.3` | URI + seletor de versão |
 | Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
-| Evento de processo | `on Evento`, `on timer 2d`, `on error X` | gatilhos explícitos |
-| Permissão | `purchase.approve` | namespace por capacidade |
+| Evento | `transition Paid { title; payload }` no `value` | evento do workflow definido no workflow; `events { }` só para evento sem transição |
+| Permissão | `roles: [Manager]` na action | autoridade é do documento; lane é execução |
 
 ## Cobertura
 
 | Grupo | Tipos | Exemplos |
 | :--- | :--- | :--- |
-| **Núcleo** | Application, Service, Process, Document, Shape, View, Role/Organogram | 50 |
+| **Núcleo** | Application, Service, Process, Form, Message, Document, Shape, View, Role/Organogram | 85 |
 | **Descoberta** | Evidence, Conversation, Decision, Assumption | 24 |
 | **Plataforma** | Environment, Parameter, Builder, Theme, Locale, Widget custom, Release/Version, Icon | 48 |
-| **Operação** | Integration, Report/Dashboard, Event, Job/Schedule, Policy/Rule | 30 |
-| **Total** | 24 tipos | **152** |
+| **Operação** | Integration, Report/Dashboard, Event, Schedule, Policy/Rule | 29 |
+| **Total** | catálogo de artefatos | **186** |
+| **Avulsos** | usos de serviços essenciais (location, timezone, regionalization, units) | 3 |
 
 ---
 
@@ -406,12 +417,16 @@ service "example.com/services/fraud-checkout" {
   }
 
   reintroduce Checkout.CheckoutStatus {
+    value ShippingQuoted {
+      transition FraudChecked {
+        title: { pt-BR: "Risco verificado", en: "Risk checked" }
+      }
+    }
+
     value FraudChecked {
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
-
-      transition PaymentAuthorized {
-        title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      }
+      icon: status.fraudChecked
+      ordinal: 25
     }
 
     insert FraudChecked before PaymentAuthorized
@@ -421,13 +436,13 @@ service "example.com/services/fraud-checkout" {
     action checkFraud() {
       title: { pt-BR: "Verificar risco", en: "Check risk" }
       roles: [RiskAnalyst]
-      transition: FraudChecked
+      to: status.FraudChecked
     }
   }
 
   reintroduce Checkout.Checkout {
     task FraudCheck {
-      type: service
+      lane: System
       action: CheckoutSession.checkFraud
     }
 
@@ -436,7 +451,7 @@ service "example.com/services/fraud-checkout" {
 }
 ```
 
-*Valida: o workflow e o processo são editados via `reintroduce`; `insert` insere estados/tasks sem substituir o todo.*
+*Valida: o ciclo de vida e o processo são editados via `reintroduce`; `insert` insere estados/tasks sem substituir o todo.*
 
 ## Lock file do app
 
@@ -469,413 +484,1875 @@ lock:
 
 ## Process
 
-### P.1 Aprovação de compra com alçadas
+Os 24 processos abaixo são o teste de aceitação do modelo Process + Document. Cada um exercita construções reais: pools e lanes (interna, portal, parceiro, sistema), forms, decisões, paralelismo, mensagens, subprocessos, prazos, exceções, compensação, cancelamento e desfechos nomeados.
+
+Convenções:
+
+- `task` sempre tem `lane`; automação usa `lane: System`;
+- o tipo da task é inferido do contrato (`form`, `manual`, `action`, `call`, `decision`, `sends`, `receives`, `runs`) — não existe `type:`;
+- arestas são explícitas e a ordem de declaração não é semântica;
+- `end` é nomeado e classificado (`outcome: success | failure | cancelled`);
+- o documento só muda por `action`; a variável do processo é contexto.
+
+### P.1 Aprovação de compra com alçada (procurement)
 
 ```bpcms
-process PurchaseApproval {
+process PurchaseApproval for PurchaseRequest {
+  title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
   version: 1
-  goal: "Comprar com alçada e rastro, sem travar o simples"
-  roles: [Requester, Manager, Buyer, Director]
-  start on PurchaseRequest.Requested
+  goal: "Comprar com alçada e rastro, sem travar o pedido simples"
+  sla: 5d
 
-  task ReviewRequest {
-    role: Manager
-    form: PurchaseReview
-    reads: [PurchaseRequest]
-    writes: [PurchaseRequest]
-    sla: 1d
+  pool Company {
+    internal
+    lane Procurement { role: Buyer }
+    lane Management { role: Manager }
+    lane Direction { role: Director }
   }
 
-  gateway Amount {
-    if purchase.amount <= 5000 -> AutoApprove
-    else -> BuyerQuote
+  variables { tier: ApproverTier; purchaseOrder: PurchaseOrder }
+
+  start Submitted { event: PurchaseRequest.Submitted }
+  start Manual { by: [Buyer, Manager] }
+  on breach -> Escalate
+
+  task Review { lane: Procurement; form: PurchaseReview; sla: 1d; on breach -> Remind }
+
+  task Decide {
+    lane: System
+    decision: ApprovalLimit
+    with { amount: purchaseRequest.amount; supplier: purchaseRequest.supplier }
+    gives: tier
   }
 
-  task AutoApprove {
-    type: service
-    action: PurchaseRequest.approve
+  gateway Tier {
+    if tier == Auto -> AutoApprove
+    if tier == Manager -> ManagerReview
+    else -> DirectorReview
   }
 
-  task BuyerQuote {
-    role: Buyer
-    form: QuoteForm
-    reads: [PurchaseRequest]
-    writes: [Quote]
-  }
+  task AutoApprove { lane: System; action: PurchaseRequest.approve; with { purchaseRequest } }
+  task ManagerReview { lane: Management; form: ApprovalDecision; sla: 2d; assign: named(purchaseRequest.requester.manager) }
+  task DirectorReview { lane: Direction; form: ApprovalDecision; sla: 2d }
+  task Remind { lane: System; action: PurchaseRequest.remindApprover; with { purchaseRequest } }
+  task Escalate { lane: System; action: PurchaseRequest.escalate; with { purchaseRequest } }
+  task CreateOrder { lane: System; action: PurchaseOrder.create; with { purchaseRequest }; gives: purchaseOrder }
 
-  task Approve {
-    role: Manager
-    form: ApprovalForm
-    reads: [Quote]
-    writes: [PurchaseOrder]
-  }
+  Submitted -> Review
+  Manual -> Review
+  Review -> Decide
+  Decide -> Tier
+  AutoApprove -> CreateOrder
+  ManagerReview.approved -> CreateOrder
+  ManagerReview.rejected -> Rejected
+  DirectorReview.approved -> CreateOrder
+  DirectorReview.rejected -> Rejected
+  Remind -> Review
+  Escalate -> DirectorReview
+  CreateOrder -> Approved
 
-  end on PurchaseRequest.Approved
-
-  on timer 2d after ReviewRequest -> Escalate
-  task Escalate {
-    role: Director
-    form: EscalationForm
-  }
+  end Approved { title: { pt-BR: "Aprovada", en: "Approved" }; outcome: success }
+  end Rejected { title: { pt-BR: "Rejeitada", en: "Rejected" }; outcome: failure }
 }
 ```
 
-*Valida: gateway por valor, tarefa automática, cotação humana, SLA e escalonamento por timer.*
+*Valida: dois starts, DMN com alçada, gateway por valor, breach do caso e da task, arestas por desfecho de form, desfechos nomeados.*
 
-### P.2 Expedição com paralelismo e erro de transportadora
+### P.2 Onboarding de fornecedor com portal externo (procurement)
 
 ```bpcms
-process OrderFulfillment {
-  version: 2
-  goal: "Entregar o pedido no prazo com frete conhecido"
-  roles: [Picker, Packer, Supervisor, Carrier]
-  start on Order.Approved
+process SupplierOnboarding for Supplier {
+  title: { pt-BR: "Cadastro de fornecedor", en: "Supplier onboarding" }
+  version: 1
+  goal: "Cadastrar fornecedor com documento verificado e contrato assinado"
+  sla: 10d
 
-  parallel {
-    task PickItems {
-      role: Picker
-      reads: [Order, StockItem]
-      writes: [Shipment]
-      sla: 2h
-    }
-    task ReserveStock {
-      type: service
-      action: Inventory.reserve
-    }
+  pool Company {
+    internal
+    lane Procurement { role: Buyer }
+    lane Compliance { role: ComplianceAnalyst }
+  }
+  pool Supplier {
+    external
+    lane SupplierPortal { role: SupplierUser }
+  }
+  pool Bureau {
+    external
   }
 
-  task PackItems {
-    role: Packer
-    reads: [Shipment, Product]
-    writes: [Shipment]
+  variables { profile: CompanyProfile; contract: Contract }
+
+  start Nominated { by: [Buyer, ComplianceAnalyst] }
+
+  task SubmitRegistration {
+    lane: SupplierPortal
+    form: SupplierRegistration
+    sla: 5d
+    on breach -> CancelOnboarding
   }
 
-  gateway WeightLimit {
-    if shipment.pesoBruto <= carrier.limitDePeso -> QuoteFreight
-    else -> SplitShipment
+  task VerifyCompany {
+    lane: System
+    call: Bureau.verifyCompany
+    with { supplier }
+    gives: profile
   }
 
-  task SplitShipment {
-    role: Supervisor
-    form: SplitForm
-    reads: [Shipment]
-    writes: [Shipment]
+  gateway Profile {
+    if profile.status == ok -> ComplianceReview
+    else -> RequestFix
   }
 
-  task QuoteFreight {
-    type: service
-    integration: Carrier
-    reads: [Shipment]
-    writes: [FreightQuote]
-  }
+  task RequestFix { lane: System; sends: RegistrationFixRequest; partner: Supplier; with { supplier; profile } }
+  task ComplianceReview { lane: Compliance; form: ComplianceApproval; sla: 2d }
+  task Register { lane: System; action: Supplier.approve; with { supplier; profile } }
+  task OpenContract { lane: System; action: Contract.open; with { supplier }; gives: contract }
+  task SignContract { lane: SupplierPortal; form: ContractSignature; sla: 5d }
+  task Activate { lane: System; sends: SupplierActivated; partner: Supplier; with { supplier } }
+  task CancelOnboarding { lane: System; action: Supplier.reject; with { supplier } }
 
-  task PrintLabel {
-    type: service
-    integration: Carrier
-    reads: [Shipment]
-    writes: [Label]
-  }
+  Nominated -> SubmitRegistration
+  SubmitRegistration -> VerifyCompany
+  VerifyCompany -> Profile
+  RequestFix -> SubmitRegistration
+  ComplianceReview.approved -> Register
+  ComplianceReview.rejected -> CancelOnboarding
+  Register -> OpenContract
+  OpenContract -> SignContract
+  SignContract.signed -> Activate
+  SignContract.declined -> CancelOnboarding
+  Activate -> Active
+  CancelOnboarding -> Rejected
 
-  end on Shipment.Dispatched
-
-  on error CarrierUnavailable -> ManualQuote
-  task ManualQuote {
-    role: Supervisor
-    form: FreightManualQuoteForm
-    writes: [FreightQuote]
-  }
+  end Active { title: { pt-BR: "Fornecedor ativo", en: "Supplier active" }; outcome: success }
+  end Rejected { title: { pt-BR: "Cadastro recusado", en: "Registration rejected" }; outcome: failure }
 }
 ```
 
-*Valida: paralelismo, decisão por peso, divisão de remessa, serviço externo e boundary error.*
+*Valida: pool externo com portal (form preenchido fora), parceiro caixa-preta (Bureau), mensagens com partner, laço de correção, assinatura de contrato.*
 
-### P.3 Exame laboratorial com dispositivo e assinatura
+### P.3 Recebimento de mercadoria com divergência (procurement)
 
 ```bpcms
-process LabExamFlow {
+process GoodsReceipt for GoodsReceipt {
+  title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
   version: 1
-  goal: "Liberar laudo confiável no prazo"
-  roles: [Collector, Analyst, Pathologist]
-  start on Sample.Collected
+  goal: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
+  sla: 1d
 
-  task ReceiveSample {
-    role: Collector
-    form: ReceiveForm
-    reads: [LabExam]
-    writes: [LabExam]
+  pool Company {
+    internal
+    lane Dock { role: Receiver }
+    lane Quality { role: QualityInspector }
   }
 
-  task ReadAnalyzer {
-    type: service
-    integration: LabAnalyzer
-    reads: [LabExam]
-    writes: [LabExam.result]
+  variables { reading: WeightReading; accepted: boolean }
+
+  start Arrived { event: GoodsReceipt.Arrived }
+
+  task CheckIn { lane: Dock; form: ReceivingForm; sla: 2h }
+  task Weigh { lane: System; call: Scale.read; with { receipt }; gives: reading }
+
+  task Decide {
+    lane: System
+    decision: ReceiptDiscrepancy
+    with { expected: receipt.expectedWeight; measured: reading.weight }
+    gives: accepted
   }
 
-  task ValidateResult {
-    role: Analyst
-    form: ValidationForm
-    reads: [LabExam]
-    writes: [LabExam]
+  gateway Discrepancy {
+    if accepted -> Accept
+    else -> Inspect
   }
 
-  gateway Critical {
-    if exam.critical -> NotifyDoctor
-    else -> Review
+  task Accept { lane: System; action: GoodsReceipt.accept; with { receipt; weight: reading.weight } }
+  task Inspect { lane: Quality; form: DivergenceInspection; sla: 4h }
+  task Quarantine { lane: System; action: GoodsReceipt.quarantine; with { receipt } }
+  task ReverseReceipt { lane: System; action: GoodsReceipt.reverse; with { receipt }; compensates: Accept }
+  rollback Undo
+
+  Arrived -> CheckIn
+  CheckIn -> Weigh
+  Weigh -> Decide
+  Decide -> Discrepancy
+  Inspect.accepted -> Accept
+  Inspect.divergent -> Quarantine
+  Accept -> Accepted
+  Quarantine -> Undo
+  Undo -> Divergent
+
+  end Accepted { title: { pt-BR: "Recebido", en: "Accepted" }; outcome: success }
+  end Divergent { title: { pt-BR: "Divergente", en: "Divergent" }; outcome: failure }
+}
+```
+
+*Valida: leitura de dispositivo como task, decisão por tolerância, form de inspeção, compensação declarada e rollback.*
+
+### P.4 Entrada de pedido (orders)
+
+```bpcms
+process OrderIntake for Order {
+  title: { pt-BR: "Entrada de pedido", en: "Order intake" }
+  version: 1
+  goal: "Confirmar o pedido com estoque reservado e prazo prometido"
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Sales { role: Clerk }
+    lane Management { role: Manager }
   }
 
-  task NotifyDoctor {
-    type: service
-    integration: Notifications
-    reads: [LabExam]
-  }
+  variables { reservation: Reservation }
+
+  start Placed { event: Order.Placed }
+  start Manual { by: [Clerk] }
 
   task Review {
-    role: Pathologist
-    form: ReviewForm
-    reads: [LabExam]
-    writes: [LabExam.signature]
+    lane: Sales
+    form: OrderReview
+    sla: 4h
+    on breach -> ManagerReview
+    on error OrderInvalid -> Reject
   }
 
-  task Release {
-    type: service
-    action: LabExam.release
-    writes: [LabExam]
+  task Reserve {
+    lane: System
+    action: Stock.reserve
+    with { order }
+    gives: reservation
+    sla: 2m
+    on error StockUnavailable -> Backorder
   }
 
-  end on LabExam.Released
+  task Confirm { lane: System; action: Order.confirm; with { order; reservation } }
+  task Backorder { lane: Management; form: BackorderDecision; sla: 1d }
+  task Reject { lane: System; action: Order.reject; with { order } }
+  task ManagerReview { lane: Management; form: OrderReview; sla: 2h }
 
-  on timer 4h after ReceiveSample -> Escalate
-  task Escalate {
-    role: Pathologist
-    form: EscalationForm
-  }
+  Placed -> Review
+  Manual -> Review
+  Review.approved -> Reserve
+  Review.rejected -> Reject
+  Review.held -> ManagerReview
+  ManagerReview.approved -> Reserve
+  ManagerReview.rejected -> Reject
+  Reserve -> Confirm
+  Backorder.partial -> Confirm
+  Backorder.cancel -> Reject
+  Confirm -> Confirmed
+  Reject -> Rejected
+
+  end Confirmed { title: { pt-BR: "Confirmado", en: "Confirmed" }; outcome: success }
+  end Rejected { title: { pt-BR: "Recusado", en: "Rejected" }; outcome: failure }
 }
 ```
 
-*Valida: leitura de dispositivo, caminho crítico, assinatura e liberação como tarefas distintas.*
+*Valida: evento de início + início manual, form com três desfechos, erro de serviço com desvio, prazo com escalonamento, action encadeada.*
 
-### P.4 Onboarding com subprocesso
+### P.5 Cancelamento de pedido com compensação (orders)
 
 ```bpcms
-process EmployeeOnboarding {
+process OrderCancellation for Order {
+  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
   version: 1
-  goal: "Novo colaborador produtivo no primeiro dia"
-  roles: [HR, IT, Manager, NewHire]
-  start on Candidate.Hired
+  goal: "Cancelar com motivo, devolvendo reserva e pagamento"
+  sla: 2d
 
-  parallel {
-    task CollectDocuments {
-      role: NewHire
-      form: DocumentUpload
-      writes: [EmployeeProfile]
-    }
-    task CreateAccounts {
-      role: IT
-      form: AccountForm
-      writes: [AccessGrant]
-    }
-    task OrderEquipment {
-      role: IT
-      form: EquipmentForm
-      writes: [EquipmentOrder]
-    }
+  pool Company {
+    internal
+    lane Support { role: SupportAgent }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
   }
 
-  subprocess ITProvisioning {
-    process: ProvisionAccess
+  variables { eligible: boolean }
+
+  start Requested { by: [SupportAgent, Manager] }
+
+  task Review { lane: Support; form: CancellationReview; sla: 8h }
+
+  task Decide {
+    lane: System
+    decision: CancellationEligibility
+    with { order; reason: review.reason }
+    gives: eligible
   }
 
-  task ManagerCheckin {
-    role: Manager
-    form: CheckinForm
-    reads: [EmployeeProfile]
+  gateway Eligible {
+    if eligible -> ReleaseStock
+    else -> AskCustomer
   }
 
-  end on Onboarding.Completed
+  task ReleaseStock { lane: System; action: Stock.release; with { order }; compensates: Order.confirm }
+  task Refund { lane: System; action: Payment.refund; with { order; amount: order.total }; compensates: Order.confirm }
+  task CancelOrder { lane: System; action: Order.cancel; with { order; reason: review.reason } }
+  task AskCustomer { lane: Client; form: CancellationOptions; sla: 2d }
+  rollback Undo
 
-  on timer 3d after CandidateHired -> Escalate
-  task Escalate {
-    role: HR
-    form: OnboardingEscalation
-  }
+  Requested -> Review
+  Review -> Decide
+  Decide -> Eligible
+  AskCustomer.keep -> ReleaseStock
+  AskCustomer.acceptfee -> ReleaseStock
+  ReleaseStock -> Refund
+  Refund -> CancelOrder
+  CancelOrder -> Cancelled
+  Refund -> Undo
+  Undo -> Failed
+
+  end Cancelled { title: { pt-BR: "Cancelado", en: "Cancelled" }; outcome: success }
+  end Failed { title: { pt-BR: "Falha no cancelamento", en: "Cancellation failed" }; outcome: failure }
 }
 ```
 
-*Valida: paralelismo de tarefas humanas, subprocesso reutilizável e prazo de onboarding.*
+*Valida: decisão de elegibilidade, task no portal do cliente, compensação em ordem reversa, desvio de erro para rollback.*
 
-### P.5 Sinistro com risco, cobertura e compensação
+### P.6 Despacho com paralelismo e coleta pelo parceiro (shipping)
 
 ```bpcms
-process InsuranceClaim {
+process DispatchOrder for Order {
+  title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
   version: 1
-  goal: "Regular sinistro com decisão rastreável"
-  roles: [Adjuster, Analyst, Supervisor]
-  start on Claim.Opened
+  goal: "Separar, embalar e despachar com frete e rastreio conhecidos"
+  sla: 2d
 
-  task RegisterClaim {
-    role: Analyst
-    form: ClaimForm
-    reads: [Claim, Policy]
-    writes: [Claim]
+  pool Company {
+    internal
+    lane Warehouse { role: Packer }
+    lane Dispatch { role: Dispatcher }
+    lane Management { role: Manager }
+  }
+  pool Carrier {
+    external
   }
 
-  task ScoreFraud {
-    type: service
-    integration: FraudEngine
-    reads: [Claim]
-    writes: [FraudScore]
+  variables { shipment: Shipment; quote: FreightQuote }
+
+  start Approved { event: Order.Approved }
+
+  fork Prepare
+  join Prepared
+
+  task Pick { lane: Warehouse; form: PickItems; sla: 2h }
+  task Reserve { lane: System; action: Stock.reserve; with { order } }
+  task Pack { lane: Warehouse; form: PackShipment; sla: 2h }
+  task OpenShipment { lane: System; action: Shipment.open; with { order }; gives: shipment }
+  task Quote { lane: System; call: Carrier.quote; with { shipment }; gives: quote; sla: 5m; on error CarrierUnavailable -> ManualQuote }
+
+  gateway Weight {
+    if shipment.grossWeight <= carrier.maxWeight -> PrintLabel
+    else -> Split
   }
 
-  gateway Risk {
-    if fraud.score < 30 -> AutoApprove
-    else -> ManualReview
+  task Split { lane: Management; form: SplitShipment }
+  task PrintLabel { lane: System; call: Carrier.label; with { shipment; quote } }
+  task RequestPickup { lane: System; sends: PickupRequest; partner: Carrier; with { shipment } }
+
+  task AwaitPickup {
+    lane: System
+    receives: PickupConfirmed
+    partner: Carrier
+    apply: Shipment.applyPickup
+    sla: 1d
+    on timer 1d -> ManualPickup
   }
 
-  task AutoApprove {
-    type: service
-    action: Claim.approve
+  task Close { lane: System; action: Order.dispatch; with { order; shipment } }
+  task ManualQuote { lane: Management; form: FreightManualQuote; sla: 4h }
+  task ManualPickup { lane: Dispatch; form: PickupConfirmation; sla: 4h }
+
+  Approved -> Prepare
+  Prepare -> Pick
+  Prepare -> Reserve
+  Pick -> Prepared
+  Reserve -> Prepared
+  Prepared -> Pack
+  Pack -> OpenShipment
+  OpenShipment -> Quote
+  Quote -> Weight
+  Split -> PrintLabel
+  PrintLabel -> RequestPickup
+  RequestPickup -> AwaitPickup
+  AwaitPickup -> Close
+  ManualQuote -> PrintLabel
+  ManualPickup -> Close
+  Close -> Dispatched
+
+  end Dispatched { title: { pt-BR: "Despachado", en: "Dispatched" }; outcome: success }
+}
+```
+
+*Valida: fork/join, gateway por peso, mensagem enviada e recebida com apply, timeouts com desvio, erro de integração.*
+
+### P.7 Rastreamento da entrega como processo filho (shipping)
+
+```bpcms
+process DeliveryTracking for Shipment {
+  title: { pt-BR: "Rastreamento da entrega", en: "Delivery tracking" }
+  version: 1
+  goal: "Acompanhar a entrega até confirmar ou devolver"
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane CustomerService { role: SupportAgent }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+  pool Carrier {
+    external
   }
 
-  task ManualReview {
-    role: Adjuster
-    form: ReviewForm
-    reads: [Claim, FraudScore]
-    writes: [Claim]
+  start Begin { called }
+
+  task AwaitUpdate {
+    lane: System
+    receives: TrackingUpdated
+    partner: Carrier
+    apply: Shipment.applyTracking
+    with { shipment }
+    sla: 5d
+    on timer 5d keep -> RemindCarrier
+    on timer 10d -> Investigate
   }
 
-  gateway Coverage {
-    if claim.covered -> Pay
+  gateway Status {
+    if shipment.status == Delivered -> Confirm
+    if shipment.status == Failed -> Retry
+    else -> AwaitUpdate
+  }
+
+  task RemindCarrier { lane: System; sends: TrackingReminder; partner: Carrier; with { shipment } }
+  task Retry { lane: CustomerService; form: RescheduleDelivery; sla: 2d }
+  task Confirm { lane: System; action: Shipment.confirmDelivery; with { shipment } }
+  task Investigate { lane: Dispatch; form: DeliveryInvestigation; sla: 2d }
+  task Return { lane: System; action: Shipment.returnToSender; with { shipment } }
+
+  milestone Delivered {
+    title: { pt-BR: "Entrega confirmada", en: "Delivered" }
+    on: Shipment.Delivered
+  }
+
+  cancel on Shipment.Cancelled -> Return
+
+  Dispatched -> AwaitUpdate
+  AwaitUpdate -> Status
+  Retry.scheduled -> AwaitUpdate
+  Retry.undeliverable -> Return
+  Confirm -> Delivered
+  Investigate.found -> AwaitUpdate
+  Investigate.lost -> Return
+  Return -> Returned
+
+  end Delivered { title: { pt-BR: "Entregue", en: "Delivered" }; outcome: success }
+  end Returned { title: { pt-BR: "Devolvido", en: "Returned" }; outcome: failure }
+  Begin -> AwaitUpdate
+}
+```
+
+*Valida: processo filho com passo próprio, recebimento contínuo de mensagem, laço com saída, milestone por evento, cancelamento a qualquer momento.*
+
+### P.8 Cotação de frete com múltiplas transportadoras (shipping)
+
+```bpcms
+process FreightQuote for Shipment {
+  title: { pt-BR: "Cotação de frete", en: "Freight quote" }
+  version: 1
+  goal: "Escolher transportadora com preço e prazo conhecidos"
+  sla: 4h
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane Management { role: Manager }
+  }
+  pool Carriers {
+    external
+  }
+
+  variables { quotes: FreightQuote[]; chosen: FreightQuote }
+
+  start Requested { by: [Dispatcher] }
+
+  task Collect {
+    lane: System
+    call: FreightBroker.quoteAll
+    with { shipment; carriers }
+    gives: quotes
+    sla: 15m
+    on error BrokerUnavailable -> ManualQuote
+  }
+
+  task Select { lane: System; decision: CarrierSelection; with { quotes }; gives: chosen }
+  task Book { lane: System; call: Carrier.book; with { shipment; quote: chosen }; sla: 10m; on error SlotUnavailable -> ManualQuote }
+  task ManualQuote { lane: Management; form: FreightManualQuote; sla: 2h }
+
+  Requested -> Collect
+  Collect -> Select
+  Select -> Book
+  Book -> Booked
+  ManualQuote.chosen -> Book
+  ManualQuote.abort -> Aborted
+
+  end Booked { title: { pt-BR: "Frete contratado", en: "Freight booked" }; outcome: success }
+  end Aborted { title: { pt-BR: "Sem frete", en: "No freight" }; outcome: failure }
+}
+```
+
+*Valida: integração de agregação, decisão sobre coleção, timeout com desvio, retorno manual ao fluxo.*
+### P.9 Checkout com retentativa do cliente (checkout)
+
+```bpcms
+process Checkout for CheckoutSession {
+  title: { pt-BR: "Finalização da compra", en: "Checkout" }
+  version: 1
+  goal: "Cotar frete, autorizar pagamento e confirmar o pedido"
+  sla: 1h
+
+  pool Company {
+    internal
+    lane Store { role: Clerk }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+  pool Payments {
+    external
+  }
+
+  start Validated { event: CheckoutSession.Validated }
+
+  task QuoteShipping { lane: System; action: CheckoutSession.quoteShipping; with { session }; sla: 2m }
+  task Authorize { lane: System; action: CheckoutSession.authorizePayment; with { session }; sla: 2m; on error GatewayDown -> RetryPayment }
+
+  gateway Authorized {
+    if session.paymentAuthorized -> ConfirmOrder
+    else -> RetryPayment
+  }
+
+  task RetryPayment {
+    lane: Client
+    form: PaymentRetry
+    sla: 30m
+    on breach -> Abandon
+  }
+
+  task ConfirmOrder { lane: System; action: CheckoutSession.confirmOrder; with { session } }
+  task Abandon { lane: System; action: CheckoutSession.abandon; with { session } }
+
+  Validated -> QuoteShipping
+  QuoteShipping -> Authorize
+  Authorize -> Authorized
+  RetryPayment.retry -> Authorize
+  RetryPayment.giveup -> Abandon
+  ConfirmOrder -> Confirmed
+  Abandon -> Abandoned
+
+  end Confirmed { title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }; outcome: success }
+  end Abandoned { title: { pt-BR: "Compra abandonada", en: "Checkout abandoned" }; outcome: cancelled }
+}
+```
+
+*Valida: fluxo quase todo automático, task humana no portal do cliente, laço de retentativa, timeout como abandono.*
+
+### P.10 Captura de pagamento com estorno (payments)
+
+```bpcms
+process PaymentCapture for Payment {
+  title: { pt-BR: "Captura de pagamento", en: "Payment capture" }
+  version: 1
+  goal: "Autorizar e capturar o pagamento, estornando em caso de falha"
+  sla: 1h
+
+  pool Company {
+    internal
+    lane Finance { role: FinanceAnalyst }
+  }
+  pool Gateway {
+    external
+  }
+
+  variables { authorization: Authorization }
+
+  start Requested { event: Payment.Requested }
+
+  task Authorize {
+    lane: System
+    call: Gateway.authorize
+    with { payment }
+    gives: authorization
+    sla: 30s
+    on error Declined -> Declined
+  }
+
+  task Capture {
+    lane: System
+    call: Gateway.capture
+    with { payment; authorization }
+    sla: 30s
+    on error CaptureFailed -> Undo
+  }
+
+  task Reverse {
+    lane: System
+    call: Gateway.refund
+    with { payment; authorization }
+    compensates: Capture
+  }
+
+  rollback Undo
+
+  Requested -> Authorize
+  Authorize -> Capture
+  Capture -> Captured
+  Capture -> Undo
+  Undo -> Failed
+
+  end Captured { title: { pt-BR: "Capturado", en: "Captured" }; outcome: success }
+  end Declined { title: { pt-BR: "Recusado", en: "Declined" }; outcome: failure }
+  end Failed { title: { pt-BR: "Falha na captura", en: "Capture failed" }; outcome: failure }
+}
+```
+
+*Valida: integração pura, compensação acionada por rollback, desfechos de negócio distintos.*
+
+### P.11 Disputa de chargeback com a bandeira (payments)
+
+```bpcms
+process ChargebackDispute for Chargeback {
+  title: { pt-BR: "Disputa de chargeback", en: "Chargeback dispute" }
+  version: 1
+  goal: "Responder a disputa no prazo com evidência"
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Finance { role: FinanceAnalyst }
+    lane Management { role: Manager }
+  }
+  pool Network {
+    external
+  }
+
+  start Opened { event: Chargeback.Opened }
+
+  task GatherEvidence { lane: Finance; form: ChargebackEvidence; sla: 7d; on breach -> Escalate }
+  task Submit { lane: System; sends: ChargebackEvidence; partner: Network; with { chargeback } }
+
+  task AwaitDecision {
+    lane: System
+    receives: ChargebackDecided
+    partner: Network
+    apply: Chargeback.applyDecision
+    with { chargeback }
+    sla: 21d
+    on timer 21d -> Escalate
+  }
+
+  gateway Outcome {
+    if chargeback.status == won -> Close
+    else -> AcceptLoss
+  }
+
+  task Close { lane: System; action: Chargeback.close; with { chargeback } }
+  task AcceptLoss { lane: System; action: Chargeback.acceptLoss; with { chargeback } }
+  task Escalate { lane: Management; form: ChargebackEscalation; sla: 2d }
+
+  Opened -> GatherEvidence
+  GatherEvidence -> Submit
+  Submit -> AwaitDecision
+  AwaitDecision -> Outcome
+  Escalate.submitted -> Submit
+  Escalate.writeoff -> AcceptLoss
+  Close -> Won
+  AcceptLoss -> Lost
+
+  end Won { title: { pt-BR: "Disputa ganha", en: "Dispute won" }; outcome: success }
+  end Lost { title: { pt-BR: "Disputa perdida", en: "Dispute lost" }; outcome: failure }
+}
+```
+
+*Valida: prazo legal com dois timers, mensagem enviada e recebida com apply, escalonamento humano, desfechos.*
+
+### P.12 Emissão de nota fiscal (billing)
+
+```bpcms
+process InvoiceIssuance for Invoice {
+  title: { pt-BR: "Emissão de nota fiscal", en: "Invoice issuance" }
+  version: 1
+  goal: "Emitir a nota conferida e entregar ao cliente"
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Billing { role: BillingClerk }
+    lane Management { role: Manager }
+  }
+  pool Customer {
+    external
+  }
+
+  variables { invoice: Invoice }
+
+  start Requested { by: [BillingClerk, Manager] }
+  start FromOrder { event: Order.Invoiced }
+
+  on breach -> Escalate
+
+  task Prepare { lane: System; action: Invoice.prepare; with { order }; gives: invoice }
+  task Review { lane: Billing; form: InvoiceReview; sla: 4h }
+
+  gateway Reviewed {
+    if review.approved -> Issue
+    else -> Cancel
+  }
+
+  task Issue { lane: System; action: Invoice.issue; with { invoice } }
+  task Send { lane: System; sends: InvoiceIssued; partner: Customer; with { invoice } }
+  task Cancel { lane: Management; form: InvoiceCancellation; sla: 4h }
+  task Escalate { lane: Management; form: InvoiceEscalation; sla: 2h }
+
+  Requested -> Prepare
+  FromOrder -> Prepare
+  Prepare -> Review
+  Review -> Reviewed
+  Issue -> Send
+  Send -> Issued
+  Cancel -> Cancelled
+  Escalate.proceed -> Issue
+  Escalate.abort -> Cancel
+
+  end Issued { title: { pt-BR: "Nota emitida", en: "Invoice issued" }; outcome: success }
+  end Cancelled { title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }; outcome: cancelled }
+}
+```
+
+*Valida: dois starts (manual e por evento de outro documento), mensagem ao cliente, aprovação e cancelamento.*
+
+### P.13 Cobrança de faturas vencidas (billing)
+
+```bpcms
+process Dunning for Invoice {
+  title: { pt-BR: "Cobrança de faturas", en: "Invoice dunning" }
+  version: 1
+  goal: "Cobrar sem desgastar o cliente e escalar quando necessário"
+  sla: 45d
+
+  pool Company {
+    internal
+    lane Collections { role: CollectionsAgent }
+    lane Management { role: Manager }
+  }
+  pool Customer {
+    external
+  }
+
+  start Daily {
+    schedule: "0 6 * * *"
+    select: invoice.status == Overdue and invoice.daysOverdue >= 1
+  }
+
+  task Remind { lane: System; sends: PaymentReminder; partner: Customer; with { invoice } }
+  wait Grace { for: 7d }
+
+  gateway Late {
+    if invoice.daysOverdue > 30 -> Escalate
+    else -> Remind
+  }
+
+  task Escalate { lane: Collections; form: CollectionCall; sla: 2d }
+  task WriteOff { lane: Management; form: WriteOffApproval; sla: 3d }
+
+  cancel on Invoice.Paid -> Settled
+
+  Daily -> Remind
+  Remind -> Grace
+  Grace -> Late
+  Escalate.promised -> Remind
+  Escalate.unreachable -> WriteOff
+  WriteOff -> WrittenOff
+
+  end Settled { title: { pt-BR: "Fatura paga", en: "Invoice paid" }; outcome: success }
+  end WrittenOff { title: { pt-BR: "Perda reconhecida", en: "Written off" }; outcome: failure }
+}
+```
+
+*Valida: start agendado com fan-out por sujeito, espera por tempo, laço com saída, cancelamento por evento externo.*
+
+### P.14 Fechamento mensal (billing)
+
+```bpcms
+process MonthClose for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  goal: "Fechar o período com números conferidos"
+  owner: "Controladoria"
+  sla: 6h
+
+  pool Company {
+    internal
+    lane Controllership { role: Controller }
+  }
+
+  start Monthly {
+    schedule: "0 2 1 * *"
+    select: fiscalPeriod.status == Open
+  }
+
+  task PostEntries { lane: System; action: Ledger.postPeriod; with { fiscalPeriod }; on error Unbalanced -> Fix }
+  task Reconcile { lane: System; action: Ledger.reconcile; with { fiscalPeriod }; on error Unbalanced -> Fix }
+  task Review { lane: Controllership; form: MonthCloseReview; sla: 4h }
+  task Fix { lane: Controllership; form: ReconciliationFix; sla: 1d }
+  task Close { lane: System; action: FiscalPeriod.close; with { fiscalPeriod } }
+
+  Monthly -> PostEntries
+  PostEntries -> Reconcile
+  Reconcile -> Review
+  Review.approved -> Close
+  Review.rejected -> Fix
+  Fix -> Reconcile
+  Close -> Closed
+
+  end Closed { title: { pt-BR: "Período fechado", en: "Period closed" }; outcome: success }
+  end Failed { title: { pt-BR: "Fechamento falhou", en: "Close failed" }; outcome: failure }
+}
+```
+
+*Valida: rotina agendada como processo, tarefa de revisão humana, erro de sistema com correção, desfecho nomeado.*
+
+### P.15 Reposição de estoque (inventory)
+
+```bpcms
+process StockReplenishment for StockItem {
+  title: { pt-BR: "Reposição de estoque", en: "Stock replenishment" }
+  version: 1
+  goal: "Repor o que está abaixo do ponto de pedido sem excesso"
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Planning { role: Planner }
+    lane Management { role: Manager }
+  }
+
+  variables { decision: ReplenishmentDecision }
+
+  start Daily {
+    schedule: "0 7 * * *"
+    select: stockItem.available < stockItem.reorderPoint
+  }
+
+  task Decide {
+    lane: System
+    decision: ReplenishmentOrder
+    with { available: stockItem.available; reorderPoint: stockItem.reorderPoint; leadTime: stockItem.leadTime }
+    gives: decision
+  }
+
+  gateway Action {
+    if decision.action == order -> CreateRequest
+    if decision.action == transfer -> Transfer
+    else -> Defer
+  }
+
+  task CreateRequest {
+    lane: System
+    action: PurchaseRequest.create
+    with { stockItem; quantity: decision.quantity }
+    gives: purchaseRequest
+  }
+
+  task SubmitRequest { lane: System; action: PurchaseRequest.submit; with { purchaseRequest } }
+  task Transfer { lane: Planning; form: StockTransfer; sla: 1d }
+  task Defer { lane: System; action: StockItem.deferReplenishment; with { stockItem; until: decision.until } }
+
+  Daily -> Decide
+  Decide -> Action
+  CreateRequest -> SubmitRequest
+  SubmitRequest -> Requested
+  Transfer -> Replenished
+  Defer -> Deferred
+
+  end Requested { title: { pt-BR: "Compra solicitada", en: "Purchase requested" }; outcome: success }
+  end Replenished { title: { pt-BR: "Transferido", en: "Transferred" }; outcome: success }
+  end Deferred { title: { pt-BR: "Adiado", en: "Deferred" }; outcome: success }
+}
+```
+
+*Valida: decisão por faixa, `runs:` como subprocesso de outro serviço, três saídas de negócio.*
+
+### P.16 Inventário cíclico com recontagem (inventory)
+
+```bpcms
+process CycleCount for CycleCount {
+  title: { pt-BR: "Inventário cíclico", en: "Cycle count" }
+  version: 1
+  goal: "Contar, explicar divergência e ajustar o estoque"
+  sla: 3d
+
+  pool Company {
+    internal
+    lane Warehouse { role: Counter }
+    lane Management { role: Manager }
+  }
+
+  variables { divergent: boolean }
+
+  start Scheduled { event: CycleCount.Scheduled }
+
+  task Count {
+    lane: Warehouse
+    form: CountSheet
+    foreach { over: cycleCount.locations; as: location; mode: parallel }
+    sla: 2h
+  }
+
+  task Compare {
+    lane: System
+    decision: CountVariance
+    with { expected: cycleCount.expectedTotal; counted: cycleCount.countedTotal }
+    gives: divergent
+  }
+
+  gateway Variance {
+    if divergent -> Recount
+    else -> Approve
+  }
+
+  task Recount { lane: Warehouse; form: RecountSheet; sla: 4h }
+
+  task Adjust { lane: System; action: StockItem.adjust; with { cycleCount } }
+  task Approve { lane: Management; form: CountApproval; sla: 1d }
+
+  Scheduled -> Count
+  Count -> Compare
+  Compare -> Variance
+  Recount.recounted -> Compare
+  Recount.giveup -> Approve
+  Approve.approved -> Adjust
+  Approve.rejected -> Rejected
+  Adjust -> Adjusted
+
+  end Adjusted { title: { pt-BR: "Estoque ajustado", en: "Stock adjusted" }; outcome: success }
+  end Rejected { title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }; outcome: failure }
+}
+```
+
+*Valida: multi-instância paralela, decisão de tolerância, task discricionária com condição, laço de recontagem.*
+### P.17 Triagem de chamado com SLA (support)
+
+```bpcms
+process TicketTriage for Ticket {
+  title: { pt-BR: "Triagem de chamado", en: "Ticket triage" }
+  version: 1
+  goal: "Classificar, resolver e comunicar dentro do prazo"
+  sla: 3d
+
+  pool Company {
+    internal
+    lane ServiceDesk { role: SupportAgent }
+    lane Engineering { role: Engineer }
+    lane Management { role: Manager }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+
+  variables { queue: TicketQueue }
+
+  start Opened { event: Ticket.Opened }
+
+  task Classify {
+    lane: System
+    decision: TicketRouting
+    with { subject: ticket.subject; tier: ticket.customerTier }
+    gives: queue
+  }
+
+  gateway Route {
+    if queue == serviceDesk -> FirstContact
+    if queue == engineering -> Diagnose
+    else -> BillingQueue
+  }
+
+  task FirstContact { lane: ServiceDesk; form: TicketTriageForm; sla: 2h; on breach -> Escalate }
+  task BillingQueue { lane: ServiceDesk; form: TicketTriageForm; sla: 4h; on breach -> Escalate }
+  task Diagnose { lane: Engineering; form: TicketDiagnosis; sla: 8h; on breach -> Escalate }
+
+  fork Respond
+  join Responded
+
+  task Fix { lane: Engineering; form: FixRecord; sla: 1d }
+  task UpdateCustomer { lane: ServiceDesk; form: CustomerUpdate; sla: 4h }
+
+  task Confirm { lane: Client; form: ResolutionConfirm; sla: 2d }
+  task Escalate { lane: Management; form: TicketEscalation; sla: 1h }
+  task Close { lane: System; action: Ticket.close; with { ticket } }
+
+  Opened -> Classify
+  Classify -> Route
+  FirstContact -> Respond
+  BillingQueue -> Respond
+  Diagnose -> Respond
+  Respond -> Fix
+  Respond -> UpdateCustomer
+  Fix -> Responded
+  UpdateCustomer -> Responded
+  Responded -> Confirm
+  Confirm.resolved -> Close
+  Confirm.reopened -> FirstContact
+  Escalate.resolved -> Close
+  Close -> Resolved
+
+  end Resolved { title: { pt-BR: "Resolvido", en: "Resolved" }; outcome: success }
+  end Escalated { title: { pt-BR: "Escalado", en: "Escalated" }; outcome: failure }
+}
+```
+
+*Valida: roteamento por decisão, SLA por fila com escalonamento, trabalho paralelo (correção + comunicação), confirmação no portal.*
+
+### P.18 Reembolso com alçada e confirmação (support)
+
+```bpcms
+process RefundCase for ReturnRequest {
+  title: { pt-BR: "Caso de reembolso", en: "Refund case" }
+  version: 1
+  goal: "Reembolsar quando elegível, com aprovação e rastro"
+  sla: 5d
+
+  pool Company {
+    internal
+    lane Support { role: SupportAgent }
+    lane Finance { role: Manager }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+
+  variables { eligible: boolean }
+
+  start Requested { event: ReturnRequest.Requested }
+
+  task Review { lane: Support; form: ReturnReview; sla: 8h }
+
+  task Eligibility {
+    lane: System
+    decision: RefundEligibility
+    with { amount: returnRequest.amount; tier: returnRequest.customer.tier }
+    gives: eligible
+  }
+
+  gateway Eligible {
+    if eligible -> Approve
     else -> Reject
   }
 
-  task Pay {
-    type: service
-    integration: Bank
-    writes: [Payment]
+  task Approve { lane: Finance; form: RefundApproval; sla: 1d }
+  task Refund { lane: System; action: Payment.refund; with { returnRequest } }
+  task NotifyDone { lane: System; sends: RefundConfirmed; partner: Customer; with { returnRequest } }
+  task Reject { lane: Support; form: RefundRejection; sla: 4h }
+
+  milestone Refunded {
+    title: { pt-BR: "Reembolso efetuado", en: "Refund completed" }
+    on: Payment.Refunded
   }
 
-  task Reject {
-    role: Adjuster
-    form: RejectForm
-    writes: [Claim]
-  }
+  cancel on ReturnRequest.Cancelled -> Cancelled
 
-  end on Claim.Settled
+  Requested -> Review
+  Review -> Eligibility
+  Eligibility -> Eligible
+  Approve.approved -> Refund
+  Approve.rejected -> Reject
+  Refund -> NotifyDone
+  NotifyDone -> Refunded
+  Reject -> Rejected
 
-  on error BankUnavailable -> RetryPayment
-  task RetryPayment {
-    type: service
-    integration: Bank
-    retry: exponential(3)
-  }
+  end Refunded { title: { pt-BR: "Reembolsado", en: "Refunded" }; outcome: success }
+  end Rejected { title: { pt-BR: "Não elegível", en: "Not eligible" }; outcome: failure }
+  end Cancelled { title: { pt-BR: "Cancelado pelo cliente", en: "Cancelled by customer" }; outcome: cancelled }
 }
 ```
 
-*Valida: duas decisões encadeadas, integração financeira, tratamento de erro e encerramento comum.*
+*Valida: decisão de elegibilidade, alçada por lane, mensagem ao cliente, milestone, cancelamento com desfecho próprio.*
 
-### P.6 Incidente com severidade e pós-mortem
+### P.19 Exame laboratorial com assinatura (laboratory)
 
 ```bpcms
-process IncidentManagement {
+process LabExam for LabExam {
+  title: { pt-BR: "Exame laboratorial", en: "Laboratory exam" }
   version: 1
-  goal: "Restaurar o serviço e aprender com o incidente"
-  roles: [OnCall, SRE, Support, Manager]
-  start on Incident.Reported
+  goal: "Liberar laudo confiável no prazo"
+  sla: 8h
 
-  task Triage {
-    role: OnCall
-    form: TriageForm
-    reads: [Incident]
-    writes: [Incident]
-    sla: 15m
+  pool Company {
+    internal
+    lane Reception { role: Collector }
+    lane Analysis { role: Analyst }
+    lane Pathology { role: Pathologist }
+  }
+  pool Clinic {
+    external
   }
 
-  gateway Severity {
-    if severity >= SEV2 -> PageSRE
-    else -> SupportQueue
+  variables { result: ExamResult }
+
+  start Collected { event: LabExam.Collected }
+
+  task Receive { lane: Reception; form: SampleReception; sla: 1h }
+
+  task Analyze {
+    lane: System
+    call: LabAnalyzer.run
+    with { labExam }
+    gives: result
+    sla: 2h
+    on error AnalyzerOffline -> ManualAnalyze
   }
 
-  task PageSRE {
-    type: service
-    integration: Pager
-    writes: [Incident]
+  task ManualAnalyze { lane: Analysis; form: ManualResultEntry; sla: 4h }
+
+  task Validate {
+    lane: Analysis
+    form: ResultValidation
+    sla: 4h
+    on breach -> Escalate
   }
 
-  task SupportQueue {
-    role: Support
-    form: SupportForm
-    reads: [Incident]
+  gateway Critical {
+    if labExam.critical -> NotifyDoctor
+    else -> Sign
   }
 
-  parallel {
-    task Mitigate {
-      role: SRE
-      form: MitigationForm
-      writes: [Incident]
-    }
-    task Communicate {
-      role: Support
-      form: UpdateForm
-      writes: [IncidentUpdate]
-    }
-  }
+  task NotifyDoctor { lane: System; sends: CriticalResult; partner: Clinic; with { labExam; result } }
+  task Sign { lane: Pathology; form: ReportSignature; sla: 2h }
+  task Release { lane: System; action: LabExam.release; with { labExam; signature: sign.signature } }
+  task Escalate { lane: Pathology; form: LabEscalation; sla: 1h }
 
-  task Postmortem {
-    role: SRE
-    form: PostmortemForm
-    writes: [Postmortem]
-  }
+  Collected -> Receive
+  Receive -> Analyze
+  Analyze -> Validate
+  ManualAnalyze -> Validate
+  Validate -> Critical
+  NotifyDoctor -> Sign
+  Sign -> Release
+  Release -> Released
+  Escalate.released -> Release
+  Escalate.rejected -> Rejected
 
-  end on Incident.Closed
-
-  on timer 15m after Triage -> Escalate
-  task Escalate {
-    role: Manager
-    form: EscalationForm
-  }
+  end Released { title: { pt-BR: "Laudo liberado", en: "Report released" }; outcome: success }
+  end Rejected { title: { pt-BR: "Exame rejeitado", en: "Exam rejected" }; outcome: failure }
 }
 ```
 
-*Valida: evento de início, severidade, comunicação em paralelo e aprendizado pós-incidente.*
+*Valida: dispositivo com fallback manual, caminho crítico por decisão, assinatura como task, prazo com escalonamento.*
 
-### P.7 Compensação de pagamento
+### P.20 Onboarding de colaborador (hr)
 
 ```bpcms
-process PaymentCompensation {
+process EmployeeOnboarding for Employee {
+  title: { pt-BR: "Onboarding de colaborador", en: "Employee onboarding" }
   version: 1
-  goal: "Reverter a cobrança quando a reserva de estoque falha"
-  roles: [Clerk, Finance]
-  start on Order.Approved
+  goal: "Novo colaborador produtivo no primeiro dia"
+  sla: 15d
 
-  task ChargePayment {
-    type: service
-    integration: Payment
-    action: Payment.charge
+  pool Company {
+    internal
+    lane People { role: HR }
+    lane IT { role: ITAnalyst }
+    lane Management { role: Manager }
+  }
+  pool NewHire {
+    external
+    lane CandidatePortal { role: Candidate }
   }
 
-  task ReserveStock {
-    type: service
-    action: Inventory.reserve
+  start Hired { event: Candidate.Hired }
+  cancel on Candidate.Withdrawn -> Cancel
+
+  fork Start
+  join Ready
+
+  task SubmitDocuments { lane: CandidatePortal; form: NewHireDocuments; sla: 5d }
+  task CreateAccounts { lane: IT; form: AccountRequest; sla: 2d }
+  task OrderEquipment { lane: IT; form: EquipmentRequest; sla: 3d }
+  task Provision { lane: System; runs: AccessProvisioning; with { employee } }
+  task Checkin { lane: Management; form: FirstDayCheckin; sla: 1d }
+  task Welcome { lane: People; manual: "Receber o colaborador e apresentar o time"; sla: 2h }
+  task Activate { lane: System; action: Employee.activate; with { employee } }
+  task Cancel { lane: System; action: Employee.cancelOnboarding; with { employee } }
+
+  task OrderSwag {
+    lane: People
+    form: SwagRequest
+    discretionary
+    when: employee.level == senior
   }
 
-  on error StockUnavailable -> RefundPayment
+  Hired -> Start
+  Start -> SubmitDocuments
+  Start -> CreateAccounts
+  Start -> OrderEquipment
+  SubmitDocuments -> Ready
+  CreateAccounts -> Ready
+  OrderEquipment -> Ready
+  Ready -> Provision
+  Provision -> Checkin
+  Checkin -> Welcome
+  Welcome -> Activate
+  Activate -> Active
+  Cancel -> Cancelled
 
-  task RefundPayment {
-    type: compensation
-    for: ChargePayment
-    action: Payment.refund
-  }
-
-  end on Order.Cancelled
+  end Active { title: { pt-BR: "Colaborador ativo", en: "Employee active" }; outcome: success }
+  end Cancelled { title: { pt-BR: "Onboarding cancelado", en: "Onboarding cancelled" }; outcome: cancelled }
 }
 ```
 
-*Valida: compensação como passo de processo, alvo `for`, disparo por erro e execução idempotente em ordem reversa.*
+*Valida: paralelismo humano, portal do candidato, subprocesso de provisionamento, task manual, cancelamento.*
 
+### P.21 Sinistro com score de fraude (claims)
+
+```bpcms
+process ClaimSettlement for Claim {
+  title: { pt-BR: "Liquidação de sinistro", en: "Claim settlement" }
+  version: 1
+  goal: "Decidir cobertura e pagar com rastro"
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Adjusters { role: Adjuster }
+    lane Supervision { role: Supervisor }
+  }
+  pool Bank {
+    external
+  }
+
+  variables { risk: RiskLevel; covered: boolean; settlement: Settlement }
+
+  start Opened { event: Claim.Opened }
+
+  task Register { lane: Adjusters; form: ClaimRegistration; sla: 4h }
+
+  task Score {
+    lane: System
+    decision: FraudRisk
+    with { claim }
+    gives: risk
+  }
+
+  gateway Suspicious {
+    if risk == High -> FraudReview
+    else -> Coverage
+  }
+
+  task FraudReview { lane: Supervision; form: FraudReviewForm; sla: 2d; on breach -> Reject }
+
+  task Coverage {
+    lane: System
+    decision: CoverageEligibility
+    with { claim; policy: claim.policy }
+    gives: covered
+  }
+
+  gateway Eligible {
+    if covered -> Approve
+    else -> Reject
+  }
+
+  task Approve { lane: Supervision; form: SettlementApproval; sla: 1d }
+  task Pay { lane: System; action: Settlement.pay; with { settlement }; on error BankDown -> RetryPay }
+  task RetryPay { lane: System; action: Settlement.pay; with { settlement }; sla: 1h }
+  task Reject { lane: Adjusters; form: ClaimRejection; sla: 4h }
+
+  Opened -> Register
+  Register -> Score
+  Score -> Suspicious
+  FraudReview.cleared -> Coverage
+  FraudReview.confirmed -> Reject
+  Coverage -> Eligible
+  Approve.approved -> Pay
+  Approve.rejected -> Reject
+  Pay -> Settled
+  RetryPay -> Settled
+  Reject -> Rejected
+
+  end Settled { title: { pt-BR: "Sinistro liquidado", en: "Claim settled" }; outcome: success }
+  end Rejected { title: { pt-BR: "Sinistro negado", en: "Claim rejected" }; outcome: failure }
+}
+```
+
+*Valida: dois níveis de decisão, revisão de fraude com prazo, pagamento com recuperação de falha.*
+
+### P.22 Visita técnica em campo (field-service)
+
+```bpcms
+process ServiceVisit for Visit {
+  title: { pt-BR: "Visita técnica", en: "Field service visit" }
+  version: 1
+  goal: "Atender no local, registrar prova e concluir"
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Coordination { role: Coordinator }
+    lane Field { role: Technician }
+  }
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+
+  start Scheduled { event: Visit.Scheduled }
+  cancel on Visit.Cancelled -> Cancel
+
+  task Dispatch { lane: Coordination; form: VisitDispatch; sla: 1h }
+  task Travel { lane: Field; manual: "Deslocamento até o cliente"; sla: 2h }
+  task CheckIn { lane: Field; form: VisitCheckIn; sla: 30m; on error OutOfRange -> Reschedule }
+
+  task Perform {
+    lane: Field
+    form: VisitReport
+    sla: 3h
+    on error CustomerAbsent -> Reschedule
+  }
+
+  task Accept { lane: Client; form: VisitAcceptance; sla: 2d }
+  task Complete { lane: System; action: Visit.complete; with { visit; report } }
+  task Reschedule { lane: Coordination; form: VisitReschedule; sla: 2h }
+  task Cancel { lane: System; action: Visit.cancel; with { visit } }
+
+  Scheduled -> Dispatch
+  Dispatch -> Travel
+  Travel -> CheckIn
+  CheckIn -> Perform
+  Perform -> Accept
+  Accept.accepted -> Complete
+  Accept.disputed -> Reschedule
+  Reschedule.scheduled -> Dispatch
+  Reschedule.abandoned -> Cancel
+  Complete -> Completed
+  Cancel -> Cancelled
+
+  end Completed { title: { pt-BR: "Visita concluída", en: "Visit completed" }; outcome: success }
+  end Cancelled { title: { pt-BR: "Visita cancelada", en: "Visit cancelled" }; outcome: cancelled }
+}
+```
+
+*Valida: task manual, validação de localização com desvio, aceite no portal do cliente, reagendamento.*
+
+### P.23 Análise de crédito com alçada (credit)
+
+```bpcms
+process CreditApplicationFlow for CreditApplication {
+  title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
+  version: 1
+  goal: "Conceder limite com risco calculado e decisão rastreável"
+  sla: 5d
+
+  pool Company {
+    internal
+    lane Analysis { role: CreditAnalyst }
+    lane Management { role: Manager }
+  }
+  pool Bureau {
+    external
+  }
+
+  variables { score: CreditScore; report: CompanyReport }
+
+  start Submitted { event: CreditApplication.Submitted }
+
+  task Score { lane: System; decision: CreditScoring; with { application }; gives: score }
+
+  task CheckBureau {
+    lane: System
+    call: Bureau.checkCompany
+    with { customer: application.customer }
+    gives: report
+    sla: 1m
+    on error BureauDown -> ManualReview
+  }
+
+  gateway Risk {
+    if score.tier == Auto -> SetLimit
+    if score.tier == review -> ManualReview
+    else -> Reject
+  }
+
+  task ManualReview { lane: Analysis; form: CreditReview; sla: 2d; on breach -> Escalate }
+  task Approve { lane: Management; form: CreditApproval; sla: 1d }
+  task SetLimit { lane: System; action: CreditLimit.set; with { application; amount: score.limit } }
+  task Reject { lane: Analysis; form: CreditRejection; sla: 4h }
+  task Escalate { lane: Management; form: CreditEscalation; sla: 1d }
+
+  Submitted -> Score
+  Score -> CheckBureau
+  CheckBureau -> Risk
+  ManualReview.recommend -> Approve
+  ManualReview.decline -> Reject
+  Approve.approved -> SetLimit
+  Approve.rejected -> Reject
+  Escalate.decided -> Approve
+  SetLimit -> Approved
+  Reject -> Rejected
+
+  end Approved { title: { pt-BR: "Crédito aprovado", en: "Credit approved" }; outcome: success }
+  end Rejected { title: { pt-BR: "Crédito negado", en: "Credit rejected" }; outcome: failure }
+}
+```
+
+*Valida: integração de bureau com fallback, três faixas de decisão, dupla aprovação, escalonamento.*
+
+### P.24 Renovação de contrato (contracts)
+
+```bpcms
+process ContractRenewal for Contract {
+  title: { pt-BR: "Renovação de contrato", en: "Contract renewal" }
+  version: 1
+  goal: "Renovar antes do vencimento com contraproposta tratada"
+  sla: 60d
+
+  pool Company {
+    internal
+    lane Accounts { role: AccountManager }
+    lane Legal { role: LegalAnalyst }
+  }
+  pool Counterparty {
+    external
+    lane Portal { role: SupplierUser }
+  }
+
+  start Expiring {
+    schedule: "0 8 * * *"
+    select: contract.status == Active and contract.endsAt <= today() + 60d
+  }
+
+  task Propose { lane: Accounts; form: RenewalProposal; sla: 5d }
+
+  task SendProposal {
+    lane: System
+    sends: RenewalProposalSent
+    partner: Counterparty
+    with { contract; proposal: contract.proposal }
+  }
+
+  task AwaitCounter {
+    lane: System
+    receives: RenewalCounterOffer
+    partner: Counterparty
+    apply: Contract.applyCounterOffer
+    with { contract }
+    sla: 10d
+    on timer 10d -> Escalate
+  }
+
+  gateway Agreed {
+    if contract.counterAccepted -> LegalReview
+    else -> Escalate
+  }
+
+  task LegalReview { lane: Legal; form: ContractLegalReview; sla: 3d }
+  task Sign { lane: Portal; form: ContractSignature; sla: 5d }
+  task Renew { lane: System; action: Contract.renew; with { contract } }
+  task Escalate { lane: Accounts; form: RenewalEscalation; sla: 2d }
+
+  Expiring -> Propose
+  Propose -> SendProposal
+  SendProposal -> AwaitCounter
+  AwaitCounter -> Agreed
+  LegalReview.approved -> Sign
+  LegalReview.rejected -> Escalate
+  Sign.signed -> Renew
+  Sign.declined -> Escalate
+  Escalate.renegotiate -> Propose
+  Escalate.letlapse -> Lapsed
+  Renew -> Renewed
+
+  end Renewed { title: { pt-BR: "Contrato renovado", en: "Contract renewed" }; outcome: success }
+  end Lapsed { title: { pt-BR: "Contrato vencido", en: "Contract lapsed" }; outcome: failure }
+}
+```
+
+*Valida: fan-out agendado por sujeito, mensagem com contraproposta, assinatura no portal, loop de renegociação.*
+## Form
+
+O form é o **contrato da tarefa humana**: o que a pessoa vê, o que ela pode fazer e qual ação de documento cada botão executa. A tela é do builder; o form não tem `roles`, não escreve campo direto e não tem ciclo de vida.
+
+### F.1 Aprovação com três desfechos e rascunho
+
+```bpcms
+form PurchaseReview {
+  title: { pt-BR: "Revisar compra", en: "Review purchase" }
+  document: PurchaseRequest
+
+  fields {
+    requester
+    supplier
+    amount
+    justification { readonly }
+    note: string {
+      title: { pt-BR: "Observação ao solicitante", en: "Note to requester" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    approve { calls: PurchaseRequest.approve }
+    reject { calls: PurchaseRequest.reject(note) }
+    sendBack { calls: PurchaseRequest.returnToRequester(note) }
+    save { calls: PurchaseRequest.saveDraft(note); stay }
+  }
+}
+```
+
+*Valida: três desfechos + botão que não avança; campos herdados do documento declarados só pelo nome.*
+
+### F.2 Formulário de criação com campos novos
+
+```bpcms
+form NewOrder {
+  title: { pt-BR: "Novo pedido", en: "New order" }
+  document: Order
+
+  fields {
+    customer { required }
+    channel: Channel {
+      title: { pt-BR: "Canal de venda", en: "Sales channel" }
+      required
+    }
+    promisedAt: Date {
+      title: { pt-BR: "Data prometida", en: "Promised date" }
+    }
+    discount: std.Percentage {
+      title: { pt-BR: "Desconto", en: "Discount" }
+      min: 0
+      max: 30
+    }
+  }
+
+  actions {
+    create { calls: Order.create(customer, channel, promisedAt, discount) }
+  }
+}
+```
+
+*Valida: campo novo declara Shape + title; campo herdado aceita `required` (endurece, nunca relaxa); botão sem comando.*
+
+### F.3 Form preenchido no portal do fornecedor
+
+```bpcms
+form SupplierRegistration {
+  title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
+  document: Supplier
+
+  fields {
+    legalName { required }
+    tradeName
+    email { required }
+    phone
+    bankAccount: BankAccount {
+      title: { pt-BR: "Conta bancária", en: "Bank account" }
+      required
+      sensitive
+    }
+    documents: File[] {
+      title: { pt-BR: "Documentos", en: "Documents" }
+      required
+    }
+  }
+
+  actions {
+    submit { calls: Supplier.submitRegistration(legalName, tradeName, email, phone, bankAccount, documents) }
+    save { calls: Supplier.saveDraft; stay }
+  }
+}
+```
+
+*Valida: o mesmo form serve a uma lane externa (portal); campo sensível declarado no form e no documento; anexos.*
+
+### F.4 Form de campo com assinatura e prova
+
+```bpcms
+form VisitReport {
+  title: { pt-BR: "Relato da visita", en: "Visit report" }
+  document: Visit
+
+  fields {
+    customer
+    site
+    notes: string {
+      title: { pt-BR: "Observações", en: "Notes" }
+      maxLength: 2000
+      required
+    }
+    photos: Image[] { title: { pt-BR: "Fotos", en: "Photos" } }
+    reading: DeviceReading<std.Mass> {
+      title: { pt-BR: "Leitura do equipamento", en: "Device reading" }
+      readonly
+    }
+    signature: Signature {
+      title: { pt-BR: "Assinatura do cliente", en: "Customer signature" }
+      required
+    }
+  }
+
+  actions {
+    complete { calls: Visit.complete(notes, photos, signature) }
+    reschedule { calls: Visit.requestReschedule(notes) }
+  }
+}
+```
+
+*Valida: assinatura, foto, leitura de dispositivo somente leitura e dois desfechos com prova.*
+
+### F.5 Confirmação de ação irreversível
+
+```bpcms
+form ShipmentCancellation {
+  title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+  document: Shipment
+
+  fields {
+    tracking { readonly }
+    reason: CancellationReason {
+      title: { pt-BR: "Motivo", en: "Reason" }
+      required
+    }
+  }
+
+  actions {
+    confirmCancel { calls: Shipment.cancel(reason) }
+  }
+}
+```
+
+*Valida: um único desfecho; a confirmação com resumo do efeito é derivada de a ação ser terminal.*
+
+### F.6 Rejeição com motivo obrigatório
+
+```bpcms
+form RefundRejection {
+  title: { pt-BR: "Recusar reembolso", en: "Reject refund" }
+  document: ReturnRequest
+
+  fields {
+    amount { readonly }
+    reason: RejectionReason {
+      title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      required
+    }
+    detail: string {
+      title: { pt-BR: "Detalhe ao cliente", en: "Detail to customer" }
+      maxLength: 400
+      required
+    }
+  }
+
+  actions {
+    reject { calls: ReturnRequest.reject(reason, detail) }
+  }
+}
+```
+
+*Valida: rejeição como ação de primeira classe, com motivo tipado e texto ao cliente; conta como retrabalho no KPI.*
+
+### F.7 Form com contexto de documentos relacionados
+
+```bpcms
+form ClaimRegistration {
+  title: { pt-BR: "Registro de sinistro", en: "Claim registration" }
+  document: Claim
+
+  fields {
+    policy
+    insured
+    occurredAt { required }
+    description: string {
+      title: { pt-BR: "Descrição", en: "Description" }
+      maxLength: 4000
+      required
+    }
+    estimatedAmount: std.Money {
+      title: { pt-BR: "Valor estimado", en: "Estimated amount" }
+      currency: BRL
+    }
+    attachments: File[] { title: { pt-BR: "Anexos", en: "Attachments" } }
+  }
+
+  actions {
+    register { calls: Claim.register(occurredAt, description, estimatedAmount, attachments) }
+    save { calls: Claim.saveDraft(description); stay }
+  }
+}
+```
+
+*Valida: campos readonly de contexto (apólice, segurado) e entrada de dados em um único comando.*
+
+### F.8 O mesmo form em duas tasks
+
+```bpcms
+form ApprovalDecision {
+  title: { pt-BR: "Decisão de aprovação", en: "Approval decision" }
+  document: PurchaseRequest
+
+  fields {
+    amount { readonly }
+    supplier { readonly }
+    justification { readonly }
+    note: string {
+      title: { pt-BR: "Justificativa", en: "Justification" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    approved { calls: PurchaseRequest.approve(note) }
+    rejected { calls: PurchaseRequest.reject(note) }
+  }
+}
+```
+
+```bpcms
+task ManagerReview {
+  lane: Management
+  form: ApprovalDecision
+  assign: named(purchaseRequest.requester.manager)
+  sla: 2d
+}
+
+task DirectorReview {
+  lane: Direction
+  form: ApprovalDecision
+  sla: 2d
+}
+```
+
+*Valida: um form reutilizado por duas tasks de lanes diferentes; o roteamento é do processo (`Task.approved -> ...`), não do form.*
+
+## Message
+
+Mensagem é contrato entre participantes: tem `about` (o documento que correlaciona), `payload` tipado e título. O participante é declarado na task (`partner:`), porque é a task que sabe com quem fala.
+
+### M.1 Envio de solicitação
+
+```bpcms
+message PickupRequest {
+  title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
+  about: Shipment
+  payload {
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em" } }
+    window: Duration { title: { pt-BR: "Janela de coleta" } }
+  }
+}
+
+task RequestPickup {
+  lane: System
+  sends: PickupRequest
+  partner: Carrier
+  with { requestedAt: now(); window: shipment.pickupWindow }
+}
+```
+
+*Valida: mensagem com correlação por documento e envio por task de sistema.*
+
+### M.2 Recebimento com aplicação no documento
+
+```bpcms
+message PickupConfirmed {
+  title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+  about: Shipment
+  payload {
+    pickupAt: DateTime { title: { pt-BR: "Coletado em" } }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio" } }
+  }
+}
+
+task AwaitPickup {
+  lane: System
+  receives: PickupConfirmed
+  partner: Carrier
+  apply: Shipment.applyPickup
+  with { shipment }
+  sla: 1d
+  on timer 1d -> ManualPickup
+}
+```
+
+*Valida: recebimento correlacionado aplica o payload numa action; timeout com desvio.*
+
+### M.3 Atualização contínua de rastreio
+
+```bpcms
+message TrackingUpdated {
+  title: { pt-BR: "Rastreio atualizado", en: "Tracking updated" }
+  about: Shipment
+  payload {
+    status: ShipmentStatus { title: { pt-BR: "Situação" } }
+    at: DateTime { title: { pt-BR: "Quando" } }
+    note: string { title: { pt-BR: "Observação" } }
+  }
+}
+
+task AwaitTracking {
+  lane: System
+  receives: TrackingUpdated
+  partner: Carrier
+  apply: Shipment.applyTracking
+  with { shipment }
+  sla: 5d
+  on timer 5d keep -> RemindCarrier
+}
+```
+
+*Valida: mensagem recorrente no mesmo passo; aplicação idempotente no documento; lembrete não interruptivo.*
+
+### M.4 Mensagem que inicia processo
+
+```bpcms
+message PaymentConfirmed {
+  title: { pt-BR: "Pagamento confirmado", en: "Payment confirmed" }
+  about: Order
+  payload {
+    paidAt: DateTime { title: { pt-BR: "Pago em" } }
+    amount: std.Money { title: { pt-BR: "Valor" } }
+  }
+}
+
+process OrderPacking for Order {
+  title: { pt-BR: "Separação do pedido", en: "Order packing" }
+  version: 1
+
+  pool Company {
+    internal
+    lane Warehouse { role: Packer }
+  }
+
+  start Paid { message: PaymentConfirmed }
+  task Pack { lane: Warehouse; form: PackShipment; sla: 4h }
+  task Ready { lane: System; action: Order.readyToShip; with { order } }
+
+  Paid -> Pack
+  Pack -> Ready
+  Ready -> Packed
+
+  end Packed { title: { pt-BR: "Pronto para envio", en: "Ready to ship" }; outcome: success }
+}
+```
+
+*Valida: mensagem como gatilho de início; correlação pelo sujeito; processo curto e completo.*
 ## Document
 
-### D.1 Cliente com identidade e unicidade
+### D.1 Cliente com identidade, PII e renomeação
 
 ```bpcms
 document Customer {
@@ -883,89 +2360,184 @@ document Customer {
   version: 1
   owner: "CRM"
   sync: live
+  retention: 5y
+
   fields {
     name: string {
       title: { pt-BR: "Nome", en: "Name" }
       maxLength: 120
       lookup
       required
+      sensitive
     }
-    email: Email { unique, lookup }
-    phone: Phone
-    status: CustomerStatus
-    private internalScore: Score
-    createdAt: DateTime
+    email: Email {
+      title: { pt-BR: "E-mail", en: "Email" }
+      lookup
+      unique
+      required
+    }
+    phone: Phone {
+      title: { pt-BR: "Telefone", en: "Phone" }
+      sensitive
+    }
+    taxId: TaxId {
+      title: { pt-BR: "CPF/CNPJ", en: "Tax ID" }
+      unique
+      sensitive
+    }
+    citizen: Citizen {
+      title: { pt-BR: "Cidadão", en: "Citizen" }
+    }
+    private riskScore: std.Count {
+      title: { pt-BR: "Score interno", en: "Internal score" }
+    }
+    createdAt: DateTime {
+      title: { pt-BR: "Criado em", en: "Created at" }
+      readonly
+    }
   }
 
-  indexes {
-    email: [email] unique
-    name: [name] search
+  events {
+    Renamed {
+      title: { pt-BR: "Cliente renomeado", en: "Customer renamed" }
+      payload {
+        name: string { title: { pt-BR: "Nome", en: "Name" } }
+      }
+    }
   }
 
   actions {
-    create(name: string, email: Email) {
-      title: { pt-BR: "Criar", en: "Create" }
+    rename(newName: string) {
+      title: { pt-BR: "Renomear", en: "Rename" }
       roles: [Clerk]
-    }
-    update(name: string, phone: Phone?) {
-      title: { pt-BR: "Atualizar", en: "Update" }
-      roles: [Clerk]
-    }
-    archive() {
-      title: { pt-BR: "Arquivar", en: "Archive" }
-      roles: [Manager]
-    }
-    private recalcScore() {
-      title: { pt-BR: "Recalcular", en: "Recalculate" }
-      roles: [System]
+      returns: Customer
+
+      rule newName.length > 0 {
+        pt-BR: "Informe o novo nome"
+        en: "Enter the new name"
+      }
+
+      {
+        name = newName
+        emit Renamed { name: newName }
+      }
     }
   }
 
-  rule email != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  indexes {
+    byEmail: [email] unique
+    byTaxId: [taxId] unique
+    byName: [name] search
   }
-  rule status in [Active, Inactive, Archived] {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+
+  rule email != null {
+    pt-BR: "Informe o e-mail do cliente"
+    en: "Enter the customer email"
   }
 }
 ```
 
-*Valida: unicidade por índice, campos opcionais, ações tipadas, `private` em campo/ação e sincronização live.*
+*Valida: unicidade por e-mail e documento fiscal, `lookup` como linha de exibição, PII em `sensitive`, campo interno em `private`, referência a `Citizen` como `DocumentRef` e comando sem transição que publica evento pelo `emit` do body (5.7).*
 
-### D.2 Nota fiscal com escopos e links
+### D.2 Nota fiscal como agregado com estado, itens e eventos
 
 ```bpcms
-scopable document Store {
-  title: { pt-BR: "Loja", en: "Store" }
+scopable document FiscalYear {
+  title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
   fields {
-    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
-    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+    year: integer {
+      title: { pt-BR: "Ano", en: "Year" }
+      unique
+      lookup
+    }
+    endsAt: DateTime {
+      title: { pt-BR: "Fim", en: "End" }
+    }
   }
 
   seed {
-    SP {
-      code: "SP"
-      name: "São Paulo"
+    Y2026 { year: 2026; endsAt: 2026-12-31 }
+  }
+}
+
+shape InvoiceItem {
+  title: { pt-BR: "Item da nota", en: "Invoice item" }
+  fields {
+    description: string {
+      title: { pt-BR: "Descrição", en: "Description" }
+      maxLength: 200
+    }
+    quantity: decimal {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      min: 0.001
+    }
+    unitPrice: std.Money {
+      title: { pt-BR: "Preço unitário", en: "Unit price" }
+      currency: BRL
+    }
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: quantity * unitPrice
     }
   }
 }
 
-scopable document FiscalYear {
-  title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
-  fields {
-    year: integer { title: { pt-BR: "Ano", en: "Year" }, unique, lookup }
-    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
-    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
-  }
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Draft
 
-  seed {
-    Y2026 {
-      year: 2026
-      startsAt: 2026-01-01
-      endsAt: 2026-12-31
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      payload {
+        number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+        issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+      }
     }
+
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: finance.issued
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: status.cancelled
+    ordinal: 40
   }
 }
 
@@ -974,104 +2546,165 @@ document Invoice {
   version: 1
   owner: "Billing"
   sync: live
+  retention: 10y
 
   fields {
-    store: Store {
-      title: { pt-BR: "Loja", en: "Store" }
-      default: Store.SP
+    number: InvoiceNumber {
+      title: { pt-BR: "Número", en: "Number" }
+      format: "{fiscalYear.year:4}-{sequence:6}"
+      sequence: per(FiscalYear)
+      unique
+      lookup
     }
     fiscalYear: FiscalYear {
       title: { pt-BR: "Exercício", en: "Fiscal year" }
       default: FiscalYear.Y2026
+      required
     }
     customer: Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
+      required
     }
-    number: InvoiceNumber {
-      format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
-      sequence: per(Store, FiscalYear)
-      unique
-      lookup
+    items: InvoiceItem[] {
+      title: { pt-BR: "Itens", en: "Items" }
     }
-    items: InvoiceItem[]
     subtotal: std.Money {
       title: { pt-BR: "Subtotal", en: "Subtotal" }
       currency: BRL
-      computed: items.sum(total)
+      computed: items.sum(subtotal)
     }
     tax: std.Money {
       title: { pt-BR: "Imposto", en: "Tax" }
       currency: BRL
+      default: 0 BRL
     }
     total: std.Money {
       title: { pt-BR: "Total", en: "Total" }
-      lookup
       currency: BRL
+      lookup
       computed: subtotal + tax
     }
-    status: InvoiceStatus
-    issuedAt: DateTime
+    status: InvoiceStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    issuedAt: DateTime {
+      title: { pt-BR: "Emitida em", en: "Issued at" }
+    }
+    paidAt: DateTime {
+      title: { pt-BR: "Paga em", en: "Paid at" }
+    }
   }
 
-  indexes {
-    number: [number] unique
-    store: [store.id] hash
-    fiscalYear: [fiscalYear.id] hash
-    byStatusDate: [status, issuedAt] range
+  events {
   }
 
   actions {
     issue() {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
-      transition: Issued
+
+      to: status.Issued
 
       rule items.length > 0 {
-        pt-BR: "Adicione itens antes de emitir a fatura"
+        pt-BR: "Adicione itens antes de emitir a nota"
         en: "Add items before issuing the invoice"
       }
       rule total > 0 BRL {
-        pt-BR: "Fatura sem valor"
-        en: "Invoice has no value"
+        pt-BR: "A nota precisa ter valor"
+        en: "The invoice must have a value"
       }
 
+      returns: Invoice
       {
         issuedAt = now()
+      }
+    }
+
+    pay(settledAt: DateTime) {
+      title: { pt-BR: "Pagar", en: "Pay" }
+      roles: [Clerk]
+
+      to: status.Paid
+      emits { amount: total }
+
+      {
+        paidAt = settledAt
       }
     }
 
     cancel(reason: string) {
       title: { pt-BR: "Cancelar", en: "Cancel" }
       roles: [Manager]
-      transition: Cancelled
+
+      to: status.Cancelled
 
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
         en: "Enter a reason with at least 10 characters"
       }
-      rule status == Issued {
-        pt-BR: "A nota precisa estar emitida"
-        en: "Invoice must be issued"
-      }
-
-      {
-      }
     }
   }
 
-  rule status == Issued implies issuedAt != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  indexes {
+    byNumber: [number] unique
+    byStatusDate: [status, issuedAt] range
+    byCustomer: [customer.id, issuedAt] range
+  }
+
+  rule total == subtotal + tax {
+    pt-BR: "Total da nota não confere"
+    en: "Invoice total does not match"
   }
 }
 ```
 
-*Valida: `scopable`, escopo inferido por referência, ID interno, número alternativo, lookup automático do cliente, ação com `transition` e regra de total.*
+*Valida: agregado com Shape composto (`InvoiceItem`), `computed` de subtotal e total, estado em Shape `base: state` com `initial`, evento por aresta (`Issued`/`Paid`/`Cancelled`), `from:`/`to:`/`emits:` na action e número de negócio sequenciado por exercício.*
 
-### D.3 Remessa com dispositivo, unidades e cálculo
+### D.3 Remessa com dispositivo, unidade e frete derivado
 
 ```bpcms
+// imports { service "bpcms.org/std" as std }
+
+shape ShipmentStatus {
+  title: { pt-BR: "Situação da remessa", en: "Shipment status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition InTransit {
+      event: Dispatched
+      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      payload {
+        tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+        dispatchedAt: DateTime { title: { pt-BR: "Despachada em", en: "Dispatched at" } }
+      }
+    }
+  }
+  value InTransit {
+    title: { pt-BR: "Em trânsito", en: "In transit" }
+    icon: logistic.inTransit
+    ordinal: 20
+
+    transition Delivered {
+      title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      payload {
+        deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+      }
+    }
+  }
+  value Delivered {
+    title: { pt-BR: "Entregue", en: "Delivered" }
+    icon: status.delivered
+    ordinal: 30
+  }
+}
+
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
   version: 1
@@ -1082,156 +2715,385 @@ document Shipment {
     order: Order {
       title: { pt-BR: "Pedido", en: "Order" }
       lookup
+      required
     }
-    items: ShipmentItem[]
-    pesoBruto: Mass { unit: kg, min: 0.001 }
-    volume: Volume { unit: m3, min: 0 }
-    frete: std.Money
-    tracking: TrackingCode { lookup }
-    status: ShipmentStatus { lookup }
-    readAt: DateTime
-    createdAt: DateTime
+    carrier: Carrier {
+      title: { pt-BR: "Transportadora", en: "Carrier" }
+      lookup
+    }
+    packages: integer {
+      title: { pt-BR: "Volumes", en: "Packages" }
+      min: 1
+    }
+    weight: std.Mass {
+      title: { pt-BR: "Peso bruto", en: "Gross weight" }
+      unit: kg
+      readonly
+    }
+    volume: std.Volume {
+      title: { pt-BR: "Volume", en: "Volume" }
+      unit: m3
+      min: 0
+      readonly
+    }
+    freight: std.Money {
+      title: { pt-BR: "Frete cotado", en: "Quoted freight" }
+      currency: BRL
+      readonly
+    }
+    tracking: TrackingCode {
+      title: { pt-BR: "Rastreio", en: "Tracking" }
+      lookup
+    }
+    status: ShipmentStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    promisedAt: DateTime {
+      title: { pt-BR: "Entrega prometida", en: "Promised delivery" }
+    }
+    dispatchedAt: DateTime {
+      title: { pt-BR: "Despachada em", en: "Dispatched at" }
+    }
+    deliveredAt: DateTime {
+      title: { pt-BR: "Entregue em", en: "Delivered at" }
+    }
   }
 
-  source: device "scale-01" for pesoBruto
+  source: device "scale-01" for weight
 
-  computed frete from Shipment, CarrierTable {
-    freshness: 15m
-    exposes: [frete, calculatedAt]
-  }
-
-  indexes {
-    order: [order.id] hash
-    byStatus: [status, createdAt] range
-    peso_normalizado: [pesoBruto.normalized] range
+  events {
   }
 
   actions {
-    addItem(item: ShipmentItem) {
-      title: { pt-BR: "Adicionar item", en: "Add item" }
-      roles: [Clerk]
-    }
-    split() {
-      title: { pt-BR: "Dividir", en: "Split" }
-      roles: [Manager]
-    }
-    dispatch(carrier: CarrierRef) {
+    dispatch(code: TrackingCode) {
       title: { pt-BR: "Despachar", en: "Dispatch" }
-      roles: [Manager]
+      roles: [Dispatcher]
+
+      to: status.InTransit
+
+      rule weight > 0 kg {
+        pt-BR: "A balança precisa registrar o peso antes do despacho"
+        en: "The scale must record the weight before dispatch"
+      }
+      rule code != null {
+        pt-BR: "Informe o código de rastreio"
+        en: "Enter the tracking code"
+      }
+
+      {
+        tracking = code
+        dispatchedAt = now()
+      }
+    }
+
+    confirmDelivery(deliveredOn: DateTime) {
+      title: { pt-BR: "Confirmar entrega", en: "Confirm delivery" }
+      roles: [Dispatcher]
+
+      to: status.Delivered
+
+      {
+        deliveredAt = deliveredOn
+      }
     }
   }
 
-  rule pesoBruto <= carrier.limitDePeso {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  indexes {
+    tracking: [tracking] unique
+    byStatus: [status, dispatchedAt] range
+    byOrder: [order.id] hash
   }
-  rule status == dispatched implies tracking != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+
+  rule status == Delivered implies deliveredAt != null {
+    pt-BR: "Entrega confirmada exige data de entrega"
+    en: "Confirmed delivery requires a delivery date"
+  }
+}
+
+document FreightEstimate {
+  title: { pt-BR: "Estimativa de frete", en: "Freight estimate" }
+  version: 1
+  owner: "Dispatch"
+  sync: read
+  computed from Shipment, FreightTariff
+  freshness: 15m
+  exposes: [freight, calculatedAt]
+
+  fields {
+    shipment: Shipment {
+      title: { pt-BR: "Remessa", en: "Shipment" }
+      lookup
+      required
+    }
+    carrier: Carrier {
+      title: { pt-BR: "Transportadora", en: "Carrier" }
+      lookup
+    }
+    freight: std.Money {
+      title: { pt-BR: "Frete", en: "Freight" }
+      currency: BRL
+    }
+  }
+
+  indexes {
+    byShipment: [shipment.id] unique
   }
 }
 ```
 
-*Valida: unidade com projeção normalizada, leitura de dispositivo, cálculo com frescor e regra por transportadora.*
+*Valida: `source: device` para o peso, `std.Mass`/`std.Volume` com unidade no campo, `readonly` no que vem de dispositivo/cálculo, `tracking` e `status` no lookup, transições `dispatch`/`confirmDelivery` com evento declarado e frete calculado em documento derivado (`computed from` + `freshness` + `exposes`).*
 
 ### D.4 Laudo com arquivo, assinatura e retenção
 
 ```bpcms
-document LabExam {
-  title: { pt-BR: "Exame laboratorial", en: "Lab exam" }
+shape LabReportStatus {
+  title: { pt-BR: "Situação do laudo", en: "Lab report status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition Released {
+      title: { pt-BR: "Laudo liberado", en: "Lab report released" }
+      payload {
+        releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
+        file: LabReportFile { title: { pt-BR: "Laudo assinado", en: "Signed report" } }
+      }
+    }
+  }
+  value Released {
+    title: { pt-BR: "Liberado", en: "Released" }
+    icon: lab.released
+    ordinal: 20
+  }
+}
+
+shape LabReportFile {
+  title: { pt-BR: "Arquivo do laudo", en: "Lab report file" }
+  base: attachment
+  mime: [application/pdf]
+}
+
+document LabReport {
+  title: { pt-BR: "Laudo laboratorial", en: "Lab report" }
   version: 1
   owner: "Laboratório"
   sync: live
-  retention: 5y
+  retention: 20y
 
   fields {
     patient: Citizen {
       title: { pt-BR: "Paciente", en: "Patient" }
       lookup
+      required
     }
-    type: ExamType { lookup }
-    status: ExamStatus { lookup }
-    result: string
-    resultFile: FileRef
-    signature: Signature
-    collectedAt: DateTime
-    releasedAt: DateTime
+    exam: ExamType {
+      title: { pt-BR: "Exame", en: "Exam" }
+      lookup
+    }
+    status: LabReportStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    file: LabReportFile {
+      title: { pt-BR: "Laudo assinado", en: "Signed report" }
+    }
+    collectedAt: DateTime {
+      title: { pt-BR: "Coletado em", en: "Collected at" }
+    }
+    releasedAt: DateTime {
+      title: { pt-BR: "Liberado em", en: "Released at" }
+    }
   }
 
-  indexes {
-    patient: [patient.id, collectedAt] range
-    byStatus: [status, collectedAt] range
+  signature {
+    release: Pathologist
+  }
+
+  events {
   }
 
   actions {
-    collect(sample: SampleRef) {
-      title: { pt-BR: "Coletar", en: "Collect" }
-      roles: [Analyst]
-    }
-    result(value: string, file: FileRef) {
-      title: { pt-BR: "Registrar resultado", en: "Record result" }
-      roles: [Analyst]
-    }
-    review(pathologist: User, signature: Signature) {
-      title: { pt-BR: "Revisar", en: "Review" }
-      roles: [Pathologist]
-    }
     release() {
       title: { pt-BR: "Liberar", en: "Release" }
       roles: [Pathologist]
+
+      to: status.Released
+
+      rule file != null {
+        pt-BR: "Anexe o laudo antes de liberar"
+        en: "Attach the report before releasing"
+      }
+
+      returns: LabReport
+      {
+        releasedAt = now()
+      }
     }
   }
 
-  rule status == released implies signature != null and result != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  indexes {
+    byPatient: [patient.id, collectedAt] range
+    byStatus: [status, releasedAt] range
   }
-  rule status == released implies releasedAt != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+
+  rule status == Released implies releasedAt != null {
+    pt-BR: "Laudo liberado exige data de liberação"
+    en: "Released report requires a release date"
   }
 }
 ```
 
-*Valida: anexo, assinatura, retenção e regra de liberação que exige evidência.*
+*Valida: anexo tipado com `base: attachment` e `mime`, `retention` no documento, bloco `signature` ligando a action ao papel com autoridade de assinatura, estado `Draft`/`Released` e evento de liberação com payload de arquivo.*
 
-### D.5 Ticket com SLA calculado
+### D.5 Chamado com SLA calculado e prazo
 
 ```bpcms
-document SupportTicket {
-  title: { pt-BR: "Chamado de atendimento", en: "Support ticket" }
+shape TicketPriority {
+  title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
+  base: classification
+
+  value Low {
+    title: { pt-BR: "Baixa", en: "Low" }
+    icon: priority.low
+    ordinal: 10
+  }
+  value Normal {
+    title: { pt-BR: "Normal", en: "Normal" }
+    icon: priority.normal
+    ordinal: 20
+  }
+  value High {
+    title: { pt-BR: "Alta", en: "High" }
+    icon: priority.high
+    ordinal: 30
+  }
+  value Critical {
+    title: { pt-BR: "Crítica", en: "Critical" }
+    icon: priority.critical
+    ordinal: 40
+  }
+}
+
+shape TicketStatus {
+  title: { pt-BR: "Situação do chamado", en: "Ticket status" }
+  base: state
+  initial: Open
+
+  value Open {
+    title: { pt-BR: "Aberto", en: "Open" }
+    icon: status.open
+    ordinal: 10
+
+    transition InProgress {
+      event: Started
+      title: { pt-BR: "Atendimento iniciado", en: "Ticket started" }
+      payload {
+        startedAt: DateTime { title: { pt-BR: "Iniciado em", en: "Started at" } }
+        dueAt: DateTime { title: { pt-BR: "Prazo do SLA", en: "SLA due at" } }
+      }
+    }
+
+    transition Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      payload {
+        resolvedAt: DateTime { title: { pt-BR: "Resolvido em", en: "Resolved at" } }
+        resolutionNote: string { title: { pt-BR: "Solução", en: "Resolution" } }
+      }
+    }
+  }
+  value InProgress {
+    title: { pt-BR: "Em atendimento", en: "In progress" }
+    icon: status.inProgress
+    ordinal: 20
+
+    transition Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      payload {
+        resolvedAt: DateTime { title: { pt-BR: "Resolvido em", en: "Resolved at" } }
+        resolutionNote: string { title: { pt-BR: "Solução", en: "Resolution" } }
+      }
+    }
+  }
+  value Resolved {
+    title: { pt-BR: "Resolvido", en: "Resolved" }
+    icon: status.resolved
+    ordinal: 30
+  }
+}
+
+document Ticket {
+  title: { pt-BR: "Chamado", en: "Ticket" }
   version: 1
   owner: "Support"
   sync: live
 
   fields {
+    subject: string {
+      title: { pt-BR: "Assunto", en: "Subject" }
+      maxLength: 160
+      lookup
+      required
+    }
     customer: Customer {
       title: { pt-BR: "Cliente", en: "Customer" }
       lookup
+      required
     }
-    subject: string { maxLength: 160, lookup }
-    description: string
-    priority: TicketPriority { lookup }
-    status: TicketStatus { lookup }
+    priority: TicketPriority {
+      title: { pt-BR: "Prioridade", en: "Priority" }
+      lookup
+    }
+    status: TicketStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
     assignee: User {
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
-    slaDue: DateTime
-    createdAt: DateTime
+    openedAt: DateTime {
+      title: { pt-BR: "Aberto em", en: "Opened at" }
+      required
+    }
+    slaWindow: Duration {
+      title: { pt-BR: "Janela de SLA", en: "SLA window" }
+    }
+    dueAt: DateTime {
+      title: { pt-BR: "Prazo do SLA", en: "SLA due at" }
+      lookup
+      computed: openedAt + slaWindow
+    }
+    startedAt: DateTime {
+      title: { pt-BR: "Iniciado em", en: "Started at" }
+    }
+    resolvedAt: DateTime {
+      title: { pt-BR: "Resolvido em", en: "Resolved at" }
+    }
+    resolutionNote: string {
+      title: { pt-BR: "Solução", en: "Resolution" }
+      maxLength: 500
+    }
   }
 
-  computed SlaBreach from SupportTicket {
-    freshness: 1m
-    exposes: [breached, remaining]
-  }
-
-  indexes {
-    byStatusPriority: [status, priority, slaDue] range
-    assignee: [assignee.id] hash
-    search: [subject, description] search
+  events {
   }
 
   actions {
+    start() {
+      title: { pt-BR: "Iniciar atendimento", en: "Start work" }
+      roles: [Agent]
+
+      to: status.InProgress
+
+      {
+        startedAt = now()
+      }
+    }
+
     assign(user: User) {
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Agent]
@@ -1246,37 +3108,213 @@ document SupportTicket {
       }
     }
 
-    comment(body: string) {
-      title: { pt-BR: "Comentar", en: "Comment" }
-      roles: [Agent]
-
-      rule body.length > 0 {
-        pt-BR: "Escreva um comentário"
-        en: "Write a comment"
-      }
-
-      {
-      }
-    }
-
-    resolve() {
+    resolve(note: string) {
       title: { pt-BR: "Resolver", en: "Resolve" }
       roles: [Agent]
-      transition: Resolved
 
-      rule assignee != null {
-        pt-BR: "Atribua o chamado antes de resolver"
-        en: "Assign the ticket before resolving"
+      to: status.Resolved
+
+      rule note.length >= 10 {
+        pt-BR: "Descreva a solução com pelo menos 10 caracteres"
+        en: "Describe the resolution in at least 10 characters"
       }
 
       {
+        resolvedAt = now()
+        resolutionNote = note
+      }
+    }
+  }
+
+  indexes {
+    byStatusDue: [status, dueAt] range
+    byAssignee: [assignee.id] hash
+    bySubject: [subject] search
+  }
+
+  rule priority == Critical implies slaWindow <= 4h {
+    pt-BR: "Chamado crítico exige SLA de até 4 horas"
+    en: "A critical ticket requires an SLA of at most 4 hours"
+  }
+  rule dueAt > openedAt {
+    pt-BR: "O prazo do SLA precisa ser posterior à abertura"
+    en: "The SLA due date must be after the ticket was opened"
+  }
+  rule status == Resolved implies resolvedAt != null {
+    pt-BR: "Chamado resolvido exige data de resolução"
+    en: "A resolved ticket requires a resolution date"
+  }
+}
+```
+
+*Valida: SLA calculado no campo (`computed: openedAt + slaWindow`), prioridade como `classification`, estado `Open`/`InProgress`/`Resolved`, ação `resolve` a partir de dois estados, regra de prazo por prioridade e evento com payload preenchido pelo body.*
+
+### D.6 Solicitação de compra com alçadas
+
+```bpcms
+shape PurchaseRequestStatus {
+  title: { pt-BR: "Situação da solicitação", en: "Purchase request status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition Submitted {
+      title: { pt-BR: "Solicitação enviada", en: "Purchase request submitted" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Enviada em", en: "Submitted at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  value Submitted {
+    title: { pt-BR: "Enviada", en: "Submitted" }
+    icon: status.submitted
+    ordinal: 20
+
+    transition Approved {
+      title: { pt-BR: "Solicitação aprovada", en: "Purchase request approved" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
 
-    reopen(reason: string) {
-      title: { pt-BR: "Reabrir", en: "Reopen" }
-      roles: [Manager]
-      transition: Open
+    transition Rejected {
+      title: { pt-BR: "Solicitação rejeitada", en: "Purchase request rejected" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: status.approved
+    ordinal: 30
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: status.rejected
+    ordinal: 40
+  }
+}
+
+document PurchaseRequest {
+  title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
+  version: 1
+  owner: "Procurement"
+  sync: live
+
+  fields {
+    number: PurchaseRequestNumber {
+      title: { pt-BR: "Número", en: "Number" }
+      format: "{createdAt.year:4}-{sequence:5}"
+      sequence: per(CostCenter)
+      unique
+      lookup
+    }
+    costCenter: CostCenter {
+      title: { pt-BR: "Centro de custo", en: "Cost center" }
+      lookup
+      required
+    }
+    requester: User {
+      title: { pt-BR: "Solicitante", en: "Requester" }
+      lookup
+      required
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      min: 0.01
+      lookup
+    }
+    justification: string {
+      title: { pt-BR: "Justificativa", en: "Justification" }
+      maxLength: 500
+    }
+    status: PurchaseRequestStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    createdAt: DateTime {
+      title: { pt-BR: "Criada em", en: "Created at" }
+      readonly
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviada em", en: "Submitted at" }
+    }
+    decidedAt: DateTime {
+      title: { pt-BR: "Decidida em", en: "Decided at" }
+    }
+    decisionNote: string {
+      title: { pt-BR: "Parecer", en: "Decision note" }
+      maxLength: 500
+    }
+  }
+
+  events {
+  }
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar", en: "Submit" }
+      roles: [Requester]
+
+      to: status.Submitted
+
+      rule amount > 0 BRL {
+        pt-BR: "Informe o valor da compra"
+        en: "Enter the purchase amount"
+      }
+      rule justification.length >= 20 {
+        pt-BR: "Justifique a compra com pelo menos 20 caracteres"
+        en: "Justify the purchase in at least 20 characters"
+      }
+
+      returns: PurchaseRequest
+      {
+        submittedAt = now()
+      }
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      roles: [Supervisor, Manager]
+
+      to: status.Approved
+
+      limits {
+        amount <= 10000 BRL: {
+          roles: [Supervisor]
+          pt-BR: "Até R$ 10.000 a aprovação é do supervisor"
+          en: "Up to BRL 10,000 the supervisor may approve"
+        }
+        amount <= 50000 BRL: {
+          roles: [Manager]
+          pt-BR: "Acima de R$ 10.000 a aprovação exige gerência"
+          en: "Above BRL 10,000 approval requires a manager"
+        }
+      }
+
+      {
+        decidedAt = now()
+      }
+    }
+
+    reject(reason: string) {
+      title: { pt-BR: "Rejeitar", en: "Reject" }
+      roles: [Supervisor, Manager]
+
+      to: status.Rejected
 
       rule reason.length >= 10 {
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
@@ -1284,55 +3322,360 @@ document SupportTicket {
       }
 
       {
+        decidedAt = now()
+        decisionNote = reason
       }
     }
   }
 
-  rule status == resolved implies assignee != null {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  segregation {
+    submit != approve
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, submittedAt] range
+    byCostCenter: [costCenter.id, submittedAt] range
+  }
+
+  rule status == Approved implies decidedAt != null {
+    pt-BR: "Solicitação aprovada exige data de decisão"
+    en: "An approved request requires a decision date"
+  }
+  rule status == Rejected implies decisionNote != null {
+    pt-BR: "Solicitação rejeitada exige parecer"
+    en: "A rejected request requires a decision note"
   }
 }
 ```
 
-*Valida: campo calculado de SLA, índice por prioridade e ações de atendimento.*
+*Valida: ciclo `Draft`/`Submitted`/`Approved`/`Rejected` com `from:`/`to:`/`emits:` em cada aresta, `limits` por papel (alçada), `segregation` entre solicitar e aprovar, número de negócio por centro de custo e `lookup` com número, centro de custo e valor.*
 
-### D.6 Faturamento mensal calculado
+### D.7 Contrato com versões, assinatura e renovação
+
+```bpcms
+shape ContractStatus {
+  title: { pt-BR: "Situação do contrato", en: "Contract status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition InReview {
+      event: Submitted
+      title: { pt-BR: "Contrato em revisão", en: "Contract in review" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+      }
+    }
+  }
+  value InReview {
+    title: { pt-BR: "Em revisão", en: "In review" }
+    icon: status.inReview
+    ordinal: 20
+
+    transition Active {
+      event: Activated
+      title: { pt-BR: "Contrato ativado", en: "Contract activated" }
+      payload {
+        activatedAt: DateTime { title: { pt-BR: "Ativado em", en: "Activated at" } }
+        currentVersion: ContractVersion { title: { pt-BR: "Versão vigente", en: "Current version" } }
+      }
+    }
+  }
+  value Active {
+    title: { pt-BR: "Vigente", en: "Active" }
+    icon: status.active
+    ordinal: 30
+
+    transition Expiring {
+      event: Expired
+      title: { pt-BR: "Contrato a vencer", en: "Contract expiring" }
+      payload {
+        endsAt: DateTime { title: { pt-BR: "Término", en: "End" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
+      payload {
+        terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Expiring {
+    title: { pt-BR: "A vencer", en: "Expiring" }
+    icon: status.expiring
+    ordinal: 40
+
+    transition Active {
+      event: Renewed
+      title: { pt-BR: "Contrato renovado", en: "Contract renewed" }
+      payload {
+        endsAt: DateTime { title: { pt-BR: "Término", en: "End" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
+      payload {
+        terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Terminated {
+    title: { pt-BR: "Encerrado", en: "Terminated" }
+    icon: status.terminated
+    ordinal: 50
+  }
+}
+
+shape ContractFile {
+  title: { pt-BR: "Arquivo do contrato", en: "Contract file" }
+  base: attachment
+  mime: [application/pdf]
+}
+
+shape ContractVersion {
+  title: { pt-BR: "Versão do contrato", en: "Contract version" }
+  fields {
+    version: integer {
+      title: { pt-BR: "Versão", en: "Version" }
+      min: 1
+    }
+    file: ContractFile {
+      title: { pt-BR: "Arquivo", en: "File" }
+    }
+    signedAt: DateTime {
+      title: { pt-BR: "Assinado em", en: "Signed at" }
+    }
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+}
+
+document Contract {
+  title: { pt-BR: "Contrato", en: "Contract" }
+  version: 1
+  owner: "Legal"
+  sync: live
+  retention: 10y
+
+  fields {
+    subject: string {
+      title: { pt-BR: "Objeto", en: "Subject" }
+      maxLength: 200
+      lookup
+      required
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+      required
+    }
+    versions: ContractVersion[] {
+      title: { pt-BR: "Versões", en: "Versions" }
+    }
+    currentVersion: ContractVersion {
+      title: { pt-BR: "Versão vigente", en: "Current version" }
+    }
+    startsAt: DateTime {
+      title: { pt-BR: "Início", en: "Start" }
+    }
+    endsAt: DateTime {
+      title: { pt-BR: "Término", en: "End" }
+    }
+    status: ContractStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviado em", en: "Submitted at" }
+    }
+    activatedAt: DateTime {
+      title: { pt-BR: "Ativado em", en: "Activated at" }
+    }
+    terminatedAt: DateTime {
+      title: { pt-BR: "Encerrado em", en: "Terminated at" }
+    }
+    terminationReason: string {
+      title: { pt-BR: "Motivo do encerramento", en: "Termination reason" }
+      maxLength: 500
+    }
+  }
+
+  signature {
+    activate: LegalCounsel
+  }
+
+  events {
+  }
+
+  actions {
+    attachVersion(version: ContractVersion) {
+      title: { pt-BR: "Anexar versão", en: "Attach version" }
+      roles: [LegalCounsel]
+
+      rule version.file != null {
+        pt-BR: "A versão precisa ter o arquivo assinado"
+        en: "The version must have the signed file"
+      }
+
+      {
+        currentVersion = version
+      }
+    }
+
+    submitReview() {
+      title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
+      roles: [LegalCounsel]
+
+      to: status.InReview
+
+      rule currentVersion != null {
+        pt-BR: "Anexe uma versão antes de enviar para revisão"
+        en: "Attach a version before submitting for review"
+      }
+
+      {
+        submittedAt = now()
+      }
+    }
+
+    activate(version: ContractVersion) {
+      title: { pt-BR: "Ativar", en: "Activate" }
+      roles: [LegalCounsel]
+
+      to: status.Active
+      emits { currentVersion: version }
+
+      rule version.signedAt != null {
+        pt-BR: "A versão vigente precisa estar assinada"
+        en: "The current version must be signed"
+      }
+
+      returns: Contract
+      {
+        currentVersion = version
+        activatedAt = now()
+      }
+    }
+
+    expire() {
+      title: { pt-BR: "Marcar a vencer", en: "Mark as expiring" }
+      roles: [System]
+
+      to: status.Expiring
+    }
+
+    renew(until: DateTime) {
+      title: { pt-BR: "Renovar", en: "Renew" }
+      roles: [Manager]
+
+      to: status.Active
+
+      rule until > endsAt {
+        pt-BR: "A renovação precisa estender o término"
+        en: "The renewal must extend the end date"
+      }
+
+      {
+        endsAt = until
+      }
+    }
+
+    terminate(reason: string) {
+      title: { pt-BR: "Encerrar", en: "Terminate" }
+      roles: [LegalCounsel, Manager]
+
+      to: status.Terminated
+
+      rule reason.length >= 20 {
+        pt-BR: "Informe o motivo do encerramento com pelo menos 20 caracteres"
+        en: "Enter the termination reason in at least 20 characters"
+      }
+
+      {
+        terminatedAt = now()
+        terminationReason = reason
+      }
+    }
+  }
+
+  indexes {
+    byStatusEndsAt: [status, endsAt] range
+    bySupplier: [supplier.id] hash
+    bySubject: [subject] search
+  }
+
+  rule endsAt > startsAt {
+    pt-BR: "O término do contrato precisa ser posterior ao início"
+    en: "The contract end must be after its start"
+  }
+  rule status == Terminated implies terminationReason != null {
+    pt-BR: "Contrato encerrado exige motivo"
+    en: "A terminated contract requires a reason"
+  }
+}
+```
+
+*Valida: `ContractVersion` como Shape composto (versões), bloco `signature` na ativação, ciclo `Draft` → `InReview` → `Active` → `Expiring` → `Active`/`Terminated` com arestas declaradas nas actions, `expire` automático por papel `System` e renovação que estende `endsAt`.*
+
+### D.8 Receita mensal como documento derivado
 
 ```bpcms
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   version: 1
   owner: "Finance"
+  sync: read
+  retention: 10y
   computed from Invoice, Payment
   freshness: 1h
-  sync: read
+  exposes: [revenue, calculatedAt]
 
   fields {
-    month: YearMonth { lookup }
-    revenue: std.Money { lookup }
-    orderCount: Count
-    calculatedAt: DateTime
+    period: YearMonth {
+      title: { pt-BR: "Período", en: "Period" }
+      lookup
+      required
+    }
+    revenue: std.Money {
+      title: { pt-BR: "Receita", en: "Revenue" }
+      currency: BRL
+      lookup
+    }
+    orderCount: std.Count {
+      title: { pt-BR: "Pedidos pagos", en: "Paid orders" }
+    }
   }
 
-  indexes { month: [month] unique }
+  indexes {
+    byPeriod: [period] unique
+  }
 
   actions {
     refresh() {
-      title: { pt-BR: "Atualizar", en: "Refresh" }
+      title: { pt-BR: "Recalcular", en: "Recalculate" }
       roles: [Manager]
     }
   }
 
-  rule month >= 2026-01 {
-    pt-BR: "Regra do documento não atendida"
-    en: "Document rule not met"
+  rule revenue >= 0 BRL {
+    pt-BR: "A receita mensal não pode ser negativa"
+    en: "Monthly revenue cannot be negative"
   }
 }
 ```
 
-*Valida: documento calculado, frescor de 1h, leitura sob demanda e ação de refresh.*
-
+*Valida: documento derivado (`computed from` + `freshness` + `exposes`) com período e receita duráveis, leitura materializada (`sync: read`), `calculatedAt` implícito no frescor e comando `refresh()` para recálculo — o número que precisa durar é documento, não relatório.*
 ## Shape
 
 ### H.1 Dinheiro com moeda e escala
@@ -1532,129 +3875,182 @@ Ela define 57 Shapes de medida/ciência/estatística, com unidades SI, imperial/
 
 ## View
 
-### V.1 Formulário de cliente
+### V.1 Tabela de pedidos com filtros, paginação e comandos
 
 ```bpcms
-view CustomerForm {
-  type: form
-  document: Customer
-  roles: [Clerk, Manager]
-
-  fields {
-    name: string { required }
-    email: Email { required }
-    phone: Phone
-    status: CustomerStatus { readonly }
-  }
-
-  actions {
-    save -> Customer.create
-    cancel -> none
-  }
-}
-```
-
-*Valida: form ligado a documento, campos com parâmetros e ações explícitas.*
-
-### V.2 Tabela de pedidos com filtros
-
-```bpcms
-view OrdersTable {
+view Orders {
+  title: { pt-BR: "Pedidos", en: "Orders" }
   type: table
   source: Order
   roles: [Clerk, Manager]
 
-  columns { number; customer.name; total; status; createdAt }
+  columns { number; customer; total; status; placedAt }
   filters { status; period; customer }
   pagination: 50
+
   actions {
     open -> OrderDetail
-    export -> Csv
+    cancel -> Order.cancel(reason)
   }
 }
 ```
 
-*Valida: tabela operacional, filtros, paginação e ações de linha.*
+*Valida: tabela operacional com colunas herdadas do documento (`customer` traz o lookup), filtros por período e situação, página de 50 linhas e ações de linha que navegam (`open`) ou delegam o comando ao documento (`cancel`), que valida a transição.*
 
-### V.3 Dashboard de vendas
-
-```bpcms
-view SalesDashboard {
-  type: dashboard
-  sources: [Invoice, Order]
-  roles: [Manager]
-
-  filters { period; region }
-  metrics {
-    revenue: sum(Invoice.total) by region
-    orders: count(Order) by region
-  }
-  freshness: 15m
-  units { revenue: BRL }
-  export: [pdf, csv]
-}
-```
-
-*Valida: dashboard como view sobre documentos, com frescor, unidade e exportação.*
-
-### V.4 Checkout em wizard
-
-```bpcms
-view CheckoutWizard {
-  type: wizard
-  roles: [Customer]
-  steps { Cart -> Address -> Payment -> Review }
-  data { Cart; Address; Payment }
-
-  actions {
-    next -> validateCurrentStep
-    back -> previousStep
-    confirm -> Checkout.confirmOrder
-  }
-  integration: Payment
-}
-```
-
-*Valida: wizard com etapas, dados compartilhados e integração de pagamento.*
-
-### V.5 Detalhe de remessa com dispositivo
+### V.2 Detalhe da remessa com seções, cálculo e dispositivo
 
 ```bpcms
 view ShipmentDetail {
+  title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
   type: detail
   document: Shipment
   roles: [Dispatcher, Supervisor]
 
   sections { summary; items; timeline; documents; deviceReading }
-  actions { dispatch; split; printLabel }
-  computed { frete }
+  computed { freight }
   device { scale-01 }
-}
-```
 
-*Valida: detalhe com seções, ações, cálculo e leitura de dispositivo.*
-
-### V.6 Kanban de atendimento
-
-```bpcms
-view SupportKanban {
-  type: kanban
-  source: SupportTicket
-  roles: [Agent, Lead]
-  groupBy: status
-
-  columns { open; in_progress; waiting; resolved }
-  card { subject; priority; slaDue; assignee }
-  filter { assignee = currentUser }
   actions {
-    move -> SupportTicket.changeStatus
-    assign -> SupportTicket.assign
+    openOrder -> OrderDetail
+    dispatch -> Shipment.dispatch(code)
+    confirmDelivery -> Shipment.confirmDelivery(deliveredOn)
   }
 }
 ```
 
-*Valida: agrupamento por estado, cartão com SLA e ação de mover.*
+*Valida: ficha com seções, campo calculado de exibição (`computed`), leitura de dispositivo da balança, navegação para o pedido e comandos de transição — a View lê, quem grava é a action.*
 
+### V.3 Relatório de vendas por região
+
+```bpcms
+view SalesByRegion {
+  title: { pt-BR: "Vendas por região", en: "Sales by region" }
+  type: report
+  sources: [Invoice, Order]
+  roles: [Manager, Analyst]
+
+  filters { period; region; status }
+  metrics {
+    revenue: sum(Invoice.total) by region
+    orders: count(Order) by region
+    ticket: avg(Invoice.total) by region
+    cancelled: count(Invoice) where status == Cancelled by region
+  }
+  units { revenue: BRL; ticket: BRL }
+  freshness: 15m
+  export: [pdf, csv]
+}
+```
+
+*Valida: relatório como View (não documento) sobre duas fontes, métricas de agregação pura com `by` e `where`, unidade de exibição por métrica, frescor do cache de leitura e exportação — número agregado para ler, filtrar e exportar.*
+
+### V.4 Dashboard operacional em tempo real
+
+```bpcms
+view OperationsControl {
+  title: { pt-BR: "Controle operacional", en: "Operations control" }
+  type: dashboard
+  sources: [Shipment, Incident, PurchaseRequest]
+  roles: [Supervisor]
+  mode: live
+
+  filters { site; carrier; status }
+  metrics {
+    late: count(Shipment) where status != Delivered and promisedAt < now()
+    openIncidents: count(Incident) where status != Closed
+    pendingApproval: count(PurchaseRequest) where status == Submitted
+    pendingAmount: sum(PurchaseRequest.amount) where status == Submitted
+  }
+  units { pendingAmount: BRL }
+  freshness: 1m
+}
+```
+
+*Valida: painel com `mode: live`, métricas filtradas por `where` (atraso comparando o prazo prometido com `now()`), contagem por situação e soma monetária com unidade — painel em tempo real, sem documento de relatório.*
+
+### V.5 Kanban de atendimento
+
+```bpcms
+view SupportKanban {
+  title: { pt-BR: "Atendimento por situação", en: "Support board by status" }
+  type: kanban
+  source: Ticket
+  roles: [Agent, Lead]
+  groupBy: status
+
+  card { subject; priority; dueAt; assignee }
+  filter { assignee = currentUser }
+
+  actions {
+    open -> TicketDetail
+    assign -> Ticket.assign(user)
+    resolve -> Ticket.resolve(note)
+  }
+}
+```
+
+*Valida: quadro agrupado pelo campo de estado (`groupBy: status`), cartão com sujeito, prioridade, prazo de SLA e responsável, filtro contextual pelo usuário atual e ações de linha que navegam ou chamam a action do documento.*
+
+### V.6 Inbox de minhas tarefas
+
+```bpcms
+view MyWork {
+  title: { pt-BR: "Minhas tarefas", en: "My work" }
+  type: inbox
+  roles: [Clerk, Manager, SupportAgent]
+  scope: mine
+  groupBy: process
+
+  columns { title; subject; lane; dueAt; priority }
+}
+```
+
+*Valida: inbox como projeção de tarefas (não de documentos), `scope: mine` para o que está atribuído ou pegável, agrupamento por processo e colunas derivadas do passo, da lane e do prazo.*
+
+### V.7 Andamento do processo de pedido
+
+```bpcms
+view OrderProgress {
+  title: { pt-BR: "Andamento do pedido", en: "Order progress" }
+  type: process
+  process: OrderFulfillment
+  roles: [Clerk, Manager, Customer]
+
+  sections {
+    current
+    participants
+    history
+    deadlines
+    subprocesses
+    documents
+    milestones
+    next
+  }
+}
+```
+
+*Valida: `type: process` com `process:` obrigatório e `sections` no vocabulário fixo do contrato de progresso (4.13/7.4); a View mostra o andamento, não cria transição nem reatribui.*
+
+### V.8 Calendário de visitas
+
+```bpcms
+view VisitCalendar {
+  title: { pt-BR: "Agenda de visitas", en: "Visit calendar" }
+  type: calendar
+  source: Visit
+  roles: [FieldAgent, Supervisor]
+
+  date: scheduledAt
+  filters { technician; status; region }
+
+  actions {
+    open -> VisitDetail
+    reschedule -> Visit.reschedule(scheduledAt)
+  }
+}
+```
+
+*Valida: agenda por data (`date: scheduledAt`) sobre o documento `Visit`, filtros por técnico, situação e região, navegação para o detalhe e reagendamento como comando do documento.*
 ## Role / Organogram
 
 ### R.1 Papéis de loja
@@ -2229,118 +4625,317 @@ conversation IncidentWarRoom {
 
 ## Decision
 
-### N.1 Limite de aprovação de compra
+Decisão é uma **tabela DMN pura** (4.17 / 11): `returns` tipado (normalmente uma `classification`), `inputs` tipados e `cases` com `else` obrigatório. Quem usa é a task (`decision:` + `with` + `gives:`); o caminho é escolhido por `gateway`. Decisão não escreve documento, não chama integração e não emite evento. Não existe `appliesTo`, `when` nem `default`: o `else` cobre o resto.
+
+### N.1 Alçada de compra
 
 ```bpcms
+shape ApproverTier {
+  title: { pt-BR: "Alçada de aprovação", en: "Approver tier" }
+  base: classification
+
+  value auto {
+    title: { pt-BR: "Automática", en: "Automatic" }
+    icon: approval.auto
+    ordinal: 10
+  }
+  value manager {
+    title: { pt-BR: "Gerência", en: "Manager" }
+    icon: approval.manager
+    ordinal: 20
+  }
+  value director {
+    title: { pt-BR: "Diretoria", en: "Director" }
+    icon: approval.director
+    ordinal: 30
+  }
+}
+
 decision ApprovalLimit {
-  appliesTo: PurchaseRequest.approve
-  when: amount
-  cases {
-    <= 5000 BRL -> auto
-    <= 50000 BRL -> manager
-    else -> director
+  title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
+  returns: ApproverTier
+
+  inputs {
+    amount: std.Money
+    supplier: Supplier
   }
+
+  cases {
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier.risk == Low -> Manager
+    else -> Director
+  }
+
   source: "Política de Compras v3"
-  owner: Finance
+  owner: "Financeiro"
+}
+
+task DecideApproval {
+  lane: System
+  decision: ApprovalLimit
+  with { amount: purchaseRequest.amount; supplier: purchaseRequest.supplier }
+  gives: tier
+}
+
+gateway Tier {
+  if tier == Auto -> AutoApprove
+  if tier == Manager -> ManagerReview
+  else -> DirectorReview
 }
 ```
 
-*Valida: decisão com faixas monetárias, caso default e fonte explícita.*
+*Valida: `returns` como `classification` (valores `auto`/`manager`/`director` com `icon` e `ordinal`), `inputs` tipados, `else` obrigatório, `source` e `owner` (1.2), a task que consome a decisão (`decision:` + `with` + `gives:`) e o `gateway` roteando pelo valor retornado.*
 
-### N.2 Desconto por cliente e margem
+### N.2 Elegibilidade de reembolso
 
 ```bpcms
-decision DiscountPolicy {
-  appliesTo: Order.applyDiscount
-  when: [customer.tier, order.margin]
-  cases {
-    tier == GOLD and margin >= 30% -> 10%
-    tier == GOLD and margin >= 20% -> 5%
-    tier == SILVER and margin >= 25% -> 5%
-    else -> 0%
+shape RefundVerdict {
+  title: { pt-BR: "Decisão de reembolso", en: "Refund verdict" }
+  base: classification
+
+  value approve {
+    title: { pt-BR: "Aprovar", en: "Approve" }
+    icon: refund.approve
+    ordinal: 10
   }
-  source: "Política Comercial 2026"
-  owner: Sales
+  value partial {
+    title: { pt-BR: "Aprovar parcial", en: "Partially approve" }
+    icon: refund.partial
+    ordinal: 20
+  }
+  value reject {
+    title: { pt-BR: "Rejeitar", en: "Reject" }
+    icon: refund.reject
+    ordinal: 30
+  }
+}
+
+decision RefundEligibility {
+  title: { pt-BR: "Elegibilidade de reembolso", en: "Refund eligibility" }
+  returns: RefundVerdict
+
+  inputs {
+    request: ReturnRequest
+    amount: std.Money
+  }
+
+  cases {
+    request.reason == damaged and request.daysSinceDelivery <= 30 -> approve
+    amount <= 100 BRL -> approve
+    request.reason == damaged -> partial
+    else -> reject
+  }
+
+  source: "Política de Trocas e Devoluções v2"
+  owner: "Atendimento"
 }
 ```
 
-*Valida: decisão multidimensional com percentual e margem.*
+*Valida: `DocumentRef` em `inputs`, leitura de campo do documento (`request.reason`) na condição, primeira condição verdadeira vence e `else` cobrindo o resto.*
 
-### N.3 Roteamento de atendimento
+### N.3 Roteamento de chamado
 
 ```bpcms
+shape SupportQueue {
+  title: { pt-BR: "Fila de atendimento", en: "Support queue" }
+  base: classification
+
+  value sre {
+    title: { pt-BR: "Plantão SRE", en: "SRE on-call" }
+    icon: support.sre
+    ordinal: 10
+  }
+  value billing {
+    title: { pt-BR: "Financeiro", en: "Billing" }
+    icon: support.billing
+    ordinal: 20
+  }
+  value technical {
+    title: { pt-BR: "Técnico", en: "Technical" }
+    icon: support.technical
+    ordinal: 30
+  }
+  value general {
+    title: { pt-BR: "Geral", en: "General" }
+    icon: support.general
+    ordinal: 40
+  }
+}
+
 decision TicketRouting {
-  appliesTo: SupportTicket.assign
-  when: [priority, category]
-  cases {
-    priority == P1 -> SREOnCall
-    category == BILLING -> FinanceQueue
-    category == TECHNICAL -> SupportQueue
-    else -> GeneralQueue
+  title: { pt-BR: "Roteamento de chamado", en: "Ticket routing" }
+  returns: SupportQueue
+
+  inputs {
+    ticket: SupportTicket
   }
-  default: GeneralQueue
-  owner: Support
+
+  cases {
+    ticket.priority == P1 -> sre
+    ticket.category == billing -> billing
+    ticket.category == technical -> technical
+    else -> general
+  }
+
+  source: "Matriz de Roteamento de Suporte v5"
+  owner: "Suporte"
 }
 ```
 
-*Valida: roteamento por prioridade e categoria, com default explícito.*
+*Valida: roteamento por prioridade e categoria, com prioridade vencendo categoria (ordem dos `cases`) e fila final obrigatória.*
 
-### N.4 Falta de estoque
+### N.4 Reposição de estoque
 
 ```bpcms
-decision StockShortage {
-  appliesTo: OrderFulfillment.ReserveStock
-  when: [requested, available]
-  cases {
-    available >= requested -> Reserve
-    available > 0 and available < requested -> PartialReserve
-    available == 0 and backorder.allowed -> Backorder
-    else -> CancelItem
+shape ReplenishmentAction {
+  title: { pt-BR: "Ação de reposição", en: "Replenishment action" }
+  base: classification
+
+  value replenish {
+    title: { pt-BR: "Repor", en: "Replenish" }
+    icon: stock.replenish
+    ordinal: 10
   }
-  source: "Política de Estoque"
-  owner: SupplyChain
+  value partial {
+    title: { pt-BR: "Repor parcial", en: "Partially replenish" }
+    icon: stock.partial
+    ordinal: 20
+  }
+  value backorder {
+    title: { pt-BR: "Pedido pendente", en: "Backorder" }
+    icon: stock.backorder
+    ordinal: 30
+  }
+  value cancel {
+    title: { pt-BR: "Cancelar item", en: "Cancel item" }
+    icon: stock.cancel
+    ordinal: 40
+  }
+}
+
+decision ReplenishmentPolicy {
+  title: { pt-BR: "Reposição de estoque", en: "Stock replenishment" }
+  returns: ReplenishmentAction
+
+  inputs {
+    available: std.Count
+    requested: std.Count
+    backorderAllowed: boolean
+  }
+
+  cases {
+    available >= requested -> replenish
+    available > 0 -> partial
+    backorderAllowed -> backorder
+    else -> cancel
+  }
+
+  source: "Política de Estoque v4"
+  owner: "Supply"
 }
 ```
 
-*Valida: decisão de exceção com ação parcial e backorder.*
+*Valida: decisão com `std.Count` e `boolean`, cobrindo estoque suficiente, parcial, pendente e cancelamento — sem ação (a `action` que repõe é da task, não da decisão).*
 
-### N.5 Faixa de risco de fraude
+### N.5 Risco de fraude
 
 ```bpcms
+shape FraudBand {
+  title: { pt-BR: "Faixa de risco", en: "Fraud band" }
+  base: classification
+
+  value low {
+    title: { pt-BR: "Baixo", en: "Low" }
+    icon: risk.low
+    ordinal: 10
+  }
+  value medium {
+    title: { pt-BR: "Médio", en: "Medium" }
+    icon: risk.medium
+    ordinal: 20
+  }
+  value high {
+    title: { pt-BR: "Alto", en: "High" }
+    icon: risk.high
+    ordinal: 30
+  }
+}
+
 decision FraudRisk {
-  appliesTo: InsuranceClaim.ScoreFraud
-  when: fraud.score
-  cases {
-    < 30 -> AutoApprove
-    >= 30 and < 70 -> ManualReview
-    >= 70 -> BlockAndInvestigate
+  title: { pt-BR: "Risco de fraude", en: "Fraud risk" }
+  returns: FraudBand
+
+  inputs {
+    score: std.Count
+    amount: std.Money
+    customer: Customer
   }
+
+  cases {
+    score >= 70 or amount > 20000 BRL -> High
+    score >= 30 -> Medium
+    else -> Low
+  }
+
   source: "Modelo de Risco v2"
-  owner: Risk
+  owner: "Risco"
 }
 ```
 
-*Valida: faixas de score e ações progressivas.*
+*Valida: condição com `or` e limiar monetário, faixas crescentes de score e `DocumentRef` (`customer`) como entrada.*
 
-### N.6 Escalonamento de SLA
+### N.6 Scoring de crédito
 
 ```bpcms
-decision SlaEscalation {
-  appliesTo: SupportTicket.slaDue
-  when: [remaining, priority]
-  cases {
-    remaining <= 0 and priority == P1 -> PageManager
-    remaining <= 0 -> Reassign
-    remaining <= 30m -> NotifyAssignee
-    else -> none
+shape CreditGrade {
+  title: { pt-BR: "Faixa de crédito", en: "Credit grade" }
+  base: classification
+
+  value prime {
+    title: { pt-BR: "Prime", en: "Prime" }
+    icon: credit.prime
+    ordinal: 10
   }
-  default: none
-  owner: Support
+  value standard {
+    title: { pt-BR: "Padrão", en: "Standard" }
+    icon: credit.standard
+    ordinal: 20
+  }
+  value subprime {
+    title: { pt-BR: "Subprime", en: "Subprime" }
+    icon: credit.subprime
+    ordinal: 30
+  }
+  value declined {
+    title: { pt-BR: "Recusado", en: "Declined" }
+    icon: credit.declined
+    ordinal: 40
+  }
+}
+
+decision CreditScoring {
+  title: { pt-BR: "Scoring de crédito", en: "Credit scoring" }
+  returns: CreditGrade
+
+  inputs {
+    score: std.Count
+    overdueDays: std.Count
+    monthlyIncome: std.Money
+  }
+
+  cases {
+    overdueDays > 90 -> declined
+    score >= 750 and overdueDays == 0 -> prime
+    score >= 600 -> standard
+    else -> subprime
+  }
+
+  source: "Política de Crédito 2026"
+  owner: "Crédito"
 }
 ```
 
-*Valida: decisão temporal com notificação, reatribuição e page.*
-
+*Valida: `classification` de crédito com exceção primeiro (inadimplência grave), faixa `prime` exigindo score e histórico, e `else` como faixa residual.*
 ## Assumption
 
 ### U.1 Frete por remessa
@@ -3375,194 +5970,240 @@ integration ScaleDevice {
 
 ## Report / Dashboard
 
+**Relatório é View, não documento** (7.3 / 21): lê, agrega, filtra e exporta — o número existe só na consulta, sem versão nem histórico.
+**Documento derivado** (`computed from`) é estado durável (5.10): guarda o número calculado, o `calculatedAt` e o frescor, para fechamento, laudo e auditoria.
+
 ### R.1 Vendas por região
 
 ```bpcms
-document SalesByRegion {
+view SalesByRegion {
   title: { pt-BR: "Vendas por região", en: "Sales by region" }
   type: report
-  computed from Invoice, Customer
-  freshness: 15m
+  sources: [Invoice, Order]
+  roles: [Manager]
 
-  report {
-    filters { period; region }
-    metrics {
+  filters { period; region; channel }
+  metrics {
     revenue: sum(Invoice.total) by region
-    orders: count(Invoice) by region
-    }
-    units { revenue: BRL }
-    export: [pdf, csv]
+    orders: count(Order) by region
+    avgTicket: avg(Order.total) by region
   }
+  units { revenue: BRL; avgTicket: BRL }
+  freshness: 15m
+  export: [pdf, csv]
 }
 ```
 
-*Valida: dashboard com métricas, dimensão, unidade e frescor.*
+*Valida: `report` com `sources`, `filters`, `metrics` agregadas por dimensão (`by region`), `units`, `freshness` e `export` — a view lê dois documentos e projeta, não grava nada.*
 
 ### R.2 Envelhecimento de estoque
 
 ```bpcms
-document InventoryAging {
+view InventoryAging {
   title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
   type: report
-  computed from StockItem, Product
-  freshness: 15m
+  sources: [StockItem, Product]
+  roles: [Supervisor, Manager]
 
-  report {
-    filters { warehouse; category }
-    dimensions { product; warehouse; ageBucket }
-    metrics {
-    quantity: sum(StockItem.quantity)
-    value: sum(StockItem.value)
-    aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
-    }
-    sort { value: desc }
-    export: [csv, xlsx]
+  filters { warehouse; category; period }
+  metrics {
+    quantity: sum(StockItem.available) by warehouse
+    value: sum(StockItem.available * Product.price) by warehouse
+    aging: bucket(StockItem.lastMovementAt, [30d, 60d, 90d, 180d])
   }
+  units { value: BRL }
+  freshness: 1h
+  export: [csv, xlsx]
 }
 ```
 
-*Valida: relatório com bucket temporal e múltiplas métricas.*
+*Valida: agregação `bucket` com fronteiras de tempo explícitas para envelhecer estoque, métrica derivada de dois documentos (`available * price`) e exportação em planilha.*
 
 ### R.3 Cumprimento de SLA
 
 ```bpcms
-document SlaCompliance {
-  title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
+view SlaCompliance {
+  title: { pt-BR: "Cumprimento de SLA", en: "SLA compliance" }
   type: report
-  computed from SupportTicket
-  freshness: 5m
+  sources: [SupportTicket]
+  roles: [Manager, Supervisor]
 
-  report {
-    filters { period; team; priority }
-    metrics {
+  filters { period; team; priority }
+  metrics {
     compliance: percentage(SupportTicket.slaMet)
-    breached: count(SupportTicket.breached)
+    breached: count(SupportTicket) where slaMet == false
     avgResolution: avg(SupportTicket.resolutionTime)
-    }
-    alert { compliance < 90% -> NotifyLead }
   }
+  units { compliance: "%"; avgResolution: h }
+  freshness: 5m
+  export: [pdf, csv]
 }
 ```
 
-*Valida: dashboard com percentual, alerta e métrica temporal.*
+*Valida: `percentage` sobre condição do documento, `count ... where` para o complemento e `avg` temporal — `units` com `%` (Percentage usa `unit: "%"`, 6.1.1) e `h`.*
 
 ### R.4 Fluxo de caixa
 
 ```bpcms
-document CashFlow {
+view CashFlow {
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
-  computed from Invoice, Payment, Bill
-  freshness: 1h
+  sources: [Invoice, Payment, Bill]
+  roles: [Manager]
 
-  report {
-    filters { period; account }
-    dimensions { month; account }
-    metrics {
-    inflow: sum(Payment.received)
-    outflow: sum(Bill.paid)
+  filters { period; account }
+  metrics {
+    inflow: sum(Payment.amount) where status == captured
+    outflow: sum(Bill.amount) where status == paid
     balance: inflow - outflow
-    }
-    units { inflow: BRL; outflow: BRL; balance: BRL }
-    export: [pdf, csv]
   }
+  units { inflow: BRL; outflow: BRL; balance: BRL }
+  freshness: 1h
+  export: [pdf, csv]
 }
 ```
 
-*Valida: relatório financeiro com unidades explícitas e saldo calculado.*
+*Valida: três fontes, `where` filtrando status, métrica calculada sobre outras métricas (`balance`) e unidade explícita em cada linha.*
 
 ### R.5 Qualidade laboratorial
 
 ```bpcms
-document LabQuality {
-  title: { pt-BR: "Qualidade laboratorial", en: "Lab quality" }
+view LabQuality {
+  title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
   type: report
-  computed from LabExam, LabNonConformity
-  freshness: 10m
+  sources: [LabExam, NonConformity]
+  roles: [Analyst, Pathologist]
 
-  report {
-    filters { period; examType }
-    metrics {
-    released: count(LabExam.released)
+  filters { period; examType; labUnit }
+  metrics {
+    released: count(LabExam) where status == Released
     rework: percentage(LabExam.rework)
     avgTurnaround: avg(LabExam.turnaround)
-    critical: count(LabExam.critical)
-    }
-    export: [pdf]
+    critical: count(LabExam) where critical == true
+    nonConformities: count(NonConformity) where status == Open
   }
+  units { avgTurnaround: h }
+  freshness: 10m
+  export: [pdf]
 }
 ```
 
-*Valida: dashboard de qualidade com tempo de resposta e não conformidade.*
+*Valida: relatório de qualidade com `count ... where` por estado do documento, `percentage` de retrabalho, tempo médio e contagem de não conformidades — sem documento de relatório.*
 
 ### R.6 Controle operacional em tempo real
 
 ```bpcms
-document OperationsControl {
+view OperationsControl {
   title: { pt-BR: "Controle operacional", en: "Operations control" }
-  type: report
-  computed from Shipment, Incident, DeviceReading
-  freshness: live
+  type: dashboard
+  sources: [Shipment, Incident]
+  roles: [Supervisor]
+  mode: live
 
-  report {
-    mode: live
-    filters { site; status }
-    metrics {
-    openShipments: count(Shipment.open)
-    lateShipments: count(Shipment.late)
-    deviceOffline: count(DeviceReading.offline)
-    incidents: count(Incident.open)
-    }
-    alert {
-    lateShipments > 20 -> PageOps
-    deviceOffline > 5 -> NotifyOps
-    }
+  filters { site; status; carrier }
+  metrics {
+    late: count(Shipment) where status != Delivered and dueAt < now()
+    atRisk: sum(Shipment.freight) where status != Delivered and dueAt < now()
+    openIncidents: count(Incident) where status != Closed
+  }
+  units { atRisk: BRL }
+  freshness: 1m
+}
+```
+
+*Valida: `dashboard` com `mode: live`, métricas condicionadas a `now()` (atraso é cálculo de leitura, não evento) e `freshness` de 1 minuto.*
+
+### R.7 Receita mensal como documento derivado (não é view)
+
+```bpcms
+document MonthlyRevenue {
+  title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
+  version: 1
+  owner: "Financeiro"
+  computed from Invoice, Payment
+  freshness: 1h
+  exposes: [revenue, invoiceCount, calculatedAt]
+
+  fields {
+    period: FiscalPeriod { title: { pt-BR: "Período", en: "Period" }, lookup }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, currency: BRL }
+    invoiceCount: std.Count { title: { pt-BR: "Notas", en: "Invoices" } }
   }
 }
 ```
 
-*Valida: dashboard live com alertas operacionais e múltiplas fontes.*
-
+*Valida: número que precisa durar vira `document` derivado — `computed from` duas fontes, `freshness`, `exposes` com `calculatedAt` implícito e campos que guardam o resultado; a view R.1 continua sendo só projeção.*
 ## Event
 
-### E.1 Evento de workflow
+**Evento de workflow fica no workflow**: é declarado na `transition` do valor de origem e publicado quando a action executa a transição. O bloco `events { }` do documento é só para eventos **sem** transição. Não existe artefato `event` de topo, nem `key`.
+
+### E.1 Evento de transição declarado no workflow
 
 ```bpcms
 shape OrderStatus {
-  base: workflow
+  title: { pt-BR: "Situação do pedido", en: "Order status" }
+  base: state
   initial: Draft
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
 
     transition Placed {
       title: { pt-BR: "Pedido realizado", en: "Order placed" }
       payload {
-        customer: User
-        total: std.Money
+        placedAt: DateTime { title: { pt-BR: "Realizado em" } }
+        total: std.Money { title: { pt-BR: "Total" } }
+        customer: User { title: { pt-BR: "Cliente" } }
       }
     }
   }
 
   value Placed {
     title: { pt-BR: "Realizado", en: "Placed" }
+    icon: status.placed
+    ordinal: 20
+  }
+}
+
+document Order {
+  title: { pt-BR: "Pedido", en: "Order" }
+
+  fields {
+    status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+  }
+
+  actions {
+    place() {
+      title: { pt-BR: "Realizar pedido", en: "Place order" }
+      roles: [Clerk]
+      to: status.Placed
+      {
+        placedAt = now()
+      }
+    }
   }
 }
 ```
 
-*Valida: evento dentro da transição, sem `events`/`emit` na action.*
+*Valida: o evento é da aresta `Draft --Placed--> Placed` e está declarado no workflow; a action só aponta o destino e o payload vem por nome.*
 
-### E.2 Evento sem workflow
+### E.2 Evento sem transição
 
 ```bpcms
 document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+
   events {
     Renamed {
       title: { pt-BR: "Loja renomeada", en: "Store renamed" }
-      key: this.id
       payload {
-        oldName: string
-        newName: string
+        oldName: string { title: { pt-BR: "Nome anterior" } }
+        newName: string { title: { pt-BR: "Nome novo" } }
       }
     }
   }
@@ -3571,163 +6212,335 @@ document Store {
     rename(name: string) {
       title: { pt-BR: "Renomear", en: "Rename" }
       roles: [Manager]
-      emit Renamed {
-        oldName: old.name
-        newName: new.name
+      {
+        oldName = this.name
+        this.name = name
+        emit Renamed { oldName; newName: name }
       }
     }
   }
 }
 ```
 
-*Valida: evento sem workflow em `events`, emitido pela action.*
+*Valida: evento que não muda estado é emitido no body; a action não declara `to:`.*
 
-### E.3 FQN cross-service
+### E.3 Identidade canônica e alias
+
+```text
+SERVICO.DOCUMENTO.EVENTO
+Billing.Invoice.Paid
+example.com/services/billing#Invoice.Paid
+```
 
 ```bpcms
-process PaymentSaga {
-  start on Order.Placed
-  end on Payment.Succeeded
+process PaymentReconciliation for Payment {
+  title: { pt-BR: "Conciliação de pagamento", en: "Payment reconciliation" }
+  version: 1
+
+  pool Company {
+    internal
+    lane Finance { role: FinanceAnalyst }
+  }
+
+  start Paid { event: Billing.Invoice.Paid }
+
+  task Match { lane: Finance; form: PaymentMatch; sla: 4h }
+  task Close { lane: System; action: Payment.reconcile; with { payment } }
+
+  Paid -> Match
+  Match -> Close
+  Close -> Reconciled
+
+  end Reconciled { title: { pt-BR: "Conciliado", en: "Reconciled" }; outcome: success }
 }
 ```
 
-*Valida: assinatura `SERVICO.DOCUMENTO.EVENTO`.*
+*Valida: processo de outro serviço assina o evento pelo nome qualificado; o alias local não muda a identidade.*
 
-### E.4 Payload com DocumentRef
+### E.4 Payload com referência a documento
 
 ```bpcms
-transition Placed {
-  title: { pt-BR: "Pedido realizado", en: "Order placed" }
-  payload {
-    customer: User
-    total: std.Money
+events {
+  Dispatched {
+    title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+    payload {
+      carrier: Carrier { title: { pt-BR: "Transportadora" } }
+      tracking: TrackingCode { title: { pt-BR: "Rastreio" } }
+      dispatchedAt: DateTime { title: { pt-BR: "Despachado em" } }
+      weight: std.Mass { title: { pt-BR: "Peso" } }
+    }
   }
 }
 ```
 
-*Valida: payload com `DocumentRef` e valor monetário.*
+*Valida: payload com `DocumentRef` (`carrier` traz id + lookup), tipo de domínio (`TrackingCode`) e unidade (`std.Mass`).*
 
-### E.5 Transição sem payload
+### E.5 Evento que inicia processo
 
 ```bpcms
-transition Closed {
-  title: { pt-BR: "Fechado", en: "Closed" }
+process Packing for Order {
+  title: { pt-BR: "Separação", en: "Packing" }
+  version: 1
+
+  pool Company {
+    internal
+    lane Warehouse { role: Packer }
+  }
+
+  start Placed { event: Order.Placed }
+  task Pick { lane: Warehouse; form: PickItems; sla: 2h }
+  task Ready { lane: System; action: Order.readyToShip; with { order } }
+
+  Placed -> Pick
+  Pick -> Ready
+  Ready -> Packed
+
+  end Packed { title: { pt-BR: "Pronto", en: "Ready" }; outcome: success }
 }
 ```
 
-*Valida: payload vazio permitido.*
+*Valida: o mesmo evento que fecha uma action abre um processo; correlação pelo sujeito (`for Order`).*
 
-### E.6 Eventos não são artefatos de topo
-
-Não existe `event <Name> { ... }`.
-
-Eventos existem em:
-
-- `transition` — workflow;
-- `events` — sem workflow.
-
-## Job / Schedule
-
-### J.1 Fechamento mensal
+### E.6 O mesmo evento a partir de origens diferentes
 
 ```bpcms
-job CloseMonth {
-  capabilities { scheduling }
-  schedule: "0 2 1 * *"
-  timezone: America/Fortaleza
-  action: Billing.closeMonth()
-  timeout: 30m
-  retry: 3
-  idempotent: true
-  deadLetter: true
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Issued
+
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: status.issued
+    ordinal: 10
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em" } }
+        amount: std.Money { title: { pt-BR: "Valor" } }
+      }
+    }
+  }
+
+  value Overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: status.overdue
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em" } }
+        amount: std.Money { title: { pt-BR: "Valor" } }
+      }
+    }
+  }
+
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+  }
+}
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+
+  fields {
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+  }
+
+  actions {
+    pay(paidAt: DateTime) {
+      title: { pt-BR: "Pagar", en: "Pay" }
+      roles: [Clerk]
+      to: status.Paid
+      emits { amount: total }
+    }
+
+    registerPayment(paidAt: DateTime) {
+      title: { pt-BR: "Registrar pagamento", en: "Register payment" }
+      roles: [Manager]
+      to: status.Paid
+      emits { amount: total }
+    }
+  }
 }
 ```
 
-*Valida: job mensal com timezone, timeout, retry e DLQ.*
+*Valida: duas arestas (`Issued` e `Overdue`) para o mesmo evento exigem o **mesmo** payload; o compilador unifica em `Invoice.Paid` e falha com `E_EVENT_SCHEMA_CONFLICT` se divergir. Renomear o estado é breaking change.*
 
-### J.2 Resumo diário
+## Schedule
+
+**Agendamento é um start, não um artefato.** O cron é do processo; o scheduler, o retry e a DLQ são runtime. Rotina em lote é **fan-out por sujeito**: `for` + `select` inicia uma instância por documento selecionado.
+
+### S.1 Fechamento mensal por período
 
 ```bpcms
-job DailyDigest {
-  capabilities { scheduling }
-  schedule: "0 7 * * *"
-  timezone: America/Fortaleza
-  action: Notifications.sendDigest()
-  input { audience: [Manager, SupportLead] }
-  timeout: 5m
-  retry: 2
+process MonthClose for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  owner: "Controladoria"
+  sla: 6h
+
+  pool Company {
+    internal
+    lane Controllership { role: Controller }
+  }
+
+  start Monthly {
+    schedule: "0 2 1 * *"
+    select: fiscalPeriod.status == Open
+  }
+
+  task PostEntries { lane: System; action: Ledger.postPeriod; with { fiscalPeriod }; on error Unbalanced -> Fix }
+  task Review { lane: Controllership; form: MonthCloseReview; sla: 4h }
+  task Fix { lane: Controllership; form: ReconciliationFix; sla: 1d }
+  task Close { lane: System; action: FiscalPeriod.close; with { fiscalPeriod } }
+
+  Monthly -> PostEntries
+  PostEntries -> Review
+  Review.approved -> Close
+  Review.rejected -> Fix
+  Fix -> PostEntries
+  Close -> Closed
+
+  end Closed { title: { pt-BR: "Fechado", en: "Closed" }; outcome: success }
+  end Failed { title: { pt-BR: "Falhou", en: "Failed" }; outcome: failure }
 }
 ```
 
-*Valida: job de comunicação com input e retry.*
+*Valida: cron diário/mensal, seleção de sujeitos (uma instância por período aberto), tarefa de sistema com erro e revisão humana.*
 
-### J.3 Limpeza de evidências
+### S.2 Cobrança com fan-out e espera
 
 ```bpcms
-job PurgeExpiredEvidence {
-  capabilities { scheduling }
-  schedule: "0 3 * * 0"
-  timezone: America/Fortaleza
-  action: Evidence.purgeExpired()
-  batch: 500
-  dryRun: env == "qa"
-  timeout: 20m
-  retry: 1
+process Dunning for Invoice {
+  title: { pt-BR: "Cobrança", en: "Dunning" }
+  version: 1
+  sla: 45d
+
+  pool Company {
+    internal
+    lane Collections { role: CollectionsAgent }
+  }
+  pool Customer {
+    external
+  }
+
+  start Daily {
+    schedule: "0 6 * * *"
+    select: invoice.status == Overdue and invoice.daysOverdue >= 1
+  }
+
+  task Remind { lane: System; sends: PaymentReminder; partner: Customer; with { invoice } }
+  wait Grace { for: 7d }
+
+  gateway Late {
+    if invoice.daysOverdue > 30 -> Escalate
+    else -> Remind
+  }
+
+  task Escalate { lane: Collections; form: CollectionCall; sla: 2d }
+  cancel on Invoice.Paid -> Settled
+
+  Daily -> Remind
+  Remind -> Grace
+  Grace -> Late
+  Late -> Escalate
+  Late -> Remind
+  Escalate.promised -> Remind
+  Escalate.writeoff -> WrittenOff
+
+  end Settled { title: { pt-BR: "Pago", en: "Paid" }; outcome: success }
+  end WrittenOff { title: { pt-BR: "Perda", en: "Written off" }; outcome: failure }
 }
 ```
 
-*Valida: job de retenção com batch e dry-run em QA.*
+*Valida: fan-out por fatura vencida, espera de 7 dias, laço com saída e cancelamento pelo pagamento.*
 
-### J.4 Retry de integrações
+### S.3 Reposição disparada por ponto de pedido
 
 ```bpcms
-job RetryFailedIntegrations {
-  capabilities { scheduling }
-  schedule: "*/15 * * * *"
-  timezone: America/Fortaleza
-  action: Integration.retryFailed()
-  filter { failedAt > now() - 24h }
-  maxAttempts: 5
-  backoff: exponential
-  deadLetter: true
+process Replenishment for StockItem {
+  title: { pt-BR: "Reposição", en: "Replenishment" }
+  version: 1
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Planning { role: Planner }
+  }
+
+  variables { decision: ReplenishmentDecision }
+
+  start Daily {
+    schedule: "0 7 * * *"
+    select: stockItem.available < stockItem.reorderPoint
+  }
+
+  task Decide {
+    lane: System
+    decision: ReplenishmentOrder
+    with { available: stockItem.available; reorderPoint: stockItem.reorderPoint }
+    gives: decision
+  }
+
+  gateway Action {
+    if decision.action == order -> CreateRequest
+    else -> Defer
+  }
+
+  task CreateRequest { lane: System; action: PurchaseRequest.create; with { stockItem; quantity: decision.quantity } }
+  task Defer { lane: System; action: StockItem.deferReplenishment; with { stockItem } }
+
+  Daily -> Decide
+  Decide -> Action
+  CreateRequest -> Requested
+  Defer -> Deferred
+
+  end Requested { title: { pt-BR: "Solicitado", en: "Requested" }; outcome: success }
+  end Deferred { title: { pt-BR: "Adiado", en: "Deferred" }; outcome: success }
 }
 ```
 
-*Valida: job de recuperação com filtro temporal e backoff.*
+*Valida: decisão antes de criar a requisição; duas saídas de negócio; sem `batch`.*
 
-### J.5 Sincronização com ERP
+### S.4 Rotina sem sujeito (digest)
 
 ```bpcms
-job SyncERP {
-  capabilities { scheduling }
-  schedule: "*/30 * * * *"
-  timezone: America/Fortaleza
-  action: ERP.syncSuppliers()
-  cursor: "erp.supplier.cursor"
-  batch: 200
-  idempotent: true
-  timeout: 15m
+process DailyDigest {
+  title: { pt-BR: "Resumo diário", en: "Daily digest" }
+  version: 1
+  owner: "Operações"
+
+  pool Company {
+    internal
+    lane Operations { role: Operator }
+  }
+  pool Team {
+    external
+  }
+
+  start Daily { schedule: "0 7 * * *" }
+
+  task Build { lane: System; action: Digest.build }
+  task Send { lane: System; sends: DailyDigestReady; partner: Team }
+  task Review { lane: Operations; manual: "Conferir o resumo antes de divulgar"; sla: 1h }
+
+  Daily -> Build
+  Build -> Send
+  Send -> Review
+  Review -> Sent
+
+  end Sent { title: { pt-BR: "Enviado", en: "Sent" }; outcome: success }
 }
 ```
 
-*Valida: job incremental com cursor e idempotência.*
-
-### J.6 Atualização de dashboard
-
-```bpcms
-job RefreshSalesDashboard {
-  capabilities { scheduling }
-  schedule: "*/5 * * * *"
-  timezone: America/Fortaleza
-  action: MonthlyRevenue.refresh()
-  condition: SalesDashboard.viewers > 0
-  timeout: 10m
-  retry: 1
-}
-```
-
-*Valida: job condicionado à audiência e ligado a documento calculado.*
-
+*Valida: processo agendado sem sujeito (sem `for`), com tarefa manual de conferência; não há documento de relatório.*
 ## Policy / Rule
 
 ### P.1 Quatro-olhos em pagamento
@@ -3900,94 +6713,69 @@ paid  { title: {...}; icon: status.paid }
 
 # O que validar nestes exemplos
 
-Estas não são pendências da baseline; são **decisões de sintaxe** que os exemplos ajudam a testar. Marque o que parece natural e o que parece burocrático.
+As perguntas abaixo são **decisões de sintaxe e de modelagem** que os exemplos ajudam a testar. A v0.2 respondeu às antigas (tipo de task, form × view, job, report, workflow em task, reads/writes); restam as seguintes.
 
 | # | Pergunta | Exemplos para olhar |
 | :--- | :--- | :--- |
-| 1 | `shape` deve ser nomeado por dimensão (`Mass`, `Length`) ou genérico (`Quantity<Mass>`)? | H.2, H.3, H.4 |
-| 2 | O campo deve carregar `unit` ou o `Shape` já define a unidade | H.2, D.3, W.4 |
-| 3 | Documento agregado deve listar itens como `Document[]` ou ter um bloco `items` próprio | D.2, D.3 |
-| 4 | O `lookup` automático cobre a projeção manual antiga | D.1, D.2 |
-| 5 | O processo deve ser declarado por nós (`task`, `gateway`) ou por XML BPMN com extensões? | P.1–P.6 |
-| 6 | `reads`/`writes` por tarefa são úteis ou ruído | P.1–P.6 |
-| 7 | Expressões (`sum`, `count`, `by`, `bucket`, `percentage`) são suficientes? | R.1–R.6, N.1–N.6 |
-| 8 | `view` deve listar campos ou compor widgets | V.1–V.6 |
-| 9 | `role` deve ter permissões inline ou só referenciar um catálogo | R.1–R.6 |
-| 10 | `evidence` deve carregar o conteúdo extraído ou só o vínculo e a confiança | E.1–E.6 |
-| 11 | `environment` deve declarar `promoteTo` ou a promoção é definida no `release`? | N.1–N.6, V.1–V.6 |
-| 12 | `builder` deve declarar `limitations` por plataforma | B.1–B.6 |
-| 13 | `widget` deve mapear `platforms` ou só declarar `capabilities`? | W.1–W.6 |
-| 14 | `conversation` deve ter `coverage` por dimensão ou por artefato | C.1–C.6 |
-| 15 | `release` deve apontar para o lock do app (uma versão/serviço) em vez de listar includes? | V.1–V.6 |
-| 16 | Cálculo deve ser campo computado (`computed frete`) ou documento (`document FreightQuote`)? | D.3, D.6 |
-| 17 | Shape composto (`fields`) é Shape ou Document embutido? | H.8, D.2 |
-| 18 | URI literal em todas as referências é verboso; quer alias local | A.1, S.2 |
-| 19 | A página `/index.html` deve listar SOs/APIs/iframe a partir do builder | A.1, S.1, B.1–B.6 |
-| 20 | URI entre aspas é aceitável ou prefere uma sintaxe sem aspas (ex.: `@example.com/...`)? | A.1, S.1 |
-| 21 | Repositório Git deve ser detectado por host (`source: auto`) ou sempre explícito? | A.7, S.7 |
-| 22 | Versão default de repo: commit, tag ou branch Produção deve exigir pin | S.7, V.1–V.6 |
-| 23 | A app deve listar só entry points e derivar a closure dos imports | A.1, S.2 |
-| 24 | Uma versão por serviço por app é suficiente Como tratar conflito de contrato | lock, V.1–V.6 |
-| 25 | IDs no lock devem cobrir todos os identificadores ou só os serializados | lock |
-| 26 | `reintroduce` ativo por closure é suficiente, ou precisa de prioridade explícita | A.8, S.8 |
-| 27 | Serviço sem `exports` e privacidade só por membro (`private`) está certo? | D.1, S.1–S.8 |
-| 28 | Alias local (`"uri" as Nome`) ajuda ou polui? | A.1, S.2 |
-| 29 | Sem `extends` na v1 e reuso só por composição/reintroduce está bom | S.8 |
-| 30 | Migração como `release` do tipo `migration` é suficiente | V.4 |
-| 31 | Capabilities de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`…) cobrem os casos? | S.1–S.8, B.1–B.6 |
-| 32 | Compensação como `type: compensation` + `for` está correta | P.7 |
-| 33 | `Parameter` cobre configuração/segredo com `type`, `source`, `required` e `default`? | PR.1–PR.6 |
-| 34 | Capabilities customizadas (`llm`, `google-maps`) devem ser nomes abertos/contrato do construtor? | B.1, S.1 |
-| 35 | `main` deve ser só `set` de Parameter de serviço e `start`, sem `wire`? | A.1 |
-| 36 | `location`, `timezone`, `regionalization` e `units` devem ser capabilities essenciais, não imports | U.1–U.3 |
-| 37 | Shapes de unidades métrico/imperial com dependência de regionalization estão corretos | U.3 |
-| 38 | `title` localizado por locale (`pt-BR`, `en-US`) e erro/fallback para tradução faltante está correto? | A.1–A.8 |
-| 39 | Todo document tem id implícito e `lookup`; `Category` não declara `id`/`categoryId` e `Product.categoryId` é FK | D.1–D.3 |
-| 40 | A projeção `User(citizenId)` (só o extra) e o lookup automático de `User` (`nickname`, `avatar`) estão claros? | D.2, árvores |
-| 41 | `Consumer extends User` compartilha `User`; `ConsumerId` é alias (mesmo valor) e `citizenId` é o extra? | árvores |
-| 42 | O que falta para você dizer “isso eu consigo revisar sem ser programador”? | todos |
+| 1 | `for <Documento>` (sujeito) deve ser obrigatório para todo processo visível? | P.1, P.13, P.24 |
+| 2 | `runs:` como único mecanismo de subpasso visível é suficiente, ou falta um agrupamento local para escopo de erro/compensação? | P.6, P.20, P.15 |
+| 3 | "Erro aborta a instância e compensa" é aceitável, ou precisamos de boundary local a um escopo? | P.3, P.5, P.10 |
+| 4 | `fork`/`join` explícitos são mais legíveis que gateway paralelo? | P.6, P.17, P.20 |
+| 5 | Form nomeado (sempre artefato) é melhor que form inline na task? | F.1–F.8 |
+| 6 | `lane` obrigatória em toda task: verbosidade aceitável? | todos os P |
+| 7 | `sla` deve ser erro (não aviso) para task humana? | P.5, P.9, P.22 |
+| 8 | `select:` no start agendado cobre rotinas em lote, sem `batch`/`cursor`? | P.13, P.14, P.15, P.24 |
+| 9 | `decision` com uma saída e primeiro-que-casa é suficiente para DMN? | P.1, P.23, N.1–N.6 |
+| 10 | `message` com `about` (documento) cobre colaboração e coreografia? | M.1–M.4, P.7, P.11 |
+| 11 | Form sem `roles` (autoridade na lane + action + campo) está claro? | F.3, F.8, P.18 |
+| 12 | `outcome` nos `end` é suficiente para KPIs de desfecho? | P.5, P.13, P.18 |
+| 13 | `foreach` sem agregação declarada é suficiente? | P.16, P.20 |
+| 14 | `cancel on` cobre "cancelar a qualquer momento" sem event sub-process? | P.7, P.13, P.18, P.20 |
+| 15 | `on timer ... keep` limitado a task lateral (sem aresta) é suficiente para lembretes? | P.7 |
+| 16 | `assign: named(expr)` cobre atribuição dirigida sem `assignment`? | P.1, P.8 |
+| 17 | Títulos herdados (task ← form/action; campo ← documento) reduzem ruído sem perder i18n? | F.1, F.8, P.19 |
+| 18 | O analista consegue revisar um processo sem ler o form/documento? | P.6, P.17, P.21 |
+| 19 | Falta algum artefato para representar seu domínio? | todos |
+| 20 | O que ainda parece "código demais" para o dono do processo? | todos |
 
 ## Padrões que os exemplos já sugerem
 
-* **Shape** é o único lugar com validação/formatação/conversão; o campo só parametriza.
-* **Document** agrega, referencia ou materializa lookup; computed/device são variações do mesmo conceito.
-* **Process** orquestra, mas não implementa regra: chama `action`, `view`, `integration` e `role`.
-* **View/Report** são projeções; não são donas de dados.
-* **Environment/Builder/Release** são artefatos de plataforma, não de negócio.
-* **Dependências são implícitas:** o app lista entry points; `Service.imports` define a closure.
-* **Sem `exports`:** todo artefato de topo é público; `private` só em membros internos.
-* **Lock do app:** uma versão por serviço e um ID por identificador; o serviço não carrega nenhum dos dois.
-* **`reintroduce` é composição:** ativo quando o serviço que reintroduz está na closure; senão, o original vale.
-* **Capabilities são de alto nível:** `gui/tui/print`, `oltp/sync`, `location`; o construtor resolve a tecnologia.
-* **Parameter** é o contrato de configuração/segredo; o valor é resolvido pelo ambiente e nunca entra no lock.
-* **Capabilities são abertas:** construtores podem declarar `llm`, `google-maps`, etc.; o serviço só declara `capabilities`.
-* **Compensação é passo:** `type: compensation` + `for` + `action`, em ordem reversa e idempotente.
-* **Serviços essenciais são capabilities:** `location`, `timezone`, `regionalization` e `units`; não são imports de app.
-* **Repositório Git é origem de primeira classe:** README é documentação, clone/zip/release é distribuição, commit/tag é versão.
-* **Evidence/Conversation/Decision/Assumption** são a memória da descoberta; precisam ser consultáveis e versionadas.
+* **Processo = trabalho; documento = estado.** A tela de andamento mostra os dois no mesmo lugar.
+* **Tipo de task é o contrato**, não uma etiqueta: `form`, `manual`, `action`, `call`, `decision`, `sends`, `receives`, `runs`.
+* **Quem executa é lane**; pool diz se é interno, portal externo, parceiro caixa-preta ou sistema.
+* **Subpasso é processo**: `runs:` cria outra instância, com tela, histórico e dono próprios.
+* **Form é contrato de escrita/desfecho**; View é leitura; relatório é View.
+* **Agendamento é start**; rotina em lote é fan-out por sujeito com `select`.
+* **Transição é da action**; o grafo de estados é derivado; só action muda estado.
+* **Erro é falha de tentativa**: cancela, compensa e desvia; retry é da integração/ação.
+* **Mensagem é contrato** com correlação por documento; o participante é declarado na task.
+* **Desfecho é nó nomeado e classificado**; é a dimensão de KPI do processo.
+* **Derivação em vez de declaração**: reads/writes, títulos herdados, grafo de estados, data objects.
 
-### Golden examples sugeridos
+## Golden examples sugeridos
 
-Se for validar só alguns, comece por estes seis — eles cobrem as decisões mais estruturais:
+Se for validar só alguns, comece por estes oito — eles cobrem as decisões mais estruturais:
 
-1. **H.2 Mass** — dimensão, unidade, projeção e agregação.
-2. **D.2 Invoice** — agregado, lookup, itens e regra de total.
-3. **P.2 OrderFulfillment** — processo, paralelismo, integração e erro.
-4. **V.3 SalesDashboard** — métricas, frescor, unidade e exportação.
-5. **R.4 FinanceRoles** — permissões, quatro-olhos e limite.
-6. **N.1 PurchaseApproval** — decisão por faixa e caso default.
-7. **A.8 + S.8** — lock, closure e reintroduce ativo.
-8. **P.7** — compensação como passo de BPMN.
+1. **P.1 PurchaseApproval** — sujeito, alçada DMN, gateway, breach, desfechos.
+2. **P.6 DispatchOrder** — pools interno/externo, fork/join, mensagem enviada e recebida, timeouts.
+3. **P.7 DeliveryTracking** — processo filho, recebimento recorrente, laço com saída, milestone, cancel on.
+4. **P.13 Dunning** — start agendado com fan-out, wait, laço, cancelamento por evento.
+5. **P.18 RefundCase** — decisão, alçada, mensagem, milestone, três desfechos.
+6. **F.1 + F.8** — form com três desfechos + form reutilizado por duas tasks.
+7. **D.2 Invoice** — agregado, estado, eventos, ações com from/to/emits.
+8. **V.7 OrderProgress** — tela de andamento com seções fixas.
 
-### Checklist de validação
+## Checklist de validação
 
 - [ ] A sintaxe parece legível para um analista, não só para um dev
-- [ ] `Shape` resolve validação/unidade sem espalhar regra pelo campo
-- [ ] Documento agregado com lookup automático faz sentido para o negócio
-- [ ] O processo orquestra sem virar código
-- [ ] `View` e `Report` são claramente projeções, não donas do dado
-- [ ] `Role`/`Policy` expressam quatro-olhos, alçada e retenção
-- [ ] `Environment`/`Builder`/`Release` dão segurança para dev/QA/prod
+- [ ] Toda task tem lane e um contrato; não há task "faz-tudo"
+- [ ] Todo processo tem start e ends nomeados; todo caminho chega a um end
+- [ ] O form não redeclara tipo/título do documento
+- [ ] O documento não duplica estado no processo
+- [ ] Agendamento aparece como start, não como artefato
+- [ ] Relatório aparece como View, não como documento
+- [ ] Mensagens têm `about` e participante declarado na task
+- [ ] Desfechos permitem calcular KPIs (ciclo, atraso, caminho, motivo)
 - [ ] Falta algum artefato para representar seu domínio
 
-> Se algo aqui parecer “código demais” para o dono do processo, o problema é de sintaxe/experiência — não do conceito. O próximo passo é escolher 3–5 exemplos como **golden examples** e usá-los como teste de aceitação da DSL no SPECS.
+> Se algo aqui parecer "código demais" para o dono do processo, o problema é de sintaxe/experiência — não do conceito. O próximo passo é escolher 3–5 exemplos como **golden examples** e usá-los como teste de aceitação da DSL no SPECS.

@@ -1,42 +1,131 @@
 // service: example.com/services/checkout
 shape CheckoutStatus {
   title: { pt-BR: "Situação da finalização", en: "Checkout status" }
-  base: workflow
+  base: state
   initial: Draft
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
 
     transition Validated {
+      event: CartValidated
       title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+      payload {
+        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
-
   value Validated {
-    title: { pt-BR: "Validado", en: "Validated" }
+    title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+    icon: Validated
+    ordinal: 20
 
     transition ShippingQuoted {
       title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+      payload {
+        freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+        deliveryDays: std.Count { title: { pt-BR: "Prazo", en: "Days" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
-
   value ShippingQuoted {
     title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+    icon: ShippingQuoted
+    ordinal: 30
 
     transition PaymentAuthorized {
       title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      payload {
+        authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
     }
   }
-
   value PaymentAuthorized {
     title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+    icon: PaymentAuthorized
+    ordinal: 40
 
-    transition OrderConfirmed {
-      title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Confirmed {
+      title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
+      payload {
+        confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
+      }
     }
   }
-
-  value OrderConfirmed {
+  value Confirmed {
     title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+    icon: Confirmed
+    ordinal: 50
+  }
+  value Abandoned {
+    title: { pt-BR: "Abandonada", en: "Abandoned" }
+    icon: Abandoned
+    ordinal: 60
+  }
+
+  format: plain
+}
+
+shape PaymentMethod {
+  title: { pt-BR: "Método de pagamento", en: "Payment method" }
+  base: classification
+
+  value CreditCard {
+    title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    icon: CreditCard
+    ordinal: 10
+  }
+  value Pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: Pix
+    ordinal: 20
+  }
+  value Boleto {
+    title: { pt-BR: "Boleto", en: "Boleto" }
+    icon: Boleto
+    ordinal: 30
+  }
+
+  format: plain
+}
+
+shape FreightOffer {
+  title: { pt-BR: "Oferta de frete", en: "Freight offer" }
+
+  fields {
+    carrier: string { title: { pt-BR: "Transportadora", en: "Carrier" } }
+    freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+    days: std.Count { title: { pt-BR: "Prazo em dias", en: "Days" } }
   }
 }

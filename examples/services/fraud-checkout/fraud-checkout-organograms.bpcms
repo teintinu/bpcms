@@ -1,0 +1,21 @@
+// service: example.com/services/fraud-checkout
+role RiskAnalyst {
+  title: { pt-BR: "Analista de risco", en: "Risk analyst" }
+  permissions: [fraud.review, fraud.approve, fraud.reject]
+}
+
+role RiskManager {
+  title: { pt-BR: "Gerente de risco", en: "Risk manager" }
+  inherits: RiskAnalyst
+  permissions: [fraud.override, report.view]
+}
+
+organogram Risk {
+  title: { pt-BR: "Organograma de risco", en: "Risk organogram" }
+
+  hierarchy {
+    RiskManager > RiskAnalyst
+  }
+
+  RiskManager manages [RiskAnalyst]
+}

@@ -25,12 +25,12 @@ document Category {
 
   actions {
     add(name: string, parent: Category?){
-      title: { pt-BR: "Cadastrar produto", en: "Add product" }
-      roles: [Manager]
+      title: { pt-BR: "Cadastrar categoria", en: "Add category" }
+      roles: [Curator]
     }
     rename(name: string){
       title: { pt-BR: "Renomear", en: "Rename" }
-      roles: [Manager]
+      roles: [Curator]
     }
   }
 }
@@ -49,13 +49,16 @@ document Product {
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
-    status: ProductStatus { title: { pt-BR: "Situação", en: "Status" } }
+    status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
     image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
     video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
     audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
     manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
     richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
+    publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
+    archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
   }
 
   indexes {
@@ -65,33 +68,68 @@ document Product {
     byWeight: [weight.normalized] range
   }
 
+
   actions {
     create(sku: SKU, name: string, price: std.Money){
       title: { pt-BR: "Criar produto", en: "Create product" }
-      roles: [Manager]
+      roles: [Curator]
     }
     update(name: string, price: std.Money){
       title: { pt-BR: "Atualizar", en: "Update" }
-      roles: [Manager]
+      roles: [Curator]
+    }
+    submitForReview(){
+      title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
+      roles: [Curator]
+
+      to: status.InReview
+      emits { submittedAt: now() }
+
+      {
+        submittedAt = now()
+      }
     }
     publish(){
       title: { pt-BR: "Publicar", en: "Publish" }
-      roles: [Manager]
+      roles: [Publisher]
+
+      to: status.Published
+      emits { publishedAt: now() }
+
+      {
+        publishedAt = now()
+      }
+    }
+    reject(reason: string){
+      title: { pt-BR: "Rejeitar", en: "Reject" }
+      roles: [Publisher]
+
+      to: status.Rejected
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
     }
     archive(){
       title: { pt-BR: "Arquivar", en: "Archive" }
-      roles: [Manager]
+      roles: [Publisher]
+
+      to: status.Archived
+      emits { archivedAt: now() }
+
+      {
+        archivedAt = now()
+      }
     }
   }
 
   rule price > 0 {
     pt-BR: "O preço deve ser maior que zero"
     en: "Price must be greater than zero"
-
   }
   rule status == Published implies price > 0 {
     pt-BR: "Publique apenas produtos com preço"
     en: "Publish only products with a price"
-
   }
 }

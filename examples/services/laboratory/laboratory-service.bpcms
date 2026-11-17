@@ -4,7 +4,6 @@ service "example.com/services/laboratory" {
   version: 1.0.0
   owner: "Laboratory"
   imports {
-    service "bpcms.org/std" as std
     service "example.com/services/citizen" as Citizen
     service "example.com/services/identity" as Identity
   }

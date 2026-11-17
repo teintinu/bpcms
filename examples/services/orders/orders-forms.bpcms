@@ -1,0 +1,58 @@
+// service: example.com/services/orders
+form DraftReview {
+  title: { pt-BR: "Revisar rascunho do pedido", en: "Review order draft" }
+  document: Order
+
+  fields {
+    customer
+    items
+    total
+    reason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 500
+    }
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      calls: Order.place
+    }
+    cancel {
+      title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      calls: Order.cancel(reason)
+    }
+    save {
+      title: { pt-BR: "Salvar observação", en: "Save note" }
+      calls: Order.annotate(note)
+      stay
+    }
+  }
+}
+
+form CancellationReview {
+  title: { pt-BR: "Analisar cancelamento", en: "Review cancellation" }
+  document: Order
+
+  fields {
+    customer
+    total
+    status
+    cancellationReason
+  }
+
+  actions {
+    approve {
+      title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
+      calls: Order.approveCancellation
+    }
+    reject {
+      title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      calls: Order.rejectCancellation
+    }
+  }
+}

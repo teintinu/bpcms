@@ -1,0 +1,35 @@
+// service: example.com/services/notifications
+form OptOutReview {
+  title: { pt-BR: "Revisar opt-out", en: "Review opt-out" }
+  document: Notification
+
+  fields {
+    recipient
+    channel
+    reason: string {
+      title: { pt-BR: "Motivo da supressão", en: "Suppression reason" }
+      maxLength: 500
+      required
+    }
+  }
+
+  actions {
+    suppress { calls: Notification.suppress(reason) }
+  }
+}
+
+form TemplateEditor {
+  title: { pt-BR: "Editor de modelo", en: "Template editor" }
+  document: NotificationTemplate
+
+  fields {
+    key
+    channel
+    subject
+    body
+  }
+
+  actions {
+    save { calls: NotificationTemplate.update(subject, body); stay }
+  }
+}

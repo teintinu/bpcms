@@ -1,0 +1,138 @@
+// service: example.com/services/credit
+
+process CreditApplicationFlow for CreditApplication {
+  title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
+  version: 1
+  goal: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
+  owner: "Credit"
+  timezone: America/Fortaleza
+  sla: 10d
+
+  pool Company {
+    internal
+    lane Analysis { role: CreditAnalyst }
+    lane Management { role: CreditManager }
+  }
+
+  variables {
+    bureauScore: std.Count
+    band: RiskBand
+  }
+
+  start Submitted { event: CreditApplication.Submitted }
+
+  task StartReview {
+    lane: System
+    action: CreditApplication.startReview
+    sla: 1m
+  }
+
+  task CheckBureau {
+    lane: System
+    call: CreditBureau.score
+    with { application: creditApplication }
+    gives: bureauScore
+    sla: 2m
+    on error BureauUnavailable -> ManualReview
+  }
+
+  task Score {
+    lane: System
+    decision: CreditScoring
+    with {
+      bureauScore
+      requestedAmount: creditApplication.requestedAmount
+      existingExposure: creditApplication.existingExposure
+    }
+    gives: band
+  }
+
+  task RecordRisk {
+    lane: System
+    action: CreditApplication.recordRisk
+    with {
+      bureauScore
+      riskBand: band
+    }
+  }
+
+  gateway Band {
+    if band == Low and creditApplication.requestedAmount <= 20000 BRL -> AutoApprove
+    if band == Low -> AnalystReview
+    if band == Medium -> AnalystReview
+    else -> ManagerReview
+  }
+
+  task AutoApprove {
+    lane: System
+    action: CreditApplication.approve
+    with { approvedLimit: creditApplication.requestedAmount }
+  }
+
+  task AnalystReview {
+    lane: Analysis
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    on timer 3d -> Escalate
+  }
+
+  task ManagerReview {
+    lane: Management
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    priority: 40
+    on timer 3d -> Escalate
+  }
+
+  task ManualReview {
+    lane: Analysis
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    on timer 3d -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    form: CreditDecision
+    sla: 1d
+  }
+
+  task SetLimit {
+    lane: System
+    action: CreditLimit.set
+    with {
+      application: creditApplication
+      holder: creditApplication.applicant
+      amount: creditApplication.approvedLimit
+    }
+  }
+
+  end Approved {
+    title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Crédito negado", en: "Credit rejected" }
+    outcome: failure
+  }
+
+  Submitted -> StartReview
+  StartReview -> CheckBureau
+  CheckBureau -> Score
+  Score -> RecordRisk
+  RecordRisk -> Band
+  AutoApprove -> SetLimit
+  AnalystReview.approve -> SetLimit
+  AnalystReview.reject -> Rejected
+  ManagerReview.approve -> SetLimit
+  ManagerReview.reject -> Rejected
+  ManualReview.approve -> SetLimit
+  ManualReview.reject -> Rejected
+  Escalate.approve -> SetLimit
+  Escalate.reject -> Rejected
+  SetLimit -> Approved
+}

@@ -1,0 +1,58 @@
+// service: example.com/services/payments
+form ChargebackEvidence {
+  title: { pt-BR: "Evidências da contestação", en: "Chargeback evidence" }
+  document: Chargeback
+
+  fields {
+    payment
+    amount
+    dueAt
+    evidenceNote: string {
+      title: { pt-BR: "Resumo das evidências", en: "Evidence summary" }
+      maxLength: 2000
+      required
+    }
+    evidenceFile: EvidenceDocument {
+      title: { pt-BR: "Documento comprobatório", en: "Supporting document" }
+      required
+    }
+    note: string {
+      title: { pt-BR: "Anotação interna", en: "Internal note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    submit {
+      title: { pt-BR: "Enviar à bandeira", en: "Send to the network" }
+      calls: Chargeback.submitEvidence(evidenceNote, evidenceFile)
+    }
+    concede {
+      title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      calls: Chargeback.concede
+    }
+    annotate {
+      title: { pt-BR: "Salvar anotação", en: "Save note" }
+      calls: Chargeback.annotateEvidence(note)
+      stay
+    }
+  }
+}
+form ChargebackConcession {
+  title: { pt-BR: "Aceitar contestação", en: "Accept chargeback" }
+  document: Chargeback
+
+  fields {
+    payment
+    amount
+    dueAt
+    status
+  }
+
+  actions {
+    accept {
+      title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      calls: Chargeback.concede
+    }
+  }
+}
