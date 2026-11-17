@@ -870,7 +870,7 @@ document Customer {
       title: { pt-BR: "Nome", en: "Name" }
       maxLength: 120
       lookup
-      required,
+      required
     }
     email: Email { unique, lookup }
     phone: Phone
@@ -888,20 +888,14 @@ document Customer {
     create(name: string, email: Email) {
       title: { pt-BR: "Criar", en: "Create" }
       roles: [Clerk]
-      {
-      }
     }
     update(name: string, phone: Phone?) {
       title: { pt-BR: "Atualizar", en: "Update" }
       roles: [Clerk]
-      {
-      }
     }
     archive() {
       title: { pt-BR: "Arquivar", en: "Archive" }
       roles: [Manager]
-      {
-      }
     }
     private recalcScore() {
       title: { pt-BR: "Recalcular", en: "Recalculate" }
@@ -1101,20 +1095,14 @@ document Shipment {
     addItem(item: ShipmentItem) {
       title: { pt-BR: "Adicionar item", en: "Add item" }
       roles: [Clerk]
-      {
-      }
     }
     split() {
       title: { pt-BR: "Dividir", en: "Split" }
       roles: [Manager]
-      {
-      }
     }
     dispatch(carrier: CarrierRef) {
       title: { pt-BR: "Despachar", en: "Dispatch" }
       roles: [Manager]
-      {
-      }
     }
   }
 
@@ -1168,26 +1156,18 @@ document LabExam {
     collect(sample: SampleRef) {
       title: { pt-BR: "Coletar", en: "Collect" }
       roles: [Analyst]
-      {
-      }
     }
     result(value: string, file: FileRef) {
       title: { pt-BR: "Registrar resultado", en: "Record result" }
       roles: [Analyst]
-      {
-      }
     }
     review(pathologist: User, signature: Signature) {
       title: { pt-BR: "Revisar", en: "Review" }
       roles: [Pathologist]
-      {
-      }
     }
     release() {
       title: { pt-BR: "Liberar", en: "Release" }
       roles: [Pathologist]
-      {
-      }
     }
   }
 
@@ -1353,8 +1333,6 @@ document MonthlyRevenue {
     refresh() {
       title: { pt-BR: "Atualizar", en: "Refresh" }
       roles: [Manager]
-      {
-      }
     }
   }
 

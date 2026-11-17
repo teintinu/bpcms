@@ -716,9 +716,10 @@ number: InvoiceNumber {
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n do campo (obrigatório); `short`/`tooltip` opcionais. |
-| `rules` | `rules { value != null: { fields; message } }` | Regras do field; substituem `required`. |
+| `required` | `required` | Campo obrigatório; ausência falha. `required: true` também é aceito. |
+| `rules` | `rules { value != null: { fields; message } }` | Regras condicionais do field. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem dos campos. |
-| booleanos | `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
+| booleanos | `required`, `lookup`, `unique`, `readonly`, `sensitive` | Flag bare = `true`; `flag: true/false` também é aceito. |
 | `maxLength` | `maxLength: 120` | Limite de texto; o `Shape` valida. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. `unique: true` também é aceito. |
 | `unit` | `unit: kg` | Unidade do valor; default é a unidade base do Shape. |

@@ -12,25 +12,13 @@ document Citizen {
       title: { pt-BR: "Nome de exibição", en: "Display name" }
       maxLength: 160
       lookup
-      rules {
-        value != null: {
-          fields: [displayName]
-          pt-BR: "Informe o nome de exibição"
-          en: "Enter the display name"
-        }
-      }
+      required
     }
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" } }
     country: string {
       title: { pt-BR: "País", en: "Country" }
       maxLength: 2
-      rules {
-        value != null: {
-          fields: [country]
-          pt-BR: "Selecione o país"
-          en: "Select the country"
-        }
-      }
+      required
     }
     status: CitizenStatus { title: { pt-BR: "Situação", en: "Status" } }
     private legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
@@ -49,32 +37,22 @@ document Citizen {
     register(kind: CitizenKind, displayName: string, country: string, legalName: string?, birthDate: Date?){
       title: { pt-BR: "Cadastrar cidadão", en: "Register citizen" }
       roles: [Clerk]
-      {
-      }
     }
     registerPerson(displayName: string, country: string, legalName: string, birthDate: Date?){
       title: { pt-BR: "Cadastrar pessoa", en: "Register person" }
       roles: [Manager]
-      {
-      }
     }
     registerOrganization(displayName: string, country: string, legalName: string){
       title: { pt-BR: "Cadastrar organização", en: "Register organization" }
       roles: [Manager]
-      {
-      }
     }
     merge(target: Citizen){
       title: { pt-BR: "Mesclar", en: "Merge" }
       roles: [Manager]
-      {
-      }
     }
     block(reason: string){
       title: { pt-BR: "Bloquear", en: "Block" }
       roles: [Manager]
-      {
-      }
     }
   }
 

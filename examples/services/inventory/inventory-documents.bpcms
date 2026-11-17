@@ -36,20 +36,14 @@ document StockItem {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
     reserve(quantity: std.Count){
       title: { pt-BR: "Reservar", en: "Reserve" }
       roles: [Manager]
-      {
-      }
     }
     release(quantity: std.Count){
       title: { pt-BR: "Liberar", en: "Release" }
       roles: [Manager]
-      {
-      }
     }
   }
 
@@ -93,20 +87,14 @@ document Reservation {
     request(product: Product, quantity: std.Count, externalRef: string){
       title: { pt-BR: "Reservar", en: "Reserve" }
       roles: [Clerk]
-      {
-      }
     }
     release(){
       title: { pt-BR: "Liberar", en: "Release" }
       roles: [Manager]
-      {
-      }
     }
     expire(){
       title: { pt-BR: "Expirar", en: "Expire" }
       roles: [Manager]
-      {
-      }
     }
   }
 

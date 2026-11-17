@@ -414,7 +414,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
 - [ ] `version`, `owner`, `sync`, `audit`, `retention`
-- [ ] `fields { name: Shape { title; lookup; unique; rules; ... } }`; sem `required`; sem `?`
+- [ ] `fields { name: Shape { title; required; lookup; unique; rules; ... } }`; sem `?`
 - [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `link`/`XxxId`; não é FK
 - [ ] campo para `scopable document` infere escopo
 - [ ] sem `source`/`scope` block/parentId/path
@@ -428,6 +428,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] UI recebe botão habilitado/desabilitado, `fields` e motivo
 - [ ] `report` como `document type: report`
 - [ ] `rules` no Document, action e field; condição verdadeira = permitido
+- [ ] `required` para obrigatoriedade simples; `rules` para condicional
 - [ ] `source: device ...`
 - [ ] `computed from`, `computed <Name> from`, `freshness`, `exposes`
 - [ ] link circular usa nome diferente do id (`parent`)

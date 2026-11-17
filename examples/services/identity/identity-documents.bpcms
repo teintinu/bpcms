@@ -16,13 +16,7 @@ document User {
       }
       maxLength: 120
       lookup
-      rules {
-        value != null: {
-          fields: [name]
-          pt-BR: "Informe o nome da pessoa"
-          en: "Enter the person name"
-        }
-      }
+      required
     }
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
@@ -41,14 +35,10 @@ document User {
     create(name: string, email: Email){
       title: { pt-BR: "Criar usuário", en: "Create user" }
       roles: [Admin]
-      {
-      }
     }
     disable(){
       title: { pt-BR: "Desativar", en: "Disable" }
       roles: [Manager]
-      {
-      }
     }
     private recalculateRisk(): std.Count
   }
@@ -84,8 +74,6 @@ document Consumer extends User {
     setCitizen(citizen: Citizen){
       title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
       roles: [Admin]
-      {
-      }
     }
   }
 
@@ -122,14 +110,10 @@ document Session {
     start(email: Email, password: string){
       title: { pt-BR: "Iniciar sessão", en: "Sign in" }
       roles: [Customer]
-      {
-      }
     }
     end(){
       title: { pt-BR: "Encerrar", en: "End" }
       roles: [Manager]
-      {
-      }
     }
   }
 

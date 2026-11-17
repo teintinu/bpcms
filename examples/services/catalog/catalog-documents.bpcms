@@ -65,26 +65,18 @@ document Product {
     create(sku: SKU, name: string, price: std.Money){
       title: { pt-BR: "Criar produto", en: "Create product" }
       roles: [Manager]
-      {
-      }
     }
     update(name: string, price: std.Money){
       title: { pt-BR: "Atualizar", en: "Update" }
       roles: [Manager]
-      {
-      }
     }
     publish(){
       title: { pt-BR: "Publicar", en: "Publish" }
       roles: [Manager]
-      {
-      }
     }
     archive(){
       title: { pt-BR: "Arquivar", en: "Archive" }
       roles: [Manager]
-      {
-      }
     }
   }
 

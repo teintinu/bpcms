@@ -83,8 +83,6 @@ document Order {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
 
     place(){
@@ -124,8 +122,6 @@ document Order {
       title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
       roles: [Manager]
       transition: Cancelled
-      {
-      }
     }
   }
 

@@ -107,8 +107,6 @@ document Ticket {
     escalateBreached(){
       title: { pt-BR: "Escalar prazo", en: "Escalate SLA" }
       roles: [Manager]
-      {
-      }
     }
   }
 
@@ -162,16 +160,12 @@ document ReturnRequest {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
 
     approve(){
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
       roles: [Manager]
       transition: Approved
-      {
-      }
     }
 
     reject(reason: string){
@@ -185,16 +179,12 @@ document ReturnRequest {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
 
     refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
       roles: [Manager]
       transition: Refunded
-      {
-      }
     }
   }
 

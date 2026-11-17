@@ -28,8 +28,6 @@ document Payment {
     authorize() {
       title: { pt-BR: "Autorizar", en: "Authorize" }
       roles: [Manager]
-      {
-      }
     }
     capture() {
       title: { pt-BR: "Capturar", en: "Capture" }
@@ -43,14 +41,10 @@ document Payment {
       title: { pt-BR: "Reembolsar", en: "Refund" }
       roles: [Manager]
       transition: RefundIssued
-      {
-      }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
       roles: [Manager]
-      {
-      }
     }
   }
 
@@ -102,20 +96,14 @@ document Refund {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
     approve(){
       title: { pt-BR: "Aprovar", en: "Approve" }
       roles: [Manager]
-      {
-      }
     }
     complete(){
       title: { pt-BR: "Concluir", en: "Complete" }
       roles: [Manager]
-      {
-      }
     }
   }
 

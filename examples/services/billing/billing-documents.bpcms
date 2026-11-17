@@ -102,8 +102,6 @@ document Invoice {
     closeMonth(){
       title: { pt-BR: "Fechar mês", en: "Close month" }
       roles: [Manager]
-      {
-      }
     }
   }
 
@@ -155,16 +153,12 @@ document CreditNote {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
       transition: Issued
-      {
-      }
     }
 
     apply(){
       title: { pt-BR: "Aplicar", en: "Apply" }
       roles: [Manager]
       transition: Applied
-      {
-      }
     }
   }
 
@@ -249,8 +243,6 @@ document OrderCancellation {
           en: "Requirement not met"
         }
       }
-      {
-      }
     }
   }
 
@@ -284,8 +276,6 @@ document MonthlyRevenue {
     refresh(){
       title: { pt-BR: "Atualizar", en: "Refresh" }
       roles: [Manager]
-      {
-      }
     }
   }
 

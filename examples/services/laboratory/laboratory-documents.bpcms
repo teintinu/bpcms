@@ -19,13 +19,7 @@ document SupportLab {
     name: string {
       title: { pt-BR: "Nome", en: "Name" }
       lookup
-      rules {
-        value != null: {
-          fields: [name]
-          pt-BR: "Informe o nome do laboratório de apoio"
-          en: "Enter the support lab name"
-        }
-      }
+      required
     }
     accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
     active: boolean { title: { pt-BR: "Ativo", en: "Active" } }
@@ -35,14 +29,10 @@ document SupportLab {
     activate(){
       title: { pt-BR: "Ativar", en: "Activate" }
       roles: [Manager]
-      {
-      }
     }
     deactivate(){
       title: { pt-BR: "Desativar", en: "Deactivate" }
       roles: [Manager]
-      {
-      }
     }
   }
 }
@@ -97,20 +87,14 @@ document Sample {
     collect(by: User){
       title: { pt-BR: "Coletar", en: "Collect" }
       roles: [Analyst]
-      {
-      }
     }
     receive(){
       title: { pt-BR: "Receber", en: "Receive" }
       roles: [Manager]
-      {
-      }
     }
     refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       roles: [Manager]
-      {
-      }
     }
   }
 }
@@ -159,26 +143,18 @@ document ExamOrder {
     assign(user: User){
       title: { pt-BR: "Atribuir", en: "Assign" }
       roles: [Pathologist]
-      {
-      }
     }
     start(){
       title: { pt-BR: "Iniciar", en: "Start" }
       roles: [Manager]
-      {
-      }
     }
     refer(lab: SupportLab){
       title: { pt-BR: "Encaminhar", en: "Refer" }
       roles: [Manager]
-      {
-      }
     }
     result(){
       title: { pt-BR: "Resultar", en: "Result" }
       roles: [Manager]
-      {
-      }
     }
   }
 }
@@ -214,8 +190,6 @@ document ExamResult {
     release(by: User){
       title: { pt-BR: "Liberar", en: "Release" }
       roles: [Pathologist]
-      {
-      }
     }
   }
 }

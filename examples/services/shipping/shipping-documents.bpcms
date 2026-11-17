@@ -72,33 +72,23 @@ document Shipment {
     create(order: Order){
       title: { pt-BR: "Criar remessa", en: "Create shipment" }
       roles: [Clerk]
-      {
-      }
     }
     addItem(product: Product, quantity: std.Count){
       title: { pt-BR: "Adicionar item", en: "Add item" }
       roles: [Manager]
-      {
-      }
     }
     split(){
       title: { pt-BR: "Dividir", en: "Split" }
       roles: [Manager]
-      {
-      }
     }
     dispatch(){
       title: { pt-BR: "Despachar", en: "Dispatch" }
       roles: [Manager]
       transition: Dispatched
-      {
-      }
     }
     trackAll(){
       title: { pt-BR: "Rastrear tudo", en: "Track all" }
       roles: [Manager]
-      {
-      }
     }
   }
 

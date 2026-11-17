@@ -11,13 +11,7 @@ document NotificationTemplate {
       title: { pt-BR: "Chave", en: "Key" }
       maxLength: 80
       lookup
-      rules {
-        value != null: {
-          fields: [key]
-          pt-BR: "Informe a chave do modelo"
-          en: "Enter the template key"
-        }
-      }
+      required
     }
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
@@ -33,14 +27,10 @@ document NotificationTemplate {
     create(key: string, channel: Channel, locale: LocaleTag){
       title: { pt-BR: "Criar modelo", en: "Create template" }
       roles: [Manager]
-      {
-      }
     }
     update(subject: string, body: string){
       title: { pt-BR: "Atualizar", en: "Update" }
       roles: [Manager]
-      {
-      }
     }
   }
 }
@@ -72,26 +62,18 @@ document Notification {
     send(){
       title: { pt-BR: "Enviar", en: "Send" }
       roles: [Manager]
-      {
-      }
     }
     retry(){
       title: { pt-BR: "Repetir", en: "Retry" }
       roles: [Manager]
-      {
-      }
     }
     sendDigest(){
       title: { pt-BR: "Enviar resumo", en: "Send digest" }
       roles: [Manager]
-      {
-      }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
       roles: [Manager]
-      {
-      }
     }
   }
 
