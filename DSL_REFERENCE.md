@@ -375,7 +375,7 @@ name: string {
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
 
-**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `<app>-application.bpcms`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
+**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.bpcms`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
 ```bpcms
 application "example.com/app/loja-do-joao" {
@@ -445,7 +445,7 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 **Sem `roles` inline.** Roles ficam no arquivo `*-organograms.bpcms`, depois do organogram; a lista inline duplicava a fonte de verdade.
 
-**Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `<service>-service.bpcms`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process` ou arquivos compartilhados. A regra completa está na seção 30.
+**Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `examples/services/<fullpath>/<service>-service.bpcms`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process` ou arquivos compartilhados. A regra completa está na seção 30.
 
 **Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
 
@@ -3815,12 +3815,14 @@ policy FourEyesPayment {
 | Chamada | filho sem `start { called }`, com gatilho de topo, ou processo de topo com `called` | `E_PROCESS_TRIGGER_CONFLICT` |
 | Subprocesso | ciclo entre processos | `E_SUBPROCESS_CYCLE` |
 | View | tipo inválido, cláusula incompatível, seção desconhecida | `E_VIEW_TYPE` / `E_VIEW_CLAUSE` / `E_VIEW_SECTION` |
-| Arquivo | nome fora do padrão (app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`), `<nome>`/`<tipo>` divergente do principal, ou slug da pasta diferente do último segmento da URI (app/service) | `E_FILE_NAME` |
+| Arquivo | nome fora do padrão (app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`) ou `<nome>`/`<tipo>` divergente do principal | `E_FILE_NAME` |
+| Arquivo | arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/` ou processo fora de `processes/` | `E_FILE_PATH` |
 | Arquivo | arquivo de contexto principal (app/service/document/process) sem exatamente um principal | `E_FILE_PRINCIPAL` |
 | Arquivo | principal não é o primeiro artefato do arquivo | `E_FILE_PRINCIPAL_FIRST` |
 | Arquivo | arquivo compartilhado declara `application`, `service`, `document` ou `process` | `E_FILE_SHARED` |
 | Arquivo | arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`; `parameter` em `-secrets.bpcms`; `role` fora de `-organograms.bpcms`) | `E_FILE_SHARED_TYPE` |
 | Arquivo | em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe) | `E_FILE_ORGANOGRAM_FIRST` |
+| Arquivo | SVG fora de `icons/` ou namespace de ícone divergente | `E_FILE_ICON_PATH` |
 
 **Classes de runtime:** `validation_error` (400), `conflict` (409), `forbidden` (403), `not_found` (404), `dependency_unavailable` (503), `rate_limited` (429), `internal` (500). Erros de linguagem são bloqueantes no `check`; erros de runtime seguem o modelo do BRAINSTORM (2.6.11).
 
@@ -3882,22 +3884,24 @@ icon Draft {
 
 ### 28.1 Icons file-based (SVG)
 
-Além do `icon` declarado, qualquer arquivo `.svg` sob a raiz do serviço — em qualquer subpasta — vira um **Icon implícito**.
+Além do `icon` declarado, qualquer arquivo `.svg` sob `<service>/icons/` vira um **Icon implícito**. `icons/` é contêiner: as subpastas dentro dele são namespaces de ícone, mas `icons` não entra no identificador.
 
 ```text
-services/billing/
-  billing-service.bpcms       <- raiz do serviço
-  status/
-    draft.svg                 -> status.draft
-    paid.svg                  -> status.paid
-    overdue.svg               -> status.overdue
-  finance/
-    invoice/
-      issued.svg              -> finance.invoice.issued
+examples/services/example.com/services/billing/
+  billing-service.bpcms
+  billing-icons.bpcms          <- icons declarados (não-SVG)
+  icons/
+    status/
+      draft.svg                -> status.draft
+      paid.svg                 -> status.paid
+      overdue.svg              -> status.overdue
+    finance/
+      invoice/
+        issued.svg             -> finance.invoice.issued
 ```
 
 - Arquivos e pastas usam **kebab-case**.
-- O identificador é o caminho relativo, sem `.svg`, com segmentos **camelCase** unidos por `.`.
+- O identificador é o caminho relativo a `icons/`, sem `.svg`, com segmentos **camelCase** unidos por `.`.
 - Referência local: `icon: status.draft`.
 - Referência por outro serviço: `icon: AliasDoServico.status.draft` (alias em `imports`).
 - O `alt`/`aria-label`/`<title>` é o title do Icon; **não usa I18n**.
@@ -3905,6 +3909,7 @@ services/billing/
 - Sem `aria-label`, `<title>` ou `alt`, o filename é o fallback:
   - `low-stock.svg` → `"Low Stock"`.
 - Um SVG e um `icon` declarado com o mesmo identificador no mesmo serviço são conflito (`E_DUPLICATE_ICON`).
+- SVG fora de `<service>/icons/` é `E_FILE_ICON_PATH`.
 - O builder sanitiza o SVG; script/recursos externos não entram no contrato.
 
 ```bpcms
@@ -3922,7 +3927,7 @@ shape InvoiceStatus {
 }
 ```
 
-**Erros:** `E_ICON_REFERENCE` para `icon:` que não resolve; `E_DUPLICATE_ICON` para conflito de identificador; `E_ICON_UNRESOLVED` para falha do builder/Theme.
+**Erros:** `E_ICON_REFERENCE` para `icon:` que não resolve; `E_DUPLICATE_ICON` para conflito de identificador; `E_ICON_UNRESOLVED` para falha do builder/Theme; `E_FILE_ICON_PATH` para SVG fora de `icons/`.
 
 **Erros:** `E_ICON_REFERENCE` (value aponta para Icon inexistente), `E_ICON_UNRESOLVED` (Theme/builder não resolve a imagem do Icon), `E_DUPLICATE_ICON` (dois icons com o mesmo nome no mesmo serviço), `E_ENUM_VALUE_TITLE`, `E_ENUM_VALUE_ICON` e `E_ENUM_VALUE_DUPLICATE`.
 
@@ -4098,9 +4103,9 @@ Regionalization {
 
 ## 29.3 Onde fica
 
-- Definição: `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`.
+- Definição: `examples/services/bpcms.org/std/std-service.bpcms` e `examples/services/bpcms.org/std/std-shapes.bpcms`.
 - Segue a regra de service: `std-service.bpcms` é o arquivo do principal e `std-shapes.bpcms` é compartilhado (30).
-- Fica na pasta normal `examples/services/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
+- Fica na pasta normal `examples/services/bpcms.org/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
 - Não é versionado pelo lock; a versão da std é a do construtor/DSL.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
 - `Mass`, `Length`, `Volume`, `Percentage` e `Duration` implementam `write`, `read`, `parse`, `format` e `toNumber`; `Money.toNumber` é automático; `Currency` não é numérico.
@@ -4111,25 +4116,38 @@ Regionalization {
 
 # 30. Organização dos arquivos
 
+`BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
+
 A unidade de organização do fonte é o **contexto principal**, não o tipo de artefato. Contexto principal é o artefato que dá sentido ao arquivo: uma `application`, um `service`, um `document` ou um `process`.
 
-| Arquivo | Contexto principal | Nome do arquivo |
-| :--- | :--- | :--- |
-| Aplicação | `application` | `<app>-application.bpcms` |
-| Serviço | `service` | `<service>-service.bpcms` |
-| Documento | `document` | `<service>-<nome>-document.bpcms` |
-| Processo | `process` | `<service>-<nome>-process.bpcms` |
+## 30.0 Caminhos
 
-Em `document`/`process`, o arquivo é `SERVICE-<NAME>-<TIPO>.bpcms`; em `application`/`service`, é `<NAME>-<TIPO>.bpcms`, sem repetir o slug.
+| Arquivo | Caminho |
+| :--- | :--- |
+| Aplicação | `<workspace>/applications/<fullpath app>/<app>-application.bpcms` |
+| Serviço | `<workspace>/services/<fullpath service>/<service>-service.bpcms` |
+| Documento | `<workspace>/services/<fullpath service>/documents/<service>-<nome>-document.bpcms` |
+| Processo | `<workspace>/services/<fullpath service>/processes/<service>-<nome>-process.bpcms` |
+| Compartilhado | `<workspace>/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms` |
+| SVG | `<workspace>/services/<fullpath service>/icons/<namespace>/<icon>.svg` |
+| `-icons.bpcms` (não-SVG) | `<workspace>/services/<fullpath service>/<service>-icons.bpcms` |
 
-`<app>`/`<service>` é o slug da pasta e o último segmento da URI, em kebab-case; `<nome>` é o nome do artefato principal em kebab-case. O slug da pasta deve ser igual ao último segmento da URI. Exemplos:
+- `<fullpath>` é a URI sem protocolo, exatamente como declarada.
+- O full path preserva os segmentos da URI; nomes de arquivos e pastas de artefato são kebab-case.
+- `<app>`/`<service>` é o último segmento da URI, em kebab-case, e deve ser igual ao slug da pasta.
+- `documents/` e `processes/` são pastas **organizacionais**, não namespaces: o artefato continua `Invoice`, não `documents.Invoice`.
+- `icons/` é um contêiner: as subpastas dentro dele são namespaces de ícone, mas `icons` não entra no identificador. Ex.: `icons/status/draft.svg` → `status.draft`.
+- As demais subpastas seguem a regra de namespace (camelCase unido por ponto).
+
+Exemplos:
 
 ```text
-billing-invoice-document.bpcms          -> document Invoice
-billing-invoice-issuance-process.bpcms  -> process InvoiceIssuance
-billing-month-close-process.bpcms       -> process MonthClose
-loja-do-joao-application.bpcms          -> application "example.com/app/loja-do-joao"
-billing-service.bpcms                   -> service "example.com/services/billing"
+examples/services/example.com/services/billing/billing-service.bpcms
+examples/services/example.com/services/billing/documents/billing-invoice-document.bpcms
+examples/services/example.com/services/billing/processes/billing-invoice-issuance-process.bpcms
+examples/services/example.com/services/billing/billing-shapes.bpcms
+examples/services/example.com/services/billing/icons/status/draft.svg
+examples/applications/example.com/app/backoffice-loja/backoffice-loja-application.bpcms
 ```
 
 **Regras.**
@@ -4141,11 +4159,11 @@ billing-service.bpcms                   -> service "example.com/services/billing
   - no documento: shapes de campo/estado, views com `document`/`source`/`sources` de um único documento, policies que se aplicam a ele, mensagens cujo `about` é ele;
   - no processo: forms de suas tasks, views com `process:`, decisions/integrations que ele chama, mensagens que ele envia/recebe sem `about`.
 - **Referência entre arquivos é permitida.** O fato de outro contexto usar um artefato não o torna compartilhado; o dono é definido pelo contrato. Ex.: `InvoiceNumber` fica no arquivo do `Invoice` e pode aparecer no payload de uma mensagem de cobrança.
-- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.bpcms`: `shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `roles`, `organograms`, `icons`. Ex.: `billing-shapes.bpcms`, `billing-views.bpcms`.
+- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.bpcms`: `shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`. Ex.: `billing-shapes.bpcms`, `billing-views.bpcms`.
 - O arquivo compartilhado **não declara** `application`, `service`, `document` ou `process` (`E_FILE_SHARED`).
-- `bpcms.org/std` é pseudo-serviço do construtor e segue a regra de service: `std-service.bpcms` é o arquivo do principal; `std-shapes.bpcms` é compartilhado.
+- `bpcms.org/std` é pseudo-serviço do construtor e segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.bpcms` é o arquivo do principal; `std-shapes.bpcms` é compartilhado.
 - `report` não é arquivo: relatório é `view type: report`; views compartilhadas ficam em `<service>-views.bpcms`.
-- Nesta fase os arquivos `.bpcms` ficam na raiz do serviço; a regra de subpastas como namespace segue anotada e não se aplica ainda.
+- O caminho completo é validado: pasta fora do full path da URI, documento fora de `documents/` ou processo fora de `processes/` é `E_FILE_PATH`; SVG fora de `icons/` é `E_FILE_ICON_PATH`.
 
 ## 30.1 Critério de dono
 
@@ -4161,7 +4179,7 @@ billing-service.bpcms                   -> service "example.com/services/billing
 
 ## 30.2 Arquivos compartilhados
 
-Artefato compartilhado — sem dono único ou de escopo do serviço — fica em `<SERVICE>-<TIPO ARTEFATO NO PLURAL>.bpcms`:
+Artefato compartilhado — sem dono único ou de escopo do serviço — fica em `<workspace>/services/<fullpath service>/<SERVICE>-<TIPO ARTEFATO NO PLURAL>.bpcms`:
 
 | Sufixo | Tipos aceitos |
 | :--- | :--- |
@@ -4175,41 +4193,50 @@ Artefato compartilhado — sem dono único ou de escopo do serviço — fica em 
 | `parameters` | `parameter` |
 | `secrets` | `secret` |
 | `organograms` | `organogram`, `role` |
-| `icons` | `icon` |
+| `icons` | `icon` (não-SVG) |
 
 - O arquivo compartilhado tem **zero** artefatos principais.
 - Cada arquivo compartilhado contém **um único tipo de artefato**, exceto `-organograms.bpcms`, que contém exatamente um `organogram` e as `role`s. O `organogram` vem **antes** das `role`s.
 - Não misture `parameter` com `secret`, nem `shape` com `view`. Roles não têm arquivo próprio (`-roles.bpcms` não existe).
+- SVG não entra em `-icons.bpcms`: SVG fica em `icons/` e `-icons.bpcms` é só para `icon` declarado.
 - Exemplos: `std-shapes.bpcms` só com shapes; `billing-views.bpcms` só com views; `billing-organograms.bpcms` com o organogram primeiro e as roles depois; `notifications-parameters.bpcms` e `notifications-secrets.bpcms` separados.
 - `reports` não é sufixo: relatório é `view` e fica em `-views.bpcms`.
 
-**Validação.** O `check` percorre todos os `.bpcms` de serviços e aplicações; `application` e `service` também contam como principal. Ele valida a estrutura, não a semântica da atribuição:
+## 30.3 Validação
 
-- `E_FILE_NAME`: nome fora do padrão (incluindo sufixo compartilhado fora da §30.2), `<nome>`/`<tipo>` divergente do principal ou slug da pasta diferente do último segmento da URI (app/service);
+O `check` percorre todos os `.bpcms` do workspace; `application` e `service` também contam como principal. Ele valida a estrutura, não a semântica da atribuição:
+
+- `E_FILE_NAME`: nome fora do padrão ou `<nome>`/`<tipo>` divergente do principal;
+- `E_FILE_PATH`: arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/` ou processo fora de `processes/`;
 - `E_FILE_PRINCIPAL`: arquivo de contexto principal sem exatamente um principal;
 - `E_FILE_PRINCIPAL_FIRST`: principal não é o primeiro artefato do arquivo;
 - `E_FILE_SHARED`: arquivo compartilhado declara `application`, `service`, `document` ou `process`;
 - `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`, `parameter` em `-secrets.bpcms`, `role` fora de `-organograms.bpcms`);
-- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe).
+- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe);
+- `E_FILE_ICON_PATH`: SVG fora de `icons/` ou namespace de ícone divergente.
 
 A escolha do dono de um auxiliar é convenção de modelagem; o check não tenta inferir dono semântico. `application`/`service` usam o slug da pasta/URI como `<nome>`; `document`/`process` usam o identificador do artefato.
 
 **Exemplo de árvore.**
 
 ```text
-billing/
-  billing-service.bpcms
-  billing-invoice-document.bpcms         // document Invoice + InvoiceNumber, InvoiceItem, InvoiceStatus, views, messages e policy
-  billing-invoice-issuance-process.bpcms // process InvoiceIssuance + view
-  billing-dunning-process.bpcms          // process Dunning + form
-  billing-month-close-process.bpcms      // process MonthClose + form e view
-  billing-store-document.bpcms
-  billing-fiscal-year-document.bpcms
-  billing-shapes.bpcms                   // shapes usados por mais de um contexto
-  billing-views.bpcms                    // views sem dono único
-  billing-parameters.bpcms
-  billing-organograms.bpcms             // organogram primeiro, depois as roles
-  billing-icons.bpcms
+examples/
+  applications/example.com/app/backoffice-loja/
+    backoffice-loja-application.bpcms
+  services/example.com/services/billing/
+    billing-service.bpcms
+    documents/
+      billing-invoice-document.bpcms
+      billing-bill-document.bpcms
+    processes/
+      billing-invoice-issuance-process.bpcms
+    billing-shapes.bpcms
+    billing-views.bpcms
+    billing-parameters.bpcms
+    billing-organograms.bpcms          // organogram primeiro, depois as roles
+    billing-icons.bpcms
+    icons/
+      status/draft.svg                  // status.draft
 ```
 
 ---

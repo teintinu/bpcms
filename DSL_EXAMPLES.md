@@ -6684,16 +6684,17 @@ icon Brl {
 
 ## SVG file-based Icons
 
-Além dos Icons declarados em `.bpcms`, arquivos `.svg` sob a raiz do serviço viram Icons implícitos. Exemplos em `examples/services/`:
+Além dos Icons declarados em `.bpcms`, arquivos `.svg` sob `<workspace>/services/<fullpath>/icons/` viram Icons implícitos. `icons/` é contêiner: as subpastas dentro dele são namespaces de ícone, mas `icons` não entra na referência. Exemplos em `examples/services/`:
 
 ```text
-billing/status/draft.svg              -> status.draft      (aria-label)
-billing/status/paid.svg               -> status.paid        (<title>)
-billing/status/overdue.svg            -> status.overdue     (alt)
-billing/finance/invoice/issued.svg    -> finance.invoice.issued
-notifications/channels/email.svg      -> channels.email
-inventory/stock/low-stock.svg         -> stock.lowStock     (fallback: "Low Stock")
-payments/status/refunded.svg          -> status.refunded    (aria-label)
+example.com/services/billing/icons/status/draft.svg              -> status.draft      (aria-label)
+example.com/services/billing/icons/status/paid.svg               -> status.paid        (<title>)
+example.com/services/billing/icons/status/overdue.svg            -> status.overdue     (alt)
+example.com/services/billing/icons/finance/invoice/issued.svg    -> finance.invoice.issued
+example.com/services/notifications/icons/channels/email.svg      -> channels.email
+example.com/services/inventory/icons/stock/low-stock.svg         -> stock.lowStock     (fallback: "Low Stock")
+example.com/services/payments/icons/status/refunded.svg          -> status.refunded    (aria-label)
+example.com/services/fraud-checkout/icons/status/fraud-checked.svg -> status.fraudChecked
 ```
 
 Uso no enum:

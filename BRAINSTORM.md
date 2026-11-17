@@ -1742,7 +1742,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 
 ## Decisões
 
-> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-60`).
+> Decisões originais do projeto e suas atualizações. A baseline operacional, que fecha as perguntas, está na seção seguinte (`B-01`…`B-61`).
 
 | ID | Decisão | Status | Origem |
 | :--- | :--- | :--- | :--- |
@@ -1791,6 +1791,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-048 | Bases de mídia, formula to/from, Duration, unitStyle e operadores tipados | ✅ | baseline atual |
 | D-049 | Money/Currency na stdlib; `MoneyBRL` removido; sem câmbio | ✅ | baseline atual |
 | D-050 | Arquivos organizados por contexto principal (`application`/`service`/`document`/`process`), com um único principal, primeiro artefato e nome equivalente; compartilhado com um único tipo por arquivo, exceto organogram + roles | ✅ | pedido |
+| D-051 | `BPCMS_WORKSPACE` é o diretório raiz do workspace passado ao compilador/construtor; nos exemplos, `BPCMS_WORKSPACE = examples/` | ✅ | pedido |
 | D-039 | `Citizen` é o serviço de identificação civil/PII; `Consumer.citizenId` referencia `CitizenId` | ✅ | baseline atual |
 | D-040 | Relação Citizen 1:N User/Consumer; `citizenId` não é unique | ✅ | baseline atual |
 | D-041 | Serviço é conceito de negócio; Theme/Locale/font/color pertencem ao construtor | ✅ | baseline atual |
@@ -1864,7 +1865,8 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-57** | Enum é classificação ou workflow? | **`base: classification`** para categorias; **`base: workflow`** para máquina de estados, com um `initial`, `next` obrigatório e `[]` terminal. Self-transition proibida; `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`. | Separa categoria de ciclo de vida. | ✅ |
 | **B-58** | Como representar mídia, unidades e operadores? | Bases `string`/`richtext`/`attachment`/`audio`/`image`/`video`; units com referência factor1 e `formula { to/from }`; `convert` inteligente; `unitStyle`; `Duration` std; operadores explícitos por Shape. | Cobre mídia, unidades não lineares e aritmética dimensional. | ✅ |
 | **B-59** | Como representar dinheiro? | `std.Money` com `base: decimal`, valor com `raw` + `currency`; `std.Currency` classification ISO com `scale`; `reintroduce` adiciona metadados e `prefix`/`suffix`/`infix`. Sem conversão cambial. | Dinheiro é valor + moeda, não número solto. | ✅ |
-| **B-60** | Como organizar os arquivos de um serviço? | Por **contexto principal** (`application`/`service`/`document`/`process`), não por tipo de artefato: app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`. Exatamente um principal por arquivo, como primeiro artefato, com nome equivalente. Compartilhado: `<service>-<tipo-no-plural>.bpcms`, zero principais e um único tipo por arquivo, exceto `-organograms.bpcms` (organogram antes das roles). | O arquivo conta uma história de negócio; o principal primeiro e nomeado evita arquivo ambíguo e facilita o check. | ✅ |
+| **B-60** | Como organizar os arquivos de um serviço? | Por **contexto principal** (`application`/`service`/`document`/`process`), não por tipo de artefato. `BPCMS_WORKSPACE = examples/`; app/service em full path; document em `documents/`; process em `processes/`; shared na raiz do serviço; SVG em `icons/`. Exatamente um principal por arquivo, como primeiro artefato, com nome equivalente. Compartilhado: zero principais e um único tipo por arquivo, exceto `-organograms.bpcms` (organogram antes das roles). | O arquivo conta uma história de negócio; o principal primeiro e nomeado evita arquivo ambíguo e facilita o check. | ✅ |
+| **B-61** | O que é `BPCMS_WORKSPACE`? | É o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`; os caminhos são relativos a ele. | Um parâmetro único de raiz evita caminhos absolutos e permite levar o workspace para outro lugar. | ✅ |
 
 ### Experimentos que substituem as dúvidas 🔬
 
@@ -1886,7 +1888,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 - [x] Escopo e não-escopo explícitos.
 - [x] Personas, jobs e jornada.
 - [x] Fluxos principais e estados.
-- [x] Decisões de baseline (B-01…B-60) sem lacunas.
+- [x] Decisões de baseline (B-01…B-61) sem lacunas.
 - [x] Requisitos não-funcionais com metas verificáveis.
 - [x] Épicos com critérios de aceite.
 - [x] Riscos, dependências e experimentos.

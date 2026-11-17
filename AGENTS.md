@@ -25,7 +25,7 @@ Não coloque `parameter`, `document`, `view` ou qualquer outro artefato diretame
 
 **Serviço é conceito de negócio.** Não crie serviço para agrupar artefatos compartilhados (Shapes, Icons, Themes, Locales) nem para ser biblioteca/package/módulo. Tipos compartilhados ficam no serviço de negócio dono (ex.: Money/Mass em Catalog, Email/Phone/Image em Citizen). `Theme`/`Locale`, fontes e cores são responsabilidade do construtor, não do serviço.
 
-**`bpcms.org/std` é exceção reservada.** É um pseudo-serviço do construtor para medidas/constantes padrão; fica em `examples/services/std/`, na pasta normal de serviços. Quem usa deve importar com alias (`imports { service "bpcms.org/std" as std }`) e referenciar `std.Mass` etc. Não criar endpoint nem lock para ele.
+**`bpcms.org/std` é exceção reservada.** É um pseudo-serviço do construtor para medidas/constantes padrão; fica em `examples/services/bpcms.org/std/`, na pasta normal de serviços. Quem usa deve importar com alias (`imports { service "bpcms.org/std" as std }`) e referenciar `std.Mass` etc. Não criar endpoint nem lock para ele.
 
 ## Revisão por checklist: propor antes de mudar
 
@@ -42,43 +42,51 @@ Para cada mudança proposta:
 
 Não aplique mudanças “óbvias” por conta própria. Reverter também é mudança e exige a mesma confirmação. Registre a decisão no `REVIEW_CHECKLIST.md`.
 
-## Pastas como namespace de artefatos
+## Pastas e namespaces
 
-A raiz de um serviço é a pasta que contém `<service>-service.bpcms`. **Toda subpasta é um namespace de artefatos**, para todos os tipos.
+`BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
 
-- Nomes de arquivos e pastas: **kebab-case**.
-- Segmentos de referência: **camelCase**, unidos por ponto.
-- Referência local: `status.refunded`, `domain.order`, `sales.order.item`.
-- Referência por outro serviço: `AliasDoServico.status.refunded` (o alias precisa estar em `imports`).
-- Artefatos na raiz não têm namespace e usam o nome simples.
-- O mesmo nome pode existir em namespaces diferentes; duplicidade dentro do mesmo tipo/namespace é erro.
+- A raiz de um serviço é a pasta que contém `<service>-service.bpcms`.
+- `documents/` e `processes/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.bpcms` continua `Invoice`, não `documents.Invoice`.
+- `icons/` é um **contêiner de ícones**: as subpastas dentro dele são namespaces de ícone; `icons` não entra na referência. Ex.: `icons/status/draft.svg` -> `status.draft`.
+- As demais subpastas seguem a regra de namespace: segmentos em camelCase, referências por ponto.
+- Nomes de arquivos e pastas de artefato: **kebab-case**; o full path da URI preserva os segmentos da URI (ex.: `example.com`).
+- Referências: camelCase unido por ponto. Referência por outro serviço: `AliasDoServico.status.refunded` (alias em `imports`).
+- O mesmo nome pode existir em namespaces diferentes; duplicidade no mesmo tipo/namespace é erro.
 
 Exemplo:
 
 ```text
-checkout/
-  checkout-service.bpcms
-  status/refunded.svg       -> status.refunded
-  domain/order.bpcms        -> domain.order
-  sales/order/item.bpcms    -> sales.order.item
+examples/services/example.com/services/billing/
+  billing-service.bpcms
+  documents/billing-invoice-document.bpcms      -> Invoice (sem prefixo documents.)
+  processes/billing-invoice-issuance-process.bpcms
+  billing-shapes.bpcms
+  billing-organograms.bpcms
+  billing-icons.bpcms
+  icons/status/draft.svg                        -> status.draft
 ```
-
-> Esta regra está anotada para as próximas validações. Os arquivos atuais ainda não foram migrados para subpastas; não mover nada sem aprovação.
 
 ## Organização dos arquivos em `examples/`
 
-O fonte é organizado por **contexto principal**, não por tipo de artefato. São contextos principais: `application`, `service`, `document` e `process`. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
+`BPCMS_WORKSPACE = examples/` nesta fase. O fonte é organizado por **contexto principal**, não por tipo de artefato. São contextos principais: `application`, `service`, `document` e `process`. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
 
 - Todo contexto principal tem seu próprio arquivo, com **exatamente um** principal, e ele é o **primeiro artefato** do arquivo.
-- Aplicação: `<app>-application.bpcms`; serviço: `<service>-service.bpcms`. O `<nome>` é o slug da pasta e o último segmento da URI.
-- Documento: `<service>-<nome>-document.bpcms`; processo: `<service>-<nome>-process.bpcms`. O `<nome>` é o nome do artefato em kebab-case.
+- Aplicação: `examples/applications/<fullpath app>/<app>-application.bpcms`.
+- Serviço: `examples/services/<fullpath service>/<service>-service.bpcms`.
+- Documento: `examples/services/<fullpath service>/documents/<service>-<nome>-document.bpcms`.
+- Processo: `examples/services/<fullpath service>/processes/<service>-<nome>-process.bpcms`.
+- Compartilhado: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms`.
+- SVG: `examples/services/<fullpath service>/icons/<namespace>/<icon>.svg`.
+- `-icons.bpcms` (não-SVG): `examples/services/<fullpath service>/<service>-icons.bpcms`.
+- `<fullpath>` é a URI sem protocolo; `<app>`/`<service>` é o último segmento da URI, igual ao slug da pasta.
 - O `<nome>` do arquivo é equivalente ao nome do artefato principal (em app/service, ao slug da URI).
 - Compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém exatamente um organogram e as roles, com o organogram primeiro. Arquivo compartilhado não declara principal. Ex.: `std-shapes.bpcms`.
 - Referência entre arquivos é permitida: `InvoiceNumber` pode ficar em `billing-invoice-document.bpcms` e ser usado por mensagens/processos de outros contextos.
 - `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
 - Roles ficam em `<service>-organograms.bpcms`, depois do organogram; não crie `<service>-roles.bpcms`. Parameters ficam em `<service>-parameters.bpcms`; secrets em `<service>-secrets.bpcms`.
-- `bpcms.org/std` segue a regra de service: `std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
-- Os arquivos `.bpcms` ficam na raiz do serviço; a regra de subpastas como namespace segue anotada e não se aplica ainda.
+- `bpcms.org/std` segue a regra de service: `examples/services/bpcms.org/std/std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
+- Compilador: `E_FILE_NAME`, `E_FILE_PRINCIPAL`, `E_FILE_PRINCIPAL_FIRST`, `E_FILE_SHARED`, `E_FILE_SHARED_TYPE`, `E_FILE_ORGANOGRAM_FIRST`, `E_FILE_PATH` e `E_FILE_ICON_PATH`.
 - **Nomes de artefatos não repetem o serviço.** O serviço já é o escopo: `Draft`, não `BillingDraft`. O mesmo nome pode existir em serviços diferentes; não duplique dentro do mesmo tipo/serviço.
 - **PascalCase é o padrão para artefatos**, com exceções para formas internacionais consagradas. Exemplo: `pH`, não `Ph`.
 

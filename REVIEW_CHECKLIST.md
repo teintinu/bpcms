@@ -72,7 +72,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 | # | Tipo | Depende de | Exemplos | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/*/*-icons.bpcms` | ✅ |
+| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/**/*-icons.bpcms` | ✅ |
 | 2 | Shape | Icon (value) | H.1–H.9 | 🟡 |
 | 3 | Role | permissões | R.1–R.6 | ⬜ |
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
@@ -109,7 +109,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
 - [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
 - [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
-- [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase; subpastas são namespaces de todos os artefatos.
+- [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase. `documents/` e `processes/` são organizacionais; `icons/` é contêiner de namespaces de ícone; as demais subpastas são namespaces.
 - [ ] Artefatos em PascalCase, com exceções internacionais (`pH`).
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
 - [ ] Icons sem prefixo `Icon`; iguais em serviços diferentes são permitidos; duplicados no mesmo serviço são erro.
@@ -118,7 +118,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Shapes compartilhados ficam no serviço de negócio dono.
 - [ ] Application não declara artefatos.
 - [ ] `id` de document é implícito; `lookup` é tag de campo; FK é soft; extensão compartilha id.
-- [ ] Nomenclatura: app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`; um principal por arquivo, primeiro artefato, nome equivalente; compartilhado com um único tipo por arquivo (exceção: `-organograms.bpcms` com organogram antes das roles) e sem principal.
+- [ ] Nomenclatura e caminhos: app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`; `BPCMS_WORKSPACE = examples/`; um principal por arquivo, primeiro artefato, nome equivalente; compartilhado com um único tipo por arquivo (exceção: `-organograms.bpcms` com organogram antes das roles) e sem principal.
 - [ ] Exemplos em `DSL_EXAMPLES.md` e em `examples/` concordam com a referência.
 - [ ] BRAINSTORM/DSL_REFERENCE/DSL_EXAMPLES atualizados juntos quando o contrato muda.
 - [ ] Nenhuma decisão de implementação (font/color/layout/resolução visual) foi revisada nesta fase.
@@ -142,7 +142,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n
 - [x] Conflito SVG × Icon declarado = erro
 
-**Exemplos:** IC.1–IC.6; 75 icons nos `*-icons.bpcms`; 7 SVGs em `billing/status`, `billing/finance/invoice`, `notifications/channels`, `inventory/stock`, `payments/status`.
+**Exemplos:** IC.1–IC.6; icons nos `*-icons.bpcms`; **8 SVGs sob `icons/`** (status, finance/invoice, channels, stock etc.).
 
 **Foco da revisão (só DSL):**
 
@@ -165,7 +165,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - **Title:** `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n.
 - **Conflito:** SVG × Icon declarado ou SVG × SVG com o mesmo identificador é erro (case-insensitive).
 - **Arquivos/pastas:** kebab-case; identificador de referência camelCase.
-- **Exemplos criados:** `billing/status/draft.svg`, `paid.svg`, `overdue.svg`, `billing/finance/invoice/issued.svg`, `notifications/channels/email.svg`, `inventory/stock/low-stock.svg`, `payments/status/refunded.svg`.
+- **Exemplos criados:** `billing/icons/status/draft.svg`, `paid.svg`, `overdue.svg`, `billing/icons/finance/invoice/issued.svg`, `notifications/icons/channels/email.svg`, `inventory/icons/stock/low-stock.svg`, `payments/icons/status/refunded.svg`, `fraud-checkout/icons/status/fraud-checked.svg`.
 - **Status:** ✅ aprovado para file-based Icons. A aplicação da regra de namespace/camelCase a **todos** os artefatos continua pendente de validação própria.
 
 ### Regra de namespaces — perguntas abertas
@@ -184,7 +184,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - **Por que:** `symbol`/`set` parecem detalhes de resolução visual, não contrato de negócio da DSL.
 - **Impacto:** 75 icons, exemplos IC.1–IC.6, `DSL_REFERENCE` e `BRAINSTORM`.
 - **Alternativas:** (a) restaurar `symbol`/`set`; (b) manter apenas nome + `title`; (c) `symbol` opcional.
-- **Arquivos afetados:** `examples/services/*/*-icons.bpcms`, `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `BRAINSTORM.md`.
+- **Arquivos afetados:** `examples/services/**/*-icons.bpcms`, `examples/services/**/icons/**`, `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `BRAINSTORM.md`.
 - **Status:** ✅ aprovada retroativamente na revisão de Icon.
 
 **Decisão:** manter `symbol`/`set` fora da DSL; resolução visual fica no builder/Theme.
@@ -267,7 +267,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Decisões:** Shape base + campos; moeda em `Money`/`Currency`; `formula` block ou shorthand afim; `Currency` sem `title`/`icon`/`ordinal` e sem `toOrdinal`, stream/format/parse como código string; composto com JSON canônico e `format`/`parse` sobrescrevíveis; `sensitive`/`maxLength` default no Shape com sobrescrita no field; `default`/`private` no field; 39 Shapes de negócio + 57 std; 178 moedas ISO.
 
-**Stdlib:** definida em `examples/services/std/std-service.bpcms` e `examples/services/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
+**Stdlib:** definida em `examples/services/bpcms.org/std/std-service.bpcms` e `examples/services/bpcms.org/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
 ## 3. Role ✅
 
@@ -390,7 +390,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] Não criar serviço para Shapes/Icons/Themes/Locales compartilhados
 - [x] Theme/Locale são do construtor
 
-**Exemplos:** S.1–S.8; `examples/services/*/*-service.bpcms`.
+**Exemplos:** S.1–S.8; `examples/services/**/*-service.bpcms`.
 
 **Foco da revisão:**
 
@@ -403,7 +403,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** Service sem `provides`, `roles`, `source`, `requires`, `capabilities` ou cláusula de substituição; usa `imports` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam no arquivo de roles, não no service.
+**Decisões:** Service sem `provides`, `roles`, `source`, `requires`, `capabilities` ou cláusula de substituição; usa `imports` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam em `*-organograms.bpcms`, não no service.
 
 ## 7. Document 🟡
 
@@ -1218,47 +1218,56 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - [ ] Revisar `reintroduce` para as novas construções (nós, arestas, `runs`, `form`).
 - [ ] Definir IDs estáveis por caminho de nomes no lock (renomear nó hoje quebra histórico).
 - [ ] Decidir se `sla` é obrigatório (erro) ou recomendado (aviso) para task humana.
-- [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.bpcms`/SVGs. É asset de builder, por isso ficou fora desta rodada.
+- [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.bpcms`/SVGs em `icons/`. É asset de builder, por isso ficou fora desta rodada.
 - [ ] Diagramas: BPMN DI, DMN, CMMN — passo futuro; AST já separa modelo de layout.
 
 ## Organização por contexto principal — 2026-11-17 (aprovada por solicitação direta do usuário)
 
-**Pedido:** revisar os nomes dos arquivos de exemplo e criar a regra da DSL: em vez de arquivos por tipo de artefato, arquivos pelo **contexto principal**; `application`, `service`, `document` e `process` são principais; cada principal tem seu próprio arquivo; ele é o primeiro artefato; o `<nome>` do arquivo é equivalente ao nome do artefato; artefato compartilhado fica em `<service>-<tipo-no-plural>.bpcms`, com um único tipo por arquivo, exceto organogram + roles (organogram antes).
+**Pedido:** revisar os nomes dos arquivos de exemplo e criar a regra da DSL: em vez de arquivos por tipo de artefato, arquivos pelo **contexto principal**; `application`, `service`, `document` e `process` são principais; cada principal tem seu próprio arquivo; ele é o primeiro artefato; o `<nome>` do arquivo é equivalente ao nome do artefato; `BPCMS_WORKSPACE = examples/`; pastas por full path da URI; `documents/` e `processes/` organizacionais; `icons/` para SVG; compartilhado com um único tipo por arquivo, exceto organogram + roles (organogram antes).
 
 **Escopo aprovado:** migrar todos os 19 serviços de negócio e validar a estrutura no `check` (`E_FILE_*`); a atribuição semântica dos auxiliares fica como convenção. `application`/`service` mantêm `<nome>-<tipo>.bpcms` (decisão do usuário); `document`/`process` usam `SERVICE-<nome>-<tipo>.bpcms`.
 
 **Decisão aplicada:**
+- `BPCMS_WORKSPACE = examples/` nesta fase; é o parâmetro de raiz do compilador/construtor.
 - Contexto principal: `application`, `service`, `document`, `process`.
 - Todo contexto principal tem seu arquivo, com exatamente **um** principal; ele é o **primeiro artefato** do arquivo.
 - O `<nome>` do arquivo é equivalente ao nome do principal: kebab-case do identificador em `document`/`process`; slug da pasta/URI em `application`/`service`.
-- Aplicação: `<app>-application.bpcms`; serviço: `<service>-service.bpcms`.
-- Documento: `<service>-<nome>-document.bpcms`; processo: `<service>-<nome>-process.bpcms`.
+- Caminhos:
+  - application: `examples/applications/<fullpath app>/<app>-application.bpcms`
+  - service: `examples/services/<fullpath service>/<service>-service.bpcms`
+  - document: `examples/services/<fullpath service>/documents/<service>-<nome>-document.bpcms`
+  - process: `examples/services/<fullpath service>/processes/<service>-<nome>-process.bpcms`
+  - shared: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms`
+  - SVG: `examples/services/<fullpath service>/icons/<namespace>/<icon>.svg`
+  - non-SVG icons: `examples/services/<fullpath service>/<service>-icons.bpcms`
+- `documents/` e `processes/` são organizacionais, não namespaces; `icons/` é contêiner e não entra na referência.
 - Arquivo compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém o organogram e as roles, com o organogram **antes** das roles. Declara **zero** principais.
 - `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` deixaram de existir; relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
-- `bpcms.org/std` segue a regra de service: `std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
+- `bpcms.org/std` segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
 
 **Regra do compilador:** o `check` percorre todos os `.bpcms` de serviços e aplicações; `application` e `service` também são principais.
 
-- `E_FILE_NAME`: nome fora do padrão (incluindo sufixo compartilhado fora da §30.2), `<nome>`/`<tipo>` divergente do principal ou slug da pasta diferente do último segmento da URI (app/service).
+- `E_FILE_NAME`: nome fora do padrão (incluindo sufixo compartilhado fora da §30.2) ou `<nome>`/`<tipo>` divergente do principal.
+- `E_FILE_PATH`: arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/` ou processo fora de `processes/`.
 - `E_FILE_PRINCIPAL`: arquivo de contexto principal (app/service/document/process) sem exatamente um principal.
 - `E_FILE_PRINCIPAL_FIRST`: principal não é o primeiro artefato do arquivo.
 - `E_FILE_SHARED`: arquivo compartilhado declara `application`, `service`, `document` ou `process`.
 - `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`; `parameter` em `-secrets.bpcms`; `role` fora de `-organograms.bpcms`).
 - `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe).
+- `E_FILE_ICON_PATH`: SVG fora de `icons/` ou namespace de ícone divergente.
 
 **Critério de dono:** shape → documento/processo que o usa como tipo; form → processo da task (senão documento); view → `document`/`source`/`sources` de um documento ou `process:`; message → documento do `about`; policy → alvo do `appliesTo`; decision/integration → processo que usa; parameter/secret, role/organogram e icon → service-wide. Detalhe na §30 do `DSL_REFERENCE.md`.
 
 **Resultado da migração:**
-- 19 serviços de negócio (+ `std`); 20 arquivos de service preservados.
-- 197 → 183 arquivos `.bpcms` de serviço; 5 aplicações inalteradas.
-- 90 arquivos de contexto (55 `document` + 35 `process`), 20 arquivos de service (19 serviços + `std`) e 5 arquivos de application; 72 arquivos compartilhados de negócio + `std-shapes.bpcms`.
-- 682 blocos de artefato preservados exatamente; 8 SVGs intactos.
+- 19 serviços de negócio (+ `std`) em full path (`examples/services/example.com/services/<service>/` e `examples/services/bpcms.org/std/`).
+- 197 → 183 arquivos `.bpcms` de serviço; 5 aplicações em `examples/applications/example.com/app/<app>/`.
+- 90 arquivos de contexto: 55 em `documents/` e 35 em `processes/`; 20 arquivos de service e 72 arquivos compartilhados de negócio + `std-shapes.bpcms` na raiz do serviço.
+- 682 blocos de artefato preservados exatamente; 8 SVGs movidos para `<service>/icons/<namespace>/`.
 - 19 arquivos `*-organograms` mantêm organogram + roles no mesmo arquivo, com o organogram primeiro; `notifications-parameters` separado em `-parameters` + `-secrets`; `payments-parameters` renomeado para `payments-secrets`.
-- Billing: 12 → 17 arquivos (`billing-invoice-document.bpcms`, `billing-invoice-issuance-process.bpcms`, `billing-dunning-process.bpcms`, `billing-month-close-process.bpcms`, documentos por contexto, `-shapes`, `-views`, `-parameters`, `-organograms`, `-icons`).
+- Billing: 12 → 17 arquivos, agora em `examples/services/example.com/services/billing/` com `documents/`, `processes/` e `icons/`.
 
-**Arquivos afetados:** `DSL_REFERENCE.md` (§2, §3, §21, §23, §26, §29, §30, §30.2 e Mapa), `AGENTS.md`, `BRAINSTORM.md` (B-47/B-60/D-037/D-050), `REVIEW_CHECKLIST.md`, `examples/services/**`.
+**Arquivos afetados:** `DSL_REFERENCE.md` (§2, §3, §21, §23, §26, §28.1, §29, §30 e Mapa), `AGENTS.md`, `BRAINSTORM.md` (B-47/B-60/B-61/D-037/D-050/D-051), `DSL_EXAMPLES.md` (SVG), `REVIEW_CHECKLIST.md`, `examples/**`.
 
 **Pendências:**
-- [ ] Reconciliar a regra de subpastas como namespace (anotada) com os nomes de arquivo por contexto; nesta rodada os `.bpcms` ficaram na raiz.
-- [ ] Implementar `E_FILE_NAME`/`E_FILE_PRINCIPAL`/`E_FILE_PRINCIPAL_FIRST`/`E_FILE_SHARED`/`E_FILE_SHARED_TYPE`/`E_FILE_ORGANOGRAM_FIRST` no `check` real (a DSL ainda não tem parser executável).
+- [ ] Implementar `E_FILE_NAME`/`E_FILE_PATH`/`E_FILE_PRINCIPAL`/`E_FILE_PRINCIPAL_FIRST`/`E_FILE_SHARED`/`E_FILE_SHARED_TYPE`/`E_FILE_ORGANOGRAM_FIRST`/`E_FILE_ICON_PATH` no `check` real (a DSL ainda não tem parser executável).
 - [ ] Revisar os casos de artefato sem dono único que ficaram em arquivo compartilhado (`Email`/`Phone` em Citizen, `TrackingEvent` em Shipping, `SupportLabGateway` em Laboratory, `ScaleDevice` em Shipping).
