@@ -815,7 +815,7 @@ customer: User {
 }
 ```
 
-- `fields` lista os campos usados;
+- o compilador extrai os campos usados na expressão;
 - a UI usa os campos extraídos para navegar;
 - `code` não existe;
 - permissão e workflow têm motivo genérico do builder.
