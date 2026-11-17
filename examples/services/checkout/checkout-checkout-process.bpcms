@@ -1,0 +1,217 @@
+// service: example.com/services/checkout
+
+process Checkout for CheckoutSession {
+  title: { pt-BR: "Finalização da compra", en: "Checkout" }
+  version: 1
+  goal: "Cotar o frete, autorizar o pagamento e confirmar a compra"
+  owner: "Checkout"
+  timezone: America/Fortaleza
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Support { role: SupportAgent }
+  }
+
+  pool Customer {
+    external
+    lane Client { role: Customer }
+  }
+
+  variables {
+    offer: FreightOffer
+    authorization: string
+  }
+
+  start Validated { event: CheckoutSession.CartValidated }
+
+  task QuoteFreight {
+    lane: System
+    call: FreightGateway.quote
+    with { session }
+    gives: offer
+    sla: 2m
+    on error QuoteUnavailable -> ManualFreight
+  }
+
+  task RecordQuote {
+    lane: System
+    action: CheckoutSession.quoteShipping
+    with {
+      freightAmount: offer.freight
+      days: offer.days
+    }
+    sla: 1m
+  }
+
+  task AuthorizePayment {
+    lane: System
+    call: PaymentGateway.authorize
+    with {
+      total: session.total
+      method: session.paymentMethod
+    }
+    gives: authorization
+    sla: 2m
+    on error Declined -> RetryPayment
+  }
+
+  task RecordAuthorization {
+    lane: System
+    action: CheckoutSession.authorizePayment
+    with { authorization }
+    sla: 1m
+  }
+
+  task ConfirmOrder {
+    lane: System
+    action: CheckoutSession.confirmOrder
+    sla: 1m
+  }
+
+  task RetryPayment {
+    lane: Client
+    form: PaymentRetry
+    sla: 1d
+    priority: 80
+    on timer 1d -> CloseExpired
+  }
+
+  task ManualFreight {
+    lane: Support
+    form: FreightReview
+    sla: 1h
+    assign: pull
+    on timer 1d -> CloseExpired
+  }
+
+  task CloseExpired {
+    lane: System
+    action: CheckoutSession.abandon
+    with { reason: "Prazo de finalização esgotado sem conclusão" }
+    sla: 1m
+  }
+
+  end Confirmed {
+    title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
+    outcome: success
+  }
+  end Abandoned {
+    title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+    outcome: cancelled
+  }
+  end Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    outcome: failure
+  }
+
+  Validated -> QuoteFreight
+  QuoteFreight -> RecordQuote
+  RecordQuote -> AuthorizePayment
+  AuthorizePayment -> RecordAuthorization
+  RecordAuthorization -> ConfirmOrder
+  ConfirmOrder -> Confirmed
+  RetryPayment.retry -> AuthorizePayment
+  RetryPayment.cancel -> Abandoned
+  ManualFreight.apply -> AuthorizePayment
+  CloseExpired -> Expired
+}
+
+shape FreightOffer {
+  title: { pt-BR: "Oferta de frete", en: "Freight offer" }
+
+  fields {
+    carrier: string { title: { pt-BR: "Transportadora", en: "Carrier" } }
+    freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+    days: std.Count { title: { pt-BR: "Prazo em dias", en: "Days" } }
+  }
+}
+
+form PaymentRetry {
+  title: { pt-BR: "Repetir pagamento", en: "Retry payment" }
+  document: CheckoutSession
+
+  fields {
+    customer
+    total
+    method: PaymentMethod {
+      title: { pt-BR: "Nova forma de pagamento", en: "New payment method" }
+    }
+    reason: string {
+      title: { pt-BR: "Motivo do abandono", en: "Abandonment reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    retry {
+      title: { pt-BR: "Tentar novamente", en: "Try again" }
+      calls: CheckoutSession.retryPayment(method)
+    }
+    cancel {
+      title: { pt-BR: "Desistir da compra", en: "Give up" }
+      calls: CheckoutSession.abandon(reason)
+    }
+  }
+}
+
+form FreightReview {
+  title: { pt-BR: "Informar frete manual", en: "Enter freight manually" }
+  document: CheckoutSession
+
+  fields {
+    customer
+    total
+    freightAmount: std.Money {
+      title: { pt-BR: "Frete negociado", en: "Negotiated freight" }
+      currency: BRL
+      required
+    }
+    days: std.Count {
+      title: { pt-BR: "Prazo em dias", en: "Days" }
+      min: 1
+      max: 90
+      required
+    }
+  }
+
+  actions {
+    apply {
+      title: { pt-BR: "Aplicar frete", en: "Apply freight" }
+      calls: CheckoutSession.quoteShipping(freightAmount, days)
+    }
+  }
+}
+
+view CheckoutProgress {
+  title: { pt-BR: "Andamento da finalização", en: "Checkout progress" }
+  type: process
+  process: Checkout
+  roles: [SupportAgent, Customer]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+integration FreightGateway {
+  protocol: rest
+  baseUrl: env.FREIGHT_URL
+  auth: api-key
+  timeout: 10s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    quote(session: CheckoutSession): FreightOffer
+  }
+}
+
+integration PaymentGateway {
+  protocol: rest
+  baseUrl: env.PAYMENT_URL
+  auth: oauth2
+  timeout: 15s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    authorize(total: std.Money, method: PaymentMethod): string
+  }
+}

@@ -1,0 +1,44 @@
+// service: example.com/services/identity
+
+// Consumer compartilha User: Consumer é alias do mesmo id.
+// Vários Users podem referenciar o mesmo Citizen; não há unique aqui.
+document Consumer extends User {
+  title: { pt-BR: "Consumidor", en: "Consumer" }
+  version: 1
+  owner: "Identity"
+  sync: read
+
+  fields {
+    citizen: Citizen {
+      title: { pt-BR: "Cidadão", en: "Citizen" }
+    }
+  }
+
+  indexes {
+    byCitizen: [citizen.id] hash
+  }
+
+  actions {
+    setCitizen(citizen: Citizen){
+      title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
+      roles: [Admin]
+    }
+  }
+
+  rule citizen != null implies status == Active {
+    pt-BR: "Cidadão vinculado deve estar ativo"
+    en: "Linked citizen must be active"
+
+  }
+}
+
+view CitizenAccounts {
+  title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
+  type: table
+  source: Consumer
+  roles: [Clerk, Manager]
+
+  columns { nickname; email; citizen; status }
+  filters { citizen; status }
+  pagination: 50
+}

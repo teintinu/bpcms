@@ -1,0 +1,95 @@
+// service: example.com/services/claims
+
+process ClaimFraudReview for Claim {
+  title: { pt-BR: "Análise de fraude do sinistro", en: "Claim fraud review" }
+  version: 1
+  goal: "Confirmar ou descartar a fraude com evidências registradas e prazo"
+  owner: "Claims"
+  timezone: America/Fortaleza
+  sla: 7d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Fraud { role: FraudAnalyst }
+    lane Management { role: Manager }
+  }
+
+  start Begin { called }
+
+  task ReviewEvidence {
+    lane: Fraud
+    form: FraudReassessment
+    sla: 1d
+    assign: pull
+    on timer 2d -> Escalate
+  }
+
+  task Decide {
+    lane: Fraud
+    form: FraudDecision
+    sla: 1d
+    assign: pull
+  }
+
+  task RequestPoliceReport {
+    lane: Fraud
+    manual: "Solicitar o boletim de ocorrência e anexar ao caso"
+    discretionary
+    when: claim.amount > 50000 BRL
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Revisar a evidência com o analista e definir o parecer"
+    sla: 1d
+  }
+
+  end FraudConfirmed {
+    title: { pt-BR: "Fraude confirmada", en: "Fraud confirmed" }
+    outcome: failure
+  }
+
+  end Cleared {
+    title: { pt-BR: "Fraude descartada", en: "Cleared" }
+    outcome: success
+  }
+
+  ReviewEvidence.record -> Decide
+  Escalate -> Decide
+  Decide.confirm -> FraudConfirmed
+  Decide.clear -> Cleared
+  Begin -> ReviewEvidence
+}
+
+form FraudReassessment {
+  title: { pt-BR: "Reavaliação de fraude", en: "Fraud reassessment" }
+  document: Claim
+
+  fields {
+    evidenceKind: EvidenceKind {
+      title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+      required
+    }
+    evidenceSummary
+  }
+
+  actions {
+    record { calls: Claim.recordEvidence(evidenceKind, evidenceSummary) }
+  }
+}
+
+form FraudDecision {
+  title: { pt-BR: "Parecer de fraude", en: "Fraud decision" }
+  document: Claim
+
+  fields {
+    fraudNote
+  }
+
+  actions {
+    confirm { calls: Claim.confirmFraud(fraudNote) }
+    clear { calls: Claim.clearFraud(fraudNote) }
+  }
+}

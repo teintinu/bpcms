@@ -1,0 +1,247 @@
+// service: example.com/services/notifications
+
+document Notification {
+  title: { pt-BR: "Notificação", en: "Notification" }
+  version: 1
+  owner: "Notifications"
+  sync: live
+
+  fields {
+    template: NotificationTemplate {
+      title: { pt-BR: "Modelo", en: "Template" }
+    }
+    recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    status: NotificationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
+    sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
+    readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
+    error: string { title: { pt-BR: "Erro", en: "Error" } }
+    suppressionReason: string { title: { pt-BR: "Motivo da supressão", en: "Suppression reason" } }
+  }
+
+  indexes {
+    byStatus: [status, sentAt] range
+    byRecipient: [recipient, sentAt] range
+  }
+
+
+  actions {
+    send(){
+      title: { pt-BR: "Enviar", en: "Send" }
+      roles: [SuccessAgent]
+
+      to: status.Sent
+
+      {
+        sentAt = now()
+      }
+    }
+
+    fail(reason: string){
+      title: { pt-BR: "Registrar falha", en: "Record failure" }
+      roles: [SuccessAgent]
+
+      to: status.Failed
+
+      {
+        error = reason
+      }
+    }
+
+    retry(){
+      title: { pt-BR: "Repetir", en: "Retry" }
+      roles: [SuccessAgent]
+
+      to: status.Queued
+      emits { at: now() }
+    }
+
+    markRead(){
+      title: { pt-BR: "Marcar como lida", en: "Mark as read" }
+      roles: [SuccessAgent]
+
+      to: status.Read
+
+      {
+        readAt = now()
+      }
+    }
+
+    sendDigest(){
+      title: { pt-BR: "Enviar resumo", en: "Send digest" }
+      roles: [SuccessAgent]
+
+      to: status.Sent
+
+      {
+        sentAt = now()
+      }
+    }
+
+    suppress(reason: string){
+      title: { pt-BR: "Suprimir", en: "Suppress" }
+      roles: [SuccessAgent]
+
+      to: status.Suppressed
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da supressão"
+        en: "Enter the suppression reason"
+      }
+
+      {
+        suppressionReason = reason
+      }
+    }
+
+    retryFailed(){
+      title: { pt-BR: "Repetir falhas", en: "Retry failed" }
+      roles: [SuccessAgent]
+    }
+  }
+
+  rule status == Sent implies sentAt != null {
+    pt-BR: "Informe a data de envio"
+    en: "Enter the sent date"
+  }
+}
+
+shape NotificationStatus {
+  title: { pt-BR: "Situação da notificação", en: "Notification status" }
+  base: state
+  initial: Queued
+  value Queued {
+    title: { pt-BR: "Na fila", en: "Queued" }
+    icon: Queued
+    ordinal: 10
+
+    transition Sent {
+      title: { pt-BR: "Notificação enviada", en: "Notification sent" }
+      payload {
+        sentAt: DateTime { title: { pt-BR: "Enviada em", en: "Sent at" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Falha no envio", en: "Delivery failed" }
+      payload {
+        error: string { title: { pt-BR: "Erro", en: "Error" } }
+      }
+    }
+
+    transition Sent {
+      event: Digested
+      title: { pt-BR: "Resumo enviado", en: "Digest sent" }
+      payload {
+        sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
+      }
+    }
+
+    transition Suppressed {
+      title: { pt-BR: "Notificação suprimida", en: "Notification suppressed" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Sent {
+    title: { pt-BR: "Enviada", en: "Sent" }
+    icon: Sent
+    ordinal: 20
+
+    transition Read {
+      title: { pt-BR: "Notificação lida", en: "Notification read" }
+      payload {
+        readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
+      }
+    }
+  }
+  value Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    icon: Failed
+    ordinal: 30
+
+    transition Queued {
+      event: Retried
+      title: { pt-BR: "Envio repetido", en: "Delivery retried" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value Read {
+    title: { pt-BR: "Lida", en: "Read" }
+    icon: Read
+    ordinal: 40
+  }
+  value Suppressed {
+    title: { pt-BR: "Suprimida", en: "Suppressed" }
+    icon: Suppressed
+    ordinal: 50
+  }
+  format: plain
+}
+
+view NotificationTable {
+  title: { pt-BR: "Notificações", en: "Notifications" }
+  type: table
+  source: Notification
+  roles: [SuccessAgent, SuccessManager]
+
+  columns { recipient; channel; status; sentAt; error }
+  filters { status; channel; period }
+  pagination: 50
+
+  actions {
+    open -> NotificationDetail
+  }
+}
+
+view NotificationDetail {
+  title: { pt-BR: "Detalhe da notificação", en: "Notification detail" }
+  type: detail
+  document: Notification
+  roles: [SuccessAgent, SuccessManager]
+
+  sections { summary; delivery; timeline }
+
+  actions {
+    send -> Notification.send
+    retry -> Notification.retry
+    suppress -> Notification.suppress(reason)
+  }
+}
+
+view NotificationKanban {
+  title: { pt-BR: "Notificações por situação", en: "Notifications by status" }
+  type: kanban
+  source: Notification
+  roles: [SuccessAgent, SuccessManager]
+
+  groupBy: status
+  columns { recipient; channel; sentAt }
+  card { recipient; channel; status; sentAt }
+
+  actions {
+    open -> NotificationDetail
+  }
+}
+
+message DigestSummary {
+  title: { pt-BR: "Resumo diário", en: "Daily digest" }
+  about: Notification
+
+  payload {
+    recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" } }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
+  }
+}
+
+policy NotificationConsent {
+  appliesTo: Notification.send
+  rule: consent == true
+  severity: block
+  message: "Destinatário sem consentimento para este canal"
+  audit: true
+}

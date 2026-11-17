@@ -1,0 +1,145 @@
+// service: example.com/services/hr
+
+process Onboarding for Employee {
+  title: { pt-BR: "Integração do colaborador", en: "Employee onboarding" }
+  version: 1
+  goal: "Colocar a pessoa produtiva no primeiro dia, com documentos, acessos e equipamento"
+  owner: "People"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  on breach -> Escalate
+  cancel on Employee.OnboardingCancelled -> Undo
+
+  pool Company {
+    internal
+    lane People { role: PeopleOps }
+    lane IT { role: ITAdmin }
+    lane Management { role: HiringManager }
+  }
+
+  pool NewHire {
+    external
+    lane Portal { role: NewHire }
+  }
+
+  start Hired { event: Employee.Hired }
+
+  fork Prepare
+
+  join Prepared
+
+  task CollectDocuments {
+    lane: Portal
+    form: OnboardingDocuments
+    sla: 3d
+    on timer 5d -> Escalate
+  }
+
+  task ProvisionAccess {
+    lane: System
+    runs: Provisioning
+    with { employee }
+    sla: 2d
+  }
+
+  task OrderEquipment {
+    lane: IT
+    form: EquipmentRequest
+    sla: 1d
+    assign: pull
+  }
+
+  task ManagerCheckin {
+    lane: Management
+    form: ManagerCheckin
+    sla: 2d
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Conversar com a pessoa e destravar o que falta para a integração"
+    sla: 1d
+  }
+
+  rollback Undo
+
+  end Ready {
+    title: { pt-BR: "Pronto para trabalhar", en: "Ready to work" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
+    outcome: cancelled
+  }
+
+  Hired -> Prepare
+  Prepare -> CollectDocuments
+  Prepare -> ProvisionAccess
+  Prepare -> OrderEquipment
+  CollectDocuments.submit -> Prepared
+  ProvisionAccess -> Prepared
+  OrderEquipment.order -> Prepared
+  Prepared -> ManagerCheckin
+  ManagerCheckin.confirm -> Ready
+  Undo -> Cancelled
+  Escalate -> ManagerCheckin
+}
+
+form OnboardingDocuments {
+  title: { pt-BR: "Documentos de integração", en: "Onboarding documents" }
+  document: Employee
+
+  fields {
+    identityDocument
+  }
+
+  actions {
+    submit { calls: Employee.submitDocuments(identityDocument) }
+  }
+}
+
+form EquipmentRequest {
+  title: { pt-BR: "Pedido de equipamento", en: "Equipment request" }
+  document: Employee
+
+  fields {
+    kind: EquipmentKind {
+      title: { pt-BR: "Equipamento", en: "Equipment" }
+      required
+    }
+  }
+
+  actions {
+    order { calls: Employee.orderEquipment(kind) }
+  }
+}
+
+form ManagerCheckin {
+  title: { pt-BR: "Check-in do gestor", en: "Manager check-in" }
+  document: Employee
+
+  fields {
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    confirm { calls: Employee.activate }
+    recordNote { calls: Employee.recordCheckinNote(note); stay }
+  }
+}
+
+view OnboardingProgress {
+  title: { pt-BR: "Andamento da integração", en: "Onboarding progress" }
+  type: process
+  process: Onboarding
+  roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}

@@ -1,59 +1,23 @@
 // service: example.com/services/catalog
-view ProductTable {
-  title: { pt-BR: "Produtos", en: "Products" }
-  type: table
-  source: Product
-  roles: [Curator, Publisher]
 
-  columns { image; sku; name; price; weight; status; createdAt }
-  filters { status; category; period }
-  pagination: 50
+view ProductHealth {
+  title: { pt-BR: "Saúde do catálogo", en: "Catalog health" }
+  type: report
+  sources: [Product, Category]
+  roles: [Publisher]
 
-  actions {
-    open -> ProductDetail
-    submit -> Product.submitForReview
-    publish -> Product.publish
-    archive -> Product.archive
+  filters { category; status }
+
+  metrics {
+    published: count(Product) where status == Published
+    drafts: count(Product) where status == Draft
+    avgPrice: avg(Product.price)
+    totalWeight: sum(Product.weight)
   }
-}
 
-view ProductDetail {
-  title: { pt-BR: "Detalhe do produto", en: "Product detail" }
-  type: detail
-  document: Product
-  roles: [Curator, Publisher]
-
-  sections { summary; pricing; media }
-
-  actions {
-    submit -> Product.submitForReview
-    publish -> Product.publish
-    archive -> Product.archive
-  }
-}
-
-view ProductKanban {
-  title: { pt-BR: "Produtos por situação", en: "Products by status" }
-  type: kanban
-  source: Product
-  roles: [Curator, Publisher]
-
-  groupBy: status
-  columns { sku; name; price }
-  card { sku; name; price; status }
-
-  actions {
-    open -> ProductDetail
-  }
-}
-
-view ProductProgress {
-  title: { pt-BR: "Andamento da publicação", en: "Publish progress" }
-  type: process
-  process: ProductPublish
-  roles: [Curator, Publisher]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
+  units { avgPrice: BRL; totalWeight: kg }
+  freshness: 15m
+  export: [csv]
 }
 
 view PublishInbox {

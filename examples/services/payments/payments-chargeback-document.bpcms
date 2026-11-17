@@ -1,0 +1,240 @@
+// service: example.com/services/payments
+
+document Chargeback {
+  title: { pt-BR: "Contestação", en: "Chargeback" }
+  version: 1
+  owner: "Payments"
+  sync: live
+
+  fields {
+    payment: Payment {
+      title: { pt-BR: "Pagamento", en: "Payment" }
+      lookup
+    }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    disputeReason: string {
+      title: { pt-BR: "Motivo da contestação", en: "Dispute reason" }
+      maxLength: 500
+    }
+    status: ChargebackStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    dueAt: DateTime { title: { pt-BR: "Prazo de resposta", en: "Response due" }, lookup }
+    openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" } }
+    decidedOn: DateTime { title: { pt-BR: "Decidida em", en: "Decided on" } }
+    networkFavorable: boolean {
+      title: { pt-BR: "Decisão favorável", en: "Favorable decision" }
+    }
+    evidenceNotes: string {
+      title: { pt-BR: "Evidências", en: "Evidence" }
+      maxLength: 2000
+    }
+    evidence: EvidenceDocument {
+      title: { pt-BR: "Documento de evidência", en: "Evidence document" }
+    }
+  }
+
+  indexes {
+    byPayment: [payment.id] hash
+    byDue: [status, dueAt] range
+  }
+
+
+  actions {
+    open(chargebackReason: string, dueAt: DateTime) {
+      title: { pt-BR: "Abrir contestação", en: "Open chargeback" }
+      roles: [PaymentEngine]
+      {
+        disputeReason = chargebackReason
+        openedAt = now()
+        emit Opened
+      }
+    }
+
+    submitEvidence(evidenceNote: string, evidenceFile: EvidenceDocument) {
+      title: { pt-BR: "Enviar evidências", en: "Submit evidence" }
+      roles: [Analyst]
+
+      to: status.UnderReview
+
+      rule evidenceNote.length >= 20 {
+        pt-BR: "Descreva as evidências com pelo menos 20 caracteres"
+        en: "Describe the evidence with at least 20 characters"
+      }
+      {
+        evidenceNotes = evidenceNote
+        evidence = evidenceFile
+      }
+    }
+
+    annotateEvidence(note: string) {
+      title: { pt-BR: "Anotar evidências", en: "Annotate evidence" }
+      roles: [Analyst]
+      {
+        evidenceNotes = note
+      }
+    }
+
+    registerDecision(favorable: boolean, decidedAt: DateTime) {
+      title: { pt-BR: "Registrar decisão da bandeira", en: "Record network decision" }
+      roles: [PaymentEngine]
+      {
+        networkFavorable = favorable
+        decidedOn = decidedAt
+      }
+    }
+
+    win() {
+      title: { pt-BR: "Marcar vitória", en: "Mark as won" }
+      roles: [Manager, PaymentEngine]
+
+      to: status.Won
+      emits { decidedAt: decidedOn }
+    }
+
+    lose() {
+      title: { pt-BR: "Marcar perda", en: "Mark as lost" }
+      roles: [Manager, PaymentEngine]
+
+      to: status.Lost
+      emits { decidedAt: decidedOn }
+    }
+
+    concede() {
+      title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      roles: [Manager]
+
+      to: status.Lost
+      emits { decidedAt: decidedOn }
+      {
+        decidedOn = now()
+      }
+    }
+  }
+
+  rule status == Lost implies decidedOn != null {
+    pt-BR: "Informe a decisão da bandeira"
+    en: "Enter the network decision"
+  }
+}
+
+shape ChargebackStatus {
+  title: { pt-BR: "Situação da contestação", en: "Chargeback status" }
+  base: state
+  initial: Open with transition Opened {
+    title: { pt-BR: "Contestação aberta", en: "Chargeback opened" }
+    payload {
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due" } }
+    }
+  }
+
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition UnderReview {
+      event: EvidenceSubmitted
+      title: { pt-BR: "Evidências enviadas", en: "Evidence submitted" }
+      payload {
+        evidenceNote: string { title: { pt-BR: "Resumo", en: "Summary" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+  }
+  value UnderReview {
+    title: { pt-BR: "Em análise", en: "Under review" }
+    icon: UnderReview
+    ordinal: 20
+
+    transition Won {
+      title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+
+    transition Lost {
+      title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      payload {
+        decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+      }
+    }
+  }
+  value Won {
+    title: { pt-BR: "Ganha", en: "Won" }
+    icon: Won
+    ordinal: 30
+  }
+  value Lost {
+    title: { pt-BR: "Perdida", en: "Lost" }
+    icon: Lost
+    ordinal: 40
+  }
+
+  format: plain
+}
+
+shape EvidenceDocument {
+  title: { pt-BR: "Documento de evidência", en: "Evidence document" }
+  base: attachment
+  mime: [application/pdf, image/*]
+}
+
+view Chargebacks {
+  title: { pt-BR: "Contestações", en: "Chargebacks" }
+  type: table
+  source: Chargeback
+  roles: [Analyst, Manager]
+
+  columns { payment; amount; status; dueAt }
+  filters { status; period }
+  actions {
+    open -> ChargebackDetail
+  }
+}
+
+view ChargebackDetail {
+  title: { pt-BR: "Detalhe da contestação", en: "Chargeback detail" }
+  type: detail
+  document: Chargeback
+  roles: [Analyst, Manager]
+
+  sections { summary; evidence; timeline }
+  actions {
+    progress -> ChargebackProgress
+  }
+}
+
+message EvidencePackage {
+  title: { pt-BR: "Pacote de evidências", en: "Evidence package" }
+  about: Chargeback
+
+  payload {
+    submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+    note: string { title: { pt-BR: "Resumo", en: "Summary" } }
+    evidence: EvidenceDocument { title: { pt-BR: "Documento", en: "Document" } }
+  }
+}
+
+message ChargebackResult {
+  title: { pt-BR: "Resultado da contestação", en: "Chargeback result" }
+  about: Chargeback
+
+  payload {
+    favorable: boolean { title: { pt-BR: "Favorável", en: "Favorable" } }
+    decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+  }
+}

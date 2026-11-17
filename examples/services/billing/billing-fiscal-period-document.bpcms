@@ -1,0 +1,105 @@
+// service: example.com/services/billing
+
+document FiscalPeriod {
+  title: { pt-BR: "Período fiscal", en: "Fiscal period" }
+  version: 1
+  owner: "Billing"
+  sync: live
+
+  fields {
+    store: Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      required
+    }
+    month: YearMonth {
+      title: { pt-BR: "Mês", en: "Month" }
+      lookup
+      required
+    }
+    status: FiscalPeriodStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
+    tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
+    closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
+    failureReason: string { title: { pt-BR: "Motivo da falha", en: "Failure reason" } }
+  }
+
+  indexes {
+    byPeriod: [store.id, month] unique
+    byStatus: [status, month] range
+  }
+
+
+  actions {
+    consolidate(){
+      title: { pt-BR: "Consolidar período", en: "Consolidate period" }
+      roles: [FinanceManager]
+    }
+
+    close(){
+      title: { pt-BR: "Fechar período", en: "Close period" }
+      roles: [FinanceManager]
+
+      to: status.Closed
+
+      {
+        closedAt = now()
+      }
+    }
+
+    fail(reason: string){
+      title: { pt-BR: "Registrar falha", en: "Record failure" }
+      roles: [FinanceManager]
+
+      to: status.Failed
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da falha"
+        en: "Enter the failure reason"
+      }
+
+      {
+        failureReason = reason
+      }
+    }
+  }
+}
+
+shape FiscalPeriodStatus {
+  title: { pt-BR: "Situação do período fiscal", en: "Fiscal period status" }
+  base: state
+  initial: Open
+  value Open {
+    title: { pt-BR: "Aberto", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition Closed {
+      title: { pt-BR: "Período fechado", en: "Period closed" }
+      payload {
+        closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Fechamento falhou", en: "Period close failed" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    icon: Closed
+    ordinal: 20
+  }
+  value Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    icon: Failed
+    ordinal: 30
+  }
+  format: plain
+}

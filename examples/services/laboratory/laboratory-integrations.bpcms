@@ -12,18 +12,3 @@ integration SupportLabGateway {
     receiveResult(sample: Sample): ExamResult
   }
 }
-
-integration Analyzer {
-  protocol: mqtt
-  topic: "analyzers/+/reading"
-  capabilities { equipment }
-  timeout: 30s
-  quality {
-    staleAfter: 5m
-    calibrate: monthly
-  }
-
-  operations {
-    readResult(order: ExamOrder): ExamReading
-  }
-}

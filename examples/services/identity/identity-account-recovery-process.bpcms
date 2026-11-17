@@ -1,0 +1,124 @@
+// service: example.com/services/identity
+
+process AccountRecovery for User {
+  title: { pt-BR: "Recuperação de acesso", en: "Account recovery" }
+  version: 1
+  goal: "Verificar a identidade, aprovar a recuperação e desbloquear o acesso"
+  owner: "Platform Identity"
+  timezone: America/Fortaleza
+  sla: 3d
+
+  pool Company {
+    internal
+
+    lane Support {
+      role: Clerk
+    }
+
+    lane Management {
+      role: Manager
+    }
+  }
+
+  pool Customer {
+    external
+
+    lane Portal {
+      role: Customer
+    }
+  }
+
+  start Requested {
+    by: [Clerk, Manager]
+  }
+
+  task Verify {
+    lane: Support
+    form: IdentityVerification
+    sla: 1d
+    priority: 50
+    assign: pull
+    on timer 2d -> Escalate
+  }
+
+  task Approve {
+    lane: Management
+    form: RecoveryApproval
+    sla: 1d
+    assign: pull
+  }
+
+  task Unlock {
+    lane: System
+    action: User.unlock
+  }
+
+  task NotifyCustomer {
+    lane: System
+    sends: AccessRestored
+    partner: Customer
+    with {
+      name: user.name
+      email: user.email
+    }
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Falar com o solicitante e revisar a verificação"
+    sla: 4h
+  }
+
+  end Restored {
+    title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+    outcome: success
+  }
+
+  Requested -> Verify
+  Verify.confirm -> Approve
+  Approve.approve -> Unlock
+  Unlock -> NotifyCustomer
+  NotifyCustomer -> Restored
+  Escalate -> Approve
+}
+
+form IdentityVerification {
+  title: { pt-BR: "Verificação de identidade", en: "Identity verification" }
+  document: User
+
+  fields {
+    name
+    email
+    nickname
+    status
+  }
+
+  actions {
+    confirm { calls: User.confirmIdentity }
+  }
+}
+
+form RecoveryApproval {
+  title: { pt-BR: "Aprovação da recuperação", en: "Recovery approval" }
+  document: User
+
+  fields {
+    name
+    email
+    status
+    identityVerifiedAt
+  }
+
+  actions {
+    approve { calls: User.approveRecovery }
+  }
+}
+
+view RecoveryProgress {
+  title: { pt-BR: "Andamento da recuperação", en: "Recovery progress" }
+  type: process
+  process: AccountRecovery
+  roles: [Clerk, Manager, Customer]
+
+  sections { current; participants; history; deadlines; documents; next }
+}

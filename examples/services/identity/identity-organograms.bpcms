@@ -1,4 +1,5 @@
 // service: example.com/services/identity
+
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [catalog.view, order.create, order.viewOwn]

@@ -1,53 +1,5 @@
 // service: example.com/services/credit
 
-view CreditApplications {
-  title: { pt-BR: "Propostas de crédito", en: "Credit applications" }
-  type: table
-  source: CreditApplication
-  roles: [CreditAnalyst, CreditManager]
-
-  columns { number; applicant; requestedAmount; monthlyIncome; riskBand; status; submittedAt }
-  filters { status; riskBand; applicant }
-  pagination: 50
-
-  actions {
-    open -> CreditApplicationDetail
-  }
-}
-
-view CreditApplicationDetail {
-  title: { pt-BR: "Detalhe da proposta", en: "Credit application detail" }
-  type: detail
-  document: CreditApplication
-  roles: [CreditAnalyst, CreditManager]
-
-  sections { summary; timeline }
-}
-
-view CreditLimits {
-  title: { pt-BR: "Limites de crédito", en: "Credit limits" }
-  type: table
-  source: CreditLimit
-  roles: [CreditAnalyst, CreditManager]
-
-  columns { number; holder; amount; used; status; expiresAt }
-  filters { status; holder }
-  pagination: 50
-
-  actions {
-    open -> CreditLimitDetail
-  }
-}
-
-view CreditLimitDetail {
-  title: { pt-BR: "Detalhe do limite", en: "Credit limit detail" }
-  type: detail
-  document: CreditLimit
-  roles: [CreditAnalyst, CreditManager]
-
-  sections { summary; timeline }
-}
-
 view RiskReport {
   title: { pt-BR: "Relatório de risco de crédito", en: "Credit risk report" }
   type: report
@@ -80,15 +32,6 @@ view CreditDashboard {
   }
   units { averageLimit: BRL }
   freshness: 5m
-}
-
-view CreditFlowProgress {
-  title: { pt-BR: "Andamento da análise de crédito", en: "Credit analysis progress" }
-  type: process
-  process: CreditApplicationFlow
-  roles: [CreditAnalyst, CreditManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
 }
 
 view MyCreditTasks {

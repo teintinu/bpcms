@@ -1,0 +1,361 @@
+// service: example.com/services/support
+
+document Ticket {
+  title: { pt-BR: "Chamado", en: "Ticket" }
+  version: 1
+  owner: "Support"
+  sync: live
+  fields {
+    customer: User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+    }
+    order: Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+    }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
+    description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
+    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
+    category: TicketCategory { title: { pt-BR: "Categoria", en: "Category" }, lookup, default: General }
+    internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
+    budget: std.Money { title: { pt-BR: "Orçamento", en: "Budget" } }
+    status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    assignee: User {
+      title: { pt-BR: "Responsável", en: "Assignee" }
+    }
+    slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
+    resolutionTime: std.Duration { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
+    slaMet: boolean { title: { pt-BR: "Prazo cumprido", en: "SLA met" } }
+    breached: boolean {
+      title: { pt-BR: "Prazo estourado", en: "SLA breached" }
+      computed: slaDue < now()
+      readonly
+    }
+    remaining: std.Duration {
+      title: { pt-BR: "Tempo restante", en: "Time remaining" }
+      computed: slaDue - now()
+      readonly
+    }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+  }
+
+  indexes {
+    byStatus: [status, priority, slaDue] range
+    byAssignee: [assignee.id] hash
+    search: [subject, description] search
+  }
+
+  events {
+    Escalated {
+      title: { pt-BR: "Chamado escalonado", en: "Ticket escalated" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+
+  actions {
+    open(subject: string, customer: User){
+      title: { pt-BR: "Abrir chamado", en: "Open ticket" }
+      roles: [SupportAgent]
+      rule subject.length > 0 {
+        pt-BR: "Informe o assunto do chamado"
+        en: "Enter the ticket subject"
+      }
+      {
+        createdAt = now()
+        emit Opened { subject }
+      }
+    }
+
+    claim(){
+      title: { pt-BR: "Assumir", en: "Claim" }
+      roles: [SupportAgent]
+      to: status.InProgress
+    }
+
+    hold(){
+      title: { pt-BR: "Aguardar", en: "Hold" }
+      roles: [SupportAgent, Manager]
+      to: status.Waiting
+    }
+
+    resume(){
+      title: { pt-BR: "Retomar", en: "Resume" }
+      roles: [SupportAgent]
+      to: status.InProgress
+    }
+
+    resolve(){
+      title: { pt-BR: "Resolver", en: "Resolve" }
+      roles: [SupportAgent, Manager]
+      to: status.Resolved
+      rule assignee != null {
+        pt-BR: "Atribua o chamado antes de resolver"
+        en: "Assign the ticket before resolving"
+      }
+      {
+        resolutionTime = now() - createdAt
+        slaMet = now() <= slaDue
+      }
+    }
+
+    close(){
+      title: { pt-BR: "Fechar", en: "Close" }
+      roles: [SupportAgent]
+      to: status.Closed
+    }
+
+    reopen(justification: string){
+      title: { pt-BR: "Reabrir", en: "Reopen" }
+      roles: [Manager]
+      to: status.Open
+      emits { reason: justification }
+      rule justification.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+    }
+
+    assign(user: User){
+      title: { pt-BR: "Atribuir", en: "Assign" }
+      roles: [SupportAgent]
+      {
+        assignee = user
+      }
+    }
+
+    categorize(target: TicketCategory){
+      title: { pt-BR: "Categorizar", en: "Categorize" }
+      roles: [SupportAgent]
+      {
+        category = target
+      }
+    }
+
+    comment(note: string){
+      title: { pt-BR: "Comentar", en: "Comment" }
+      roles: [SupportAgent]
+      rule note.length > 0 {
+        pt-BR: "Escreva o comentário"
+        en: "Write the comment"
+      }
+      {
+        internalNote = note
+      }
+    }
+
+    escalate(justification: string){
+      title: { pt-BR: "Escalar", en: "Escalate" }
+      roles: [SupportAgent, Manager]
+      {
+        internalNote = justification
+        emit Escalated { reason: justification }
+      }
+    }
+  }
+
+  rule status == Resolved implies assignee != null {
+    pt-BR: "Atribua o chamado antes de resolver"
+    en: "Assign the ticket before resolving"
+
+  }
+}
+
+shape TicketStatus {
+  title: { pt-BR: "Situação do chamado", en: "Ticket status" }
+  base: state
+  initial: Open with transition Opened {
+    title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
+    payload {
+      subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    }
+  }
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition InProgress {
+      event: Claimed
+      title: { pt-BR: "Chamado assumido", en: "Ticket claimed" }
+    }
+  }
+  value InProgress {
+    title: { pt-BR: "Em andamento", en: "In progress" }
+    icon: InProgress
+    ordinal: 20
+
+    transition Waiting {
+      event: Held
+      title: { pt-BR: "Chamado aguardando", en: "Ticket held" }
+    }
+
+    transition Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      payload {
+        assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
+      }
+    }
+  }
+  value Waiting {
+    title: { pt-BR: "Aguardando", en: "Waiting" }
+    icon: Waiting
+    ordinal: 30
+
+    transition InProgress {
+      event: Resumed
+      title: { pt-BR: "Chamado retomado", en: "Ticket resumed" }
+    }
+
+    transition Resolved {
+      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
+      payload {
+        assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
+      }
+    }
+  }
+  value Resolved {
+    title: { pt-BR: "Resolvido", en: "Resolved" }
+    icon: Resolved
+    ordinal: 40
+
+    transition Closed {
+      title: { pt-BR: "Chamado fechado", en: "Ticket closed" }
+    }
+
+    transition Open {
+      event: Reopened
+      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    icon: Closed
+    ordinal: 50
+  }
+  format: plain
+}
+
+shape TicketPriority {
+  title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
+  base: classification
+  value P1 {
+    title: { pt-BR: "Prioridade 1", en: "Priority 1" }
+    icon: P1
+    ordinal: 10
+  }
+  value P2 {
+    title: { pt-BR: "Prioridade 2", en: "Priority 2" }
+    icon: P2
+    ordinal: 20
+  }
+  value P3 {
+    title: { pt-BR: "Prioridade 3", en: "Priority 3" }
+    icon: P3
+    ordinal: 30
+  }
+  value P4 {
+    title: { pt-BR: "Prioridade 4", en: "Priority 4" }
+    icon: P4
+    ordinal: 40
+  }
+  format: plain
+}
+
+shape TicketCategory {
+  title: { pt-BR: "Categoria do chamado", en: "Ticket category" }
+  base: classification
+  value Technical {
+    title: { pt-BR: "Técnico", en: "Technical" }
+    icon: Technical
+    ordinal: 10
+  }
+  value Billing {
+    title: { pt-BR: "Cobrança", en: "Billing" }
+    icon: Billing
+    ordinal: 20
+  }
+  value General {
+    title: { pt-BR: "Geral", en: "General" }
+    icon: General
+    ordinal: 30
+  }
+  format: plain
+}
+
+view SlaCompliance {
+  title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
+  type: report
+  sources: [Ticket]
+  roles: [Manager]
+
+  filters { period; priority }
+  metrics {
+    compliance: percentage(Ticket.slaMet)
+    breached: count(Ticket) where breached == true
+    avgResolution: avg(Ticket.resolutionTime)
+  }
+  freshness: 5m
+  export: [pdf, csv]
+}
+
+view TicketKanban {
+  title: { pt-BR: "Quadro de chamados", en: "Ticket kanban" }
+  type: kanban
+  source: Ticket
+  roles: [SupportAgent, Manager]
+  groupBy: status
+
+  columns { subject; priority; slaDue }
+  card { subject; priority; slaDue; assignee }
+  filter { status != Closed }
+  actions {
+    open -> TicketDetail
+    claim -> Ticket.claim
+  }
+}
+
+view TicketDetail {
+  title: { pt-BR: "Detalhe do chamado", en: "Ticket detail" }
+  type: detail
+  document: Ticket
+  roles: [SupportAgent, Manager]
+
+  sections { summary; timeline }
+  computed { breached; remaining }
+  actions {
+    resolve -> Ticket.resolve
+    escalate -> Ticket.escalate(justification)
+  }
+}
+
+message TicketAcknowledged {
+  title: { pt-BR: "Chamado recebido", en: "Ticket acknowledged" }
+  about: Ticket
+  payload {
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" } }
+  }
+}
+
+message TicketUpdate {
+  title: { pt-BR: "Atualização do chamado", en: "Ticket update" }
+  about: Ticket
+  payload {
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    queue: TicketCategory { title: { pt-BR: "Fila", en: "Queue" } }
+  }
+}
+
+policy SlaEscalation {
+  appliesTo: Ticket
+  rule: not breached
+  severity: enforce
+  message: "Chamado fora do prazo deve ser escalonado ao gerente"
+  notification: [Email, WhatsApp]
+  audit: true
+}

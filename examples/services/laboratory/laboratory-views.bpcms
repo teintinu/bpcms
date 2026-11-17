@@ -1,5 +1,22 @@
 // service: example.com/services/laboratory
 
+view LabQuality {
+  title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
+  type: report
+  sources: [Sample, ExamResult]
+  roles: [Pathologist, LabManager]
+
+  filters { period; exam; laboratory }
+  metrics {
+    rejected: count(Sample) where status == Rejected
+    criticalResults: count(ExamResult) where critical == true
+    releasedResults: count(ExamResult) where status == Released
+    signedResults: count(ExamResult) where status == Signed
+  }
+  freshness: 15m
+  export: [pdf, csv]
+}
+
 view CollectionQueue {
   title: { pt-BR: "Fila de coleta", en: "Collection queue" }
   type: inbox
@@ -8,47 +25,4 @@ view CollectionQueue {
   groupBy: lane
   filter { lane in currentUser.lanes }
   columns { title; subject; lane; dueAt; priority }
-}
-
-view SampleSearch {
-  title: { pt-BR: "Busca de amostras", en: "Sample search" }
-  type: table
-  source: Sample
-  roles: [Collector, Analyst, Pathologist, LabManager]
-
-  columns { code; kind; patient; status; collectedAt }
-  filters { status; kind; laboratory }
-  pagination: 50
-}
-
-view ExamOrderList {
-  title: { pt-BR: "Pedidos de exame", en: "Exam orders" }
-  type: table
-  source: ExamOrder
-  roles: [Collector, Analyst, Pathologist, LabManager]
-
-  columns { sample; exam; status; requestedAt; resultedAt }
-  filters { status; exam; period }
-  pagination: 50
-  actions {
-    open -> LabExamProgress
-  }
-}
-
-view LabExamProgress {
-  title: { pt-BR: "Andamento do exame", en: "Exam progress" }
-  type: process
-  process: LabExam
-  roles: [Collector, Analyst, Pathologist, LabManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
-
-view RecollectionProgress {
-  title: { pt-BR: "Andamento da recoleta", en: "Recollection progress" }
-  type: process
-  process: SampleRecollection
-  roles: [Collector, Analyst, LabManager]
-
-  sections { current; participants; history; deadlines; documents; next }
 }

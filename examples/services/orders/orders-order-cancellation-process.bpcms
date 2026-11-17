@@ -1,0 +1,88 @@
+// service: example.com/services/orders
+
+process OrderCancellation for Order {
+  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
+  version: 1
+  goal: "Cancelar o pedido com motivo, liberar a reserva e reverter se falhar"
+  owner: "Orders"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Management { role: Manager }
+  }
+
+  start Requested { event: Order.CancellationRequested }
+
+  task Review {
+    lane: Management
+    form: CancellationReview
+    sla: 1d
+    priority: 70
+    assign: pull
+    on timer 2d -> Undo
+  }
+
+  task CancelOrder {
+    lane: System
+    action: Order.cancel
+    with { reason: order.cancellationReason }
+    sla: 1m
+  }
+
+  task ReleaseStock {
+    lane: System
+    action: Reservation.release
+    sla: 5m
+    on error ReservationLocked -> Undo
+  }
+
+  task UndoCancel {
+    lane: System
+    action: Order.reopen
+    compensates: CancelOrder
+    sla: 1m
+  }
+
+  rollback Undo
+
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: cancelled
+  }
+  end Rejected {
+    title: { pt-BR: "Não cancelado", en: "Not cancelled" }
+    outcome: failure
+  }
+
+  Requested -> Review
+  Review.approve -> CancelOrder
+  Review.reject -> Rejected
+  CancelOrder -> ReleaseStock
+  ReleaseStock -> Cancelled
+  Undo -> Rejected
+}
+
+form CancellationReview {
+  title: { pt-BR: "Analisar cancelamento", en: "Review cancellation" }
+  document: Order
+
+  fields {
+    customer
+    total
+    status
+    cancellationReason
+  }
+
+  actions {
+    approve {
+      title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
+      calls: Order.approveCancellation
+    }
+    reject {
+      title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      calls: Order.rejectCancellation
+    }
+  }
+}

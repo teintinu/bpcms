@@ -1,4 +1,5 @@
 // service: example.com/services/catalog
+
 parameter DefaultCurrency {
   title: { pt-BR: "Moeda padrão", en: "Default currency" }
   type: std.Currency

@@ -1,0 +1,206 @@
+// service: example.com/services/procurement
+
+document PurchaseRequest {
+  title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    requester: Identity.User {
+      title: { pt-BR: "Solicitante", en: "Requester" }
+      lookup
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      required
+    }
+    justification: string {
+      title: { pt-BR: "Justificativa", en: "Justification" }
+      maxLength: 500
+      required
+    }
+    neededBy: Date {
+      title: { pt-BR: "Necessário até", en: "Needed by" }
+    }
+    costCenter: string {
+      title: { pt-BR: "Centro de custo", en: "Cost center" }
+      maxLength: 60
+    }
+    status: PurchaseRequestStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviada em", en: "Submitted at" }
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovada em", en: "Approved at" }
+    }
+    rejectedAt: DateTime {
+      title: { pt-BR: "Rejeitada em", en: "Rejected at" }
+    }
+    rejectionReason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 280
+    }
+    orderedAt: DateTime {
+      title: { pt-BR: "Pedido emitido em", en: "Ordered at" }
+    }
+    purchaseOrder: PurchaseOrder {
+      title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+    }
+  }
+
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar solicitação", en: "Submit request" }
+      roles: [Requester]
+      to: status.Submitted
+      {
+        submittedAt = now()
+      }
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar solicitação", en: "Approve request" }
+      roles: [Approver, ProcurementManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    reject(rejectionReason: string) {
+      title: { pt-BR: "Rejeitar solicitação", en: "Reject request" }
+      roles: [Approver, ProcurementManager]
+      to: status.Rejected
+      emits { reason: rejectionReason }
+      {
+        rejectedAt = now()
+      }
+    }
+
+    order(purchaseOrder: PurchaseOrder) {
+      title: { pt-BR: "Emitir pedido de compra", en: "Issue purchase order" }
+      roles: [Buyer]
+      to: status.Ordered
+      {
+        orderedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, submittedAt] range
+    bySupplier: [supplier.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "A solicitação precisa ter valor positivo"
+    en: "The request must have a positive amount"
+  }
+
+  segregation {
+    submit != approve
+  }
+}
+
+shape PurchaseRequestStatus {
+  title: { pt-BR: "Situação da solicitação de compra", en: "Purchase request status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Submitted {
+      title: { pt-BR: "Solicitação enviada", en: "Purchase request submitted" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Enviada em", en: "Submitted at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  value Submitted {
+    title: { pt-BR: "Enviada", en: "Submitted" }
+    icon: Submitted
+    ordinal: 20
+
+    transition Approved {
+      title: { pt-BR: "Solicitação aprovada", en: "Purchase request approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Solicitação rejeitada", en: "Purchase request rejected" }
+      payload {
+        rejectedAt: DateTime { title: { pt-BR: "Rejeitada em", en: "Rejected at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 30
+
+    transition Ordered {
+      title: { pt-BR: "Pedido de compra emitido", en: "Purchase order issued" }
+      payload {
+        orderedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
+      }
+    }
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+  value Ordered {
+    title: { pt-BR: "Pedido emitido", en: "Ordered" }
+    icon: Ordered
+    ordinal: 50
+  }
+}
+
+view PurchaseRequests {
+  title: { pt-BR: "Solicitações de compra", en: "Purchase requests" }
+  type: table
+  source: PurchaseRequest
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  columns { number; requester; supplier; amount; status; neededBy }
+  filters { status; requester; supplier }
+  pagination: 50
+
+  actions {
+    open -> PurchaseRequestDetail
+  }
+}
+
+view PurchaseRequestDetail {
+  title: { pt-BR: "Detalhe da solicitação", en: "Purchase request detail" }
+  type: detail
+  document: PurchaseRequest
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  sections { summary; timeline }
+}

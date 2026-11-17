@@ -1,0 +1,93 @@
+// service: example.com/services/fraud-checkout
+
+process FraudReview for FraudCheck {
+  title: { pt-BR: "Análise antifraude", en: "Fraud review" }
+  version: 1
+  goal: "Avaliar o risco e decidir automaticamente ou por análise manual"
+  owner: "Risk"
+  timezone: America/Fortaleza
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Risk { role: RiskAnalyst }
+  }
+
+  start Created {
+    event: FraudCheck.Created
+  }
+
+  task Assess {
+    lane: System
+    action: FraudCheck.evaluate
+    sla: 5m
+  }
+
+  gateway RiskScore {
+    if fraudCheck.score >= 70 -> ManualReview
+    else -> AutoApprove
+  }
+
+  task AutoApprove {
+    lane: System
+    action: FraudCheck.approve
+    sla: 5m
+  }
+
+  task ManualReview {
+    lane: Risk
+    form: RiskReview
+    sla: 2h
+    assign: pull
+    priority: 80
+  }
+
+  end Cleared {
+    title: { pt-BR: "Liberada", en: "Cleared" }
+    outcome: success
+  }
+
+  end Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    outcome: cancelled
+  }
+
+  Created -> Assess
+  Assess -> RiskScore
+  AutoApprove -> Cleared
+  ManualReview.approve -> Approved
+  ManualReview.reject -> Rejected
+}
+
+form RiskReview {
+  title: { pt-BR: "Revisar risco", en: "Review risk" }
+  document: FraudCheck
+
+  fields {
+    session
+    score
+    reason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    approve { calls: FraudCheck.approve }
+    reject { calls: FraudCheck.reject(reason) }
+  }
+}
+
+view FraudProgress {
+  title: { pt-BR: "Andamento da análise", en: "Fraud review progress" }
+  type: process
+  process: FraudReview
+  roles: [RiskAnalyst, RiskManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

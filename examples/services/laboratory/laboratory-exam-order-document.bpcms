@@ -1,0 +1,256 @@
+// service: example.com/services/laboratory
+
+document ExamOrder {
+  title: { pt-BR: "Pedido de exame", en: "Exam order" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  fields {
+    laboratory: Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+    }
+    sample: Sample {
+      title: { pt-BR: "Amostra", en: "Sample" }
+      lookup
+    }
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
+    status: ExamOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    assignedTo: User {
+      title: { pt-BR: "Responsável", en: "Assignee" }
+    }
+    referredTo: SupportLab {
+      title: { pt-BR: "Encaminhado para", en: "Referred to" }
+    }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    resultedAt: DateTime { title: { pt-BR: "Resultado em", en: "Resulted at" } }
+  }
+
+  indexes {
+    byStatus: [status, requestedAt] range
+    bySample: [sample.id] hash
+  }
+
+
+  actions {
+    request(exam: ExamCode, sample: Sample){
+      title: { pt-BR: "Solicitar exame", en: "Request exam" }
+      roles: [Collector]
+      {
+        requestedAt = now()
+        emit Requested { exam }
+      }
+    }
+
+    collect(){
+      title: { pt-BR: "Coletar", en: "Collect" }
+      roles: [Collector]
+      to: status.Collected
+    }
+
+    process(){
+      title: { pt-BR: "Iniciar análise", en: "Start analysis" }
+      roles: [Analyst]
+      to: status.Processing
+    }
+
+    refer(lab: SupportLab){
+      title: { pt-BR: "Encaminhar ao apoio", en: "Refer to support" }
+      roles: [SupportLiaison]
+      to: status.Referred
+      emits { supportLab: lab }
+    }
+
+    result(){
+      title: { pt-BR: "Resultar", en: "Result" }
+      roles: [Analyst]
+      to: status.Resulted
+      {
+        resultedAt = now()
+      }
+    }
+
+    cancel(justification: string){
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      roles: [LabManager]
+      to: status.Cancelled
+      emits { reason: justification }
+    }
+
+    assign(user: User){
+      title: { pt-BR: "Atribuir", en: "Assign" }
+      roles: [Pathologist]
+      {
+        assignedTo = user
+      }
+    }
+  }
+
+  rule status == Resulted implies resultedAt != null {
+    pt-BR: "Informe a data do resultado"
+    en: "Enter the result date"
+
+  }
+  rule status == Referred implies referredTo != null {
+    pt-BR: "Selecione o laboratório de destino"
+    en: "Select the destination lab"
+
+  }
+}
+
+shape ExamCode {
+  title: { pt-BR: "Exame", en: "Exam" }
+  base: classification
+  value Hemogram {
+    title: { pt-BR: "Hemograma", en: "Complete blood count" }
+    icon: Hemogram
+    ordinal: 10
+  }
+  value Glucose {
+    title: { pt-BR: "Glicemia", en: "Glucose" }
+    icon: Glucose
+    ordinal: 20
+  }
+  value Culture {
+    title: { pt-BR: "Cultura", en: "Culture" }
+    icon: Culture
+    ordinal: 30
+  }
+  value Hba1c {
+    title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
+    icon: Hba1c
+    ordinal: 40
+  }
+  format: plain
+}
+
+shape ExamOrderStatus {
+  title: { pt-BR: "Situação do exame", en: "Exam order status" }
+  base: state
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Exame solicitado", en: "Exam requested" }
+    payload {
+      exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    }
+  }
+  value Requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: Requested
+    ordinal: 10
+
+    transition Collected {
+      title: { pt-BR: "Exame coletado", en: "Exam collected" }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Collected {
+    title: { pt-BR: "Coletado", en: "Collected" }
+    icon: Collected
+    ordinal: 20
+
+    transition Processing {
+      title: { pt-BR: "Exame em processamento", en: "Exam processing" }
+    }
+
+    transition Referred {
+      title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Processing {
+    title: { pt-BR: "Em processamento", en: "Processing" }
+    icon: Processing
+    ordinal: 30
+
+    transition Referred {
+      title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
+    }
+
+    transition Resulted {
+      title: { pt-BR: "Resultado emitido", en: "Result issued" }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Resulted {
+    title: { pt-BR: "Resultado emitido", en: "Resulted" }
+    icon: Resulted
+    ordinal: 40
+  }
+  value Referred {
+    title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
+    icon: Referred
+    ordinal: 50
+
+    transition Resulted {
+      title: { pt-BR: "Resultado emitido", en: "Result issued" }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 60
+  }
+  format: plain
+}
+
+view ExamOrderList {
+  title: { pt-BR: "Pedidos de exame", en: "Exam orders" }
+  type: table
+  source: ExamOrder
+  roles: [Collector, Analyst, Pathologist, LabManager]
+
+  columns { sample; exam; status; requestedAt; resultedAt }
+  filters { status; exam; period }
+  pagination: 50
+  actions {
+    open -> LabExamProgress
+  }
+}
+
+message CriticalResultAlert {
+  title: { pt-BR: "Alerta de resultado crítico", en: "Critical result alert" }
+  about: ExamOrder
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    value: string { title: { pt-BR: "Valor", en: "Value" } }
+  }
+}
+
+message ResultReleased {
+  title: { pt-BR: "Resultado liberado", en: "Result released" }
+  about: ExamOrder
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    sample: Sample { title: { pt-BR: "Amostra", en: "Sample" } }
+  }
+}

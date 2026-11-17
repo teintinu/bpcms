@@ -1,0 +1,210 @@
+// service: example.com/services/procurement
+
+document PurchaseOrder {
+  title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    supplier: Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    items: PurchaseItem[] {
+      title: { pt-BR: "Itens", en: "Items" }
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor total", en: "Total amount" }
+      currency: BRL
+      required
+    }
+    paymentTerms: string {
+      title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      maxLength: 120
+    }
+    status: PurchaseOrderStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    sentAt: DateTime {
+      title: { pt-BR: "Enviado em", en: "Sent at" }
+    }
+    confirmedAt: DateTime {
+      title: { pt-BR: "Confirmado em", en: "Confirmed at" }
+    }
+    receivedAt: DateTime {
+      title: { pt-BR: "Recebido em", en: "Received at" }
+    }
+    cancelledAt: DateTime {
+      title: { pt-BR: "Cancelado em", en: "Cancelled at" }
+    }
+    cancellationReason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    send() {
+      title: { pt-BR: "Enviar pedido", en: "Send order" }
+      roles: [Buyer]
+      to: status.Sent
+      {
+        sentAt = now()
+      }
+    }
+
+    confirm() {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      roles: [Buyer]
+      to: status.Confirmed
+      {
+        confirmedAt = now()
+      }
+    }
+
+    receive() {
+      title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
+      roles: [ReceivingClerk]
+      to: status.Received
+      {
+        receivedAt = now()
+      }
+    }
+
+    cancel(cancellationReason: string) {
+      title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      roles: [Buyer, ProcurementManager]
+      to: status.Cancelled
+      emits { reason: cancellationReason }
+      {
+        cancelledAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, sentAt] range
+    bySupplier: [supplier.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "O pedido precisa ter valor positivo"
+    en: "The order must have a positive amount"
+  }
+}
+
+shape PurchaseOrderStatus {
+  title: { pt-BR: "Situação do pedido de compra", en: "Purchase order status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Sent {
+      title: { pt-BR: "Pedido enviado", en: "Purchase order sent" }
+      payload {
+        sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
+      payload {
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Sent {
+    title: { pt-BR: "Enviado", en: "Sent" }
+    icon: Sent
+    ordinal: 20
+
+    transition Confirmed {
+      title: { pt-BR: "Pedido confirmado", en: "Purchase order confirmed" }
+      payload {
+        confirmedAt: DateTime { title: { pt-BR: "Confirmado em", en: "Confirmed at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
+      payload {
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Confirmed {
+    title: { pt-BR: "Confirmado", en: "Confirmed" }
+    icon: Confirmed
+    ordinal: 30
+
+    transition Received {
+      title: { pt-BR: "Pedido recebido", en: "Purchase order received" }
+      payload {
+        receivedAt: DateTime { title: { pt-BR: "Recebido em", en: "Received at" } }
+      }
+    }
+  }
+  value Received {
+    title: { pt-BR: "Recebido", en: "Received" }
+    icon: Received
+    ordinal: 40
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 50
+  }
+}
+
+shape PurchaseItem {
+  title: { pt-BR: "Item de compra", en: "Purchase item" }
+  fields {
+    description: string { title: { pt-BR: "Descrição", en: "Description" } }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+    unitPrice: std.Money {
+      title: { pt-BR: "Preço unitário", en: "Unit price" }
+      currency: BRL
+    }
+  }
+}
+
+view PurchaseOrders {
+  title: { pt-BR: "Pedidos de compra", en: "Purchase orders" }
+  type: table
+  source: PurchaseOrder
+  roles: [Buyer, ProcurementManager, ReceivingClerk]
+
+  columns { number; supplier; amount; status; sentAt }
+  filters { status; supplier }
+  pagination: 50
+
+  actions {
+    open -> PurchaseOrderDetail
+    send -> PurchaseOrder.send
+    cancel -> PurchaseOrder.cancel(cancellationReason)
+  }
+}
+
+view PurchaseOrderDetail {
+  title: { pt-BR: "Detalhe do pedido de compra", en: "Purchase order detail" }
+  type: detail
+  document: PurchaseOrder
+  roles: [Buyer, ProcurementManager, ReceivingClerk]
+
+  sections { summary; items; timeline }
+}

@@ -1,0 +1,96 @@
+// service: example.com/services/inventory
+
+process StockReplenishment for StockItem {
+  title: { pt-BR: "Reposição de estoque", en: "Stock replenishment" }
+  version: 1
+  goal: "Identificar itens abaixo do ponto de pedido e criar a requisição de compra"
+  owner: "Supply Chain"
+  timezone: America/Fortaleza
+
+  variables {
+    decision: ReorderDecision
+  }
+
+  start Daily {
+    schedule: "0 5 * * *"
+    select: stockItem.available <= stockItem.reorderPoint
+  }
+
+  task Decide {
+    lane: System
+    decision: ReorderPoint
+    with {
+      available: stockItem.available
+      reorderPoint: stockItem.reorderPoint
+    }
+    gives: decision
+    sla: 5m
+  }
+
+  gateway Reorder {
+    if decision == Reorder -> CreateRequest
+    else -> NotNeeded
+  }
+
+  task CreateRequest {
+    lane: System
+    action: ReplenishmentRequest.create
+    with { stockItem }
+    sla: 5m
+  }
+
+  end Requested {
+    title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
+    outcome: success
+  }
+
+  end NotNeeded {
+    title: { pt-BR: "Sem reposição", en: "No replenishment needed" }
+    outcome: success
+  }
+
+  Daily -> Decide
+  Decide -> Reorder
+  CreateRequest -> Requested
+}
+
+shape ReorderDecision {
+  title: { pt-BR: "Decisão de reposição", en: "Reorder decision" }
+  base: classification
+  value Reorder {
+    title: { pt-BR: "Repor", en: "Reorder" }
+    icon: Reorder
+    ordinal: 10
+  }
+  value Ok {
+    title: { pt-BR: "Suficiente", en: "Sufficient" }
+    icon: Ok
+    ordinal: 20
+  }
+  format: plain
+}
+
+view StockProgress {
+  title: { pt-BR: "Andamento da reposição", en: "Replenishment progress" }
+  type: process
+  process: StockReplenishment
+  roles: [WarehouseOperator, StockManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+decision ReorderPoint {
+  title: { pt-BR: "Ponto de pedido", en: "Reorder point" }
+  owner: "Supply Chain"
+  returns: ReorderDecision
+
+  inputs {
+    available: std.Count
+    reorderPoint: std.Count
+  }
+
+  cases {
+    available <= reorderPoint -> Reorder
+    else -> Ok
+  }
+}

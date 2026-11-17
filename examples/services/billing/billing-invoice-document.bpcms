@@ -1,0 +1,318 @@
+// service: example.com/services/billing
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+  version: 1
+  owner: "Billing"
+  sync: live
+  retention: 5y
+
+  fields {
+    store: Store {
+      title: { pt-BR: "Loja", en: "Store" }
+      required
+      default: Store.SP
+    }
+    fiscalYear: FiscalYear {
+      title: { pt-BR: "Exercício", en: "Fiscal year" }
+      required
+      default: FiscalYear.Y2026
+    }
+    number: InvoiceNumber {
+      title: { pt-BR: "Número", en: "Number" }
+      format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
+      sequence: per(Store, FiscalYear)
+      unique
+      lookup
+    }
+    order: Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+    }
+    customer: User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+    }
+    items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: items.sum(total)
+    }
+    tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      lookup
+      currency: BRL
+      computed: subtotal + tax
+    }
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
+  }
+
+  indexes {
+    number: [number] unique
+    byOrder: [order.id] hash
+    byStatus: [status, dueAt] range
+  }
+
+  actions {
+    request(order: Order){
+      title: { pt-BR: "Solicitar nota", en: "Request invoice" }
+      roles: [Clerk]
+      returns: Invoice
+      {
+        customer = order.customer
+        emit Requested { order: order }
+      }
+    }
+
+    deriveFromOrder(){
+      title: { pt-BR: "Derivar do pedido", en: "Derive from order" }
+      roles: [Clerk]
+    }
+
+    applyTax(){
+      title: { pt-BR: "Aplicar imposto", en: "Apply tax" }
+      roles: [Clerk]
+    }
+
+    issue(){
+      title: { pt-BR: "Emitir", en: "Issue" }
+      roles: [FinanceManager]
+
+      to: status.Issued
+      emits { issuedAt: now() }
+
+      rule total > 0 BRL {
+        pt-BR: "O valor deve ser maior que zero"
+        en: "Value must be greater than zero"
+      }
+
+      {
+        issuedAt = now()
+      }
+    }
+
+    pay(paidAt: DateTime){
+      title: { pt-BR: "Pagar", en: "Pay" }
+      roles: [Clerk]
+
+      to: status.Paid
+      emits { amount: total }
+    }
+
+    markOverdue(){
+      title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
+      roles: [Clerk]
+
+      to: status.Overdue
+    }
+
+    cancel(reason: string){
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      roles: [FinanceManager]
+
+      to: status.Cancelled
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+    }
+  }
+
+  rule status == Issued implies issuedAt != null {
+    pt-BR: "Informe a data de emissão"
+    en: "Enter the issue date"
+  }
+}
+
+shape InvoiceItem {
+  title: { pt-BR: "Item da nota", en: "Invoice item" }
+
+  fields {
+    product: Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+    }
+    quantity: std.Count {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      lookup
+    }
+    unitPrice: std.Money {
+      title: { pt-BR: "Preço unitário", en: "Unit price" }
+      currency: BRL
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+      computed: quantity * unitPrice
+    }
+  }
+}
+
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    }
+  }
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+        number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+      }
+    }
+  }
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: finance.invoice.issued
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Overdue {
+      title: { pt-BR: "Nota vencida", en: "Invoice overdue" }
+      payload {
+        dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+  }
+  value Overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: status.overdue
+    ordinal: 40
+
+    transition Paid {
+      title: { pt-BR: "Nota paga", en: "Invoice paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 50
+  }
+  format: plain
+}
+
+shape InvoiceNumber {
+  title: { pt-BR: "Número da nota", en: "Invoice number" }
+  base: string
+  maxLength: 40
+}
+
+view InvoiceTable {
+  title: { pt-BR: "Notas fiscais", en: "Invoices" }
+  type: table
+  source: Invoice
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  columns { number; customer; total; status; dueAt }
+  filters { status; period; customer }
+  pagination: 50
+
+  actions {
+    open -> InvoiceDetail
+    issue -> Invoice.issue
+    cancel -> Invoice.cancel(reason)
+  }
+}
+
+view InvoiceDetail {
+  title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
+  type: detail
+  document: Invoice
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  sections { summary; items; customer; timeline }
+
+  actions {
+    pay -> Invoice.pay(paidAt)
+    cancel -> Invoice.cancel(reason)
+  }
+}
+
+view InvoiceKanban {
+  title: { pt-BR: "Notas por situação", en: "Invoices by status" }
+  type: kanban
+  source: Invoice
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  groupBy: status
+  columns { number; customer; total; dueAt }
+  card { number; customer; total; dueAt }
+
+  actions {
+    open -> InvoiceDetail
+  }
+}
+
+message InvoiceIssued {
+  title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+  about: Invoice
+
+  payload {
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+  }
+}
+
+message PaymentReminder {
+  title: { pt-BR: "Lembrete de pagamento", en: "Payment reminder" }
+  about: Invoice
+
+  payload {
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    dueAt: DateTime { title: { pt-BR: "Vencimento", en: "Due at" } }
+  }
+}
+
+policy InvoiceRetention {
+  appliesTo: Invoice
+  rule: retainFor(5y) then anonymize
+  severity: enforce
+  audit: true
+}

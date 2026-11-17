@@ -1,0 +1,110 @@
+// service: example.com/services/procurement
+
+process GoodsReceipt for GoodsReceipt {
+  title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
+  version: 1
+  goal: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
+  owner: "Procurement"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Receiving { role: ReceivingClerk }
+    lane Quality { role: QualityInspector }
+  }
+
+  pool Supplier {
+    external
+  }
+
+  start Intake { by: [ReceivingClerk] }
+
+  task Receive {
+    lane: Receiving
+    form: ReceiveGoods
+    sla: 2h
+    assign: pull
+  }
+
+  task Reserve {
+    lane: System
+    action: GoodsReceipt.reserveStock
+  }
+
+  task Inspect {
+    lane: Quality
+    form: InspectGoods
+    sla: 4h
+    assign: pull
+    priority: 60
+  }
+
+  task Notify {
+    lane: System
+    sends: DivergenceNotice
+    partner: Supplier
+    with {
+      reason: goodsReceipt.divergenceReason
+      expectedWeight: goodsReceipt.expectedWeight
+      receivedWeight: goodsReceipt.receivedWeight
+    }
+  }
+
+  task Release {
+    lane: System
+    action: GoodsReceipt.releaseStock
+    compensates: Reserve
+  }
+
+  rollback Undo
+
+  end Accepted {
+    title: { pt-BR: "Recebido", en: "Accepted" }
+    outcome: success
+  }
+
+  end Divergent {
+    title: { pt-BR: "Divergente", en: "Divergent" }
+    outcome: failure
+  }
+
+  Intake -> Receive
+  Receive.receive -> Reserve
+  Reserve -> Inspect
+  Inspect.accept -> Accepted
+  Inspect.diverge -> Notify
+  Notify -> Undo
+  Undo -> Divergent
+}
+
+form ReceiveGoods {
+  title: { pt-BR: "Receber mercadoria", en: "Receive goods" }
+  document: GoodsReceipt
+
+  fields {
+    order { readonly }
+    expectedWeight { readonly }
+    receivedWeight { readonly }
+  }
+
+  actions {
+    receive { calls: GoodsReceipt.receive }
+  }
+}
+
+form InspectGoods {
+  title: { pt-BR: "Inspecionar recebimento", en: "Inspect goods receipt" }
+  document: GoodsReceipt
+
+  fields {
+    expectedWeight { readonly }
+    receivedWeight { readonly }
+    divergenceReason
+  }
+
+  actions {
+    accept { calls: GoodsReceipt.accept }
+    diverge { calls: GoodsReceipt.markDivergent(divergenceReason) }
+  }
+}

@@ -1,0 +1,233 @@
+// service: example.com/services/laboratory
+
+document Sample {
+  title: { pt-BR: "Amostra", en: "Sample" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  fields {
+    code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    laboratory: Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+    }
+    kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
+    patient: Citizen {
+      title: { pt-BR: "Paciente", en: "Patient" }
+      lookup
+    }
+    supportLab: SupportLab {
+      title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+    }
+    controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
+    status: SampleStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
+  }
+
+  indexes {
+    byStatus: [status, collectedAt] range
+    byPatient: [patient.id] hash
+  }
+
+
+  actions {
+    collect(){
+      title: { pt-BR: "Coletar", en: "Collect" }
+      roles: [Collector]
+      {
+        collectedAt = now()
+        emit Collected
+      }
+    }
+
+    recollect(){
+      title: { pt-BR: "Recoletar", en: "Recollect" }
+      roles: [Collector]
+      to: status.Collected
+      {
+        collectedAt = now()
+      }
+    }
+
+    receive(){
+      title: { pt-BR: "Receber", en: "Receive" }
+      roles: [Collector]
+      to: status.Received
+    }
+
+    reject(justification: string){
+      title: { pt-BR: "Rejeitar", en: "Reject" }
+      roles: [Analyst]
+      to: status.Rejected
+      emits { reason: justification }
+      rule justification.length >= 10 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
+    }
+
+    process(){
+      title: { pt-BR: "Processar", en: "Process" }
+      roles: [Analyst]
+      to: status.Processing
+    }
+
+    refer(lab: SupportLab){
+      title: { pt-BR: "Encaminhar", en: "Refer" }
+      roles: [SupportLiaison]
+      to: status.Referred
+      emits { supportLab: lab }
+    }
+
+    result(){
+      title: { pt-BR: "Resultar", en: "Result" }
+      roles: [Analyst]
+      to: status.Resulted
+    }
+  }
+
+  rule kind == Patient implies patient != null {
+    pt-BR: "Selecione o paciente"
+    en: "Select the patient"
+
+  }
+  rule kind == Support implies supportLab != null {
+    pt-BR: "Selecione o laboratório de apoio"
+    en: "Select the support lab"
+
+  }
+  rule kind == Control implies controlLot != null {
+    pt-BR: "Informe o lote de controle"
+    en: "Enter the control lot"
+
+  }
+}
+
+shape SampleCode {
+  title: { pt-BR: "Código da amostra", en: "Sample code" }
+  base: string
+  normalize: upper-trim
+  maxLength: 40
+  format: plain
+}
+
+shape SampleKind {
+  title: { pt-BR: "Origem da amostra", en: "Sample origin" }
+  base: classification
+  value Patient {
+    title: { pt-BR: "Paciente", en: "Patient" }
+    icon: Patient
+    ordinal: 10
+  }
+  value Support {
+    title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+    icon: Support
+    ordinal: 20
+  }
+  value Control {
+    title: { pt-BR: "Controle", en: "Control" }
+    icon: Control
+    ordinal: 30
+  }
+  format: plain
+}
+
+shape SampleStatus {
+  title: { pt-BR: "Situação da amostra", en: "Sample status" }
+  base: state
+  initial: Collected with transition Collected {
+    title: { pt-BR: "Amostra coletada", en: "Sample collected" }
+  }
+  value Collected {
+    title: { pt-BR: "Coletada", en: "Collected" }
+    icon: Collected
+    ordinal: 10
+
+    transition Received {
+      title: { pt-BR: "Amostra recebida", en: "Sample received" }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Received {
+    title: { pt-BR: "Recebida", en: "Received" }
+    icon: Received
+    ordinal: 20
+
+    transition Rejected {
+      title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Processing {
+      title: { pt-BR: "Amostra em processamento", en: "Sample processing" }
+    }
+
+    transition Referred {
+      title: { pt-BR: "Amostra encaminhada", en: "Sample referred" }
+      payload {
+        supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
+      }
+    }
+  }
+  value Processing {
+    title: { pt-BR: "Em processamento", en: "Processing" }
+    icon: Processing
+    ordinal: 30
+
+    transition Resulted {
+      title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
+    }
+  }
+  value Resulted {
+    title: { pt-BR: "Resultada", en: "Resulted" }
+    icon: Resulted
+    ordinal: 40
+  }
+  value Referred {
+    title: { pt-BR: "Encaminhada", en: "Referred" }
+    icon: Referred
+    ordinal: 50
+
+    transition Resulted {
+      title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
+    }
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 60
+
+    transition Collected {
+      event: Recollected
+      title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
+    }
+  }
+  format: plain
+}
+
+view SampleSearch {
+  title: { pt-BR: "Busca de amostras", en: "Sample search" }
+  type: table
+  source: Sample
+  roles: [Collector, Analyst, Pathologist, LabManager]
+
+  columns { code; kind; patient; status; collectedAt }
+  filters { status; kind; laboratory }
+  pagination: 50
+}
+
+message RecollectionRequest {
+  title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
+  about: Sample
+  payload {
+    code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+  }
+}

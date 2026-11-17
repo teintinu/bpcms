@@ -1,4 +1,5 @@
 // service: example.com/services/notifications
+
 role SuccessAgent {
   title: { pt-BR: "Agente de sucesso do cliente", en: "Customer success agent" }
   permissions: [notification.view, notification.review, notification.suppress]

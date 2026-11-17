@@ -1,0 +1,35 @@
+// service: example.com/services/laboratory
+
+document SupportLab {
+  title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  fields {
+    name: string {
+      title: { pt-BR: "Nome", en: "Name" }
+      lookup
+      required
+    }
+    accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
+    active: boolean { title: { pt-BR: "Ativo", en: "Active" }, default: true }
+  }
+
+  actions {
+    activate(){
+      title: { pt-BR: "Ativar", en: "Activate" }
+      roles: [LabManager]
+      {
+        active = true
+      }
+    }
+
+    deactivate(){
+      title: { pt-BR: "Desativar", en: "Deactivate" }
+      roles: [LabManager]
+      {
+        active = false
+      }
+    }
+  }
+}

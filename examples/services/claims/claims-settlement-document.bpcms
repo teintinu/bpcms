@@ -1,0 +1,151 @@
+// service: example.com/services/claims
+
+document Settlement {
+  title: { pt-BR: "Liquidação", en: "Settlement" }
+  version: 1
+  owner: "Claims"
+  sync: live
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    claim: Claim { title: { pt-BR: "Sinistro", en: "Claim" }, lookup }
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      lookup
+      required
+    }
+    method: PaymentMethod { title: { pt-BR: "Forma de pagamento", en: "Payment method" }, lookup }
+    status: SettlementStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" }, readonly }
+    paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" }, readonly }
+    reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" }, readonly }
+    note: string { title: { pt-BR: "Observação", en: "Note" }, maxLength: 500 }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, approvedAt] range
+  }
+
+
+  actions {
+    approve() {
+      title: { pt-BR: "Aprovar liquidação", en: "Approve settlement" }
+      roles: [FinanceAnalyst, Manager]
+      to: status.Approved
+      { approvedAt = now() }
+    }
+
+    pay() {
+      title: { pt-BR: "Pagar liquidação", en: "Pay settlement" }
+      roles: [FinanceAnalyst]
+      to: status.Paid
+      { paidAt = now() }
+    }
+
+    reverse(reason: string) {
+      title: { pt-BR: "Estornar liquidação", en: "Reverse settlement" }
+      roles: [Manager]
+      to: status.Pending
+      { reversedAt = now(); note = reason }
+    }
+  }
+}
+
+shape SettlementStatus {
+  title: { pt-BR: "Situação da liquidação", en: "Settlement status" }
+  base: state
+  initial: Pending
+
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: status.pending
+    ordinal: 10
+
+    transition Approved {
+      title: { pt-BR: "Liquidação aprovada", en: "Settlement approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: status.approved
+    ordinal: 20
+
+    transition Paid {
+      title: { pt-BR: "Liquidação paga", en: "Settlement paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+      }
+    }
+
+    transition Pending {
+      event: Reversed
+      title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      payload {
+        reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+
+    transition Pending {
+      event: Reversed
+      title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      payload {
+        reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+}
+
+shape PaymentMethod {
+  title: { pt-BR: "Forma de pagamento", en: "Payment method" }
+  base: classification
+
+  value BankTransfer {
+    title: { pt-BR: "Transferência bancária", en: "Bank transfer" }
+    icon: payment.transfer
+    ordinal: 10
+  }
+  value Pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: payment.pix
+    ordinal: 20
+  }
+  value Check {
+    title: { pt-BR: "Cheque", en: "Check" }
+    icon: payment.check
+    ordinal: 30
+  }
+}
+
+view SettlementsTable {
+  title: { pt-BR: "Liquidações", en: "Settlements" }
+  type: table
+  source: Settlement
+  roles: [FinanceAnalyst, Manager]
+
+  columns { number; amount; method; status; approvedAt; paidAt }
+  filters { status; method; period }
+  pagination: 50
+
+  actions {
+    approve -> Settlement.approve
+    pay -> Settlement.pay
+    reverse -> Settlement.reverse(reason)
+  }
+}

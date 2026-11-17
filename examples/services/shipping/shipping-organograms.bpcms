@@ -1,4 +1,5 @@
 // service: example.com/services/shipping
+
 role Packer {
   title: { pt-BR: "Embalador", en: "Packer" }
   permissions: [shipment.pack, shipment.view]

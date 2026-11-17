@@ -1,0 +1,189 @@
+// service: example.com/services/credit
+
+document CreditLimit {
+  title: { pt-BR: "Limite de crédito", en: "Credit limit" }
+  version: 1
+  owner: "Credit"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    application: CreditApplication {
+      title: { pt-BR: "Proposta", en: "Application" }
+      lookup
+    }
+    holder: Identity.User {
+      title: { pt-BR: "Titular", en: "Holder" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Limite", en: "Limit" }
+      currency: BRL
+      required
+    }
+    used: std.Money {
+      title: { pt-BR: "Utilizado", en: "Used" }
+      currency: BRL
+    }
+    status: CreditLimitStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    activatedAt: DateTime {
+      title: { pt-BR: "Ativado em", en: "Activated at" }
+    }
+    expiresAt: Date {
+      title: { pt-BR: "Validade", en: "Expiry date" }
+    }
+    suspendedAt: DateTime {
+      title: { pt-BR: "Suspenso em", en: "Suspended at" }
+    }
+    suspendedReason: string {
+      title: { pt-BR: "Motivo da suspensão", en: "Suspension reason" }
+      maxLength: 280
+    }
+    reinstatedAt: DateTime {
+      title: { pt-BR: "Reativado em", en: "Reinstated at" }
+    }
+    revokedAt: DateTime {
+      title: { pt-BR: "Revogado em", en: "Revoked at" }
+    }
+    revocationReason: string {
+      title: { pt-BR: "Motivo da revogação", en: "Revocation reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    set(application: CreditApplication, holder: Identity.User, amount: std.Money) {
+      title: { pt-BR: "Definir limite", en: "Set limit" }
+      roles: [CreditManager]
+      {
+        activatedAt = now()
+      }
+    }
+
+    suspend(suspendedReason: string) {
+      title: { pt-BR: "Suspender limite", en: "Suspend limit" }
+      roles: [CreditManager]
+      to: status.Suspended
+      emits { reason: suspendedReason }
+      {
+        suspendedAt = now()
+      }
+    }
+
+    reinstate() {
+      title: { pt-BR: "Reativar limite", en: "Reinstate limit" }
+      roles: [CreditManager]
+      to: status.Active
+      {
+        reinstatedAt = now()
+      }
+    }
+
+    revoke(revocationReason: string) {
+      title: { pt-BR: "Revogar limite", en: "Revoke limit" }
+      roles: [CreditManager]
+      to: status.Revoked
+      emits { reason: revocationReason }
+      {
+        revokedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status] hash
+    byHolder: [holder.id] hash
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "O limite precisa ser positivo"
+    en: "The limit must be positive"
+  }
+}
+
+shape CreditLimitStatus {
+  title: { pt-BR: "Situação do limite de crédito", en: "Credit limit status" }
+  base: state
+  initial: Active
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+
+    transition Suspended {
+      title: { pt-BR: "Limite suspenso", en: "Credit limit suspended" }
+      payload {
+        suspendedAt: DateTime { title: { pt-BR: "Suspenso em", en: "Suspended at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Revoked {
+      title: { pt-BR: "Limite revogado", en: "Credit limit revoked" }
+      payload {
+        revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Suspended {
+    title: { pt-BR: "Suspenso", en: "Suspended" }
+    icon: Suspended
+    ordinal: 20
+
+    transition Active {
+      event: Reinstated
+      title: { pt-BR: "Limite reativado", en: "Credit limit reinstated" }
+      payload {
+        reinstatedAt: DateTime { title: { pt-BR: "Reativado em", en: "Reinstated at" } }
+      }
+    }
+
+    transition Revoked {
+      title: { pt-BR: "Limite revogado", en: "Credit limit revoked" }
+      payload {
+        revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Revoked {
+    title: { pt-BR: "Revogado", en: "Revoked" }
+    icon: Revoked
+    ordinal: 30
+  }
+}
+
+view CreditLimits {
+  title: { pt-BR: "Limites de crédito", en: "Credit limits" }
+  type: table
+  source: CreditLimit
+  roles: [CreditAnalyst, CreditManager]
+
+  columns { number; holder; amount; used; status; expiresAt }
+  filters { status; holder }
+  pagination: 50
+
+  actions {
+    open -> CreditLimitDetail
+  }
+}
+
+view CreditLimitDetail {
+  title: { pt-BR: "Detalhe do limite", en: "Credit limit detail" }
+  type: detail
+  document: CreditLimit
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { summary; timeline }
+}

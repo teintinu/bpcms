@@ -1,4 +1,5 @@
 // service: example.com/services/inventory
+
 role WarehouseOperator {
   title: { pt-BR: "Operador de armazém", en: "Warehouse operator" }
   permissions: [stock.view, stock.count, stock.adjust, stock.reserve]

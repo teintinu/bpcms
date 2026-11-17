@@ -1,0 +1,102 @@
+// service: example.com/services/billing
+
+process Dunning for Invoice {
+  title: { pt-BR: "Cobrança", en: "Dunning" }
+  version: 1
+  goal: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
+  owner: "Cobrança"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Collections { role: CollectionAgent }
+    lane Finance { role: FinanceManager }
+  }
+
+  pool Customer {
+    external
+  }
+
+  start Daily {
+    schedule: "0 6 * * *"
+    select: invoice.status == Overdue
+  }
+
+  task Remind {
+    lane: System
+    sends: PaymentReminder
+    partner: Customer
+    with { invoice }
+    sla: 1h
+  }
+
+  wait Grace {
+    for: 5d
+  }
+
+  gateway CheckPaid {
+    if invoice.status == Overdue -> Escalate
+    else -> Settled
+  }
+
+  task Escalate {
+    lane: Collections
+    manual: "Ligar ao cliente e negociar o pagamento"
+    sla: 2d
+    assign: pull
+  }
+
+  wait Final {
+    for: 7d
+  }
+
+  gateway StillOverdue {
+    if invoice.status == Overdue -> Cancel
+    else -> Settled
+  }
+
+  task Cancel {
+    lane: Finance
+    form: DunningCancellation
+    sla: 1d
+  }
+
+  end Settled {
+    title: { pt-BR: "Liquidada", en: "Settled" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    outcome: cancelled
+  }
+
+  Daily -> Remind
+  Remind -> Grace
+  Grace -> CheckPaid
+  Escalate -> Final
+  Final -> StillOverdue
+  Cancel.cancel -> Cancelled
+}
+
+form DunningCancellation {
+  title: { pt-BR: "Cancelar nota vencida", en: "Cancel overdue invoice" }
+  document: Invoice
+
+  fields {
+    number
+    customer
+    total
+    dueAt
+    reason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 500
+      required
+    }
+  }
+
+  actions {
+    cancel { calls: Invoice.cancel(reason) }
+  }
+}

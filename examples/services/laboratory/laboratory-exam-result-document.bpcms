@@ -1,0 +1,129 @@
+// service: example.com/services/laboratory
+
+document ExamResult {
+  title: { pt-BR: "Resultado de exame", en: "Exam result" }
+  version: 1
+  owner: "Laboratory"
+  sync: live
+  fields {
+    laboratory: Laboratory {
+      title: { pt-BR: "Laboratório", en: "Laboratory" }
+    }
+    examOrder: ExamOrder {
+      title: { pt-BR: "Pedido", en: "Exam order" }
+      lookup
+    }
+    sample: Sample {
+      title: { pt-BR: "Amostra", en: "Sample" }
+      lookup
+    }
+    value: string { title: { pt-BR: "Valor", en: "Value" } }
+    unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
+    critical: boolean { title: { pt-BR: "Resultado crítico", en: "Critical result" } }
+    status: ExamResultStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    validatedAt: DateTime { title: { pt-BR: "Validado em", en: "Validated at" } }
+    signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+    releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
+  }
+
+  indexes {
+    byOrder: [examOrder.id] hash
+    byStatus: [status, releasedAt] range
+  }
+
+
+  actions {
+    record(order: ExamOrder, sampleRef: Sample, measured: string, measUnit: string, isCritical: boolean){
+      title: { pt-BR: "Registrar leitura", en: "Record reading" }
+      roles: [Analyst]
+      returns: ExamResult
+      {
+        examOrder = order
+        sample = sampleRef
+        value = measured
+        unit = measUnit
+        critical = isCritical
+      }
+    }
+
+    validate(){
+      title: { pt-BR: "Validar", en: "Validate" }
+      roles: [Analyst]
+      to: status.Validated
+      {
+        validatedAt = now()
+      }
+    }
+
+    sign(){
+      title: { pt-BR: "Assinar", en: "Sign" }
+      roles: [Pathologist]
+      to: status.Signed
+      {
+        signedAt = now()
+      }
+    }
+
+    release(){
+      title: { pt-BR: "Liberar", en: "Release" }
+      roles: [Pathologist]
+      to: status.Released
+      {
+        releasedAt = now()
+      }
+    }
+  }
+
+  rule status == Released implies releasedAt != null {
+    pt-BR: "Informe a data de liberação"
+    en: "Enter the release date"
+
+  }
+
+  signature {
+    release: Pathologist
+  }
+}
+
+shape ExamResultStatus {
+  title: { pt-BR: "Situação do resultado", en: "Exam result status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Registrado", en: "Recorded" }
+    icon: Draft
+    ordinal: 10
+
+    transition Validated {
+      title: { pt-BR: "Resultado validado", en: "Result validated" }
+    }
+  }
+  value Validated {
+    title: { pt-BR: "Validado", en: "Validated" }
+    icon: Validated
+    ordinal: 20
+
+    transition Signed {
+      title: { pt-BR: "Resultado assinado", en: "Result signed" }
+    }
+  }
+  value Signed {
+    title: { pt-BR: "Assinado", en: "Signed" }
+    icon: Signed
+    ordinal: 30
+
+    transition Released {
+      title: { pt-BR: "Resultado liberado", en: "Result released" }
+      payload {
+        value: string { title: { pt-BR: "Valor", en: "Value" } }
+        unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
+      }
+    }
+  }
+  value Released {
+    title: { pt-BR: "Liberado", en: "Released" }
+    icon: Released
+    ordinal: 40
+  }
+  format: plain
+}

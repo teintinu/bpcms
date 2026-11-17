@@ -1,60 +1,5 @@
 // service: example.com/services/field-service
 
-view VisitsTable {
-  title: { pt-BR: "Visitas técnicas", en: "Visits" }
-  type: table
-  source: Visit
-  roles: [Dispatcher, FieldTechnician, Supervisor]
-
-  columns { number; site; technician; status; windowStart }
-  filters { status; site; technician; period }
-  pagination: 50
-
-  actions {
-    open -> VisitDetail
-    dispatch -> Visit.dispatch
-    fail -> Visit.fail(failureReason)
-  }
-}
-
-view VisitDetail {
-  title: { pt-BR: "Detalhe da visita", en: "Visit detail" }
-  type: detail
-  document: Visit
-  roles: [Dispatcher, FieldTechnician, Supervisor, Customer]
-
-  sections { summary; checkin; report; timeline }
-
-  actions {
-    open -> VisitProgress
-    checkIn -> Visit.checkIn(point)
-  }
-}
-
-view VisitsBoard {
-  title: { pt-BR: "Quadro de visitas", en: "Visits board" }
-  type: kanban
-  source: Visit
-  roles: [Dispatcher, Supervisor]
-  groupBy: status
-
-  columns { number; site; windowStart }
-  card { number; site; technician }
-
-  actions {
-    open -> VisitDetail
-  }
-}
-
-view VisitProgress {
-  title: { pt-BR: "Andamento da visita", en: "Visit progress" }
-  type: process
-  process: ServiceVisit
-  roles: [Dispatcher, FieldTechnician, Supervisor, Customer]
-
-  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
-}
-
 view DispatchWork {
   title: { pt-BR: "Fila de despacho", en: "Dispatch queue" }
   type: inbox
@@ -64,40 +9,6 @@ view DispatchWork {
   filter { lane in currentUser.lanes }
 
   columns { title; subject; lane; dueAt; priority }
-}
-
-view WorkOrdersTable {
-  title: { pt-BR: "Ordens de serviço", en: "Work orders" }
-  type: table
-  source: WorkOrder
-  roles: [Dispatcher, Supervisor]
-
-  columns { number; site; priority; status; dueAt }
-  filters { status; priority; site; period }
-  pagination: 50
-
-  actions {
-    assign -> WorkOrder.assign(assignedTechnician)
-    start -> WorkOrder.start
-    finish -> WorkOrder.finish
-    cancel -> WorkOrder.cancel(reason)
-  }
-}
-
-view TechniciansTable {
-  title: { pt-BR: "Técnicos", en: "Technicians" }
-  type: table
-  source: Technician
-  roles: [Dispatcher, Supervisor]
-
-  columns { registration; person; zone; availability; dailyCapacity }
-  filters { availability; zone }
-
-  actions {
-    assign -> Technician.assign
-    release -> Technician.release
-    goOffDuty -> Technician.goOffDuty(reason)
-  }
 }
 
 view FieldDashboard {

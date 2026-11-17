@@ -1,0 +1,247 @@
+// service: example.com/services/laboratory
+
+process LabExam for ExamOrder {
+  title: { pt-BR: "Exame laboratorial", en: "Laboratory exam" }
+  version: 1
+  goal: "Coletar, analisar, validar, assinar e liberar o resultado no prazo"
+  owner: "Laboratory"
+  timezone: America/Fortaleza
+  sla: 8h
+
+  pool Laboratory {
+    internal
+
+    lane Collection {
+      role: Collector
+    }
+
+    lane Analysis {
+      role: Analyst
+    }
+
+    lane Pathology {
+      role: Pathologist
+    }
+
+    lane Management {
+      role: LabManager
+    }
+  }
+
+  pool Requester {
+    external
+  }
+
+  variables {
+    reading: ExamReading
+    result: ExamResult
+  }
+
+  start Requested {
+    event: ExamOrder.Requested
+  }
+
+  task Collect {
+    lane: Collection
+    form: SampleCollection
+    sla: 2h
+    priority: 50
+    assign: pull
+    on timer 4h -> Escalate
+  }
+
+  task StartAnalysis {
+    lane: System
+    action: ExamOrder.process
+  }
+
+  task ReadAnalyzer {
+    lane: System
+    call: Analyzer.readResult
+    with { order: examOrder }
+    gives: reading
+    sla: 30m
+  }
+
+  gateway Critical {
+    if reading.critical -> AlertCritical
+    else -> RecordResult
+  }
+
+  task AlertCritical {
+    lane: System
+    sends: CriticalResultAlert
+    partner: Requester
+    with {
+      exam: examOrder.exam
+      value: reading.value
+    }
+  }
+
+  task RecordResult {
+    lane: System
+    action: ExamResult.record
+    with {
+      order: examOrder
+      sampleRef: examOrder.sample
+      measured: reading.value
+      measUnit: reading.unit
+      isCritical: reading.critical
+    }
+    gives: result
+  }
+
+  task Validate {
+    lane: Analysis
+    form: ResultValidation
+    with { result }
+    sla: 4h
+    assign: pull
+  }
+
+  task Sign {
+    lane: Pathology
+    form: ResultSignature
+    with { result }
+    sla: 8h
+    assign: pull
+  }
+
+  task Release {
+    lane: System
+    action: ExamResult.release
+    with { result }
+  }
+
+  task MarkResulted {
+    lane: System
+    action: ExamOrder.result
+  }
+
+  task TellRequester {
+    lane: System
+    sends: ResultReleased
+    partner: Requester
+    with {
+      exam: examOrder.exam
+      sample: examOrder.sample
+    }
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Repactuar o prazo da coleta com o responsável"
+    sla: 2h
+  }
+
+  rollback Stop
+
+  end Released {
+    title: { pt-BR: "Resultado liberado", en: "Result released" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+    outcome: cancelled
+  }
+
+  Requested -> Collect
+  Collect.collect -> StartAnalysis
+  StartAnalysis -> ReadAnalyzer
+  ReadAnalyzer -> Critical
+  Critical -> AlertCritical
+  Critical -> RecordResult
+  AlertCritical -> RecordResult
+  RecordResult -> Validate
+  Validate.validate -> Sign
+  Sign.sign -> Release
+  Release -> MarkResulted
+  MarkResulted -> TellRequester
+  TellRequester -> Released
+  Escalate -> Collect
+  Stop -> Cancelled
+
+  cancel on ExamOrder.Cancelled -> Stop
+}
+
+shape ExamReading {
+  title: { pt-BR: "Leitura do analisador", en: "Analyzer reading" }
+  fields {
+    value: string
+    unit: string
+    critical: boolean
+    readAt: DateTime
+  }
+}
+
+form SampleCollection {
+  title: { pt-BR: "Coleta da amostra", en: "Sample collection" }
+  document: ExamOrder
+
+  fields {
+    sample
+    exam
+    laboratory
+  }
+
+  actions {
+    collect { calls: ExamOrder.collect }
+  }
+}
+
+form ResultValidation {
+  title: { pt-BR: "Validação do resultado", en: "Result validation" }
+  document: ExamResult
+
+  fields {
+    value
+    unit
+    critical
+    examOrder
+  }
+
+  actions {
+    validate { calls: ExamResult.validate }
+  }
+}
+
+form ResultSignature {
+  title: { pt-BR: "Assinatura do resultado", en: "Result signature" }
+  document: ExamResult
+
+  fields {
+    value
+    unit
+    critical
+    examOrder
+  }
+
+  actions {
+    sign { calls: ExamResult.sign }
+  }
+}
+
+view LabExamProgress {
+  title: { pt-BR: "Andamento do exame", en: "Exam progress" }
+  type: process
+  process: LabExam
+  roles: [Collector, Analyst, Pathologist, LabManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+integration Analyzer {
+  protocol: mqtt
+  topic: "analyzers/+/reading"
+  capabilities { equipment }
+  timeout: 30s
+  quality {
+    staleAfter: 5m
+    calibrate: monthly
+  }
+
+  operations {
+    readResult(order: ExamOrder): ExamReading
+  }
+}

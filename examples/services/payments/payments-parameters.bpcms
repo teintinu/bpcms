@@ -1,4 +1,5 @@
 // service: example.com/services/payments
+
 secret GatewayKey {
   title: { pt-BR: "Chave do gateway", en: "Gateway key" }
   type: string

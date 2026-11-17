@@ -1,4 +1,5 @@
 // service: example.com/services/notifications
+
 parameter FromEmail {
   title: { pt-BR: "Remetente", en: "From email" }
   type: Citizen.Email

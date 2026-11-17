@@ -1,0 +1,253 @@
+// service: example.com/services/shipping
+
+process DispatchOrder for Shipment {
+  title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
+  version: 1
+  goal: "Separar, embalar, pesar, cotar o frete e despachar com etiqueta"
+  owner: "Shipping"
+  timezone: America/Fortaleza
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Warehouse { role: Packer }
+    lane Dispatch { role: Dispatcher }
+    lane Management { role: Manager }
+  }
+
+  pool Carrier {
+    external
+  }
+
+  variables {
+    freight: std.Money
+    tracking: TrackingCode
+  }
+
+  start Created { event: Shipment.Created }
+
+  task Pick {
+    lane: Warehouse
+    manual: "Separar os itens do pedido no armazém"
+    sla: 2h
+    priority: 60
+    assign: pull
+    on timer 4h -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Priorizar a separação com o supervisor"
+    sla: 1h
+  }
+
+  task Pack {
+    lane: Warehouse
+    form: Packing
+    sla: 1h
+    assign: pull
+  }
+
+  task Weigh {
+    lane: Warehouse
+    manual: "Conferir o peso da remessa na balança do posto"
+    sla: 15m
+  }
+
+  gateway WeightLimit {
+    if shipment.pesoBruto <= MaxWeight -> QuoteFreight
+    else -> Split
+  }
+
+  task Split {
+    lane: Management
+    form: SplitShipment
+    sla: 4h
+    assign: pull
+  }
+
+  task QuoteFreight {
+    lane: System
+    call: Carrier.quote
+    with {
+      shipment
+      carrier: "CarrierX"
+    }
+    gives: freight
+    sla: 2m
+    on error CarrierUnavailable -> ManualQuote
+  }
+
+  task ManualQuote {
+    lane: Management
+    form: FreightOverride
+    sla: 2h
+    assign: pull
+  }
+
+  task RecordFreight {
+    lane: System
+    action: Shipment.applyFreight
+    with {
+      carrier: "CarrierX"
+      amount: freight
+    }
+    sla: 1m
+  }
+
+  task CreateLabel {
+    lane: System
+    call: Carrier.createLabel
+    with {
+      shipment
+      carrier: "CarrierX"
+    }
+    gives: tracking
+    sla: 2m
+    on error LabelRejected -> ManualQuote
+  }
+
+  task RecordDispatch {
+    lane: System
+    action: Shipment.dispatch
+    with { trackingCode: tracking }
+    sla: 1m
+  }
+
+  task RequestPickup {
+    lane: System
+    sends: PickupRequest
+    partner: Carrier
+    with { shipment }
+    sla: 5m
+  }
+
+  task ConfirmPickup {
+    lane: System
+    receives: PickupConfirmed
+    partner: Carrier
+    apply: Shipment.confirmPickup
+    sla: 2d
+    on timer 2d -> ManualPickup
+  }
+
+  task ManualPickup {
+    lane: Dispatch
+    form: PickupConfirmation
+    sla: 1d
+    assign: pull
+  }
+
+  task Track {
+    lane: System
+    runs: DeliveryTracking
+    with { shipment }
+    sla: 30d
+  }
+
+  end Dispatched {
+    title: { pt-BR: "Despachada", en: "Dispatched" }
+    outcome: success
+  }
+  end SplitDone {
+    title: { pt-BR: "Dividida", en: "Split" }
+    outcome: success
+  }
+  end Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    outcome: cancelled
+  }
+
+  Created -> Pick
+  Pick -> Pack
+  Escalate -> Pack
+  Pack.confirm -> Weigh
+  Weigh -> WeightLimit
+  WeightLimit -> QuoteFreight
+  WeightLimit -> Split
+  Split.split -> SplitDone
+  Split.cancel -> Cancelled
+  QuoteFreight -> RecordFreight
+  ManualQuote.apply -> RecordFreight
+  RecordFreight -> CreateLabel
+  CreateLabel -> RecordDispatch
+  RecordDispatch -> RequestPickup
+  RequestPickup -> ConfirmPickup
+  ConfirmPickup -> Track
+  ManualPickup.confirm -> Track
+  Track -> Dispatched
+}
+
+form Packing {
+  title: { pt-BR: "Embalar remessa", en: "Pack shipment" }
+  document: Shipment
+
+  fields {
+    order
+    items
+    pesoBruto
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar embalagem", en: "Confirm packing" }
+      calls: Shipment.pack
+    }
+  }
+}
+
+form SplitShipment {
+  title: { pt-BR: "Dividir remessa", en: "Split shipment" }
+  document: Shipment
+
+  fields {
+    order
+    items
+    pesoBruto
+    reason: string {
+      title: { pt-BR: "Motivo", en: "Reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    split {
+      title: { pt-BR: "Dividir", en: "Split" }
+      calls: Shipment.split
+    }
+    cancel {
+      title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+      calls: Shipment.cancel(reason)
+    }
+  }
+}
+
+form PickupConfirmation {
+  title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+  document: Shipment
+
+  fields {
+    order
+    tracking
+    pickedUpOn: DateTime {
+      title: { pt-BR: "Coletada em", en: "Picked up at" }
+      required
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+      calls: Shipment.confirmPickup(pickedUpOn)
+    }
+  }
+}
+
+view DispatchProgress {
+  title: { pt-BR: "Andamento do despacho", en: "Dispatch progress" }
+  type: process
+  process: DispatchOrder
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
+}

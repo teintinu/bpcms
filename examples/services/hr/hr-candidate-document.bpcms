@@ -1,0 +1,191 @@
+// service: example.com/services/hr
+
+document Candidate {
+  title: { pt-BR: "Candidato", en: "Candidate" }
+  version: 1
+  owner: "People"
+  sync: live
+  retention: 2y
+
+  fields {
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup, maxLength: 120 }
+    email: string { title: { pt-BR: "E-mail", en: "Email" }, sensitive, maxLength: 160 }
+    position: string { title: { pt-BR: "Vaga", en: "Position" }, lookup, maxLength: 120 }
+    department: Department { title: { pt-BR: "Área", en: "Department" }, lookup }
+    status: CandidateStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    source: string { title: { pt-BR: "Origem", en: "Source" }, maxLength: 60 }
+    appliedAt: DateTime { title: { pt-BR: "Inscrito em", en: "Applied at" }, readonly }
+    rejectReason: string { title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }, maxLength: 500 }
+  }
+
+  indexes {
+    byStatus: [status, appliedAt] range
+    byPosition: [position] hash
+  }
+
+
+  actions {
+    screen() {
+      title: { pt-BR: "Triar candidato", en: "Screen candidate" }
+      roles: [Recruiter]
+      to: status.Screening
+      emits { at: now() }
+    }
+
+    scheduleInterview() {
+      title: { pt-BR: "Agendar entrevista", en: "Schedule interview" }
+      roles: [Recruiter]
+      to: status.Interview
+      emits { at: now() }
+    }
+
+    extendOffer() {
+      title: { pt-BR: "Enviar proposta", en: "Extend offer" }
+      roles: [HiringManager, Recruiter]
+      to: status.Offer
+      emits { at: now() }
+    }
+
+    hire() {
+      title: { pt-BR: "Contratar", en: "Hire" }
+      roles: [HiringManager]
+      to: status.Hired
+      emits { at: now() }
+    }
+
+    reject(reason: string) {
+      title: { pt-BR: "Recusar candidato", en: "Reject candidate" }
+      roles: [Recruiter, HiringManager]
+      to: status.Rejected
+      { rejectReason = reason }
+    }
+  }
+}
+
+shape CandidateStatus {
+  title: { pt-BR: "Situação do candidato", en: "Candidate status" }
+  base: state
+  initial: Applied
+
+  value Applied {
+    title: { pt-BR: "Inscrito", en: "Applied" }
+    icon: status.applied
+    ordinal: 10
+
+    transition Screening {
+      event: Screened
+      title: { pt-BR: "Candidato triado", en: "Candidate screened" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Screening {
+    title: { pt-BR: "Em triagem", en: "Screening" }
+    icon: status.screening
+    ordinal: 20
+
+    transition Interview {
+      event: InterviewScheduled
+      title: { pt-BR: "Entrevista agendada", en: "Interview scheduled" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Interview {
+    title: { pt-BR: "Em entrevista", en: "Interview" }
+    icon: status.interview
+    ordinal: 30
+
+    transition Offer {
+      event: OfferExtended
+      title: { pt-BR: "Proposta enviada", en: "Offer extended" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Offer {
+    title: { pt-BR: "Com proposta", en: "Offer" }
+    icon: status.offer
+    ordinal: 40
+
+    transition Hired {
+      title: { pt-BR: "Candidato contratado", en: "Candidate hired" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Hired {
+    title: { pt-BR: "Contratado", en: "Hired" }
+    icon: status.hired
+    ordinal: 50
+  }
+  value Rejected {
+    title: { pt-BR: "Recusado", en: "Rejected" }
+    icon: status.rejected
+    ordinal: 60
+  }
+}
+
+view CandidatesKanban {
+  title: { pt-BR: "Quadro de candidatos", en: "Candidates board" }
+  type: kanban
+  source: Candidate
+  roles: [Recruiter, HiringManager]
+  groupBy: status
+
+  columns { name; position; department }
+  card { name; position; appliedAt }
+
+  actions {
+    open -> CandidateDetail
+  }
+}
+
+view CandidateDetail {
+  title: { pt-BR: "Detalhe do candidato", en: "Candidate detail" }
+  type: detail
+  document: Candidate
+  roles: [Recruiter, HiringManager, Candidate]
+
+  sections { summary; interviews; timeline }
+
+  actions {
+    screen -> Candidate.screen
+    scheduleInterview -> Candidate.scheduleInterview
+    extendOffer -> Candidate.extendOffer
+    hire -> Candidate.hire
+    reject -> Candidate.reject(reason)
+  }
+}

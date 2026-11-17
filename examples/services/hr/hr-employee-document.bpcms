@@ -1,0 +1,297 @@
+// service: example.com/services/hr
+
+document Employee {
+  title: { pt-BR: "Colaborador", en: "Employee" }
+  version: 1
+  owner: "People"
+  sync: live
+  retention: 10y
+
+  fields {
+    number: string {
+      title: { pt-BR: "Matrícula", en: "Employee number" }
+      lookup
+      unique
+      maxLength: 20
+    }
+    person: Identity.User { title: { pt-BR: "Pessoa", en: "Person" }, lookup }
+    candidate: Candidate { title: { pt-BR: "Candidato", en: "Candidate" }, lookup }
+    position: string { title: { pt-BR: "Cargo", en: "Position" }, lookup, maxLength: 120 }
+    department: Department { title: { pt-BR: "Área", en: "Department" }, lookup }
+    employmentType: EmploymentType { title: { pt-BR: "Vínculo", en: "Employment type" }, lookup }
+    manager: Identity.User { title: { pt-BR: "Gestor", en: "Manager" } }
+    status: EmployeeStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    hiredAt: DateTime { title: { pt-BR: "Contratado em", en: "Hired at" }, readonly }
+    startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
+    lastWorkingDay: DateTime { title: { pt-BR: "Último dia", en: "Last working day" } }
+    identityDocument: string {
+      title: { pt-BR: "Documento de identidade", en: "Identity document" }
+      sensitive
+      maxLength: 40
+    }
+    documentsComplete: boolean {
+      title: { pt-BR: "Documentos completos", en: "Documents complete" }
+      default: false
+    }
+    mailboxProvisioned: boolean {
+      title: { pt-BR: "Caixa de e-mail provisionada", en: "Mailbox provisioned" }
+      default: false
+    }
+    systemsProvisioned: boolean {
+      title: { pt-BR: "Sistemas provisionados", en: "Systems provisioned" }
+      default: false
+    }
+    accessConfirmed: boolean { title: { pt-BR: "Acesso confirmado", en: "Access confirmed" }, default: false }
+    accessIssue: string { title: { pt-BR: "Problema de acesso", en: "Access issue" }, maxLength: 500 }
+    accessRevokedAt: DateTime { title: { pt-BR: "Acessos revogados em", en: "Access revoked at" }, readonly }
+    equipmentReturnedAt: DateTime {
+      title: { pt-BR: "Equipamento devolvido em", en: "Equipment returned at" }
+      readonly
+    }
+    lastEquipmentKind: EquipmentKind { title: { pt-BR: "Último equipamento", en: "Last equipment" } }
+    exitInterviewNotes: string {
+      title: { pt-BR: "Entrevista de saída", en: "Exit interview" }
+      maxLength: 2000
+    }
+    offboardingReason: string { title: { pt-BR: "Motivo do desligamento", en: "Offboarding reason" }, maxLength: 500 }
+    checkinNote: string { title: { pt-BR: "Nota do check-in", en: "Check-in note" }, maxLength: 500 }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, startedAt] range
+    byDepartment: [department] hash
+    byPerson: [person.id] hash
+  }
+
+
+  actions {
+    hire(firstDay: DateTime) {
+      title: { pt-BR: "Registrar contratação", en: "Register hire" }
+      roles: [PeopleOps]
+      {
+        emit Hired { startedAt: firstDay }
+        hiredAt = now()
+        startedAt = firstDay
+      }
+    }
+
+    submitDocuments(documentNumber: string) {
+      title: { pt-BR: "Enviar documentos", en: "Submit documents" }
+      roles: [NewHire, PeopleOps]
+      { identityDocument = documentNumber; documentsComplete = true }
+    }
+
+    provisionMailbox() {
+      title: { pt-BR: "Provisionar e-mail", en: "Provision mailbox" }
+      roles: [ITAdmin]
+      { mailboxProvisioned = true }
+    }
+
+    provisionSystems() {
+      title: { pt-BR: "Provisionar sistemas", en: "Provision systems" }
+      roles: [ITAdmin]
+      { systemsProvisioned = true }
+    }
+
+    confirmAccess() {
+      title: { pt-BR: "Confirmar acesso", en: "Confirm access" }
+      roles: [NewHire]
+      { accessConfirmed = true }
+    }
+
+    reportAccessIssue(note: string) {
+      title: { pt-BR: "Relatar problema de acesso", en: "Report access issue" }
+      roles: [NewHire]
+      { accessIssue = note; accessConfirmed = false }
+    }
+
+    orderEquipment(kind: EquipmentKind) {
+      title: { pt-BR: "Pedir equipamento", en: "Order equipment" }
+      roles: [ITAdmin, PeopleOps]
+      returns: EquipmentOrder
+      { lastEquipmentKind = kind }
+    }
+
+    recordCheckinNote(note: string) {
+      title: { pt-BR: "Registrar check-in do gestor", en: "Record manager check-in" }
+      roles: [HiringManager]
+      { checkinNote = note }
+    }
+
+    activate() {
+      title: { pt-BR: "Concluir integração", en: "Complete onboarding" }
+      roles: [HiringManager, PeopleOps]
+      to: status.Active
+      emits { at: now() }
+    }
+
+    cancelOnboarding(reason: string) {
+      title: { pt-BR: "Cancelar integração", en: "Cancel onboarding" }
+      roles: [PeopleOps]
+      to: status.Terminated
+      { offboardingReason = reason }
+    }
+
+    startOffboarding(reason: string, lastDay: DateTime) {
+      title: { pt-BR: "Iniciar desligamento", en: "Start offboarding" }
+      roles: [PeopleOps, HiringManager]
+      to: status.Offboarding
+      { offboardingReason = reason; lastWorkingDay = lastDay }
+    }
+
+    cancelOffboarding(reason: string) {
+      title: { pt-BR: "Cancelar desligamento", en: "Cancel offboarding" }
+      roles: [PeopleOps]
+      to: status.Active
+    }
+
+    revokeAllAccess(note: string) {
+      title: { pt-BR: "Revogar acessos", en: "Revoke all access" }
+      roles: [ITAdmin]
+      { accessRevokedAt = now(); accessIssue = note }
+    }
+
+    returnEquipment(kind: EquipmentKind) {
+      title: { pt-BR: "Registrar devolução", en: "Register equipment return" }
+      roles: [ITAdmin]
+      { equipmentReturnedAt = now(); lastEquipmentKind = kind }
+    }
+
+    recordExitInterview(notes: string) {
+      title: { pt-BR: "Registrar entrevista de saída", en: "Record exit interview" }
+      roles: [PeopleOps]
+      { exitInterviewNotes = notes }
+    }
+
+    terminate() {
+      title: { pt-BR: "Desligar colaborador", en: "Terminate employee" }
+      roles: [PeopleOps]
+      to: status.Terminated
+      emits { at: now() }
+    }
+  }
+}
+
+shape EmployeeStatus {
+  title: { pt-BR: "Situação do colaborador", en: "Employee status" }
+  base: state
+  initial: Onboarding with transition Hired {
+    title: { pt-BR: "Colaborador contratado", en: "Employee hired" }
+    payload {
+      startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
+    }
+  }
+
+  value Onboarding {
+    title: { pt-BR: "Em integração", en: "Onboarding" }
+    icon: status.onboarding
+    ordinal: 10
+
+    transition Active {
+      event: Activated
+      title: { pt-BR: "Integração concluída", en: "Onboarding completed" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Terminated {
+      event: OnboardingCancelled
+      title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: status.active
+    ordinal: 20
+
+    transition Offboarding {
+      event: OffboardingStarted
+      title: { pt-BR: "Desligamento iniciado", en: "Offboarding started" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Offboarding {
+    title: { pt-BR: "Em desligamento", en: "Offboarding" }
+    icon: status.offboarding
+    ordinal: 30
+
+    transition Active {
+      event: OffboardingCancelled
+      title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Colaborador desligado", en: "Employee terminated" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value Terminated {
+    title: { pt-BR: "Desligado", en: "Terminated" }
+    icon: status.terminated
+    ordinal: 40
+  }
+}
+
+shape EmploymentType {
+  title: { pt-BR: "Vínculo", en: "Employment type" }
+  base: classification
+
+  value FullTime {
+    title: { pt-BR: "Tempo integral", en: "Full time" }
+    icon: employment.fullTime
+    ordinal: 10
+  }
+  value PartTime {
+    title: { pt-BR: "Meio período", en: "Part time" }
+    icon: employment.partTime
+    ordinal: 20
+  }
+  value Contractor {
+    title: { pt-BR: "Prestador", en: "Contractor" }
+    icon: employment.contractor
+    ordinal: 30
+  }
+}
+
+view EmployeesTable {
+  title: { pt-BR: "Colaboradores", en: "Employees" }
+  type: table
+  source: Employee
+  roles: [PeopleOps, HiringManager, ITAdmin]
+
+  columns { number; person; position; department; status; startedAt }
+  filters { status; department; period }
+  pagination: 50
+
+  actions {
+    open -> EmployeeDetail
+    startOffboarding -> Employee.startOffboarding(reason, lastDay)
+  }
+}
+
+view EmployeeDetail {
+  title: { pt-BR: "Detalhe do colaborador", en: "Employee detail" }
+  type: detail
+  document: Employee
+  roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
+
+  sections { summary; onboarding; access; equipment; timeline }
+
+  actions {
+    open -> OnboardingProgress
+    cancelOnboarding -> Employee.cancelOnboarding(reason)
+    terminate -> Employee.terminate
+  }
+}

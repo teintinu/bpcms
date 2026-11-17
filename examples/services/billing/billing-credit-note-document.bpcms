@@ -1,0 +1,96 @@
+// service: example.com/services/billing
+
+document CreditNote {
+  title: { pt-BR: "Nota de crédito", en: "Credit note" }
+  version: 1
+  owner: "Billing"
+  sync: live
+  fields {
+    invoice: Invoice {
+      title: { pt-BR: "Nota fiscal", en: "Invoice" }
+      lookup
+    }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    status: CreditNoteStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
+    appliedAt: DateTime { title: { pt-BR: "Aplicado em", en: "Applied at" } }
+  }
+
+  indexes {
+    byInvoice: [invoice.id] hash
+    byStatus: [status, issuedAt] range
+  }
+
+
+  actions {
+    issue(){
+      title: { pt-BR: "Emitir", en: "Issue" }
+      roles: [FinanceManager]
+
+      to: status.Issued
+      emits { issuedAt: now() }
+
+      {
+        issuedAt = now()
+      }
+    }
+
+    apply(){
+      title: { pt-BR: "Aplicar", en: "Apply" }
+      roles: [FinanceManager]
+
+      to: status.Applied
+      emits { appliedAt: now() }
+
+      {
+        appliedAt = now()
+      }
+    }
+  }
+
+  rule amount > 0 {
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+  }
+  rule amount <= 100000 BRL {
+    pt-BR: "O valor excede o limite de 100.000 BRL"
+    en: "Amount exceeds the 100,000 BRL limit"
+  }
+}
+
+shape CreditNoteStatus {
+  title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Issued {
+      title: { pt-BR: "Nota de crédito emitida", en: "Credit note issued" }
+      payload {
+        issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+      }
+    }
+  }
+  value Issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: Issued
+    ordinal: 20
+
+    transition Applied {
+      title: { pt-BR: "Nota de crédito aplicada", en: "Credit note applied" }
+      payload {
+        appliedAt: DateTime { title: { pt-BR: "Aplicada em", en: "Applied at" } }
+      }
+    }
+  }
+  value Applied {
+    title: { pt-BR: "Aplicada", en: "Applied" }
+    icon: Applied
+    ordinal: 30
+  }
+  format: plain
+}

@@ -1,57 +1,39 @@
 // service: example.com/services/billing
-view InvoiceTable {
-  title: { pt-BR: "Notas fiscais", en: "Invoices" }
-  type: table
-  source: Invoice
-  roles: [Clerk, CollectionAgent, FinanceManager]
 
-  columns { number; customer; total; status; dueAt }
-  filters { status; period; customer }
-  pagination: 50
+view CashFlow {
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
+  type: report
+  sources: [Invoice, Payment, Bill]
+  roles: [FinanceManager]
 
-  actions {
-    open -> InvoiceDetail
-    issue -> Invoice.issue
-    cancel -> Invoice.cancel(reason)
+  filters { period; store }
+
+  metrics {
+    inflow: sum(Payment.amount) where status == Captured
+    outflow: sum(Bill.amount) where status == Paid
+    balance: inflow - outflow
   }
+
+  units { inflow: BRL; outflow: BRL; balance: BRL }
+  freshness: 1h
+  export: [pdf, csv]
 }
 
-view InvoiceDetail {
-  title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
-  type: detail
-  document: Invoice
-  roles: [Clerk, CollectionAgent, FinanceManager]
+view RevenueControl {
+  title: { pt-BR: "Controle de faturamento", en: "Billing control" }
+  type: dashboard
+  sources: [Invoice, Bill]
+  roles: [FinanceManager]
+  mode: live
 
-  sections { summary; items; customer; timeline }
+  filters { status; period }
 
-  actions {
-    pay -> Invoice.pay(paidAt)
-    cancel -> Invoice.cancel(reason)
+  metrics {
+    overdue: count(Invoice) where status == Overdue
+    openBills: count(Bill) where status != Paid
   }
-}
 
-view InvoiceKanban {
-  title: { pt-BR: "Notas por situação", en: "Invoices by status" }
-  type: kanban
-  source: Invoice
-  roles: [Clerk, CollectionAgent, FinanceManager]
-
-  groupBy: status
-  columns { number; customer; total; dueAt }
-  card { number; customer; total; dueAt }
-
-  actions {
-    open -> InvoiceDetail
-  }
-}
-
-view InvoiceProgress {
-  title: { pt-BR: "Andamento da emissão", en: "Invoice issuance progress" }
-  type: process
-  process: InvoiceIssuance
-  roles: [Clerk, FinanceManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
+  freshness: 15m
 }
 
 view DunningInbox {
@@ -63,13 +45,4 @@ view DunningInbox {
   filter { lane in currentUser.lanes }
   groupBy: process
   columns { title; subject; lane; dueAt; priority }
-}
-
-view MonthCloseProgress {
-  title: { pt-BR: "Andamento do fechamento", en: "Month close progress" }
-  type: process
-  process: MonthClose
-  roles: [FinanceManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
 }

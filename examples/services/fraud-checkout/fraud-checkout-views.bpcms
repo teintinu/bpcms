@@ -1,36 +1,4 @@
 // service: example.com/services/fraud-checkout
-view FraudTable {
-  title: { pt-BR: "Verificações antifraude", en: "Fraud checks" }
-  type: table
-  source: FraudCheck
-  roles: [RiskAnalyst, RiskManager]
-
-  columns { session; score; approved; status; evaluatedAt }
-  filters { status; period }
-  pagination: 50
-
-  actions {
-    open -> FraudDetail
-  }
-}
-
-view FraudDetail {
-  title: { pt-BR: "Detalhe da verificação", en: "Fraud check detail" }
-  type: detail
-  document: FraudCheck
-  roles: [RiskAnalyst, RiskManager]
-
-  sections { summary; decision; timeline }
-}
-
-view FraudProgress {
-  title: { pt-BR: "Andamento da análise", en: "Fraud review progress" }
-  type: process
-  process: FraudReview
-  roles: [RiskAnalyst, RiskManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
 
 view RiskInbox {
   title: { pt-BR: "Fila de risco", en: "Risk queue" }

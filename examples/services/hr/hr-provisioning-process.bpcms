@@ -1,0 +1,84 @@
+// service: example.com/services/hr
+
+process Provisioning for Employee {
+  title: { pt-BR: "Provisionamento de acessos", en: "Access provisioning" }
+  version: 1
+  goal: "Entregar e-mail e sistemas funcionando para a pessoa contratada"
+  owner: "IT"
+  timezone: America/Fortaleza
+  sla: 3d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane IT { role: ITAdmin }
+  }
+
+  pool NewHire {
+    external
+    lane Portal { role: NewHire }
+  }
+
+  start Begin { called }
+
+  task ProvisionMailbox {
+    lane: System
+    action: Employee.provisionMailbox
+    sla: 2h
+  }
+
+  task ProvisionSystems {
+    lane: System
+    action: Employee.provisionSystems
+    sla: 4h
+    on timer 4h -> Escalate
+  }
+
+  task ConfirmAccess {
+    lane: Portal
+    form: AccessConfirmation
+    sla: 1d
+    on timer 2d -> Escalate
+  }
+
+  task Escalate {
+    lane: IT
+    manual: "Reprovisionar o acesso com a pessoa e registrar o problema"
+    sla: 4h
+  }
+
+  end Ready {
+    title: { pt-BR: "Acessos prontos", en: "Access ready" }
+    outcome: success
+  }
+
+  end Blocked {
+    title: { pt-BR: "Acesso bloqueado", en: "Access blocked" }
+    outcome: failure
+  }
+
+  ProvisionMailbox -> ProvisionSystems
+  ProvisionSystems -> ConfirmAccess
+  ConfirmAccess.confirm -> Ready
+  ConfirmAccess.report -> Blocked
+  Escalate -> ConfirmAccess
+  Begin -> ProvisionMailbox
+}
+
+form AccessConfirmation {
+  title: { pt-BR: "Confirmação de acesso", en: "Access confirmation" }
+  document: Employee
+
+  fields {
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    confirm { calls: Employee.confirmAccess }
+    report { calls: Employee.reportAccessIssue(note) }
+  }
+}

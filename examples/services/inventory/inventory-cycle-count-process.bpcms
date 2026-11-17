@@ -1,0 +1,117 @@
+// service: example.com/services/inventory
+
+process CycleCount for CountSheet {
+  title: { pt-BR: "Contagem cíclica", en: "Cycle count" }
+  version: 1
+  goal: "Contar o estoque com leitura de dispositivo, tratar divergência e aprovar"
+  owner: "Supply Chain"
+  timezone: America/Fortaleza
+
+  pool Company {
+    internal
+    lane Warehouse { role: WarehouseOperator }
+    lane Management { role: StockManager }
+  }
+
+  start Created {
+    event: CountSheet.Created
+  }
+
+  task Capture {
+    lane: Warehouse
+    form: CountCapture
+    sla: 1d
+    assign: pull
+  }
+
+  task Approve {
+    lane: Management
+    form: CountApproval
+    sla: 1d
+    assign: pull
+  }
+
+  // discricionária: disponível quando há divergência; concluir leva à aprovação (caminho alternativo, 4.7)
+  task Recount {
+    lane: Warehouse
+    form: RecountCapture
+    discretionary
+    when: countSheet.divergence != 0 and countSheet.status == Counted
+    assign: pull
+  }
+
+  end Approved {
+    title: { pt-BR: "Contagem aprovada", en: "Count approved" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }
+    outcome: cancelled
+  }
+
+  Created -> Capture
+  Capture.submit -> Approve
+  Recount.recount -> Approve
+  Approve.approve -> Approved
+  Approve.reject -> Rejected
+}
+
+form CountCapture {
+  title: { pt-BR: "Conferir contagem", en: "Check count" }
+  document: CountSheet
+
+  fields {
+    stockItem
+    expected
+    counted
+    divergence
+  }
+
+  actions {
+    submit { calls: CountSheet.submit }
+  }
+}
+
+form CountApproval {
+  title: { pt-BR: "Aprovar contagem", en: "Approve count" }
+  document: CountSheet
+
+  fields {
+    stockItem
+    counted
+    divergence
+    reason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    approve { calls: CountSheet.approve }
+    reject { calls: CountSheet.reject(reason) }
+  }
+}
+
+form RecountCapture {
+  title: { pt-BR: "Recontagem", en: "Recount" }
+  document: CountSheet
+
+  fields {
+    counted
+    divergence
+  }
+
+  actions {
+    recount { calls: CountSheet.recount }
+  }
+}
+
+view CycleCountProgress {
+  title: { pt-BR: "Andamento da contagem", en: "Count progress" }
+  type: process
+  process: CycleCount
+  roles: [WarehouseOperator, StockManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

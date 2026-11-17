@@ -1,0 +1,89 @@
+// service: example.com/services/inventory
+
+document Reservation {
+  title: { pt-BR: "Reserva", en: "Reservation" }
+  version: 1
+  owner: "Inventory"
+  sync: live
+
+  fields {
+    product: Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+    }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
+    status: ReservationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
+  }
+
+  indexes {
+    byExternal: [externalRef] hash
+    byExpiry: [status, expiresAt] range
+  }
+
+
+  actions {
+    request(product: Product, quantity: std.Count, externalRef: string){
+      title: { pt-BR: "Reservar", en: "Reserve" }
+      roles: [WarehouseOperator]
+    }
+
+    release(){
+      title: { pt-BR: "Liberar", en: "Release" }
+      roles: [WarehouseOperator]
+
+      to: status.Released
+      emits { releasedAt: now() }
+    }
+
+    expire(){
+      title: { pt-BR: "Expirar", en: "Expire" }
+      roles: [StockManager]
+
+      to: status.Expired
+      emits { expiredAt: now() }
+    }
+  }
+
+  rule quantity > 0 {
+    pt-BR: "A quantidade deve ser maior que zero"
+    en: "Quantity must be greater than zero"
+  }
+}
+
+shape ReservationStatus {
+  title: { pt-BR: "Situação da reserva", en: "Reservation status" }
+  base: state
+  initial: Active
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+
+    transition Released {
+      title: { pt-BR: "Reserva liberada", en: "Reservation released" }
+      payload {
+        releasedAt: DateTime { title: { pt-BR: "Liberada em", en: "Released at" } }
+      }
+    }
+
+    transition Expired {
+      title: { pt-BR: "Reserva expirada", en: "Reservation expired" }
+      payload {
+        expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" } }
+      }
+    }
+  }
+  value Released {
+    title: { pt-BR: "Liberada", en: "Released" }
+    icon: Released
+    ordinal: 20
+  }
+  value Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: Expired
+    ordinal: 30
+  }
+  format: plain
+}

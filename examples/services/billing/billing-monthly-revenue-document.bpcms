@@ -1,0 +1,31 @@
+// service: example.com/services/billing
+
+document MonthlyRevenue {
+  title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
+  version: 1
+  owner: "Billing"
+  computed from Invoice, Payment
+  freshness: 1h
+  sync: read
+
+  fields {
+    month: YearMonth { title: { pt-BR: "Mês", en: "Month" }, lookup }
+    revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
+    invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
+  }
+
+  indexes { month: [month] unique }
+
+  actions {
+    refresh(){
+      title: { pt-BR: "Atualizar", en: "Refresh" }
+      roles: [FinanceManager]
+    }
+  }
+
+  rule month >= 2026-01 {
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+  }
+}

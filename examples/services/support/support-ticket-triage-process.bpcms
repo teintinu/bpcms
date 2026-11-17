@@ -1,0 +1,236 @@
+// service: example.com/services/support
+
+process TicketTriage for Ticket {
+  title: { pt-BR: "Triagem do chamado", en: "Ticket triage" }
+  version: 1
+  goal: "Classificar, encaminhar e responder o chamado dentro do prazo"
+  owner: "Support"
+  timezone: America/Fortaleza
+  sla: 8h
+
+  pool Company {
+    internal
+
+    lane Support {
+      role: SupportAgent
+    }
+
+    lane Management {
+      role: Manager
+    }
+  }
+
+  pool Customer {
+    external
+
+    lane Client {
+      role: Customer
+    }
+  }
+
+  pool BackOffice {
+    external
+  }
+
+  variables {
+    queue: TicketCategory
+  }
+
+  start Opened {
+    event: Ticket.Opened
+  }
+
+  task Triage {
+    lane: Support
+    form: TicketIntake
+    sla: 4h
+    priority: 50
+    assign: pull
+    on breach -> Escalate
+    on timer 1d -> Escalate
+  }
+
+  task Route {
+    lane: System
+    decision: TicketRouting
+    with {
+      category: ticket.category
+      priority: ticket.priority
+    }
+    gives: queue
+  }
+
+  gateway Destination {
+    if queue == Technical -> Technical
+    if queue == Billing -> Billing
+    else -> General
+  }
+
+  task Technical {
+    lane: Support
+    form: TicketResolution
+    sla: 1d
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task Billing {
+    lane: Management
+    form: TicketResolution
+    sla: 1d
+    assign: pull
+  }
+
+  task General {
+    lane: Support
+    form: TicketResolution
+    sla: 2d
+    assign: pull
+  }
+
+  fork Notify
+  join Notified
+
+  task TellCustomer {
+    lane: System
+    sends: TicketAcknowledged
+    partner: Customer
+    with {
+      subject: ticket.subject
+      priority: ticket.priority
+    }
+  }
+
+  task TellBackOffice {
+    lane: System
+    sends: TicketUpdate
+    partner: BackOffice
+    with {
+      subject: ticket.subject
+      queue
+    }
+  }
+
+  task Close {
+    lane: System
+    action: Ticket.close
+  }
+
+  task Escalate {
+    lane: Management
+    form: TicketEscalation
+    sla: 4h
+    assign: pull
+  }
+
+  end Done {
+    title: { pt-BR: "Chamado encerrado", en: "Ticket closed" }
+    outcome: success
+  }
+
+  Opened -> Triage
+  Triage.claim -> Route
+  Route -> Destination
+  Destination -> Technical
+  Destination -> Billing
+  Destination -> General
+  Technical.resolve -> Close
+  Billing.resolve -> Close
+  General.resolve -> Close
+  Close -> Notify
+  Notify -> TellCustomer
+  Notify -> TellBackOffice
+  TellCustomer -> Notified
+  TellBackOffice -> Notified
+  Notified -> Done
+  Escalate.escalate -> Triage
+
+  on breach -> Escalate
+}
+
+form TicketIntake {
+  title: { pt-BR: "Triagem do chamado", en: "Ticket intake" }
+  document: Ticket
+
+  fields {
+    subject
+    description
+    priority
+    category
+    order
+    customer
+    justification: string {
+      title: { pt-BR: "Motivo do escalonamento", en: "Escalation reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    claim { calls: Ticket.claim }
+    escalate { calls: Ticket.escalate(justification); stay }
+  }
+}
+
+form TicketResolution {
+  title: { pt-BR: "Resolução do chamado", en: "Ticket resolution" }
+  document: Ticket
+
+  fields {
+    subject
+    description
+    assignee
+    justification: string {
+      title: { pt-BR: "Motivo da espera ou do escalonamento", en: "Hold or escalation reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    resolve { calls: Ticket.resolve }
+    hold { calls: Ticket.hold; stay }
+    escalate { calls: Ticket.escalate(justification); stay }
+  }
+}
+
+form TicketEscalation {
+  title: { pt-BR: "Escalonamento do chamado", en: "Ticket escalation" }
+  document: Ticket
+
+  fields {
+    subject
+    priority
+    justification: string {
+      title: { pt-BR: "Motivo do escalonamento", en: "Escalation reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    escalate { calls: Ticket.escalate(justification) }
+  }
+}
+
+view TicketTriageProgress {
+  title: { pt-BR: "Andamento da triagem", en: "Ticket triage progress" }
+  type: process
+  process: TicketTriage
+  roles: [SupportAgent, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+decision TicketRouting {
+  title: { pt-BR: "Roteamento do chamado", en: "Ticket routing" }
+  returns: TicketCategory
+  inputs {
+    category: TicketCategory
+    priority: TicketPriority
+  }
+  cases {
+    category == Billing -> Billing
+    category == Technical and priority == P1 -> Technical
+    else -> General
+  }
+  source: "Política de atendimento v1"
+  owner: Support
+}

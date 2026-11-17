@@ -1,0 +1,133 @@
+// service: example.com/services/payments
+
+process PaymentCapture for Payment {
+  title: { pt-BR: "Captura do pagamento", en: "Payment capture" }
+  version: 1
+  goal: "Autorizar, capturar e estornar o valor quando a captura não puder ser registrada"
+  owner: "Payments"
+  timezone: America/Fortaleza
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Finance { role: Analyst }
+  }
+
+  pool Acquirer {
+    external
+  }
+
+  variables {
+    authorization: string
+    receipt: string
+  }
+
+  start Created { event: Payment.Created }
+
+  task Authorize {
+    lane: System
+    call: PaymentGateway.authorize
+    with {
+      order: payment.order
+      amount: payment.amount
+    }
+    gives: authorization
+    sla: 2m
+    on error Declined -> FailPayment
+  }
+
+  task RecordAuthorization {
+    lane: System
+    action: Payment.authorize
+    with { authorization }
+    sla: 1m
+  }
+
+  task Capture {
+    lane: System
+    call: PaymentGateway.capture
+    with { payment }
+    gives: receipt
+    sla: 2m
+    on error CaptureDeclined -> Retry
+  }
+
+  task RecordCapture {
+    lane: System
+    action: Payment.capture
+    with { receipt }
+    sla: 1m
+    on error ReceiptRejected -> Undo
+  }
+
+  task Retry {
+    lane: Finance
+    manual: "Contatar o adquirente e repetir a captura no portal"
+    sla: 4h
+    on timer 8h -> Undo
+  }
+
+  task RefundCapture {
+    lane: System
+    action: Payment.refund
+    with { refundAmount: payment.amount }
+    compensates: Capture
+    sla: 5m
+  }
+
+  task FailPayment {
+    lane: System
+    action: Payment.fail
+    with { failureReason: "Autorização recusada pelo adquirente" }
+    sla: 1m
+  }
+
+  rollback Undo
+
+  end Captured {
+    title: { pt-BR: "Capturado", en: "Captured" }
+    outcome: success
+  }
+  end Failed {
+    title: { pt-BR: "Não capturado", en: "Not captured" }
+    outcome: failure
+  }
+
+  Created -> Authorize
+  Authorize -> RecordAuthorization
+  RecordAuthorization -> Capture
+  Capture -> RecordCapture
+  RecordCapture -> Captured
+  Retry -> Capture
+  Undo -> FailPayment
+  FailPayment -> Failed
+}
+
+view PaymentProgress {
+  title: { pt-BR: "Andamento da captura", en: "Capture progress" }
+  type: process
+  process: PaymentCapture
+  roles: [Analyst, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}
+
+integration PaymentGateway {
+  protocol: rest
+  baseUrl: env.PAYMENT_URL
+  auth: api-key
+  timeout: 15s
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    authorize(order: Order, amount: std.Money): string
+    capture(payment: Payment): string
+    refund(payment: Payment, amount: std.Money): string
+  }
+
+  webhooks {
+    payment.succeeded -> Payment.Captured
+    payment.failed -> Payment.Failed
+    chargeback.opened -> Chargeback.Opened
+  }
+}

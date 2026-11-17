@@ -1,0 +1,219 @@
+// service: example.com/services/credit
+
+document CreditApplication {
+  title: { pt-BR: "Proposta de crédito", en: "Credit application" }
+  version: 1
+  owner: "Credit"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    applicant: Identity.User {
+      title: { pt-BR: "Proponente", en: "Applicant" }
+      lookup
+    }
+    requestedAmount: std.Money {
+      title: { pt-BR: "Valor solicitado", en: "Requested amount" }
+      currency: BRL
+      required
+    }
+    monthlyIncome: std.Money {
+      title: { pt-BR: "Renda mensal", en: "Monthly income" }
+      currency: BRL
+    }
+    existingExposure: std.Money {
+      title: { pt-BR: "Exposição atual", en: "Existing exposure" }
+      currency: BRL
+    }
+    purpose: string {
+      title: { pt-BR: "Finalidade", en: "Purpose" }
+      maxLength: 240
+    }
+    status: CreditApplicationStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    bureauScore: std.Count {
+      title: { pt-BR: "Score do bureau", en: "Bureau score" }
+    }
+    riskBand: RiskBand {
+      title: { pt-BR: "Faixa de risco", en: "Risk band" }
+      lookup
+    }
+    approvedLimit: std.Money {
+      title: { pt-BR: "Limite aprovado", en: "Approved limit" }
+      currency: BRL
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviada em", en: "Submitted at" }
+    }
+    reviewStartedAt: DateTime {
+      title: { pt-BR: "Análise iniciada em", en: "Review started at" }
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovada em", en: "Approved at" }
+    }
+    rejectedAt: DateTime {
+      title: { pt-BR: "Rejeitada em", en: "Rejected at" }
+    }
+    rejectionReason: string {
+      title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      maxLength: 280
+    }
+    analyst: Identity.User {
+      title: { pt-BR: "Analista", en: "Analyst" }
+    }
+  }
+
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar proposta", en: "Submit application" }
+      roles: public
+      to: status.Submitted
+      {
+        submittedAt = now()
+      }
+    }
+
+    startReview() {
+      title: { pt-BR: "Iniciar análise", en: "Start review" }
+      roles: [CreditAnalyst]
+      to: status.UnderReview
+      {
+        reviewStartedAt = now()
+      }
+    }
+
+    recordRisk(bureauScore: std.Count, riskBand: RiskBand) {
+      title: { pt-BR: "Registrar risco", en: "Record risk" }
+      roles: [CreditAnalyst]
+    }
+
+    approve(approvedLimit: std.Money) {
+      title: { pt-BR: "Aprovar crédito", en: "Approve credit" }
+      roles: [CreditAnalyst, CreditManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    reject(rejectionReason: string) {
+      title: { pt-BR: "Rejeitar crédito", en: "Reject credit" }
+      roles: [CreditAnalyst, CreditManager]
+      to: status.Rejected
+      emits { reason: rejectionReason }
+      {
+        rejectedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, submittedAt] range
+    byApplicant: [applicant.id] hash
+  }
+
+  rule requestedAmount > 0 BRL {
+    pt-BR: "O valor solicitado precisa ser positivo"
+    en: "Requested amount must be positive"
+  }
+
+  segregation {
+    submit != approve
+  }
+}
+
+shape CreditApplicationStatus {
+  title: { pt-BR: "Situação da proposta de crédito", en: "Credit application status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Submitted {
+      title: { pt-BR: "Proposta enviada", en: "Credit application submitted" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Enviada em", en: "Submitted at" } }
+        requestedAmount: std.Money { title: { pt-BR: "Valor solicitado", en: "Requested amount" } }
+      }
+    }
+  }
+  value Submitted {
+    title: { pt-BR: "Enviada", en: "Submitted" }
+    icon: Submitted
+    ordinal: 20
+
+    transition UnderReview {
+      event: ReviewStarted
+      title: { pt-BR: "Análise iniciada", en: "Credit review started" }
+      payload {
+        reviewStartedAt: DateTime { title: { pt-BR: "Iniciada em", en: "Started at" } }
+      }
+    }
+  }
+  value UnderReview {
+    title: { pt-BR: "Em análise", en: "Under review" }
+    icon: UnderReview
+    ordinal: 30
+
+    transition Approved {
+      title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+        approvedLimit: std.Money { title: { pt-BR: "Limite aprovado", en: "Approved limit" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Crédito rejeitado", en: "Credit rejected" }
+      payload {
+        rejectedAt: DateTime { title: { pt-BR: "Rejeitada em", en: "Rejected at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 40
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 50
+  }
+}
+
+view CreditApplications {
+  title: { pt-BR: "Propostas de crédito", en: "Credit applications" }
+  type: table
+  source: CreditApplication
+  roles: [CreditAnalyst, CreditManager]
+
+  columns { number; applicant; requestedAmount; monthlyIncome; riskBand; status; submittedAt }
+  filters { status; riskBand; applicant }
+  pagination: 50
+
+  actions {
+    open -> CreditApplicationDetail
+  }
+}
+
+view CreditApplicationDetail {
+  title: { pt-BR: "Detalhe da proposta", en: "Credit application detail" }
+  type: detail
+  document: CreditApplication
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { summary; timeline }
+}

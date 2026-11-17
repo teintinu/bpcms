@@ -1,0 +1,139 @@
+// service: example.com/services/citizen
+
+process CitizenMerge for Citizen {
+  title: { pt-BR: "Mesclagem de cidadãos", en: "Citizen merge" }
+  version: 1
+  goal: "Unificar cadastros duplicados com aprovação de quatro olhos, reatribuir usuários e registrar a auditoria"
+  owner: "Platform Citizen"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  pool Company {
+    internal
+
+    lane Registration {
+      role: Clerk
+    }
+
+    lane Management {
+      role: Manager
+    }
+
+    lane Audit {
+      role: Auditor
+    }
+  }
+
+  variables {
+    reassignedUsers: std.Count
+  }
+
+  start Reported {
+    by: [Clerk, Manager]
+  }
+
+  task Analyze {
+    lane: Registration
+    manual: "Comparar os cadastros e confirmar a duplicidade"
+    sla: 1d
+    priority: 50
+    assign: pull
+    on timer 2d -> Escalate
+  }
+
+  task Approve {
+    lane: Management
+    form: MergeApproval
+    sla: 1d
+    assign: pull
+  }
+
+  task Reassign {
+    lane: System
+    call: IdentityDirectory.reassignAccounts
+    with {
+      duplicate: citizen
+      survivor: citizen.mergedInto
+    }
+    gives: reassignedUsers
+    sla: 5m
+    on error DirectoryUnavailable -> ManualReassign
+  }
+
+  task ManualReassign {
+    lane: Registration
+    manual: "Reatribuir as contas do cadastro duplicado no diretório de identidade"
+    sla: 1d
+  }
+
+  task RegisterAudit {
+    lane: Audit
+    manual: "Conferir o dossiê da mesclagem e registrar o parecer de auditoria"
+    sla: 2d
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Revisar a duplicidade com o solicitante"
+    sla: 1d
+  }
+
+  milestone Recorded {
+    title: { pt-BR: "Mesclagem registrada", en: "Merge recorded" }
+    on: Citizen.Merged
+  }
+
+  end Completed {
+    title: { pt-BR: "Mesclagem concluída", en: "Merge completed" }
+    outcome: success
+  }
+
+  Reported -> Analyze
+  Analyze -> Approve
+  Approve.approve -> Reassign
+  Reassign -> RegisterAudit
+  ManualReassign -> RegisterAudit
+  RegisterAudit -> Completed
+  Escalate -> Approve
+}
+
+form MergeApproval {
+  title: { pt-BR: "Aprovação da mesclagem", en: "Merge approval" }
+  document: Citizen
+
+  fields {
+    displayName
+    kind
+    country
+    target: Citizen {
+      title: { pt-BR: "Cadastro de destino", en: "Target record" }
+      required
+    }
+  }
+
+  actions {
+    approve { calls: Citizen.merge(target) }
+  }
+}
+
+view MergeProgress {
+  title: { pt-BR: "Andamento da mesclagem", en: "Merge progress" }
+  type: process
+  process: CitizenMerge
+  roles: [Clerk, Manager, Auditor]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+integration IdentityDirectory {
+  protocol: rest
+  baseUrl: env.IDENTITY_DIRECTORY_URL
+  auth: oauth2
+  timeout: 20s
+  retry: exponential(3)
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    reassignAccounts(duplicate: Citizen, survivor: Citizen): std.Count
+  }
+}

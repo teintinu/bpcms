@@ -1,7 +1,0 @@
-// service: example.com/services/billing
-policy InvoiceRetention {
-  appliesTo: Invoice
-  rule: retainFor(5y) then anonymize
-  severity: enforce
-  audit: true
-}

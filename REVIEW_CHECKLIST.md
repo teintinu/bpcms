@@ -118,7 +118,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Shapes compartilhados ficam no serviço de negócio dono.
 - [ ] Application não declara artefatos.
 - [ ] `id` de document é implícito; `lookup` é tag de campo; FK é soft; extensão compartilha id.
-- [ ] Nomenclatura de arquivos: `<service>-<type>.bpcms`; roles+organogram no mesmo `*-organograms.bpcms`.
+- [ ] Nomenclatura de arquivos: `<service>-<contexto>-<tipo>.bpcms` (`tipo` = `document`/`process`); compartilhado `<service>-<tipo>.bpcms`; roles+organogram no mesmo `*-organograms.bpcms`.
 - [ ] Exemplos em `DSL_EXAMPLES.md` e em `examples/` concordam com a referência.
 - [ ] BRAINSTORM/DSL_REFERENCE/DSL_EXAMPLES atualizados juntos quando o contrato muda.
 - [ ] Nenhuma decisão de implementação (font/color/layout/resolução visual) foi revisada nesta fase.
@@ -229,7 +229,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [x] `<Document>Id` é Shape implícito de FK; não declarar
 
-**Exemplos:** H.1–H.9; `catalog-shapes`, `identity-shapes`, `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
+**Exemplos:** H.1–H.9; shapes de contexto e `<service>-shapes.bpcms` (compartilhados), como `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
 
 **Resultado da inspeção:**
 
@@ -452,7 +452,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `limits` em action
 - [ ] `segregation` e `signature` no documento, se aplicável
 
-**Exemplos:** D.1–D.6; `*-documents.bpcms`.
+**Exemplos:** D.1–D.6; `<service>-<contexto>-document.bpcms`.
 
 **Foco da revisão:**
 
@@ -511,7 +511,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `capabilities { gui }` na View apenas se a tela inteira exigir GUI por outro motivo
 - [ ] Shapes de áudio/imagem/vídeo declaram `capabilities { gui }`
 
-**Exemplos:** V.1–V.6; `*-views.bpcms`.
+**Exemplos:** V.1–V.6; arquivos de contexto e `<service>-views.bpcms` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -552,7 +552,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `default`
 - [ ] `owner`
 
-**Exemplos:** N.1–N.6; `*-decisions.bpcms`.
+**Exemplos:** N.1–N.6; arquivos de contexto e `<service>-decisions.bpcms` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -580,7 +580,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `notification`
 - [ ] `mask`
 
-**Exemplos:** P.1–P.6; `*-policies.bpcms`.
+**Exemplos:** P.1–P.6; arquivos de contexto e `<service>-policies.bpcms` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -657,7 +657,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `cache`
 - [ ] `quality`
 
-**Exemplos:** I.1–I.6; `*-integrations.bpcms`.
+**Exemplos:** I.1–I.6; arquivos de contexto e `<service>-integrations.bpcms` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -737,7 +737,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `type: decision` / DMN
 - [ ] `message` em send/receive
 
-**Exemplos:** P.1–P.7; `*-processes.bpcms`.
+**Exemplos:** P.1–P.7; `<service>-<contexto>-process.bpcms`.
 
 **Foco da revisão:**
 
@@ -1220,3 +1220,35 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - [ ] Decidir se `sla` é obrigatório (erro) ou recomendado (aviso) para task humana.
 - [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.bpcms`/SVGs. É asset de builder, por isso ficou fora desta rodada.
 - [ ] Diagramas: BPMN DI, DMN, CMMN — passo futuro; AST já separa modelo de layout.
+
+## Organização por contexto principal — 2026-11-17 (aprovada por solicitação direta do usuário)
+
+**Pedido:** revisar os nomes dos arquivos de exemplo e criar a regra da DSL: em vez de arquivos por tipo de artefato, arquivos pelo **contexto principal**; manter `service`; `application`, `document` e `process` são principais; nome `<service>-<contexto>-<tipo>.bpcms`; `<service>-<tipo>.bpcms` só para artefato compartilhado.
+
+**Escopo aprovado:** migrar todos os 19 serviços de negócio nesta rodada e validar a estrutura no `check` (`E_FILE_NAME`, `E_FILE_CONTEXT`, `E_FILE_SHARED`); a atribuição semântica dos auxiliares fica como convenção.
+
+**Decisão aplicada:**
+- Serviço: `<service>-<contexto>-<tipo>.bpcms`, com `tipo` = `document` ou `process` e contexto em kebab-case.
+- Aplicação: `<app>-application.bpcms` (o contexto é a própria aplicação); manifesto: `<service>-service.bpcms`.
+- Cada arquivo de contexto tem exatamente **um** artefato principal (o do nome) + auxiliares do contexto; referências entre arquivos são permitidas.
+- Arquivo compartilhado (`<service>-shapes.bpcms`, `-forms`, `-views`, `-messages`, `-policies`, `-decisions`, `-integrations`, `-parameters`, `-organograms`, `-icons`) só para artefato sem dono único ou de escopo do serviço.
+- `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` deixaram de existir; relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
+- `bpcms.org/std` continua com `std-service.bpcms` + `std-shapes.bpcms`.
+
+**Critério de dono:** shape → documento/processo que o usa como tipo; form → processo da task (senão documento); view → `document`/`source`/`sources` de um documento ou `process:`; message → documento do `about`; policy → alvo do `appliesTo`; decision/integration → processo que usa; parameter/secret, role/organogram e icon → service-wide. Detalhe na §30 do `DSL_REFERENCE.md`.
+
+**Validação:** o `check` valida a estrutura (`E_FILE_NAME`, `E_FILE_CONTEXT`, `E_FILE_SHARED`), não a semântica da atribuição dos auxiliares. Regra em §26/§30.
+
+**Resultado da migração:**
+- 19 serviços de negócio (+ `std`); 20 manifestos preservados.
+- 197 → 182 arquivos `.bpcms` no total.
+- 90 arquivos de contexto (55 `document` + 35 `process`), 71 arquivos compartilhados e 1 `std-shapes.bpcms`.
+- 682 blocos de artefato preservados exatamente; 5 aplicações e 8 SVGs intactos.
+- Billing: 12 → 17 arquivos (`billing-invoice-document.bpcms`, `billing-invoice-issuance-process.bpcms`, `billing-dunning-process.bpcms`, `billing-month-close-process.bpcms`, documentos por contexto, `-shapes`, `-views`, `-parameters`, `-organograms`, `-icons`).
+
+**Arquivos afetados:** `DSL_REFERENCE.md` (§2, §3, §21, §23, §26, §30 e Mapa), `AGENTS.md`, `BRAINSTORM.md` (B-60/D-050), `REVIEW_CHECKLIST.md`, `examples/services/**`.
+
+**Pendências:**
+- [ ] Reconciliar a regra de subpastas como namespace (anotada) com os nomes de arquivo por contexto; nesta rodada os `.bpcms` ficaram na raiz.
+- [ ] Implementar `E_FILE_NAME`/`E_FILE_CONTEXT`/`E_FILE_SHARED` no `check` real (a DSL ainda não tem parser executável).
+- [ ] Revisar os casos de artefato sem dono único que ficaram em arquivo compartilhado (`Email`/`Phone` em Citizen, `TrackingEvent` em Shipping, `SupportLabGateway` em Laboratory, `ScaleDevice` em Shipping).

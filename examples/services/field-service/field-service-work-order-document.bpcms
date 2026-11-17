@@ -1,0 +1,188 @@
+// service: example.com/services/field-service
+
+document WorkOrder {
+  title: { pt-BR: "Ordem de serviço", en: "Work order" }
+  version: 1
+  owner: "Field Service"
+  sync: live
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    site: Site { title: { pt-BR: "Site", en: "Site" }, lookup }
+    customer: Identity.User { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    priority: WorkOrderPriority {
+      title: { pt-BR: "Prioridade", en: "Priority" }
+      lookup
+      default: Normal
+    }
+    description: string { title: { pt-BR: "Descrição", en: "Description" }, maxLength: 1000 }
+    status: WorkOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    technician: Technician { title: { pt-BR: "Técnico", en: "Technician" } }
+    openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" }, readonly }
+    dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due at" } }
+    cancelReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }, maxLength: 500 }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, dueAt] range
+    bySite: [site.id] hash
+  }
+
+
+  actions {
+    assign(assignedTechnician: Technician) {
+      title: { pt-BR: "Atribuir técnico", en: "Assign technician" }
+      roles: [Dispatcher]
+      to: status.Assigned
+      emits { technician: assignedTechnician }
+      { technician = assignedTechnician }
+    }
+
+    start() {
+      title: { pt-BR: "Iniciar execução", en: "Start work" }
+      roles: [FieldTechnician, Dispatcher]
+      to: status.InProgress
+      emits { at: now() }
+    }
+
+    finish() {
+      title: { pt-BR: "Concluir ordem", en: "Finish work order" }
+      roles: [Dispatcher, Supervisor]
+      to: status.Done
+      emits { at: now() }
+    }
+
+    cancel(reason: string) {
+      title: { pt-BR: "Cancelar ordem", en: "Cancel work order" }
+      roles: [Supervisor]
+      to: status.Cancelled
+      { cancelReason = reason }
+    }
+  }
+}
+
+shape WorkOrderStatus {
+  title: { pt-BR: "Situação da ordem de serviço", en: "Work order status" }
+  base: state
+  initial: Open
+
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: status.open
+    ordinal: 10
+
+    transition Assigned {
+      title: { pt-BR: "Ordem atribuída", en: "Work order assigned" }
+      payload {
+        technician: Technician { title: { pt-BR: "Técnico", en: "Technician" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Assigned {
+    title: { pt-BR: "Atribuída", en: "Assigned" }
+    icon: status.assigned
+    ordinal: 20
+
+    transition InProgress {
+      event: Started
+      title: { pt-BR: "Ordem iniciada", en: "Work order started" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value InProgress {
+    title: { pt-BR: "Em execução", en: "In progress" }
+    icon: status.inProgress
+    ordinal: 30
+
+    transition Done {
+      event: Finished
+      title: { pt-BR: "Ordem concluída", en: "Work order finished" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Done {
+    title: { pt-BR: "Concluída", en: "Done" }
+    icon: status.done
+    ordinal: 40
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: status.cancelled
+    ordinal: 50
+  }
+}
+
+shape WorkOrderPriority {
+  title: { pt-BR: "Prioridade da ordem", en: "Work order priority" }
+  base: classification
+
+  value Low {
+    title: { pt-BR: "Baixa", en: "Low" }
+    icon: priority.low
+    ordinal: 10
+  }
+  value Normal {
+    title: { pt-BR: "Normal", en: "Normal" }
+    icon: priority.normal
+    ordinal: 20
+  }
+  value High {
+    title: { pt-BR: "Alta", en: "High" }
+    icon: priority.high
+    ordinal: 30
+  }
+  value Urgent {
+    title: { pt-BR: "Urgente", en: "Urgent" }
+    icon: priority.urgent
+    ordinal: 40
+  }
+}
+
+view WorkOrdersTable {
+  title: { pt-BR: "Ordens de serviço", en: "Work orders" }
+  type: table
+  source: WorkOrder
+  roles: [Dispatcher, Supervisor]
+
+  columns { number; site; priority; status; dueAt }
+  filters { status; priority; site; period }
+  pagination: 50
+
+  actions {
+    assign -> WorkOrder.assign(assignedTechnician)
+    start -> WorkOrder.start
+    finish -> WorkOrder.finish
+    cancel -> WorkOrder.cancel(reason)
+  }
+}

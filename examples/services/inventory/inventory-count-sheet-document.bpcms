@@ -1,0 +1,155 @@
+// service: example.com/services/inventory
+
+document CountSheet {
+  title: { pt-BR: "Folha de contagem", en: "Count sheet" }
+  version: 1
+  owner: "Inventory"
+  sync: live
+
+  fields {
+    stockItem: StockItem {
+      title: { pt-BR: "Item de estoque", en: "Stock item" }
+      lookup
+    }
+    expected: std.Count { title: { pt-BR: "Esperado", en: "Expected" }, lookup }
+    counted: std.Count { title: { pt-BR: "Contado", en: "Counted" }, lookup }
+    divergence: std.Count {
+      title: { pt-BR: "Divergência", en: "Divergence" }
+      lookup
+      computed: counted - expected
+    }
+    status: CountStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    countedAt: DateTime { title: { pt-BR: "Contada em", en: "Counted at" } }
+    recountedAt: DateTime { title: { pt-BR: "Recontada em", en: "Recounted at" } }
+    approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+    rejectionReason: string { title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" } }
+  }
+
+  capabilities { capture, units }
+  source: device "collector-01" for counted
+
+  indexes {
+    byItem: [stockItem.id, countedAt] range
+    byStatus: [status, countedAt] range
+  }
+
+
+  actions {
+    create(stockItem: StockItem){
+      title: { pt-BR: "Abrir contagem", en: "Open count" }
+      roles: [StockManager]
+      returns: CountSheet
+      {
+        expected = stockItem.available
+        emit Created { stockItem: stockItem }
+      }
+    }
+
+    submit(){
+      title: { pt-BR: "Registrar contagem", en: "Record count" }
+      roles: [WarehouseOperator]
+
+      to: status.Counted
+
+      {
+        countedAt = now()
+      }
+    }
+
+    recount(){
+      title: { pt-BR: "Recontar", en: "Recount" }
+      roles: [WarehouseOperator]
+
+      {
+        recountedAt = now()
+      }
+    }
+
+    approve(){
+      title: { pt-BR: "Aprovar contagem", en: "Approve count" }
+      roles: [StockManager]
+
+      to: status.Approved
+      emits { approvedAt: now() }
+
+      {
+        approvedAt = now()
+      }
+    }
+
+    reject(reason: string){
+      title: { pt-BR: "Rejeitar contagem", en: "Reject count" }
+      roles: [StockManager]
+
+      to: status.Rejected
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
+
+      {
+        rejectionReason = reason
+      }
+    }
+  }
+
+  rule counted >= 0 {
+    pt-BR: "A contagem não pode ser negativa"
+    en: "Count cannot be negative"
+  }
+}
+
+shape CountStatus {
+  title: { pt-BR: "Situação da contagem", en: "Count status" }
+  base: state
+  initial: Open with transition Created {
+    title: { pt-BR: "Contagem criada", en: "Count created" }
+    payload {
+      stockItem: StockItem { title: { pt-BR: "Item de estoque", en: "Stock item" } }
+    }
+  }
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition Counted {
+      title: { pt-BR: "Contagem registrada", en: "Count recorded" }
+      payload {
+        counted: std.Count { title: { pt-BR: "Contado", en: "Counted" } }
+        divergence: std.Count { title: { pt-BR: "Divergência", en: "Divergence" } }
+      }
+    }
+  }
+  value Counted {
+    title: { pt-BR: "Contada", en: "Counted" }
+    icon: Counted
+    ordinal: 20
+
+    transition Approved {
+      title: { pt-BR: "Contagem aprovada", en: "Count approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 30
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+  format: plain
+}

@@ -1,0 +1,325 @@
+// service: example.com/services/checkout
+
+document CheckoutSession {
+  title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+  version: 2
+  owner: "Checkout"
+  sync: live
+
+  fields {
+    customer: User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      lookup
+      currency: BRL
+    }
+    freight: std.Money {
+      title: { pt-BR: "Frete", en: "Freight" }
+      currency: BRL
+    }
+    deliveryDays: std.Count {
+      title: { pt-BR: "Prazo de entrega", en: "Delivery days" }
+      min: 1
+      max: 90
+    }
+    paymentMethod: PaymentMethod {
+      title: { pt-BR: "Método de pagamento", en: "Payment method" }
+      lookup
+    }
+    authorizationCode: string {
+      title: { pt-BR: "Código de autorização", en: "Authorization code" }
+      maxLength: 60
+    }
+    status: CheckoutStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" } }
+    confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
+  }
+
+  indexes {
+    byCustomer: [customer.id, createdAt] range
+    byStatus: [status, createdAt] range
+  }
+
+
+  actions {
+    create(customer: User, total: std.Money) {
+      title: { pt-BR: "Abrir sessão", en: "Open session" }
+      roles: [Customer]
+      {
+        createdAt = now()
+      }
+    }
+
+    validateCart() {
+      title: { pt-BR: "Validar carrinho", en: "Validate cart" }
+      roles: [Customer]
+
+      to: status.Validated
+
+      rule total > 0 {
+        pt-BR: "O carrinho está vazio"
+        en: "The cart is empty"
+      }
+    }
+
+    quoteShipping(freightAmount: std.Money, days: std.Count) {
+      title: { pt-BR: "Registrar frete", en: "Record shipping" }
+      roles: [SessionEngine]
+
+      to: status.ShippingQuoted
+      emits { freight: freightAmount; deliveryDays: days }
+
+      rule freightAmount >= 0 BRL {
+        pt-BR: "O frete não pode ser negativo"
+        en: "Freight cannot be negative"
+      }
+      {
+        freight = freightAmount
+        deliveryDays = days
+      }
+    }
+
+    authorizePayment(authorization: string) {
+      title: { pt-BR: "Registrar autorização", en: "Record authorization" }
+      roles: [SessionEngine]
+
+      to: status.PaymentAuthorized
+      emits { authorizationCode: authorization }
+
+      rule authorization.length >= 4 {
+        pt-BR: "Informe o código de autorização"
+        en: "Enter the authorization code"
+      }
+      {
+        authorizationCode = authorization
+      }
+    }
+
+    retryPayment(method: PaymentMethod) {
+      title: { pt-BR: "Trocar forma de pagamento", en: "Change payment method" }
+      roles: [Customer]
+      {
+        paymentMethod = method
+      }
+    }
+
+    abandon(reason: string) {
+      title: { pt-BR: "Abandonar compra", en: "Abandon purchase" }
+      roles: [Customer, SupportAgent, SessionEngine]
+
+      to: status.Abandoned
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+    }
+
+    confirmOrder() {
+      title: { pt-BR: "Confirmar compra", en: "Confirm purchase" }
+      roles: [SessionEngine]
+
+      to: status.Confirmed
+      {
+        confirmedAt = now()
+      }
+    }
+  }
+
+  rule status == Confirmed implies confirmedAt != null {
+    pt-BR: "Informe a data de confirmação"
+    en: "Enter the confirmation date"
+  }
+}
+
+shape CheckoutStatus {
+  title: { pt-BR: "Situação da finalização", en: "Checkout status" }
+  base: state
+  initial: Draft
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Validated {
+      event: CartValidated
+      title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+      payload {
+        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Validated {
+    title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+    icon: Validated
+    ordinal: 20
+
+    transition ShippingQuoted {
+      title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+      payload {
+        freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+        deliveryDays: std.Count { title: { pt-BR: "Prazo", en: "Days" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value ShippingQuoted {
+    title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+    icon: ShippingQuoted
+    ordinal: 30
+
+    transition PaymentAuthorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      payload {
+        authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
+      }
+    }
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value PaymentAuthorized {
+    title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+    icon: PaymentAuthorized
+    ordinal: 40
+
+    transition Abandoned {
+      title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Confirmed {
+      title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
+      payload {
+        confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
+      }
+    }
+  }
+  value Confirmed {
+    title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+    icon: Confirmed
+    ordinal: 50
+  }
+  value Abandoned {
+    title: { pt-BR: "Abandonada", en: "Abandoned" }
+    icon: Abandoned
+    ordinal: 60
+  }
+
+  format: plain
+}
+
+shape PaymentMethod {
+  title: { pt-BR: "Método de pagamento", en: "Payment method" }
+  base: classification
+
+  value CreditCard {
+    title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    icon: CreditCard
+    ordinal: 10
+  }
+  value Pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: Pix
+    ordinal: 20
+  }
+  value Boleto {
+    title: { pt-BR: "Boleto", en: "Boleto" }
+    icon: Boleto
+    ordinal: 30
+  }
+
+  format: plain
+}
+
+view Funnel {
+  title: { pt-BR: "Funil de finalização", en: "Checkout funnel" }
+  type: report
+  sources: [CheckoutSession]
+  roles: [SupportAgent]
+
+  filters { period; status }
+  metrics {
+    started: count(CheckoutSession)
+    validated: count(CheckoutSession) where status != Draft
+    paid: count(CheckoutSession) where status == Confirmed
+    abandoned: count(CheckoutSession) where status == Abandoned
+    revenue: sum(CheckoutSession.total) where status == Confirmed
+  }
+  units { revenue: BRL }
+  freshness: 10m
+  export: [pdf, csv]
+}
+
+view SessionPulse {
+  title: { pt-BR: "Pulso das finalizações", en: "Session pulse" }
+  type: dashboard
+  sources: [CheckoutSession]
+  roles: [SupportAgent]
+  mode: live
+
+  filters { status }
+  metrics {
+    awaitingPayment: count(CheckoutSession) where status == PaymentAuthorized
+    awaitingQuote: count(CheckoutSession) where status == Validated
+    abandonedToday: count(CheckoutSession) where status == Abandoned
+  }
+  freshness: 1m
+}
+
+view Sessions {
+  title: { pt-BR: "Sessões de finalização", en: "Checkout sessions" }
+  type: table
+  source: CheckoutSession
+  roles: [SupportAgent, Customer]
+
+  columns { customer; total; status; createdAt }
+  filters { status; period; customer }
+  pagination: 50
+
+  actions {
+    open -> SessionDetail
+    startCheckout -> CheckoutSession.create(customer, total)
+    validate -> CheckoutSession.validateCart
+    abandon -> CheckoutSession.abandon(reason)
+  }
+}
+
+view SessionDetail {
+  title: { pt-BR: "Detalhe da sessão", en: "Session detail" }
+  type: detail
+  document: CheckoutSession
+  roles: [SupportAgent, Customer]
+
+  sections { summary; timeline }
+  actions {
+    progress -> CheckoutProgress
+  }
+}

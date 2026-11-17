@@ -1,0 +1,144 @@
+// service: example.com/services/payments
+
+document Refund {
+  title: { pt-BR: "Reembolso", en: "Refund" }
+  version: 2
+  owner: "Payments"
+  sync: live
+
+  fields {
+    payment: Payment {
+      title: { pt-BR: "Pagamento", en: "Payment" }
+      lookup
+    }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    requestReason: string { title: { pt-BR: "Motivo", en: "Reason" }, maxLength: 500 }
+    status: RefundStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+    completedAt: DateTime { title: { pt-BR: "Concluído em", en: "Completed at" } }
+  }
+
+  indexes {
+    byPayment: [payment.id] hash
+    byStatus: [status, requestedAt] range
+  }
+
+
+  actions {
+    request(reason: string) {
+      title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
+      roles: [Analyst]
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      {
+        requestReason = reason
+        requestedAt = now()
+        emit Requested
+      }
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar", en: "Approve" }
+      roles: [Manager]
+
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    complete() {
+      title: { pt-BR: "Concluir", en: "Complete" }
+      roles: [PaymentEngine]
+
+      to: status.Completed
+      {
+        completedAt = now()
+      }
+    }
+
+    reject(reason: string) {
+      title: { pt-BR: "Rejeitar", en: "Reject" }
+      roles: [Manager]
+
+      to: status.Rejected
+    }
+  }
+
+  rule amount > 0 {
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+  }
+  rule amount <= 100000 BRL {
+    pt-BR: "O valor excede o limite de 100.000 BRL"
+    en: "Amount exceeds the 100,000 BRL limit"
+  }
+}
+
+shape RefundStatus {
+  title: { pt-BR: "Situação do reembolso", en: "Refund status" }
+  base: state
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Reembolso solicitado", en: "Refund requested" }
+    payload {
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    }
+  }
+
+  value Requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: Requested
+    ordinal: 10
+
+    transition Approved {
+      title: { pt-BR: "Reembolso aprovado", en: "Refund approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Reembolso rejeitado", en: "Refund rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovado", en: "Approved" }
+    icon: Approved
+    ordinal: 20
+
+    transition Completed {
+      title: { pt-BR: "Reembolso concluído", en: "Refund completed" }
+      payload {
+        completedAt: DateTime { title: { pt-BR: "Concluído em", en: "Completed at" } }
+      }
+    }
+  }
+  value Completed {
+    title: { pt-BR: "Concluído", en: "Completed" }
+    icon: Completed
+    ordinal: 30
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitado", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+
+  format: plain
+}
+
+policy FourEyesRefund {
+  appliesTo: Refund.approve
+  rule: approver != creator
+  severity: block
+  message: "Reembolso exige segundo aprovador"
+  audit: true
+}

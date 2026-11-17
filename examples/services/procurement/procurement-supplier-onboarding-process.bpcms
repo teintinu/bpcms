@@ -1,0 +1,183 @@
+// service: example.com/services/procurement
+
+process SupplierOnboarding for Supplier {
+  title: { pt-BR: "Habilitação de fornecedor", en: "Supplier onboarding" }
+  version: 1
+  goal: "Habilitar fornecedor com cadastro no portal, documentos verificados e contas a pagar prontas"
+  owner: "Procurement"
+  timezone: America/Fortaleza
+  sla: 10d
+
+  pool Company {
+    internal
+    lane Compliance { role: ComplianceAnalyst }
+    lane Approval { role: Approver }
+    lane Management { role: ProcurementManager }
+    lane Finance { role: PayablesClerk }
+  }
+
+  pool Supplier {
+    external
+    lane Portal { role: SupplierUser }
+  }
+
+  start Intake { by: [Buyer] }
+
+  task Invite {
+    lane: System
+    sends: SupplierInvite
+    partner: Supplier
+    with {
+      invitedAt: now()
+      expiresAt: now() + 7d
+    }
+  }
+
+  task Register {
+    lane: Portal
+    form: SupplierRegistration
+    sla: 5d
+    on timer 7d -> Abandon
+  }
+
+  task Verify {
+    lane: Compliance
+    form: DocumentVerification
+    sla: 2d
+    assign: pull
+  }
+
+  task Approve {
+    lane: Approval
+    form: ComplianceApproval
+    sla: 2d
+    assign: pull
+    on timer 3d -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    form: ComplianceApproval
+    sla: 2d
+  }
+
+  task Payables {
+    lane: Finance
+    form: PayablesSetup
+    sla: 1d
+    assign: pull
+  }
+
+  task Abandon {
+    lane: Compliance
+    form: BlockSupplier
+    sla: 1d
+  }
+
+  end Onboarded {
+    title: { pt-BR: "Fornecedor habilitado", en: "Supplier onboarded" }
+    outcome: success
+  }
+
+  end Blocked {
+    title: { pt-BR: "Habilitação bloqueada", en: "Onboarding blocked" }
+    outcome: failure
+  }
+
+  Intake -> Invite
+  Invite -> Register
+  Register.submit -> Verify
+  Verify.verified -> Approve
+  Verify.rejected -> Blocked
+  Approve.approved -> Payables
+  Approve.rejected -> Blocked
+  Escalate.approved -> Payables
+  Escalate.rejected -> Blocked
+  Payables.enable -> Onboarded
+  Abandon.block -> Blocked
+}
+
+form SupplierRegistration {
+  title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
+  document: Supplier
+
+  fields {
+    legalName { required }
+    tradeName
+    email { required }
+    phone
+    category { required }
+  }
+
+  actions {
+    submit { calls: Supplier.submitRegistration(legalName, tradeName, email, phone, category) }
+  }
+}
+
+form DocumentVerification {
+  title: { pt-BR: "Verificação documental", en: "Document verification" }
+  document: Supplier
+
+  fields {
+    risk
+    blockedReason
+  }
+
+  actions {
+    verified { calls: Supplier.verifyDocuments }
+    classify { calls: Supplier.classifyRisk(risk); stay }
+    rejected { calls: Supplier.block(blockedReason) }
+  }
+}
+
+form ComplianceApproval {
+  title: { pt-BR: "Aprovação de fornecedor", en: "Supplier approval" }
+  document: Supplier
+
+  fields {
+    legalName { readonly }
+    risk { readonly }
+    blockedReason
+  }
+
+  actions {
+    approved { calls: Supplier.approve }
+    rejected { calls: Supplier.block(blockedReason) }
+  }
+}
+
+form PayablesSetup {
+  title: { pt-BR: "Configuração de contas a pagar", en: "Payables setup" }
+  document: Supplier
+
+  fields {
+    legalName { readonly }
+    paymentTerms
+  }
+
+  actions {
+    enable { calls: Supplier.enablePayables(paymentTerms) }
+  }
+}
+
+form BlockSupplier {
+  title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+  document: Supplier
+
+  fields {
+    blockedReason
+  }
+
+  actions {
+    block { calls: Supplier.block(blockedReason) }
+  }
+}
+
+view SupplierOnboardingProgress {
+  title: { pt-BR: "Andamento da habilitação de fornecedor", en: "Supplier onboarding progress" }
+  type: process
+  process: SupplierOnboarding
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

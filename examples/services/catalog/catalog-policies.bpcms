@@ -1,8 +1,0 @@
-// service: example.com/services/catalog
-policy PublishApproval {
-  appliesTo: Product.publish
-  rule: price > 0 and status == InReview
-  severity: block
-  message: "Produto precisa de preço e estar em rascunho para publicar"
-  audit: true
-}

@@ -1,0 +1,144 @@
+// service: example.com/services/shipping
+
+process FreightQuote for Shipment {
+  title: { pt-BR: "Cotação de frete", en: "Freight quote" }
+  version: 1
+  goal: "Cotar frete em várias transportadoras e aplicar a melhor oferta"
+  owner: "Shipping"
+  timezone: America/Fortaleza
+  sla: 1d
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane Management { role: Manager }
+  }
+
+  pool Carrier {
+    external
+  }
+
+  variables {
+    quoteA: std.Money
+    quoteB: std.Money
+    quoteC: std.Money
+  }
+
+  start Requested { event: Shipment.QuoteRequested }
+
+  fork Ask
+
+  task AskA {
+    lane: System
+    call: Carrier.quote
+    with {
+      shipment
+      carrier: "CarrierA"
+    }
+    gives: quoteA
+    sla: 2m
+    on timer 2m -> Fallback
+  }
+
+  task AskB {
+    lane: System
+    call: Carrier.quote
+    with {
+      shipment
+      carrier: "CarrierB"
+    }
+    gives: quoteB
+    sla: 2m
+    on timer 2m -> Fallback
+  }
+
+  task AskC {
+    lane: System
+    call: Carrier.quote
+    with {
+      shipment
+      carrier: "CarrierC"
+    }
+    gives: quoteC
+    sla: 2m
+    on timer 2m -> Fallback
+  }
+
+  join Qualified
+
+  gateway Cheapest {
+    if quoteA <= quoteB and quoteA <= quoteC -> UseA
+    if quoteB <= quoteC -> UseB
+    else -> UseC
+  }
+
+  task UseA {
+    lane: System
+    action: Shipment.applyFreight
+    with {
+      carrier: "CarrierA"
+      amount: quoteA
+    }
+    sla: 1m
+  }
+
+  task UseB {
+    lane: System
+    action: Shipment.applyFreight
+    with {
+      carrier: "CarrierB"
+      amount: quoteB
+    }
+    sla: 1m
+  }
+
+  task UseC {
+    lane: System
+    action: Shipment.applyFreight
+    with {
+      carrier: "CarrierC"
+      amount: quoteC
+    }
+    sla: 1m
+  }
+
+  task Fallback {
+    lane: Management
+    form: FreightOverride
+    sla: 2h
+    assign: pull
+    on timer 1d -> AbandonQuote
+  }
+
+  task AbandonQuote {
+    lane: Management
+    manual: "Encerrar a cotação como expirada e avisar o despachante"
+    sla: 1h
+  }
+
+  end Quoted {
+    title: { pt-BR: "Cotada", en: "Quoted" }
+    outcome: success
+  }
+  end Expired {
+    title: { pt-BR: "Cotação expirada", en: "Quote expired" }
+    outcome: failure
+  }
+
+  Requested -> Ask
+  Ask -> AskA
+  Ask -> AskB
+  Ask -> AskC
+  AskA -> Qualified
+  AskB -> Qualified
+  AskC -> Qualified
+  Qualified -> Cheapest
+  Cheapest -> UseA
+  Cheapest -> UseB
+  Cheapest -> UseC
+  UseA -> Quoted
+  UseB -> Quoted
+  UseC -> Quoted
+  Fallback.apply -> Quoted
+  AbandonQuote -> Expired
+}

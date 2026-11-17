@@ -1,4 +1,5 @@
 // service: example.com/services/checkout
+
 role Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   permissions: [checkout.start, checkout.pay]

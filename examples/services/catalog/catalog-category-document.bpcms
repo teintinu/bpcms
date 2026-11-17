@@ -1,0 +1,37 @@
+// service: example.com/services/catalog
+
+document Category {
+  title: { pt-BR: "Categoria", en: "Category" }
+  version: 1
+  owner: "Catalog"
+  sync: read
+
+  fields {
+    name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
+    parent: Category {
+      title: { pt-BR: "Categoria pai", en: "Parent category" }
+    }
+  }
+
+  indexes {
+    name: [name] unique
+    parent: [parent.id] hash
+  }
+
+  seed {
+    General {
+      name: "Geral"
+    }
+  }
+
+  actions {
+    add(name: string, parent: Category?){
+      title: { pt-BR: "Cadastrar categoria", en: "Add category" }
+      roles: [Curator]
+    }
+    rename(name: string){
+      title: { pt-BR: "Renomear", en: "Rename" }
+      roles: [Curator]
+    }
+  }
+}

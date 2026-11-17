@@ -1,0 +1,361 @@
+// service: example.com/services/contracts
+
+document Contract {
+  title: { pt-BR: "Contrato", en: "Contract" }
+  version: 1
+  owner: "Contracts"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    subject: string {
+      title: { pt-BR: "Objeto", en: "Subject" }
+      maxLength: 240
+      lookup
+      required
+    }
+    kind: ContractKind {
+      title: { pt-BR: "Tipo", en: "Kind" }
+      lookup
+    }
+    supplier: Procurement.Supplier {
+      title: { pt-BR: "Fornecedor", en: "Supplier" }
+      lookup
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor", en: "Amount" }
+      currency: BRL
+      required
+    }
+    startsAt: Date {
+      title: { pt-BR: "Início", en: "Start date" }
+      required
+    }
+    endsAt: Date {
+      title: { pt-BR: "Término", en: "End date" }
+      required
+    }
+    status: ContractStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    submittedAt: DateTime {
+      title: { pt-BR: "Enviado para revisão em", en: "Submitted for review at" }
+    }
+    legalClearedAt: DateTime {
+      title: { pt-BR: "Liberado pelo jurídico em", en: "Legal cleared at" }
+    }
+    proposedEndsAt: Date {
+      title: { pt-BR: "Término proposto", en: "Proposed end date" }
+    }
+    signedAt: DateTime {
+      title: { pt-BR: "Assinado em", en: "Signed at" }
+    }
+    signatureId: string {
+      title: { pt-BR: "Identificador da assinatura", en: "Signature id" }
+      maxLength: 80
+    }
+    renewedAt: DateTime {
+      title: { pt-BR: "Renovado em", en: "Renewed at" }
+    }
+    markedAt: DateTime {
+      title: { pt-BR: "Marcado a vencer em", en: "Marked expiring at" }
+    }
+    cancelledAt: DateTime {
+      title: { pt-BR: "Cancelado em", en: "Cancelled at" }
+    }
+    cancellationReason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 280
+    }
+    terminatedAt: DateTime {
+      title: { pt-BR: "Encerrado em", en: "Terminated at" }
+    }
+    terminationReason: string {
+      title: { pt-BR: "Motivo do encerramento", en: "Termination reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    submit() {
+      title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
+      roles: [ContractAnalyst]
+      to: status.InReview
+      {
+        submittedAt = now()
+      }
+    }
+
+    clearLegal() {
+      title: { pt-BR: "Liberar pelo jurídico", en: "Clear by legal" }
+      roles: [LegalCounsel]
+      {
+        legalClearedAt = now()
+      }
+    }
+
+    sign(signatureId: string, signedAt: DateTime) {
+      title: { pt-BR: "Assinar contrato", en: "Sign contract" }
+      roles: [LegalCounsel, ContractManager]
+      to: status.Active
+    }
+
+    markExpiring() {
+      title: { pt-BR: "Marcar a vencer", en: "Mark expiring" }
+      roles: [ContractManager]
+      to: status.Expiring
+      {
+        markedAt = now()
+      }
+    }
+
+    proposeRenewal(proposedEndsAt: Date) {
+      title: { pt-BR: "Propor renovação", en: "Propose renewal" }
+      roles: [LegalCounsel, ContractAnalyst]
+    }
+
+    confirmRenewal(signedAt: DateTime) {
+      title: { pt-BR: "Confirmar renovação", en: "Confirm renewal" }
+      roles: [ContractManager]
+      to: status.Active
+      {
+        endsAt = proposedEndsAt
+        renewedAt = signedAt
+      }
+    }
+
+    terminate(terminationReason: string) {
+      title: { pt-BR: "Encerrar contrato", en: "Terminate contract" }
+      roles: [ContractManager]
+      to: status.Terminated
+      emits { reason: terminationReason }
+      {
+        terminatedAt = now()
+      }
+    }
+
+    cancel(cancellationReason: string) {
+      title: { pt-BR: "Cancelar contrato", en: "Cancel contract" }
+      roles: [ContractManager, LegalCounsel]
+      to: status.Terminated
+      emits { reason: cancellationReason }
+      {
+        cancelledAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, endsAt] range
+    byEndsAt: [endsAt] range
+    bySupplier: [supplier.id] hash
+  }
+
+  rule endsAt > startsAt {
+    pt-BR: "O término do contrato deve ser posterior ao início"
+    en: "Contract end date must be after its start date"
+  }
+
+  rule amount > 0 BRL {
+    pt-BR: "O contrato precisa ter valor positivo"
+    en: "The contract must have a positive amount"
+  }
+}
+
+shape ContractStatus {
+  title: { pt-BR: "Situação do contrato", en: "Contract status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition InReview {
+      event: Submitted
+      title: { pt-BR: "Contrato enviado para revisão", en: "Contract submitted for review" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+      }
+    }
+
+    transition Terminated {
+      event: Cancelled
+      title: { pt-BR: "Contrato cancelado", en: "Contract cancelled" }
+      payload {
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value InReview {
+    title: { pt-BR: "Em revisão", en: "In review" }
+    icon: InReview
+    ordinal: 20
+
+    transition Active {
+      event: Signed
+      title: { pt-BR: "Contrato assinado", en: "Contract signed" }
+      payload {
+        signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+        signatureId: string { title: { pt-BR: "Identificador da assinatura", en: "Signature id" } }
+      }
+    }
+
+    transition Terminated {
+      event: Cancelled
+      title: { pt-BR: "Contrato cancelado", en: "Contract cancelled" }
+      payload {
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 30
+
+    transition Expiring {
+      title: { pt-BR: "Contrato a vencer", en: "Contract expiring" }
+      payload {
+        markedAt: DateTime { title: { pt-BR: "Marcado em", en: "Marked at" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
+      payload {
+        terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Expiring {
+    title: { pt-BR: "A vencer", en: "Expiring" }
+    icon: Expiring
+    ordinal: 40
+
+    transition Active {
+      event: Renewed
+      title: { pt-BR: "Contrato renovado", en: "Contract renewed" }
+      payload {
+        signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+      }
+    }
+
+    transition Terminated {
+      title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
+      payload {
+        terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Terminated {
+    title: { pt-BR: "Encerrado", en: "Terminated" }
+    icon: Terminated
+    ordinal: 50
+  }
+}
+
+shape ContractKind {
+  title: { pt-BR: "Tipo de contrato", en: "Contract kind" }
+  base: classification
+  value Supply {
+    title: { pt-BR: "Fornecimento", en: "Supply" }
+    icon: Supply
+    ordinal: 10
+  }
+  value Service {
+    title: { pt-BR: "Serviço", en: "Service" }
+    icon: Service
+    ordinal: 20
+  }
+  value License {
+    title: { pt-BR: "Licença", en: "License" }
+    icon: License
+    ordinal: 30
+  }
+}
+
+view Contracts {
+  title: { pt-BR: "Contratos", en: "Contracts" }
+  type: table
+  source: Contract
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  columns { number; subject; supplier; amount; status; endsAt }
+  filters { status; supplier; kind }
+  pagination: 50
+
+  actions {
+    open -> ContractDetail
+  }
+}
+
+view ContractDetail {
+  title: { pt-BR: "Detalhe do contrato", en: "Contract detail" }
+  type: detail
+  document: Contract
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  sections { summary; timeline }
+}
+
+view RenewalCalendar {
+  title: { pt-BR: "Calendário de renovação", en: "Renewal calendar" }
+  type: calendar
+  source: Contract
+  date: endsAt
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  filters { status; supplier }
+  actions {
+    open -> ContractDetail
+  }
+}
+
+message SignatureRequest {
+  title: { pt-BR: "Solicitação de assinatura", en: "Signature request" }
+  about: Contract
+  payload {
+    contractNumber: string { title: { pt-BR: "Número do contrato", en: "Contract number" } }
+    expiresAt: Date { title: { pt-BR: "Expira em", en: "Expires at" } }
+  }
+}
+
+message SignatureConfirmed {
+  title: { pt-BR: "Assinatura confirmada", en: "Signature confirmed" }
+  about: Contract
+  payload {
+    signatureId: string { title: { pt-BR: "Identificador da assinatura", en: "Signature id" } }
+    signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+  }
+}
+
+message RenewalRequest {
+  title: { pt-BR: "Proposta de renovação", en: "Renewal request" }
+  about: Contract
+  payload {
+    contractNumber: string { title: { pt-BR: "Número do contrato", en: "Contract number" } }
+    proposedEndsAt: Date { title: { pt-BR: "Novo término proposto", en: "Proposed end date" } }
+    expiresAt: Date { title: { pt-BR: "Resposta até", en: "Respond by" } }
+  }
+}
+
+message RenewalConfirmed {
+  title: { pt-BR: "Renovação confirmada", en: "Renewal confirmed" }
+  about: Contract
+  payload {
+    signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+  }
+}

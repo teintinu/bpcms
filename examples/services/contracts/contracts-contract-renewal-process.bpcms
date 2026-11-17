@@ -1,0 +1,147 @@
+// service: example.com/services/contracts
+
+process ContractRenewal for Contract {
+  title: { pt-BR: "Renovação de contrato", en: "Contract renewal" }
+  version: 1
+  goal: "Renovar antes do vencimento, com proposta ao fornecedor e encerramento quando não houver acordo"
+  owner: "Contracts"
+  timezone: America/Fortaleza
+  sla: 60d
+
+  pool Company {
+    internal
+    lane Renewals { role: ContractAnalyst }
+    lane Management { role: ContractManager }
+  }
+
+  pool Supplier {
+    external
+  }
+
+  start RenewalWindow {
+    schedule: "0 8 * * *"
+    select: contract.status == Active and contract.endsAt <= today() + 60d
+  }
+
+  task ReviewRenewal {
+    lane: Management
+    form: RenewalReview
+    sla: 3d
+    assign: pull
+    on timer 5d -> Escalate
+  }
+
+  task PrepareTerms {
+    lane: Renewals
+    form: RenewalTerms
+    sla: 3d
+    assign: pull
+  }
+
+  task SendProposal {
+    lane: System
+    sends: RenewalRequest
+    partner: Supplier
+    with {
+      contractNumber: contract.number
+      proposedEndsAt: contract.proposedEndsAt
+      expiresAt: contract.endsAt
+    }
+  }
+
+  task AwaitAcceptance {
+    lane: System
+    receives: RenewalConfirmed
+    partner: Supplier
+    apply: Contract.confirmRenewal
+    with { contract }
+    sla: 10d
+    on timer 10d -> Expire
+  }
+
+  task Expire {
+    lane: Management
+    form: TerminateContract
+    sla: 2d
+    assign: pull
+  }
+
+  task Escalate {
+    lane: Management
+    form: RenewalReview
+    sla: 2d
+  }
+
+  end Renewed {
+    title: { pt-BR: "Contrato renovado", en: "Contract renewed" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Renovação cancelada", en: "Renewal cancelled" }
+    outcome: cancelled
+  }
+
+  RenewalWindow -> ReviewRenewal
+  ReviewRenewal.renew -> PrepareTerms
+  ReviewRenewal.decline -> Cancelled
+  PrepareTerms.propose -> SendProposal
+  SendProposal -> AwaitAcceptance
+  AwaitAcceptance -> Renewed
+  Expire.terminate -> Cancelled
+  Escalate.renew -> PrepareTerms
+  Escalate.decline -> Cancelled
+}
+
+form TerminateContract {
+  title: { pt-BR: "Encerrar contrato", en: "Terminate contract" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    terminationReason
+  }
+
+  actions {
+    terminate { calls: Contract.terminate(terminationReason) }
+  }
+}
+
+form RenewalReview {
+  title: { pt-BR: "Decisão de renovação", en: "Renewal decision" }
+  document: Contract
+
+  fields {
+    endsAt { readonly }
+    amount { readonly }
+    terminationReason
+  }
+
+  actions {
+    renew { calls: Contract.markExpiring }
+    decline { calls: Contract.terminate(terminationReason) }
+  }
+}
+
+form RenewalTerms {
+  title: { pt-BR: "Termos da renovação", en: "Renewal terms" }
+  document: Contract
+
+  fields {
+    endsAt { readonly }
+    proposedEndsAt
+  }
+
+  actions {
+    propose { calls: Contract.proposeRenewal(proposedEndsAt) }
+  }
+}
+
+view ContractRenewalProgress {
+  title: { pt-BR: "Andamento da renovação", en: "Contract renewal progress" }
+  type: process
+  process: ContractRenewal
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

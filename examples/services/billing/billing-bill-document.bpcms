@@ -1,0 +1,91 @@
+// service: example.com/services/billing
+
+document Bill {
+  title: { pt-BR: "Conta a pagar", en: "Bill" }
+  version: 1
+  owner: "Billing"
+  sync: read
+  fields {
+    supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
+    status: BillStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
+  }
+
+  indexes {
+    byStatus: [status, dueAt] range
+  }
+
+
+  actions {
+    pay(paidAt: DateTime){
+      title: { pt-BR: "Pagar", en: "Pay" }
+      roles: [Clerk]
+
+      to: status.Paid
+      emits { paidAt: now() }
+
+      {
+        paidAt = now()
+      }
+    }
+
+    markOverdue(){
+      title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
+      roles: [Clerk]
+
+      to: status.Overdue
+    }
+  }
+
+  rule amount > 0 {
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+  }
+}
+
+shape BillStatus {
+  title: { pt-BR: "Situação da conta", en: "Bill status" }
+  base: state
+  initial: Open
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition Paid {
+      title: { pt-BR: "Conta paga", en: "Bill paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+
+    transition Overdue {
+      title: { pt-BR: "Conta vencida", en: "Bill overdue" }
+      payload {
+        dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
+      }
+    }
+  }
+  value Paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: Paid
+    ordinal: 20
+  }
+  value Overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: Overdue
+    ordinal: 30
+
+    transition Paid {
+      title: { pt-BR: "Conta paga", en: "Bill paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  format: plain
+}

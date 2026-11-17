@@ -1,0 +1,545 @@
+// service: example.com/services/shipping
+
+document Shipment {
+  title: { pt-BR: "Remessa", en: "Shipment" }
+  version: 2
+  owner: "Shipping"
+  sync: live
+
+  fields {
+    order: Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+    }
+    items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
+    volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    carrierName: string {
+      title: { pt-BR: "Transportadora", en: "Carrier" }
+      maxLength: 60
+      lookup
+    }
+    frete: std.Money { title: { pt-BR: "Frete", en: "Freight" }, lookup, currency: BRL }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    attempts: std.Count { title: { pt-BR: "Tentativas de entrega", en: "Delivery attempts" } }
+    lastTrackingKind: TrackingKind { title: { pt-BR: "Último evento", en: "Last event" } }
+    lastTrackingAt: DateTime { title: { pt-BR: "Último evento em", en: "Last event at" } }
+    receiverName: string {
+      title: { pt-BR: "Recebido por", en: "Received by" }
+      maxLength: 120
+    }
+    nextAttemptAt: DateTime { title: { pt-BR: "Próxima tentativa", en: "Next attempt" } }
+    pickedUpAt: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+    packedAt: DateTime { title: { pt-BR: "Embalada em", en: "Packed at" } }
+    deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+    returnedAt: DateTime { title: { pt-BR: "Devolvida em", en: "Returned at" } }
+    readAt: DateTime { title: { pt-BR: "Pesada em", en: "Weighed at" } }
+    createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" }, lookup }
+  }
+
+  capabilities { capture, units }
+  source: device "scale-01" for pesoBruto
+
+  indexes {
+    byOrder: [order.id] hash
+    byStatus: [status, createdAt] range
+    byCarrier: [carrierName, status] range
+    byWeight: [pesoBruto.normalized] range
+  }
+
+  events {
+    QuoteRequested {
+      title: { pt-BR: "Cotação solicitada", en: "Quote requested" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      }
+    }
+    FreightQuoted {
+      title: { pt-BR: "Frete cotado", en: "Freight quoted" }
+      payload {
+        carrier: string { title: { pt-BR: "Transportadora", en: "Carrier" } }
+        amount: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+      }
+    }
+  }
+
+  actions {
+    create(order: Order) {
+      title: { pt-BR: "Criar remessa", en: "Create shipment" }
+      roles: [Dispatcher]
+      {
+        createdAt = now()
+        emit Created
+      }
+    }
+
+    addItem(product: Product, quantity: std.Count) {
+      title: { pt-BR: "Adicionar item", en: "Add item" }
+      roles: [Packer]
+      rule quantity > 0 {
+        pt-BR: "A quantidade deve ser maior que zero"
+        en: "Quantity must be greater than zero"
+      }
+    }
+
+    pack() {
+      title: { pt-BR: "Embalar", en: "Pack" }
+      roles: [Packer]
+
+      to: status.Packed
+      {
+        packedAt = now()
+      }
+    }
+
+    requestQuote() {
+      title: { pt-BR: "Solicitar cotação", en: "Request quote" }
+      roles: [Dispatcher]
+      {
+        emit QuoteRequested
+      }
+    }
+
+    applyFreight(carrier: string, amount: std.Money) {
+      title: { pt-BR: "Aplicar frete", en: "Apply freight" }
+      roles: [ShipmentEngine]
+
+      rule amount >= 0 BRL {
+        pt-BR: "O frete não pode ser negativo"
+        en: "Freight cannot be negative"
+      }
+      {
+        carrierName = carrier
+        frete = amount
+        emit FreightQuoted
+      }
+    }
+
+    split() {
+      title: { pt-BR: "Dividir remessa", en: "Split shipment" }
+      roles: [Manager]
+
+      to: status.Split
+    }
+
+    dispatch(trackingCode: TrackingCode) {
+      title: { pt-BR: "Despachar", en: "Dispatch" }
+      roles: [ShipmentEngine]
+
+      to: status.Dispatched
+      emits { tracking: trackingCode }
+      {
+        tracking = trackingCode
+      }
+    }
+
+    confirmPickup(pickedUpOn: DateTime) {
+      title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+      roles: [ShipmentEngine]
+
+      to: status.OutForDelivery
+      emits { pickedUpAt: pickedUpOn }
+      {
+        pickedUpAt = pickedUpOn
+      }
+    }
+
+    applyTracking(kind: TrackingKind, at: DateTime, receivedBy: string) {
+      title: { pt-BR: "Aplicar evento de rastreio", en: "Apply tracking event" }
+      roles: [ShipmentEngine]
+      {
+        lastTrackingKind = kind
+        lastTrackingAt = at
+        receiverName = receivedBy
+      }
+    }
+
+    markAttemptFailed(reason: string) {
+      title: { pt-BR: "Registrar tentativa falha", en: "Record failed attempt" }
+      roles: [ShipmentEngine]
+
+      to: status.AttemptFailed
+      {
+        attempts = attempts + 1
+      }
+    }
+
+    scheduleRetry(attemptOn: DateTime) {
+      title: { pt-BR: "Agendar reentrega", en: "Schedule retry" }
+      roles: [Dispatcher]
+
+      to: status.OutForDelivery
+      emits { nextAttemptAt: attemptOn }
+      {
+        nextAttemptAt = attemptOn
+      }
+    }
+
+    markDelivered() {
+      title: { pt-BR: "Confirmar entrega", en: "Confirm delivery" }
+      roles: [ShipmentEngine]
+
+      to: status.Delivered
+      {
+        deliveredAt = now()
+      }
+    }
+
+    returnToSender() {
+      title: { pt-BR: "Devolver ao remetente", en: "Return to sender" }
+      roles: [Dispatcher]
+
+      to: status.Returned
+      {
+        returnedAt = now()
+      }
+    }
+
+    cancel(reason: string) {
+      title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+      roles: [Manager]
+
+      to: status.Cancelled
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+    }
+  }
+
+  rule status == Dispatched implies tracking != null {
+    pt-BR: "Informe o rastreio após o despacho"
+    en: "Enter tracking after dispatch"
+  }
+  rule pesoBruto <= MaxWeight {
+    pt-BR: "Remessa acima do limite de peso"
+    en: "Shipment above the weight limit"
+  }
+}
+
+shape ShipmentItem {
+  title: { pt-BR: "Item de remessa", en: "Shipment item" }
+
+  fields {
+    product: Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+    }
+    quantity: std.Count {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      lookup
+      required
+    }
+    pesoUnitario: std.Mass {
+      title: { pt-BR: "Peso unitário", en: "Unit weight" }
+    }
+  }
+}
+
+shape ShipmentStatus {
+  title: { pt-BR: "Situação da remessa", en: "Shipment status" }
+  base: state
+  initial: Draft with transition Created {
+    title: { pt-BR: "Remessa criada", en: "Shipment created" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    }
+  }
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Packed {
+      title: { pt-BR: "Remessa embalada", en: "Shipment packed" }
+      payload {
+        packedAt: DateTime { title: { pt-BR: "Embalada em", en: "Packed at" } }
+      }
+    }
+
+    transition Split {
+      title: { pt-BR: "Remessa dividida", en: "Shipment split" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Packed {
+    title: { pt-BR: "Embalada", en: "Packed" }
+    icon: Packed
+    ordinal: 20
+
+    transition Split {
+      title: { pt-BR: "Remessa dividida", en: "Shipment split" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      }
+    }
+
+    transition Dispatched {
+      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      payload {
+        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+        tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Dispatched {
+    title: { pt-BR: "Despachada", en: "Dispatched" }
+    icon: Dispatched
+    ordinal: 30
+
+    transition OutForDelivery {
+      event: PickedUp
+      title: { pt-BR: "Remessa coletada", en: "Shipment picked up" }
+      payload {
+        pickedUpAt: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value OutForDelivery {
+    title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    icon: OutForDelivery
+    ordinal: 40
+
+    transition AttemptFailed {
+      title: { pt-BR: "Tentativa de entrega falhou", en: "Delivery attempt failed" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Delivered {
+      title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      payload {
+        deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+      }
+    }
+  }
+  value AttemptFailed {
+    title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    icon: AttemptFailed
+    ordinal: 50
+
+    transition OutForDelivery {
+      event: RetryScheduled
+      title: { pt-BR: "Reentrega agendada", en: "Retry scheduled" }
+      payload {
+        nextAttemptAt: DateTime { title: { pt-BR: "Próxima tentativa", en: "Next attempt" } }
+      }
+    }
+
+    transition Delivered {
+      title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      payload {
+        deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+      }
+    }
+
+    transition Returned {
+      title: { pt-BR: "Remessa devolvida", en: "Shipment returned" }
+      payload {
+        returnedAt: DateTime { title: { pt-BR: "Devolvida em", en: "Returned at" } }
+      }
+    }
+  }
+  value Delivered {
+    title: { pt-BR: "Entregue", en: "Delivered" }
+    icon: Delivered
+    ordinal: 60
+  }
+  value Returned {
+    title: { pt-BR: "Devolvida", en: "Returned" }
+    icon: Returned
+    ordinal: 70
+  }
+  value Split {
+    title: { pt-BR: "Dividida", en: "Split" }
+    icon: Split
+    ordinal: 80
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 90
+  }
+
+  format: plain
+}
+
+shape TrackingKind {
+  title: { pt-BR: "Tipo de evento de rastreio", en: "Tracking event kind" }
+  base: classification
+
+  value InTransit {
+    title: { pt-BR: "Em trânsito", en: "In transit" }
+    icon: InTransit
+    ordinal: 10
+  }
+  value OutForDelivery {
+    title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    icon: OutForDelivery
+    ordinal: 20
+  }
+  value AttemptFailed {
+    title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    icon: AttemptFailed
+    ordinal: 30
+  }
+  value Completed {
+    title: { pt-BR: "Entrega concluída", en: "Delivery completed" }
+    icon: Completed
+    ordinal: 40
+  }
+
+  format: plain
+}
+
+shape TrackingCode {
+  title: { pt-BR: "Código de rastreio", en: "Tracking code" }
+  base: string
+  normalize: upper-trim
+  maxLength: 40
+  format: plain
+}
+
+view FreightCost {
+  title: { pt-BR: "Custo de frete", en: "Freight cost" }
+  type: report
+  sources: [Shipment]
+  roles: [Manager]
+
+  filters { period; carrierName; status }
+  metrics {
+    shipments: count(Shipment)
+    freight: sum(Shipment.frete)
+    avgWeight: avg(Shipment.pesoBruto)
+    failedAttempts: count(Shipment) where status == AttemptFailed
+  }
+  units { freight: BRL; avgWeight: kg }
+  freshness: 15m
+  export: [pdf, csv]
+}
+
+view DeliveryPulse {
+  title: { pt-BR: "Pulso das entregas", en: "Delivery pulse" }
+  type: dashboard
+  sources: [Shipment]
+  roles: [Manager]
+  mode: live
+
+  filters { status; carrierName }
+  metrics {
+    outForDelivery: count(Shipment) where status == OutForDelivery
+    failedAttempts: count(Shipment) where status == AttemptFailed
+    returned: count(Shipment) where status == Returned
+  }
+  freshness: 5m
+}
+
+view Shipments {
+  title: { pt-BR: "Remessas", en: "Shipments" }
+  type: table
+  source: Shipment
+  roles: [Packer, Dispatcher, Manager]
+
+  columns { order; carrierName; status; tracking; frete }
+  filters { status; period; carrierName }
+  pagination: 50
+
+  actions {
+    open -> ShipmentDetail
+    receive -> Shipment.create(order)
+    requestQuote -> Shipment.requestQuote
+  }
+}
+
+view ShipmentDetail {
+  title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
+  type: detail
+  document: Shipment
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { summary; items; timeline }
+  actions {
+    progress -> DispatchProgress
+    delivery -> DeliveryProgress
+  }
+}
+
+view DispatchBoard {
+  title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
+  type: kanban
+  source: Shipment
+  roles: [Packer, Dispatcher, Manager]
+
+  groupBy: status
+  card { order; tracking; frete }
+  filter { status != Cancelled }
+  actions {
+    open -> ShipmentDetail
+  }
+}
+
+message PickupRequest {
+  title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
+  about: Shipment
+
+  payload {
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    window: Duration { title: { pt-BR: "Janela de coleta", en: "Pickup window" } }
+  }
+}
+
+message PickupConfirmed {
+  title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+  about: Shipment
+
+  payload {
+    pickedUpOn: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+  }
+}
+
+message TrackingUpdated {
+  title: { pt-BR: "Rastreio atualizado", en: "Tracking updated" }
+  about: Shipment
+
+  payload {
+    kind: TrackingKind { title: { pt-BR: "Tipo de evento", en: "Event kind" } }
+    at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
+    receivedBy: string { title: { pt-BR: "Recebido por", en: "Received by" } }
+  }
+}
+
+policy WeightLimit {
+  appliesTo: Shipment.dispatch
+  rule: pesoBruto <= MaxWeight
+  severity: block
+  message: "Remessa acima do limite de peso"
+  audit: true
+}

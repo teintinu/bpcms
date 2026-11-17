@@ -1,4 +1,5 @@
 // service: example.com/services/notifications
+
 integration Email {
   protocol: smtp
   host: env.SMTP_HOST

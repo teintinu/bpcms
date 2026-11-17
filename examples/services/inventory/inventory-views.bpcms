@@ -1,67 +1,21 @@
 // service: example.com/services/inventory
-view StockTable {
-  title: { pt-BR: "Itens de estoque", en: "Stock items" }
-  type: table
-  source: StockItem
-  roles: [WarehouseOperator, StockManager]
 
-  columns { product; warehouse; available; reserved; reorderPoint; status }
-  filters { warehouse; status; available }
-  pagination: 50
+view StockAging {
+  title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
+  type: report
+  sources: [StockItem, Product]
+  roles: [StockManager]
 
-  actions {
-    open -> StockDetail
-    adjust -> StockItem.adjust(quantity, reason)
-    block -> StockItem.block(reason)
+  filters { warehouse; category }
+
+  metrics {
+    quantity: sum(StockItem.available)
+    value: sum(StockItem.available * Product.price)
+    aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
   }
-}
 
-view StockDetail {
-  title: { pt-BR: "Detalhe do item", en: "Stock item detail" }
-  type: detail
-  document: StockItem
-  roles: [WarehouseOperator, StockManager]
-
-  sections { summary; movements }
-
-  actions {
-    adjust -> StockItem.adjust(quantity, reason)
-    block -> StockItem.block(reason)
-    unblock -> StockItem.unblock
-  }
-}
-
-view StockKanban {
-  title: { pt-BR: "Estoque por situação", en: "Stock by status" }
-  type: kanban
-  source: StockItem
-  roles: [WarehouseOperator, StockManager]
-
-  groupBy: status
-  columns { product; warehouse; available; reorderPoint }
-  card { product; warehouse; available; status }
-
-  actions {
-    open -> StockDetail
-  }
-}
-
-view StockProgress {
-  title: { pt-BR: "Andamento da reposição", en: "Replenishment progress" }
-  type: process
-  process: StockReplenishment
-  roles: [WarehouseOperator, StockManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
-
-view CycleCountProgress {
-  title: { pt-BR: "Andamento da contagem", en: "Count progress" }
-  type: process
-  process: CycleCount
-  roles: [WarehouseOperator, StockManager]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
+  freshness: 15m
+  export: [csv, xlsx]
 }
 
 view CountInbox {

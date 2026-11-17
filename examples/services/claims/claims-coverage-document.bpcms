@@ -1,0 +1,82 @@
+// service: example.com/services/claims
+
+document Coverage {
+  title: { pt-BR: "Cobertura", en: "Coverage" }
+  version: 1
+  owner: "Claims"
+
+  fields {
+    policyNumber: string {
+      title: { pt-BR: "Apólice", en: "Policy number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    product: string { title: { pt-BR: "Produto", en: "Product" }, lookup, maxLength: 60 }
+    validFrom: DateTime { title: { pt-BR: "Vigente de", en: "Valid from" } }
+    validTo: DateTime { title: { pt-BR: "Vigente até", en: "Valid to" } }
+    limitAmount: std.Money {
+      title: { pt-BR: "Limite de indenização", en: "Coverage limit" }
+      currency: BRL
+      required
+    }
+    deductible: std.Money { title: { pt-BR: "Franquia", en: "Deductible" }, currency: BRL }
+    status: CoverageStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" }, readonly }
+  }
+
+  indexes {
+    byPolicy: [policyNumber] unique
+    byStatus: [status, validTo] range
+  }
+
+
+  actions {
+    expire() {
+      title: { pt-BR: "Expirar cobertura", en: "Expire coverage" }
+      roles: [Clerk]
+      to: status.Expired
+      { expiredAt = now() }
+    }
+
+    renew(newValidTo: DateTime) {
+      title: { pt-BR: "Renovar cobertura", en: "Renew coverage" }
+      roles: [Clerk]
+      to: status.Active
+      emits { validTo: newValidTo }
+      { validTo = newValidTo }
+    }
+  }
+}
+
+shape CoverageStatus {
+  title: { pt-BR: "Situação da cobertura", en: "Coverage status" }
+  base: state
+  initial: Active
+
+  value Active {
+    title: { pt-BR: "Vigente", en: "Active" }
+    icon: status.active
+    ordinal: 10
+
+    transition Expired {
+      title: { pt-BR: "Cobertura expirada", en: "Coverage expired" }
+      payload {
+        expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" } }
+      }
+    }
+  }
+  value Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: status.expired
+    ordinal: 20
+
+    transition Active {
+      event: Renewed
+      title: { pt-BR: "Cobertura renovada", en: "Coverage renewed" }
+      payload {
+        validTo: DateTime { title: { pt-BR: "Nova vigência", en: "New validity" } }
+      }
+    }
+  }
+}

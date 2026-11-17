@@ -1,0 +1,135 @@
+// service: example.com/services/hr
+
+process Offboarding for Employee {
+  title: { pt-BR: "Desligamento do colaborador", en: "Employee offboarding" }
+  version: 1
+  goal: "Encerrar o vínculo com acessos revogados, equipamento devolvido e entrevista registrada"
+  owner: "People"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  on breach -> Escalate
+  cancel on Employee.OffboardingCancelled -> Undo
+
+  pool Company {
+    internal
+    lane People { role: PeopleOps }
+    lane IT { role: ITAdmin }
+    lane Management { role: HiringManager }
+  }
+
+  start OffboardingRequested { event: Employee.OffboardingStarted }
+
+  fork Departure
+
+  join Departed
+
+  task RevokeAccess {
+    lane: IT
+    form: AccessRevocation
+    sla: 1d
+    assign: pull
+  }
+
+  task ReturnEquipment {
+    lane: IT
+    form: EquipmentReturn
+    sla: 2d
+    assign: pull
+  }
+
+  task ExitInterview {
+    lane: People
+    form: ExitInterview
+    sla: 3d
+    assign: pull
+  }
+
+  wait LastDay {
+    until: employee.lastWorkingDay
+  }
+
+  task Terminate {
+    lane: System
+    action: Employee.terminate
+  }
+
+  task Escalate {
+    lane: Management
+    manual: "Falar com a pessoa e concluir o desligamento"
+    sla: 1d
+  }
+
+  rollback Undo
+
+  end Closed {
+    title: { pt-BR: "Desligado", en: "Closed" }
+    outcome: success
+  }
+
+  end Cancelled {
+    title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
+    outcome: cancelled
+  }
+
+  OffboardingRequested -> Departure
+  Departure -> RevokeAccess
+  Departure -> ReturnEquipment
+  Departure -> ExitInterview
+  RevokeAccess.revoke -> Departed
+  ReturnEquipment.returnItem -> Departed
+  ExitInterview.record -> Departed
+  Departed -> LastDay
+  LastDay -> Terminate
+  Terminate -> Closed
+  Undo -> Cancelled
+  Escalate -> Terminate
+}
+
+form AccessRevocation {
+  title: { pt-BR: "Revogação de acessos", en: "Access revocation" }
+  document: Employee
+
+  fields {
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    revoke { calls: Employee.revokeAllAccess(note) }
+  }
+}
+
+form EquipmentReturn {
+  title: { pt-BR: "Devolução de equipamento", en: "Equipment return" }
+  document: Employee
+
+  fields {
+    kind: EquipmentKind {
+      title: { pt-BR: "Equipamento", en: "Equipment" }
+      required
+    }
+  }
+
+  actions {
+    returnItem { calls: Employee.returnEquipment(kind) }
+  }
+}
+
+form ExitInterview {
+  title: { pt-BR: "Entrevista de saída", en: "Exit interview" }
+  document: Employee
+
+  fields {
+    notes: string {
+      title: { pt-BR: "Anotações", en: "Notes" }
+      maxLength: 2000
+    }
+  }
+
+  actions {
+    record { calls: Employee.recordExitInterview(notes) }
+  }
+}

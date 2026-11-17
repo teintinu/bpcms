@@ -1,0 +1,224 @@
+// service: example.com/services/inventory
+
+document StockItem {
+  title: { pt-BR: "Item de estoque", en: "Stock item" }
+  version: 1
+  owner: "Inventory"
+  sync: live
+  fields {
+    product: Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+    }
+    warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
+    available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
+    reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
+    reorderPoint: std.Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
+    status: StockStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    blockedReason: string { title: { pt-BR: "Motivo do bloqueio", en: "Block reason" } }
+    lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
+  }
+
+  indexes {
+    uniqueProduct: [product.id, warehouse] unique
+    byAvailable: [available] range
+    byMovement: [lastMovement] range
+    byStatus: [status, lastMovement] range
+  }
+
+
+  actions {
+    adjust(quantity: std.Count, reason: string){
+      title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
+      roles: [WarehouseOperator]
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      {
+        available = available + quantity
+      }
+    }
+
+    reserve(quantity: std.Count){
+      title: { pt-BR: "Reservar", en: "Reserve" }
+      roles: [WarehouseOperator]
+
+      to: status.Reserved
+
+      {
+        reserved = reserved + quantity
+      }
+    }
+
+    release(quantity: std.Count){
+      title: { pt-BR: "Liberar", en: "Release" }
+      roles: [WarehouseOperator]
+
+      to: status.Available
+
+      {
+        reserved = reserved - quantity
+      }
+    }
+
+    block(reason: string){
+      title: { pt-BR: "Bloquear", en: "Block" }
+      roles: [StockManager]
+
+      to: status.Blocked
+
+      {
+        blockedReason = reason
+      }
+    }
+
+    unblock(){
+      title: { pt-BR: "Desbloquear", en: "Unblock" }
+      roles: [StockManager]
+
+      to: status.Available
+      emits { at: now() }
+    }
+  }
+
+  rule available >= 0 {
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+  }
+  rule reserved >= 0 {
+    pt-BR: "Verifique os dados informados"
+    en: "Check the informed data"
+  }
+}
+
+shape StockStatus {
+  title: { pt-BR: "Situação do estoque", en: "Stock status" }
+  base: state
+  initial: Available
+  value Available {
+    title: { pt-BR: "Disponível", en: "Available" }
+    icon: Available
+    ordinal: 10
+
+    transition Reserved {
+      title: { pt-BR: "Estoque reservado", en: "Stock reserved" }
+      payload {
+        quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+      }
+    }
+
+    transition Blocked {
+      title: { pt-BR: "Estoque bloqueado", en: "Stock blocked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    icon: Reserved
+    ordinal: 20
+
+    transition Available {
+      event: Released
+      title: { pt-BR: "Estoque liberado", en: "Stock released" }
+      payload {
+        quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+      }
+    }
+
+    transition Blocked {
+      title: { pt-BR: "Estoque bloqueado", en: "Stock blocked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Blocked {
+    title: { pt-BR: "Bloqueado", en: "Blocked" }
+    icon: Blocked
+    ordinal: 30
+
+    transition Available {
+      event: Unblocked
+      title: { pt-BR: "Estoque desbloqueado", en: "Stock unblocked" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  format: plain
+}
+
+view StockControl {
+  title: { pt-BR: "Controle de estoque", en: "Stock control" }
+  type: dashboard
+  sources: [StockItem]
+  roles: [StockManager]
+  mode: live
+
+  filters { warehouse }
+
+  metrics {
+    lowStock: count(StockItem) where available <= reorderPoint
+    reserved: sum(StockItem.reserved)
+  }
+
+  freshness: 15m
+}
+
+view StockTable {
+  title: { pt-BR: "Itens de estoque", en: "Stock items" }
+  type: table
+  source: StockItem
+  roles: [WarehouseOperator, StockManager]
+
+  columns { product; warehouse; available; reserved; reorderPoint; status }
+  filters { warehouse; status; available }
+  pagination: 50
+
+  actions {
+    open -> StockDetail
+    adjust -> StockItem.adjust(quantity, reason)
+    block -> StockItem.block(reason)
+  }
+}
+
+view StockDetail {
+  title: { pt-BR: "Detalhe do item", en: "Stock item detail" }
+  type: detail
+  document: StockItem
+  roles: [WarehouseOperator, StockManager]
+
+  sections { summary; movements }
+
+  actions {
+    adjust -> StockItem.adjust(quantity, reason)
+    block -> StockItem.block(reason)
+    unblock -> StockItem.unblock
+  }
+}
+
+view StockKanban {
+  title: { pt-BR: "Estoque por situação", en: "Stock by status" }
+  type: kanban
+  source: StockItem
+  roles: [WarehouseOperator, StockManager]
+
+  groupBy: status
+  columns { product; warehouse; available; reorderPoint }
+  card { product; warehouse; available; status }
+
+  actions {
+    open -> StockDetail
+  }
+}
+
+policy StockAdjustment {
+  appliesTo: StockItem.adjust
+  rule: quantity != 0
+  severity: require
+  message: "Ajuste de estoque exige justificativa"
+  audit: true
+}

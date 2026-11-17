@@ -1,0 +1,107 @@
+// service: example.com/services/laboratory
+
+process SampleRecollection for Sample {
+  title: { pt-BR: "Recoleta de amostra", en: "Sample recollection" }
+  version: 1
+  goal: "Recoletar a amostra rejeitada e liberá-la para análise"
+  owner: "Laboratory"
+  timezone: America/Fortaleza
+  sla: 3d
+
+  pool Laboratory {
+    internal
+
+    lane Collection {
+      role: Collector
+    }
+
+    lane Analysis {
+      role: Analyst
+    }
+  }
+
+  pool Patient {
+    external
+  }
+
+  start Rejected {
+    event: Sample.Rejected
+  }
+
+  task AskRecollection {
+    lane: System
+    sends: RecollectionRequest
+    partner: Patient
+    with {
+      code: sample.code
+      requestedAt: now()
+    }
+  }
+
+  task Recollect {
+    lane: Collection
+    form: Recollection
+    sla: 1d
+    assign: pull
+    on timer 2d -> Escalate
+  }
+
+  task Escalate {
+    lane: Collection
+    manual: "Contatar o paciente e reagendar a coleta"
+    sla: 1d
+  }
+
+  task Receive {
+    lane: System
+    action: Sample.receive
+  }
+
+  task StartAnalysis {
+    lane: System
+    action: Sample.process
+  }
+
+  task OfferHomeCollection {
+    lane: Collection
+    manual: "Agendar coleta domiciliar com o laboratório parceiro"
+    discretionary
+    when: sample.kind == Patient
+  }
+
+  end Recollected {
+    title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
+    outcome: success
+  }
+
+  Rejected -> AskRecollection
+  AskRecollection -> Recollect
+  Recollect.recollect -> Receive
+  Receive -> StartAnalysis
+  StartAnalysis -> Recollected
+  Escalate -> Recollect
+}
+
+form Recollection {
+  title: { pt-BR: "Recoleta da amostra", en: "Sample recollection" }
+  document: Sample
+
+  fields {
+    code
+    kind
+    patient
+  }
+
+  actions {
+    recollect { calls: Sample.recollect }
+  }
+}
+
+view RecollectionProgress {
+  title: { pt-BR: "Andamento da recoleta", en: "Recollection progress" }
+  type: process
+  process: SampleRecollection
+  roles: [Collector, Analyst, LabManager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}

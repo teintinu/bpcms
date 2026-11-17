@@ -1,0 +1,421 @@
+// service: example.com/services/claims
+
+document Claim {
+  title: { pt-BR: "Sinistro", en: "Claim" }
+  version: 1
+  owner: "Claims"
+  sync: live
+  retention: 10y
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      lookup
+      unique
+      maxLength: 24
+    }
+    claimant: Identity.User { title: { pt-BR: "Segurado", en: "Claimant" }, lookup }
+    coverage: Coverage { title: { pt-BR: "Cobertura", en: "Coverage" }, lookup }
+    type: ClaimType {
+      title: { pt-BR: "Tipo de sinistro", en: "Claim type" }
+      lookup
+      default: Collision
+    }
+    occurredAt: DateTime { title: { pt-BR: "Ocorrido em", en: "Occurred at" }, required }
+    description: string {
+      title: { pt-BR: "Descrição", en: "Description" }
+      sensitive
+      maxLength: 2000
+    }
+    amount: std.Money {
+      title: { pt-BR: "Valor reclamado", en: "Claimed amount" }
+      currency: BRL
+      lookup
+      required
+    }
+    approvedAmount: std.Money { title: { pt-BR: "Valor aprovado", en: "Approved amount" }, currency: BRL }
+    status: ClaimStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    covered: boolean { title: { pt-BR: "Cobertura confirmada", en: "Coverage confirmed" }, default: false }
+    fraudBand: FraudBand { title: { pt-BR: "Faixa de risco", en: "Fraud band" }, lookup }
+    fraudConfirmed: boolean {
+      title: { pt-BR: "Fraude confirmada", en: "Fraud confirmed" }
+      default: false
+      private
+    }
+    fraudNote: string { title: { pt-BR: "Nota da análise", en: "Fraud note" }, maxLength: 1000 }
+    lastEvidenceKind: EvidenceKind { title: { pt-BR: "Última evidência", en: "Last evidence" } }
+    evidenceSummary: string {
+      title: { pt-BR: "Resumo das evidências", en: "Evidence summary" }
+      maxLength: 1000
+    }
+    rejectReason: string {
+      title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      sensitive
+      maxLength: 500
+    }
+    statementAt: DateTime { title: { pt-BR: "Declaração em", en: "Statement at" }, readonly }
+    adjuster: Identity.User { title: { pt-BR: "Ajustador", en: "Adjuster" } }
+    openedAt: DateTime { title: { pt-BR: "Aberto em", en: "Opened at" }, readonly }
+    decidedAt: DateTime { title: { pt-BR: "Decidido em", en: "Decided at" }, readonly }
+    paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" }, readonly }
+    paymentReference: string {
+      title: { pt-BR: "Referência do pagamento", en: "Payment reference" }
+      maxLength: 40
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, openedAt] range
+    byCoverage: [coverage.id] hash
+    byClaimant: [claimant.id] hash
+  }
+
+
+  actions {
+    register(occurredOn: DateTime, claimedAmount: std.Money) {
+      title: { pt-BR: "Registrar aviso", en: "Register notice" }
+      roles: [Clerk, Policyholder]
+      {
+        emit Opened { occurredAt: occurredOn; amount: claimedAmount }
+        openedAt = now()
+        occurredAt = occurredOn
+        amount = claimedAmount
+      }
+    }
+
+    triage(coveredNow: boolean, claimType: ClaimType, assignedAdjuster: Identity.User) {
+      title: { pt-BR: "Triar sinistro", en: "Triage claim" }
+      roles: [Clerk]
+      to: status.Triaged
+      emits { covered: coveredNow; type: claimType }
+      {
+        covered = coveredNow
+        type = claimType
+        adjuster = assignedAdjuster
+      }
+    }
+
+    describe(text: string) {
+      title: { pt-BR: "Declarar o ocorrido", en: "Describe the incident" }
+      roles: [Policyholder]
+      { description = text; statementAt = now() }
+    }
+
+    startReview() {
+      title: { pt-BR: "Iniciar análise", en: "Start review" }
+      roles: [Clerk, Adjuster]
+      to: status.UnderReview
+      emits { at: now() }
+    }
+
+    recordRisk(band: FraudBand) {
+      title: { pt-BR: "Registrar faixa de risco", en: "Record fraud band" }
+      roles: [FraudAnalyst]
+      { fraudBand = band }
+    }
+
+    recordEvidence(kind: EvidenceKind, summary: string) {
+      title: { pt-BR: "Registrar evidência", en: "Record evidence" }
+      roles: [FraudAnalyst, Adjuster]
+      { lastEvidenceKind = kind; evidenceSummary = summary }
+    }
+
+    confirmFraud(note: string) {
+      title: { pt-BR: "Confirmar fraude", en: "Confirm fraud" }
+      roles: [FraudAnalyst, Manager]
+      { fraudConfirmed = true; fraudNote = note }
+    }
+
+    clearFraud(note: string) {
+      title: { pt-BR: "Descartar fraude", en: "Clear fraud" }
+      roles: [FraudAnalyst, Manager]
+      { fraudConfirmed = false; fraudNote = note }
+    }
+
+    approve(approvedTotal: std.Money) {
+      title: { pt-BR: "Aprovar sinistro", en: "Approve claim" }
+      roles: [Adjuster]
+      to: status.Approved
+      emits { approvedAmount: approvedTotal; at: now() }
+      { approvedAmount = approvedTotal; decidedAt = now() }
+    }
+
+    reject(reason: string) {
+      title: { pt-BR: "Recusar sinistro", en: "Reject claim" }
+      roles: [Clerk, Adjuster]
+      to: status.Rejected
+      emits { at: now() }
+      { rejectReason = reason; decidedAt = now() }
+    }
+
+    openSettlement() {
+      title: { pt-BR: "Abrir liquidação", en: "Open settlement" }
+      roles: [FinanceAnalyst]
+      returns: Settlement
+    }
+
+    confirmPayment(reference: string) {
+      title: { pt-BR: "Confirmar pagamento", en: "Confirm payment" }
+      roles: [FinanceAnalyst]
+      to: status.Paid
+      emits { amount: approvedAmount }
+      { paidAt = now(); paymentReference = reference }
+    }
+
+    reopen() {
+      title: { pt-BR: "Reabrir análise", en: "Reopen review" }
+      roles: [Manager]
+      to: status.UnderReview
+      emits { at: now() }
+    }
+  }
+}
+
+shape ClaimStatus {
+  title: { pt-BR: "Situação do sinistro", en: "Claim status" }
+  base: state
+  initial: Opened with transition Opened {
+    title: { pt-BR: "Aviso de sinistro aberto", en: "Claim notice opened" }
+    payload {
+      occurredAt: DateTime { title: { pt-BR: "Ocorrido em", en: "Occurred at" } }
+      amount: std.Money { title: { pt-BR: "Valor reclamado", en: "Claimed amount" } }
+    }
+  }
+
+  value Opened {
+    title: { pt-BR: "Aviso aberto", en: "Opened" }
+    icon: status.opened
+    ordinal: 10
+
+    transition Triaged {
+      title: { pt-BR: "Sinistro triado", en: "Claim triaged" }
+      payload {
+        covered: boolean { title: { pt-BR: "Cobertura confirmada", en: "Coverage confirmed" } }
+        type: ClaimType { title: { pt-BR: "Tipo de sinistro", en: "Claim type" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value Triaged {
+    title: { pt-BR: "Triado", en: "Triaged" }
+    icon: status.triaged
+    ordinal: 20
+
+    transition UnderReview {
+      event: ReviewStarted
+      title: { pt-BR: "Análise iniciada", en: "Review started" }
+      payload {
+        at: DateTime { title: { pt-BR: "Iniciada em", en: "Started at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value UnderReview {
+    title: { pt-BR: "Em análise", en: "Under review" }
+    icon: status.underReview
+    ordinal: 30
+
+    transition Approved {
+      title: { pt-BR: "Sinistro aprovado", en: "Claim approved" }
+      payload {
+        approvedAmount: std.Money { title: { pt-BR: "Valor aprovado", en: "Approved amount" } }
+        at: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovado", en: "Approved" }
+    icon: status.approved
+    ordinal: 40
+
+    transition Paid {
+      title: { pt-BR: "Sinistro pago", en: "Claim paid" }
+      payload {
+        paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
+        amount: std.Money { title: { pt-BR: "Valor pago", en: "Paid amount" } }
+      }
+    }
+
+    transition UnderReview {
+      event: Reopened
+      title: { pt-BR: "Sinistro reaberto", en: "Claim reopened" }
+      payload {
+        at: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+      }
+    }
+  }
+  value Rejected {
+    title: { pt-BR: "Recusado", en: "Rejected" }
+    icon: status.rejected
+    ordinal: 50
+  }
+  value Paid {
+    title: { pt-BR: "Pago", en: "Paid" }
+    icon: status.paid
+    ordinal: 60
+  }
+}
+
+shape ClaimType {
+  title: { pt-BR: "Tipo de sinistro", en: "Claim type" }
+  base: classification
+
+  value Collision {
+    title: { pt-BR: "Colisão", en: "Collision" }
+    icon: claim.collision
+    ordinal: 10
+  }
+  value Theft {
+    title: { pt-BR: "Furto", en: "Theft" }
+    icon: claim.theft
+    ordinal: 20
+  }
+  value Fire {
+    title: { pt-BR: "Incêndio", en: "Fire" }
+    icon: claim.fire
+    ordinal: 30
+  }
+  value Other {
+    title: { pt-BR: "Outro", en: "Other" }
+    icon: claim.other
+    ordinal: 40
+  }
+}
+
+shape FraudBand {
+  title: { pt-BR: "Faixa de risco de fraude", en: "Fraud risk band" }
+  base: classification
+
+  value Low {
+    title: { pt-BR: "Baixo", en: "Low" }
+    icon: fraud.low
+    ordinal: 10
+  }
+  value Medium {
+    title: { pt-BR: "Médio", en: "Medium" }
+    icon: fraud.medium
+    ordinal: 20
+  }
+  value High {
+    title: { pt-BR: "Alto", en: "High" }
+    icon: fraud.high
+    ordinal: 30
+  }
+}
+
+shape EvidenceKind {
+  title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+  base: classification
+
+  value Document {
+    title: { pt-BR: "Documento", en: "Document" }
+    icon: evidence.document
+    ordinal: 10
+  }
+  value Photo {
+    title: { pt-BR: "Foto", en: "Photo" }
+    icon: evidence.photo
+    ordinal: 20
+  }
+  value Witness {
+    title: { pt-BR: "Testemunha", en: "Witness" }
+    icon: evidence.witness
+    ordinal: 30
+  }
+  value Report {
+    title: { pt-BR: "Laudo", en: "Report" }
+    icon: evidence.report
+    ordinal: 40
+  }
+}
+
+view ClaimsTable {
+  title: { pt-BR: "Sinistros", en: "Claims" }
+  type: table
+  source: Claim
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager]
+
+  columns { number; claimant; type; amount; status; openedAt }
+  filters { status; type; period; coverage }
+  pagination: 50
+
+  actions {
+    open -> ClaimDetail
+    triage -> Claim.triage(coveredNow, claimType, assignedAdjuster)
+    reject -> Claim.reject(reason)
+  }
+}
+
+view ClaimDetail {
+  title: { pt-BR: "Detalhe do sinistro", en: "Claim detail" }
+  type: detail
+  document: Claim
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager, Policyholder]
+
+  sections { summary; coverage; evidence; settlement; timeline }
+
+  actions {
+    startReview -> Claim.startReview
+    approve -> Claim.approve(approvedTotal)
+    reject -> Claim.reject(reason)
+    open -> ClaimProgress
+  }
+}
+
+view ClaimsKanban {
+  title: { pt-BR: "Quadro de sinistros", en: "Claims board" }
+  type: kanban
+  source: Claim
+  roles: [Clerk, Adjuster, Manager]
+  groupBy: status
+
+  columns { number; amount; type }
+  card { number; amount; adjuster }
+  filter { adjuster = currentUser }
+
+  actions {
+    open -> ClaimDetail
+  }
+}
+
+message PaymentInstruction {
+  title: { pt-BR: "Instrução de pagamento", en: "Payment instruction" }
+  about: Claim
+
+  payload {
+    settlementNumber: string { title: { pt-BR: "Liquidação", en: "Settlement" } }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+  }
+}
+
+message PaymentConfirmation {
+  title: { pt-BR: "Confirmação de pagamento", en: "Payment confirmation" }
+  about: Claim
+
+  payload {
+    reference: string { title: { pt-BR: "Referência bancária", en: "Bank reference" } }
+  }
+}

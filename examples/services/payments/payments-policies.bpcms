@@ -1,8 +1,0 @@
-// service: example.com/services/payments
-policy FourEyesRefund {
-  appliesTo: Refund.approve
-  rule: approver != creator
-  severity: block
-  message: "Reembolso exige segundo aprovador"
-  audit: true
-}

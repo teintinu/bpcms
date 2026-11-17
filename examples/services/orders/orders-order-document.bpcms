@@ -1,0 +1,416 @@
+// service: example.com/services/orders
+
+document Order {
+  title: { pt-BR: "Pedido", en: "Order" }
+  version: 2
+  owner: "Orders"
+  sync: live
+
+  fields {
+    customer: User {
+      title: { pt-BR: "Cliente", en: "Customer" }
+      lookup
+    }
+    items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    subtotal: std.Money {
+      title: { pt-BR: "Subtotal", en: "Subtotal" }
+      currency: BRL
+      computed: items.sum(total)
+    }
+    discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      lookup
+      currency: BRL
+      computed: subtotal - discount
+    }
+    status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
+    reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
+    cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+    reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+    fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
+    cancellationReason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 500
+    }
+    notes: string {
+      title: { pt-BR: "Observações", en: "Notes" }
+      maxLength: 1000
+    }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" }, lookup }
+  }
+
+  indexes {
+    byCustomer: [customer.id, createdAt] range
+    byStatus: [status, createdAt] range
+  }
+
+
+  actions {
+    create(customer: User, discount: std.Percentage) {
+      title: { pt-BR: "Criar pedido", en: "Create order" }
+      roles: [Clerk]
+      {
+        createdAt = now()
+        emit Drafted
+      }
+    }
+
+    addItem(product: Product, quantity: std.Count) {
+      title: { pt-BR: "Adicionar item", en: "Add item" }
+      roles: [Clerk]
+      rule quantity > 0 {
+        pt-BR: "A quantidade deve ser maior que zero"
+        en: "Quantity must be greater than zero"
+      }
+    }
+
+    annotate(note: string) {
+      title: { pt-BR: "Anotar", en: "Annotate" }
+      roles: [Clerk]
+      {
+        notes = note
+      }
+    }
+
+    place() {
+      title: { pt-BR: "Realizar pedido", en: "Place order" }
+      roles: [Clerk]
+
+      to: status.Placed
+
+      rule items.length > 0 {
+        pt-BR: "Adicione ao menos um item"
+        en: "Add at least one item"
+      }
+      {
+        placedAt = now()
+      }
+    }
+
+    confirmReservation() {
+      title: { pt-BR: "Confirmar reserva", en: "Confirm reservation" }
+      roles: [OrderEngine]
+
+      to: status.Reserved
+      {
+        reservedAt = now()
+      }
+    }
+
+    requestCancellation(reason: string) {
+      title: { pt-BR: "Solicitar cancelamento", en: "Request cancellation" }
+      roles: [Clerk, Manager]
+
+      to: status.CancellationRequested
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      {
+        cancellationReason = reason
+      }
+    }
+
+    approveCancellation() {
+      title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
+      roles: [Manager]
+
+      to: status.CancellationApproved
+    }
+
+    rejectCancellation() {
+      title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      roles: [Manager]
+
+      to: status.Placed
+    }
+
+    cancel(reason: string) {
+      title: { pt-BR: "Cancelar", en: "Cancel" }
+      roles: [Clerk, Manager, OrderEngine]
+
+      to: status.Cancelled
+
+      rule reason.length >= 10 {
+        pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        en: "Enter a reason with at least 10 characters"
+      }
+      {
+        cancellationReason = reason
+        cancelledAt = now()
+      }
+    }
+
+    reopen() {
+      title: { pt-BR: "Reabrir", en: "Reopen" }
+      roles: [Manager, OrderEngine]
+
+      to: status.Placed
+      {
+        reopenedAt = now()
+      }
+    }
+
+    fulfill() {
+      title: { pt-BR: "Atender", en: "Fulfill" }
+      roles: [OrderEngine]
+
+      to: status.Fulfilled
+      {
+        fulfilledAt = now()
+      }
+    }
+  }
+
+  rule status == Placed implies placedAt != null {
+    pt-BR: "Informe a data do pedido"
+    en: "Enter the order date"
+  }
+  rule items.count <= 50 {
+    pt-BR: "O pedido excede o limite de 50 itens"
+    en: "Order exceeds the 50 item limit"
+  }
+}
+
+shape OrderItem {
+  title: { pt-BR: "Item de pedido", en: "Order item" }
+
+  fields {
+    product: Product {
+      title: { pt-BR: "Produto", en: "Product" }
+      lookup
+    }
+    quantity: std.Count {
+      title: { pt-BR: "Quantidade", en: "Quantity" }
+      lookup
+      min: 1
+      max: 1000
+      required
+    }
+    unitPrice: std.Money {
+      title: { pt-BR: "Preço unitário", en: "Unit price" }
+      currency: BRL
+    }
+    total: std.Money {
+      title: { pt-BR: "Total", en: "Total" }
+      currency: BRL
+      computed: quantity * unitPrice
+    }
+  }
+}
+
+shape OrderStatus {
+  title: { pt-BR: "Situação do pedido", en: "Order status" }
+  base: state
+  initial: Draft with transition Drafted {
+    title: { pt-BR: "Pedido criado", en: "Order drafted" }
+    payload {
+      customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+      createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    }
+  }
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Placed {
+      title: { pt-BR: "Pedido realizado", en: "Order placed" }
+      payload {
+        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+        placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
+      }
+    }
+
+    transition Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+      }
+    }
+  }
+  value Placed {
+    title: { pt-BR: "Realizado", en: "Placed" }
+    icon: Placed
+    ordinal: 20
+
+    transition Reserved {
+      title: { pt-BR: "Estoque reservado", en: "Stock reserved" }
+      payload {
+        reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
+      }
+    }
+
+    transition CancellationRequested {
+      title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    icon: Reserved
+    ordinal: 30
+
+    transition CancellationRequested {
+      title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Fulfilled {
+      title: { pt-BR: "Pedido atendido", en: "Order fulfilled" }
+      payload {
+        fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
+      }
+    }
+  }
+  value CancellationRequested {
+    title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+    icon: CancellationRequested
+    ordinal: 40
+
+    transition CancellationApproved {
+      title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+      payload {
+        cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Placed {
+      event: CancellationRejected
+      title: { pt-BR: "Cancelamento recusado", en: "Cancellation rejected" }
+      payload {
+        cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value CancellationApproved {
+    title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+    icon: CancellationApproved
+    ordinal: 50
+
+    transition Cancelled {
+      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+      }
+    }
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 60
+
+    transition Placed {
+      event: Reopened
+      title: { pt-BR: "Pedido reaberto", en: "Order reopened" }
+      payload {
+        reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+      }
+    }
+  }
+  value Fulfilled {
+    title: { pt-BR: "Atendido", en: "Fulfilled" }
+    icon: Fulfilled
+    ordinal: 70
+  }
+
+  format: plain
+}
+
+view OrderPipeline {
+  title: { pt-BR: "Funil de pedidos", en: "Order pipeline" }
+  type: report
+  sources: [Order]
+  roles: [Manager]
+
+  filters { period; status }
+  metrics {
+    placed: count(Order) where status == Placed
+    cancelled: count(Order) where status == Cancelled
+    revenue: sum(Order.total) where status != Cancelled
+    avgTicket: avg(Order.total)
+  }
+  units { revenue: BRL; avgTicket: BRL }
+  freshness: 10m
+  export: [pdf, csv]
+}
+
+view OrderPulse {
+  title: { pt-BR: "Pulso dos pedidos", en: "Order pulse" }
+  type: dashboard
+  sources: [Order]
+  roles: [Manager]
+  mode: live
+
+  filters { status }
+  metrics {
+    awaitingReview: count(Order) where status == Draft
+    awaitingReservation: count(Order) where status == Placed
+    awaitingDecision: count(Order) where status == CancellationRequested
+  }
+  freshness: 5m
+}
+
+view OrderList {
+  title: { pt-BR: "Pedidos", en: "Orders" }
+  type: table
+  source: Order
+  roles: [Clerk, Manager]
+
+  columns { customer; total; status; placedAt }
+  filters { status; period; customer }
+  pagination: 50
+
+  actions {
+    open -> OrderDetail
+    newOrder -> Order.create(customer, discount)
+    requestCancellation -> Order.requestCancellation(reason)
+  }
+}
+
+view OrderDetail {
+  title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
+  type: detail
+  document: Order
+  roles: [Clerk, Manager]
+
+  sections { summary; items; timeline }
+  actions {
+    progress -> OrderProgress
+    cancel -> Order.cancel(reason)
+    reopen -> Order.reopen
+  }
+}
+
+view OrderBoard {
+  title: { pt-BR: "Quadro de pedidos", en: "Order board" }
+  type: kanban
+  source: Order
+  roles: [Clerk, Manager]
+
+  groupBy: status
+  card { customer; total; placedAt }
+  filter { status != Cancelled }
+  actions {
+    open -> OrderDetail
+  }
+}
+
+policy OrderDiscount {
+  appliesTo: Order.place
+  rule: discount <= subtotal * 10% or approver.role == Manager
+  severity: require
+  message: "Desconto acima de 10% exige gerente"
+  audit: true
+}

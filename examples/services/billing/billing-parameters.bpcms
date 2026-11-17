@@ -1,4 +1,5 @@
 // service: example.com/services/billing
+
 parameter TaxRegime {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   type: TaxRegimeCode

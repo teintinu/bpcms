@@ -1,0 +1,118 @@
+// service: example.com/services/procurement
+
+document RFQ {
+  title: { pt-BR: "Cotação", en: "Request for quotation" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    number: string {
+      title: { pt-BR: "Número", en: "Number" }
+      maxLength: 40
+      unique
+      lookup
+    }
+    request: PurchaseRequest {
+      title: { pt-BR: "Solicitação", en: "Purchase request" }
+      lookup
+    }
+    dueAt: DateTime {
+      title: { pt-BR: "Prazo da cotação", en: "Quote deadline" }
+    }
+    status: RFQStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    quotedAmount: std.Money {
+      title: { pt-BR: "Valor cotado", en: "Quoted amount" }
+      currency: BRL
+    }
+    quotedAt: DateTime {
+      title: { pt-BR: "Cotado em", en: "Quoted at" }
+    }
+    awardedSupplier: Supplier {
+      title: { pt-BR: "Fornecedor adjudicado", en: "Awarded supplier" }
+    }
+    awardedAt: DateTime {
+      title: { pt-BR: "Adjudicado em", en: "Awarded at" }
+    }
+  }
+
+
+  actions {
+    quote(quotedAmount: std.Money) {
+      title: { pt-BR: "Registrar cotação", en: "Record quote" }
+      roles: [Buyer]
+      to: status.Quoted
+      emits { amount: quotedAmount }
+      {
+        quotedAt = now()
+      }
+    }
+
+    award(awardedSupplier: Supplier) {
+      title: { pt-BR: "Adjudicar cotação", en: "Award quote" }
+      roles: [Buyer, ProcurementManager]
+      to: status.Awarded
+      emits { supplier: awardedSupplier }
+      {
+        awardedAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byNumber: [number] unique
+    byStatus: [status, dueAt] range
+  }
+}
+
+shape RFQStatus {
+  title: { pt-BR: "Situação da cotação", en: "RFQ status" }
+  base: state
+  initial: Open
+  value Open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+
+    transition Quoted {
+      title: { pt-BR: "Cotação recebida", en: "Quote received" }
+      payload {
+        quotedAt: DateTime { title: { pt-BR: "Cotado em", en: "Quoted at" } }
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  value Quoted {
+    title: { pt-BR: "Cotada", en: "Quoted" }
+    icon: Quoted
+    ordinal: 20
+
+    transition Awarded {
+      title: { pt-BR: "Cotação adjudicada", en: "Quote awarded" }
+      payload {
+        awardedAt: DateTime { title: { pt-BR: "Adjudicado em", en: "Awarded at" } }
+        supplier: Supplier { title: { pt-BR: "Fornecedor", en: "Supplier" } }
+      }
+    }
+  }
+  value Awarded {
+    title: { pt-BR: "Adjudicada", en: "Awarded" }
+    icon: Awarded
+    ordinal: 30
+  }
+}
+
+view QuotationsBoard {
+  title: { pt-BR: "Cotações em aberto", en: "Open quotations" }
+  type: kanban
+  source: RFQ
+  roles: [Buyer, ProcurementManager]
+
+  groupBy: status
+  columns { number; dueAt; quotedAmount }
+  card { number; dueAt; status }
+  filter { status != Awarded }
+}

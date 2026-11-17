@@ -1,0 +1,27 @@
+// service: example.com/services/credit
+
+document RiskAssessment {
+  title: { pt-BR: "Avaliação de risco", en: "Risk assessment" }
+  version: 1
+  owner: "Credit"
+  computed from CreditApplication
+  freshness: 10m
+  exposes: [score, band, calculatedAt]
+
+  fields {
+    application: CreditApplication {
+      title: { pt-BR: "Proposta", en: "Application" }
+      lookup
+    }
+    score: std.Count {
+      title: { pt-BR: "Score", en: "Score" }
+    }
+    band: RiskBand {
+      title: { pt-BR: "Faixa", en: "Band" }
+    }
+  }
+
+  indexes {
+    byApplication: [application.id] hash
+  }
+}

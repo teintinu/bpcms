@@ -1,0 +1,23 @@
+// service: example.com/services/billing
+
+scopable document FiscalYear {
+  title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
+  fields {
+    year: integer {
+      title: { pt-BR: "Ano", en: "Year" }
+      unique
+      lookup
+      required
+    }
+    startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
+    endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
+  }
+
+  seed {
+    Y2026 {
+      year: 2026
+      startsAt: 2026-01-01
+      endsAt: 2026-12-31
+    }
+  }
+}

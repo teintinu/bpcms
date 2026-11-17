@@ -1,0 +1,152 @@
+// service: example.com/services/procurement
+
+process PurchaseApproval for PurchaseRequest {
+  title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
+  version: 1
+  goal: "Aprovar a compra na alçada certa, com rastro e sem travar o pedido simples"
+  owner: "Procurement"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Approval { role: Approver }
+    lane Management { role: ProcurementManager }
+  }
+
+  variables {
+    tier: ApproverTier
+  }
+
+  start Submitted { event: PurchaseRequest.Submitted }
+
+  task Decide {
+    lane: System
+    decision: ApprovalLimit
+    with {
+      amount: purchaseRequest.amount
+      supplier: purchaseRequest.supplier
+    }
+    gives: tier
+  }
+
+  gateway Tier {
+    if tier == Auto -> AutoApprove
+    if tier == Manager -> ManagerReview
+    else -> DirectorReview
+  }
+
+  task AutoApprove {
+    lane: System
+    action: PurchaseRequest.approve
+    sla: 1m
+  }
+
+  task ManagerReview {
+    lane: Approval
+    form: ApprovalDecision
+    sla: 2d
+    assign: pull
+    priority: 50
+    on timer 2d -> Escalate
+  }
+
+  task DirectorReview {
+    lane: Management
+    form: ApprovalDecision
+    sla: 2d
+    assign: pull
+    priority: 30
+    on timer 3d -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    form: ApprovalDecision
+    sla: 2d
+  }
+
+  end Approved {
+    title: { pt-BR: "Compra aprovada", en: "Purchase approved" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Compra rejeitada", en: "Purchase rejected" }
+    outcome: failure
+  }
+
+  Submitted -> Decide
+  Decide -> Tier
+  AutoApprove -> Approved
+  ManagerReview.approved -> Approved
+  ManagerReview.rejected -> Rejected
+  DirectorReview.approved -> Approved
+  DirectorReview.rejected -> Rejected
+  Escalate.approved -> Approved
+  Escalate.rejected -> Rejected
+}
+
+shape ApproverTier {
+  title: { pt-BR: "Alçada de aprovação", en: "Approval tier" }
+  base: classification
+  value Auto {
+    title: { pt-BR: "Automática", en: "Automatic" }
+    icon: Auto
+    ordinal: 10
+  }
+  value Manager {
+    title: { pt-BR: "Gerência", en: "Manager" }
+    icon: Manager
+    ordinal: 20
+  }
+  value Director {
+    title: { pt-BR: "Diretoria", en: "Director" }
+    icon: Director
+    ordinal: 30
+  }
+}
+
+form ApprovalDecision {
+  title: { pt-BR: "Decisão de aprovação", en: "Approval decision" }
+  document: PurchaseRequest
+
+  fields {
+    amount { readonly }
+    supplier { readonly }
+    justification { readonly }
+    rejectionReason
+  }
+
+  actions {
+    approved { calls: PurchaseRequest.approve }
+    rejected { calls: PurchaseRequest.reject(rejectionReason) }
+  }
+}
+
+view PurchaseApprovalProgress {
+  title: { pt-BR: "Andamento da aprovação de compra", en: "Purchase approval progress" }
+  type: process
+  process: PurchaseApproval
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+decision ApprovalLimit {
+  title: { pt-BR: "Alçada de aprovação de compra", en: "Purchase approval limit" }
+  returns: ApproverTier
+  inputs {
+    amount: std.Money
+    supplier: Supplier
+  }
+  cases {
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier != null and supplier.risk == Low -> Manager
+    else -> Director
+  }
+  source: "Política de Compras v3"
+  owner: "Procurement"
+}

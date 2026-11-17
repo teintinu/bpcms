@@ -1,0 +1,9 @@
+// service: example.com/services/laboratory
+
+scopable document Laboratory {
+  title: { pt-BR: "Laboratório", en: "Laboratory" }
+  fields {
+    code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
+  }
+}

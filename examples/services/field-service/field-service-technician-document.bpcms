@@ -1,0 +1,156 @@
+// service: example.com/services/field-service
+
+document Technician {
+  title: { pt-BR: "Técnico", en: "Technician" }
+  version: 1
+  owner: "Field Service"
+  sync: live
+
+  fields {
+    registration: string {
+      title: { pt-BR: "Matrícula", en: "Registration" }
+      lookup
+      unique
+      maxLength: 20
+    }
+    person: Identity.User { title: { pt-BR: "Pessoa", en: "Person" }, lookup }
+    skills: ServiceSkill[] { title: { pt-BR: "Especialidades", en: "Skills" } }
+    zone: string { title: { pt-BR: "Região", en: "Zone" }, lookup, maxLength: 60 }
+    availability: TechnicianAvailability { title: { pt-BR: "Disponibilidade", en: "Availability" }, lookup }
+    dailyCapacity: std.Count { title: { pt-BR: "Capacidade diária", en: "Daily capacity" } }
+    availableFrom: DateTime { title: { pt-BR: "Disponível a partir de", en: "Available from" } }
+    dutyNote: string { title: { pt-BR: "Observação", en: "Note" }, maxLength: 240 }
+  }
+
+  indexes {
+    byRegistration: [registration] unique
+    byAvailability: [availability, zone] range
+  }
+
+
+  actions {
+    assign() {
+      title: { pt-BR: "Colocar em atendimento", en: "Assign technician" }
+      roles: [Dispatcher]
+      to: availability.Assigned
+      emits { at: now() }
+    }
+
+    release() {
+      title: { pt-BR: "Liberar técnico", en: "Release technician" }
+      roles: [Dispatcher]
+      to: availability.Available
+      emits { at: now() }
+    }
+
+    goOffDuty(reason: string) {
+      title: { pt-BR: "Fora de turno", en: "Go off duty" }
+      roles: [Supervisor]
+      to: availability.OffDuty
+      { dutyNote = reason }
+    }
+
+    returnToDuty() {
+      title: { pt-BR: "Voltar ao turno", en: "Return to duty" }
+      roles: [Supervisor]
+      to: availability.Available
+      emits { at: now() }
+    }
+  }
+}
+
+shape TechnicianAvailability {
+  title: { pt-BR: "Disponibilidade do técnico", en: "Technician availability" }
+  base: state
+  initial: Available
+
+  value Available {
+    title: { pt-BR: "Disponível", en: "Available" }
+    icon: status.available
+    ordinal: 10
+
+    transition Assigned {
+      event: TechnicianAssigned
+      title: { pt-BR: "Técnico em atendimento", en: "Technician assigned" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition OffDuty {
+      event: WentOffDuty
+      title: { pt-BR: "Técnico fora de turno", en: "Technician off duty" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Assigned {
+    title: { pt-BR: "Em atendimento", en: "Assigned" }
+    icon: status.assigned
+    ordinal: 20
+
+    transition Available {
+      event: TechnicianReleased
+      title: { pt-BR: "Técnico liberado", en: "Technician released" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value OffDuty {
+    title: { pt-BR: "Fora de turno", en: "Off duty" }
+    icon: status.offDuty
+    ordinal: 30
+
+    transition Available {
+      event: ReturnedToDuty
+      title: { pt-BR: "Técnico de volta ao turno", en: "Technician back on duty" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+}
+
+shape ServiceSkill {
+  title: { pt-BR: "Especialidade técnica", en: "Service skill" }
+  base: classification
+
+  value Installation {
+    title: { pt-BR: "Instalação", en: "Installation" }
+    icon: skill.installation
+    ordinal: 10
+  }
+  value Maintenance {
+    title: { pt-BR: "Manutenção", en: "Maintenance" }
+    icon: skill.maintenance
+    ordinal: 20
+  }
+  value Repair {
+    title: { pt-BR: "Reparo", en: "Repair" }
+    icon: skill.repair
+    ordinal: 30
+  }
+  value Inspection {
+    title: { pt-BR: "Inspeção", en: "Inspection" }
+    icon: skill.inspection
+    ordinal: 40
+  }
+}
+
+view TechniciansTable {
+  title: { pt-BR: "Técnicos", en: "Technicians" }
+  type: table
+  source: Technician
+  roles: [Dispatcher, Supervisor]
+
+  columns { registration; person; zone; availability; dailyCapacity }
+  filters { availability; zone }
+
+  actions {
+    assign -> Technician.assign
+    release -> Technician.release
+    goOffDuty -> Technician.goOffDuty(reason)
+  }
+}

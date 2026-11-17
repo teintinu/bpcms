@@ -1,0 +1,169 @@
+// service: example.com/services/payments
+
+process ChargebackDispute for Chargeback {
+  title: { pt-BR: "Contestação da bandeira", en: "Chargeback dispute" }
+  version: 1
+  goal: "Responder a contestação dentro do prazo, com evidências"
+  owner: "Payments"
+  timezone: America/Fortaleza
+  sla: 20d
+
+  pool Company {
+    internal
+    lane Finance { role: Analyst }
+    lane Management { role: Manager }
+  }
+
+  pool Network {
+    external
+  }
+
+  start Opened { event: Chargeback.Opened }
+
+  task GatherEvidence {
+    lane: Finance
+    form: ChargebackEvidence
+    sla: 5d
+    priority: 90
+    assign: pull
+    on timer 10d -> Concede
+  }
+
+  task SendEvidence {
+    lane: System
+    sends: EvidencePackage
+    partner: Network
+    with { chargeback }
+    sla: 1h
+    on error NetworkUnavailable -> ManualSend
+  }
+
+  task ManualSend {
+    lane: Finance
+    manual: "Enviar as evidências pelo portal da bandeira"
+    sla: 4h
+    on timer 4h -> Concede
+  }
+
+  task AwaitDecision {
+    lane: System
+    receives: ChargebackResult
+    partner: Network
+    apply: Chargeback.registerDecision
+    sla: 30d
+    on timer 30d -> Concede
+  }
+
+  task ConfirmWin {
+    lane: System
+    action: Chargeback.win
+    sla: 1m
+  }
+
+  task ConfirmLoss {
+    lane: System
+    action: Chargeback.lose
+    sla: 1m
+  }
+
+  task Concede {
+    lane: Management
+    form: ChargebackConcession
+    sla: 1h
+    assign: pull
+  }
+
+  gateway Decision {
+    if chargeback.networkFavorable -> ConfirmWin
+    else -> ConfirmLoss
+  }
+
+  end Won {
+    title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+    outcome: success
+  }
+  end Lost {
+    title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+    outcome: failure
+  }
+
+  Opened -> GatherEvidence
+  GatherEvidence.submit -> SendEvidence
+  GatherEvidence.concede -> Concede
+  SendEvidence -> AwaitDecision
+  ManualSend -> AwaitDecision
+  AwaitDecision -> Decision
+  Decision -> ConfirmWin
+  Decision -> ConfirmLoss
+  ConfirmWin -> Won
+  ConfirmLoss -> Lost
+  Concede.accept -> Lost
+}
+
+form ChargebackEvidence {
+  title: { pt-BR: "Evidências da contestação", en: "Chargeback evidence" }
+  document: Chargeback
+
+  fields {
+    payment
+    amount
+    dueAt
+    evidenceNote: string {
+      title: { pt-BR: "Resumo das evidências", en: "Evidence summary" }
+      maxLength: 2000
+      required
+    }
+    evidenceFile: EvidenceDocument {
+      title: { pt-BR: "Documento comprobatório", en: "Supporting document" }
+      required
+    }
+    note: string {
+      title: { pt-BR: "Anotação interna", en: "Internal note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    submit {
+      title: { pt-BR: "Enviar à bandeira", en: "Send to the network" }
+      calls: Chargeback.submitEvidence(evidenceNote, evidenceFile)
+    }
+    concede {
+      title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      calls: Chargeback.concede
+    }
+    annotate {
+      title: { pt-BR: "Salvar anotação", en: "Save note" }
+      calls: Chargeback.annotateEvidence(note)
+      stay
+    }
+  }
+}
+
+form ChargebackConcession {
+  title: { pt-BR: "Aceitar contestação", en: "Accept chargeback" }
+  document: Chargeback
+
+  fields {
+    payment
+    amount
+    dueAt
+    status
+  }
+
+  actions {
+    accept {
+      title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      calls: Chargeback.concede
+    }
+  }
+}
+
+view ChargebackProgress {
+  title: { pt-BR: "Andamento da contestação", en: "Chargeback progress" }
+  type: process
+  process: ChargebackDispute
+  roles: [Analyst, Manager]
+
+  sections { current; participants; history; deadlines; documents; next }
+}

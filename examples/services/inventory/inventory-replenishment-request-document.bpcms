@@ -1,0 +1,78 @@
+// service: example.com/services/inventory
+
+document ReplenishmentRequest {
+  title: { pt-BR: "Requisição de reposição", en: "Replenishment request" }
+  version: 1
+  owner: "Inventory"
+  sync: live
+
+  fields {
+    stockItem: StockItem {
+      title: { pt-BR: "Item de estoque", en: "Stock item" }
+      lookup
+    }
+    quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    status: RequisitionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    requestedAt: DateTime { title: { pt-BR: "Solicitada em", en: "Requested at" } }
+    cancelledReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" } }
+  }
+
+  indexes {
+    byStatus: [status, requestedAt] range
+    byItem: [stockItem.id, requestedAt] range
+  }
+
+
+  actions {
+    create(stockItem: StockItem){
+      title: { pt-BR: "Criar requisição", en: "Create request" }
+      roles: [StockManager]
+      returns: ReplenishmentRequest
+      {
+        quantity = stockItem.reorderPoint
+        requestedAt = now()
+        emit Requested { quantity }
+      }
+    }
+
+    cancel(reason: string){
+      title: { pt-BR: "Cancelar requisição", en: "Cancel request" }
+      roles: [StockManager]
+
+      to: status.Cancelled
+
+      {
+        cancelledReason = reason
+      }
+    }
+  }
+}
+
+shape RequisitionStatus {
+  title: { pt-BR: "Situação da requisição", en: "Requisition status" }
+  base: state
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
+    payload {
+      quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+    }
+  }
+  value Requested {
+    title: { pt-BR: "Solicitada", en: "Requested" }
+    icon: Requested
+    ordinal: 10
+
+    transition Cancelled {
+      title: { pt-BR: "Requisição cancelada", en: "Request cancelled" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 20
+  }
+  format: plain
+}

@@ -1,0 +1,31 @@
+// service: example.com/services/billing
+
+scopable document Store {
+  title: { pt-BR: "Loja", en: "Store" }
+  fields {
+    code: string {
+      title: { pt-BR: "Código", en: "Code" }
+      maxLength: 8
+      unique
+      lookup
+      required
+    }
+    name: string {
+      title: { pt-BR: "Nome", en: "Name" }
+      maxLength: 120
+      lookup
+      required
+    }
+  }
+
+  seed {
+    SP {
+      code: "SP"
+      name: "São Paulo"
+    }
+    RJ {
+      code: "RJ"
+      name: "Rio de Janeiro"
+    }
+  }
+}

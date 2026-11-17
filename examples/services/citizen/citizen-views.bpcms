@@ -1,16 +1,5 @@
 // service: example.com/services/citizen
 
-view Registry {
-  title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
-  type: table
-  source: Citizen
-  roles: [Clerk, Manager, Auditor]
-
-  columns { avatar; displayName; kind; country; status }
-  filters { kind; country; status }
-  pagination: 50
-}
-
 view Duplicates {
   title: { pt-BR: "Fila de duplicados", en: "Duplicate queue" }
   type: inbox
@@ -19,13 +8,4 @@ view Duplicates {
   groupBy: lane
   filter { lane in currentUser.lanes }
   columns { title; subject; lane; dueAt; priority }
-}
-
-view MergeProgress {
-  title: { pt-BR: "Andamento da mesclagem", en: "Merge progress" }
-  type: process
-  process: CitizenMerge
-  roles: [Clerk, Manager, Auditor]
-
-  sections { current; participants; history; deadlines; documents; milestones; next }
 }

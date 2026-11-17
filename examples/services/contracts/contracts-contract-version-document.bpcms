@@ -1,0 +1,117 @@
+// service: example.com/services/contracts
+
+document ContractVersion {
+  title: { pt-BR: "Versão do contrato", en: "Contract version" }
+  version: 1
+  owner: "Contracts"
+  sync: read
+
+  fields {
+    contract: Contract {
+      title: { pt-BR: "Contrato", en: "Contract" }
+      lookup
+    }
+    versionNumber: std.Count {
+      title: { pt-BR: "Número da versão", en: "Version number" }
+      required
+    }
+    status: ContractVersionStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    summary: string {
+      title: { pt-BR: "Resumo das mudanças", en: "Change summary" }
+      maxLength: 500
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovada em", en: "Approved at" }
+    }
+    supersededAt: DateTime {
+      title: { pt-BR: "Substituída em", en: "Superseded at" }
+    }
+  }
+
+
+  actions {
+    approve() {
+      title: { pt-BR: "Aprovar versão", en: "Approve version" }
+      roles: [LegalCounsel]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    supersede() {
+      title: { pt-BR: "Substituir versão", en: "Supersede version" }
+      roles: [ContractManager]
+      to: status.Superseded
+      {
+        supersededAt = now()
+      }
+    }
+  }
+
+  indexes {
+    byContract: [contract.id, versionNumber] range
+    byStatus: [status] hash
+  }
+
+  rule versionNumber > 0 {
+    pt-BR: "O número da versão precisa ser positivo"
+    en: "Version number must be positive"
+  }
+}
+
+shape ContractVersionStatus {
+  title: { pt-BR: "Situação da versão do contrato", en: "Contract version status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition Approved {
+      title: { pt-BR: "Versão aprovada", en: "Version approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+      }
+    }
+
+    transition Superseded {
+      title: { pt-BR: "Versão substituída", en: "Version superseded" }
+      payload {
+        supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 20
+
+    transition Superseded {
+      title: { pt-BR: "Versão substituída", en: "Version superseded" }
+      payload {
+        supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
+      }
+    }
+  }
+  value Superseded {
+    title: { pt-BR: "Substituída", en: "Superseded" }
+    icon: Superseded
+    ordinal: 30
+  }
+}
+
+view ContractVersions {
+  title: { pt-BR: "Versões do contrato", en: "Contract versions" }
+  type: table
+  source: ContractVersion
+  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+
+  columns { contract; versionNumber; status; summary; approvedAt }
+  filters { status; contract }
+  pagination: 50
+}

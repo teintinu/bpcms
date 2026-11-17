@@ -1,0 +1,255 @@
+// service: example.com/services/payments
+
+document Payment {
+  title: { pt-BR: "Pagamento", en: "Payment" }
+  version: 2
+  owner: "Payments"
+  sync: live
+
+  fields {
+    order: Order {
+      title: { pt-BR: "Pedido", en: "Order" }
+      lookup
+    }
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
+    status: PaymentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    authorizationCode: string {
+      title: { pt-BR: "Código de autorização", en: "Authorization code" }
+      maxLength: 60
+    }
+    authorizedAt: DateTime { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
+    capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
+    acquirerReceipt: string {
+      title: { pt-BR: "Comprovante do adquirente", en: "Acquirer receipt" }
+      maxLength: 60
+    }
+    failureDetail: string {
+      title: { pt-BR: "Detalhe da falha", en: "Failure detail" }
+      maxLength: 300
+    }
+    notes: string {
+      title: { pt-BR: "Observações", en: "Notes" }
+      maxLength: 1000
+    }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+  }
+
+  indexes {
+    byOrder: [order.id] hash
+    byStatus: [status, capturedAt] range
+  }
+
+
+  actions {
+    create(order: Order, amount: std.Money, method: PaymentMethod) {
+      title: { pt-BR: "Registrar cobrança", en: "Register charge" }
+      roles: [Analyst]
+      {
+        createdAt = now()
+        emit Created
+      }
+    }
+
+    authorize(authorization: string) {
+      title: { pt-BR: "Autorizar", en: "Authorize" }
+      roles: [PaymentEngine]
+
+      to: status.Authorized
+      emits { authorizationCode: authorization }
+      {
+        authorizationCode = authorization
+        authorizedAt = now()
+      }
+    }
+
+    capture(receipt: string) {
+      title: { pt-BR: "Capturar", en: "Capture" }
+      roles: [PaymentEngine]
+
+      to: status.Captured
+      {
+        acquirerReceipt = receipt
+        capturedAt = now()
+      }
+    }
+
+    fail(failureReason: string) {
+      title: { pt-BR: "Registrar falha", en: "Record failure" }
+      roles: [PaymentEngine]
+
+      to: status.Failed
+      {
+        failureDetail = failureReason
+      }
+    }
+
+    refund(refundAmount: std.Money) {
+      title: { pt-BR: "Estornar", en: "Refund" }
+      roles: [Manager, PaymentEngine]
+
+      to: status.Refunded
+      emits { amount: refundAmount }
+
+      rule refundAmount > 0 BRL {
+        pt-BR: "O valor do estorno deve ser maior que zero"
+        en: "Refund amount must be greater than zero"
+      }
+    }
+
+    annotate(note: string) {
+      title: { pt-BR: "Anotar", en: "Annotate" }
+      roles: [Analyst]
+      {
+        notes = note
+      }
+    }
+  }
+
+  rule amount > 0 {
+    pt-BR: "O valor deve ser maior que zero"
+    en: "Amount must be greater than zero"
+  }
+  rule status == Captured implies capturedAt != null {
+    pt-BR: "Informe a data de captura"
+    en: "Enter the capture date"
+  }
+}
+
+shape PaymentStatus {
+  title: { pt-BR: "Situação do pagamento", en: "Payment status" }
+  base: state
+  initial: Pending with transition Created {
+    title: { pt-BR: "Cobrança registrada", en: "Charge registered" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+    }
+  }
+
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: Pending
+    ordinal: 10
+
+    transition Authorized {
+      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      payload {
+        failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Authorized {
+    title: { pt-BR: "Autorizado", en: "Authorized" }
+    icon: Authorized
+    ordinal: 20
+
+    transition Captured {
+      title: { pt-BR: "Pagamento capturado", en: "Payment captured" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
+      }
+    }
+
+    transition Failed {
+      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      payload {
+        failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Refunded {
+      event: RefundIssued
+      title: { pt-BR: "Estorno emitido", en: "Refund issued" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  value Captured {
+    title: { pt-BR: "Capturado", en: "Captured" }
+    icon: Captured
+    ordinal: 30
+
+    transition Refunded {
+      event: RefundIssued
+      title: { pt-BR: "Estorno emitido", en: "Refund issued" }
+      payload {
+        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      }
+    }
+  }
+  value Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    icon: Failed
+    ordinal: 40
+  }
+  value Refunded {
+    title: { pt-BR: "Reembolsado", en: "Refunded" }
+    icon: Refunded
+    ordinal: 50
+  }
+
+  format: plain
+}
+
+shape PaymentMethod {
+  title: { pt-BR: "Método de pagamento", en: "Payment method" }
+  base: classification
+
+  value CreditCard {
+    title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    icon: CreditCard
+    ordinal: 10
+  }
+  value Pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: Pix
+    ordinal: 20
+  }
+  value Boleto {
+    title: { pt-BR: "Boleto", en: "Boleto" }
+    icon: Boleto
+    ordinal: 30
+  }
+
+  format: plain
+}
+
+view Charges {
+  title: { pt-BR: "Cobranças", en: "Charges" }
+  type: table
+  source: Payment
+  roles: [Analyst, Manager]
+
+  columns { order; amount; method; status; capturedAt }
+  filters { status; period; method }
+  pagination: 50
+
+  actions {
+    open -> PaymentDetail
+    charge -> Payment.create(order, amount, method)
+    refund -> Payment.refund(refundAmount)
+  }
+}
+
+view PaymentDetail {
+  title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
+  type: detail
+  document: Payment
+  roles: [Analyst, Manager]
+
+  sections { summary; refunds; timeline }
+  actions {
+    progress -> PaymentProgress
+  }
+}

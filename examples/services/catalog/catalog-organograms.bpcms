@@ -1,4 +1,5 @@
 // service: example.com/services/catalog
+
 role Curator {
   title: { pt-BR: "Editor de catálogo", en: "Catalog editor" }
   permissions: [product.edit, product.submitForReview, catalog.view]

@@ -1,0 +1,154 @@
+// service: example.com/services/identity
+
+document User {
+  title: { pt-BR: "Usuário", en: "User" }
+  version: 1
+  owner: "Identity"
+  sync: read
+  fields {
+    name: string {
+      title: {
+        pt-BR: "Nome da pessoa"
+        en: "Person name"
+        short: { pt-BR: "Pessoa", en: "Person" }
+        tooltip: { pt-BR: "Nome completo da pessoa", en: "Full person name" }
+      }
+      maxLength: 120
+      lookup
+      required
+    }
+    nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
+    avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
+    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" }, unique, lookup }
+    status: UserStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    identityVerifiedAt: DateTime { title: { pt-BR: "Identidade verificada em", en: "Identity verified at" } }
+    recoveryApprovedAt: DateTime { title: { pt-BR: "Recuperação aprovada em", en: "Recovery approved at" } }
+    private loginAttempts: std.Count { title: { pt-BR: "Tentativas de acesso", en: "Login attempts" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+  }
+
+  indexes {
+    email: [email] unique
+    byStatus: [status, createdAt] range
+  }
+
+
+  actions {
+    create(name: string, email: Email){
+      title: { pt-BR: "Criar usuário", en: "Create user" }
+      roles: [Admin]
+      {
+        createdAt = now()
+        emit Created { name }
+      }
+    }
+
+    suspend(justification: string){
+      title: { pt-BR: "Suspender", en: "Suspend" }
+      roles: [Admin]
+      to: status.Suspended
+      emits { reason: justification }
+    }
+
+    disable(){
+      title: { pt-BR: "Desativar", en: "Disable" }
+      roles: [Manager]
+      to: status.Disabled
+    }
+
+    unlock(){
+      title: { pt-BR: "Desbloquear", en: "Unlock" }
+      roles: [Manager]
+      to: status.Active
+    }
+
+    confirmIdentity(){
+      title: { pt-BR: "Confirmar identidade", en: "Confirm identity" }
+      roles: [Clerk]
+      {
+        identityVerifiedAt = now()
+      }
+    }
+
+    approveRecovery(){
+      title: { pt-BR: "Aprovar recuperação", en: "Approve recovery" }
+      roles: [Manager]
+      {
+        recoveryApprovedAt = now()
+      }
+    }
+
+    private recalculateRisk(){
+      title: { pt-BR: "Recalcular risco", en: "Recalculate risk" }
+      roles: [Admin]
+      returns: std.Count
+    }
+  }
+
+  rule recoveryApprovedAt != null implies identityVerifiedAt != null {
+    pt-BR: "A recuperação exige a verificação de identidade antes da aprovação"
+    en: "Recovery requires identity verification before approval"
+
+  }
+}
+
+shape UserStatus {
+  title: { pt-BR: "Situação do usuário", en: "User status" }
+  base: state
+  initial: Active with transition Created {
+    title: { pt-BR: "Usuário criado", en: "User created" }
+    payload {
+      name: string { title: { pt-BR: "Nome", en: "Name" } }
+    }
+  }
+  value Active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+
+    transition Suspended {
+      title: { pt-BR: "Usuário suspenso", en: "User suspended" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+
+    transition Disabled {
+      title: { pt-BR: "Usuário desativado", en: "User disabled" }
+    }
+  }
+  value Suspended {
+    title: { pt-BR: "Suspenso", en: "Suspended" }
+    icon: Suspended
+    ordinal: 20
+
+    transition Disabled {
+      title: { pt-BR: "Usuário desativado", en: "User disabled" }
+    }
+
+    transition Active {
+      event: Unlocked
+      title: { pt-BR: "Acesso liberado", en: "Access unlocked" }
+    }
+  }
+  value Disabled {
+    title: { pt-BR: "Desativado", en: "Disabled" }
+    icon: Disabled
+    ordinal: 30
+
+    transition Active {
+      event: Unlocked
+      title: { pt-BR: "Acesso liberado", en: "Access unlocked" }
+    }
+  }
+  format: plain
+}
+
+message AccessRestored {
+  title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+  about: User
+  payload {
+    name: string { title: { pt-BR: "Nome", en: "Name" } }
+    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" } }
+  }
+}

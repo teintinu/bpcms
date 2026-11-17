@@ -1,0 +1,114 @@
+// service: example.com/services/contracts
+
+process ContractSignature for Contract {
+  title: { pt-BR: "Assinatura de contrato", en: "Contract signature" }
+  version: 1
+  goal: "Coletar a assinatura do fornecedor no prazo e ativar o contrato"
+  owner: "Contracts"
+  timezone: America/Fortaleza
+  sla: 10d
+
+  on breach -> Expire
+
+  pool Company {
+    internal
+    lane Legal { role: LegalCounsel }
+  }
+
+  pool Supplier {
+    external
+  }
+
+  start Submitted { event: Contract.Submitted }
+
+  task LegalReview {
+    lane: Legal
+    form: LegalReview
+    sla: 2d
+    assign: pull
+    on timer 3d -> Expire
+  }
+
+  task SendForSignature {
+    lane: System
+    sends: SignatureRequest
+    partner: Supplier
+    with {
+      contractNumber: contract.number
+      expiresAt: contract.endsAt
+    }
+  }
+
+  task AwaitSignature {
+    lane: System
+    receives: SignatureConfirmed
+    partner: Supplier
+    apply: Contract.sign
+    with { contract }
+    sla: 5d
+    on timer 5d -> Expire
+  }
+
+  task Expire {
+    lane: Legal
+    form: CancelContract
+    sla: 2d
+    assign: pull
+  }
+
+  end Signed {
+    title: { pt-BR: "Contrato assinado", en: "Contract signed" }
+    outcome: success
+  }
+
+  end Declined {
+    title: { pt-BR: "Assinatura não concluída", en: "Signature not completed" }
+    outcome: cancelled
+  }
+
+  Submitted -> LegalReview
+  LegalReview.approve -> SendForSignature
+  LegalReview.reject -> Declined
+  SendForSignature -> AwaitSignature
+  AwaitSignature -> Signed
+  Expire.cancel -> Declined
+}
+
+form LegalReview {
+  title: { pt-BR: "Revisão jurídica do contrato", en: "Contract legal review" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    endsAt { readonly }
+    cancellationReason
+  }
+
+  actions {
+    approve { calls: Contract.clearLegal }
+    reject { calls: Contract.cancel(cancellationReason) }
+  }
+}
+
+form CancelContract {
+  title: { pt-BR: "Cancelar contrato", en: "Cancel contract" }
+  document: Contract
+
+  fields {
+    number { readonly }
+    cancellationReason
+  }
+
+  actions {
+    cancel { calls: Contract.cancel(cancellationReason) }
+  }
+}
+
+view ContractSignatureProgress {
+  title: { pt-BR: "Andamento da assinatura", en: "Contract signature progress" }
+  type: process
+  process: ContractSignature
+  roles: [ContractManager, LegalCounsel]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

@@ -1,0 +1,173 @@
+// service: example.com/services/fraud-checkout
+
+document FraudCheck {
+  title: { pt-BR: "Verificação antifraude", en: "Fraud check" }
+  version: 1
+  owner: "Risk"
+  sync: live
+
+  fields {
+    session: CheckoutSession {
+      title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+      lookup
+    }
+    score: number {
+      title: { pt-BR: "Pontuação de risco", en: "Risk score" }
+      min: 0
+      max: 100
+      lookup
+    }
+    approved: boolean {
+      title: { pt-BR: "Aprovado", en: "Approved" }
+    }
+    status: FraudCheckStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    rejectionReason: string { title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" } }
+    evaluatedAt: DateTime { title: { pt-BR: "Avaliada em", en: "Evaluated at" } }
+    reviewedAt: DateTime { title: { pt-BR: "Revisada em", en: "Reviewed at" } }
+  }
+
+  indexes {
+    bySession: [session.id] hash
+    byStatus: [status, evaluatedAt] range
+  }
+
+
+  actions {
+    create(session: CheckoutSession, riskScore: number){
+      title: { pt-BR: "Criar verificação", en: "Create check" }
+      roles: [RiskAnalyst]
+      returns: FraudCheck
+      {
+        score = riskScore
+        emit Created { session: session }
+      }
+    }
+
+    evaluate(){
+      title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
+      roles: [RiskAnalyst]
+
+      to: status.Evaluated
+
+      {
+        evaluatedAt = now()
+      }
+    }
+
+    approve(){
+      title: { pt-BR: "Aprovar risco", en: "Approve risk" }
+      roles: [RiskAnalyst]
+
+      to: status.Approved
+      emits { approvedAt: now() }
+
+      {
+        approved = true
+        reviewedAt = now()
+      }
+    }
+
+    reject(reason: string){
+      title: { pt-BR: "Rejeitar risco", en: "Reject risk" }
+      roles: [RiskAnalyst]
+
+      to: status.Rejected
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
+
+      {
+        approved = false
+        rejectionReason = reason
+        reviewedAt = now()
+      }
+    }
+  }
+
+  rule score >= 0 and score <= 100 {
+    pt-BR: "A pontuação deve ficar entre 0 e 100"
+    en: "Score must be between 0 and 100"
+  }
+}
+
+shape FraudCheckStatus {
+  title: { pt-BR: "Situação da verificação antifraude", en: "Fraud check status" }
+  base: state
+  initial: Pending with transition Created {
+    title: { pt-BR: "Verificação criada", en: "Fraud check created" }
+    payload {
+      session: CheckoutSession { title: { pt-BR: "Sessão", en: "Session" } }
+    }
+  }
+  value Pending {
+    title: { pt-BR: "Pendente", en: "Pending" }
+    icon: Pending
+    ordinal: 10
+
+    transition Evaluated {
+      title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
+      payload {
+        score: number { title: { pt-BR: "Pontuação", en: "Score" } }
+      }
+    }
+  }
+  value Evaluated {
+    title: { pt-BR: "Avaliada", en: "Evaluated" }
+    icon: Evaluated
+    ordinal: 20
+
+    transition Approved {
+      title: { pt-BR: "Risco aprovado", en: "Risk approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Risco rejeitado", en: "Risk rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovada", en: "Approved" }
+    icon: Approved
+    ordinal: 30
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+  format: plain
+}
+
+view FraudTable {
+  title: { pt-BR: "Verificações antifraude", en: "Fraud checks" }
+  type: table
+  source: FraudCheck
+  roles: [RiskAnalyst, RiskManager]
+
+  columns { session; score; approved; status; evaluatedAt }
+  filters { status; period }
+  pagination: 50
+
+  actions {
+    open -> FraudDetail
+  }
+}
+
+view FraudDetail {
+  title: { pt-BR: "Detalhe da verificação", en: "Fraud check detail" }
+  type: detail
+  document: FraudCheck
+  roles: [RiskAnalyst, RiskManager]
+
+  sections { summary; decision; timeline }
+}

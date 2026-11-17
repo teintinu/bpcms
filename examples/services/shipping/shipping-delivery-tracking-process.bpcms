@@ -1,0 +1,134 @@
+// service: example.com/services/shipping
+
+process DeliveryTracking for Shipment {
+  title: { pt-BR: "Acompanhamento da entrega", en: "Delivery tracking" }
+  version: 1
+  goal: "Acompanhar a entrega, tratar tentativa falha e reentregar"
+  owner: "Shipping"
+  timezone: America/Fortaleza
+  sla: 30d
+
+  pool Company {
+    internal
+    lane Operations { role: Dispatcher }
+  }
+
+  pool Carrier {
+    external
+  }
+
+
+  start Begin { called }
+
+  task AwaitTracking {
+    lane: System
+    receives: TrackingUpdated
+    partner: Carrier
+    apply: Shipment.applyTracking
+    sla: 3d
+    on timer 3d -> Chase
+  }
+
+  gateway Outcome {
+    if shipment.lastTrackingKind == Completed -> Confirm
+    if shipment.lastTrackingKind == AttemptFailed -> FlagFailure
+    else -> AwaitTracking
+  }
+
+  task Confirm {
+    lane: System
+    action: Shipment.markDelivered
+    sla: 1m
+  }
+
+  task FlagFailure {
+    lane: System
+    action: Shipment.markAttemptFailed
+    with { reason: "Tentativa de entrega frustrada pelo parceiro" }
+    sla: 1m
+  }
+
+  task Retry {
+    lane: Operations
+    form: DeliveryRetry
+    sla: 4h
+    priority: 70
+    assign: pull
+  }
+
+  task Chase {
+    lane: Operations
+    manual: "Ligar para a transportadora e pedir posição do rastreio"
+    sla: 1d
+  }
+
+  wait NextAttempt {
+    until: shipment.nextAttemptAt
+  }
+
+  milestone HandedOver {
+    title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+    on: Shipment.PickedUp
+  }
+
+  end Delivered {
+    title: { pt-BR: "Entregue", en: "Delivered" }
+    outcome: success
+  }
+  end Returned {
+    title: { pt-BR: "Devolvida", en: "Returned" }
+    outcome: cancelled
+  }
+  end Stopped {
+    title: { pt-BR: "Encerrada", en: "Stopped" }
+    outcome: cancelled
+  }
+
+  cancel on Shipment.Cancelled -> Stopped
+
+  AwaitTracking -> Outcome
+  Outcome -> Confirm
+  Outcome -> FlagFailure
+  Outcome -> AwaitTracking
+  Confirm -> Delivered
+  FlagFailure -> Retry
+  Retry.confirm -> NextAttempt
+  Retry.sendBack -> Returned
+  NextAttempt -> AwaitTracking
+  Chase -> AwaitTracking
+  Begin -> AwaitTracking
+}
+
+form DeliveryRetry {
+  title: { pt-BR: "Reagendar entrega", en: "Reschedule delivery" }
+  document: Shipment
+
+  fields {
+    order
+    tracking
+    attemptOn: DateTime {
+      title: { pt-BR: "Nova tentativa", en: "New attempt" }
+      required
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Agendar reentrega", en: "Schedule retry" }
+      calls: Shipment.scheduleRetry(attemptOn)
+    }
+    sendBack {
+      title: { pt-BR: "Devolver ao remetente", en: "Return to sender" }
+      calls: Shipment.returnToSender
+    }
+  }
+}
+
+view DeliveryProgress {
+  title: { pt-BR: "Andamento da entrega", en: "Delivery progress" }
+  type: process
+  process: DeliveryTracking
+  roles: [Packer, Dispatcher, Manager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

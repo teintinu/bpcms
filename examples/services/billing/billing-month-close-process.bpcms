@@ -1,0 +1,79 @@
+// service: example.com/services/billing
+
+process MonthClose for FiscalPeriod {
+  title: { pt-BR: "Fechamento mensal", en: "Month close" }
+  version: 1
+  goal: "Consolidar o período, revisar os números e fechar ou registrar a falha"
+  owner: "Controladoria"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  pool Company {
+    internal
+    lane Finance { role: FinanceManager }
+  }
+
+  start Monthly {
+    schedule: "0 3 1 * *"
+    select: fiscalPeriod.status == Open
+  }
+
+  task Consolidate {
+    lane: System
+    action: FiscalPeriod.consolidate
+    sla: 1h
+  }
+
+  task Review {
+    lane: Finance
+    form: MonthCloseReview
+    sla: 2d
+    assign: pull
+  }
+
+  end Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    outcome: success
+  }
+
+  end Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    outcome: failure
+  }
+
+  Monthly -> Consolidate
+  Consolidate -> Review
+  Review.close -> Closed
+  Review.fail -> Failed
+}
+
+form MonthCloseReview {
+  title: { pt-BR: "Revisar fechamento", en: "Review month close" }
+  document: FiscalPeriod
+
+  fields {
+    store
+    month
+    revenue
+    tax
+    invoiceCount
+    reason: string {
+      title: { pt-BR: "Motivo da falha", en: "Failure reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    close { calls: FiscalPeriod.close }
+    fail { calls: FiscalPeriod.fail(reason) }
+  }
+}
+
+view MonthCloseProgress {
+  title: { pt-BR: "Andamento do fechamento", en: "Month close progress" }
+  type: process
+  process: MonthClose
+  roles: [FinanceManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

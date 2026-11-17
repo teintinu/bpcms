@@ -1,4 +1,5 @@
 // service: example.com/services/billing
+
 role Clerk {
   title: { pt-BR: "Faturista", en: "Billing clerk" }
   permissions: [invoice.view, invoice.create, invoice.issue, invoice.collect]

@@ -1,0 +1,272 @@
+// service: example.com/services/catalog
+
+document Product {
+  title: { pt-BR: "Produto", en: "Product" }
+  version: 1
+  owner: "Catalog"
+  sync: live
+  fields {
+    sku: SKU { title: { pt-BR: "Código", en: "SKU" }, unique, lookup }
+    name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
+    category: Category {
+      title: { pt-BR: "Categoria", en: "Category" }
+    }
+    price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
+    weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
+    length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
+    status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
+    video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
+    audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
+    manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
+    richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
+    createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
+    publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
+    archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
+  }
+
+  indexes {
+    sku: [sku] unique
+    name: [name] search
+    byStatus: [status, createdAt] range
+    byWeight: [weight.normalized] range
+  }
+
+
+  actions {
+    create(sku: SKU, name: string, price: std.Money){
+      title: { pt-BR: "Criar produto", en: "Create product" }
+      roles: [Curator]
+    }
+    update(name: string, price: std.Money){
+      title: { pt-BR: "Atualizar", en: "Update" }
+      roles: [Curator]
+    }
+    submitForReview(){
+      title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
+      roles: [Curator]
+
+      to: status.InReview
+      emits { submittedAt: now() }
+
+      {
+        submittedAt = now()
+      }
+    }
+    publish(){
+      title: { pt-BR: "Publicar", en: "Publish" }
+      roles: [Publisher]
+
+      to: status.Published
+      emits { publishedAt: now() }
+
+      {
+        publishedAt = now()
+      }
+    }
+    reject(reason: string){
+      title: { pt-BR: "Rejeitar", en: "Reject" }
+      roles: [Publisher]
+
+      to: status.Rejected
+
+      rule reason.length >= 5 {
+        pt-BR: "Informe o motivo da rejeição"
+        en: "Enter the rejection reason"
+      }
+    }
+    archive(){
+      title: { pt-BR: "Arquivar", en: "Archive" }
+      roles: [Publisher]
+
+      to: status.Archived
+      emits { archivedAt: now() }
+
+      {
+        archivedAt = now()
+      }
+    }
+  }
+
+  rule price > 0 {
+    pt-BR: "O preço deve ser maior que zero"
+    en: "Price must be greater than zero"
+  }
+  rule status == Published implies price > 0 {
+    pt-BR: "Publique apenas produtos com preço"
+    en: "Publish only products with a price"
+  }
+}
+
+shape SKU {
+  title: { pt-BR: "Código", en: "SKU" }
+  base: string
+  normalize: upper-trim
+  maxLength: 40
+  format: plain
+}
+
+shape ProductImage {
+  title: { pt-BR: "Imagem do produto", en: "Product image" }
+  base: image
+  capabilities { gui }
+}
+
+shape ProductVideo {
+  title: { pt-BR: "Vídeo do produto", en: "Product video" }
+  base: video
+  capabilities { gui }
+}
+
+shape ProductAudio {
+  title: { pt-BR: "Áudio do produto", en: "Product audio" }
+  base: audio
+  capabilities { gui }
+}
+
+shape ProductManual {
+  title: { pt-BR: "Manual do produto", en: "Product manual" }
+  base: attachment
+  mime: [application/pdf]
+  capabilities { attachments }
+}
+
+shape ProductRichDescription {
+  title: { pt-BR: "Descrição rica", en: "Rich description" }
+  base: richtext
+}
+
+shape ProductStatus {
+  title: { pt-BR: "Situação do produto", en: "Product status" }
+  base: state
+  initial: Draft
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+
+    transition InReview {
+      event: SubmittedForReview
+      title: { pt-BR: "Produto em revisão", en: "Product submitted for review" }
+      payload {
+        submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
+      }
+    }
+  }
+  value InReview {
+    title: { pt-BR: "Em revisão", en: "In review" }
+    icon: InReview
+    ordinal: 20
+
+    transition Published {
+      title: { pt-BR: "Produto publicado", en: "Product published" }
+      payload {
+        publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
+      }
+    }
+
+    transition Rejected {
+      title: { pt-BR: "Produto rejeitado", en: "Product rejected" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Published {
+    title: { pt-BR: "Publicado", en: "Published" }
+    icon: Published
+    ordinal: 30
+
+    transition Archived {
+      title: { pt-BR: "Produto arquivado", en: "Product archived" }
+      payload {
+        archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
+      }
+    }
+  }
+  value Rejected {
+    title: { pt-BR: "Rejeitado", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+  }
+  value Archived {
+    title: { pt-BR: "Arquivado", en: "Archived" }
+    icon: Archived
+    ordinal: 50
+  }
+  format: plain
+}
+
+view PublishingControl {
+  title: { pt-BR: "Controle do catálogo", en: "Catalog control" }
+  type: dashboard
+  sources: [Product]
+  roles: [Publisher]
+  mode: live
+
+  filters { category }
+
+  metrics {
+    inReview: count(Product) where status == InReview
+    rejected: count(Product) where status == Rejected
+  }
+
+  freshness: 15m
+}
+
+view ProductTable {
+  title: { pt-BR: "Produtos", en: "Products" }
+  type: table
+  source: Product
+  roles: [Curator, Publisher]
+
+  columns { image; sku; name; price; weight; status; createdAt }
+  filters { status; category; period }
+  pagination: 50
+
+  actions {
+    open -> ProductDetail
+    submit -> Product.submitForReview
+    publish -> Product.publish
+    archive -> Product.archive
+  }
+}
+
+view ProductDetail {
+  title: { pt-BR: "Detalhe do produto", en: "Product detail" }
+  type: detail
+  document: Product
+  roles: [Curator, Publisher]
+
+  sections { summary; pricing; media }
+
+  actions {
+    submit -> Product.submitForReview
+    publish -> Product.publish
+    archive -> Product.archive
+  }
+}
+
+view ProductKanban {
+  title: { pt-BR: "Produtos por situação", en: "Products by status" }
+  type: kanban
+  source: Product
+  roles: [Curator, Publisher]
+
+  groupBy: status
+  columns { sku; name; price }
+  card { sku; name; price; status }
+
+  actions {
+    open -> ProductDetail
+  }
+}
+
+policy PublishApproval {
+  appliesTo: Product.publish
+  rule: price > 0 and status == InReview
+  severity: block
+  message: "Produto precisa de preço e estar em rascunho para publicar"
+  audit: true
+}

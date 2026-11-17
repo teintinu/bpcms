@@ -1,0 +1,106 @@
+// service: example.com/services/identity
+
+document Session {
+  title: { pt-BR: "Sessão", en: "Session" }
+  version: 1
+  owner: "Identity"
+  sync: read
+
+  fields {
+    user: User {
+      title: { pt-BR: "Usuário", en: "User" }
+    }
+    issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
+    expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
+    status: SessionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+  }
+
+  indexes {
+    byUser: [user.id, issuedAt] range
+    byExpiry: [expiresAt] range
+  }
+
+
+  actions {
+    start(email: Email, password: string){
+      title: { pt-BR: "Iniciar sessão", en: "Sign in" }
+      roles: [Customer]
+      {
+        issuedAt = now()
+        expiresAt = now() + SessionTtl
+        emit Started
+      }
+    }
+
+    end(){
+      title: { pt-BR: "Encerrar", en: "End" }
+      roles: [Customer]
+      to: status.Ended
+    }
+
+    expire(){
+      title: { pt-BR: "Expirar", en: "Expire" }
+      roles: [Admin]
+      to: status.Expired
+    }
+  }
+
+  rule expiresAt > issuedAt {
+    pt-BR: "A expiração deve ser posterior à emissão"
+    en: "Expiration must be after issuance"
+
+  }
+}
+
+shape SessionStatus {
+  title: { pt-BR: "Situação da sessão", en: "Session status" }
+  base: state
+  initial: Active with transition Started {
+    title: { pt-BR: "Sessão iniciada", en: "Session started" }
+  }
+  value Active {
+    title: { pt-BR: "Ativa", en: "Active" }
+    icon: Active
+    ordinal: 10
+
+    transition Ended {
+      title: { pt-BR: "Sessão encerrada", en: "Session ended" }
+    }
+
+    transition Expired {
+      title: { pt-BR: "Sessão expirada", en: "Session expired" }
+    }
+  }
+  value Ended {
+    title: { pt-BR: "Encerrada", en: "Ended" }
+    icon: Ended
+    ordinal: 20
+  }
+  value Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: Expired
+    ordinal: 30
+  }
+  format: plain
+}
+
+form SignIn {
+  title: { pt-BR: "Formulário de acesso", en: "Sign in" }
+  document: Session
+
+  fields {
+    email: Email {
+      title: { pt-BR: "Correio eletrônico", en: "Email" }
+      required
+    }
+    password: string {
+      title: { pt-BR: "Senha", en: "Password" }
+      maxLength: 128
+      required
+    }
+  }
+
+  actions {
+    signIn { calls: Session.start(email, password) }
+  }
+}

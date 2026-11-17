@@ -1,0 +1,132 @@
+// service: example.com/services/hr
+
+document AccessGrant {
+  title: { pt-BR: "Concessão de acesso", en: "Access grant" }
+  version: 1
+  owner: "People"
+  sync: live
+
+  fields {
+    employee: Employee { title: { pt-BR: "Colaborador", en: "Employee" }, lookup }
+    system: AccessSystem { title: { pt-BR: "Sistema", en: "System" }, lookup }
+    profile: string { title: { pt-BR: "Perfil", en: "Profile" }, maxLength: 60 }
+    status: AccessGrantStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" }, readonly }
+    requestedBy: Identity.User { title: { pt-BR: "Solicitado por", en: "Requested by" } }
+    provisionedAt: DateTime { title: { pt-BR: "Provisionado em", en: "Provisioned at" }, readonly }
+    revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" }, readonly }
+    revokeReason: string { title: { pt-BR: "Motivo da revogação", en: "Revocation reason" }, maxLength: 500 }
+  }
+
+  indexes {
+    byEmployee: [employee.id] hash
+    byStatus: [status, requestedAt] range
+  }
+
+
+  actions {
+    provision() {
+      title: { pt-BR: "Provisionar acesso", en: "Provision access" }
+      roles: [ITAdmin]
+      to: status.Provisioned
+      emits { at: now() }
+      { provisionedAt = now() }
+    }
+
+    revoke(reason: string) {
+      title: { pt-BR: "Revogar acesso", en: "Revoke access" }
+      roles: [ITAdmin, PeopleOps]
+      to: status.Revoked
+      { revokedAt = now(); revokeReason = reason }
+    }
+  }
+}
+
+shape AccessGrantStatus {
+  title: { pt-BR: "Situação do acesso", en: "Access grant status" }
+  base: state
+  initial: Requested
+
+  value Requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: status.requested
+    ordinal: 10
+
+    transition Provisioned {
+      title: { pt-BR: "Acesso provisionado", en: "Access provisioned" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+
+    transition Revoked {
+      title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Provisioned {
+    title: { pt-BR: "Provisionado", en: "Provisioned" }
+    icon: status.provisioned
+    ordinal: 20
+
+    transition Revoked {
+      title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      payload {
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Revoked {
+    title: { pt-BR: "Revogado", en: "Revoked" }
+    icon: status.revoked
+    ordinal: 30
+  }
+}
+
+shape AccessSystem {
+  title: { pt-BR: "Sistema de acesso", en: "Access system" }
+  base: classification
+
+  value Email {
+    title: { pt-BR: "E-mail corporativo", en: "Corporate email" }
+    icon: access.email
+    ordinal: 10
+  }
+  value ERP {
+    title: { pt-BR: "ERP", en: "ERP" }
+    icon: access.erp
+    ordinal: 20
+  }
+  value VPN {
+    title: { pt-BR: "VPN", en: "VPN" }
+    icon: access.vpn
+    ordinal: 30
+  }
+  value Badge {
+    title: { pt-BR: "Crachá", en: "Badge" }
+    icon: access.badge
+    ordinal: 40
+  }
+  value Payroll {
+    title: { pt-BR: "Folha de pagamento", en: "Payroll" }
+    icon: access.payroll
+    ordinal: 50
+  }
+}
+
+view AccessGrantsTable {
+  title: { pt-BR: "Acessos", en: "Access grants" }
+  type: table
+  source: AccessGrant
+  roles: [ITAdmin, PeopleOps]
+
+  columns { employee; system; profile; status; requestedAt }
+  filters { status; system }
+
+  actions {
+    provision -> AccessGrant.provision
+    revoke -> AccessGrant.revoke(reason)
+  }
+}

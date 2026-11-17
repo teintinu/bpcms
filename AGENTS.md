@@ -65,22 +65,20 @@ checkout/
 
 > Esta regra está anotada para as próximas validações. Os arquivos atuais ainda não foram migrados para subpastas; não mover nada sem aprovação.
 
-## Nomes de arquivos em `examples/`
+## Organização dos arquivos em `examples/`
 
-Todo arquivo `.bpcms` começa com o **nome do serviço/app dono da pasta**, em kebab-case, seguido do tipo:
+O fonte é organizado por **contexto principal**, não por tipo de artefato. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
 
-- `examples/services/identity/identity-documents.bpcms`
-- `examples/services/billing/billing-service.bpcms`
-- `examples/applications/loja-do-joao/loja-do-joao-application.bpcms`
-
-Regras:
-
-- O prefixo é o slug da pasta, não o tipo do artefato. `identity-documents.bpcms`, nunca `documents.bpcms`.
-- O arquivo `*-service.bpcms` é o manifesto do serviço; não use `service.bpcms` genérico.
-- O arquivo `*-application.bpcms` é a aplicação; não use `application.bpcms` genérico.
-- O restante do nome é o tipo do artefato (`documents`, `forms`, `messages`, `views`, `events`, `parameters`, `policies`, `reports`, `integrations`, `processes`, `decisions`, `organograms`, `icons`, `shapes`, `themes`, `locales`). Agendamento não tem arquivo próprio: é `start { schedule: }` em `*-processes.bpcms`.
-- Roles e organogram ficam no **mesmo** arquivo `<service>-organograms.bpcms`; não crie `<service>-roles.bpcms` separado.
-- Use kebab-case e não repita o prefixo dentro da pasta.
+- Serviço: `<service>-<contexto>-<tipo>.bpcms`, com `tipo` = `document` ou `process` e contexto em kebab-case. Ex.: `billing-invoice-document.bpcms`, `billing-invoice-issuance-process.bpcms`.
+- Aplicação: `<app>-application.bpcms`; o contexto principal é a própria aplicação.
+- Manifesto: `<service>-service.bpcms`; não use `service.bpcms` genérico.
+- Compartilhado: `<service>-<tipo-no-plural>.bpcms` (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `organograms`, `icons`) só para artefato sem dono único ou de escopo do serviço.
+- Um arquivo de contexto declara exatamente **um** artefato principal; o nome e o tipo do principal formam o nome do arquivo.
+- Referência entre arquivos é permitida: `InvoiceNumber` pode ficar em `billing-invoice-document.bpcms` e ser usado por mensagens/processos de outros contextos.
+- `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
+- Roles e organogram ficam no **mesmo** `<service>-organograms.bpcms`; parameters/secrets e icons são service-wide (`<service>-parameters.bpcms`, `<service>-icons.bpcms`).
+- `bpcms.org/std` mantém `std-service.bpcms` + `std-shapes.bpcms`.
+- Os arquivos `.bpcms` ficam na raiz do serviço; a regra de subpastas como namespace segue anotada e não se aplica ainda.
 - **Nomes de artefatos não repetem o serviço.** O serviço já é o escopo: `Draft`, não `BillingDraft`. O mesmo nome pode existir em serviços diferentes; não duplique dentro do mesmo tipo/serviço.
 - **PascalCase é o padrão para artefatos**, com exceções para formas internacionais consagradas. Exemplo: `pH`, não `Ph`.
 

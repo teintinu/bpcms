@@ -1,0 +1,63 @@
+// service: example.com/services/billing
+
+process InvoiceIssuance for Invoice {
+  title: { pt-BR: "Emissão de nota", en: "Invoice issuance" }
+  version: 1
+  goal: "Emitir a nota a partir do pedido, com imposto aplicado e envio ao cliente"
+  owner: "Faturamento"
+  timezone: America/Fortaleza
+
+  pool Customer {
+    external
+  }
+
+  start Requested {
+    event: Invoice.Requested
+  }
+
+  task Derive {
+    lane: System
+    action: Invoice.deriveFromOrder
+    sla: 5m
+  }
+
+  task ApplyTax {
+    lane: System
+    action: Invoice.applyTax
+    sla: 5m
+  }
+
+  task Issue {
+    lane: System
+    action: Invoice.issue
+    sla: 5m
+  }
+
+  task Send {
+    lane: System
+    sends: InvoiceIssued
+    partner: Customer
+    with { invoice }
+    sla: 10m
+  }
+
+  end Issued {
+    title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+    outcome: success
+  }
+
+  Requested -> Derive
+  Derive -> ApplyTax
+  ApplyTax -> Issue
+  Issue -> Send
+  Send -> Issued
+}
+
+view InvoiceProgress {
+  title: { pt-BR: "Andamento da emissão", en: "Invoice issuance progress" }
+  type: process
+  process: InvoiceIssuance
+  roles: [Clerk, FinanceManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

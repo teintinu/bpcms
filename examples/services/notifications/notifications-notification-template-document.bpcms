@@ -1,0 +1,77 @@
+// service: example.com/services/notifications
+
+document NotificationTemplate {
+  title: { pt-BR: "Modelo de notificação", en: "Notification template" }
+  version: 1
+  owner: "Notifications"
+  sync: read
+  fields {
+    key: string {
+      title: { pt-BR: "Chave", en: "Key" }
+      maxLength: 80
+      lookup
+      required
+    }
+    channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
+    body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
+    locale: LocaleTag { title: { pt-BR: "Idioma", en: "Locale" }, lookup }
+  }
+
+  indexes {
+    uniqueKey: [key, channel, locale] unique
+  }
+
+  seed {
+    Welcome {
+      key: "welcome"
+      channel: Email
+      subject: "Bem-vindo"
+      body: "Sua conta foi criada"
+      locale: PtBr
+    }
+  }
+
+  actions {
+    create(key: string, channel: Channel, locale: LocaleTag){
+      title: { pt-BR: "Criar modelo", en: "Create template" }
+      roles: [SuccessManager]
+    }
+    update(subject: string, body: string){
+      title: { pt-BR: "Atualizar", en: "Update" }
+      roles: [SuccessManager]
+    }
+  }
+}
+
+shape LocaleTag {
+  title: { pt-BR: "Idioma", en: "Locale" }
+  base: classification
+  value PtBr {
+    title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+    icon: LocalePtBr
+    ordinal: 10
+  }
+  value EnUs {
+    title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+    icon: LocaleEnUs
+    ordinal: 20
+  }
+  format: plain
+}
+
+form TemplateEditor {
+  title: { pt-BR: "Editor de modelo", en: "Template editor" }
+  document: NotificationTemplate
+
+  fields {
+    key
+    channel
+    subject
+    body
+  }
+
+  actions {
+    save { calls: NotificationTemplate.update(subject, body); stay }
+  }
+}

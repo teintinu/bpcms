@@ -1,0 +1,110 @@
+// service: example.com/services/field-service
+
+process VisitReschedule for Visit {
+  title: { pt-BR: "Reagendamento da visita", en: "Visit reschedule" }
+  version: 1
+  goal: "Reagendar a visita falhada e avisar o cliente com a nova janela"
+  owner: "Field Service"
+  timezone: America/Fortaleza
+  sla: 5d
+
+  on breach -> Escalate
+
+  pool Company {
+    internal
+    lane Dispatch { role: Dispatcher }
+    lane Supervision { role: Supervisor }
+  }
+
+  pool Customer {
+    external
+    lane Portal { role: Customer }
+  }
+
+  start Begin { called }
+
+  task ReviewFailure {
+    lane: Dispatch
+    form: RescheduleReview
+    sla: 4h
+    assign: pull
+    on breach -> Escalate
+  }
+
+  task NotifyCustomer {
+    lane: System
+    sends: VisitRescheduled
+    partner: Customer
+    with {
+      visit
+      windowStart: visit.windowStart
+      windowEnd: visit.windowEnd
+    }
+    sla: 30m
+  }
+
+  task CustomerConfirmation {
+    lane: Portal
+    form: VisitConfirmation
+    sla: 1d
+    on timer 2d -> Escalate
+  }
+
+  task Escalate {
+    lane: Supervision
+    manual: "Ligar para o cliente e confirmar a nova janela"
+    sla: 1h
+  }
+
+  end Rescheduled {
+    title: { pt-BR: "Reagendada", en: "Rescheduled" }
+    outcome: success
+  }
+
+  end Abandoned {
+    title: { pt-BR: "Abandonada", en: "Abandoned" }
+    outcome: cancelled
+  }
+
+  ReviewFailure.reschedule -> NotifyCustomer
+  ReviewFailure.abandon -> Abandoned
+  NotifyCustomer -> CustomerConfirmation
+  CustomerConfirmation.acknowledge -> Rescheduled
+  Escalate -> CustomerConfirmation
+  Begin -> ReviewFailure
+}
+
+form RescheduleReview {
+  title: { pt-BR: "Reagendar visita", en: "Reschedule visit" }
+  document: Visit
+
+  fields {
+    windowStart
+    windowEnd
+    reason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Withdrawal reason" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    reschedule { calls: Visit.reschedule(windowStart, windowEnd) }
+    abandon { calls: Visit.withdraw(reason) }
+  }
+}
+
+form VisitConfirmation {
+  title: { pt-BR: "Confirmar nova janela", en: "Confirm new window" }
+  document: Visit
+
+  fields {
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    acknowledge { calls: Visit.acknowledgeWindow(note) }
+  }
+}

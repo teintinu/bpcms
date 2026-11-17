@@ -1,0 +1,132 @@
+// service: example.com/services/orders
+
+process OrderIntake for Order {
+  title: { pt-BR: "Entrada de pedido", en: "Order intake" }
+  version: 1
+  goal: "Levar o rascunho à confirmação e reservar o estoque"
+  owner: "Orders"
+  timezone: America/Fortaleza
+  sla: 2d
+
+  pool Company {
+    internal
+    lane Sales { role: Clerk }
+  }
+
+  start Drafted { event: Order.Drafted }
+
+  task ReviewDraft {
+    lane: Sales
+    form: DraftReview
+    sla: 4h
+    priority: 50
+    assign: pull
+    on timer 2d -> ExpireDraft
+  }
+
+  task ReserveStock {
+    lane: System
+    action: Reservation.request
+    foreach { over: order.items; as: item; mode: parallel }
+    with {
+      product: item.product
+      quantity: item.quantity
+      externalRef: order.id
+    }
+    sla: 5m
+    on error StockOut -> Unavailable
+  }
+
+  task ConfirmReservation {
+    lane: System
+    action: Order.confirmReservation
+    sla: 1m
+  }
+
+  task ExpireDraft {
+    lane: System
+    action: Order.cancel
+    with { reason: "Rascunho expirado sem confirmação do cliente" }
+    sla: 1m
+  }
+
+  task Unavailable {
+    lane: Sales
+    manual: "Avisar o cliente da falta de estoque e sugerir substitutos"
+    sla: 2h
+  }
+
+  milestone Placed {
+    title: { pt-BR: "Pedido confirmado", en: "Order placed" }
+    on: Order.Placed
+  }
+
+  end Reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    outcome: success
+  }
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: cancelled
+  }
+  end OutOfStock {
+    title: { pt-BR: "Sem estoque", en: "Out of stock" }
+    outcome: failure
+  }
+  end Expired {
+    title: { pt-BR: "Expirado", en: "Expired" }
+    outcome: failure
+  }
+
+  Drafted -> ReviewDraft
+  ReviewDraft.confirm -> ReserveStock
+  ReviewDraft.cancel -> Cancelled
+  ReserveStock -> ConfirmReservation
+  ConfirmReservation -> Reserved
+  Unavailable -> OutOfStock
+  ExpireDraft -> Expired
+}
+
+form DraftReview {
+  title: { pt-BR: "Revisar rascunho do pedido", en: "Review order draft" }
+  document: Order
+
+  fields {
+    customer
+    items
+    total
+    reason: string {
+      title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      maxLength: 500
+    }
+    note: string {
+      title: { pt-BR: "Observação", en: "Note" }
+      maxLength: 500
+    }
+  }
+
+  actions {
+    confirm {
+      title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      calls: Order.place
+    }
+    cancel {
+      title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      calls: Order.cancel(reason)
+    }
+    save {
+      title: { pt-BR: "Salvar observação", en: "Save note" }
+      calls: Order.annotate(note)
+      stay
+    }
+  }
+}
+
+view OrderProgress {
+  title: { pt-BR: "Andamento do pedido", en: "Order progress" }
+  type: process
+  process: OrderIntake
+  roles: [Clerk, Manager, Customer]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

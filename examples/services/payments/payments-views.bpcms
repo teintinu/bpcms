@@ -1,74 +1,37 @@
 // service: example.com/services/payments
-view Charges {
-  title: { pt-BR: "Cobranças", en: "Charges" }
-  type: table
-  source: Payment
-  roles: [Analyst, Manager]
 
-  columns { order; amount; method; status; capturedAt }
-  filters { status; period; method }
-  pagination: 50
+view Reconciliation {
+  title: { pt-BR: "Conciliação de pagamentos", en: "Payment reconciliation" }
+  type: report
+  sources: [Payment, Refund, Chargeback]
+  roles: [Manager]
 
-  actions {
-    open -> PaymentDetail
-    charge -> Payment.create(order, amount, method)
-    refund -> Payment.refund(refundAmount)
+  filters { period; status; method }
+  metrics {
+    captured: sum(Payment.amount) where Payment.status == Captured
+    refunded: sum(Refund.amount) where Refund.status == Completed
+    failed: count(Payment) where Payment.status == Failed
+    disputes: count(Chargeback) where Chargeback.status != Lost
   }
+  units { captured: BRL; refunded: BRL }
+  freshness: 5m
+  export: [csv, pdf]
 }
 
-view PaymentDetail {
-  title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
-  type: detail
-  document: Payment
-  roles: [Analyst, Manager]
+view RiskPulse {
+  title: { pt-BR: "Pulso de risco", en: "Risk pulse" }
+  type: dashboard
+  sources: [Chargeback, Payment]
+  roles: [Manager]
+  mode: live
 
-  sections { summary; refunds; timeline }
-  actions {
-    progress -> PaymentProgress
+  filters { status }
+  metrics {
+    openDisputes: count(Chargeback) where Chargeback.status == Open
+    overdue: count(Chargeback) where Chargeback.status == Open and Chargeback.dueAt < now()
+    lost: count(Chargeback) where Chargeback.status == Lost
   }
-}
-
-view Chargebacks {
-  title: { pt-BR: "Contestações", en: "Chargebacks" }
-  type: table
-  source: Chargeback
-  roles: [Analyst, Manager]
-
-  columns { payment; amount; status; dueAt }
-  filters { status; period }
-  actions {
-    open -> ChargebackDetail
-  }
-}
-
-view ChargebackDetail {
-  title: { pt-BR: "Detalhe da contestação", en: "Chargeback detail" }
-  type: detail
-  document: Chargeback
-  roles: [Analyst, Manager]
-
-  sections { summary; evidence; timeline }
-  actions {
-    progress -> ChargebackProgress
-  }
-}
-
-view PaymentProgress {
-  title: { pt-BR: "Andamento da captura", en: "Capture progress" }
-  type: process
-  process: PaymentCapture
-  roles: [Analyst, Manager]
-
-  sections { current; participants; history; deadlines; documents; next }
-}
-
-view ChargebackProgress {
-  title: { pt-BR: "Andamento da contestação", en: "Chargeback progress" }
-  type: process
-  process: ChargebackDispute
-  roles: [Analyst, Manager]
-
-  sections { current; participants; history; deadlines; documents; next }
+  freshness: 5m
 }
 
 view FinanceInbox {

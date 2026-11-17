@@ -1,0 +1,196 @@
+// service: example.com/services/credit
+
+process CreditApplicationFlow for CreditApplication {
+  title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
+  version: 1
+  goal: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
+  owner: "Credit"
+  timezone: America/Fortaleza
+  sla: 10d
+
+  pool Company {
+    internal
+    lane Analysis { role: CreditAnalyst }
+    lane Management { role: CreditManager }
+  }
+
+  variables {
+    bureauScore: std.Count
+    band: RiskBand
+  }
+
+  start Submitted { event: CreditApplication.Submitted }
+
+  task StartReview {
+    lane: System
+    action: CreditApplication.startReview
+    sla: 1m
+  }
+
+  task CheckBureau {
+    lane: System
+    call: CreditBureau.score
+    with { application: creditApplication }
+    gives: bureauScore
+    sla: 2m
+    on error BureauUnavailable -> ManualReview
+  }
+
+  task Score {
+    lane: System
+    decision: CreditScoring
+    with {
+      bureauScore
+      requestedAmount: creditApplication.requestedAmount
+      existingExposure: creditApplication.existingExposure
+    }
+    gives: band
+  }
+
+  task RecordRisk {
+    lane: System
+    action: CreditApplication.recordRisk
+    with {
+      bureauScore
+      riskBand: band
+    }
+  }
+
+  gateway Band {
+    if band == Low and creditApplication.requestedAmount <= 20000 BRL -> AutoApprove
+    if band == Low -> AnalystReview
+    if band == Medium -> AnalystReview
+    else -> ManagerReview
+  }
+
+  task AutoApprove {
+    lane: System
+    action: CreditApplication.approve
+    with { approvedLimit: creditApplication.requestedAmount }
+  }
+
+  task AnalystReview {
+    lane: Analysis
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    on timer 3d -> Escalate
+  }
+
+  task ManagerReview {
+    lane: Management
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    priority: 40
+    on timer 3d -> Escalate
+  }
+
+  task ManualReview {
+    lane: Analysis
+    form: CreditDecision
+    sla: 2d
+    assign: pull
+    on timer 3d -> Escalate
+  }
+
+  task Escalate {
+    lane: Management
+    form: CreditDecision
+    sla: 1d
+  }
+
+  task SetLimit {
+    lane: System
+    action: CreditLimit.set
+    with {
+      application: creditApplication
+      holder: creditApplication.applicant
+      amount: creditApplication.approvedLimit
+    }
+  }
+
+  end Approved {
+    title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
+    outcome: success
+  }
+
+  end Rejected {
+    title: { pt-BR: "Crédito negado", en: "Credit rejected" }
+    outcome: failure
+  }
+
+  Submitted -> StartReview
+  StartReview -> CheckBureau
+  CheckBureau -> Score
+  Score -> RecordRisk
+  RecordRisk -> Band
+  AutoApprove -> SetLimit
+  AnalystReview.approve -> SetLimit
+  AnalystReview.reject -> Rejected
+  ManagerReview.approve -> SetLimit
+  ManagerReview.reject -> Rejected
+  ManualReview.approve -> SetLimit
+  ManualReview.reject -> Rejected
+  Escalate.approve -> SetLimit
+  Escalate.reject -> Rejected
+  SetLimit -> Approved
+}
+
+form CreditDecision {
+  title: { pt-BR: "Decisão de crédito", en: "Credit decision" }
+  document: CreditApplication
+
+  fields {
+    applicant { readonly }
+    requestedAmount { readonly }
+    bureauScore { readonly }
+    riskBand { readonly }
+    approvedLimit
+    rejectionReason
+  }
+
+  actions {
+    approve { calls: CreditApplication.approve(approvedLimit) }
+    reject { calls: CreditApplication.reject(rejectionReason) }
+  }
+}
+
+view CreditFlowProgress {
+  title: { pt-BR: "Andamento da análise de crédito", en: "Credit analysis progress" }
+  type: process
+  process: CreditApplicationFlow
+  roles: [CreditAnalyst, CreditManager]
+
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}
+
+decision CreditScoring {
+  title: { pt-BR: "Faixa de risco da proposta", en: "Credit application risk band" }
+  returns: RiskBand
+  inputs {
+    bureauScore: std.Count
+    requestedAmount: std.Money
+    existingExposure: std.Money
+  }
+  cases {
+    bureauScore >= 750 and requestedAmount <= 50000 BRL and existingExposure <= 10000 BRL -> Low
+    bureauScore >= 550 -> Medium
+    else -> High
+  }
+  source: "Política de Crédito v4"
+  owner: "Credit"
+}
+
+integration CreditBureau {
+  protocol: rest
+  baseUrl: env.CREDIT_BUREAU_URL
+  auth: api-key
+  timeout: 5s
+  retry: exponential(3)
+  idempotency: header "Idempotency-Key"
+
+  operations {
+    score(application: CreditApplication): std.Count
+  }
+}

@@ -1,0 +1,236 @@
+// service: example.com/services/procurement
+
+document Supplier {
+  title: { pt-BR: "Fornecedor", en: "Supplier" }
+  version: 1
+  owner: "Procurement"
+  sync: read
+
+  fields {
+    legalName: string {
+      title: { pt-BR: "Razão social", en: "Legal name" }
+      maxLength: 160
+      unique
+      lookup
+      required
+    }
+    tradeName: string {
+      title: { pt-BR: "Nome fantasia", en: "Trade name" }
+      maxLength: 120
+    }
+    email: string {
+      title: { pt-BR: "Correio eletrônico", en: "Email" }
+      maxLength: 254
+    }
+    phone: string {
+      title: { pt-BR: "Telefone", en: "Phone" }
+      maxLength: 40
+    }
+    category: SupplierCategory {
+      title: { pt-BR: "Categoria", en: "Category" }
+      lookup
+    }
+    risk: RiskLevel {
+      title: { pt-BR: "Risco", en: "Risk" }
+      lookup
+    }
+    status: SupplierStatus {
+      title: { pt-BR: "Situação", en: "Status" }
+      lookup
+    }
+    documentsVerified: boolean {
+      title: { pt-BR: "Documentos verificados", en: "Documents verified" }
+    }
+    paymentTerms: string {
+      title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      maxLength: 120
+    }
+    approvedAt: DateTime {
+      title: { pt-BR: "Aprovado em", en: "Approved at" }
+    }
+    blockedAt: DateTime {
+      title: { pt-BR: "Bloqueado em", en: "Blocked at" }
+    }
+    blockedReason: string {
+      title: { pt-BR: "Motivo do bloqueio", en: "Block reason" }
+      maxLength: 280
+    }
+  }
+
+
+  actions {
+    submitRegistration(legalName: string, tradeName: string, email: string, phone: string, category: SupplierCategory) {
+      title: { pt-BR: "Enviar cadastro", en: "Submit registration" }
+      roles: [SupplierUser, Buyer]
+    }
+
+    verifyDocuments() {
+      title: { pt-BR: "Verificar documentos", en: "Verify documents" }
+      roles: [ComplianceAnalyst]
+      {
+        documentsVerified = true
+      }
+    }
+
+    classifyRisk(risk: RiskLevel) {
+      title: { pt-BR: "Classificar risco", en: "Classify risk" }
+      roles: [ComplianceAnalyst]
+    }
+
+    approve() {
+      title: { pt-BR: "Aprovar fornecedor", en: "Approve supplier" }
+      roles: [Approver, ProcurementManager]
+      to: status.Approved
+      {
+        approvedAt = now()
+      }
+    }
+
+    block(blockedReason: string) {
+      title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+      roles: [ComplianceAnalyst, Approver, ProcurementManager]
+      to: status.Blocked
+      emits { reason: blockedReason }
+      {
+        blockedAt = now()
+      }
+    }
+
+    enablePayables(paymentTerms: string) {
+      title: { pt-BR: "Habilitar contas a pagar", en: "Enable payables" }
+      roles: [PayablesClerk]
+    }
+  }
+
+  indexes {
+    byLegalName: [legalName] unique
+    byStatus: [status, legalName] range
+  }
+
+  rule status == Approved implies documentsVerified {
+    pt-BR: "Verifique os documentos antes de aprovar o fornecedor"
+    en: "Verify the documents before approving the supplier"
+  }
+}
+
+shape SupplierStatus {
+  title: { pt-BR: "Situação do fornecedor", en: "Supplier status" }
+  base: state
+  initial: Prospect
+  value Prospect {
+    title: { pt-BR: "Prospecto", en: "Prospect" }
+    icon: Prospect
+    ordinal: 10
+
+    transition Approved {
+      title: { pt-BR: "Fornecedor aprovado", en: "Supplier approved" }
+      payload {
+        approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
+      }
+    }
+
+    transition Blocked {
+      title: { pt-BR: "Fornecedor bloqueado", en: "Supplier blocked" }
+      payload {
+        blockedAt: DateTime { title: { pt-BR: "Bloqueado em", en: "Blocked at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Approved {
+    title: { pt-BR: "Aprovado", en: "Approved" }
+    icon: Approved
+    ordinal: 20
+
+    transition Blocked {
+      title: { pt-BR: "Fornecedor bloqueado", en: "Supplier blocked" }
+      payload {
+        blockedAt: DateTime { title: { pt-BR: "Bloqueado em", en: "Blocked at" } }
+        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+      }
+    }
+  }
+  value Blocked {
+    title: { pt-BR: "Bloqueado", en: "Blocked" }
+    icon: Blocked
+    ordinal: 30
+  }
+}
+
+shape SupplierCategory {
+  title: { pt-BR: "Categoria do fornecedor", en: "Supplier category" }
+  base: classification
+  value Goods {
+    title: { pt-BR: "Mercadorias", en: "Goods" }
+    icon: Goods
+    ordinal: 10
+  }
+  value Services {
+    title: { pt-BR: "Serviços", en: "Services" }
+    icon: Services
+    ordinal: 20
+  }
+  value Logistics {
+    title: { pt-BR: "Logística", en: "Logistics" }
+    icon: Logistics
+    ordinal: 30
+  }
+  value Technology {
+    title: { pt-BR: "Tecnologia", en: "Technology" }
+    icon: Technology
+    ordinal: 40
+  }
+}
+
+shape RiskLevel {
+  title: { pt-BR: "Nível de risco do fornecedor", en: "Supplier risk level" }
+  base: classification
+  value Low {
+    title: { pt-BR: "Baixo", en: "Low" }
+    icon: Low
+    ordinal: 10
+  }
+  value Medium {
+    title: { pt-BR: "Médio", en: "Medium" }
+    icon: Medium
+    ordinal: 20
+  }
+  value High {
+    title: { pt-BR: "Alto", en: "High" }
+    icon: High
+    ordinal: 30
+  }
+}
+
+view Suppliers {
+  title: { pt-BR: "Fornecedores", en: "Suppliers" }
+  type: table
+  source: Supplier
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager]
+
+  columns { legalName; tradeName; category; risk; status }
+  filters { status; category; risk }
+  pagination: 50
+
+  actions {
+    open -> SupplierDetail
+  }
+}
+
+view SupplierDetail {
+  title: { pt-BR: "Detalhe do fornecedor", en: "Supplier detail" }
+  type: detail
+  document: Supplier
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
+
+  sections { summary; timeline }
+}
+
+message SupplierInvite {
+  title: { pt-BR: "Convite ao portal do fornecedor", en: "Supplier portal invite" }
+  about: Supplier
+  payload {
+    invitedAt: DateTime { title: { pt-BR: "Convidado em", en: "Invited at" } }
+    expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
+  }
+}

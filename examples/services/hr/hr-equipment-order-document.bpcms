@@ -1,0 +1,94 @@
+// service: example.com/services/hr
+
+document EquipmentOrder {
+  title: { pt-BR: "Pedido de equipamento", en: "Equipment order" }
+  version: 1
+  owner: "People"
+  sync: live
+
+  fields {
+    employee: Employee { title: { pt-BR: "Colaborador", en: "Employee" }, lookup }
+    kind: EquipmentKind { title: { pt-BR: "Equipamento", en: "Equipment" }, lookup }
+    vendor: string { title: { pt-BR: "Fornecedor", en: "Vendor" }, maxLength: 120 }
+    serial: string { title: { pt-BR: "Número de série", en: "Serial number" }, lookup, maxLength: 60 }
+    status: EquipmentOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    orderedAt: DateTime { title: { pt-BR: "Pedido em", en: "Ordered at" }, readonly }
+    deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" }, readonly }
+    returnedAt: DateTime { title: { pt-BR: "Devolvido em", en: "Returned at" }, readonly }
+  }
+
+  indexes {
+    byEmployee: [employee.id] hash
+    byStatus: [status, orderedAt] range
+  }
+
+
+  actions {
+    deliver(serialNumber: string) {
+      title: { pt-BR: "Registrar entrega", en: "Register delivery" }
+      roles: [ITAdmin]
+      to: status.Delivered
+      emits { serial: serialNumber }
+      { serial = serialNumber; deliveredAt = now() }
+    }
+
+    returnItem() {
+      title: { pt-BR: "Registrar devolução", en: "Register return" }
+      roles: [ITAdmin]
+      to: status.Returned
+      emits { at: now() }
+      { returnedAt = now() }
+    }
+  }
+}
+
+shape EquipmentOrderStatus {
+  title: { pt-BR: "Situação do equipamento", en: "Equipment order status" }
+  base: state
+  initial: Ordered
+
+  value Ordered {
+    title: { pt-BR: "Pedido", en: "Ordered" }
+    icon: status.ordered
+    ordinal: 10
+
+    transition Delivered {
+      title: { pt-BR: "Equipamento entregue", en: "Equipment delivered" }
+      payload {
+        serial: string { title: { pt-BR: "Número de série", en: "Serial number" } }
+      }
+    }
+  }
+  value Delivered {
+    title: { pt-BR: "Entregue", en: "Delivered" }
+    icon: status.delivered
+    ordinal: 20
+
+    transition Returned {
+      title: { pt-BR: "Equipamento devolvido", en: "Equipment returned" }
+      payload {
+        at: DateTime { title: { pt-BR: "Em", en: "At" } }
+      }
+    }
+  }
+  value Returned {
+    title: { pt-BR: "Devolvido", en: "Returned" }
+    icon: status.returned
+    ordinal: 30
+  }
+}
+
+view EquipmentOrdersTable {
+  title: { pt-BR: "Equipamentos", en: "Equipment orders" }
+  type: table
+  source: EquipmentOrder
+  roles: [ITAdmin, PeopleOps]
+
+  columns { employee; kind; vendor; serial; status }
+  filters { status; kind }
+
+  actions {
+    deliver -> EquipmentOrder.deliver(serialNumber)
+    returnItem -> EquipmentOrder.returnItem
+  }
+}
