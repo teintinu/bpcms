@@ -33,14 +33,6 @@ document FraudCheck {
     byStatus: [status, evaluatedAt] range
   }
 
-  events {
-    Created {
-      title: { pt-BR: "Verificação criada", en: "Fraud check created" }
-      payload {
-        session: CheckoutSession { title: { pt-BR: "Sessão", en: "Session" } }
-      }
-    }
-  }
 
   actions {
     create(session: CheckoutSession, riskScore: number){

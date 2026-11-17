@@ -32,14 +32,6 @@ document User {
     byStatus: [status, createdAt] range
   }
 
-  events {
-    Created {
-      title: { pt-BR: "Usuário criado", en: "User created" }
-      payload {
-        name: string { title: { pt-BR: "Nome", en: "Name" } }
-      }
-    }
-  }
 
   actions {
     create(name: string, email: Email){
@@ -152,11 +144,6 @@ document Session {
     byExpiry: [expiresAt] range
   }
 
-  events {
-    Started {
-      title: { pt-BR: "Sessão iniciada", en: "Session started" }
-    }
-  }
 
   actions {
     start(email: Email, password: string){

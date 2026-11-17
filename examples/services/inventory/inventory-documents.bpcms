@@ -165,14 +165,6 @@ document ReplenishmentRequest {
     byItem: [stockItem.id, requestedAt] range
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
-      payload {
-        quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
-      }
-    }
-  }
 
   actions {
     create(stockItem: StockItem){
@@ -232,14 +224,6 @@ document CountSheet {
     byStatus: [status, countedAt] range
   }
 
-  events {
-    Created {
-      title: { pt-BR: "Contagem criada", en: "Count created" }
-      payload {
-        stockItem: StockItem { title: { pt-BR: "Item de estoque", en: "Stock item" } }
-      }
-    }
-  }
 
   actions {
     create(stockItem: StockItem){

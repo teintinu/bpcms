@@ -2,7 +2,13 @@
 shape PaymentStatus {
   title: { pt-BR: "Situação do pagamento", en: "Payment status" }
   base: state
-  initial: Pending
+  initial: Pending with transition Created {
+    title: { pt-BR: "Cobrança registrada", en: "Charge registered" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+    }
+  }
 
   value Pending {
     title: { pt-BR: "Pendente", en: "Pending" }
@@ -82,7 +88,13 @@ shape PaymentStatus {
 shape RefundStatus {
   title: { pt-BR: "Situação do reembolso", en: "Refund status" }
   base: state
-  initial: Requested
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Reembolso solicitado", en: "Refund requested" }
+    payload {
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    }
+  }
 
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
@@ -132,7 +144,13 @@ shape RefundStatus {
 shape ChargebackStatus {
   title: { pt-BR: "Situação da contestação", en: "Chargeback status" }
   base: state
-  initial: Open
+  initial: Open with transition Opened {
+    title: { pt-BR: "Contestação aberta", en: "Chargeback opened" }
+    payload {
+      amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due" } }
+    }
+  }
 
   value Open {
     title: { pt-BR: "Aberta", en: "Open" }

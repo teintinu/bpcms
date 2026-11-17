@@ -3,7 +3,13 @@
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    }
+  }
+
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: status.draft

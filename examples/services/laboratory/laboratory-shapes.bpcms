@@ -32,7 +32,9 @@ shape SampleKind {
 shape SampleStatus {
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
   base: state
-  initial: Collected
+  initial: Collected with transition Collected {
+    title: { pt-BR: "Amostra coletada", en: "Sample collected" }
+  }
   value Collected {
     title: { pt-BR: "Coletada", en: "Collected" }
     icon: Collected
@@ -137,7 +139,12 @@ shape ExamCode {
 shape ExamOrderStatus {
   title: { pt-BR: "Situação do exame", en: "Exam order status" }
   base: state
-  initial: Requested
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Exame solicitado", en: "Exam requested" }
+    payload {
+      exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
+    }
+  }
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested

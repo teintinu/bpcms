@@ -72,15 +72,6 @@ document Order {
     byStatus: [status, createdAt] range
   }
 
-  events {
-    Drafted {
-      title: { pt-BR: "Pedido criado", en: "Order drafted" }
-      payload {
-        customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
-        createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
-      }
-    }
-  }
 
   actions {
     create(customer: User, discount: std.Percentage) {

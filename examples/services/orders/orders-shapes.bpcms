@@ -2,7 +2,13 @@
 shape OrderStatus {
   title: { pt-BR: "Situação do pedido", en: "Order status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Drafted {
+    title: { pt-BR: "Pedido criado", en: "Order drafted" }
+    payload {
+      customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+      createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    }
+  }
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }

@@ -2,7 +2,12 @@
 shape ShipmentStatus {
   title: { pt-BR: "Situação da remessa", en: "Shipment status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Created {
+    title: { pt-BR: "Remessa criada", en: "Shipment created" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    }
+  }
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }

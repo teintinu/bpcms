@@ -67,12 +67,6 @@ document Shipment {
   }
 
   events {
-    Created {
-      title: { pt-BR: "Remessa criada", en: "Shipment created" }
-      payload {
-        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
-      }
-    }
     QuoteRequested {
       title: { pt-BR: "Cotação solicitada", en: "Quote requested" }
       payload {

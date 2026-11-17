@@ -3,7 +3,12 @@
 shape UserStatus {
   title: { pt-BR: "Situação do usuário", en: "User status" }
   base: state
-  initial: Active
+  initial: Active with transition Created {
+    title: { pt-BR: "Usuário criado", en: "User created" }
+    payload {
+      name: string { title: { pt-BR: "Nome", en: "Name" } }
+    }
+  }
   value Active {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
@@ -50,7 +55,9 @@ shape UserStatus {
 shape SessionStatus {
   title: { pt-BR: "Situação da sessão", en: "Session status" }
   base: state
-  initial: Active
+  initial: Active with transition Started {
+    title: { pt-BR: "Sessão iniciada", en: "Session started" }
+  }
   value Active {
     title: { pt-BR: "Ativa", en: "Active" }
     icon: Active

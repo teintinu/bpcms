@@ -46,12 +46,6 @@ document Ticket {
   }
 
   events {
-    Opened {
-      title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
-      payload {
-        subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
-      }
-    }
     Escalated {
       title: { pt-BR: "Chamado escalonado", en: "Ticket escalated" }
       payload {
@@ -197,14 +191,6 @@ document ReturnRequest {
     byStatus: [status, requestedAt] range
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Devolução solicitada", en: "Return requested" }
-      payload {
-        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-      }
-    }
-  }
 
   actions {
     request(justification: string){

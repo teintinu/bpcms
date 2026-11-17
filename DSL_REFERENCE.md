@@ -1411,13 +1411,21 @@ number: InvoiceNumber {
 
 O Shape de estado declara os **valores** e as **transições**, e cada transição carrega o **evento do workflow** (nome, título e payload). A action executa o comando e aponta o estado de destino; ela **não redefine a aresta nem o evento**.
 
+O **nascimento** do documento também é uma transição: o `initial` declara a **transição de entrada**, com o evento de criação. Evento de criação não mora em `events { }`.
+
 Isso restaura a regra: **evento de workflow é definido no workflow**. O bloco `events { }` do documento fica só para eventos **sem transição** (5.7).
 
 ```bpcms
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido" } }
+    }
+  }
+
   format: plain
 
   value Draft {
@@ -1501,6 +1509,15 @@ Regras do Shape de estado:
 - estado sem caminho a partir do `initial` = `W_STATE_UNREACHABLE`;
 - transição sem nenhuma action que a execute = `W_TRANSITION_UNUSED`.
 
+Regras da transição de entrada (criação):
+
+- `initial: <Valor> with transition <Evento> { title?; payload? }` declara o evento de criação;
+- o identificador após `transition` é o **nome do evento** (não há estado de origem; o destino é o próprio `initial`);
+- a action que **cria** o documento (`returns: <Document>`, sem `to:`) emite o evento de entrada no body; é o único `emit` de evento de workflow permitido;
+- sem bloco (`initial: Draft`) o documento nasce sem evento;
+- mais de uma action de criação no mesmo documento publica o mesmo evento de entrada;
+- evento de criação declarado em `events { }` = `E_CREATION_EVENT`.
+
 ## 5.4 Actions — comandos que executam transições
 
 ```bpcms
@@ -1554,7 +1571,7 @@ Regras:
 - `emits { ... }` só mapeia valores do payload: campo sem mapeamento vem **pelo nome** do escopo (parâmetros + campos do documento); mapear campo que não é do payload = `E_EMITS_UNKNOWN`;
 - campo do payload sem origem (nem por nome, nem em `emits`) = `E_EVENT_PAYLOAD`;
 - ação com `to:` **não** usa `emit` no body: o evento é o da transição;
-- `emit <Event>` no body só vale para evento declarado em `events { }` (evento sem workflow);
+- `emit <Event>` no body vale para (a) evento declarado em `events { }` e (b) o **evento de entrada** do documento, na action de criação (sem `to:`);
 - criação é comando (`create(...)`) e declara `returns:` com o documento criado;
 - toda ação mutante é auditada automaticamente (5.12);
 - `roles: public` é explícito; `roles: []` é erro;
@@ -1693,7 +1710,57 @@ document Invoice {
 - origens diferentes podem emitir **eventos diferentes** para o mesmo destino (`Signed` e `Renewed` → `Active`);
 - transição sem bloco (`transition Cancelled`) não publica evento.
 
-### 5.7.2 Evento sem workflow
+### 5.7.2 Evento de criação
+
+O nascimento do documento é uma transição de entrada, declarada no `initial` (5.3). O evento é do workflow; a action de criação o emite.
+
+```bpcms
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido" } }
+    }
+  }
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+  }
+}
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+
+  fields {
+    order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+  }
+
+  actions {
+    request(order: Order) {
+      title: { pt-BR: "Solicitar nota", en: "Request invoice" }
+      roles: [Clerk]
+      returns: Invoice
+      {
+        customer = order.customer
+        emit Requested { order: order }
+      }
+    }
+  }
+}
+```
+
+- `initial: Draft with transition Requested { ... }` declara o contrato do evento de criação;
+- a action de criação tem `returns: <Document>` e **não** tem `to:`; ela emite o evento de entrada;
+- o mesmo documento pode ter várias actions de criação (`registerPerson`, `registerOrganization`): todas emitem o mesmo evento;
+- evento de criação em `events { }` = `E_CREATION_EVENT`; `emit` de entrada em ação com `to:` = `E_EMIT_WITH_TRANSITION`.
+
+### 5.7.3 Evento sem workflow
 
 ```bpcms
 document Store {
@@ -1728,7 +1795,7 @@ document Store {
 - `emit` é proibido em action com `to:` (o evento de transição já é o da aresta);
 - evento declarado e nunca emitido = `W_EVENT_UNUSED`; emitido e não declarado = `E_EVENT_UNKNOWN`.
 
-### 5.7.3 Identidade e regras
+### 5.7.4 Identidade e regras
 
 - o envelope (documento, id, ator, hora, correlação) é do builder; o `payload` é só negócio;
 - o evento pertence ao serviço dono do documento; a referência é `SERVICO.DOCUMENTO.EVENTO` (`Billing.Invoice.Paid`); canônica: `example.com/services/billing#Invoice.Paid`;
@@ -1914,6 +1981,7 @@ O registro é responsabilidade do builder. A DSL não declara `audit` no documen
 | ação sem `title` ou sem `roles` | `E_ACTION` |
 | evento sem declaração (`emit`) / payload sem origem / mapeamento inválido | `E_EVENT_UNKNOWN` / `E_EVENT_PAYLOAD` / `E_EMITS_UNKNOWN` |
 | evento do mesmo nome com payload divergente / `emit` em ação com `to:` | `E_EVENT_SCHEMA_CONFLICT` / `E_EMIT_WITH_TRANSITION` |
+| evento de criação em `events { }` (deve ir no `initial`) | `E_CREATION_EVENT` |
 | transição sem ação que a execute | `W_TRANSITION_UNUSED` |
 | dois eventos com o mesmo nome | `E_EVENT_DUPLICATE` |
 | valor de estado inalcançável | `W_STATE_UNREACHABLE` |
@@ -2145,8 +2213,9 @@ shape TaxRegimeCode {
 Regras:
 
 - `state` tem exatamente um `initial`; `classification` não tem `initial`;
-- `transition` **não existe** em `value`: a aresta é declarada na action com `from:`/`to:` (5.4);
+- `transition` é a aresta do workflow (5.3); a action só aponta o destino (`to:`), sem `from:`;
 - a **transição e o evento do workflow** são declarados no próprio `value` de origem (`transition <Destino> { title; payload; event? }`); a action só aponta `to:` (5.3, 5.7);
+- o `initial` pode declarar a **transição de entrada** (`with transition <Evento> { ... }`): é o evento de criação do documento (5.3, 5.7.2);
 - o grafo de estados é derivado das actions; estado inalcançável gera `W_STATE_UNREACHABLE`;
 - estado sem action de saída é terminal (legítimo, sem aviso);
 - self-transition é inválida (`E_TRANSITION_SELF`);
@@ -3390,7 +3459,12 @@ Regras:
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido" } }
+    }
+  }
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
@@ -3454,7 +3528,57 @@ document Invoice {
 - `emits { campo: expr }` na action só mapeia valores do payload cujo nome difere do escopo;
 - duas origens para o mesmo evento exigem o mesmo payload (`E_EVENT_SCHEMA_CONFLICT`); origens diferentes podem emitir eventos diferentes para o mesmo destino.
 
-## 22.2 Evento sem workflow
+## 22.2 Evento de criação
+
+O documento nasce por uma **transição de entrada**, declarada no `initial` do Shape. O evento é do workflow; a action de criação o emite.
+
+```bpcms
+shape InvoiceStatus {
+  title: { pt-BR: "Situação da nota", en: "Invoice status" }
+  base: state
+
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido" } }
+    }
+  }
+
+  value Draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+  }
+}
+
+document Invoice {
+  title: { pt-BR: "Nota fiscal", en: "Invoice" }
+
+  fields {
+    order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+    status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+  }
+
+  actions {
+    request(order: Order) {
+      title: { pt-BR: "Solicitar nota", en: "Request invoice" }
+      roles: [Clerk]
+      returns: Invoice
+      {
+        customer = order.customer
+        emit Requested { order: order }
+      }
+    }
+  }
+}
+```
+
+- `initial: <Valor> with transition <Evento> { ... }`: o identificador é o **nome do evento** (o destino é o próprio inicial);
+- a action de criação (`returns: <Document>`, sem `to:`) emite o evento de entrada;
+- mais de uma action de criação no documento publica o mesmo evento;
+- `events { }` não declara evento de criação.
+
+## 22.3 Evento sem workflow
 
 ```bpcms
 document Store {
@@ -3487,7 +3611,7 @@ document Store {
 - `events { }` declara título e payload do evento sem transição;
 - `emit` no body publica; `emit` em action com `to:` é erro.
 
-## 22.3 Identidade
+## 22.4 Identidade
 
 ```text
 SERVICO.DOCUMENTO.EVENTO
@@ -3500,9 +3624,10 @@ example.com/services/billing#Invoice.Paid
 - o evento carrega o documento (id + lookup) e a correlação; o `payload` é só negócio;
 - `key` não existe: a chave é o documento.
 
-## 22.4 Regras
+## 22.5 Regras
 
 - evento de workflow: declarado na `transition` do Shape; publicado pela action que executa a transição;
+- evento de criação: declarado no `initial` (`with transition`); publicado pela action de criação via `emit`;
 - evento sem workflow: declarado em `events { }`; publicado por `emit` no body;
 - `emit` é proibido em action com `to:`; `emits { }` só mapeia payload;
 - processo/integração assinam `Document.Event` (`start { event: }`, `cancel on`, `milestone on`);
@@ -3681,7 +3806,7 @@ policy FourEyesPayment {
 | Form | ação sem aresta nem `stay`, argumento sem campo, campo não usado | `E_FORM_ACTION_NO_EDGE` / `E_FORM_PARAM` / `W_FORM_UNUSED_FIELD` |
 | Dados | `with` desconhecido/ausente, `gives` incompatível, variável não atribuída | `E_WITH_UNKNOWN` / `E_WITH_MISSING` / `E_GIVES_TYPE` / `E_DEFINITELY_ASSIGNED` |
 | Estado | `from`/`to` inválido, incompleto, self-transition ou estado inalcançável | `E_TRANSITION_STATE` / `E_TRANSITION_INCOMPLETE` / `E_TRANSITION_SELF` / `W_STATE_UNREACHABLE` |
-| Evento | não declarado, duplicado, payload sem origem, schema divergente, nunca emitido | `E_EVENT_UNKNOWN` / `E_EVENT_DUPLICATE` / `E_EVENT_PAYLOAD` / `E_EMITS_UNKNOWN` / `E_EVENT_SCHEMA_CONFLICT` / `W_EVENT_UNUSED` |
+| Evento | não declarado, duplicado, payload sem origem, schema divergente, criação fora do `initial`, nunca emitido | `E_EVENT_UNKNOWN` / `E_EVENT_DUPLICATE` / `E_EVENT_PAYLOAD` / `E_EMITS_UNKNOWN` / `E_EVENT_SCHEMA_CONFLICT` / `E_CREATION_EVENT` / `W_EVENT_UNUSED` |
 | Mensagem | sem `about`, `about` incompatível, duplicada | `E_MESSAGE_ABOUT` / `E_MESSAGE_DUPLICATE` |
 | Start | sem gatilho, dois gatilhos, duplicado, `select` inválido | `E_START_DUPLICATE` / `E_SELECT` / `E_PROCESS_NO_START` |
 | Chamada | filho sem `start { called }`, com gatilho de topo, ou processo de topo com `called` | `E_PROCESS_TRIGGER_CONFLICT` |

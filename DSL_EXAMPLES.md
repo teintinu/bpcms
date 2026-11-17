@@ -42,7 +42,7 @@ Este documento cobre o catálogo de artefatos com **186 exemplos** (e 3 usos de 
 | Versão | `version: semver("1.2.3")` / `tag("v1.2.3")` / `commit("9f3a1c")` | `1.4.0` é açúcar para `semver("1.4.0")` |
 | Release | `"<uri>"@1.2.3` | URI + seletor de versão |
 | Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
-| Evento | `transition Paid { title; payload }` no `value` | evento do workflow definido no workflow; `events { }` só para evento sem transição |
+| Evento | `transition Paid { title; payload }` no `value` | evento do workflow definido no workflow; `initial ... with transition X` é o evento de criação; `events { }` só para evento sem transição |
 | Permissão | `roles: [Manager]` na action | autoridade é do documento; lane é execução |
 
 ## Cobertura
@@ -2486,7 +2486,12 @@ shape InvoiceItem {
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
-  initial: Draft
+  initial: Draft with transition Requested {
+    title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
+    payload {
+      order: Order { title: { pt-BR: "Pedido" } }
+    }
+  }
 
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
@@ -2597,10 +2602,17 @@ document Invoice {
     }
   }
 
-  events {
-  }
-
   actions {
+    request(order: Order) {
+      title: { pt-BR: "Solicitar nota", en: "Request invoice" }
+      roles: [Clerk]
+      returns: Invoice
+      {
+        customer = order.customer
+        emit Requested { order: order }
+      }
+    }
+
     issue() {
       title: { pt-BR: "Emitir", en: "Issue" }
       roles: [Manager]
@@ -2762,9 +2774,6 @@ document Shipment {
 
   source: device "scale-01" for weight
 
-  events {
-  }
-
   actions {
     dispatch(code: TrackingCode) {
       title: { pt-BR: "Despachar", en: "Dispatch" }
@@ -2912,9 +2921,6 @@ document LabReport {
 
   signature {
     release: Pathologist
-  }
-
-  events {
   }
 
   actions {
@@ -3077,9 +3083,6 @@ document Ticket {
       title: { pt-BR: "Solução", en: "Resolution" }
       maxLength: 500
     }
-  }
-
-  events {
   }
 
   actions {
@@ -3259,9 +3262,6 @@ document PurchaseRequest {
       title: { pt-BR: "Parecer", en: "Decision note" }
       maxLength: 500
     }
-  }
-
-  events {
   }
 
   actions {
@@ -3513,9 +3513,6 @@ document Contract {
 
   signature {
     activate: LegalCounsel
-  }
-
-  events {
   }
 
   actions {

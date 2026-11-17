@@ -1181,6 +1181,7 @@ Service revisado; seguimos para **Document**.
 | 19 | `sla` do caso + `on breach` do processo | Lead time e escalonamento de caso | §4.2, §4.8 |
 | 20 | `foreach` sem agregação declarada (v1) | Agregação é efeito no documento; simplicidade | §4.7 |
 | 21 | **Correção:** evento de workflow volta para o `value` (`transition` com `title`/`payload`/`event:`) | A v0.2 tinha posto o evento em `events { }`, violando a regra "evento de workflow é definido no workflow"; a aresta pertence ao Shape e o evento é da aresta | §5.3, §5.7, §22; 213 transições migradas em `examples/` |
+| 22 | **Evento de criação no `initial`** (`initial: V with transition X { ... }`), emitido pela action de criação | Fecha o último evento de workflow que ainda morava em `events { }`; o nascimento é a transição de entrada | §5.3, §5.7.2, §22.2; 18 documentos migrados em `examples/` |
 
 ### O que foi removido (e por quê)
 

@@ -98,7 +98,12 @@ shape ReservationStatus {
 shape CountStatus {
   title: { pt-BR: "Situação da contagem", en: "Count status" }
   base: state
-  initial: Open
+  initial: Open with transition Created {
+    title: { pt-BR: "Contagem criada", en: "Count created" }
+    payload {
+      stockItem: StockItem { title: { pt-BR: "Item de estoque", en: "Stock item" } }
+    }
+  }
   value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
@@ -147,7 +152,12 @@ shape CountStatus {
 shape RequisitionStatus {
   title: { pt-BR: "Situação da requisição", en: "Requisition status" }
   base: state
-  initial: Requested
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
+    payload {
+      quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+    }
+  }
   value Requested {
     title: { pt-BR: "Solicitada", en: "Requested" }
     icon: Requested

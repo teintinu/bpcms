@@ -131,17 +131,8 @@ document Invoice {
     byStatus: [status, dueAt] range
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
-      payload {
-        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
-      }
-    }
-  }
-
   actions {
-    create(order: Order){
+    request(order: Order){
       title: { pt-BR: "Solicitar nota", en: "Request invoice" }
       roles: [Clerk]
       returns: Invoice

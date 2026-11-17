@@ -99,7 +99,12 @@ shape CandidateStatus {
 shape EmployeeStatus {
   title: { pt-BR: "Situação do colaborador", en: "Employee status" }
   base: state
-  initial: Onboarding
+  initial: Onboarding with transition Hired {
+    title: { pt-BR: "Colaborador contratado", en: "Employee hired" }
+    payload {
+      startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
+    }
+  }
 
   value Onboarding {
     title: { pt-BR: "Em integração", en: "Onboarding" }

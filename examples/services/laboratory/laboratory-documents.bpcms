@@ -70,11 +70,6 @@ document Sample {
     byPatient: [patient.id] hash
   }
 
-  events {
-    Collected {
-      title: { pt-BR: "Amostra coletada", en: "Sample collected" }
-    }
-  }
 
   actions {
     collect(){
@@ -179,14 +174,6 @@ document ExamOrder {
     bySample: [sample.id] hash
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Exame solicitado", en: "Exam requested" }
-      payload {
-        exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } }
-      }
-    }
-  }
 
   actions {
     request(exam: ExamCode, sample: Sample){

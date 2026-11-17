@@ -39,15 +39,6 @@ document Payment {
     byStatus: [status, capturedAt] range
   }
 
-  events {
-    Created {
-      title: { pt-BR: "Cobrança registrada", en: "Charge registered" }
-      payload {
-        order: Order { title: { pt-BR: "Pedido", en: "Order" } }
-        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-      }
-    }
-  }
 
   actions {
     create(order: Order, amount: std.Money, method: PaymentMethod) {
@@ -148,15 +139,6 @@ document Refund {
     byStatus: [status, requestedAt] range
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Reembolso solicitado", en: "Refund requested" }
-      payload {
-        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-        reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-      }
-    }
-  }
 
   actions {
     request(reason: string) {
@@ -249,15 +231,6 @@ document Chargeback {
     byDue: [status, dueAt] range
   }
 
-  events {
-    Opened {
-      title: { pt-BR: "Contestação aberta", en: "Chargeback opened" }
-      payload {
-        amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-        dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due" } }
-      }
-    }
-  }
 
   actions {
     open(chargebackReason: string, dueAt: DateTime) {

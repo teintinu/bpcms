@@ -19,7 +19,12 @@ shape CitizenKind {
 shape CitizenStatus {
   title: { pt-BR: "Situação do cidadão", en: "Citizen status" }
   base: state
-  initial: Active
+  initial: Active with transition Registered {
+    title: { pt-BR: "Cidadão cadastrado", en: "Citizen registered" }
+    payload {
+      displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" } }
+    }
+  }
   value Active {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active

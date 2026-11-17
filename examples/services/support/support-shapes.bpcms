@@ -3,7 +3,12 @@
 shape TicketStatus {
   title: { pt-BR: "Situação do chamado", en: "Ticket status" }
   base: state
-  initial: Open
+  initial: Open with transition Opened {
+    title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
+    payload {
+      subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    }
+  }
   value Open {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
@@ -76,7 +81,12 @@ shape TicketStatus {
 shape ReturnStatus {
   title: { pt-BR: "Situação da devolução", en: "Return status" }
   base: state
-  initial: Requested
+  initial: Requested with transition Requested {
+    title: { pt-BR: "Devolução solicitada", en: "Return requested" }
+    payload {
+      reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    }
+  }
   value Requested {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested

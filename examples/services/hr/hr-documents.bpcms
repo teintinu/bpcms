@@ -126,14 +126,6 @@ document Employee {
     byPerson: [person.id] hash
   }
 
-  events {
-    Hired {
-      title: { pt-BR: "Colaborador contratado", en: "Employee hired" }
-      payload {
-        startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
-      }
-    }
-  }
 
   actions {
     hire(firstDay: DateTime) {

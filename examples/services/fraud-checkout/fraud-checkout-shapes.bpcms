@@ -2,7 +2,12 @@
 shape FraudCheckStatus {
   title: { pt-BR: "Situação da verificação antifraude", en: "Fraud check status" }
   base: state
-  initial: Pending
+  initial: Pending with transition Created {
+    title: { pt-BR: "Verificação criada", en: "Fraud check created" }
+    payload {
+      session: CheckoutSession { title: { pt-BR: "Sessão", en: "Session" } }
+    }
+  }
   value Pending {
     title: { pt-BR: "Pendente", en: "Pending" }
     icon: Pending

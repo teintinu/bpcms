@@ -178,15 +178,6 @@ document Claim {
     byClaimant: [claimant.id] hash
   }
 
-  events {
-    Opened {
-      title: { pt-BR: "Aviso de sinistro aberto", en: "Claim notice opened" }
-      payload {
-        occurredAt: DateTime { title: { pt-BR: "Ocorrido em", en: "Occurred at" } }
-        amount: std.Money { title: { pt-BR: "Valor reclamado", en: "Claimed amount" } }
-      }
-    }
-  }
 
   actions {
     register(occurredOn: DateTime, claimedAmount: std.Money) {

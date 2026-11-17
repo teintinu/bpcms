@@ -35,14 +35,6 @@ document Citizen {
     byMergedInto: [mergedInto.id] hash
   }
 
-  events {
-    Registered {
-      title: { pt-BR: "Cidadão cadastrado", en: "Citizen registered" }
-      payload {
-        displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" } }
-      }
-    }
-  }
 
   actions {
     register(kind: CitizenKind, displayName: string, country: string, legalName: string?, birthDate: Date?){
