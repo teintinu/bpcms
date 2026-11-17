@@ -43,25 +43,23 @@ shape ProductStatus {
   title: { pt-BR: "Situação do produto", en: "Product status" }
   base: workflow
   initial: draft
-  values {
-    draft {
-      title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Draft
-      ordinal: 10
-      next: [published, archived]
-    }
-    published {
-      title: { pt-BR: "Publicado", en: "Published" }
-      icon: Published
-      ordinal: 20
-      next: [archived]
-    }
-    archived {
-      title: { pt-BR: "Arquivado", en: "Archived" }
-      icon: Archived
-      ordinal: 30
-      next: []
-    }
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+    next: [published, archived]
+  }
+  value published {
+    title: { pt-BR: "Publicado", en: "Published" }
+    icon: Published
+    ordinal: 20
+    next: [archived]
+  }
+  value archived {
+    title: { pt-BR: "Arquivado", en: "Archived" }
+    icon: Archived
+    ordinal: 30
+    next: []
   }
   format: plain
 

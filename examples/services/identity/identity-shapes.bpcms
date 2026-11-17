@@ -6,25 +6,23 @@ shape UserStatus {
   title: { pt-BR: "Situação do usuário", en: "User status" }
   base: workflow
   initial: active
-  values {
-    active {
-      title: { pt-BR: "Ativo", en: "Active" }
-      icon: Active
-      ordinal: 10
-      next: [suspended, disabled]
-    }
-    suspended {
-      title: { pt-BR: "Suspenso", en: "Suspended" }
-      icon: Suspended
-      ordinal: 20
-      next: [active, disabled]
-    }
-    disabled {
-      title: { pt-BR: "Desativado", en: "Disabled" }
-      icon: Disabled
-      ordinal: 30
-      next: []
-    }
+  value active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+    next: [suspended, disabled]
+  }
+  value suspended {
+    title: { pt-BR: "Suspenso", en: "Suspended" }
+    icon: Suspended
+    ordinal: 20
+    next: [active, disabled]
+  }
+  value disabled {
+    title: { pt-BR: "Desativado", en: "Disabled" }
+    icon: Disabled
+    ordinal: 30
+    next: []
   }
   format: plain
 
@@ -34,25 +32,23 @@ shape SessionStatus {
   title: { pt-BR: "Situação da sessão", en: "Session status" }
   base: workflow
   initial: active
-  values {
-    active {
-      title: { pt-BR: "Ativo", en: "Active" }
-      icon: Active
-      ordinal: 10
-      next: [ended, expired]
-    }
-    ended {
-      title: { pt-BR: "Encerrada", en: "Ended" }
-      icon: Ended
-      ordinal: 20
-      next: []
-    }
-    expired {
-      title: { pt-BR: "Expirada", en: "Expired" }
-      icon: Expired
-      ordinal: 30
-      next: []
-    }
+  value active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+    next: [ended, expired]
+  }
+  value ended {
+    title: { pt-BR: "Encerrada", en: "Ended" }
+    icon: Ended
+    ordinal: 20
+    next: []
+  }
+  value expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: Expired
+    ordinal: 30
+    next: []
   }
   format: plain
 

@@ -426,20 +426,18 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 ## 3.1 `reintroduce`
 
-`reintroduce` altera/adiciona definições de um artefato importado. Pode modificar qualquer parte do artefato: `values`, `fields`, `title`, `icon`, `ordinal`, `permissions`, etc.
+`reintroduce` altera/adiciona definições de um artefato importado. Pode modificar qualquer parte do artefato: `value`, `fields`, `title`, `icon`, `ordinal`, `permissions`, etc.
 
 ```bpcms
 reintroduce std.Currency {
-  values {
-    BRL {
-      title: { pt-BR: "Real", en: "Brazilian real" }
-      prefix: {
-        pt-BR: "R$"
-        en: "BRL"
-      }
-      icon: Brl
-      ordinal: 10
+  value BRL {
+    title: { pt-BR: "Real", en: "Brazilian real" }
+    prefix: {
+      pt-BR: "R$"
+      en: "BRL"
     }
+    icon: Brl
+    ordinal: 10
   }
 }
 ```
@@ -863,7 +861,7 @@ document Shipment {
 | `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
-| `values` | `values { draft { title; icon; ordinal: 10; next: [...] } }` | Enum; `classification`/`workflow`; `workflow` exige `next`. Exceção: values-base de `std.Currency` não exigem metadados. |
+| `value` | `value draft { title; icon; ordinal: 10; next: [...] }` | Enum; `classification`/`workflow`; repete `value` por estado. Exceção: `value` base de `std.Currency` não exige metadados. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
@@ -916,6 +914,8 @@ toNumber(value) {
 
 ## 6.1 Valores enumerados
 
+> Migração pendente: `next` será substituído por `transition` dentro de cada `value`; o compilador gerará `next` internamente.
+
 Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 
 ```bpcms
@@ -924,37 +924,35 @@ shape InvoiceStatus {
   base: workflow
   initial: draft
   format: plain
-  values {
-    draft {
-      title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Draft
-      ordinal: 10
-      next: [issued, cancelled]
-    }
-    issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Issued
-      ordinal: 20
-      next: [paid, overdue, cancelled]
-    }
-    paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-      icon: Paid
-      ordinal: 30
-      next: []
-    }
-    overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: Overdue
-      ordinal: 40
-      next: [paid, cancelled]
-    }
-    cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
-      icon: Cancelled
-      ordinal: 50
-      next: []
-    }
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+    next: [issued, cancelled]
+  }
+  value issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: Issued
+    ordinal: 20
+    next: [paid, overdue, cancelled]
+  }
+  value paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: Paid
+    ordinal: 30
+    next: []
+  }
+  value overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: Overdue
+    ordinal: 40
+    next: [paid, cancelled]
+  }
+  value cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 50
+    next: []
   }
 }
 ```
@@ -962,7 +960,7 @@ shape InvoiceStatus {
 - O primeiro ordinal é **10**; os seguintes incrementam de **10 em 10**.
 - `ordinal` é único, inteiro e estável; inserir um value no meio usa um ordinal livre.
 - O ordinal é usado no stream binário; o title/icon são para UI.
-- `values: [a, b]` sem title/icon/ordinal é erro.
+- `value` sem `title`/`icon`/`ordinal` é erro, exceto `std.Currency`.
 
 ## 6.1.1 Units
 
@@ -1003,15 +1001,13 @@ shape Length {
 
 ### 6.1.1.1 Exceção `std.Currency`
 
-`std.Currency` é a única classificação que pode ter values sem `title`, `icon` e `ordinal`:
+`std.Currency` é a única classificação que pode ter `value` sem `title`, `icon` e `ordinal`:
 
 ```bpcms
 shape Currency {
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
-  values {
-    BRL { numeric: "986", scale: 2 }
-    USD { numeric: "840", scale: 2 }
-  }
+  value BRL { numeric: "986", scale: 2 }
+  value USD { numeric: "840", scale: 2 }
 }
 ```
 
@@ -1047,12 +1043,10 @@ shape TrackingEvent {
 shape TaxRegimeCode {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: classification
-  values {
-    SIMPLES {
-      title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
-      icon: Simples
-      ordinal: 10
-    }
+  value SIMPLES {
+    title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+    icon: Simples
+    ordinal: 10
   }
 }
 ```
@@ -2395,17 +2389,15 @@ services/billing/
 
 ```bpcms
 shape InvoiceStatus {
-  values {
-    draft {
-      title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: status.draft
-      ordinal: 10
-    }
-    issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
-      icon: finance.invoice.issued
-      ordinal: 20
-    }
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+  }
+  value issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: finance.invoice.issued
+    ordinal: 20
   }
 }
 ```
@@ -2472,19 +2464,17 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 
 **`Money`:** tipo de valor monetário com qualquer `Currency`; `base: decimal`. O valor carrega `raw` + `currency`; `toNumber` é automático e retorna `raw`. Sem conversão cambial.
 
-**`Currency`:** classificação da stdlib com URL externa ISO 4217 e values com `scale`, sem `title`/`icon`/`ordinal`. Para usar uma moeda, o serviço precisa reintroduzi-la.
+**`Currency`:** classificação da stdlib com URL externa ISO 4217 e `value` com `scale`, sem `title`/`icon`/`ordinal`. Para usar uma moeda, o serviço precisa reintroduzi-la.
 
 ```bpcms
 shape Currency {
   title: { pt-BR: "Moeda", en: "Currency" }
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
-  values {
-    BRL { numeric: "986", scale: 2 }
-    USD { numeric: "840", scale: 2 }
-    JPY { numeric: "392", scale: 0 }
-    KWD { numeric: "414", scale: 3 }
-    CVE { numeric: "132", scale: 2 }
-  }
+  value BRL { numeric: "986", scale: 2 }
+  value USD { numeric: "840", scale: 2 }
+  value JPY { numeric: "392", scale: 0 }
+  value KWD { numeric: "414", scale: 3 }
+  value CVE { numeric: "132", scale: 2 }
 }
 ```
 
@@ -2502,28 +2492,26 @@ shape Currency {
 
 ```bpcms
 reintroduce std.Currency {
-  values {
-    BRL {
-      title: { pt-BR: "Real", en: "Brazilian real" }
-      prefix: {
-        pt-BR: "R$"
-        en: "BRL"
-      }
-      icon: Brl
-      ordinal: 10
+  value BRL {
+    title: { pt-BR: "Real", en: "Brazilian real" }
+    prefix: {
+      pt-BR: "R$"
+      en: "BRL"
     }
-    BTC {
-      title: { pt-BR: "Bitcoin", en: "Bitcoin" }
-      suffix: " BTC"
-      icon: Bitcoin
-      ordinal: 1000
-    }
-    CVE {
-      title: { pt-BR: "Escudo cabo-verdiano", en: "Cape Verdean escudo" }
-      infix: "$"
-      icon: CVE
-      ordinal: 30
-    }
+    icon: Brl
+    ordinal: 10
+  }
+  value BTC {
+    title: { pt-BR: "Bitcoin", en: "Bitcoin" }
+    suffix: " BTC"
+    icon: Bitcoin
+    ordinal: 1000
+  }
+  value CVE {
+    title: { pt-BR: "Escudo cabo-verdiano", en: "Cape Verdean escudo" }
+    infix: "$"
+    icon: CVE
+    ordinal: 30
   }
 }
 ```

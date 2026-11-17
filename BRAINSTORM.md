@@ -672,7 +672,7 @@ fields {
 }
 ```
 
-A biblioteca cobre 57 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `Currency` é ISO 4217, não enum com values/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `Currency` e `Count` agora são `std.*`.
+A biblioteca cobre 57 Shapes de medidas/ciências/estatística, com unidades SI, imperial/US, CGS, astronômicas, atômicas/nucleares, químicas, dados e estatística. `Currency` é ISO 4217, não enum com `value`/icons. A migração dos Shapes duplicados dos serviços de negócio foi concluída; `Mass`, `Length`, `Volume`, `Percentage`, `Currency` e `Count` agora são `std.*`.
 
 > **Decisão B-53:** biblioteca padrão vive em `bpcms.org/std`, pseudo-serviço do construtor; uso sempre por `std.Identificador`; sem import não resolve. Ela não substitui serviços de negócio.
 
@@ -1775,7 +1775,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
 | D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles + organogram no mesmo arquivo do serviço | ✅ | baseline atual |
-| D-038 | Enum values têm `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
+| D-038 | Enum `value` tem `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
 | D-044 | Shape tem `write/read` em stream, `format/parse` com flags, `toNumber` e métodos próprios; `convert` removido | ✅ | baseline atual |
 | D-045 | `units` no Shape com fatores; `unit`/`min`/`precision` no field; sem `convert` | ✅ | baseline atual |
 | D-046 | I18n aceita `PluralForms`; units carregam plural no `title` | ✅ | baseline atual |

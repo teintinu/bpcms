@@ -6,37 +6,35 @@ shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: workflow
   initial: draft
-  values {
-    draft {
-      title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: status.draft
-      ordinal: 10
-      next: [issued]
-    }
-    issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
-      icon: finance.invoice.issued
-      ordinal: 20
-      next: [paid, overdue, cancelled]
-    }
-    paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-      icon: status.paid
-      ordinal: 30
-      next: []
-    }
-    overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: status.overdue
-      ordinal: 40
-      next: [paid, cancelled]
-    }
-    cancelled {
-      title: { pt-BR: "Cancelada", en: "Cancelled" }
-      icon: Cancelled
-      ordinal: 50
-      next: []
-    }
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: status.draft
+    ordinal: 10
+    next: [issued]
+  }
+  value issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: finance.invoice.issued
+    ordinal: 20
+    next: [paid, overdue, cancelled]
+  }
+  value paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: status.paid
+    ordinal: 30
+    next: []
+  }
+  value overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: status.overdue
+    ordinal: 40
+    next: [paid, cancelled]
+  }
+  value cancelled {
+    title: { pt-BR: "Cancelada", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 50
+    next: []
   }
   format: plain
 
@@ -46,25 +44,23 @@ shape CreditNoteStatus {
   title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
   base: workflow
   initial: draft
-  values {
-    draft {
-      title: { pt-BR: "Rascunho", en: "Draft" }
-      icon: Draft
-      ordinal: 10
-      next: [issued]
-    }
-    issued {
-      title: { pt-BR: "Emitida", en: "Issued" }
-      icon: Issued
-      ordinal: 20
-      next: [applied]
-    }
-    applied {
-      title: { pt-BR: "Aplicada", en: "Applied" }
-      icon: Applied
-      ordinal: 30
-      next: []
-    }
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+    icon: Draft
+    ordinal: 10
+    next: [issued]
+  }
+  value issued {
+    title: { pt-BR: "Emitida", en: "Issued" }
+    icon: Issued
+    ordinal: 20
+    next: [applied]
+  }
+  value applied {
+    title: { pt-BR: "Aplicada", en: "Applied" }
+    icon: Applied
+    ordinal: 30
+    next: []
   }
   format: plain
 
@@ -75,25 +71,23 @@ shape BillStatus {
   title: { pt-BR: "Situação da conta", en: "Bill status" }
   base: workflow
   initial: open
-  values {
-    open {
-      title: { pt-BR: "Aberta", en: "Open" }
-      icon: Open
-      ordinal: 10
-      next: [paid, overdue]
-    }
-    paid {
-      title: { pt-BR: "Paga", en: "Paid" }
-      icon: Paid
-      ordinal: 20
-      next: []
-    }
-    overdue {
-      title: { pt-BR: "Vencida", en: "Overdue" }
-      icon: Overdue
-      ordinal: 30
-      next: [paid]
-    }
+  value open {
+    title: { pt-BR: "Aberta", en: "Open" }
+    icon: Open
+    ordinal: 10
+    next: [paid, overdue]
+  }
+  value paid {
+    title: { pt-BR: "Paga", en: "Paid" }
+    icon: Paid
+    ordinal: 20
+    next: []
+  }
+  value overdue {
+    title: { pt-BR: "Vencida", en: "Overdue" }
+    icon: Overdue
+    ordinal: 30
+    next: [paid]
   }
   format: plain
 
@@ -102,22 +96,20 @@ shape BillStatus {
 shape TaxRegimeCode {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: classification
-  values {
-    SIMPLES {
-      title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
-      icon: Simples
-      ordinal: 10
-    }
-    LUCRO_PRESUMIDO {
-      title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
-      icon: LucroPresumido
-      ordinal: 20
-    }
-    LUCRO_REAL {
-      title: { pt-BR: "Lucro Real", en: "Actual profit" }
-      icon: LucroReal
-      ordinal: 30
-    }
+  value SIMPLES {
+    title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+    icon: Simples
+    ordinal: 10
+  }
+  value LUCRO_PRESUMIDO {
+    title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
+    icon: LucroPresumido
+    ordinal: 20
+  }
+  value LUCRO_REAL {
+    title: { pt-BR: "Lucro Real", en: "Actual profit" }
+    icon: LucroReal
+    ordinal: 30
   }
   format: plain
 

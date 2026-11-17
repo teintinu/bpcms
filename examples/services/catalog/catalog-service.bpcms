@@ -8,8 +8,7 @@ service "example.com/services/catalog" {
   }
 
   reintroduce std.Currency {
-    values {
-      BRL {
+    value BRL {
         title: { pt-BR: "Real", en: "Brazilian real" }
         prefix: {
           pt-BR: "R$"
@@ -17,7 +16,6 @@ service "example.com/services/catalog" {
         }
         icon: Brl
         ordinal: 10
-      }
     }
   }
 }

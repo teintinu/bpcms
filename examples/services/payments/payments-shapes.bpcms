@@ -5,31 +5,29 @@ shape PaymentStatus {
   title: { pt-BR: "Situação do pagamento", en: "Payment status" }
   base: workflow
   initial: authorized
-  values {
-    authorized {
-      title: { pt-BR: "Autorizado", en: "Authorized" }
-      icon: Authorized
-      ordinal: 10
-      next: [captured, failed]
-    }
-    captured {
-      title: { pt-BR: "Capturado", en: "Captured" }
-      icon: Captured
-      ordinal: 20
-      next: [refunded]
-    }
-    failed {
-      title: { pt-BR: "Falhou", en: "Failed" }
-      icon: Failed
-      ordinal: 30
-      next: []
-    }
-    refunded {
-      title: { pt-BR: "Reembolsado", en: "Refunded" }
-      icon: status.refunded
-      ordinal: 40
-      next: []
-    }
+  value authorized {
+    title: { pt-BR: "Autorizado", en: "Authorized" }
+    icon: Authorized
+    ordinal: 10
+    next: [captured, failed]
+  }
+  value captured {
+    title: { pt-BR: "Capturado", en: "Captured" }
+    icon: Captured
+    ordinal: 20
+    next: [refunded]
+  }
+  value failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    icon: Failed
+    ordinal: 30
+    next: []
+  }
+  value refunded {
+    title: { pt-BR: "Reembolsado", en: "Refunded" }
+    icon: status.refunded
+    ordinal: 40
+    next: []
   }
   format: plain
 
@@ -39,31 +37,29 @@ shape RefundStatus {
   title: { pt-BR: "Situação do reembolso", en: "Refund status" }
   base: workflow
   initial: requested
-  values {
-    requested {
-      title: { pt-BR: "Solicitado", en: "Requested" }
-      icon: Requested
-      ordinal: 10
-      next: [approved, rejected]
-    }
-    approved {
-      title: { pt-BR: "Aprovado", en: "Approved" }
-      icon: Approved
-      ordinal: 20
-      next: [completed]
-    }
-    completed {
-      title: { pt-BR: "Concluído", en: "Completed" }
-      icon: Completed
-      ordinal: 30
-      next: []
-    }
-    rejected {
-      title: { pt-BR: "Rejeitado", en: "Rejected" }
-      icon: Rejected
-      ordinal: 40
-      next: []
-    }
+  value requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: Requested
+    ordinal: 10
+    next: [approved, rejected]
+  }
+  value approved {
+    title: { pt-BR: "Aprovado", en: "Approved" }
+    icon: Approved
+    ordinal: 20
+    next: [completed]
+  }
+  value completed {
+    title: { pt-BR: "Concluído", en: "Completed" }
+    icon: Completed
+    ordinal: 30
+    next: []
+  }
+  value rejected {
+    title: { pt-BR: "Rejeitado", en: "Rejected" }
+    icon: Rejected
+    ordinal: 40
+    next: []
   }
   format: plain
 
@@ -72,22 +68,20 @@ shape RefundStatus {
 shape PaymentMethod {
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
   base: classification
-  values {
     credit-card {
       title: { pt-BR: "Cartão de crédito", en: "Credit card" }
       icon: CreditCard
       ordinal: 10
     }
-    pix {
-      title: { pt-BR: "Pix", en: "Pix" }
-      icon: Pix
-      ordinal: 20
-    }
-    boleto {
-      title: { pt-BR: "Boleto", en: "Boleto" }
-      icon: Boleto
-      ordinal: 30
-    }
+  value pix {
+    title: { pt-BR: "Pix", en: "Pix" }
+    icon: Pix
+    ordinal: 20
+  }
+  value boleto {
+    title: { pt-BR: "Boleto", en: "Boleto" }
+    icon: Boleto
+    ordinal: 30
   }
   format: plain
 

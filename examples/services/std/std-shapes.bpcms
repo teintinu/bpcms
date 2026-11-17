@@ -721,185 +721,184 @@ shape Money {
 shape Currency {
   title: { pt-BR: "Moeda", en: "Currency" }
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
-  values {
-    AED { numeric: "784", scale: 2 }
-    AFN { numeric: "971", scale: 2 }
-    ALL { numeric: "008", scale: 2 }
-    AMD { numeric: "051", scale: 2 }
-    AOA { numeric: "973", scale: 2 }
-    ARS { numeric: "032", scale: 2 }
-    AUD { numeric: "036", scale: 2 }
-    AWG { numeric: "533", scale: 2 }
-    AZN { numeric: "944", scale: 2 }
-    BAM { numeric: "977", scale: 2 }
-    BBD { numeric: "052", scale: 2 }
-    BDT { numeric: "050", scale: 2 }
-    BHD { numeric: "048", scale: 3 }
-    BIF { numeric: "108", scale: 0 }
-    BMD { numeric: "060", scale: 2 }
-    BND { numeric: "096", scale: 2 }
-    BOB { numeric: "068", scale: 2 }
-    BOV { numeric: "984", scale: 2 }
-    BRL { numeric: "986", scale: 2 }
-    BSD { numeric: "044", scale: 2 }
-    BTN { numeric: "064", scale: 2 }
-    BWP { numeric: "072", scale: 2 }
-    BYN { numeric: "933", scale: 2 }
-    BZD { numeric: "084", scale: 2 }
-    CAD { numeric: "124", scale: 2 }
-    CDF { numeric: "976", scale: 2 }
-    CHE { numeric: "947", scale: 2 }
-    CHF { numeric: "756", scale: 2 }
-    CHW { numeric: "948", scale: 2 }
-    CLF { numeric: "990", scale: 4 }
-    CLP { numeric: "152", scale: 0 }
-    CNY { numeric: "156", scale: 2 }
-    COP { numeric: "170", scale: 2 }
-    COU { numeric: "970", scale: 2 }
-    CRC { numeric: "188", scale: 2 }
-    CUP { numeric: "192", scale: 2 }
-    CVE { numeric: "132", scale: 2 }
-    CZK { numeric: "203", scale: 2 }
-    DJF { numeric: "262", scale: 0 }
-    DKK { numeric: "208", scale: 2 }
-    DOP { numeric: "214", scale: 2 }
-    DZD { numeric: "012", scale: 2 }
-    EGP { numeric: "818", scale: 2 }
-    ERN { numeric: "232", scale: 2 }
-    ETB { numeric: "230", scale: 2 }
-    EUR { numeric: "978", scale: 2 }
-    FJD { numeric: "242", scale: 2 }
-    FKP { numeric: "238", scale: 2 }
-    GBP { numeric: "826", scale: 2 }
-    GEL { numeric: "981", scale: 2 }
-    GHS { numeric: "936", scale: 2 }
-    GIP { numeric: "292", scale: 2 }
-    GMD { numeric: "270", scale: 2 }
-    GNF { numeric: "324", scale: 0 }
-    GTQ { numeric: "320", scale: 2 }
-    GYD { numeric: "328", scale: 2 }
-    HKD { numeric: "344", scale: 2 }
-    HNL { numeric: "340", scale: 2 }
-    HTG { numeric: "332", scale: 2 }
-    HUF { numeric: "348", scale: 2 }
-    IDR { numeric: "360", scale: 2 }
-    ILS { numeric: "376", scale: 2 }
-    INR { numeric: "356", scale: 2 }
-    IQD { numeric: "368", scale: 3 }
-    IRR { numeric: "364", scale: 2 }
-    ISK { numeric: "352", scale: 0 }
-    JMD { numeric: "388", scale: 2 }
-    JOD { numeric: "400", scale: 3 }
-    JPY { numeric: "392", scale: 0 }
-    KES { numeric: "404", scale: 2 }
-    KGS { numeric: "417", scale: 2 }
-    KHR { numeric: "116", scale: 2 }
-    KMF { numeric: "174", scale: 0 }
-    KPW { numeric: "408", scale: 2 }
-    KRW { numeric: "410", scale: 0 }
-    KWD { numeric: "414", scale: 3 }
-    KYD { numeric: "136", scale: 2 }
-    KZT { numeric: "398", scale: 2 }
-    LAK { numeric: "418", scale: 2 }
-    LBP { numeric: "422", scale: 2 }
-    LKR { numeric: "144", scale: 2 }
-    LRD { numeric: "430", scale: 2 }
-    LSL { numeric: "426", scale: 2 }
-    LYD { numeric: "434", scale: 3 }
-    MAD { numeric: "504", scale: 2 }
-    MDL { numeric: "498", scale: 2 }
-    MGA { numeric: "969", scale: 2, subunitRatio: 5 }
-    MKD { numeric: "807", scale: 2 }
-    MMK { numeric: "104", scale: 2 }
-    MNT { numeric: "496", scale: 2 }
-    MOP { numeric: "446", scale: 2 }
-    MRU { numeric: "929", scale: 2, subunitRatio: 5 }
-    MUR { numeric: "480", scale: 2 }
-    MVR { numeric: "462", scale: 2 }
-    MWK { numeric: "454", scale: 2 }
-    MXN { numeric: "484", scale: 2 }
-    MXV { numeric: "979", scale: 2 }
-    MYR { numeric: "458", scale: 2 }
-    MZN { numeric: "943", scale: 2 }
-    NAD { numeric: "516", scale: 2 }
-    NGN { numeric: "566", scale: 2 }
-    NIO { numeric: "558", scale: 2 }
-    NOK { numeric: "578", scale: 2 }
-    NPR { numeric: "524", scale: 2 }
-    NZD { numeric: "554", scale: 2 }
-    OMR { numeric: "512", scale: 3 }
-    PAB { numeric: "590", scale: 2 }
-    PEN { numeric: "604", scale: 2 }
-    PGK { numeric: "598", scale: 2 }
-    PHP { numeric: "608", scale: 2 }
-    PKR { numeric: "586", scale: 2 }
-    PLN { numeric: "985", scale: 2 }
-    PYG { numeric: "600", scale: 0 }
-    QAR { numeric: "634", scale: 2 }
-    RON { numeric: "946", scale: 2 }
-    RSD { numeric: "941", scale: 2 }
-    RUB { numeric: "643", scale: 2 }
-    RWF { numeric: "646", scale: 0 }
-    SAR { numeric: "682", scale: 2 }
-    SBD { numeric: "090", scale: 2 }
-    SCR { numeric: "690", scale: 2 }
-    SDG { numeric: "938", scale: 2 }
-    SEK { numeric: "752", scale: 2 }
-    SGD { numeric: "702", scale: 2 }
-    SHP { numeric: "654", scale: 2 }
-    SLE { numeric: "925", scale: 2 }
-    SOS { numeric: "706", scale: 2 }
-    SRD { numeric: "968", scale: 2 }
-    SSP { numeric: "728", scale: 2 }
-    STN { numeric: "930", scale: 2 }
-    SVC { numeric: "222", scale: 2 }
-    SYP { numeric: "760", scale: 2 }
-    SZL { numeric: "748", scale: 2 }
-    THB { numeric: "764", scale: 2 }
-    TJS { numeric: "972", scale: 2 }
-    TMT { numeric: "934", scale: 2 }
-    TND { numeric: "788", scale: 3 }
-    TOP { numeric: "776", scale: 2 }
-    TRY { numeric: "949", scale: 2 }
-    TTD { numeric: "780", scale: 2 }
-    TWD { numeric: "901", scale: 2 }
-    TZS { numeric: "834", scale: 2 }
-    UAH { numeric: "980", scale: 2 }
-    UGX { numeric: "800", scale: 0 }
-    USD { numeric: "840", scale: 2 }
-    USN { numeric: "997", scale: 2 }
-    UYI { numeric: "940", scale: 0 }
-    UYU { numeric: "858", scale: 2 }
-    UYW { numeric: "927", scale: 4 }
-    UZS { numeric: "860", scale: 2 }
-    VED { numeric: "926", scale: 2 }
-    VES { numeric: "928", scale: 2 }
-    VND { numeric: "704", scale: 0 }
-    VUV { numeric: "548", scale: 0 }
-    WST { numeric: "882", scale: 2 }
-    XAD { numeric: "396", scale: 2 }
-    XAF { numeric: "950", scale: 0 }
-    XAG { numeric: "961", scale: 0 }
-    XAU { numeric: "959", scale: 0 }
-    XBA { numeric: "955", scale: 0 }
-    XBB { numeric: "956", scale: 0 }
-    XBC { numeric: "957", scale: 0 }
-    XBD { numeric: "958", scale: 0 }
-    XCD { numeric: "951", scale: 2 }
-    XCG { numeric: "532", scale: 2 }
-    XDR { numeric: "960", scale: 0 }
-    XOF { numeric: "952", scale: 0 }
-    XPD { numeric: "964", scale: 0 }
-    XPF { numeric: "953", scale: 0 }
-    XPT { numeric: "962", scale: 0 }
-    XSU { numeric: "994", scale: 0 }
-    XTS { numeric: "963", scale: 0 }
-    XUA { numeric: "965", scale: 0 }
-    XXX { numeric: "999", scale: 0 }
-    YER { numeric: "886", scale: 2 }
-    ZAR { numeric: "710", scale: 2 }
-    ZMW { numeric: "967", scale: 2 }
-    ZWG { numeric: "924", scale: 2 }
+  value AED { numeric: "784", scale: 2 }
+  value AFN { numeric: "971", scale: 2 }
+  value ALL { numeric: "008", scale: 2 }
+  value AMD { numeric: "051", scale: 2 }
+  value AOA { numeric: "973", scale: 2 }
+  value ARS { numeric: "032", scale: 2 }
+  value AUD { numeric: "036", scale: 2 }
+  value AWG { numeric: "533", scale: 2 }
+  value AZN { numeric: "944", scale: 2 }
+  value BAM { numeric: "977", scale: 2 }
+  value BBD { numeric: "052", scale: 2 }
+  value BDT { numeric: "050", scale: 2 }
+  value BHD { numeric: "048", scale: 3 }
+  value BIF { numeric: "108", scale: 0 }
+  value BMD { numeric: "060", scale: 2 }
+  value BND { numeric: "096", scale: 2 }
+  value BOB { numeric: "068", scale: 2 }
+  value BOV { numeric: "984", scale: 2 }
+  value BRL { numeric: "986", scale: 2 }
+  value BSD { numeric: "044", scale: 2 }
+  value BTN { numeric: "064", scale: 2 }
+  value BWP { numeric: "072", scale: 2 }
+  value BYN { numeric: "933", scale: 2 }
+  value BZD { numeric: "084", scale: 2 }
+  value CAD { numeric: "124", scale: 2 }
+  value CDF { numeric: "976", scale: 2 }
+  value CHE { numeric: "947", scale: 2 }
+  value CHF { numeric: "756", scale: 2 }
+  value CHW { numeric: "948", scale: 2 }
+  value CLF { numeric: "990", scale: 4 }
+  value CLP { numeric: "152", scale: 0 }
+  value CNY { numeric: "156", scale: 2 }
+  value COP { numeric: "170", scale: 2 }
+  value COU { numeric: "970", scale: 2 }
+  value CRC { numeric: "188", scale: 2 }
+  value CUP { numeric: "192", scale: 2 }
+  value CVE { numeric: "132", scale: 2 }
+  value CZK { numeric: "203", scale: 2 }
+  value DJF { numeric: "262", scale: 0 }
+  value DKK { numeric: "208", scale: 2 }
+  value DOP { numeric: "214", scale: 2 }
+  value DZD { numeric: "012", scale: 2 }
+  value EGP { numeric: "818", scale: 2 }
+  value ERN { numeric: "232", scale: 2 }
+  value ETB { numeric: "230", scale: 2 }
+  value EUR { numeric: "978", scale: 2 }
+  value FJD { numeric: "242", scale: 2 }
+  value FKP { numeric: "238", scale: 2 }
+  value GBP { numeric: "826", scale: 2 }
+  value GEL { numeric: "981", scale: 2 }
+  value GHS { numeric: "936", scale: 2 }
+  value GIP { numeric: "292", scale: 2 }
+  value GMD { numeric: "270", scale: 2 }
+  value GNF { numeric: "324", scale: 0 }
+  value GTQ { numeric: "320", scale: 2 }
+  value GYD { numeric: "328", scale: 2 }
+  value HKD { numeric: "344", scale: 2 }
+  value HNL { numeric: "340", scale: 2 }
+  value HTG { numeric: "332", scale: 2 }
+  value HUF { numeric: "348", scale: 2 }
+  value IDR { numeric: "360", scale: 2 }
+  value ILS { numeric: "376", scale: 2 }
+  value INR { numeric: "356", scale: 2 }
+  value IQD { numeric: "368", scale: 3 }
+  value IRR { numeric: "364", scale: 2 }
+  value ISK { numeric: "352", scale: 0 }
+  value JMD { numeric: "388", scale: 2 }
+  value JOD { numeric: "400", scale: 3 }
+  value JPY { numeric: "392", scale: 0 }
+  value KES { numeric: "404", scale: 2 }
+  value KGS { numeric: "417", scale: 2 }
+  value KHR { numeric: "116", scale: 2 }
+  value KMF { numeric: "174", scale: 0 }
+  value KPW { numeric: "408", scale: 2 }
+  value KRW { numeric: "410", scale: 0 }
+  value KWD { numeric: "414", scale: 3 }
+  value KYD { numeric: "136", scale: 2 }
+  value KZT { numeric: "398", scale: 2 }
+  value LAK { numeric: "418", scale: 2 }
+  value LBP { numeric: "422", scale: 2 }
+  value LKR { numeric: "144", scale: 2 }
+  value LRD { numeric: "430", scale: 2 }
+  value LSL { numeric: "426", scale: 2 }
+  value LYD { numeric: "434", scale: 3 }
+  value MAD { numeric: "504", scale: 2 }
+  value MDL { numeric: "498", scale: 2 }
+  value MGA { numeric: "969", scale: 2, subunitRatio: 5 }
+  value MKD { numeric: "807", scale: 2 }
+  value MMK { numeric: "104", scale: 2 }
+  value MNT { numeric: "496", scale: 2 }
+  value MOP { numeric: "446", scale: 2 }
+  value MRU { numeric: "929", scale: 2, subunitRatio: 5 }
+  value MUR { numeric: "480", scale: 2 }
+  value MVR { numeric: "462", scale: 2 }
+  value MWK { numeric: "454", scale: 2 }
+  value MXN { numeric: "484", scale: 2 }
+  value MXV { numeric: "979", scale: 2 }
+  value MYR { numeric: "458", scale: 2 }
+  value MZN { numeric: "943", scale: 2 }
+  value NAD { numeric: "516", scale: 2 }
+  value NGN { numeric: "566", scale: 2 }
+  value NIO { numeric: "558", scale: 2 }
+  value NOK { numeric: "578", scale: 2 }
+  value NPR { numeric: "524", scale: 2 }
+  value NZD { numeric: "554", scale: 2 }
+  value OMR { numeric: "512", scale: 3 }
+  value PAB { numeric: "590", scale: 2 }
+  value PEN { numeric: "604", scale: 2 }
+  value PGK { numeric: "598", scale: 2 }
+  value PHP { numeric: "608", scale: 2 }
+  value PKR { numeric: "586", scale: 2 }
+  value PLN { numeric: "985", scale: 2 }
+  value PYG { numeric: "600", scale: 0 }
+  value QAR { numeric: "634", scale: 2 }
+  value RON { numeric: "946", scale: 2 }
+  value RSD { numeric: "941", scale: 2 }
+  value RUB { numeric: "643", scale: 2 }
+  value RWF { numeric: "646", scale: 0 }
+  value SAR { numeric: "682", scale: 2 }
+  value SBD { numeric: "090", scale: 2 }
+  value SCR { numeric: "690", scale: 2 }
+  value SDG { numeric: "938", scale: 2 }
+  value SEK { numeric: "752", scale: 2 }
+  value SGD { numeric: "702", scale: 2 }
+  value SHP { numeric: "654", scale: 2 }
+  value SLE { numeric: "925", scale: 2 }
+  value SOS { numeric: "706", scale: 2 }
+  value SRD { numeric: "968", scale: 2 }
+  value SSP { numeric: "728", scale: 2 }
+  value STN { numeric: "930", scale: 2 }
+  value SVC { numeric: "222", scale: 2 }
+  value SYP { numeric: "760", scale: 2 }
+  value SZL { numeric: "748", scale: 2 }
+  value THB { numeric: "764", scale: 2 }
+  value TJS { numeric: "972", scale: 2 }
+  value TMT { numeric: "934", scale: 2 }
+  value TND { numeric: "788", scale: 3 }
+  value TOP { numeric: "776", scale: 2 }
+  value TRY { numeric: "949", scale: 2 }
+  value TTD { numeric: "780", scale: 2 }
+  value TWD { numeric: "901", scale: 2 }
+  value TZS { numeric: "834", scale: 2 }
+  value UAH { numeric: "980", scale: 2 }
+  value UGX { numeric: "800", scale: 0 }
+  value USD { numeric: "840", scale: 2 }
+  value USN { numeric: "997", scale: 2 }
+  value UYI { numeric: "940", scale: 0 }
+  value UYU { numeric: "858", scale: 2 }
+  value UYW { numeric: "927", scale: 4 }
+  value UZS { numeric: "860", scale: 2 }
+  value VED { numeric: "926", scale: 2 }
+  value VES { numeric: "928", scale: 2 }
+  value VND { numeric: "704", scale: 0 }
+  value VUV { numeric: "548", scale: 0 }
+  value WST { numeric: "882", scale: 2 }
+  value XAD { numeric: "396", scale: 2 }
+  value XAF { numeric: "950", scale: 0 }
+  value XAG { numeric: "961", scale: 0 }
+  value XAU { numeric: "959", scale: 0 }
+  value XBA { numeric: "955", scale: 0 }
+  value XBB { numeric: "956", scale: 0 }
+  value XBC { numeric: "957", scale: 0 }
+  value XBD { numeric: "958", scale: 0 }
+  value XCD { numeric: "951", scale: 2 }
+  value XCG { numeric: "532", scale: 2 }
+  value XDR { numeric: "960", scale: 0 }
+  value XOF { numeric: "952", scale: 0 }
+  value XPD { numeric: "964", scale: 0 }
+  value XPF { numeric: "953", scale: 0 }
+  value XPT { numeric: "962", scale: 0 }
+  value XSU { numeric: "994", scale: 0 }
+  value XTS { numeric: "963", scale: 0 }
+  value XUA { numeric: "965", scale: 0 }
+  value XXX { numeric: "999", scale: 0 }
+  value YER { numeric: "886", scale: 2 }
+  value ZAR { numeric: "710", scale: 2 }
+  value ZMW { numeric: "967", scale: 2 }
+  value ZWG { numeric: "924", scale: 2 }
   }
 
   write(value, out) {
@@ -916,9 +915,7 @@ shape Currency {
 
   format(value, flags) {
     return value;
-  }
 }
-
 shape Duration {
   title: { pt-BR: "Duração", en: "Duration" }
   base: decimal

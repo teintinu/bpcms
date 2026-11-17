@@ -5,25 +5,23 @@ shape StockStatus {
   title: { pt-BR: "Situação do estoque", en: "Stock status" }
   base: workflow
   initial: available
-  values {
-    available {
-      title: { pt-BR: "Disponível", en: "Available" }
-      icon: Available
-      ordinal: 10
-      next: [reserved, blocked]
-    }
-    reserved {
-      title: { pt-BR: "Reservado", en: "Reserved" }
-      icon: Reserved
-      ordinal: 20
-      next: [available, blocked]
-    }
-    blocked {
-      title: { pt-BR: "Bloqueado", en: "Blocked" }
-      icon: Blocked
-      ordinal: 30
-      next: [available]
-    }
+  value available {
+    title: { pt-BR: "Disponível", en: "Available" }
+    icon: Available
+    ordinal: 10
+    next: [reserved, blocked]
+  }
+  value reserved {
+    title: { pt-BR: "Reservado", en: "Reserved" }
+    icon: Reserved
+    ordinal: 20
+    next: [available, blocked]
+  }
+  value blocked {
+    title: { pt-BR: "Bloqueado", en: "Blocked" }
+    icon: Blocked
+    ordinal: 30
+    next: [available]
   }
   format: plain
 
@@ -33,25 +31,23 @@ shape ReservationStatus {
   title: { pt-BR: "Situação da reserva", en: "Reservation status" }
   base: workflow
   initial: active
-  values {
-    active {
-      title: { pt-BR: "Ativo", en: "Active" }
-      icon: Active
-      ordinal: 10
-      next: [released, expired]
-    }
-    released {
-      title: { pt-BR: "Liberada", en: "Released" }
-      icon: Released
-      ordinal: 20
-      next: []
-    }
-    expired {
-      title: { pt-BR: "Expirada", en: "Expired" }
-      icon: Expired
-      ordinal: 30
-      next: []
-    }
+  value active {
+    title: { pt-BR: "Ativo", en: "Active" }
+    icon: Active
+    ordinal: 10
+    next: [released, expired]
+  }
+  value released {
+    title: { pt-BR: "Liberada", en: "Released" }
+    icon: Released
+    ordinal: 20
+    next: []
+  }
+  value expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    icon: Expired
+    ordinal: 30
+    next: []
   }
   format: plain
 

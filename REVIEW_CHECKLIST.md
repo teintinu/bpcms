@@ -73,7 +73,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 | # | Tipo | Depende de | Exemplos | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/*/*-icons.bpcms` | ✅ |
-| 2 | Shape | Icon (values) | H.1–H.9 | 🟡 |
+| 2 | Shape | Icon (value) | H.1–H.9 | 🟡 |
 | 3 | Role | permissões | R.1–R.6 | ⬜ |
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
 | 5 | Parameter | Shape/Secret | PR.1–PR.6 | ⬜ |
@@ -103,7 +103,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 ## Checklist transversal (aplicar em toda rodada)
 
 - [ ] `title: I18n` obrigatório onde a regra exige: service, shape, document, field, view, event, parameter, role, organogram, icon; application.
-- [ ] Campos têm `title`; payloads de evento têm `title`; values de enum têm `title` + `icon`.
+- [ ] Campos têm `title`; payloads de evento têm `title`; cada `value` de enum tem `title` + `icon`.
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
 - [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
 - [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
@@ -189,7 +189,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 ## 2. Shape ✅
 
-**Depende de:** Icon (values enumerados), tipos embutidos.
+**Depende de:** Icon (valores enumerados), tipos embutidos.
 
 **Sintaxe/cláusulas:**
 
@@ -197,7 +197,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `title: I18n`
 - [x] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
 - [x] Shapes de `audio`/`image`/`video` declaram `capabilities { gui }`
-- [x] `values { <value> { title; icon; ordinal; next } }` — `classification`/`workflow`; ordinal 10, 20, 30...
+- [x] `value <name> { title; icon; ordinal }` — `classification`/`workflow`; ordinal 10, 20, 30...
 - [x] `currency`
 - [x] `dimension`, `units { unidade: { factor, title } }`
 - [x] `units` titles têm plural I18n e `format` escolhe `one`/`other`
@@ -223,7 +223,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `index`, `normalize`, `validate`, `sensitive`
 - [x] `fields { ... }` — shape composto
 - [x] `default`, `private`
-- [x] Enum: cada value tem `title` + `icon` + `ordinal` (exceto values-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
+- [x] Enum: cada `value` tem `title` + `icon` + `ordinal` (exceto valores-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
 - [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [x] `<Document>Id` é Shape implícito de FK; não declarar
 
@@ -231,9 +231,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Resultado da inspeção:**
 
-- [x] 39 Shapes de negócio + 57 Shapes std; todos com `title` (exceto values-base de `Currency`).
-- [x] 22 enums / 77 values; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
-- [x] `values` em bloco; sem `values: [...]`.
+- [x] 39 Shapes de negócio + 57 Shapes std; todos com `title` (exceto valores-base de `Currency`).
+- [x] 22 enums / 77 `value`; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
+- [x] `value` repetido por estado; sem bloco `values`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
 - [x] `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio; `MoneyBRL` foi removido.
 - [x] `Mass`, `Length`, `Volume`, `Percentage`, `Count` movidos para `bpcms.org/std`; `Money`/`Currency` vivem na std.
@@ -244,7 +244,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Pontos para decidir (sem alterar):**
 - [x] `formula: <expr>` e bloco `to/from` aceitos; shorthand só afim invertível.
-- [x] `std.Currency` é exceção: values-base sem `title`/`icon`/`ordinal`; `reintroduce` completa.
+- [x] `std.Currency` é exceção: `value` sem `title`/`icon`/`ordinal`; `reintroduce` completa.
 - [x] `std.Currency` não tem `toOrdinal`; stream/format/parse usam o código string.
 - [x] `Currency.format`/`parse` retornam o próprio código string.
 - [x] `Address.format` formata BR/US conforme `std.regionalization`.
@@ -259,6 +259,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
 - [x] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
 - [x] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
+
+**Pendência:** migrar `next` para `transition` dentro de `value`; o compilador gerará `next` internamente.
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 

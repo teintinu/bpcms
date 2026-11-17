@@ -11,22 +11,20 @@ shape SampleCode {
 shape SampleKind {
   title: { pt-BR: "Origem da amostra", en: "Sample origin" }
   base: classification
-  values {
-    patient {
-      title: { pt-BR: "Paciente", en: "Patient" }
-      icon: Patient
-      ordinal: 10
-    }
-    support {
-      title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
-      icon: Support
-      ordinal: 20
-    }
-    control {
-      title: { pt-BR: "Controle", en: "Control" }
-      icon: Control
-      ordinal: 30
-    }
+  value patient {
+    title: { pt-BR: "Paciente", en: "Patient" }
+    icon: Patient
+    ordinal: 10
+  }
+  value support {
+    title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
+    icon: Support
+    ordinal: 20
+  }
+  value control {
+    title: { pt-BR: "Controle", en: "Control" }
+    icon: Control
+    ordinal: 30
   }
   format: plain
 }
@@ -35,43 +33,41 @@ shape SampleStatus {
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
   base: workflow
   initial: collected
-  values {
-    collected {
-      title: { pt-BR: "Coletada", en: "Collected" }
-      icon: Collected
-      ordinal: 10
-      next: [received, rejected]
-    }
-    received {
-      title: { pt-BR: "Recebida", en: "Received" }
-      icon: Received
-      ordinal: 20
-      next: [processing, referred, rejected]
-    }
-    processing {
-      title: { pt-BR: "Em processamento", en: "Processing" }
-      icon: Processing
-      ordinal: 30
-      next: [resulted]
-    }
-    resulted {
-      title: { pt-BR: "Resultada", en: "Resulted" }
-      icon: Resulted
-      ordinal: 40
-      next: []
-    }
-    referred {
-      title: { pt-BR: "Encaminhada", en: "Referred" }
-      icon: Referred
-      ordinal: 50
-      next: [resulted]
-    }
-    rejected {
-      title: { pt-BR: "Rejeitada", en: "Rejected" }
-      icon: Rejected
-      ordinal: 60
-      next: []
-    }
+  value collected {
+    title: { pt-BR: "Coletada", en: "Collected" }
+    icon: Collected
+    ordinal: 10
+    next: [received, rejected]
+  }
+  value received {
+    title: { pt-BR: "Recebida", en: "Received" }
+    icon: Received
+    ordinal: 20
+    next: [processing, referred, rejected]
+  }
+  value processing {
+    title: { pt-BR: "Em processamento", en: "Processing" }
+    icon: Processing
+    ordinal: 30
+    next: [resulted]
+  }
+  value resulted {
+    title: { pt-BR: "Resultada", en: "Resulted" }
+    icon: Resulted
+    ordinal: 40
+    next: []
+  }
+  value referred {
+    title: { pt-BR: "Encaminhada", en: "Referred" }
+    icon: Referred
+    ordinal: 50
+    next: [resulted]
+  }
+  value rejected {
+    title: { pt-BR: "Rejeitada", en: "Rejected" }
+    icon: Rejected
+    ordinal: 60
+    next: []
   }
   format: plain
 }
@@ -79,27 +75,25 @@ shape SampleStatus {
 shape ExamCode {
   title: { pt-BR: "Exame", en: "Exam" }
   base: classification
-  values {
-    hemogram {
-      title: { pt-BR: "Hemograma", en: "Complete blood count" }
-      icon: Hemogram
-      ordinal: 10
-    }
-    glucose {
-      title: { pt-BR: "Glicemia", en: "Glucose" }
-      icon: Glucose
-      ordinal: 20
-    }
-    culture {
-      title: { pt-BR: "Cultura", en: "Culture" }
-      icon: Culture
-      ordinal: 30
-    }
-    hba1c {
-      title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
-      icon: Hba1c
-      ordinal: 40
-    }
+  value hemogram {
+    title: { pt-BR: "Hemograma", en: "Complete blood count" }
+    icon: Hemogram
+    ordinal: 10
+  }
+  value glucose {
+    title: { pt-BR: "Glicemia", en: "Glucose" }
+    icon: Glucose
+    ordinal: 20
+  }
+  value culture {
+    title: { pt-BR: "Cultura", en: "Culture" }
+    icon: Culture
+    ordinal: 30
+  }
+  value hba1c {
+    title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
+    icon: Hba1c
+    ordinal: 40
   }
   format: plain
 }
@@ -108,43 +102,41 @@ shape ExamOrderStatus {
   title: { pt-BR: "Situação do exame", en: "Exam order status" }
   base: workflow
   initial: requested
-  values {
-    requested {
-      title: { pt-BR: "Solicitado", en: "Requested" }
-      icon: Requested
-      ordinal: 10
-      next: [collected, cancelled]
-    }
-    collected {
-      title: { pt-BR: "Coletado", en: "Collected" }
-      icon: Collected
-      ordinal: 20
-      next: [processing, referred, cancelled]
-    }
-    processing {
-      title: { pt-BR: "Em processamento", en: "Processing" }
-      icon: Processing
-      ordinal: 30
-      next: [resulted, referred, cancelled]
-    }
-    resulted {
-      title: { pt-BR: "Resultado emitido", en: "Resulted" }
-      icon: Resulted
-      ordinal: 40
-      next: []
-    }
-    referred {
-      title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
-      icon: Referred
-      ordinal: 50
-      next: [resulted, cancelled]
-    }
-    cancelled {
-      title: { pt-BR: "Cancelado", en: "Cancelled" }
-      icon: Cancelled
-      ordinal: 60
-      next: []
-    }
+  value requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    icon: Requested
+    ordinal: 10
+    next: [collected, cancelled]
+  }
+  value collected {
+    title: { pt-BR: "Coletado", en: "Collected" }
+    icon: Collected
+    ordinal: 20
+    next: [processing, referred, cancelled]
+  }
+  value processing {
+    title: { pt-BR: "Em processamento", en: "Processing" }
+    icon: Processing
+    ordinal: 30
+    next: [resulted, referred, cancelled]
+  }
+  value resulted {
+    title: { pt-BR: "Resultado emitido", en: "Resulted" }
+    icon: Resulted
+    ordinal: 40
+    next: []
+  }
+  value referred {
+    title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
+    icon: Referred
+    ordinal: 50
+    next: [resulted, cancelled]
+  }
+  value cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    icon: Cancelled
+    ordinal: 60
+    next: []
   }
   format: plain
 }
