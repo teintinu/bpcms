@@ -47,19 +47,28 @@ shape ProductStatus {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    next: [published, archived]
+    transition Published {
+      title: { pt-BR: "Publicado", en: "Published" }
+      to: published
+    }
+    transition Archived {
+      title: { pt-BR: "Arquivado", en: "Archived" }
+      to: archived
+    }
   }
   value published {
     title: { pt-BR: "Publicado", en: "Published" }
     icon: Published
     ordinal: 20
-    next: [archived]
+    transition Archived {
+      title: { pt-BR: "Arquivado", en: "Archived" }
+      to: archived
+    }
   }
   value archived {
     title: { pt-BR: "Arquivado", en: "Archived" }
     icon: Archived
     ordinal: 30
-    next: []
   }
   format: plain
 

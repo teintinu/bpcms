@@ -970,25 +970,6 @@ document Invoice {
     byStatusDate: [status, issuedAt] range
   }
 
-  events {
-    Issued {
-      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
-      key: this.id
-      payload {
-        number: InvoiceNumber
-        total: std.Money
-      }
-    }
-
-    Cancelled {
-      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      key: this.id
-      payload {
-        reason: string
-      }
-    }
-  }
-
   actions {
     issue() {
       title: { pt-BR: "Emitir", en: "Issue" }
@@ -1001,10 +982,6 @@ document Invoice {
       issuedAt = now()
       audit("invoice.issued")
 
-      emit Issued {
-        number: number
-        total: total
-      }
     }
 
     cancel(reason: string) {
@@ -1017,9 +994,6 @@ document Invoice {
       status => cancelled
       audit("invoice.cancelled", reason)
 
-      emit Cancelled {
-        reason: reason
-      }
     }
   }
 
@@ -1187,19 +1161,6 @@ document SupportTicket {
     search: [subject, description] search
   }
 
-  events {
-    Resolved {
-      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
-      key: this.id
-      payload { assignee: User }
-    }
-    Reopened {
-      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
-      key: this.id
-      payload { reason: string }
-    }
-  }
-
   actions {
     assign(user: User) {
       title: { pt-BR: "Atribuir", en: "Assign" }
@@ -1227,7 +1188,6 @@ document SupportTicket {
 
       status => resolved
       audit("ticket.resolved")
-      emit Resolved { assignee }
     }
 
     reopen(reason: string) {
@@ -1239,7 +1199,6 @@ document SupportTicket {
 
       status => open
       audit("ticket.reopened", reason)
-      emit Reopened { reason: reason }
     }
   }
 
@@ -3478,121 +3437,65 @@ document OperationsControl {
 
 ## Event
 
-### E.1 Pedido aprovado
+### E.1 Evento de workflow
 
 ```bpcms
-document Order {
+shape OrderStatus {
+  base: workflow
+  initial: draft
+
+  value draft {
+    title: { pt-BR: "Rascunho", en: "Draft" }
+
+    transition Placed {
+      title: { pt-BR: "Pedido realizado", en: "Order placed" }
+      to: placed
+      payload {
+        customer: User
+        total: std.Money
+      }
+    }
+  }
+
+  value placed {
+    title: { pt-BR: "Realizado", en: "Placed" }
+  }
+}
+```
+
+*Valida: evento dentro da transição, sem `events`/`emit` na action.*
+
+### E.2 Evento sem workflow
+
+```bpcms
+document Store {
   events {
-    Approved {
-      title: { pt-BR: "Pedido aprovado", en: "Order approved" }
+    Renamed {
+      title: { pt-BR: "Loja renomeada", en: "Store renamed" }
       key: this.id
       payload {
-        approvedBy: User
-        approvedAt: DateTime
+        oldName: string
+        newName: string
       }
     }
   }
 
   actions {
-    approve() {
-      title: { pt-BR: "Aprovar", en: "Approve" }
+    rename(name: string) {
+      title: { pt-BR: "Renomear", en: "Rename" }
       permission: Manager
-      status => approved
-      emit Approved {
-        approvedBy: currentUser.id
-        approvedAt: now()
+      emit Renamed {
+        oldName: old.name
+        newName: new.name
       }
     }
   }
 }
 ```
 
-*Valida: evento dentro do Document, sem `producer`/`consumers`, emitido por action.*
+*Valida: evento sem workflow em `events`, emitido pela action.*
 
-### E.2 Remessa despachada
-
-```bpcms
-document Shipment {
-  events {
-    Dispatched {
-      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
-      key: this.id
-      payload {
-        order: Order
-        carrier: CarrierRef
-        tracking: TrackingCode
-        dispatchedAt: DateTime
-      }
-    }
-  }
-}
-```
-
-*Valida: evento que cruza serviços e alimenta rastreio/notificação.*
-
-### E.3 Exame liberado
-
-```bpcms
-document LabExam {
-  events {
-    Released {
-      title: { pt-BR: "Exame liberado", en: "Exam released" }
-      key: this.id
-      payload {
-        patient: Patient
-        releasedBy: User
-        releasedAt: DateTime
-        critical: boolean
-      }
-      sensitivity: restricted
-    }
-  }
-}
-```
-
-*Valida: evento com dado sensível e referência cross-service.*
-
-### E.4 Pagamento falhou
-
-```bpcms
-document Payment {
-  events {
-    Failed {
-      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
-      key: this.id
-      payload {
-        order: Order
-        reason: PaymentFailureReason
-        failedAt: DateTime
-      }
-    }
-  }
-}
-```
-
-*Valida: evento de falha consumido por Checkout, Notifications e Support via assinatura.*
-
-### E.5 Estoque baixo
-
-```bpcms
-document StockItem {
-  events {
-    Low {
-      title: { pt-BR: "Estoque baixo", en: "Stock low" }
-      key: this.id
-      payload {
-        product: Product
-        available: Quantity
-        threshold: Quantity
-      }
-    }
-  }
-}
-```
-
-*Valida: evento de alerta com quantidades e limiar.*
-
-### E.6 Assinatura cross-service
+### E.3 FQN cross-service
 
 ```bpcms
 process PaymentSaga {
@@ -3601,7 +3504,42 @@ process PaymentSaga {
 }
 ```
 
-*Valida: processo assina `Document.Event`; não existe artefato Event de topo.*
+*Valida: assinatura `SERVICO.DOCUMENTO.EVENTO`.*
+
+### E.4 Payload com DocumentRef
+
+```bpcms
+transition Placed {
+  title: { pt-BR: "Pedido realizado", en: "Order placed" }
+  to: placed
+  payload {
+    customer: User
+    total: std.Money
+  }
+}
+```
+
+*Valida: payload com `DocumentRef` e valor monetário.*
+
+### E.5 Transição sem payload
+
+```bpcms
+transition Closed {
+  title: { pt-BR: "Fechado", en: "Closed" }
+  to: closed
+}
+```
+
+*Valida: payload vazio permitido.*
+
+### E.6 Eventos não são artefatos de topo
+
+Não existe `event <Name> { ... }`.
+
+Eventos existem em:
+
+- `transition` — workflow;
+- `events` — sem workflow.
 
 ## Job / Schedule
 

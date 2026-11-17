@@ -9,31 +9,68 @@ shape TicketStatus {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
-    next: [in_progress, waiting, resolved]
+    transition InProgress {
+      title: { pt-BR: "Em andamento", en: "In progress" }
+      to: in_progress
+    }
+    transition Waiting {
+      title: { pt-BR: "Aguardando", en: "Waiting" }
+      to: waiting
+    }
+    transition Resolved {
+      title: { pt-BR: "Resolvido", en: "Resolved" }
+      to: resolved
+      payload {
+        assignee: User
+      }
+    }
   }
   value in_progress {
     title: { pt-BR: "Em andamento", en: "In progress" }
     icon: InProgress
     ordinal: 20
-    next: [waiting, resolved]
+    transition Waiting {
+      title: { pt-BR: "Aguardando", en: "Waiting" }
+      to: waiting
+    }
+    transition Resolved {
+      title: { pt-BR: "Resolvido", en: "Resolved" }
+      to: resolved
+    }
   }
   value waiting {
     title: { pt-BR: "Aguardando", en: "Waiting" }
     icon: Waiting
     ordinal: 30
-    next: [in_progress, resolved]
+    transition InProgress {
+      title: { pt-BR: "Em andamento", en: "In progress" }
+      to: in_progress
+    }
+    transition Resolved {
+      title: { pt-BR: "Resolvido", en: "Resolved" }
+      to: resolved
+    }
   }
   value resolved {
     title: { pt-BR: "Resolvido", en: "Resolved" }
     icon: Resolved
     ordinal: 40
-    next: [closed]
+    transition Closed {
+      title: { pt-BR: "Fechado", en: "Closed" }
+      to: closed
+    }
+    transition Reopened {
+      title: { pt-BR: "Reaberto", en: "Reopened" }
+      to: open
+      payload {
+        reason: string
+      }
+    }
   }
   value closed {
     title: { pt-BR: "Fechado", en: "Closed" }
     icon: Closed
     ordinal: 50
-    next: []
   }
   format: plain
 
@@ -47,31 +84,42 @@ shape ReturnStatus {
     title: { pt-BR: "Solicitado", en: "Requested" }
     icon: Requested
     ordinal: 10
-    next: [approved, rejected]
+    transition Approved {
+      title: { pt-BR: "Aprovado", en: "Approved" }
+      to: approved
+    }
+    transition Rejected {
+      title: { pt-BR: "Rejeitado", en: "Rejected" }
+      to: rejected
+    }
   }
   value approved {
     title: { pt-BR: "Aprovado", en: "Approved" }
     icon: Approved
     ordinal: 20
-    next: [received]
+    transition Received {
+      title: { pt-BR: "Recebida", en: "Received" }
+      to: received
+    }
   }
   value rejected {
     title: { pt-BR: "Rejeitado", en: "Rejected" }
     icon: Rejected
     ordinal: 30
-    next: []
   }
   value received {
     title: { pt-BR: "Recebida", en: "Received" }
     icon: Received
     ordinal: 40
-    next: [refunded]
+    transition Refunded {
+      title: { pt-BR: "Reembolsado", en: "Refunded" }
+      to: refunded
+    }
   }
   value refunded {
     title: { pt-BR: "Reembolsado", en: "Refunded" }
     icon: Refunded
     ordinal: 50
-    next: []
   }
   format: plain
 

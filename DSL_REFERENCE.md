@@ -786,7 +786,7 @@ document Invoice {
 - `title` é o label do botão;
 - `permission` é a role exigida;
 - `status => approved` declara a transição;
-- o build valida `approved` em `status.next`;
+- o build valida `approved` nas transições do workflow;
 - a UI desabilita se a transição não for possível;
 - permissão negada = botão desabilitado;
 - a mensagem de permissão é genérica e definida pelo construtor;
@@ -861,7 +861,7 @@ document Shipment {
 | `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
 | `classification` | `classification: "<url>"` | Classificação externa; reservada à stdlib (`Currency`). |
-| `value` | `value draft { title; icon; ordinal: 10; next: [...] }` | Enum; `classification`/`workflow`; repete `value` por estado. Exceção: `value` base de `std.Currency` não exige metadados. |
+| `value` | `value draft { title; icon; ordinal; transition Issued { to: issued; payload { ... } } }` | Enum; `classification`/`workflow`; repete `value` por estado. Exceção: `value` base de `std.Currency` não exige metadados. |
 | `initial` | `initial: draft` | Estado inicial do `workflow`; obrigatório e único. |
 | `dimension` | `dimension: mass` | Grandeza; impede comparar com outra dimensão. |
 | `units` | `units { m: { factor: 1 }, cm: { factor: 0.01 } }` | Primeira unidade é a referência; demais usam `factor` ou `formula`. |
@@ -914,8 +914,6 @@ toNumber(value) {
 
 ## 6.1 Valores enumerados
 
-> Migração pendente: `next` será substituído por `transition` dentro de cada `value`; o compilador gerará `next` internamente.
-
 Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório.
 
 ```bpcms
@@ -928,31 +926,61 @@ shape InvoiceStatus {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    next: [issued, cancelled]
+    transition Issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      to: issued
+      payload {
+        number: InvoiceNumber
+        total: std.Money
+      }
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+      payload { reason: string }
+    }
   }
   value issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
-    next: [paid, overdue, cancelled]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
+    transition Overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      to: overdue
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+    }
   }
   value paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: Paid
     ordinal: 30
-    next: []
+
   }
   value overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 40
-    next: [paid, cancelled]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+    }
   }
   value cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 50
-    next: []
+
   }
 }
 ```
@@ -1051,12 +1079,12 @@ shape TaxRegimeCode {
 }
 ```
 
-- `classification` não tem `initial` nem `next`.
+- `classification` não tem `initial` nem transições.
 - `workflow` tem exatamente um `initial`.
-- Todo state de `workflow` tem `next`; `next: []` é terminal.
-- `next` referencia apenas states do mesmo workflow.
+- `transition` define as arestas; estado sem transição é terminal.
+- `to` referencia apenas states do mesmo workflow.
 - Self-transition é inválida no v1.
-- `canTransitionTo(next)` é um método automático do workflow.
+- `canTransitionTo` usa o `next` gerado pelo compilador.
 - `transitionTo` não existe; alterar o valor para um próximo estado inválido lança `E_INVALID_TRANSITION`.
 - Ordinal continua explícito, 10, 20, 30...
 
@@ -2109,57 +2137,111 @@ Não há `report <Name> { ... }` como artefato de topo. Os arquivos `*-reports.b
 
 ---
 
-# 22. Event (dentro do Document)
+# 22. Event
 
-Evento não é artefato de topo. É declarado dentro do Document que o produz.
+Eventos de workflow ficam na `transition` do `value`. Eventos sem workflow ficam em `events` no Document.
 
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `events` | `events { Approved { ... } }` | Eventos do documento. |
-| nome | `Approved` | Fato no passado; referência externa `Document.Approved`. |
-| `title` | `title: { ... }` | I18n obrigatório. |
-| `version` | `version: 1` | Versão do contrato. |
-| `payload` | `payload { reason: string }` | Dados de negócio do fato. |
-| `key` | `key: orderId` | Chave de partição/ordenação. |
-| `sensitivity` | `sensitivity: restricted` | Restrição de dados. |
-| `emit` | `emit Approved { ... }` | Emissão a partir da action. |
+## 22.1 Evento de workflow
 
 ```bpcms
-document Order {
+value issued {
+  title: { pt-BR: "Emitida", en: "Issued" }
+
+  transition Paid {
+    title: { pt-BR: "Nota paga", en: "Invoice paid" }
+    to: paid
+    payload {
+      paidAt: DateTime
+    }
+  }
+}
+```
+
+- o nome da transição é o evento;
+- `to` é o destino;
+- `payload` é o contrato do evento;
+- a action usa `status => paid`;
+- a action não usa `emit` para workflow.
+
+## 22.2 Evento sem workflow
+
+```bpcms
+document Store {
   events {
-    Approved {
-      title: { pt-BR: "Pedido aprovado", en: "Order approved" }
-      key: orderId
+    Renamed {
+      title: { pt-BR: "Loja renomeada", en: "Store renamed" }
+      key: this.id
       payload {
-        approvedBy: User
-        approvedAt: DateTime
+        oldName: string
+        newName: string
       }
     }
   }
 
   actions {
-    approve() {
-      title: { pt-BR: "Aprovar", en: "Approve" }
+    rename(name: string) {
+      title: { pt-BR: "Renomear", en: "Rename" }
       permission: Manager
-      status => approved
-      emit Approved {
-        approvedBy: currentUser.id
-        approvedAt: now()
+      emit Renamed {
+        oldName: old.name
+        newName: new.name
       }
     }
   }
 }
 ```
 
-Regras:
+## 22.3 FQN
 
+```text
+SERVICO.DOCUMENTO.EVENTO
+```
+
+Exemplo:
+
+```text
+Billing.Invoice.Paid
+```
+
+Canônico:
+
+```text
+example.com/services/billing#Invoice.Paid
+```
+
+- `SERVICO` é o dono do Document;
+- alias é sintaxe local;
+- em cada serviço, o código usa o alias daquele serviço;
+- na aplicação, o código usa o alias da aplicação;
+- o alias não altera a identidade canônica;
+- o envelope publica a forma canônica;
 - `producer` é implícito;
-- `consumers` não pertencem ao evento;
-- processo/integração/job assinam `Order.Approved`;
-- ação que muda estado precisa emitir evento;
-- ação com `status =>` precisa emitir evento;
-- payload contém só dados de negócio;
-- envelope (`eventId`, `occurredAt`, `actorId`, `correlationId`, `aggregateVersion`) é gerado pelo builder.
+- `consumers` não pertencem ao evento.
+
+Exemplo:
+
+```text
+App1: BillingOnApp1.Invoice.Paid
+S1:   BillingOnS1.Invoice.Paid
+S2:   BillingOnS2.Invoice.Paid
+```
+
+Todos resolvem para:
+
+```text
+example.com/services/billing#Invoice.Paid
+```
+
+## 22.4 Regras
+
+- evento de workflow não fica em `events`;
+- evento sem workflow fica em `events` e usa `emit`;
+- action com `status =>` não usa `emit`;
+- payload de workflow fica na transição;
+- payload sem workflow fica em `events`;
+- `key` usa `this.id` ou `referencia.id`;
+- processo/integração/job assinam `Document.Event`;
+- evento inexistente = erro.
 
 ---
 
@@ -2283,8 +2365,8 @@ policy FourEyesPayment {
 | Extensão | pai inexistente, múltiplo, ciclo, fora do serviço ou tentativa de redeclarar herdado | `E_EXTENDS` |
 | Tipo | campo recebe Shape incompatível | `E_TYPE` |
 | Constructor | propriedade/valor inválido em `new` | `E_CONSTRUCTOR_PROPERTY` |
-| Workflow | initial/next inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_NEXT` / `E_WORKFLOW_TRANSITION` |
-| Classification | `initial`/`next` em classification | `E_CLASSIFICATION_TRANSITION` |
+| Workflow | initial/transition inválido, state inexistente ou self-transition | `E_WORKFLOW_INITIAL` / `E_WORKFLOW_TRANSITION` |
+| Classification | `initial`/`transition` em classification | `E_CLASSIFICATION_TRANSITION` |
 | Runtime | mudança de estado não permitida | `E_INVALID_TRANSITION` |
 | Moeda | metadado ausente, moeda incompatível, parse/scale inválido | `E_CURRENCY_METADATA_MISSING` / `E_CURRENCY_MISMATCH` / `E_MONEY_PARSE` / `E_CURRENCY_INFIX_SCALE` |
 | Reintroduce | conflito ao completar definição externa | `E_REINTRODUCE_CONFLICT` |

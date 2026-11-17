@@ -23,48 +23,22 @@ document Payment {
     byStatus: [status, capturedAt] range
   }
 
-  events {
-    Authorized {
-      title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      key: this.id
-      payload { amount: std.Money }
-    }
-    Succeeded {
-      title: { pt-BR: "Pagamento aprovado", en: "Payment succeeded" }
-      key: this.id
-      payload { amount: std.Money }
-    }
-    Failed {
-      title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
-      key: this.id
-      payload { reason: string }
-    }
-    RefundIssued {
-      title: { pt-BR: "Reembolso emitido", en: "Refund issued" }
-      key: this.id
-      payload { amount: std.Money }
-    }
-  }
 
   actions {
     authorize() {
       title: { pt-BR: "Autorizar", en: "Authorize" }
       permission: Manager
-      status => authorized
-      emit Authorized { amount: amount }
     }
     capture() {
       title: { pt-BR: "Capturar", en: "Capture" }
       permission: Manager
       status => captured
       capturedAt = now()
-      emit Succeeded { amount: amount }
     }
     refund() {
       title: { pt-BR: "Reembolsar", en: "Refund" }
       permission: Manager
       status => refunded
-      emit RefundIssued { amount: amount }
     }
     retryFailed(){
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }

@@ -205,7 +205,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `unit` e `units` mutuamente exclusivos; `Percentage` usa `unit: "%"`
 - [x] `format` auto-seleciona unidade; `flags.unit` força
 - [x] `maxLength`; `min`/`max`/`scale` no field
-- [x] `initial` único em `workflow`; `next` obrigatório; `[]` terminal
+- [x] `initial` único em `workflow`; `transition` define arestas; estado sem transição é terminal
 - [x] `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`
 - [x] `parse`, `format`, `compare`, `aggregate`
 - [x] `write(value, out)` com `out` inferido como `streamWriter`; `format(value, flags)` com `value` explícito; `read(in)` com `in` inferido como `streamReader`; `void` inferido
@@ -223,7 +223,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `index`, `normalize`, `validate`, `sensitive`
 - [x] `fields { ... }` — shape composto
 - [x] `default`, `private`
-- [x] Enum: cada `value` tem `title` + `icon` + `ordinal` (exceto valores-base de `std.Currency`); workflow também `next`; icons são locais ao serviço
+- [x] Enum: cada `value` tem `title` + `icon` + `ordinal` (exceto valores-base de `std.Currency`); workflow usa `transition`; icons são locais ao serviço
 - [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [x] `<Document>Id` é Shape implícito de FK; não declarar
 
@@ -232,7 +232,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Resultado da inspeção:**
 
 - [x] 39 Shapes de negócio + 57 Shapes std; todos com `title` (exceto valores-base de `Currency`).
-- [x] 22 enums / 77 `value`; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`next`; 6 classifications sem transições.
+- [x] 22 enums / 77 `value`; todos com `title` + `icon` + `ordinal`; 16 workflows com `initial`/`transition`; 6 classifications sem transições.
 - [x] `value` repetido por estado; sem bloco `values`.
 - [x] Shape composto `TrackingEvent` com fields tipados/title.
 - [x] `Email`, `Phone`, `Image`, `LocaleTag`, `YearMonth` continuam em serviços de negócio; `MoneyBRL` foi removido.
@@ -259,8 +259,6 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `bpcms.org/std` definido e importado; 57 Shapes; migração concluída?
 - [x] `format`/`parse`/`validate` aceitam valores que não estão nos exemplos; a lista de valores precisa ser fechada?
 - [x] `Shape` tem `title`, mas fields de Shape composto precisam de `title` explícito em todos os casos?
-
-**Pendência:** migrar `next` para `transition` dentro de `value`; o compilador gerará `next` internamente.
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
@@ -1027,6 +1025,12 @@ O item 27 (`reintroduce`) fica como revisão transversal depois das keywords.
 Próximo: **Document** 🟡.
 
 Service revisado; seguimos para **Document**.
+
+## Pendências ao final do checklist
+
+- [ ] Riscos da migração `next` → `transition`: payload perdido, processos escutando evento renomeado, workflows compartilhados, ações em estados sem transição.
+- [ ] Validar FQN canônico versus alias local na aplicação.
+- [ ] Revisar eventos não-workflow remanescentes.
 
 ## Pendências de revisão de keywords
 

@@ -31,25 +31,41 @@ shape NotificationStatus {
     title: { pt-BR: "Na fila", en: "Queued" }
     icon: Queued
     ordinal: 10
-    next: [sent, failed]
+    transition Sent {
+      title: { pt-BR: "Enviada", en: "Sent" }
+      to: sent
+    }
+    transition Failed {
+      title: { pt-BR: "Falhou", en: "Failed" }
+      to: failed
+    }
   }
   value sent {
     title: { pt-BR: "Enviada", en: "Sent" }
     icon: Sent
     ordinal: 20
-    next: [read, failed]
+    transition Read {
+      title: { pt-BR: "Lida", en: "Read" }
+      to: read
+    }
+    transition Failed {
+      title: { pt-BR: "Falhou", en: "Failed" }
+      to: failed
+    }
   }
   value failed {
     title: { pt-BR: "Falhou", en: "Failed" }
     icon: Failed
     ordinal: 30
-    next: [queued]
+    transition Queued {
+      title: { pt-BR: "Na fila", en: "Queued" }
+      to: queued
+    }
   }
   value read {
     title: { pt-BR: "Lida", en: "Read" }
     icon: Read
     ordinal: 40
-    next: []
   }
   format: plain
 

@@ -39,18 +39,6 @@ document Ticket {
     search: [subject, description] search
   }
 
-  events {
-    Resolved {
-      title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
-      key: this.id
-      payload { assignee: User }
-    }
-    Reopened {
-      title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
-      key: this.id
-      payload { reason: string }
-    }
-  }
 
   actions {
     assign(user: User){
@@ -74,7 +62,6 @@ document Ticket {
       require assignee != null
       status => resolved
       audit("ticket.resolved")
-      emit Resolved { assignee: assignee.id }
     }
 
     reopen(reason: string){
@@ -83,7 +70,6 @@ document Ticket {
       require reason.length >= 10
       status => open
       audit("ticket.reopened", reason)
-      emit Reopened { reason: reason }
     }
 
     escalateBreached(){
@@ -126,42 +112,18 @@ document ReturnRequest {
     byStatus: [status, requestedAt] range
   }
 
-  events {
-    Requested {
-      title: { pt-BR: "Devolução solicitada", en: "Return requested" }
-      key: this.id
-      payload { reason: string }
-    }
-    Approved {
-      title: { pt-BR: "Devolução aprovada", en: "Return approved" }
-      key: this.id
-    }
-    Rejected {
-      title: { pt-BR: "Devolução rejeitada", en: "Return rejected" }
-      key: this.id
-      payload { reason: string }
-    }
-    Refunded {
-      title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
-      key: this.id
-      payload { refundAmount: std.Money }
-    }
-  }
 
   actions {
     request(reason: string){
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
       permission: Clerk
       require reason.length >= 10
-      status => requested
-      emit Requested { reason: reason }
     }
 
     approve(){
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
       permission: Manager
       status => approved
-      emit Approved
     }
 
     reject(reason: string){
@@ -169,14 +131,12 @@ document ReturnRequest {
       permission: Manager
       require reason.length >= 10
       status => rejected
-      emit Rejected { reason: reason }
     }
 
     refund(){
       title: { pt-BR: "Reembolsar", en: "Refund" }
       permission: Manager
       status => refunded
-      emit Refunded { refundAmount: refundAmount }
     }
   }
 

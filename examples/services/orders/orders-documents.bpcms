@@ -55,18 +55,6 @@ document Order {
     byStatus: [status, createdAt] range
   }
 
-  events {
-    Placed {
-      title: { pt-BR: "Pedido realizado", en: "Order placed" }
-      key: this.id
-      payload { customer: User; total: std.Money }
-    }
-    Cancelled {
-      title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
-      key: this.id
-      payload { reason: string }
-    }
-  }
 
   actions {
     create(customer: User, discount: std.Percentage){
@@ -88,7 +76,6 @@ document Order {
       status => placed
       placedAt = now()
       audit("order.placed")
-      emit Placed { customer: customer; total: total }
     }
 
     cancel(reason: string){
@@ -97,14 +84,12 @@ document Order {
       require reason.length >= 10
       status => cancelled
       audit("order.cancelled", reason)
-      emit Cancelled { reason: reason }
     }
 
     expireDraft(){
       title: { pt-BR: "Expirar rascunho", en: "Expire draft" }
       permission: Manager
       status => cancelled
-      emit Cancelled { reason: "draft expired" }
     }
   }
 

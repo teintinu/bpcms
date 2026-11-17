@@ -24,19 +24,24 @@ shape CitizenStatus {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
     ordinal: 10
-    next: [merged, blocked]
+    transition Merged {
+      title: { pt-BR: "Mesclado", en: "Merged" }
+      to: merged
+    }
+    transition Blocked {
+      title: { pt-BR: "Bloqueado", en: "Blocked" }
+      to: blocked
+    }
   }
   value merged {
     title: { pt-BR: "Mesclado", en: "Merged" }
     icon: Merged
     ordinal: 20
-    next: []
   }
   value blocked {
     title: { pt-BR: "Bloqueado", en: "Blocked" }
     icon: Blocked
     ordinal: 30
-    next: []
   }
   format: plain
 

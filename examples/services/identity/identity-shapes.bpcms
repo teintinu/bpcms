@@ -10,19 +10,32 @@ shape UserStatus {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
     ordinal: 10
-    next: [suspended, disabled]
+    transition Suspended {
+      title: { pt-BR: "Suspenso", en: "Suspended" }
+      to: suspended
+    }
+    transition Disabled {
+      title: { pt-BR: "Desativado", en: "Disabled" }
+      to: disabled
+    }
   }
   value suspended {
     title: { pt-BR: "Suspenso", en: "Suspended" }
     icon: Suspended
     ordinal: 20
-    next: [active, disabled]
+    transition Active {
+      title: { pt-BR: "Ativo", en: "Active" }
+      to: active
+    }
+    transition Disabled {
+      title: { pt-BR: "Desativado", en: "Disabled" }
+      to: disabled
+    }
   }
   value disabled {
     title: { pt-BR: "Desativado", en: "Disabled" }
     icon: Disabled
     ordinal: 30
-    next: []
   }
   format: plain
 
@@ -36,19 +49,24 @@ shape SessionStatus {
     title: { pt-BR: "Ativo", en: "Active" }
     icon: Active
     ordinal: 10
-    next: [ended, expired]
+    transition Ended {
+      title: { pt-BR: "Encerrada", en: "Ended" }
+      to: ended
+    }
+    transition Expired {
+      title: { pt-BR: "Expirada", en: "Expired" }
+      to: expired
+    }
   }
   value ended {
     title: { pt-BR: "Encerrada", en: "Ended" }
     icon: Ended
     ordinal: 20
-    next: []
   }
   value expired {
     title: { pt-BR: "Expirada", en: "Expired" }
     icon: Expired
     ordinal: 30
-    next: []
   }
   format: plain
 

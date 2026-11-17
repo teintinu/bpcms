@@ -60,18 +60,6 @@ document Invoice {
     byStatus: [status, dueAt] range
   }
 
-  events {
-    Issued {
-      title: { pt-BR: "Nota emitida", en: "Invoice issued" }
-      key: this.id // TODO existe mesmo necessidade disso? algum key será diferente?
-      payload { number: InvoiceNumber; total: std.Money }
-    }
-    Cancelled {
-      title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      key: this.id
-      payload { reason: string }
-    }
-  }
 
   actions {
     issue(series: string, number: string){
@@ -82,7 +70,6 @@ document Invoice {
       status => issued
       issuedAt = now()
       audit("invoice.issued", number)
-      emit Issued { number: this.number; total: this.total }
     }
 
     cancel(reason: string){
@@ -92,7 +79,6 @@ document Invoice {
       require reason.length >= 10
       status => cancelled
       audit("invoice.cancelled", reason)
-      emit Cancelled { reason }
     }
 
     closeMonth(){
@@ -131,32 +117,18 @@ document CreditNote {
     byStatus: [status, issuedAt] range
   }
 
-  events {
-    Issued {
-      title: { pt-BR: "Nota de crédito emitida", en: "Credit note issued" }
-      key: this.id
-      payload { amount: std.Money }
-    }
-    Applied {
-      title: { pt-BR: "Nota de crédito aplicada", en: "Credit note applied" }
-      key: this.id
-      payload { invoice: Invoice }
-    }
-  }
 
   actions {
     issue(){
       title: { pt-BR: "Emitir", en: "Issue" }
       permission: Manager
       status => issued
-      emit Issued { amount: amount }
     }
 
     apply(){
       title: { pt-BR: "Aplicar", en: "Apply" }
       permission: Manager
       status => applied
-      emit Applied { invoice: invoice }
     }
   }
 
@@ -185,21 +157,13 @@ document Bill {
     byStatus: [status, dueAt] range
   }
 
-  events {
-    Paid { // TODO mover eventos para o workflow?
-      title: { pt-BR: "Conta paga", en: "Bill paid" }
-      key: this.id
-      payload { amount: std.Money }
-    }
-  }
 
   actions {
     pay(){
       title: { pt-BR: "Pagar", en: "Pay" }
       permission: Manager
-      status => paid
-      paidAt = now()
       emit Paid { amount: amount }
+      paidAt = now()
     }
   }
 

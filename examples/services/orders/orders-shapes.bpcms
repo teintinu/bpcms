@@ -9,25 +9,44 @@ shape OrderStatus {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    next: [placed, cancelled]
+    transition Placed {
+      title: { pt-BR: "Realizado", en: "Placed" }
+      to: placed
+      payload {
+        customer: User
+        total: std.Money
+      }
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+      payload {
+        reason: string
+      }
+    }
   }
   value placed {
     title: { pt-BR: "Realizado", en: "Placed" }
     icon: Placed
     ordinal: 20
-    next: [cancelled, fulfilled]
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+    }
+    transition Fulfilled {
+      title: { pt-BR: "Atendido", en: "Fulfilled" }
+      to: fulfilled
+    }
   }
   value cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 30
-    next: []
   }
   value fulfilled {
     title: { pt-BR: "Atendido", en: "Fulfilled" }
     icon: Fulfilled
     ordinal: 40
-    next: []
   }
   format: plain
 

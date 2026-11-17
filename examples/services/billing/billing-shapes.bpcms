@@ -10,31 +10,57 @@ shape InvoiceStatus {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: status.draft
     ordinal: 10
-    next: [issued]
+    transition Issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      to: issued
+      payload {
+        number: InvoiceNumber
+        total: std.Money
+      }
+    }
   }
   value issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: finance.invoice.issued
     ordinal: 20
-    next: [paid, overdue, cancelled]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
+    transition Overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      to: overdue
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+      payload {
+        reason: string
+      }
+    }
   }
   value paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: status.paid
     ordinal: 30
-    next: []
   }
   value overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: status.overdue
     ordinal: 40
-    next: [paid, cancelled]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
+    transition Cancelled {
+      title: { pt-BR: "Cancelada", en: "Cancelled" }
+      to: cancelled
+    }
   }
   value cancelled {
     title: { pt-BR: "Cancelada", en: "Cancelled" }
     icon: Cancelled
     ordinal: 50
-    next: []
   }
   format: plain
 
@@ -48,19 +74,24 @@ shape CreditNoteStatus {
     title: { pt-BR: "Rascunho", en: "Draft" }
     icon: Draft
     ordinal: 10
-    next: [issued]
+    transition Issued {
+      title: { pt-BR: "Emitida", en: "Issued" }
+      to: issued
+    }
   }
   value issued {
     title: { pt-BR: "Emitida", en: "Issued" }
     icon: Issued
     ordinal: 20
-    next: [applied]
+    transition Applied {
+      title: { pt-BR: "Aplicada", en: "Applied" }
+      to: applied
+    }
   }
   value applied {
     title: { pt-BR: "Aplicada", en: "Applied" }
     icon: Applied
     ordinal: 30
-    next: []
   }
   format: plain
 
@@ -75,19 +106,28 @@ shape BillStatus {
     title: { pt-BR: "Aberta", en: "Open" }
     icon: Open
     ordinal: 10
-    next: [paid, overdue]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
+    transition Overdue {
+      title: { pt-BR: "Vencida", en: "Overdue" }
+      to: overdue
+    }
   }
   value paid {
     title: { pt-BR: "Paga", en: "Paid" }
     icon: Paid
     ordinal: 20
-    next: []
   }
   value overdue {
     title: { pt-BR: "Vencida", en: "Overdue" }
     icon: Overdue
     ordinal: 30
-    next: [paid]
+    transition Paid {
+      title: { pt-BR: "Paga", en: "Paid" }
+      to: paid
+    }
   }
   format: plain
 

@@ -63,13 +63,6 @@ document Shipment {
     byWeight: [pesoBruto.normalized] range
   }
 
-  events {
-    Dispatched {
-      title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
-      key: this.id
-      payload { order: Order; tracking: TrackingCode }
-    }
-  }
 
   actions {
     create(order: Order){
@@ -87,7 +80,7 @@ document Shipment {
     dispatch(){
       title: { pt-BR: "Despachar", en: "Dispatch" }
       permission: Manager
-      emit Dispatched { order: order; tracking: tracking }
+      status => dispatched
     }
     trackAll(){
       title: { pt-BR: "Rastrear tudo", en: "Track all" }
