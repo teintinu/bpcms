@@ -1,70 +1,70 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Organograma do serviço; deve ser o primeiro artefato do arquivo.
+// REVIEW [2026-12-15] Organograma do serviço; deve ser o primeiro artefato do arquivo.
 organogram Support {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
-  // Estrutura hierárquica entre os papéis.
+  // REVIEW [2026-12-15] Estrutura hierárquica entre os papéis.
   hierarchy {
-    // O gerente fica acima do agente de suporte.
+    // REVIEW [2026-12-15] O gerente fica acima do agente de suporte.
     Manager > SupportAgent
   }
-  // Declara explicitamente que o gerente coordena os agentes.
+  // REVIEW [2026-12-15] Declara explicitamente que o gerente coordena os agentes.
   Manager manages [SupportAgent]
 }
 
-// Papel com poder de decisão sobre chamados e devoluções.
+// REVIEW [2026-12-15] Papel com poder de decisão sobre chamados e devoluções.
 role Manager {
-  // Título exibido nas telas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido nas telas e nos filtros.
   title: { pt-BR: "Gerente de suporte", en: "Support manager" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consultar o chamado.
+    // REVIEW [2026-12-15] Consultar o chamado.
     ticket.view,
-    // Distribuir o chamado para um agente.
+    // REVIEW [2026-12-15] Distribuir o chamado para um agente.
     ticket.assign,
-    // Escalonar o chamado.
+    // REVIEW [2026-12-15] Escalonar o chamado.
     ticket.escalate,
-    // Encerrar o chamado.
+    // REVIEW [2026-12-15] Encerrar o chamado.
     ticket.close,
-    // Aprovar a devolução.
+    // REVIEW [2026-12-15] Aprovar a devolução.
     return.approve,
-    // Rejeitar a devolução.
+    // REVIEW [2026-12-15] Rejeitar a devolução.
     return.reject,
-    // Cancelar a devolução.
+    // REVIEW [2026-12-15] Cancelar a devolução.
     return.cancel,
-    // Efetivar o reembolso.
+    // REVIEW [2026-12-15] Efetivar o reembolso.
     return.refund,
-    // Consultar relatórios de atendimento.
+    // REVIEW [2026-12-15] Consultar relatórios de atendimento.
     report.view
   ]
 }
 
-// Papel operacional que atende e resolve chamados.
+// REVIEW [2026-12-15] Papel operacional que atende e resolve chamados.
 role SupportAgent {
-  // Título exibido nas telas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido nas telas e nos filtros.
   title: { pt-BR: "Agente de suporte", en: "Support agent" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consultar o chamado.
+    // REVIEW [2026-12-15] Consultar o chamado.
     ticket.view,
-    // Comentar o chamado.
+    // REVIEW [2026-12-15] Comentar o chamado.
     ticket.comment,
-    // Assumir o chamado.
+    // REVIEW [2026-12-15] Assumir o chamado.
     ticket.assign,
-    // Resolver o chamado.
+    // REVIEW [2026-12-15] Resolver o chamado.
     ticket.resolve,
-    // Conferir a devolução.
+    // REVIEW [2026-12-15] Conferir a devolução.
     return.review,
-    // Registrar o recebimento da devolução.
+    // REVIEW [2026-12-15] Registrar o recebimento da devolução.
     return.receive
   ]
 }
 
-// Papel do cliente, restrito aos próprios registros.
+// REVIEW [2026-12-15] Papel do cliente, restrito aos próprios registros.
 role Customer {
-  // Título exibido nas telas.
+  // REVIEW [2026-12-15] Título exibido nas telas.
   title: { pt-BR: "Cliente", en: "Customer" }
-  // Permissões apenas sobre os próprios chamados e devoluções.
+  // REVIEW [2026-12-15] Permissões apenas sobre os próprios chamados e devoluções.
   permissions: [ticket.viewOwn, ticket.commentOwn, return.requestOwn]
 }

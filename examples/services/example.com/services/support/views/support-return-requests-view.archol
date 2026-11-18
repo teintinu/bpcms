@@ -1,25 +1,25 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Tabela que lista as solicitações de devolução.
+// REVIEW [2026-12-15] Tabela que lista as solicitações de devolução.
 view ReturnRequests {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Solicitações de devolução", en: "Return requests" }
-  // Tipo da view: tabela paginada.
+  // REVIEW [2026-12-15] Tipo da view: tabela paginada.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: ReturnRequest
-  // Papéis que podem abrir a lista.
+  // REVIEW [2026-12-15] Papéis que podem abrir a lista.
   roles: [SupportAgent, Manager]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { order; status; refundAmount; requestedAt }
-  // Filtros disponíveis na tela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tela.
   filters { status; period }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
-  // Ações oferecidas na lista.
+  // REVIEW [2026-12-15] Ações oferecidas na lista.
   actions {
-    // Abre o andamento do caso de devolução.
+    // REVIEW [2026-12-15] Abre o andamento do caso de devolução.
     open -> RefundCaseProgress
   }
 }

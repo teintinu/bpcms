@@ -1,29 +1,29 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Dashboard de controle do catálogo para gerentes.
+// REVIEW [2026-12-15] Dashboard de controle do catálogo para gerentes.
 view PublishingControl {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Controle do catálogo", en: "Catalog control" }
-  // Tipo da view: painel de indicadores.
+  // REVIEW [2026-12-15] Tipo da view: painel de indicadores.
   type: dashboard
-  // Documentos consultados como fonte dos indicadores.
+  // REVIEW [2026-12-15] Documentos consultados como fonte dos indicadores.
   sources: [Product]
-  // Papéis autorizados a abrir a view.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a view.
   roles: [Publisher]
-  // Modo de atualização: em tempo real.
+  // REVIEW [2026-12-15] Modo de atualização: em tempo real.
   mode: live
 
-  // Filtros disponíveis no painel.
+  // REVIEW [2026-12-15] Filtros disponíveis no painel.
   filters { category }
 
-  // Métricas calculadas sobre os produtos.
+  // REVIEW [2026-12-15] Métricas calculadas sobre os produtos.
   metrics {
-    // Quantidade de produtos em revisão.
+    // REVIEW [2026-12-15] Quantidade de produtos em revisão.
     inReview: count(Product) where status == InReview
-    // Quantidade de produtos rejeitados.
+    // REVIEW [2026-12-15] Quantidade de produtos rejeitados.
     rejected: count(Product) where status == Rejected
   }
 
-  // Frescor máximo aceitável dos dados antes de recálculo.
+  // REVIEW [2026-12-15] Frescor máximo aceitável dos dados antes de recálculo.
   freshness: 15m
 }

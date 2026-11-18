@@ -1,26 +1,26 @@
-// service: example.com/services/hr
+// REVIEW [2026-12-15] service: example.com/services/hr
 
-// Quadro kanban dos candidatos por situação.
+// REVIEW [2026-12-15] Quadro kanban dos candidatos por situação.
 view CandidatesKanban {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Quadro de candidatos", en: "Candidates board" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento exibido no quadro.
+  // REVIEW [2026-12-15] Documento exibido no quadro.
   source: Candidate
-  // Papéis que podem abrir o quadro.
+  // REVIEW [2026-12-15] Papéis que podem abrir o quadro.
   roles: [Recruiter, HiringManager]
-  // Agrupa os cartões pela situação do candidato.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação do candidato.
   groupBy: status
 
-  // Colunas exibidas em cada cartão.
+  // REVIEW [2026-12-15] Colunas exibidas em cada cartão.
   columns { name; position; department }
-  // Dados resumidos no cartão do kanban.
+  // REVIEW [2026-12-15] Dados resumidos no cartão do kanban.
   card { name; position; appliedAt }
 
-  // Ações disponíveis no quadro.
+  // REVIEW [2026-12-15] Ações disponíveis no quadro.
   actions {
-    // Abre o detalhe do candidato.
+    // REVIEW [2026-12-15] Abre o detalhe do candidato.
     open -> CandidateDetail
   }
 }

@@ -1,17 +1,17 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Forma reutilizável que descreve um evento de rastreio da remessa.
+// REVIEW [2026-12-15] Forma reutilizável que descreve um evento de rastreio da remessa.
 shape TrackingEvent {
-  // Título exibido no builder e nas telas que usam a forma.
+  // REVIEW [2026-12-15] Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Evento de rastreio", en: "Tracking event" }
 
-  // Campos que compõem o evento.
+  // REVIEW [2026-12-15] Campos que compõem o evento.
   fields {
-    // Momento em que o evento aconteceu.
+    // REVIEW [2026-12-15] Momento em que o evento aconteceu.
     at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
-    // Tipo/classificação do evento de rastreio.
+    // REVIEW [2026-12-15] Tipo/classificação do evento de rastreio.
     kind: TrackingKind { title: { pt-BR: "Tipo", en: "Kind" } }
-    // Texto descritivo do evento, como "saiu para entrega".
+    // REVIEW [2026-12-15] Texto descritivo do evento, como "saiu para entrega".
     description: string { title: { pt-BR: "Descrição", en: "Description" } }
   }
 }

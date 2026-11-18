@@ -1,35 +1,35 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Declara o serviço Catálogo, dono dos artefatos de produtos e categorias.
+// REVIEW [2026-12-15] Declara o serviço Catálogo, dono dos artefatos de produtos e categorias.
 service "example.com/services/catalog" {
-  // Nome exibido no builder e na navegação, por idioma.
+  // REVIEW [2026-12-15] Nome exibido no builder e na navegação, por idioma.
   title: { pt-BR: "Catálogo", en: "Catalog" }
-  // Versão semântica do artefato serviço, usada em release e diff.
+  // REVIEW [2026-12-15] Versão semântica do artefato serviço, usada em release e diff.
   version: 1.0.0
-  // Área de negócio responsável pela manutenção do serviço.
+  // REVIEW [2026-12-15] Área de negócio responsável pela manutenção do serviço.
   owner: "Catalog"
-  // Dependências externas usadas por este serviço.
+  // REVIEW [2026-12-15] Dependências externas usadas por este serviço.
   imports {
-    // Importa o pseudo-serviço de medidas/constantes padrão do construtor.
+    // REVIEW [2026-12-15] Importa o pseudo-serviço de medidas/constantes padrão do construtor.
     service "bpcms.org/std" as std
   }
 
-  // Reabre o shape std.Currency para acrescentar valores de moeda locais.
+  // REVIEW [2026-12-15] Reabre o shape std.Currency para acrescentar valores de moeda locais.
   reintroduce std.Currency {
-    // Valor de moeda Real brasileiro acrescentado ao Currency.
+    // REVIEW [2026-12-15] Valor de moeda Real brasileiro acrescentado ao Currency.
     value BRL {
-        // Rótulo do valor exibido na interface.
+        // REVIEW [2026-12-15] Rótulo do valor exibido na interface.
         title: { pt-BR: "Real", en: "Brazilian real" }
-        // Símbolo de prefixo da moeda por idioma.
+        // REVIEW [2026-12-15] Símbolo de prefixo da moeda por idioma.
         prefix: {
-          // Prefixo usado em português.
+          // REVIEW [2026-12-15] Prefixo usado em português.
           pt-BR: "R$"
-          // Prefixo usado em inglês.
+          // REVIEW [2026-12-15] Prefixo usado em inglês.
           en: "BRL"
         }
-        // Ícone associado à moeda no seletor.
+        // REVIEW [2026-12-15] Ícone associado à moeda no seletor.
         icon: Brl
-        // Ordem de exibição do valor na lista.
+        // REVIEW [2026-12-15] Ordem de exibição do valor na lista.
         ordinal: 10
     }
   }

@@ -1,302 +1,302 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Documento que representa cada notificação, do enfileiramento à leitura.
+// REVIEW [2026-12-15] Documento que representa cada notificação, do enfileiramento à leitura.
 document Notification {
-  // Rótulo do documento exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo do documento exibido no construtor.
   title: { pt-BR: "Notificação", en: "Notification" }
-  version: 1 // Versão do artefato Documento.
-  owner: "Notifications" // Área dona do documento.
-  sync: live // Sincronização em tempo real entre cliente e servidor.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Documento.
+  owner: "Notifications" // REVIEW [2026-12-15] Área dona do documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
 
-  // Campos que compõem a notificação.
+  // REVIEW [2026-12-15] Campos que compõem a notificação.
   fields {
-    // Modelo usado para renderizar a mensagem.
+    // REVIEW [2026-12-15] Modelo usado para renderizar a mensagem.
     template: NotificationTemplate {
-      // Rótulo do campo.
+      // REVIEW [2026-12-15] Rótulo do campo.
       title: { pt-BR: "Modelo", en: "Template" }
     }
-    // Destinatário do envio, pesquisável na tabela.
+    // REVIEW [2026-12-15] Destinatário do envio, pesquisável na tabela.
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
-    // Canal de entrega da notificação.
+    // REVIEW [2026-12-15] Canal de entrega da notificação.
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
-    // Situação atual no ciclo de vida.
+    // REVIEW [2026-12-15] Situação atual no ciclo de vida.
     status: NotificationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Registra se o destinatário consentiu com o envio.
+    // REVIEW [2026-12-15] Registra se o destinatário consentiu com o envio.
     consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
-    // Instante em que a notificação foi enviada.
+    // REVIEW [2026-12-15] Instante em que a notificação foi enviada.
     sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
-    // Instante em que a notificação foi lida.
+    // REVIEW [2026-12-15] Instante em que a notificação foi lida.
     readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
-    // Mensagem de erro da última tentativa de envio.
+    // REVIEW [2026-12-15] Mensagem de erro da última tentativa de envio.
     error: string { title: { pt-BR: "Erro", en: "Error" } }
-    // Motivo registrado quando o envio é suprimido.
+    // REVIEW [2026-12-15] Motivo registrado quando o envio é suprimido.
     suppressionReason: string { title: { pt-BR: "Motivo da supressão", en: "Suppression reason" } }
   }
 
-  // Índices de consulta por situação e por destinatário.
+  // REVIEW [2026-12-15] Índices de consulta por situação e por destinatário.
   indexes {
-    // Consulta por situação, ordenada pela data de envio.
+    // REVIEW [2026-12-15] Consulta por situação, ordenada pela data de envio.
     byStatus: [status, sentAt] range
-    // Consulta por destinatário, ordenada pela data de envio.
+    // REVIEW [2026-12-15] Consulta por destinatário, ordenada pela data de envio.
     byRecipient: [recipient, sentAt] range
   }
 
 
-  // Ações que mudam a situação da notificação.
+  // REVIEW [2026-12-15] Ações que mudam a situação da notificação.
   actions {
-    // Marca a notificação como enviada.
+    // REVIEW [2026-12-15] Marca a notificação como enviada.
     send(){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Enviar", en: "Send" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição para a situação Sent.
+      // REVIEW [2026-12-15] Transição para a situação Sent.
       to: status.Sent
 
-      // Efeitos aplicados na transição.
+      // REVIEW [2026-12-15] Efeitos aplicados na transição.
       {
-        // Carimba a data/hora atual do envio.
+        // REVIEW [2026-12-15] Carimba a data/hora atual do envio.
         sentAt = now()
       }
     }
 
-    // Registra falha de entrega com o motivo informado.
+    // REVIEW [2026-12-15] Registra falha de entrega com o motivo informado.
     fail(reason: string){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Registrar falha", en: "Record failure" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição para a situação Failed.
+      // REVIEW [2026-12-15] Transição para a situação Failed.
       to: status.Failed
 
-      // Efeitos aplicados na transição.
+      // REVIEW [2026-12-15] Efeitos aplicados na transição.
       {
-        // Guarda a mensagem de erro recebida.
+        // REVIEW [2026-12-15] Guarda a mensagem de erro recebida.
         error = reason
       }
     }
 
-    // Reenfileira a notificação para uma nova tentativa de envio.
+    // REVIEW [2026-12-15] Reenfileira a notificação para uma nova tentativa de envio.
     retry(){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Repetir", en: "Retry" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição de volta para a situação Queued.
+      // REVIEW [2026-12-15] Transição de volta para a situação Queued.
       to: status.Queued
-      // Emite o evento Retried com o instante da nova tentativa.
+      // REVIEW [2026-12-15] Emite o evento Retried com o instante da nova tentativa.
       emits { at: now() }
     }
 
-    // Marca a notificação como lida.
+    // REVIEW [2026-12-15] Marca a notificação como lida.
     markRead(){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Marcar como lida", en: "Mark as read" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição para a situação Read.
+      // REVIEW [2026-12-15] Transição para a situação Read.
       to: status.Read
 
-      // Efeitos aplicados na transição.
+      // REVIEW [2026-12-15] Efeitos aplicados na transição.
       {
-        // Carimba a data/hora da leitura.
+        // REVIEW [2026-12-15] Carimba a data/hora da leitura.
         readAt = now()
       }
     }
 
-    // Envia o resumo diário desta notificação.
+    // REVIEW [2026-12-15] Envia o resumo diário desta notificação.
     sendDigest(){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Enviar resumo", en: "Send digest" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição para a situação Sent.
+      // REVIEW [2026-12-15] Transição para a situação Sent.
       to: status.Sent
 
-      // Efeitos aplicados na transição.
+      // REVIEW [2026-12-15] Efeitos aplicados na transição.
       {
-        // Carimba a data/hora do envio do resumo.
+        // REVIEW [2026-12-15] Carimba a data/hora do envio do resumo.
         sentAt = now()
       }
     }
 
-    // Suprime o envio e registra o motivo informado.
+    // REVIEW [2026-12-15] Suprime o envio e registra o motivo informado.
     suppress(reason: string){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Suprimir", en: "Suppress" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
 
-      // Transição para a situação Suppressed.
+      // REVIEW [2026-12-15] Transição para a situação Suppressed.
       to: status.Suppressed
 
-      // Validação: exige motivo com ao menos 5 caracteres.
+      // REVIEW [2026-12-15] Validação: exige motivo com ao menos 5 caracteres.
       rule reason.length >= 5 {
-        // Mensagem de erro exibida em português.
+        // REVIEW [2026-12-15] Mensagem de erro exibida em português.
         pt-BR: "Informe o motivo da supressão"
-        // Mensagem de erro exibida em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro exibida em inglês.
         en: "Enter the suppression reason"
       }
 
-      // Efeitos aplicados na transição.
+      // REVIEW [2026-12-15] Efeitos aplicados na transição.
       {
-        // Guarda o motivo informado pelo agente.
+        // REVIEW [2026-12-15] Guarda o motivo informado pelo agente.
         suppressionReason = reason
       }
     }
 
-    // Action de repetição em lote das falhas de envio.
+    // REVIEW [2026-12-15] Action de repetição em lote das falhas de envio.
     retryFailed(){
-      // Rótulo da action no construtor.
+      // REVIEW [2026-12-15] Rótulo da action no construtor.
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
-      // Quem pode executar a action.
+      // REVIEW [2026-12-15] Quem pode executar a action.
       roles: [SuccessAgent]
     }
   }
 
-  // Invariante: notificação enviada precisa ter data de envio.
+  // REVIEW [2026-12-15] Invariante: notificação enviada precisa ter data de envio.
   rule status == Sent implies sentAt != null {
-    // Mensagem de erro exibida em português.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em português.
     pt-BR: "Informe a data de envio"
-    // Mensagem de erro exibida em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em inglês.
     en: "Enter the sent date"
   }
 }
 
-// Forma de estado do ciclo de vida da notificação.
+// REVIEW [2026-12-15] Forma de estado do ciclo de vida da notificação.
 shape NotificationStatus {
-  // Rótulo da forma exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo da forma exibido no construtor.
   title: { pt-BR: "Situação da notificação", en: "Notification status" }
-  base: state // Base estado: máquina de estados com transições.
-  initial: Queued // Situação inicial de toda notificação criada.
-  // Situação "na fila", aguardando envio.
+  base: state // REVIEW [2026-12-15] Base estado: máquina de estados com transições.
+  initial: Queued // REVIEW [2026-12-15] Situação inicial de toda notificação criada.
+  // REVIEW [2026-12-15] Situação "na fila", aguardando envio.
   value Queued {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Na fila", en: "Queued" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: Queued
-    ordinal: 10 // Posição do valor na ordenação.
+    ordinal: 10 // REVIEW [2026-12-15] Posição do valor na ordenação.
 
-    // Transição para Sent, disparada pelo envio.
+    // REVIEW [2026-12-15] Transição para Sent, disparada pelo envio.
     transition Sent {
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Notificação enviada", en: "Notification sent" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Instante do envio carregado pela transição.
+        // REVIEW [2026-12-15] Instante do envio carregado pela transição.
         sentAt: DateTime { title: { pt-BR: "Enviada em", en: "Sent at" } }
       }
     }
 
-    // Transição para Failed, disparada por falha de entrega.
+    // REVIEW [2026-12-15] Transição para Failed, disparada por falha de entrega.
     transition Failed {
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Falha no envio", en: "Delivery failed" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Mensagem de erro carregada pela transição.
+        // REVIEW [2026-12-15] Mensagem de erro carregada pela transição.
         error: string { title: { pt-BR: "Erro", en: "Error" } }
       }
     }
 
-    // Transição para Sent disparada pelo evento Digested.
+    // REVIEW [2026-12-15] Transição para Sent disparada pelo evento Digested.
     transition Sent {
-      // Evento nomeado que dispara esta transição.
+      // REVIEW [2026-12-15] Evento nomeado que dispara esta transição.
       event: Digested
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Resumo enviado", en: "Digest sent" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Instante do envio carregado pela transição.
+        // REVIEW [2026-12-15] Instante do envio carregado pela transição.
         sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
       }
     }
 
-    // Transição para Suppressed, disparada pela supressão.
+    // REVIEW [2026-12-15] Transição para Suppressed, disparada pela supressão.
     transition Suppressed {
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Notificação suprimida", en: "Notification suppressed" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Motivo da supressão carregado pela transição.
+        // REVIEW [2026-12-15] Motivo da supressão carregado pela transição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Situação "enviada".
+  // REVIEW [2026-12-15] Situação "enviada".
   value Sent {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Enviada", en: "Sent" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: Sent
-    ordinal: 20 // Posição do valor na ordenação.
+    ordinal: 20 // REVIEW [2026-12-15] Posição do valor na ordenação.
 
-    // Transição para Read, disparada pela leitura.
+    // REVIEW [2026-12-15] Transição para Read, disparada pela leitura.
     transition Read {
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Notificação lida", en: "Notification read" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Instante da leitura carregado pela transição.
+        // REVIEW [2026-12-15] Instante da leitura carregado pela transição.
         readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
       }
     }
   }
-  // Situação "falhou".
+  // REVIEW [2026-12-15] Situação "falhou".
   value Failed {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Falhou", en: "Failed" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: Failed
-    ordinal: 30 // Posição do valor na ordenação.
+    ordinal: 30 // REVIEW [2026-12-15] Posição do valor na ordenação.
 
-    // Transição para Queued disparada pelo evento Retried.
+    // REVIEW [2026-12-15] Transição para Queued disparada pelo evento Retried.
     transition Queued {
-      // Evento nomeado que dispara esta transição.
+      // REVIEW [2026-12-15] Evento nomeado que dispara esta transição.
       event: Retried
-      // Título da transição exibido no histórico.
+      // REVIEW [2026-12-15] Título da transição exibido no histórico.
       title: { pt-BR: "Envio repetido", en: "Delivery retried" }
-      // Dados carregados na transição.
+      // REVIEW [2026-12-15] Dados carregados na transição.
       payload {
-        // Instante da nova tentativa carregado pela transição.
+        // REVIEW [2026-12-15] Instante da nova tentativa carregado pela transição.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
-  // Situação "lida".
+  // REVIEW [2026-12-15] Situação "lida".
   value Read {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Lida", en: "Read" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: Read
-    ordinal: 40 // Posição do valor na ordenação.
+    ordinal: 40 // REVIEW [2026-12-15] Posição do valor na ordenação.
   }
-  // Situação "suprimida".
+  // REVIEW [2026-12-15] Situação "suprimida".
   value Suppressed {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Suprimida", en: "Suppressed" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: Suppressed
-    ordinal: 50 // Posição do valor na ordenação.
+    ordinal: 50 // REVIEW [2026-12-15] Posição do valor na ordenação.
   }
-  format: plain // Renderização em texto simples.
+  format: plain // REVIEW [2026-12-15] Renderização em texto simples.
 }
 
-// Política que impede o envio sem consentimento do destinatário.
+// REVIEW [2026-12-15] Política que impede o envio sem consentimento do destinatário.
 policy NotificationConsent {
-  // Action protegida pela política.
+  // REVIEW [2026-12-15] Action protegida pela política.
   appliesTo: Notification.send
-  // Condição exigida para permitir o envio.
+  // REVIEW [2026-12-15] Condição exigida para permitir o envio.
   rule: consent == true
-  // Bloqueia a execução quando a regra não é satisfeita.
+  // REVIEW [2026-12-15] Bloqueia a execução quando a regra não é satisfeita.
   severity: block
-  // Mensagem exibida ao usuário bloqueado.
+  // REVIEW [2026-12-15] Mensagem exibida ao usuário bloqueado.
   message: "Destinatário sem consentimento para este canal"
-  // Registra a decisão na trilha de auditoria.
+  // REVIEW [2026-12-15] Registra a decisão na trilha de auditoria.
   audit: true
 }

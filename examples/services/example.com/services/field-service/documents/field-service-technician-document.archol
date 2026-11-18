@@ -1,237 +1,237 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// Documento que representa um técnico de campo e sua disponibilidade.
+// REVIEW [2026-12-15] Documento que representa um técnico de campo e sua disponibilidade.
 document Technician {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Técnico", en: "Technician" }
-  // Versão do artefato; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
   version: 1
-  // Responsável pela manutenção do documento.
+  // REVIEW [2026-12-15] Responsável pela manutenção do documento.
   owner: "Field Service"
-  // Sincronização em tempo real entre os usuários da operação.
+  // REVIEW [2026-12-15] Sincronização em tempo real entre os usuários da operação.
   sync: live
 
-  // Campos que compõem o técnico.
+  // REVIEW [2026-12-15] Campos que compõem o técnico.
   fields {
-    // Matrícula funcional do técnico; consultável, única e curta.
+    // REVIEW [2026-12-15] Matrícula funcional do técnico; consultável, única e curta.
     registration: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Matrícula", en: "Registration" }
-      // Permite localizar o técnico pela matrícula.
+      // REVIEW [2026-12-15] Permite localizar o técnico pela matrícula.
       lookup
-      // Impede dois técnicos com a mesma matrícula.
+      // REVIEW [2026-12-15] Impede dois técnicos com a mesma matrícula.
       unique
-      // Limita a matrícula a vinte caracteres.
+      // REVIEW [2026-12-15] Limita a matrícula a vinte caracteres.
       maxLength: 20
     }
-    // Pessoa do serviço de identidade associada ao técnico.
+    // REVIEW [2026-12-15] Pessoa do serviço de identidade associada ao técnico.
     person: Identity.User { title: { pt-BR: "Pessoa", en: "Person" }, lookup }
-    // Especialidades técnicas do técnico.
+    // REVIEW [2026-12-15] Especialidades técnicas do técnico.
     skills: ServiceSkill[] { title: { pt-BR: "Especialidades", en: "Skills" } }
-    // Região de atuação, usada no despacho.
+    // REVIEW [2026-12-15] Região de atuação, usada no despacho.
     zone: string { title: { pt-BR: "Região", en: "Zone" }, lookup, maxLength: 60 }
-    // Situação atual de disponibilidade do técnico; consultável.
+    // REVIEW [2026-12-15] Situação atual de disponibilidade do técnico; consultável.
     availability: TechnicianAvailability { title: { pt-BR: "Disponibilidade", en: "Availability" }, lookup }
-    // Quantidade máxima de atendimentos por dia.
+    // REVIEW [2026-12-15] Quantidade máxima de atendimentos por dia.
     dailyCapacity: std.Count { title: { pt-BR: "Capacidade diária", en: "Daily capacity" } }
-    // Data e hora a partir das quais o técnico está liberado.
+    // REVIEW [2026-12-15] Data e hora a partir das quais o técnico está liberado.
     availableFrom: DateTime { title: { pt-BR: "Disponível a partir de", en: "Available from" } }
-    // Observação livre sobre a situação do técnico, como o motivo do afastamento.
+    // REVIEW [2026-12-15] Observação livre sobre a situação do técnico, como o motivo do afastamento.
     dutyNote: string { title: { pt-BR: "Observação", en: "Note" }, maxLength: 240 }
   }
 
-  // Índices que aceleram as consultas sobre o documento.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas sobre o documento.
   indexes {
-    // Busca exata pela matrícula, garantindo unicidade no banco.
+    // REVIEW [2026-12-15] Busca exata pela matrícula, garantindo unicidade no banco.
     byRegistration: [registration] unique
-    // Consulta por disponibilidade e região em faixa.
+    // REVIEW [2026-12-15] Consulta por disponibilidade e região em faixa.
     byAvailability: [availability, zone] range
   }
 
 
-  // Ações que mudam a disponibilidade e o estado do técnico.
+  // REVIEW [2026-12-15] Ações que mudam a disponibilidade e o estado do técnico.
   actions {
-    // Coloca o técnico em atendimento.
+    // REVIEW [2026-12-15] Coloca o técnico em atendimento.
     assign() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Colocar em atendimento", en: "Assign technician" }
-      // Somente o despachante pode atribuir.
+      // REVIEW [2026-12-15] Somente o despachante pode atribuir.
       roles: [Dispatcher]
-      // Transição para o estado Assigned da disponibilidade.
+      // REVIEW [2026-12-15] Transição para o estado Assigned da disponibilidade.
       to: availability.Assigned
-      // Emite o evento com o instante da atribuição.
+      // REVIEW [2026-12-15] Emite o evento com o instante da atribuição.
       emits { at: now() }
     }
 
-    // Libera o técnico após o atendimento.
+    // REVIEW [2026-12-15] Libera o técnico após o atendimento.
     release() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Liberar técnico", en: "Release technician" }
-      // Somente o despachante pode liberar.
+      // REVIEW [2026-12-15] Somente o despachante pode liberar.
       roles: [Dispatcher]
-      // Transição de volta para o estado Available.
+      // REVIEW [2026-12-15] Transição de volta para o estado Available.
       to: availability.Available
-      // Emite o evento com o instante da liberação.
+      // REVIEW [2026-12-15] Emite o evento com o instante da liberação.
       emits { at: now() }
     }
 
-    // Coloca o técnico fora de turno, registrando o motivo.
+    // REVIEW [2026-12-15] Coloca o técnico fora de turno, registrando o motivo.
     goOffDuty(reason: string) {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Fora de turno", en: "Go off duty" }
-      // Somente o supervisor pode afastar o técnico.
+      // REVIEW [2026-12-15] Somente o supervisor pode afastar o técnico.
       roles: [Supervisor]
-      // Transição para o estado OffDuty.
+      // REVIEW [2026-12-15] Transição para o estado OffDuty.
       to: availability.OffDuty
-      // Guarda o motivo no campo de observação.
+      // REVIEW [2026-12-15] Guarda o motivo no campo de observação.
       { dutyNote = reason }
     }
 
-    // Devolve o técnico ao turno.
+    // REVIEW [2026-12-15] Devolve o técnico ao turno.
     returnToDuty() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Voltar ao turno", en: "Return to duty" }
-      // Somente o supervisor pode devolver ao turno.
+      // REVIEW [2026-12-15] Somente o supervisor pode devolver ao turno.
       roles: [Supervisor]
-      // Transição de volta para o estado Available.
+      // REVIEW [2026-12-15] Transição de volta para o estado Available.
       to: availability.Available
-      // Emite o evento com o instante do retorno.
+      // REVIEW [2026-12-15] Emite o evento com o instante do retorno.
       emits { at: now() }
     }
   }
 }
 
-// Máquina de estados da disponibilidade do técnico.
+// REVIEW [2026-12-15] Máquina de estados da disponibilidade do técnico.
 shape TechnicianAvailability {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Disponibilidade do técnico", en: "Technician availability" }
-  // Base da forma: máquina de estados.
+  // REVIEW [2026-12-15] Base da forma: máquina de estados.
   base: state
-  // Estado em que todo técnico começa.
+  // REVIEW [2026-12-15] Estado em que todo técnico começa.
   initial: Available
 
-  // Estado em que o técnico pode receber atendimentos.
+  // REVIEW [2026-12-15] Estado em que o técnico pode receber atendimentos.
   value Available {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Disponível", en: "Available" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.available
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 10
 
-    // Transição para o estado Assigned.
+    // REVIEW [2026-12-15] Transição para o estado Assigned.
     transition Assigned {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: TechnicianAssigned
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Técnico em atendimento", en: "Technician assigned" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Instante em que o técnico foi atribuído.
+        // REVIEW [2026-12-15] Instante em que o técnico foi atribuído.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
-    // Transição para o estado OffDuty.
+    // REVIEW [2026-12-15] Transição para o estado OffDuty.
     transition OffDuty {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: WentOffDuty
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Técnico fora de turno", en: "Technician off duty" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do afastamento.
+        // REVIEW [2026-12-15] Motivo do afastamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado em que o técnico está executando um atendimento.
+  // REVIEW [2026-12-15] Estado em que o técnico está executando um atendimento.
   value Assigned {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em atendimento", en: "Assigned" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.assigned
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 20
 
-    // Transição de volta para Available.
+    // REVIEW [2026-12-15] Transição de volta para Available.
     transition Available {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: TechnicianReleased
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Técnico liberado", en: "Technician released" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Instante em que o técnico foi liberado.
+        // REVIEW [2026-12-15] Instante em que o técnico foi liberado.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
-  // Estado em que o técnico está fora de turno.
+  // REVIEW [2026-12-15] Estado em que o técnico está fora de turno.
   value OffDuty {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Fora de turno", en: "Off duty" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.offDuty
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 30
 
-    // Transição de volta para Available.
+    // REVIEW [2026-12-15] Transição de volta para Available.
     transition Available {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: ReturnedToDuty
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Técnico de volta ao turno", en: "Technician back on duty" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Instante em que o técnico voltou ao turno.
+        // REVIEW [2026-12-15] Instante em que o técnico voltou ao turno.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
 }
 
-// Classificação das especialidades técnicas do técnico.
+// REVIEW [2026-12-15] Classificação das especialidades técnicas do técnico.
 shape ServiceSkill {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Especialidade técnica", en: "Service skill" }
-  // Base da forma: classificação fechada de valores.
+  // REVIEW [2026-12-15] Base da forma: classificação fechada de valores.
   base: classification
 
-  // Especialidade em instalação.
+  // REVIEW [2026-12-15] Especialidade em instalação.
   value Installation {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Instalação", en: "Installation" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: skill.installation
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 10
   }
-  // Especialidade em manutenção.
+  // REVIEW [2026-12-15] Especialidade em manutenção.
   value Maintenance {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Manutenção", en: "Maintenance" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: skill.maintenance
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 20
   }
-  // Especialidade em reparo.
+  // REVIEW [2026-12-15] Especialidade em reparo.
   value Repair {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Reparo", en: "Repair" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: skill.repair
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 30
   }
-  // Especialidade em inspeção.
+  // REVIEW [2026-12-15] Especialidade em inspeção.
   value Inspection {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Inspeção", en: "Inspection" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: skill.inspection
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 40
   }
 }

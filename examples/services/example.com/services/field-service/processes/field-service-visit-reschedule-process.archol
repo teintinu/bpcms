@@ -1,165 +1,165 @@
-// service: example.com/services/field-service
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/field-service
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo que reagenda uma visita falhada e avisa o cliente.
+// REVIEW [2026-12-15] Declara o processo que reagenda uma visita falhada e avisa o cliente.
 process VisitReschedule(visit: Visit) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Reagendamento da visita", en: "Visit reschedule" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Reagendar a visita falhada e avisar o cliente com a nova janela"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 5d
 
-  // Declara que este processo é chamado por outro, sem gatilho próprio.
+  // REVIEW [2026-12-15] Declara que este processo é chamado por outro, sem gatilho próprio.
   called
 
-  // Bloco externo: captura timeout do caso e de qualquer form.
+  // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e de qualquer form.
   try {
-    // Abre o form de reagendamento para o despachante.
+    // REVIEW [2026-12-15] Abre o form de reagendamento para o despachante.
     RescheduleReview.show({ visit })
 
-    // Se a visita foi cancelada no form...
+    // REVIEW [2026-12-15] Se a visita foi cancelada no form...
     if (visit.status == Failed) {
-      // ...encerra no desfecho Abandoned, sem nova janela.
+      // REVIEW [2026-12-15] ...encerra no desfecho Abandoned, sem nova janela.
       return Abandoned
     }
 
-    // Avisa o cliente sobre a nova janela combinada.
+    // REVIEW [2026-12-15] Avisa o cliente sobre a nova janela combinada.
     send VisitRescheduled {
-      // Chave de correlação e dedup da mensagem: a própria visita.
+      // REVIEW [2026-12-15] Chave de correlação e dedup da mensagem: a própria visita.
       key: visit
-      // Dados levados para o payload da mensagem.
+      // REVIEW [2026-12-15] Dados levados para o payload da mensagem.
       with {
-        // Início da janela reagendada.
+        // REVIEW [2026-12-15] Início da janela reagendada.
         windowStart: visit.windowStart
-        // Fim da janela reagendada.
+        // REVIEW [2026-12-15] Fim da janela reagendada.
         windowEnd: visit.windowEnd
       }
     }
 
-    // Laço de tentativas de confirmação, limitado a duas iterações.
+    // REVIEW [2026-12-15] Laço de tentativas de confirmação, limitado a duas iterações.
     loop ConfirmationAttempt max 2 {
-      // Tenta obter a confirmação do cliente a cada iteração.
+      // REVIEW [2026-12-15] Tenta obter a confirmação do cliente a cada iteração.
       try {
-        // Abre o form de confirmação para o cliente.
+        // REVIEW [2026-12-15] Abre o form de confirmação para o cliente.
         VisitConfirmation.show({ visit })
-        // Encerra no desfecho de sucesso assim que confirmado.
+        // REVIEW [2026-12-15] Encerra no desfecho de sucesso assim que confirmado.
         return Rescheduled
       } catch (Timeout) {
-        // on timer da confirmação: escala e reapresenta a confirmação
-        // Abre o manual de escalação quando a confirmação expira.
+        // REVIEW [2026-12-15] on timer da confirmação: escala e reapresenta a confirmação
+        // REVIEW [2026-12-15] Abre o manual de escalação quando a confirmação expira.
         EscalateReschedule.show({ visit })
       }
     }
 
-    // Esgotou as tentativas sem confirmação: encerra no desfecho Abandoned.
+    // REVIEW [2026-12-15] Esgotou as tentativas sem confirmação: encerra no desfecho Abandoned.
     return Abandoned
   } catch (Timeout) {
-    // on breach do caso: escala e encerra sem nova janela confirmada
-    // Abre o manual de escalação quando o SLA do caso expira.
+    // REVIEW [2026-12-15] on breach do caso: escala e encerra sem nova janela confirmada
+    // REVIEW [2026-12-15] Abre o manual de escalação quando o SLA do caso expira.
     EscalateReschedule.show({ visit })
-    // Encerra o processo no desfecho de cancelamento.
+    // REVIEW [2026-12-15] Encerra o processo no desfecho de cancelamento.
     return Abandoned
   }
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Rescheduled {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Reagendada", en: "Rescheduled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Abandoned {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Abandonada", en: "Abandoned" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Form de reagendamento, preenchido pelo despachante.
+// REVIEW [2026-12-15] Form de reagendamento, preenchido pelo despachante.
 form RescheduleReview {
-  // Título exibido no formulário e na inbox.
+  // REVIEW [2026-12-15] Título exibido no formulário e na inbox.
   title: { pt-BR: "Reagendar visita", en: "Reschedule visit" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Visit
-  // Papéis que podem preencher o form.
+  // REVIEW [2026-12-15] Papéis que podem preencher o form.
   roles: [Dispatcher]
-  // Prazo para preencher antes de estourar o timeout.
+  // REVIEW [2026-12-15] Prazo para preencher antes de estourar o timeout.
   timeout: 4h
-  // Distribuição por pull: o despachante assume o item da fila.
+  // REVIEW [2026-12-15] Distribuição por pull: o despachante assume o item da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Início da nova janela combinada.
+    // REVIEW [2026-12-15] Início da nova janela combinada.
     windowStart
-    // Fim da nova janela combinada.
+    // REVIEW [2026-12-15] Fim da nova janela combinada.
     windowEnd
-    // Motivo do cancelamento, quando a visita for encerrada sem reagendar.
+    // REVIEW [2026-12-15] Motivo do cancelamento, quando a visita for encerrada sem reagendar.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Withdrawal reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações do formulário.
+  // REVIEW [2026-12-15] Ações do formulário.
   actions {
-    // Reagenda a visita chamando a ação do documento com a nova janela.
+    // REVIEW [2026-12-15] Reagenda a visita chamando a ação do documento com a nova janela.
     reschedule { calls: Visit.reschedule(windowStart, windowEnd) }
-    // Cancela a visita com o motivo informado.
+    // REVIEW [2026-12-15] Cancela a visita com o motivo informado.
     abandon { calls: Visit.withdraw(reason) }
   }
 }
 
-// Form de confirmação da nova janela, preenchido pelo cliente.
+// REVIEW [2026-12-15] Form de confirmação da nova janela, preenchido pelo cliente.
 form VisitConfirmation {
-  // Título exibido no formulário e na inbox.
+  // REVIEW [2026-12-15] Título exibido no formulário e na inbox.
   title: { pt-BR: "Confirmar nova janela", en: "Confirm new window" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Visit
-  // Papéis que podem preencher o form.
+  // REVIEW [2026-12-15] Papéis que podem preencher o form.
   roles: [Customer]
-  // Prazo para o cliente confirmar antes de estourar o timeout.
+  // REVIEW [2026-12-15] Prazo para o cliente confirmar antes de estourar o timeout.
   timeout: 2d
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Observação opcional do cliente sobre a nova janela.
+    // REVIEW [2026-12-15] Observação opcional do cliente sobre a nova janela.
     note: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
-      // Limita a observação a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações do formulário.
+  // REVIEW [2026-12-15] Ações do formulário.
   actions {
-    // Confirma a janela chamando a ação do documento com a observação.
+    // REVIEW [2026-12-15] Confirma a janela chamando a ação do documento com a observação.
     acknowledge { calls: Visit.acknowledgeWindow(note) }
   }
 }
 
-// Manual de escalação usado quando a confirmação ou o SLA falha.
+// REVIEW [2026-12-15] Manual de escalação usado quando a confirmação ou o SLA falha.
 manual EscalateReschedule {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Escalar reagendamento da visita", en: "Escalate visit reschedule" }
-  // Documento ao qual o manual se refere.
+  // REVIEW [2026-12-15] Documento ao qual o manual se refere.
   document: Visit
-  // Papéis que podem executar o manual.
+  // REVIEW [2026-12-15] Papéis que podem executar o manual.
   roles: [Supervisor]
-  // Instrução exibida ao supervisor escalado.
+  // REVIEW [2026-12-15] Instrução exibida ao supervisor escalado.
   instructions: "Ligar para o cliente e confirmar a nova janela"
-  // Prazo para concluir a escalação antes de estourar o timeout.
+  // REVIEW [2026-12-15] Prazo para concluir a escalação antes de estourar o timeout.
   timeout: 1h
 }

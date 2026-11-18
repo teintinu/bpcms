@@ -1,32 +1,32 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// View de tabela com a listagem de produtos.
+// REVIEW [2026-12-15] View de tabela com a listagem de produtos.
 view ProductTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Produtos", en: "Products" }
-  // Tipo da view: tabela paginada.
+  // REVIEW [2026-12-15] Tipo da view: tabela paginada.
   type: table
-  // Documento exibido nas linhas da tabela.
+  // REVIEW [2026-12-15] Documento exibido nas linhas da tabela.
   source: Product
-  // Papéis autorizados a abrir a view.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { image; sku; name; price; weight; status; createdAt }
-  // Filtros disponíveis sobre a listagem.
+  // REVIEW [2026-12-15] Filtros disponíveis sobre a listagem.
   filters { status; category; period }
-  // Quantidade de itens por página.
+  // REVIEW [2026-12-15] Quantidade de itens por página.
   pagination: 50
 
-  // Ações disponíveis na tabela.
+  // REVIEW [2026-12-15] Ações disponíveis na tabela.
   actions {
-    // Abre o detalhe do produto selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do produto selecionado.
     open -> ProductDetail
-    // Envia o produto para revisão.
+    // REVIEW [2026-12-15] Envia o produto para revisão.
     submit -> Product.submitForReview
-    // Publica o produto.
+    // REVIEW [2026-12-15] Publica o produto.
     publish -> Product.publish
-    // Arquiva o produto.
+    // REVIEW [2026-12-15] Arquiva o produto.
     archive -> Product.archive
   }
 }

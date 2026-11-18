@@ -1,26 +1,26 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// View de detalhe de um produto.
+// REVIEW [2026-12-15] View de detalhe de um produto.
 view ProductDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do produto", en: "Product detail" }
-  // Tipo da view: página de detalhe.
+  // REVIEW [2026-12-15] Tipo da view: página de detalhe.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Product
-  // Papéis autorizados a abrir a view.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
-  // Seções exibidas na página de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na página de detalhe.
   sections { summary; pricing; media }
 
-  // Ações disponíveis no detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis no detalhe.
   actions {
-    // Envia o produto para revisão.
+    // REVIEW [2026-12-15] Envia o produto para revisão.
     submit -> Product.submitForReview
-    // Publica o produto.
+    // REVIEW [2026-12-15] Publica o produto.
     publish -> Product.publish
-    // Arquiva o produto.
+    // REVIEW [2026-12-15] Arquiva o produto.
     archive -> Product.archive
   }
 }

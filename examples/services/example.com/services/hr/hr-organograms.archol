@@ -1,131 +1,131 @@
-// service: example.com/services/hr
-// Organograma do serviço e papéis com suas permissões.
+// REVIEW [2026-12-15] service: example.com/services/hr
+// REVIEW [2026-12-15] Organograma do serviço e papéis com suas permissões.
 
-// Organograma das pessoas envolvidas nos processos de RH.
+// REVIEW [2026-12-15] Organograma das pessoas envolvidas nos processos de RH.
 organogram People {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Organograma de pessoas", en: "People organogram" }
 
-  // Relações de subordinação entre os papéis.
+  // REVIEW [2026-12-15] Relações de subordinação entre os papéis.
   hierarchy {
-    // O gestor contratante chefia Pessoas e cultura, que chefia o recrutador.
+    // REVIEW [2026-12-15] O gestor contratante chefia Pessoas e cultura, que chefia o recrutador.
     HiringManager > PeopleOps > Recruiter
-    // Pessoas e cultura chefia o administrador de TI.
+    // REVIEW [2026-12-15] Pessoas e cultura chefia o administrador de TI.
     PeopleOps > ITAdmin
-    // O recrutador chefia o candidato.
+    // REVIEW [2026-12-15] O recrutador chefia o candidato.
     Recruiter > Candidate
-    // Pessoas e cultura chefia a nova contratação.
+    // REVIEW [2026-12-15] Pessoas e cultura chefia a nova contratação.
     PeopleOps > NewHire
   }
 
-  // Pessoas e cultura gerencia recrutador e administrador de TI.
+  // REVIEW [2026-12-15] Pessoas e cultura gerencia recrutador e administrador de TI.
   PeopleOps manages [Recruiter, ITAdmin]
-  // O gestor contratante gerencia Pessoas e cultura.
+  // REVIEW [2026-12-15] O gestor contratante gerencia Pessoas e cultura.
   HiringManager manages [PeopleOps]
-  // Em ausência do gestor por cinco dias, Pessoas e cultura assume o papel.
+  // REVIEW [2026-12-15] Em ausência do gestor por cinco dias, Pessoas e cultura assume o papel.
   HiringManager delegates to PeopleOps when absent for 5d
 }
 
-// Papel do recrutador no processo seletivo.
+// REVIEW [2026-12-15] Papel do recrutador no processo seletivo.
 role Recruiter {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Recrutador", en: "Recruiter" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consulta candidatos.
+    // REVIEW [2026-12-15] Consulta candidatos.
     candidate.view,
-    // Triagem de candidatos.
+    // REVIEW [2026-12-15] Triagem de candidatos.
     candidate.screen,
-    // Agendamento de entrevistas.
+    // REVIEW [2026-12-15] Agendamento de entrevistas.
     candidate.interview,
-    // Recusa de candidatos.
+    // REVIEW [2026-12-15] Recusa de candidatos.
     candidate.reject
   ]
 }
 
-// Papel do gestor que abre a vaga e acompanha a contratação.
+// REVIEW [2026-12-15] Papel do gestor que abre a vaga e acompanha a contratação.
 role HiringManager {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Gestor contratante", en: "Hiring manager" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consulta candidatos.
+    // REVIEW [2026-12-15] Consulta candidatos.
     candidate.view,
-    // Envio de proposta ao candidato.
+    // REVIEW [2026-12-15] Envio de proposta ao candidato.
     candidate.offer,
-    // Contratação do candidato.
+    // REVIEW [2026-12-15] Contratação do candidato.
     candidate.hire,
-    // Consulta colaboradores.
+    // REVIEW [2026-12-15] Consulta colaboradores.
     employee.view,
-    // Registro do check-in do gestor.
+    // REVIEW [2026-12-15] Registro do check-in do gestor.
     employee.checkin,
-    // Início do desligamento.
+    // REVIEW [2026-12-15] Início do desligamento.
     employee.offboarding,
-    // Acesso aos relatórios.
+    // REVIEW [2026-12-15] Acesso aos relatórios.
     report.view
   ]
 }
 
-// Papel de Pessoas e cultura, responsável pela operação de RH.
+// REVIEW [2026-12-15] Papel de Pessoas e cultura, responsável pela operação de RH.
 role PeopleOps {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pessoas e cultura", en: "People operations" }
-  // Herda as permissões do recrutador.
+  // REVIEW [2026-12-15] Herda as permissões do recrutador.
   inherits: Recruiter
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consulta colaboradores.
+    // REVIEW [2026-12-15] Consulta colaboradores.
     employee.view,
-    // Registro de contratação.
+    // REVIEW [2026-12-15] Registro de contratação.
     employee.hire,
-    // Desligamento do colaborador.
+    // REVIEW [2026-12-15] Desligamento do colaborador.
     employee.terminate,
-    // Gestão dos documentos do colaborador.
+    // REVIEW [2026-12-15] Gestão dos documentos do colaborador.
     employee.documents,
-    // Consulta de acessos.
+    // REVIEW [2026-12-15] Consulta de acessos.
     access.view,
-    // Consulta de equipamentos.
+    // REVIEW [2026-12-15] Consulta de equipamentos.
     equipment.view,
-    // Registro da entrevista de saída.
+    // REVIEW [2026-12-15] Registro da entrevista de saída.
     exit.interview,
-    // Acesso aos relatórios.
+    // REVIEW [2026-12-15] Acesso aos relatórios.
     report.view
   ]
 }
 
-// Papel do administrador de TI, responsável por acessos e equipamentos.
+// REVIEW [2026-12-15] Papel do administrador de TI, responsável por acessos e equipamentos.
 role ITAdmin {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Administrador de TI", en: "IT administrator" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consulta de acessos.
+    // REVIEW [2026-12-15] Consulta de acessos.
     access.view,
-    // Provisionamento de acessos.
+    // REVIEW [2026-12-15] Provisionamento de acessos.
     access.provision,
-    // Revogação de acessos.
+    // REVIEW [2026-12-15] Revogação de acessos.
     access.revoke,
-    // Consulta de equipamentos.
+    // REVIEW [2026-12-15] Consulta de equipamentos.
     equipment.view,
-    // Entrega de equipamentos.
+    // REVIEW [2026-12-15] Entrega de equipamentos.
     equipment.deliver,
-    // Consulta colaboradores.
+    // REVIEW [2026-12-15] Consulta colaboradores.
     employee.view
   ]
 }
 
-// Papel do candidato que se inscreve em uma vaga.
+// REVIEW [2026-12-15] Papel do candidato que se inscreve em uma vaga.
 role Candidate {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Candidato", en: "Candidate" }
-  // Permite ver os próprios dados e se candidatar.
+  // REVIEW [2026-12-15] Permite ver os próprios dados e se candidatar.
   permissions: [candidate.viewOwn, candidate.apply]
 }
 
-// Papel da pessoa recém-contratada durante a integração.
+// REVIEW [2026-12-15] Papel da pessoa recém-contratada durante a integração.
 role NewHire {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Nova contratação", en: "New hire" }
-  // Permite ver os próprios dados, enviar documentos e confirmar acesso.
+  // REVIEW [2026-12-15] Permite ver os próprios dados, enviar documentos e confirmar acesso.
   permissions: [employee.viewOwn, employee.documents, employee.confirmAccess]
 }

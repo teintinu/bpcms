@@ -1,337 +1,337 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Documento que representa uma solicitação de devolução.
+// REVIEW [2026-12-15] Documento que representa uma solicitação de devolução.
 document ReturnRequest {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Solicitação de devolução", en: "Return request" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Support"
-  // Sincronização ao vivo: réplicas acompanham cada transição.
+  // REVIEW [2026-12-15] Sincronização ao vivo: réplicas acompanham cada transição.
   sync: live
-  // Campos que compõem a solicitação.
+  // REVIEW [2026-12-15] Campos que compõem a solicitação.
   fields {
-    // Pedido que o cliente quer devolver; consultável.
+    // REVIEW [2026-12-15] Pedido que o cliente quer devolver; consultável.
     order: Order {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
-      // Permite localizar a devolução pelo pedido.
+      // REVIEW [2026-12-15] Permite localizar a devolução pelo pedido.
       lookup
     }
-    // Pagamento que será estornado no reembolso.
+    // REVIEW [2026-12-15] Pagamento que será estornado no reembolso.
     payment: Payment {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pagamento", en: "Payment" }
     }
-    // Remessa devolvida pelo cliente.
+    // REVIEW [2026-12-15] Remessa devolvida pelo cliente.
     shipment: Shipment {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Remessa", en: "Shipment" }
     }
-    // Motivo declarado pelo cliente para devolver.
+    // REVIEW [2026-12-15] Motivo declarado pelo cliente para devolver.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-    // Situação atual da devolução, consultável.
+    // REVIEW [2026-12-15] Situação atual da devolução, consultável.
     status: ReturnStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Valor a reembolsar em reais; consultável.
+    // REVIEW [2026-12-15] Valor a reembolsar em reais; consultável.
     refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" }, lookup, currency: BRL }
-    // Instante em que o cliente pediu a devolução.
+    // REVIEW [2026-12-15] Instante em que o cliente pediu a devolução.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
-    // Instante da conferência feita pelo agente.
+    // REVIEW [2026-12-15] Instante da conferência feita pelo agente.
     reviewedAt: DateTime { title: { pt-BR: "Conferido em", en: "Reviewed at" } }
-    // Instante em que o reembolso foi efetivado.
+    // REVIEW [2026-12-15] Instante em que o reembolso foi efetivado.
     refundedAt: DateTime { title: { pt-BR: "Reembolsado em", en: "Refunded at" } }
   }
 
-  // Índices que sustentam consultas e filas da devolução.
+  // REVIEW [2026-12-15] Índices que sustentam consultas e filas da devolução.
   indexes {
-    // Recupera a devolução a partir do pedido.
+    // REVIEW [2026-12-15] Recupera a devolução a partir do pedido.
     byOrder: [order.id] hash
-    // Fila de devoluções por situação e data do pedido.
+    // REVIEW [2026-12-15] Fila de devoluções por situação e data do pedido.
     byStatus: [status, requestedAt] range
   }
 
 
-  // Ações que operam o ciclo de vida da devolução.
+  // REVIEW [2026-12-15] Ações que operam o ciclo de vida da devolução.
   actions {
-    // Registra o pedido de devolução com justificativa.
+    // REVIEW [2026-12-15] Registra o pedido de devolução com justificativa.
     request(justification: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Solicitar devolução", en: "Request return" }
-      // Apenas agentes registram a solicitação.
+      // REVIEW [2026-12-15] Apenas agentes registram a solicitação.
       roles: [SupportAgent]
-      // Exige justificativa com pelo menos 10 caracteres.
+      // REVIEW [2026-12-15] Exige justificativa com pelo menos 10 caracteres.
       rule justification.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
-      // Efeitos executados quando a validação passa.
+      // REVIEW [2026-12-15] Efeitos executados quando a validação passa.
       {
-        // Grava a justificativa como motivo da devolução.
+        // REVIEW [2026-12-15] Grava a justificativa como motivo da devolução.
         reason = justification
-        // Registra o instante da solicitação.
+        // REVIEW [2026-12-15] Registra o instante da solicitação.
         requestedAt = now()
-        // Emite o evento Requested com o motivo.
+        // REVIEW [2026-12-15] Emite o evento Requested com o motivo.
         emit Requested { reason: justification }
       }
     }
 
-    // Marca a conferência da devolução pelo agente.
+    // REVIEW [2026-12-15] Marca a conferência da devolução pelo agente.
     review(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Conferir devolução", en: "Review return" }
-      // Apenas agentes conferem devoluções.
+      // REVIEW [2026-12-15] Apenas agentes conferem devoluções.
       roles: [SupportAgent]
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Registra o instante da conferência.
+        // REVIEW [2026-12-15] Registra o instante da conferência.
         reviewedAt = now()
       }
     }
 
-    // Aprova a devolução.
+    // REVIEW [2026-12-15] Aprova a devolução.
     approve(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Aprovar devolução", en: "Approve return" }
-      // Somente gerentes aprovam devoluções.
+      // REVIEW [2026-12-15] Somente gerentes aprovam devoluções.
       roles: [Manager]
-      // Transição para Aprovado.
+      // REVIEW [2026-12-15] Transição para Aprovado.
       to: status.Approved
     }
 
-    // Rejeita a devolução com justificativa.
+    // REVIEW [2026-12-15] Rejeita a devolução com justificativa.
     reject(justification: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Rejeitar devolução", en: "Reject return" }
-      // Somente gerentes rejeitam devoluções.
+      // REVIEW [2026-12-15] Somente gerentes rejeitam devoluções.
       roles: [Manager]
-      // Transição para Rejeitado.
+      // REVIEW [2026-12-15] Transição para Rejeitado.
       to: status.Rejected
-      // Mapeia a justificativa para o campo reason do evento Rejected.
+      // REVIEW [2026-12-15] Mapeia a justificativa para o campo reason do evento Rejected.
       emits { reason: justification }
-      // Exige justificativa com pelo menos 10 caracteres.
+      // REVIEW [2026-12-15] Exige justificativa com pelo menos 10 caracteres.
       rule justification.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
 
-    // Registra o recebimento físico da devolução.
+    // REVIEW [2026-12-15] Registra o recebimento físico da devolução.
     receive(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Receber devolução", en: "Receive return" }
-      // Apenas agentes registram o recebimento.
+      // REVIEW [2026-12-15] Apenas agentes registram o recebimento.
       roles: [SupportAgent]
-      // Transição para Recebida.
+      // REVIEW [2026-12-15] Transição para Recebida.
       to: status.Received
     }
 
-    // Efetiva o reembolso da devolução.
+    // REVIEW [2026-12-15] Efetiva o reembolso da devolução.
     refund(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Reembolsar", en: "Refund" }
-      // Somente gerentes reembolsam.
+      // REVIEW [2026-12-15] Somente gerentes reembolsam.
       roles: [Manager]
-      // Transição para Reembolsado.
+      // REVIEW [2026-12-15] Transição para Reembolsado.
       to: status.Refunded
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Registra o instante do reembolso.
+        // REVIEW [2026-12-15] Registra o instante do reembolso.
         refundedAt = now()
       }
     }
 
-    // Cancela a devolução com justificativa.
+    // REVIEW [2026-12-15] Cancela a devolução com justificativa.
     cancel(justification: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Cancelar devolução", en: "Cancel return" }
-      // Somente gerentes cancelam devoluções.
+      // REVIEW [2026-12-15] Somente gerentes cancelam devoluções.
       roles: [Manager]
-      // Transição para Cancelado.
+      // REVIEW [2026-12-15] Transição para Cancelado.
       to: status.Cancelled
-      // Mapeia a justificativa para o campo reason do evento Cancelled.
+      // REVIEW [2026-12-15] Mapeia a justificativa para o campo reason do evento Cancelled.
       emits { reason: justification }
     }
   }
 
-  // Invariante: o valor do reembolso nunca pode ser negativo.
+  // REVIEW [2026-12-15] Invariante: o valor do reembolso nunca pode ser negativo.
   rule refundAmount >= 0 {
-    // Mensagem da invariante em português.
+    // REVIEW [2026-12-15] Mensagem da invariante em português.
     pt-BR: "Verifique os dados informados"
-    // Mensagem da invariante em inglês.
+    // REVIEW [2026-12-15] Mensagem da invariante em inglês.
     en: "Check the informed data"
 
   }
-  // Invariante: devolução aprovada precisa ter valor de reembolso.
+  // REVIEW [2026-12-15] Invariante: devolução aprovada precisa ter valor de reembolso.
   rule status == Approved implies refundAmount > 0 {
-    // Mensagem da invariante em português.
+    // REVIEW [2026-12-15] Mensagem da invariante em português.
     pt-BR: "A devolução aprovada precisa ter valor"
-    // Mensagem da invariante em inglês.
+    // REVIEW [2026-12-15] Mensagem da invariante em inglês.
     en: "Approved return must have a value"
 
   }
 }
 
-// Máquina de estados que conduz a situação da devolução.
+// REVIEW [2026-12-15] Máquina de estados que conduz a situação da devolução.
 shape ReturnStatus {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Situação da devolução", en: "Return status" }
-  // Base de estado: valores com transições nomeadas.
+  // REVIEW [2026-12-15] Base de estado: valores com transições nomeadas.
   base: state
-  // Estado inicial Solicitado, alcançado pela transição Requested.
+  // REVIEW [2026-12-15] Estado inicial Solicitado, alcançado pela transição Requested.
   initial: Requested with transition Requested {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Devolução solicitada", en: "Return requested" }
-    // Dados exigidos para entrar no estado inicial.
+    // REVIEW [2026-12-15] Dados exigidos para entrar no estado inicial.
     payload {
-      // Motivo informado pelo cliente.
+      // REVIEW [2026-12-15] Motivo informado pelo cliente.
       reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     }
   }
-  // Estado Solicitado.
+  // REVIEW [2026-12-15] Estado Solicitado.
   value Requested {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Solicitado", en: "Requested" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Requested
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 10
 
-    // Transição de Solicitado para Aprovado.
+    // REVIEW [2026-12-15] Transição de Solicitado para Aprovado.
     transition Approved {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução aprovada", en: "Return approved" }
-      // Dados levados ao aprovar.
+      // REVIEW [2026-12-15] Dados levados ao aprovar.
       payload {
-        // Valor aprovado para reembolso.
+        // REVIEW [2026-12-15] Valor aprovado para reembolso.
         refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
       }
     }
 
-    // Transição de Solicitado para Rejeitado.
+    // REVIEW [2026-12-15] Transição de Solicitado para Rejeitado.
     transition Rejected {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução rejeitada", en: "Return rejected" }
-      // Dados levados ao rejeitar.
+      // REVIEW [2026-12-15] Dados levados ao rejeitar.
       payload {
-        // Motivo da rejeição.
+        // REVIEW [2026-12-15] Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
-    // Transição de Solicitado para Cancelado.
+    // REVIEW [2026-12-15] Transição de Solicitado para Cancelado.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
-      // Dados levados ao cancelar.
+      // REVIEW [2026-12-15] Dados levados ao cancelar.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado Aprovado.
+  // REVIEW [2026-12-15] Estado Aprovado.
   value Approved {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Aprovado", en: "Approved" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Approved
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 20
 
-    // Transição de Aprovado para Recebida.
+    // REVIEW [2026-12-15] Transição de Aprovado para Recebida.
     transition Received {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução recebida", en: "Return received" }
     }
 
-    // Transição de Aprovado para Cancelado.
+    // REVIEW [2026-12-15] Transição de Aprovado para Cancelado.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
-      // Dados levados ao cancelar.
+      // REVIEW [2026-12-15] Dados levados ao cancelar.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado Rejeitado, terminal.
+  // REVIEW [2026-12-15] Estado Rejeitado, terminal.
   value Rejected {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Rejected
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 30
   }
-  // Estado Recebida.
+  // REVIEW [2026-12-15] Estado Recebida.
   value Received {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Recebida", en: "Received" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Received
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 40
 
-    // Transição de Recebida para Reembolsado.
+    // REVIEW [2026-12-15] Transição de Recebida para Reembolsado.
     transition Refunded {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
-      // Dados levados ao reembolsar.
+      // REVIEW [2026-12-15] Dados levados ao reembolsar.
       payload {
-        // Valor efetivamente reembolsado.
+        // REVIEW [2026-12-15] Valor efetivamente reembolsado.
         refundAmount: std.Money { title: { pt-BR: "Valor do reembolso", en: "Refund amount" } }
       }
     }
 
-    // Transição de Recebida para Cancelado.
+    // REVIEW [2026-12-15] Transição de Recebida para Cancelado.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
-      // Dados levados ao cancelar.
+      // REVIEW [2026-12-15] Dados levados ao cancelar.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado terminal Reembolsado.
+  // REVIEW [2026-12-15] Estado terminal Reembolsado.
   value Refunded {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Reembolsado", en: "Refunded" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Refunded
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 50
   }
-  // Estado terminal Cancelado.
+  // REVIEW [2026-12-15] Estado terminal Cancelado.
   value Cancelled {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Cancelled
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 60
   }
-  // Renderização sem formatação especial.
+  // REVIEW [2026-12-15] Renderização sem formatação especial.
   format: plain
 }
 
-// Política que restringe reembolso acima do limite configurado.
+// REVIEW [2026-12-15] Política que restringe reembolso acima do limite configurado.
 policy RefundAuthorization {
-  // Ação específica à qual a política se aplica.
+  // REVIEW [2026-12-15] Ação específica à qual a política se aplica.
   appliesTo: ReturnRequest.refund
-  // Condição verificada: o valor não pode passar do limite.
+  // REVIEW [2026-12-15] Condição verificada: o valor não pode passar do limite.
   rule: refundAmount <= RefundLimit
-  // Severidade que bloqueia a ação em caso de violação.
+  // REVIEW [2026-12-15] Severidade que bloqueia a ação em caso de violação.
   severity: block
-  // Texto explicativo exibido na violação.
+  // REVIEW [2026-12-15] Texto explicativo exibido na violação.
   message: "Reembolso acima do limite exige aprovação de gerente"
-  // Registra a avaliação da política na trilha de auditoria.
+  // REVIEW [2026-12-15] Registra a avaliação da política na trilha de auditoria.
   audit: true
 }

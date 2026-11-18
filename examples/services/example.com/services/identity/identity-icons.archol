@@ -1,31 +1,31 @@
-// service: example.com/services/identity
+// REVIEW [2026-12-15] service: example.com/services/identity
 
-// Ícone do estado ativo, usado pelo shape UserStatus.
+// REVIEW [2026-12-15] Ícone do estado ativo, usado pelo shape UserStatus.
 icon Active {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Ativo", en: "Active" }
 }
 
-// Ícone do estado suspenso, usado pelo shape UserStatus.
+// REVIEW [2026-12-15] Ícone do estado suspenso, usado pelo shape UserStatus.
 icon Suspended {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Suspenso", en: "Suspended" }
 }
 
-// Ícone do estado desativado, usado pelo shape UserStatus.
+// REVIEW [2026-12-15] Ícone do estado desativado, usado pelo shape UserStatus.
 icon Disabled {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Desativado", en: "Disabled" }
 }
 
-// Ícone do estado encerrado, usado pelo shape SessionStatus.
+// REVIEW [2026-12-15] Ícone do estado encerrado, usado pelo shape SessionStatus.
 icon Ended {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Encerrada", en: "Ended" }
 }
 
-// Ícone do estado expirado, usado pelo shape SessionStatus.
+// REVIEW [2026-12-15] Ícone do estado expirado, usado pelo shape SessionStatus.
 icon Expired {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Expirada", en: "Expired" }
 }

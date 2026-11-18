@@ -45,6 +45,8 @@ During compilation references are resolved to **paths**, not numbers. At the
 end:
 
 - every artifact in the application closure is a root and gets an id;
+- pending comments (`TODO`, `REVIEW`, ...) are metadata and never get ids or
+  lock lines;
 - a field, enum value, or parameter gets an id only when something references
   it (`invoice.status`, `== Overdue`, type references, roles, ...);
 - identifiers never referenced stay without an id and without a lock line;

@@ -1,306 +1,306 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Documento que representa uma amostra biológica coletada.
+// REVIEW [2026-12-15] Documento que representa uma amostra biológica coletada.
 document Sample {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Amostra", en: "Sample" }
-  version: 1 // Versão do artefato Document.
-  owner: "Laboratory" // Dono de negócio do documento.
-  sync: live // Sincronização em tempo real entre cliente e servidor.
-  // Campos que compõem a amostra.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document.
+  owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio do documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
+  // REVIEW [2026-12-15] Campos que compõem a amostra.
   fields {
-    // Código da amostra; único e consultável.
+    // REVIEW [2026-12-15] Código da amostra; único e consultável.
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
-    // Laboratório responsável pela amostra.
+    // REVIEW [2026-12-15] Laboratório responsável pela amostra.
     laboratory: Laboratory {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
-    // Origem da amostra; consultável para filtros.
+    // REVIEW [2026-12-15] Origem da amostra; consultável para filtros.
     kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
-    // Paciente de quem a amostra foi coletada.
+    // REVIEW [2026-12-15] Paciente de quem a amostra foi coletada.
     patient: Citizen {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Paciente", en: "Patient" }
-      // Permite localizar amostras pelo paciente.
+      // REVIEW [2026-12-15] Permite localizar amostras pelo paciente.
       lookup
     }
-    // Laboratório de apoio que forneceu ou recebeu a amostra.
+    // REVIEW [2026-12-15] Laboratório de apoio que forneceu ou recebeu a amostra.
     supportLab: SupportLab {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
     }
-    // Lote de controle de qualidade ao qual a amostra pertence.
+    // REVIEW [2026-12-15] Lote de controle de qualidade ao qual a amostra pertence.
     controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
-    // Situação da amostra; consultável para filtros.
+    // REVIEW [2026-12-15] Situação da amostra; consultável para filtros.
     status: SampleStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Instante em que a amostra foi coletada.
+    // REVIEW [2026-12-15] Instante em que a amostra foi coletada.
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
   }
 
-  // Índices secundários para consulta.
+  // REVIEW [2026-12-15] Índices secundários para consulta.
   indexes {
-    // Índice por situação e data de coleta, consultado por faixa.
+    // REVIEW [2026-12-15] Índice por situação e data de coleta, consultado por faixa.
     byStatus: [status, collectedAt] range
-    // Índice por paciente, consultado por igualdade.
+    // REVIEW [2026-12-15] Índice por paciente, consultado por igualdade.
     byPatient: [patient.id] hash
   }
 
 
-  // Ações que movimentam a amostra.
+  // REVIEW [2026-12-15] Ações que movimentam a amostra.
   actions {
-    // Action que registra a coleta da amostra.
+    // REVIEW [2026-12-15] Action que registra a coleta da amostra.
     collect(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Coletar", en: "Collect" }
-      roles: [Collector] // Papéis autorizados a coletar.
-      // Corpo da action: registra a data e emite o evento Collected.
+      roles: [Collector] // REVIEW [2026-12-15] Papéis autorizados a coletar.
+      // REVIEW [2026-12-15] Corpo da action: registra a data e emite o evento Collected.
       {
-        // Registra o instante da coleta.
+        // REVIEW [2026-12-15] Registra o instante da coleta.
         collectedAt = now()
-        // Emite o evento de amostra coletada.
+        // REVIEW [2026-12-15] Emite o evento de amostra coletada.
         emit Collected
       }
     }
 
-    // Action que refaz a coleta de uma amostra rejeitada.
+    // REVIEW [2026-12-15] Action que refaz a coleta de uma amostra rejeitada.
     recollect(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Recoletar", en: "Recollect" }
-      roles: [Collector] // Papéis autorizados a recoletar.
-      to: status.Collected // Volta a amostra para o estado Collected.
-      // Corpo da action: atualiza a data da coleta.
+      roles: [Collector] // REVIEW [2026-12-15] Papéis autorizados a recoletar.
+      to: status.Collected // REVIEW [2026-12-15] Volta a amostra para o estado Collected.
+      // REVIEW [2026-12-15] Corpo da action: atualiza a data da coleta.
       {
-        // Registra o novo instante da coleta.
+        // REVIEW [2026-12-15] Registra o novo instante da coleta.
         collectedAt = now()
       }
     }
 
-    // Action que registra o recebimento da amostra no laboratório.
+    // REVIEW [2026-12-15] Action que registra o recebimento da amostra no laboratório.
     receive(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Receber", en: "Receive" }
-      roles: [Collector] // Papéis autorizados a receber.
-      to: status.Received // Transição para o estado Received.
+      roles: [Collector] // REVIEW [2026-12-15] Papéis autorizados a receber.
+      to: status.Received // REVIEW [2026-12-15] Transição para o estado Received.
     }
 
-    // Action que rejeita a amostra com justificativa.
+    // REVIEW [2026-12-15] Action que rejeita a amostra com justificativa.
     reject(justification: string){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Rejeitar", en: "Reject" }
-      roles: [Analyst] // Papéis autorizados a rejeitar.
-      to: status.Rejected // Transição para o estado Rejected.
-      // Emite a transição levando o motivo da rejeição.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a rejeitar.
+      to: status.Rejected // REVIEW [2026-12-15] Transição para o estado Rejected.
+      // REVIEW [2026-12-15] Emite a transição levando o motivo da rejeição.
       emits { reason: justification }
-      // Exige justificativa com pelo menos dez caracteres.
+      // REVIEW [2026-12-15] Exige justificativa com pelo menos dez caracteres.
       rule justification.length >= 10 {
-        pt-BR: "Informe o motivo da rejeição" // Mensagem do erro em português.
-        en: "Enter the rejection reason" // Mensagem do erro em inglês.
+        pt-BR: "Informe o motivo da rejeição" // REVIEW [2026-12-15] Mensagem do erro em português.
+        en: "Enter the rejection reason" // REVIEW [2026-12-15] Mensagem do erro em inglês.
       }
     }
 
-    // Action que inicia o processamento da amostra.
+    // REVIEW [2026-12-15] Action que inicia o processamento da amostra.
     process(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Processar", en: "Process" }
-      roles: [Analyst] // Papéis autorizados a processar.
-      to: status.Processing // Transição para o estado Processing.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a processar.
+      to: status.Processing // REVIEW [2026-12-15] Transição para o estado Processing.
     }
 
-    // Action que encaminha a amostra a um laboratório de apoio.
+    // REVIEW [2026-12-15] Action que encaminha a amostra a um laboratório de apoio.
     refer(lab: SupportLab){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Encaminhar", en: "Refer" }
-      roles: [SupportLiaison] // Papéis autorizados a encaminhar.
-      to: status.Referred // Transição para o estado Referred.
-      // Emite a transição levando o laboratório de destino.
+      roles: [SupportLiaison] // REVIEW [2026-12-15] Papéis autorizados a encaminhar.
+      to: status.Referred // REVIEW [2026-12-15] Transição para o estado Referred.
+      // REVIEW [2026-12-15] Emite a transição levando o laboratório de destino.
       emits { supportLab: lab }
     }
 
-    // Action que registra o resultado da amostra.
+    // REVIEW [2026-12-15] Action que registra o resultado da amostra.
     result(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Resultar", en: "Result" }
-      roles: [Analyst] // Papéis autorizados a resultar.
-      to: status.Resulted // Transição para o estado Resulted.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a resultar.
+      to: status.Resulted // REVIEW [2026-12-15] Transição para o estado Resulted.
     }
   }
 
-  // Exige paciente quando a origem da amostra é Patient.
+  // REVIEW [2026-12-15] Exige paciente quando a origem da amostra é Patient.
   rule kind == Patient implies patient != null {
-    pt-BR: "Selecione o paciente" // Mensagem do erro em português.
-    en: "Select the patient" // Mensagem do erro em inglês.
+    pt-BR: "Selecione o paciente" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Select the patient" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
-  // Exige laboratório de apoio quando a origem é Support.
+  // REVIEW [2026-12-15] Exige laboratório de apoio quando a origem é Support.
   rule kind == Support implies supportLab != null {
-    pt-BR: "Selecione o laboratório de apoio" // Mensagem do erro em português.
-    en: "Select the support lab" // Mensagem do erro em inglês.
+    pt-BR: "Selecione o laboratório de apoio" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Select the support lab" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
-  // Exige lote de controle quando a origem é Control.
+  // REVIEW [2026-12-15] Exige lote de controle quando a origem é Control.
   rule kind == Control implies controlLot != null {
-    pt-BR: "Informe o lote de controle" // Mensagem do erro em português.
-    en: "Enter the control lot" // Mensagem do erro em inglês.
+    pt-BR: "Informe o lote de controle" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Enter the control lot" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
 }
 
-// Shape do código da amostra, com normalização para maiúsculas.
+// REVIEW [2026-12-15] Shape do código da amostra, com normalização para maiúsculas.
 shape SampleCode {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Código da amostra", en: "Sample code" }
-  base: string // Tipo base: texto simples.
-  normalize: upper-trim // Normaliza removendo espaços e convertendo para maiúsculas.
-  maxLength: 40 // Limita o código a quarenta caracteres.
-  format: plain // Exibição sem máscara.
+  base: string // REVIEW [2026-12-15] Tipo base: texto simples.
+  normalize: upper-trim // REVIEW [2026-12-15] Normaliza removendo espaços e convertendo para maiúsculas.
+  maxLength: 40 // REVIEW [2026-12-15] Limita o código a quarenta caracteres.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }
 
-// Shape de classificação com a origem da amostra.
+// REVIEW [2026-12-15] Shape de classificação com a origem da amostra.
 shape SampleKind {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Origem da amostra", en: "Sample origin" }
-  base: classification // Tipo base: classificação fechada.
-  // Valor de origem "paciente".
+  base: classification // REVIEW [2026-12-15] Tipo base: classificação fechada.
+  // REVIEW [2026-12-15] Valor de origem "paciente".
   value Patient {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Paciente", en: "Patient" }
-    icon: Patient // Ícone associado ao valor.
-    ordinal: 10 // Ordem de exibição do valor.
+    icon: Patient // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor de origem "laboratório de apoio".
+  // REVIEW [2026-12-15] Valor de origem "laboratório de apoio".
   value Support {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
-    icon: Support // Ícone associado ao valor.
-    ordinal: 20 // Ordem de exibição do valor.
+    icon: Support // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor de origem "controle".
+  // REVIEW [2026-12-15] Valor de origem "controle".
   value Control {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Controle", en: "Control" }
-    icon: Control // Ícone associado ao valor.
-    ordinal: 30 // Ordem de exibição do valor.
+    icon: Control // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  format: plain // Exibição sem máscara.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }
 
-// Shape de estado que acompanha o ciclo de vida da amostra.
+// REVIEW [2026-12-15] Shape de estado que acompanha o ciclo de vida da amostra.
 shape SampleStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
-  base: state // Tipo base: máquina de estados.
-  // Estado inicial Collected, criado pela transição Collected.
+  base: state // REVIEW [2026-12-15] Tipo base: máquina de estados.
+  // REVIEW [2026-12-15] Estado inicial Collected, criado pela transição Collected.
   initial: Collected with transition Collected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Amostra coletada", en: "Sample collected" }
   }
-  // Estado "coletada".
+  // REVIEW [2026-12-15] Estado "coletada".
   value Collected {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Coletada", en: "Collected" }
-    icon: Collected // Ícone associado ao estado.
-    ordinal: 10 // Ordem de exibição do estado.
+    icon: Collected // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Received.
+    // REVIEW [2026-12-15] Transição para o estado Received.
     transition Received {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra recebida", en: "Sample received" }
     }
 
-    // Transição para o estado Rejected.
+    // REVIEW [2026-12-15] Transição para o estado Rejected.
     transition Rejected {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo da rejeição.
+        // REVIEW [2026-12-15] Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado "recebida".
+  // REVIEW [2026-12-15] Estado "recebida".
   value Received {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Recebida", en: "Received" }
-    icon: Received // Ícone associado ao estado.
-    ordinal: 20 // Ordem de exibição do estado.
+    icon: Received // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Rejected.
+    // REVIEW [2026-12-15] Transição para o estado Rejected.
     transition Rejected {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo da rejeição.
+        // REVIEW [2026-12-15] Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
-    // Transição para o estado Processing.
+    // REVIEW [2026-12-15] Transição para o estado Processing.
     transition Processing {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra em processamento", en: "Sample processing" }
     }
 
-    // Transição para o estado Referred.
+    // REVIEW [2026-12-15] Transição para o estado Referred.
     transition Referred {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra encaminhada", en: "Sample referred" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Laboratório de apoio de destino.
+        // REVIEW [2026-12-15] Laboratório de apoio de destino.
         supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
       }
     }
   }
-  // Estado "em processamento".
+  // REVIEW [2026-12-15] Estado "em processamento".
   value Processing {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em processamento", en: "Processing" }
-    icon: Processing // Ícone associado ao estado.
-    ordinal: 30 // Ordem de exibição do estado.
+    icon: Processing // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Resulted.
+    // REVIEW [2026-12-15] Transição para o estado Resulted.
     transition Resulted {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
-  // Estado "resultada".
+  // REVIEW [2026-12-15] Estado "resultada".
   value Resulted {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Resultada", en: "Resulted" }
-    icon: Resulted // Ícone associado ao estado.
-    ordinal: 40 // Ordem de exibição do estado.
+    icon: Resulted // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição do estado.
   }
-  // Estado "encaminhada".
+  // REVIEW [2026-12-15] Estado "encaminhada".
   value Referred {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Encaminhada", en: "Referred" }
-    icon: Referred // Ícone associado ao estado.
-    ordinal: 50 // Ordem de exibição do estado.
+    icon: Referred // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 50 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Resulted.
+    // REVIEW [2026-12-15] Transição para o estado Resulted.
     transition Resulted {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
-  // Estado "rejeitada".
+  // REVIEW [2026-12-15] Estado "rejeitada".
   value Rejected {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
-    icon: Rejected // Ícone associado ao estado.
-    ordinal: 60 // Ordem de exibição do estado.
+    icon: Rejected // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 60 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição de recoleta, disparada pelo evento Recollected.
+    // REVIEW [2026-12-15] Transição de recoleta, disparada pelo evento Recollected.
     transition Collected {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: Recollected
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
     }
   }
-  format: plain // Exibição sem máscara.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }

@@ -27,6 +27,89 @@ function getChildren(node) {
   return children;
 }
 
+
+// The server returns comments in `SourceFile.pending`. The explorer shows them
+// as children of the deepest node that contains them, in source order, so the
+// tree follows the file instead of listing every pending at the end.
+function mergePending(ast) {
+  if (!isAstNode(ast) || !Array.isArray(ast.pending)) return ast;
+  const pending = ast.pending
+    .filter(isAstNode)
+    .filter((node) => node.kind === 'Pending')
+    .sort((left, right) => spanStart(left) - spanStart(right));
+  delete ast.pending;
+  for (const item of pending) {
+    const container = pendingContainer(ast, item.span, null);
+    if (!container) continue;
+    const target = chooseArray(container, item.span);
+    if (!target) continue;
+    target.array.splice(insertIndex(target.array, item.span), 0, item);
+  }
+  return ast;
+}
+
+function spanStart(node) {
+  return node && node.span && Number.isFinite(node.span.start) ? node.span.start : 0;
+}
+
+function contains(span, point) {
+  return Boolean(span)
+    && Number.isFinite(span.start)
+    && Number.isFinite(span.end)
+    && Number.isFinite(point)
+    && point >= span.start
+    && point <= span.end;
+}
+
+// Deepest node with a child array that contains the pending comment.
+function pendingContainer(node, span, fallback) {
+  const children = getChildren(node);
+  for (const child of children) {
+    if (!isAstNode(child) || child.kind === 'Pending') continue;
+    if (!child.span || !contains(child.span, span.start)) continue;
+    const deeper = pendingContainer(child, span, fallback);
+    if (deeper && arrayKeys(deeper).length > 0) return deeper;
+  }
+  if (arrayKeys(node).length > 0) return node;
+  return fallback;
+}
+
+function arrayKeys(node) {
+  return Object.keys(node).filter((key) => {
+    if (key === 'pending' || key === 'span' || key === 'keywordSpan') return false;
+    const value = node[key];
+    return Array.isArray(value) && value.some((item) => isAstNode(item));
+  });
+}
+
+function chooseArray(node, span) {
+  const keys = arrayKeys(node);
+  if (keys.length === 0) return null;
+  let best = null;
+  for (const key of keys) {
+    const array = node[key];
+    let distance = Infinity;
+    for (const item of array) {
+      if (!isAstNode(item) || !item.span) continue;
+      if (contains(item.span, span.start)) {
+        distance = 0;
+        break;
+      }
+      distance = Math.min(distance, Math.abs(item.span.start - span.start));
+    }
+    if (!best || distance < best.distance) best = { array, distance };
+  }
+  return best;
+}
+
+function insertIndex(array, span) {
+  for (let index = 0; index < array.length; index += 1) {
+    const item = array[index];
+    if (isAstNode(item) && item.span && item.span.start > span.start) return index;
+  }
+  return array.length;
+}
+
 function nodeAtPath(root, path) {
   let node = root;
   if (!Array.isArray(path)) return null;
@@ -145,6 +228,7 @@ function textOffsetsForByteSpan(text, startByte, endByte) {
 }
 
 module.exports = {
+  mergePending,
   byteOffsetAtText,
   textOffsetsForByteSpan,
   findNodeAtOffset,

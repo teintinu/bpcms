@@ -16,6 +16,8 @@ fn main() {
     let rest = &args[1..];
     let code = match command.as_str() {
         "check" => check(rest),
+        "lint" => check(rest),
+        "format" => format(rest),
         "lock" => lock(rest),
         "applications" => applications(rest),
         "ast" => ast(rest),
@@ -39,6 +41,8 @@ fn usage() {
     eprintln!(
         "archol <command> [args]\n\n\
          \x20 check [dir] --app <uri-or-path> [--json]   compiles the application closure\n\
+         \x20 lint [dir] --app <uri-or-path> [--json]    same diagnostics as check\n\
+         \x20 format [dir] [--check]                     uppercases pending comment keywords\n\
          \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
          \x20 ast <file> [--app <uri-or-path>] [--json]   prints the AST (annotated with --app)\n\
@@ -52,6 +56,7 @@ struct Options {
     positional: Vec<String>,
     app: Option<String>,
     json: bool,
+    check: bool,
 }
 
 impl Options {
@@ -59,11 +64,13 @@ impl Options {
         let mut positional = Vec::new();
         let mut app = None;
         let mut json = false;
+        let mut check = false;
         let mut iter = args.iter();
         while let Some(arg) = iter.next() {
             match arg.as_str() {
                 "--app" => app = iter.next().cloned(),
                 "--json" => json = true,
+                "--check" => check = true,
                 _ => positional.push(arg.clone()),
             }
         }
@@ -71,6 +78,7 @@ impl Options {
             positional,
             app,
             json,
+            check,
         }
     }
 
@@ -163,6 +171,37 @@ fn check(args: &[String]) -> i32 {
         1
     } else {
         0
+    }
+}
+
+fn format(args: &[String]) -> i32 {
+    let options = Options::parse(args);
+    let root = options.root();
+    let (files, read_errors) = load_files(&root);
+    for (path, message) in &read_errors {
+        eprintln!("{path}: {message}");
+    }
+    let mut changed = 0;
+    for file in &files {
+        let parsed = parse(&file.source, file.path.clone());
+        let formatted = archol_core::pending::format_source(&file.source, &parsed.ast.pending);
+        if formatted == file.source {
+            continue;
+        }
+        changed += 1;
+        if options.check {
+            println!("{}", file.path);
+        } else if let Err(error) = std::fs::write(&file.path, formatted) {
+            eprintln!("{}: {error}", file.path);
+            return 2;
+        } else {
+            println!("{}", file.path);
+        }
+    }
+    if options.check {
+        i32::from(changed > 0 || !read_errors.is_empty())
+    } else {
+        i32::from(!read_errors.is_empty())
     }
 }
 

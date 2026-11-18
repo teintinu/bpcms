@@ -1,140 +1,140 @@
-// service: example.com/services/identity
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/identity
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo de recuperação de acesso; o argumento é o documento-sujeito da instância.
+// REVIEW [2026-12-15] Declara o processo de recuperação de acesso; o argumento é o documento-sujeito da instância.
 process AccountRecovery(user: User) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Recuperação de acesso", en: "Account recovery" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Verificar a identidade, aprovar a recuperação e desbloquear o acesso"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 3d
 
-  // Papéis que participam do caso.
+  // REVIEW [2026-12-15] Papéis que participam do caso.
   by: [Clerk, Manager]
 
-  // Bloco que captura o timeout da verificação de identidade.
+  // REVIEW [2026-12-15] Bloco que captura o timeout da verificação de identidade.
   try {
-    // Abre o form de verificação de identidade para o usuário.
+    // REVIEW [2026-12-15] Abre o form de verificação de identidade para o usuário.
     IdentityVerification.show({ user })
   } catch (Timeout) {
-    // on timer da verificação: escala e segue para a aprovação
-    // Prazo estourado: abre a tarefa manual de escalonamento do caso.
+    // REVIEW [2026-12-15] on timer da verificação: escala e segue para a aprovação
+    // REVIEW [2026-12-15] Prazo estourado: abre a tarefa manual de escalonamento do caso.
     EscalateRecovery.show({ user })
   }
 
-  // Verificação concluída: abre o form de aprovação da recuperação.
+  // REVIEW [2026-12-15] Verificação concluída: abre o form de aprovação da recuperação.
   RecoveryApproval.show({ user })
 
-  // Aprovação dada: desbloqueia o acesso, levando o status a Active.
+  // REVIEW [2026-12-15] Aprovação dada: desbloqueia o acesso, levando o status a Active.
   User.unlock()
 
-  // Envia a mensagem de acesso restaurado ao usuário.
+  // REVIEW [2026-12-15] Envia a mensagem de acesso restaurado ao usuário.
   send AccessRestored {
-    // Chave de identidade/correlação da mensagem.
+    // REVIEW [2026-12-15] Chave de identidade/correlação da mensagem.
     key: user
-    // Dados levados no payload da mensagem.
+    // REVIEW [2026-12-15] Dados levados no payload da mensagem.
     with {
-      // Nome do usuário usado na mensagem.
+      // REVIEW [2026-12-15] Nome do usuário usado na mensagem.
       name: user.name
-      // Correio eletrônico usado na mensagem.
+      // REVIEW [2026-12-15] Correio eletrônico usado na mensagem.
       email: user.email
     }
   }
 
-  // Encerra o caso no desfecho de sucesso.
+  // REVIEW [2026-12-15] Encerra o caso no desfecho de sucesso.
   return Restored
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Restored {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Acesso restaurado", en: "Access restored" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 }
 
-// Form de verificação de identidade do solicitante.
+// REVIEW [2026-12-15] Form de verificação de identidade do solicitante.
 form IdentityVerification {
-  // Título exibido na inbox e no formulário.
+  // REVIEW [2026-12-15] Título exibido na inbox e no formulário.
   title: { pt-BR: "Verificação de identidade", en: "Identity verification" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: User
-  // Papéis que podem atender o form.
+  // REVIEW [2026-12-15] Papéis que podem atender o form.
   roles: [Clerk]
-  // Prazo para conclusão; estourar dispara o erro Timeout.
+  // REVIEW [2026-12-15] Prazo para conclusão; estourar dispara o erro Timeout.
   timeout: 2d
-  // Prioridade do item na fila de trabalho.
+  // REVIEW [2026-12-15] Prioridade do item na fila de trabalho.
   priority: 50
-  // Modo de atribuição: o atendente puxa o item da fila.
+  // REVIEW [2026-12-15] Modo de atribuição: o atendente puxa o item da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Nome da pessoa, usado na conferência da identidade.
+    // REVIEW [2026-12-15] Nome da pessoa, usado na conferência da identidade.
     name
-    // Correio eletrônico da pessoa.
+    // REVIEW [2026-12-15] Correio eletrônico da pessoa.
     email
-    // Apelido da pessoa.
+    // REVIEW [2026-12-15] Apelido da pessoa.
     nickname
-    // Situação atual do usuário.
+    // REVIEW [2026-12-15] Situação atual do usuário.
     status
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Confirma a identidade verificada; a action grava identityVerifiedAt.
+    // REVIEW [2026-12-15] Confirma a identidade verificada; a action grava identityVerifiedAt.
     confirm { calls: User.confirmIdentity }
   }
 }
 
-// Form de aprovação da recuperação, restrito ao gerente.
+// REVIEW [2026-12-15] Form de aprovação da recuperação, restrito ao gerente.
 form RecoveryApproval {
-  // Título exibido na inbox e no formulário.
+  // REVIEW [2026-12-15] Título exibido na inbox e no formulário.
   title: { pt-BR: "Aprovação da recuperação", en: "Recovery approval" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: User
-  // Papéis que podem atender o form.
+  // REVIEW [2026-12-15] Papéis que podem atender o form.
   roles: [Manager]
-  // Prazo para conclusão; estourar dispara o erro Timeout.
+  // REVIEW [2026-12-15] Prazo para conclusão; estourar dispara o erro Timeout.
   timeout: 1d
-  // Modo de atribuição: o gerente puxa o item da fila.
+  // REVIEW [2026-12-15] Modo de atribuição: o gerente puxa o item da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Nome da pessoa.
+    // REVIEW [2026-12-15] Nome da pessoa.
     name
-    // Correio eletrônico da pessoa.
+    // REVIEW [2026-12-15] Correio eletrônico da pessoa.
     email
-    // Situação atual do usuário.
+    // REVIEW [2026-12-15] Situação atual do usuário.
     status
-    // Momento em que a identidade foi verificada.
+    // REVIEW [2026-12-15] Momento em que a identidade foi verificada.
     identityVerifiedAt
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Aprova a recuperação; a action grava recoveryApprovedAt.
+    // REVIEW [2026-12-15] Aprova a recuperação; a action grava recoveryApprovedAt.
     approve { calls: User.approveRecovery }
   }
 }
 
-// Tarefa manual de escalonamento quando a verificação não conclui no prazo.
+// REVIEW [2026-12-15] Tarefa manual de escalonamento quando a verificação não conclui no prazo.
 manual EscalateRecovery {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Escalar recuperação de acesso", en: "Escalate account recovery" }
-  // Documento manipulado pela tarefa.
+  // REVIEW [2026-12-15] Documento manipulado pela tarefa.
   document: User
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [Manager]
-  // Orientações exibidas ao responsável pela tarefa.
+  // REVIEW [2026-12-15] Orientações exibidas ao responsável pela tarefa.
   instructions: "Falar com o solicitante e revisar a verificação"
-  // Prazo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo para conclusão da tarefa.
   timeout: 4h
 }

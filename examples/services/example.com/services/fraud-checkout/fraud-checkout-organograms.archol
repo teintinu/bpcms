@@ -1,34 +1,34 @@
-// service: example.com/services/fraud-checkout
+// REVIEW [2026-12-15] service: example.com/services/fraud-checkout
 
-// Declara o organograma de risco, que estrutura os papéis da análise antifraude.
+// REVIEW [2026-12-15] Declara o organograma de risco, que estrutura os papéis da análise antifraude.
 organogram Risk {
-  // Título exibido no builder e na navegação de papéis.
+  // REVIEW [2026-12-15] Título exibido no builder e na navegação de papéis.
   title: { pt-BR: "Organograma de risco", en: "Risk organogram" }
 
-  // Bloco da hierarquia de papéis do organograma.
+  // REVIEW [2026-12-15] Bloco da hierarquia de papéis do organograma.
   hierarchy {
-    // Define o gerente de risco como superior do analista de risco.
+    // REVIEW [2026-12-15] Define o gerente de risco como superior do analista de risco.
     RiskManager > RiskAnalyst
   }
 
-  // Declara que o gerente gerencia diretamente o analista de risco.
+  // REVIEW [2026-12-15] Declara que o gerente gerencia diretamente o analista de risco.
   RiskManager manages [RiskAnalyst]
 }
 
-// Papel do analista de risco, base da cadeia hierárquica.
+// REVIEW [2026-12-15] Papel do analista de risco, base da cadeia hierárquica.
 role RiskAnalyst {
-  // Título exibido ao usuário.
+  // REVIEW [2026-12-15] Título exibido ao usuário.
   title: { pt-BR: "Analista de risco", en: "Risk analyst" }
-  // Permissões de revisar, aprovar e rejeitar verificações antifraude.
+  // REVIEW [2026-12-15] Permissões de revisar, aprovar e rejeitar verificações antifraude.
   permissions: [fraud.review, fraud.approve, fraud.reject]
 }
 
-// Papel do gerente de risco, acima do analista na hierarquia.
+// REVIEW [2026-12-15] Papel do gerente de risco, acima do analista na hierarquia.
 role RiskManager {
-  // Título exibido ao usuário.
+  // REVIEW [2026-12-15] Título exibido ao usuário.
   title: { pt-BR: "Gerente de risco", en: "Risk manager" }
-  // Herda as permissões do analista de risco.
+  // REVIEW [2026-12-15] Herda as permissões do analista de risco.
   inherits: RiskAnalyst
-  // Permissões adicionais de sobrescrever decisões e visualizar relatórios.
+  // REVIEW [2026-12-15] Permissões adicionais de sobrescrever decisões e visualizar relatórios.
   permissions: [fraud.override, report.view]
 }

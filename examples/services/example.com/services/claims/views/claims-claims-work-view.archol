@@ -1,18 +1,18 @@
-// service: example.com/services/claims
+// REVIEW [2026-12-15] service: example.com/services/claims
 
-// Inbox com as tarefas de sinistro atribuídas ao usuário atual.
+// REVIEW [2026-12-15] Inbox com as tarefas de sinistro atribuídas ao usuário atual.
 view ClaimsWork {
-  // Título exibido na navegação da inbox.
+  // REVIEW [2026-12-15] Título exibido na navegação da inbox.
   title: { pt-BR: "Minhas tarefas de sinistro", en: "My claim work" }
-  // Tipo da view: caixa de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: caixa de trabalho.
   type: inbox
-  // Papéis que operam a inbox.
+  // REVIEW [2026-12-15] Papéis que operam a inbox.
   roles: [Clerk, Adjuster, FraudAnalyst]
-  // Restringe a lista às tarefas do próprio usuário.
+  // REVIEW [2026-12-15] Restringe a lista às tarefas do próprio usuário.
   scope: mine
-  // Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
   groupBy: process
 
-  // Colunas exibidas em cada tarefa.
+  // REVIEW [2026-12-15] Colunas exibidas em cada tarefa.
   columns { title; subject; role; dueAt; priority }
 }

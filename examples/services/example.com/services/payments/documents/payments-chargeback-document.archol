@@ -1,301 +1,301 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Documento que representa uma contestação de pagamento aberta pela bandeira.
+// REVIEW [2026-12-15] Documento que representa uma contestação de pagamento aberta pela bandeira.
 document Chargeback {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Contestação", en: "Chargeback" }
-  version: 1 // Versão do artefato Document; entra no diff e no release.
-  owner: "Payments" // Área responsável pelo documento.
-  sync: live // Sincronização em tempo real entre instâncias.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document; entra no diff e no release.
+  owner: "Payments" // REVIEW [2026-12-15] Área responsável pelo documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias.
 
-  // Campos que compõem a contestação.
+  // REVIEW [2026-12-15] Campos que compõem a contestação.
   fields {
-    // Pagamento contestado; consultável.
+    // REVIEW [2026-12-15] Pagamento contestado; consultável.
     payment: Payment {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pagamento", en: "Payment" }
-      lookup // Permite localizar a cobrança pelo pagamento contestado.
+      lookup // REVIEW [2026-12-15] Permite localizar a cobrança pelo pagamento contestado.
     }
-    // Valor contestado em reais; consultável.
+    // REVIEW [2026-12-15] Valor contestado em reais; consultável.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
-    // Motivo informado pela bandeira ao abrir a contestação.
+    // REVIEW [2026-12-15] Motivo informado pela bandeira ao abrir a contestação.
     disputeReason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo da contestação", en: "Dispute reason" }
-      maxLength: 500 // Limita o motivo a quinhentos caracteres.
+      maxLength: 500 // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
     }
-    // Situação atual da contestação; consultável.
+    // REVIEW [2026-12-15] Situação atual da contestação; consultável.
     status: ChargebackStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Prazo-limite para responder à bandeira; consultável.
+    // REVIEW [2026-12-15] Prazo-limite para responder à bandeira; consultável.
     dueAt: DateTime { title: { pt-BR: "Prazo de resposta", en: "Response due" }, lookup }
-    // Instante em que a contestação foi aberta.
+    // REVIEW [2026-12-15] Instante em que a contestação foi aberta.
     openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" } }
-    // Instante em que a contestação foi decidida.
+    // REVIEW [2026-12-15] Instante em que a contestação foi decidida.
     decidedOn: DateTime { title: { pt-BR: "Decidida em", en: "Decided on" } }
-    // Indica se a decisão da bandeira foi favorável ao lojista.
+    // REVIEW [2026-12-15] Indica se a decisão da bandeira foi favorável ao lojista.
     networkFavorable: boolean {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Decisão favorável", en: "Favorable decision" }
     }
-    // Resumo textual das evidências reunidas.
+    // REVIEW [2026-12-15] Resumo textual das evidências reunidas.
     evidenceNotes: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Evidências", en: "Evidence" }
-      maxLength: 2000 // Limita as evidências a dois mil caracteres.
+      maxLength: 2000 // REVIEW [2026-12-15] Limita as evidências a dois mil caracteres.
     }
-    // Documento comprobatório anexado.
+    // REVIEW [2026-12-15] Documento comprobatório anexado.
     evidence: EvidenceDocument {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Documento de evidência", en: "Evidence document" }
     }
   }
 
-  // Índices de consulta do documento.
+  // REVIEW [2026-12-15] Índices de consulta do documento.
   indexes {
-    // Busca as contestações de um pagamento por hash.
+    // REVIEW [2026-12-15] Busca as contestações de um pagamento por hash.
     byPayment: [payment.id] hash
-    // Ordena as contestações por situação e prazo.
+    // REVIEW [2026-12-15] Ordena as contestações por situação e prazo.
     byDue: [status, dueAt] range
   }
 
 
-  // Ações que alteram a contestação e disparam transições de situação.
+  // REVIEW [2026-12-15] Ações que alteram a contestação e disparam transições de situação.
   actions {
-    // Abre a contestação com motivo e prazo de resposta.
+    // REVIEW [2026-12-15] Abre a contestação com motivo e prazo de resposta.
     open(chargebackReason: string, dueAt: DateTime) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Abrir contestação", en: "Open chargeback" }
-      // Papéis autorizados a abrir contestações.
+      // REVIEW [2026-12-15] Papéis autorizados a abrir contestações.
       roles: [PaymentEngine]
       {
-        // Persiste o motivo informado pela bandeira.
+        // REVIEW [2026-12-15] Persiste o motivo informado pela bandeira.
         disputeReason = chargebackReason
-        // Carimba o instante de abertura.
+        // REVIEW [2026-12-15] Carimba o instante de abertura.
         openedAt = now()
-        emit Opened // Emite o evento de contestação aberta.
+        emit Opened // REVIEW [2026-12-15] Emite o evento de contestação aberta.
       }
     }
 
-    // Envia as evidências de defesa à bandeira.
+    // REVIEW [2026-12-15] Envia as evidências de defesa à bandeira.
     submitEvidence(evidenceNote: string, evidenceFile: EvidenceDocument) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Enviar evidências", en: "Submit evidence" }
-      // Papéis autorizados a enviar evidências.
+      // REVIEW [2026-12-15] Papéis autorizados a enviar evidências.
       roles: [Analyst]
 
-      // Move a situação para Em análise.
+      // REVIEW [2026-12-15] Move a situação para Em análise.
       to: status.UnderReview
 
-      // Regra de negócio: exige justificativa mínima nas evidências.
+      // REVIEW [2026-12-15] Regra de negócio: exige justificativa mínima nas evidências.
       rule evidenceNote.length >= 20 {
-        // Mensagem da regra em português.
+        // REVIEW [2026-12-15] Mensagem da regra em português.
         pt-BR: "Descreva as evidências com pelo menos 20 caracteres"
-        // Mensagem da regra em inglês.
+        // REVIEW [2026-12-15] Mensagem da regra em inglês.
         en: "Describe the evidence with at least 20 characters"
       }
       {
-        // Persiste o resumo das evidências.
+        // REVIEW [2026-12-15] Persiste o resumo das evidências.
         evidenceNotes = evidenceNote
-        // Anexa o documento comprobatório.
+        // REVIEW [2026-12-15] Anexa o documento comprobatório.
         evidence = evidenceFile
       }
     }
 
-    // Acrescenta uma anotação interna às evidências.
+    // REVIEW [2026-12-15] Acrescenta uma anotação interna às evidências.
     annotateEvidence(note: string) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Anotar evidências", en: "Annotate evidence" }
-      // Papéis autorizados a anotar.
+      // REVIEW [2026-12-15] Papéis autorizados a anotar.
       roles: [Analyst]
       {
-        // Persiste a anotação no resumo de evidências.
+        // REVIEW [2026-12-15] Persiste a anotação no resumo de evidências.
         evidenceNotes = note
       }
     }
 
-    // Registra a decisão recebida da bandeira.
+    // REVIEW [2026-12-15] Registra a decisão recebida da bandeira.
     registerDecision(favorable: boolean, decidedAt: DateTime) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Registrar decisão da bandeira", en: "Record network decision" }
-      // Papéis autorizados a registrar a decisão.
+      // REVIEW [2026-12-15] Papéis autorizados a registrar a decisão.
       roles: [PaymentEngine]
       {
-        // Guarda se a decisão foi favorável.
+        // REVIEW [2026-12-15] Guarda se a decisão foi favorável.
         networkFavorable = favorable
-        // Carimba o instante da decisão.
+        // REVIEW [2026-12-15] Carimba o instante da decisão.
         decidedOn = decidedAt
       }
     }
 
-    // Marca a contestação como ganha.
+    // REVIEW [2026-12-15] Marca a contestação como ganha.
     win() {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Marcar vitória", en: "Mark as won" }
-      // Papéis autorizados a marcar vitória.
+      // REVIEW [2026-12-15] Papéis autorizados a marcar vitória.
       roles: [Manager, PaymentEngine]
 
-      // Move a situação para Ganha.
+      // REVIEW [2026-12-15] Move a situação para Ganha.
       to: status.Won
-      // Payload do evento de vitória emitido pela transição.
+      // REVIEW [2026-12-15] Payload do evento de vitória emitido pela transição.
       emits { decidedAt: decidedOn }
     }
 
-    // Marca a contestação como perdida.
+    // REVIEW [2026-12-15] Marca a contestação como perdida.
     lose() {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Marcar perda", en: "Mark as lost" }
-      // Papéis autorizados a marcar perda.
+      // REVIEW [2026-12-15] Papéis autorizados a marcar perda.
       roles: [Manager, PaymentEngine]
 
-      // Move a situação para Perdida.
+      // REVIEW [2026-12-15] Move a situação para Perdida.
       to: status.Lost
-      // Payload do evento de perda emitido pela transição.
+      // REVIEW [2026-12-15] Payload do evento de perda emitido pela transição.
       emits { decidedAt: decidedOn }
     }
 
-    // Aceita a contestação, encerrando-a como perdida.
+    // REVIEW [2026-12-15] Aceita a contestação, encerrando-a como perdida.
     concede() {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
-      // Papéis autorizados a aceitar a contestação.
+      // REVIEW [2026-12-15] Papéis autorizados a aceitar a contestação.
       roles: [Manager]
 
-      // Move a situação para Perdida.
+      // REVIEW [2026-12-15] Move a situação para Perdida.
       to: status.Lost
-      // Payload do evento de perda emitido pela transição.
+      // REVIEW [2026-12-15] Payload do evento de perda emitido pela transição.
       emits { decidedAt: decidedOn }
       {
-        // Carimba o instante da decisão.
+        // REVIEW [2026-12-15] Carimba o instante da decisão.
         decidedOn = now()
       }
     }
   }
 
-  // Regra de negócio: contestação perdida exige data de decisão.
+  // REVIEW [2026-12-15] Regra de negócio: contestação perdida exige data de decisão.
   rule status == Lost implies decidedOn != null {
-    // Mensagem da regra em português.
+    // REVIEW [2026-12-15] Mensagem da regra em português.
     pt-BR: "Informe a decisão da bandeira"
-    // Mensagem da regra em inglês.
+    // REVIEW [2026-12-15] Mensagem da regra em inglês.
     en: "Enter the network decision"
   }
 }
 
-// Máquina de estados da situação da contestação.
+// REVIEW [2026-12-15] Máquina de estados da situação da contestação.
 shape ChargebackStatus {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Situação da contestação", en: "Chargeback status" }
-  base: state // Forma de estado: valores com transições.
-  // Estado inicial e transição que o cria.
+  base: state // REVIEW [2026-12-15] Forma de estado: valores com transições.
+  // REVIEW [2026-12-15] Estado inicial e transição que o cria.
   initial: Open with transition Opened {
-    // Título da transição exibido na trilha.
+    // REVIEW [2026-12-15] Título da transição exibido na trilha.
     title: { pt-BR: "Contestação aberta", en: "Chargeback opened" }
-    // Dados que acompanham a transição inicial.
+    // REVIEW [2026-12-15] Dados que acompanham a transição inicial.
     payload {
-      // Valor contestado no payload.
+      // REVIEW [2026-12-15] Valor contestado no payload.
       amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-      // Prazo de resposta no payload.
+      // REVIEW [2026-12-15] Prazo de resposta no payload.
       dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due" } }
     }
   }
 
-  // Estado de contestação recém-aberta.
+  // REVIEW [2026-12-15] Estado de contestação recém-aberta.
   value Open {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Aberta", en: "Open" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Open
-    ordinal: 10 // Ordem de exibição entre os estados.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
 
-    // Transição para Em análise, disparada pelo envio de evidências.
+    // REVIEW [2026-12-15] Transição para Em análise, disparada pelo envio de evidências.
     transition UnderReview {
-      // Nome do evento que dispara a transição.
+      // REVIEW [2026-12-15] Nome do evento que dispara a transição.
       event: EvidenceSubmitted
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Evidências enviadas", en: "Evidence submitted" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Resumo das evidências enviadas.
+        // REVIEW [2026-12-15] Resumo das evidências enviadas.
         evidenceNote: string { title: { pt-BR: "Resumo", en: "Summary" } }
       }
     }
 
-    // Transição para Perdida.
+    // REVIEW [2026-12-15] Transição para Perdida.
     transition Lost {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da decisão.
+        // REVIEW [2026-12-15] Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
 
-    // Transição adicional para Perdida, quando a decisão chega antes das evidências.
+    // REVIEW [2026-12-15] Transição adicional para Perdida, quando a decisão chega antes das evidências.
     transition Lost {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da decisão.
+        // REVIEW [2026-12-15] Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
   }
-  // Estado de contestação em análise pela bandeira.
+  // REVIEW [2026-12-15] Estado de contestação em análise pela bandeira.
   value UnderReview {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em análise", en: "Under review" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: UnderReview
-    ordinal: 20 // Ordem de exibição entre os estados.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
 
-    // Transição para Ganha.
+    // REVIEW [2026-12-15] Transição para Ganha.
     transition Won {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da decisão.
+        // REVIEW [2026-12-15] Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
 
-    // Transição para Perdida.
+    // REVIEW [2026-12-15] Transição para Perdida.
     transition Lost {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da decisão.
+        // REVIEW [2026-12-15] Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
   }
-  // Estado final de contestação ganha.
+  // REVIEW [2026-12-15] Estado final de contestação ganha.
   value Won {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Ganha", en: "Won" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Won
-    ordinal: 30 // Ordem de exibição entre os estados.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
   }
-  // Estado final de contestação perdida.
+  // REVIEW [2026-12-15] Estado final de contestação perdida.
   value Lost {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Perdida", en: "Lost" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Lost
-    ordinal: 40 // Ordem de exibição entre os estados.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
   }
 
-  format: plain // Formato simples de exibição da situação.
+  format: plain // REVIEW [2026-12-15] Formato simples de exibição da situação.
 }
 
-// Forma de anexo usada como documento comprobatório.
+// REVIEW [2026-12-15] Forma de anexo usada como documento comprobatório.
 shape EvidenceDocument {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Documento de evidência", en: "Evidence document" }
-  base: attachment // Forma de anexo de arquivo.
-  // Tipos de arquivo aceitos: PDF e imagens.
+  base: attachment // REVIEW [2026-12-15] Forma de anexo de arquivo.
+  // REVIEW [2026-12-15] Tipos de arquivo aceitos: PDF e imagens.
   mime: [application/pdf, image/*]
 }

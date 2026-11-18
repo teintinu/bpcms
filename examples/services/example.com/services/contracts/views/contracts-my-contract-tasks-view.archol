@@ -1,15 +1,15 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Caixa de entrada pessoal que reúne as tarefas de contrato de cada papel.
+// REVIEW [2026-12-15] Caixa de entrada pessoal que reúne as tarefas de contrato de cada papel.
 view MyContractTasks {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Minhas tarefas de contratos", en: "My contract tasks" }
-  type: inbox // Tipo do artefato: caixa de entrada de tarefas.
-  // Papéis autorizados a abrir a caixa de entrada.
+  type: inbox // REVIEW [2026-12-15] Tipo do artefato: caixa de entrada de tarefas.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a caixa de entrada.
   roles: [ContractManager, ContractAnalyst, LegalCounsel]
 
-  scope: mine // Mostra apenas itens atribuídos ao usuário logado.
-  groupBy: process // Agrupa as tarefas pelo processo de origem.
-  // Colunas exibidas em cada linha da lista.
+  scope: mine // REVIEW [2026-12-15] Mostra apenas itens atribuídos ao usuário logado.
+  groupBy: process // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha da lista.
   columns { title; subject; role; dueAt; priority }
 }

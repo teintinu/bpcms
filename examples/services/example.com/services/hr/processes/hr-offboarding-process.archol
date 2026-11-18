@@ -1,203 +1,203 @@
-// service: example.com/services/hr
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/hr
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Processo que encerra o vínculo e devolve acessos e equipamentos.
+// REVIEW [2026-12-15] Processo que encerra o vínculo e devolve acessos e equipamentos.
 process Offboarding(employee: Employee) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Desligamento do colaborador", en: "Employee offboarding" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Encerrar o vínculo com acessos revogados, equipamento devolvido e entrevista registrada"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 30d
-  // Prazo máximo do caso antes do timeout.
+  // REVIEW [2026-12-15] Prazo máximo do caso antes do timeout.
   timeout: 30d
 
-  // Gatilho: inicia uma instância quando o documento inicia o desligamento.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento inicia o desligamento.
   on [Employee.OffboardingStarted]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: employee
 
-  // Bloco que captura timeout do caso e dos forms.
+  // REVIEW [2026-12-15] Bloco que captura timeout do caso e dos forms.
   try {
-    // Executa revogação, devolução e entrevista em paralelo.
+    // REVIEW [2026-12-15] Executa revogação, devolução e entrevista em paralelo.
     parallel {
-      // Ramo de revogação dos acessos.
+      // REVIEW [2026-12-15] Ramo de revogação dos acessos.
       branch RevokeAccess {
-        // Exibe o form de revogação para o TI.
+        // REVIEW [2026-12-15] Exibe o form de revogação para o TI.
         AccessRevocation.show({ employee })
       }
-      // Ramo de devolução do equipamento.
+      // REVIEW [2026-12-15] Ramo de devolução do equipamento.
       branch ReturnEquipment {
-        // Exibe o form de devolução para o TI.
+        // REVIEW [2026-12-15] Exibe o form de devolução para o TI.
         EquipmentReturn.show({ employee })
       }
-      // Ramo da entrevista de saída.
+      // REVIEW [2026-12-15] Ramo da entrevista de saída.
       branch ExitInterview {
-        // Exibe o form de entrevista de saída para Pessoas e cultura.
+        // REVIEW [2026-12-15] Exibe o form de entrevista de saída para Pessoas e cultura.
         ExitInterview.show({ employee })
       }
     }
 
-    // Espera até o último dia de trabalho antes de encerrar o vínculo.
+    // REVIEW [2026-12-15] Espera até o último dia de trabalho antes de encerrar o vínculo.
     wait until employee.lastWorkingDay
 
-    // Desliga o colaborador no documento.
+    // REVIEW [2026-12-15] Desliga o colaborador no documento.
     Employee.terminate()
 
-    // Encerra no desfecho Closed.
+    // REVIEW [2026-12-15] Encerra no desfecho Closed.
     return Closed
   } catch (Timeout) {
-    // Timeout do caso: escala o desligamento para o gestor.
+    // REVIEW [2026-12-15] Timeout do caso: escala o desligamento para o gestor.
     EscalateOffboarding.show({ employee })
 
-    // Desliga o colaborador mesmo fora do prazo.
+    // REVIEW [2026-12-15] Desliga o colaborador mesmo fora do prazo.
     Employee.terminate()
 
-    // Encerra no desfecho Closed.
+    // REVIEW [2026-12-15] Encerra no desfecho Closed.
     return Closed
   }
 
-  // Cancelamento: se o desligamento for cancelado no documento...
+  // REVIEW [2026-12-15] Cancelamento: se o desligamento for cancelado no documento...
   cancel on Employee.OffboardingCancelled {
-    // ...encerra no desfecho Cancelled.
+    // REVIEW [2026-12-15] ...encerra no desfecho Cancelled.
     return Cancelled
   }
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Closed {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Desligado", en: "Closed" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Cancelled {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Tarefa manual de escalação do desligamento.
+// REVIEW [2026-12-15] Tarefa manual de escalação do desligamento.
 manual EscalateOffboarding {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Escalar desligamento", en: "Escalate offboarding" }
-  // Documento-sujeito da tarefa.
+  // REVIEW [2026-12-15] Documento-sujeito da tarefa.
   document: Employee
-  // Papéis que podem assumir a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem assumir a tarefa.
   roles: [HiringManager]
-  // Orientação exibida para quem executa a tarefa.
+  // REVIEW [2026-12-15] Orientação exibida para quem executa a tarefa.
   instructions: "Falar com a pessoa e concluir o desligamento"
-  // Prazo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo para conclusão da tarefa.
   timeout: 1d
-  // Prioridade da tarefa na fila.
+  // REVIEW [2026-12-15] Prioridade da tarefa na fila.
   priority: 70
-  // Distribuição da tarefa por puxada (pull).
+  // REVIEW [2026-12-15] Distribuição da tarefa por puxada (pull).
   assign: pull
 }
 
-// Form de revogação dos acessos do colaborador.
+// REVIEW [2026-12-15] Form de revogação dos acessos do colaborador.
 form AccessRevocation {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Revogação de acessos", en: "Access revocation" }
-  // Documento-sujeito do form.
+  // REVIEW [2026-12-15] Documento-sujeito do form.
   document: Employee
-  // Papéis que podem preencher o form.
+  // REVIEW [2026-12-15] Papéis que podem preencher o form.
   roles: [ITAdmin]
-  // Prazo para preenchimento antes do timeout.
+  // REVIEW [2026-12-15] Prazo para preenchimento antes do timeout.
   timeout: 1d
-  // Prioridade do form na fila.
+  // REVIEW [2026-12-15] Prioridade do form na fila.
   priority: 60
-  // Distribuição do form por puxada (pull).
+  // REVIEW [2026-12-15] Distribuição do form por puxada (pull).
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Observação livre sobre a revogação.
+    // REVIEW [2026-12-15] Observação livre sobre a revogação.
     note: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
-      // Limita a observação a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações disponíveis no form.
+  // REVIEW [2026-12-15] Ações disponíveis no form.
   actions {
-    // Revoga todos os acessos e registra a observação.
+    // REVIEW [2026-12-15] Revoga todos os acessos e registra a observação.
     revoke { calls: Employee.revokeAllAccess(note) }
   }
 }
 
-// Form de devolução do equipamento.
+// REVIEW [2026-12-15] Form de devolução do equipamento.
 form EquipmentReturn {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Devolução de equipamento", en: "Equipment return" }
-  // Documento-sujeito do form.
+  // REVIEW [2026-12-15] Documento-sujeito do form.
   document: Employee
-  // Papéis que podem preencher o form.
+  // REVIEW [2026-12-15] Papéis que podem preencher o form.
   roles: [ITAdmin]
-  // Prazo para preenchimento antes do timeout.
+  // REVIEW [2026-12-15] Prazo para preenchimento antes do timeout.
   timeout: 2d
-  // Prioridade do form na fila.
+  // REVIEW [2026-12-15] Prioridade do form na fila.
   priority: 60
-  // Distribuição do form por puxada (pull).
+  // REVIEW [2026-12-15] Distribuição do form por puxada (pull).
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Tipo do equipamento devolvido.
+    // REVIEW [2026-12-15] Tipo do equipamento devolvido.
     kind: EquipmentKind {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Equipamento", en: "Equipment" }
-      // Torna o tipo de equipamento obrigatório.
+      // REVIEW [2026-12-15] Torna o tipo de equipamento obrigatório.
       required
     }
   }
 
-  // Ações disponíveis no form.
+  // REVIEW [2026-12-15] Ações disponíveis no form.
   actions {
-    // Registra a devolução com o tipo escolhido.
+    // REVIEW [2026-12-15] Registra a devolução com o tipo escolhido.
     returnItem { calls: Employee.returnEquipment(kind) }
   }
 }
 
-// Form da entrevista de saída.
+// REVIEW [2026-12-15] Form da entrevista de saída.
 form ExitInterview {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Entrevista de saída", en: "Exit interview" }
-  // Documento-sujeito do form.
+  // REVIEW [2026-12-15] Documento-sujeito do form.
   document: Employee
-  // Papéis que podem preencher o form.
+  // REVIEW [2026-12-15] Papéis que podem preencher o form.
   roles: [PeopleOps]
-  // Prazo para preenchimento antes do timeout.
+  // REVIEW [2026-12-15] Prazo para preenchimento antes do timeout.
   timeout: 3d
-  // Prioridade do form na fila.
+  // REVIEW [2026-12-15] Prioridade do form na fila.
   priority: 50
-  // Distribuição do form por puxada (pull).
+  // REVIEW [2026-12-15] Distribuição do form por puxada (pull).
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Anotações da conversa de saída.
+    // REVIEW [2026-12-15] Anotações da conversa de saída.
     notes: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Anotações", en: "Notes" }
-      // Limita as anotações a dois mil caracteres.
+      // REVIEW [2026-12-15] Limita as anotações a dois mil caracteres.
       maxLength: 2000
     }
   }
 
-  // Ações disponíveis no form.
+  // REVIEW [2026-12-15] Ações disponíveis no form.
   actions {
-    // Registra as anotações da entrevista.
+    // REVIEW [2026-12-15] Registra as anotações da entrevista.
     record { calls: Employee.recordExitInterview(notes) }
   }
 }

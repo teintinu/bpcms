@@ -1,30 +1,30 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Tabela paginada de itens de estoque.
+// REVIEW [2026-12-15] Tabela paginada de itens de estoque.
 view StockTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Itens de estoque", en: "Stock items" }
-  // Tipo da view: tabela de registros.
+  // REVIEW [2026-12-15] Tipo da view: tabela de registros.
   type: table
-  // Documento exibido na tabela.
+  // REVIEW [2026-12-15] Documento exibido na tabela.
   source: StockItem
-  // Papéis autorizados a abrir a tabela.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a tabela.
   roles: [WarehouseOperator, StockManager]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { product; warehouse; available; reserved; reorderPoint; status }
-  // Filtros disponíveis na tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tabela.
   filters { warehouse; status; available }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
 
-  // Ações disponíveis em cada linha da tabela.
+  // REVIEW [2026-12-15] Ações disponíveis em cada linha da tabela.
   actions {
-    // Abre o detalhe do item selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do item selecionado.
     open -> StockDetail
-    // Ajusta o saldo do item direto da tabela.
+    // REVIEW [2026-12-15] Ajusta o saldo do item direto da tabela.
     adjust -> StockItem.adjust(quantity, reason)
-    // Bloqueia o item direto da tabela.
+    // REVIEW [2026-12-15] Bloqueia o item direto da tabela.
     block -> StockItem.block(reason)
   }
 }

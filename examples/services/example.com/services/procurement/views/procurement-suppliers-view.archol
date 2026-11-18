@@ -1,26 +1,26 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// View de listagem dos fornecedores.
+// REVIEW [2026-12-15] View de listagem dos fornecedores.
 view Suppliers {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fornecedores", en: "Suppliers" }
-  // Tipo da view: tabela.
+  // REVIEW [2026-12-15] Tipo da view: tabela.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: Supplier
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { legalName; tradeName; category; risk; status }
-  // Filtros disponíveis na tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tabela.
   filters { status; category; risk }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
 
-  // Ações disponíveis na listagem.
+  // REVIEW [2026-12-15] Ações disponíveis na listagem.
   actions {
-    // Abre o detalhe do fornecedor selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do fornecedor selecionado.
     open -> SupplierDetail
   }
 }

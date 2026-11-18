@@ -53,7 +53,7 @@ impl Date {
         Self::new(year, month, day)
     }
 
-    fn to_string(self) -> String {
+    fn iso(self) -> String {
         format!("{:04}-{:02}-{:02}", self.year, self.month, self.day)
     }
 }
@@ -105,7 +105,7 @@ pub fn collect(source: &str, tokens: &[Token]) -> Vec<Pending> {
             if let Some(end) = after.find(']') {
                 let raw = after[..end].trim().to_string();
                 date_text = Some(raw.clone());
-                due_date = Date::parse(&raw).map(|date| date.to_string());
+                due_date = Date::parse(&raw).map(|date| date.iso());
                 rest = after[end + 1..].trim_start();
             }
         }
@@ -155,7 +155,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
             format!(
                 "{} expired on {} ({} day(s) ago)",
                 pending.keyword,
-                due.to_string(),
+                due.iso(),
                 -remaining
             ),
             pending.span,
@@ -167,7 +167,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
                 "{} is due in {} day(s) on {}",
                 pending.keyword,
                 remaining,
-                due.to_string()
+                due.iso()
             ),
             pending.span,
         ));
@@ -251,5 +251,70 @@ fn civil_from_days(days: i64) -> Date {
         year: year as i32,
         month: month as u32,
         day: day as u32,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::lex;
+
+    fn parse_pending(source: &str) -> Vec<Pending> {
+        let lexed = lex(source);
+        collect(source, &lexed.tokens)
+    }
+
+    #[test]
+    fn recognizes_keywords_case_insensitively_and_keeps_message() {
+        let items =
+            parse_pending("// todo implementar criptografia\n// FixMe [2027-03-12] corrigir\n");
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].keyword, "TODO");
+        assert_eq!(items[0].due_date, None);
+        assert_eq!(items[0].message, "implementar criptografia");
+        assert_eq!(items[1].keyword, "FIXME");
+        assert_eq!(items[1].due_date.as_deref(), Some("2027-03-12"));
+        assert_eq!(items[1].message, "corrigir");
+    }
+
+    #[test]
+    fn ignores_comments_without_a_pending_keyword() {
+        assert!(parse_pending("// just a comment\n// NOTA keyword is ignored\n").is_empty());
+    }
+
+    #[test]
+    fn missing_and_past_dates_are_errors() {
+        let today = Date::new(2026, 11, 18).unwrap();
+        let items = parse_pending("// TODO no date\n// FIXME [2026-11-17] late\n");
+        assert_eq!(validate(&items[0], today)[0].code, "E_PENDING_NO_DATE");
+        assert_eq!(validate(&items[1], today)[0].code, "E_PENDING_EXPIRED");
+    }
+
+    #[test]
+    fn due_within_fifteen_days_is_a_warning_and_later_is_clean() {
+        let today = Date::new(2026, 11, 18).unwrap();
+        let soon = parse_pending("// REVIEW [2026-12-03] within 15 days\n");
+        assert_eq!(validate(&soon[0], today)[0].code, "W_PENDING_SOON");
+        let later = parse_pending("// REVIEW [2026-12-04] after 15 days\n");
+        assert!(validate(&later[0], today).is_empty());
+    }
+
+    #[test]
+    fn invalid_dates_are_reported() {
+        let today = Date::new(2026, 11, 18).unwrap();
+        let items = parse_pending("// HACK [2026-02-30] impossible\n");
+        assert_eq!(items[0].due_date, None);
+        assert_eq!(items[0].date_text.as_deref(), Some("2026-02-30"));
+        assert_eq!(validate(&items[0], today)[0].code, "E_PENDING_DATE");
+    }
+
+    #[test]
+    fn formatter_uppercases_only_pending_keywords() {
+        let source = "// todo lower\n// note stays\n";
+        let items = parse_pending(source);
+        assert_eq!(
+            format_source(source, &items),
+            "// TODO lower\n// note stays\n"
+        );
     }
 }

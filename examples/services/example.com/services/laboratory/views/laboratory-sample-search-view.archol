@@ -1,18 +1,18 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// View de busca de amostras em formato de tabela.
+// REVIEW [2026-12-15] View de busca de amostras em formato de tabela.
 view SampleSearch {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Busca de amostras", en: "Sample search" }
-  // Tipo da view: tabela de registros.
+  // REVIEW [2026-12-15] Tipo da view: tabela de registros.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: Sample
-  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a busca.
+  roles: [Collector, Analyst, Pathologist, LabManager] // REVIEW [2026-12-15] Papéis que podem abrir a busca.
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { code; kind; patient; status; collectedAt }
-  // Filtros disponíveis na busca.
+  // REVIEW [2026-12-15] Filtros disponíveis na busca.
   filters { status; kind; laboratory }
-  pagination: 50 // Itens por página.
+  pagination: 50 // REVIEW [2026-12-15] Itens por página.
 }

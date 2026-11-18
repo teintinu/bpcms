@@ -1,259 +1,259 @@
-// service: example.com/services/inventory
-// Documento que mantém o saldo e a situação de estoque por produto e armazém.
+// REVIEW [2026-12-15] service: example.com/services/inventory
+// REVIEW [2026-12-15] Documento que mantém o saldo e a situação de estoque por produto e armazém.
 document StockItem {
-  // Título exibido no builder, na inbox e nos históricos.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Item de estoque", en: "Stock item" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Inventory"
-  // Sincronização em tempo real entre as instâncias do documento.
+  // REVIEW [2026-12-15] Sincronização em tempo real entre as instâncias do documento.
   sync: live
-  // Campos persistidos no item de estoque.
+  // REVIEW [2026-12-15] Campos persistidos no item de estoque.
   fields {
-    // Produto ao qual este item de estoque se refere.
+    // REVIEW [2026-12-15] Produto ao qual este item de estoque se refere.
     product: Product {
-      // Título exibido no formulário e nas colunas.
+      // REVIEW [2026-12-15] Título exibido no formulário e nas colunas.
       title: { pt-BR: "Produto", en: "Product" }
-      // Permite buscar e filtrar pelo produto relacionado.
+      // REVIEW [2026-12-15] Permite buscar e filtrar pelo produto relacionado.
       lookup
     }
-    // Armazém onde as unidades estão fisicamente guardadas.
+    // REVIEW [2026-12-15] Armazém onde as unidades estão fisicamente guardadas.
     warehouse: string { title: { pt-BR: "Armazém", en: "Warehouse" }, maxLength: 40, lookup }
-    // Quantidade disponível para novas reservas.
+    // REVIEW [2026-12-15] Quantidade disponível para novas reservas.
     available: std.Count { title: { pt-BR: "Disponível", en: "Available" }, min: 0, max: 100000 }
-    // Quantidade já comprometida com reservas ativas.
+    // REVIEW [2026-12-15] Quantidade já comprometida com reservas ativas.
     reserved: std.Count { title: { pt-BR: "Reservado", en: "Reserved" } }
-    // Nível de estoque que dispara a reposição.
+    // REVIEW [2026-12-15] Nível de estoque que dispara a reposição.
     reorderPoint: std.Count { title: { pt-BR: "Ponto de reposição", en: "Reorder point" } }
-    // Situação do item no shape StockStatus.
+    // REVIEW [2026-12-15] Situação do item no shape StockStatus.
     status: StockStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Motivo informado quando o item é bloqueado.
+    // REVIEW [2026-12-15] Motivo informado quando o item é bloqueado.
     blockedReason: string { title: { pt-BR: "Motivo do bloqueio", en: "Block reason" } }
-    // Data e hora da última movimentação registrada.
+    // REVIEW [2026-12-15] Data e hora da última movimentação registrada.
     lastMovement: DateTime { title: { pt-BR: "Última movimentação", en: "Last movement" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Garante um único item por produto em cada armazém.
+    // REVIEW [2026-12-15] Garante um único item por produto em cada armazém.
     uniqueProduct: [product.id, warehouse] unique
-    // Consulta ordenada pela quantidade disponível.
+    // REVIEW [2026-12-15] Consulta ordenada pela quantidade disponível.
     byAvailable: [available] range
-    // Consulta ordenada pela última movimentação.
+    // REVIEW [2026-12-15] Consulta ordenada pela última movimentação.
     byMovement: [lastMovement] range
-    // Consulta por situação, ordenada pela última movimentação.
+    // REVIEW [2026-12-15] Consulta por situação, ordenada pela última movimentação.
     byStatus: [status, lastMovement] range
   }
 
 
-  // Ações que alteram o item de estoque.
+  // REVIEW [2026-12-15] Ações que alteram o item de estoque.
   actions {
-    // Ajusta manualmente a quantidade disponível com justificativa.
+    // REVIEW [2026-12-15] Ajusta manualmente a quantidade disponível com justificativa.
     adjust(quantity: std.Count, reason: string){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Ajustar estoque", en: "Adjust stock" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
-      // Exige justificativa com pelo menos 10 caracteres.
+      // REVIEW [2026-12-15] Exige justificativa com pelo menos 10 caracteres.
       rule reason.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
       {
-        // Soma o ajuste à quantidade disponível (pode ser negativo).
+        // REVIEW [2026-12-15] Soma o ajuste à quantidade disponível (pode ser negativo).
         available = available + quantity
       }
     }
 
-    // Reserva parte do estoque disponível.
+    // REVIEW [2026-12-15] Reserva parte do estoque disponível.
     reserve(quantity: std.Count){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Reservar", en: "Reserve" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
 
-      // Transição automática para a situação Reserved.
+      // REVIEW [2026-12-15] Transição automática para a situação Reserved.
       to: status.Reserved
 
       {
-        // Soma a quantidade reservada ao saldo de reservas.
+        // REVIEW [2026-12-15] Soma a quantidade reservada ao saldo de reservas.
         reserved = reserved + quantity
       }
     }
 
-    // Libera quantidade previamente reservada.
+    // REVIEW [2026-12-15] Libera quantidade previamente reservada.
     release(quantity: std.Count){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Liberar", en: "Release" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
 
-      // Transição automática para a situação Available.
+      // REVIEW [2026-12-15] Transição automática para a situação Available.
       to: status.Available
 
       {
-        // Devolve a quantidade reservada ao saldo disponível.
+        // REVIEW [2026-12-15] Devolve a quantidade reservada ao saldo disponível.
         reserved = reserved - quantity
       }
     }
 
-    // Bloqueia o item para novas movimentações.
+    // REVIEW [2026-12-15] Bloqueia o item para novas movimentações.
     block(reason: string){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Bloquear", en: "Block" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [StockManager]
 
-      // Transição automática para a situação Blocked.
+      // REVIEW [2026-12-15] Transição automática para a situação Blocked.
       to: status.Blocked
 
       {
-        // Persiste o motivo informado no bloqueio.
+        // REVIEW [2026-12-15] Persiste o motivo informado no bloqueio.
         blockedReason = reason
       }
     }
 
-    // Desbloqueia o item devolvendo-o à situação Available.
+    // REVIEW [2026-12-15] Desbloqueia o item devolvendo-o à situação Available.
     unblock(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Desbloquear", en: "Unblock" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [StockManager]
 
-      // Transição automática para a situação Available.
+      // REVIEW [2026-12-15] Transição automática para a situação Available.
       to: status.Available
-      // Payload emitido na transição, transportando o instante do desbloqueio.
+      // REVIEW [2026-12-15] Payload emitido na transição, transportando o instante do desbloqueio.
       emits { at: now() }
     }
   }
 
-  // O saldo disponível nunca pode ficar negativo.
+  // REVIEW [2026-12-15] O saldo disponível nunca pode ficar negativo.
   rule available >= 0 {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "Verifique os dados informados"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Check the informed data"
   }
-  // O saldo reservado nunca pode ficar negativo.
+  // REVIEW [2026-12-15] O saldo reservado nunca pode ficar negativo.
   rule reserved >= 0 {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "Verifique os dados informados"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Check the informed data"
   }
 }
 
-// Shape de estado que modela o ciclo de vida do item de estoque.
+// REVIEW [2026-12-15] Shape de estado que modela o ciclo de vida do item de estoque.
 shape StockStatus {
-  // Título exibido no builder e nos filtros.
+  // REVIEW [2026-12-15] Título exibido no builder e nos filtros.
   title: { pt-BR: "Situação do estoque", en: "Stock status" }
-  // Base do shape: máquina de estados.
+  // REVIEW [2026-12-15] Base do shape: máquina de estados.
   base: state
-  // Estado inicial do item recém-cadastrado.
+  // REVIEW [2026-12-15] Estado inicial do item recém-cadastrado.
   initial: Available
-  // Estado em que o item está disponível para reservas.
+  // REVIEW [2026-12-15] Estado em que o item está disponível para reservas.
   value Available {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Disponível", en: "Available" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Available
-    // Ordem de exibição do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição do estado no fluxo.
     ordinal: 10
 
-    // Transição para Reserved quando parte do estoque é reservada.
+    // REVIEW [2026-12-15] Transição para Reserved quando parte do estoque é reservada.
     transition Reserved {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Estoque reservado", en: "Stock reserved" }
-      // Dados carregados pela transição de reserva.
+      // REVIEW [2026-12-15] Dados carregados pela transição de reserva.
       payload {
-        // Quantidade reservada nesta transição.
+        // REVIEW [2026-12-15] Quantidade reservada nesta transição.
         quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
       }
     }
 
-    // Transição para Blocked quando o item é bloqueado.
+    // REVIEW [2026-12-15] Transição para Blocked quando o item é bloqueado.
     transition Blocked {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Estoque bloqueado", en: "Stock blocked" }
-      // Dados carregados pela transição de bloqueio.
+      // REVIEW [2026-12-15] Dados carregados pela transição de bloqueio.
       payload {
-        // Motivo do bloqueio informado pelo gestor.
+        // REVIEW [2026-12-15] Motivo do bloqueio informado pelo gestor.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado em que o item tem quantidade comprometida com reservas.
+  // REVIEW [2026-12-15] Estado em que o item tem quantidade comprometida com reservas.
   value Reserved {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Reservado", en: "Reserved" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Reserved
-    // Ordem de exibição do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição do estado no fluxo.
     ordinal: 20
 
-    // Transição de volta para Available quando a reserva é liberada.
+    // REVIEW [2026-12-15] Transição de volta para Available quando a reserva é liberada.
     transition Available {
-      // Evento que dispara a transição de liberação.
+      // REVIEW [2026-12-15] Evento que dispara a transição de liberação.
       event: Released
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Estoque liberado", en: "Stock released" }
-      // Dados carregados pela transição de liberação.
+      // REVIEW [2026-12-15] Dados carregados pela transição de liberação.
       payload {
-        // Quantidade liberada nesta transição.
+        // REVIEW [2026-12-15] Quantidade liberada nesta transição.
         quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
       }
     }
 
-    // Transição para Blocked quando o item é bloqueado.
+    // REVIEW [2026-12-15] Transição para Blocked quando o item é bloqueado.
     transition Blocked {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Estoque bloqueado", en: "Stock blocked" }
-      // Dados carregados pela transição de bloqueio.
+      // REVIEW [2026-12-15] Dados carregados pela transição de bloqueio.
       payload {
-        // Motivo do bloqueio informado pelo gestor.
+        // REVIEW [2026-12-15] Motivo do bloqueio informado pelo gestor.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado em que o item está impedido de movimentar.
+  // REVIEW [2026-12-15] Estado em que o item está impedido de movimentar.
   value Blocked {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Bloqueado", en: "Blocked" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Blocked
-    // Ordem de exibição do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição do estado no fluxo.
     ordinal: 30
 
-    // Transição de volta para Available quando o item é desbloqueado.
+    // REVIEW [2026-12-15] Transição de volta para Available quando o item é desbloqueado.
     transition Available {
-      // Evento que dispara a transição de desbloqueio.
+      // REVIEW [2026-12-15] Evento que dispara a transição de desbloqueio.
       event: Unblocked
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Estoque desbloqueado", en: "Stock unblocked" }
-      // Dados carregados pela transição de desbloqueio.
+      // REVIEW [2026-12-15] Dados carregados pela transição de desbloqueio.
       payload {
-        // Instante em que o item foi desbloqueado.
+        // REVIEW [2026-12-15] Instante em que o item foi desbloqueado.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
-  // Formato de apresentação do shape.
+  // REVIEW [2026-12-15] Formato de apresentação do shape.
   format: plain
 }
 
-// Política que exige justificativa nos ajustes de estoque.
+// REVIEW [2026-12-15] Política que exige justificativa nos ajustes de estoque.
 policy StockAdjustment {
-  // Ação do documento à qual a política se aplica.
+  // REVIEW [2026-12-15] Ação do documento à qual a política se aplica.
   appliesTo: StockItem.adjust
-  // Condição que precisa ser verdadeira para a ação seguir.
+  // REVIEW [2026-12-15] Condição que precisa ser verdadeira para a ação seguir.
   rule: quantity != 0
-  // Severidade da política: exige atenção antes de prosseguir.
+  // REVIEW [2026-12-15] Severidade da política: exige atenção antes de prosseguir.
   severity: require
-  // Mensagem exibida quando a política é acionada.
+  // REVIEW [2026-12-15] Mensagem exibida quando a política é acionada.
   message: "Ajuste de estoque exige justificativa"
-  // Registra a avaliação da política na trilha de auditoria.
+  // REVIEW [2026-12-15] Registra a avaliação da política na trilha de auditoria.
   audit: true
 }

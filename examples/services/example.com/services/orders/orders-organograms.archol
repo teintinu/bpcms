@@ -1,51 +1,51 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// Organograma que define a hierarquia de papéis do serviço de pedidos.
+// REVIEW [2026-12-15] Organograma que define a hierarquia de papéis do serviço de pedidos.
 organogram Sales {
-  // Título exibido na interface de administração.
+  // REVIEW [2026-12-15] Título exibido na interface de administração.
   title: { pt-BR: "Organograma de vendas", en: "Sales organogram" }
 
-  // Estrutura de subordinação entre os papéis.
+  // REVIEW [2026-12-15] Estrutura de subordinação entre os papéis.
   hierarchy {
-    Manager > Clerk > Customer // gerente acima do atendente, que está acima do cliente
+    Manager > Clerk > Customer // REVIEW [2026-12-15] gerente acima do atendente, que está acima do cliente
   }
 
-  // Declara que o gerente administra os atendentes.
+  // REVIEW [2026-12-15] Declara que o gerente administra os atendentes.
   Manager manages [Clerk]
 }
 
-// Papel do cliente: acompanha e solicita cancelamento dos próprios pedidos.
+// REVIEW [2026-12-15] Papel do cliente: acompanha e solicita cancelamento dos próprios pedidos.
 role Customer {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cliente", en: "Customer" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [order.viewOwn, order.requestCancellation]
 }
 
-// Papel do atendente: cria e gerencia os pedidos.
+// REVIEW [2026-12-15] Papel do atendente: cria e gerencia os pedidos.
 role Clerk {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Atendente de pedidos", en: "Order clerk" }
-  // Herda as permissões do papel Customer.
+  // REVIEW [2026-12-15] Herda as permissões do papel Customer.
   inherits: Customer
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [order.manage, order.create, order.cancel]
 }
 
-// Papel do gerente: decide cancelamentos e reabre pedidos.
+// REVIEW [2026-12-15] Papel do gerente: decide cancelamentos e reabre pedidos.
 role Manager {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Gerente de pedidos", en: "Order manager" }
-  // Herda as permissões do papel Clerk.
+  // REVIEW [2026-12-15] Herda as permissões do papel Clerk.
   inherits: Clerk
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [order.cancel, order.reopen, report.view]
 }
 
-// Papel do motor de pedidos: reserva e atende pedidos automaticamente.
+// REVIEW [2026-12-15] Papel do motor de pedidos: reserva e atende pedidos automaticamente.
 role OrderEngine {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Motor de pedidos", en: "Order engine" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [order.reserve, order.fulfill]
 }

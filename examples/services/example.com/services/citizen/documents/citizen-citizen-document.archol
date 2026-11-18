@@ -1,316 +1,316 @@
-// service: example.com/services/citizen
+// REVIEW [2026-12-15] service: example.com/services/citizen
 
-// Documento que representa um cidadão (pessoa ou organização) no cadastro.
+// REVIEW [2026-12-15] Documento que representa um cidadão (pessoa ou organização) no cadastro.
 document Citizen {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cidadão", en: "Citizen" }
-  // Versão do artefato Document; usada em diff e release.
+  // REVIEW [2026-12-15] Versão do artefato Document; usada em diff e release.
   version: 1
-  // Responsável pela governança do documento.
+  // REVIEW [2026-12-15] Responsável pela governança do documento.
   owner: "Citizen"
-  // Modo de sincronização: leitura a partir do documento.
+  // REVIEW [2026-12-15] Modo de sincronização: leitura a partir do documento.
   sync: read
-  // Campos que compõem o cadastro do cidadão.
+  // REVIEW [2026-12-15] Campos que compõem o cadastro do cidadão.
   fields {
-    // Tipo do cidadão (pessoa ou organização); consultável por busca.
+    // REVIEW [2026-12-15] Tipo do cidadão (pessoa ou organização); consultável por busca.
     kind: CitizenKind { title: { pt-BR: "Tipo", en: "Kind" }, lookup }
-    // Nome de exibição do cidadão; consultável e obrigatório.
+    // REVIEW [2026-12-15] Nome de exibição do cidadão; consultável e obrigatório.
     displayName: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Nome de exibição", en: "Display name" }
-      // Limita o nome a 160 caracteres.
+      // REVIEW [2026-12-15] Limita o nome a 160 caracteres.
       maxLength: 160
-      // Permite localizar o cidadão pelo nome.
+      // REVIEW [2026-12-15] Permite localizar o cidadão pelo nome.
       lookup
-      // Torna o nome obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o nome obrigatório no preenchimento.
       required
     }
-    // Imagem de perfil do cidadão.
+    // REVIEW [2026-12-15] Imagem de perfil do cidadão.
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" } }
-    // País do cidadão; obrigatório.
+    // REVIEW [2026-12-15] País do cidadão; obrigatório.
     country: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "País", en: "Country" }
-      // Limita o país ao código de duas letras.
+      // REVIEW [2026-12-15] Limita o país ao código de duas letras.
       maxLength: 2
-      // Torna o país obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o país obrigatório no preenchimento.
       required
     }
-    // Situação atual do cidadão; consultável por busca.
+    // REVIEW [2026-12-15] Situação atual do cidadão; consultável por busca.
     status: CitizenStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Cadastro de destino quando este cidadão foi mesclado.
+    // REVIEW [2026-12-15] Cadastro de destino quando este cidadão foi mesclado.
     mergedInto: Citizen { title: { pt-BR: "Mesclado em", en: "Merged into" }, lookup }
-    // Instante em que a mesclagem ocorreu.
+    // REVIEW [2026-12-15] Instante em que a mesclagem ocorreu.
     mergedAt: DateTime { title: { pt-BR: "Mesclado em", en: "Merged at" } }
-    // Nome legal, dado pessoal privado.
+    // REVIEW [2026-12-15] Nome legal, dado pessoal privado.
     private legalName: string { title: { pt-BR: "Nome legal", en: "Legal name" }, maxLength: 200 }
-    // Data de nascimento, dado pessoal privado.
+    // REVIEW [2026-12-15] Data de nascimento, dado pessoal privado.
     private birthDate: Date { title: { pt-BR: "Data de nascimento", en: "Birth date" } }
-    // Resumo (hash) do documento de identificação, dado privado.
+    // REVIEW [2026-12-15] Resumo (hash) do documento de identificação, dado privado.
     private documentHash: string { title: { pt-BR: "Resumo do documento", en: "Document hash" }, maxLength: 128 }
-    // Instante de criação do cadastro.
+    // REVIEW [2026-12-15] Instante de criação do cadastro.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
-  // Índices que aceleram buscas e consultas por campo.
+  // REVIEW [2026-12-15] Índices que aceleram buscas e consultas por campo.
   indexes {
-    // Índice de busca textual pelo nome de exibição.
+    // REVIEW [2026-12-15] Índice de busca textual pelo nome de exibição.
     byDisplayName: [displayName] search
-    // Índice hash por tipo e situação.
+    // REVIEW [2026-12-15] Índice hash por tipo e situação.
     byKind: [kind, status] hash
-    // Índice hash por país.
+    // REVIEW [2026-12-15] Índice hash por país.
     byCountry: [country] hash
-    // Índice hash pelo id do cadastro de destino da mesclagem.
+    // REVIEW [2026-12-15] Índice hash pelo id do cadastro de destino da mesclagem.
     byMergedInto: [mergedInto.id] hash
   }
 
 
-  // Ações de negócio que alteram o cadastro.
+  // REVIEW [2026-12-15] Ações de negócio que alteram o cadastro.
   actions {
-    // Cadastra um cidadão genérico.
+    // REVIEW [2026-12-15] Cadastra um cidadão genérico.
     register(kind: CitizenKind, displayName: string, country: string, legalName: string?, birthDate: Date?){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Cadastrar cidadão", en: "Register citizen" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
-      // Corpo executado quando a ação é chamada.
+      // REVIEW [2026-12-15] Corpo executado quando a ação é chamada.
       {
-        // Registra o instante de criação do cadastro.
+        // REVIEW [2026-12-15] Registra o instante de criação do cadastro.
         createdAt = now()
-        // Emite o evento Registered levando o nome de exibição.
+        // REVIEW [2026-12-15] Emite o evento Registered levando o nome de exibição.
         emit Registered { displayName }
       }
     }
 
-    // Cadastra uma pessoa física já preenchendo os dados obrigatórios.
+    // REVIEW [2026-12-15] Cadastra uma pessoa física já preenchendo os dados obrigatórios.
     registerPerson(displayName: string, country: string, legalName: string, birthDate: Date?){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Cadastrar pessoa", en: "Register person" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Manager]
-      // Corpo executado quando a ação é chamada.
+      // REVIEW [2026-12-15] Corpo executado quando a ação é chamada.
       {
-        // Fixa o tipo do cidadão como pessoa.
+        // REVIEW [2026-12-15] Fixa o tipo do cidadão como pessoa.
         kind = Person
-        // Registra o instante de criação do cadastro.
+        // REVIEW [2026-12-15] Registra o instante de criação do cadastro.
         createdAt = now()
-        // Emite o evento Registered levando o nome de exibição.
+        // REVIEW [2026-12-15] Emite o evento Registered levando o nome de exibição.
         emit Registered { displayName }
       }
     }
 
-    // Cadastra uma organização já preenchendo os dados obrigatórios.
+    // REVIEW [2026-12-15] Cadastra uma organização já preenchendo os dados obrigatórios.
     registerOrganization(displayName: string, country: string, legalName: string){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Cadastrar organização", en: "Register organization" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Manager]
-      // Corpo executado quando a ação é chamada.
+      // REVIEW [2026-12-15] Corpo executado quando a ação é chamada.
       {
-        // Fixa o tipo do cidadão como organização.
+        // REVIEW [2026-12-15] Fixa o tipo do cidadão como organização.
         kind = Organization
-        // Registra o instante de criação do cadastro.
+        // REVIEW [2026-12-15] Registra o instante de criação do cadastro.
         createdAt = now()
-        // Emite o evento Registered levando o nome de exibição.
+        // REVIEW [2026-12-15] Emite o evento Registered levando o nome de exibição.
         emit Registered { displayName }
       }
     }
 
-    // Mescla este cidadão em outro cadastro alvo.
+    // REVIEW [2026-12-15] Mescla este cidadão em outro cadastro alvo.
     merge(target: Citizen){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Mesclar", en: "Merge" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Manager]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Merged
-      // Pré-condição da ação: alvo existente e diferente do próprio cadastro.
+      // REVIEW [2026-12-15] Pré-condição da ação: alvo existente e diferente do próprio cadastro.
       rule target != null and target.id != id {
-        // Mensagem da pré-condição em português.
+        // REVIEW [2026-12-15] Mensagem da pré-condição em português.
         pt-BR: "Selecione um cidadão de destino diferente do mesclado"
-        // Mensagem da pré-condição em inglês.
+        // REVIEW [2026-12-15] Mensagem da pré-condição em inglês.
         en: "Select a target citizen different from the merged one"
       }
-      // Corpo executado quando a ação é chamada.
+      // REVIEW [2026-12-15] Corpo executado quando a ação é chamada.
       {
-        // Aponta o cadastro para o cidadão sobrevivente.
+        // REVIEW [2026-12-15] Aponta o cadastro para o cidadão sobrevivente.
         mergedInto = target
-        // Registra o instante da mesclagem.
+        // REVIEW [2026-12-15] Registra o instante da mesclagem.
         mergedAt = now()
       }
     }
 
-    // Bloqueia o cadastro informando uma justificativa.
+    // REVIEW [2026-12-15] Bloqueia o cadastro informando uma justificativa.
     block(justification: string){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Bloquear", en: "Block" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Manager]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Blocked
-      // Dados enviados no evento da transição.
+      // REVIEW [2026-12-15] Dados enviados no evento da transição.
       emits { reason: justification }
-      // Pré-condição da ação: justificativa com tamanho mínimo.
+      // REVIEW [2026-12-15] Pré-condição da ação: justificativa com tamanho mínimo.
       rule justification.length >= 10 {
-        // Mensagem da pré-condição em português.
+        // REVIEW [2026-12-15] Mensagem da pré-condição em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem da pré-condição em inglês.
+        // REVIEW [2026-12-15] Mensagem da pré-condição em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
   }
 
-  // Validação global: o nome de exibição precisa existir.
+  // REVIEW [2026-12-15] Validação global: o nome de exibição precisa existir.
   rule displayName != null {
-    // Mensagem de erro em português.
+    // REVIEW [2026-12-15] Mensagem de erro em português.
     pt-BR: "Informe o nome de exibição"
-    // Mensagem de erro em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro em inglês.
     en: "Enter the display name"
 
   }
-  // Validação global: o país deve ter exatamente dois caracteres.
+  // REVIEW [2026-12-15] Validação global: o país deve ter exatamente dois caracteres.
   rule country.length == 2 {
-    // Mensagem de erro em português.
+    // REVIEW [2026-12-15] Mensagem de erro em português.
     pt-BR: "Verifique o tamanho do texto informado"
-    // Mensagem de erro em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro em inglês.
     en: "Check the informed text length"
 
   }
 }
 
-// Forma de classificação que distingue pessoa de organização.
+// REVIEW [2026-12-15] Forma de classificação que distingue pessoa de organização.
 shape CitizenKind {
-  // Título exibido no formulário.
+  // REVIEW [2026-12-15] Título exibido no formulário.
   title: { pt-BR: "Tipo de cidadão", en: "Citizen kind" }
-  // Tipo-base de classificação, com valores enumerados.
+  // REVIEW [2026-12-15] Tipo-base de classificação, com valores enumerados.
   base: classification
-  // Valor que representa uma pessoa física.
+  // REVIEW [2026-12-15] Valor que representa uma pessoa física.
   value Person {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Pessoa", en: "Person" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: Person
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 10
   }
-  // Valor que representa uma organização.
+  // REVIEW [2026-12-15] Valor que representa uma organização.
   value Organization {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Organização", en: "Organization" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: Organization
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 20
   }
-  // Exibe o valor sem máscara.
+  // REVIEW [2026-12-15] Exibe o valor sem máscara.
   format: plain
 }
 
-// Forma de estado que modela o ciclo de vida do cadastro.
+// REVIEW [2026-12-15] Forma de estado que modela o ciclo de vida do cadastro.
 shape CitizenStatus {
-  // Título exibido no formulário.
+  // REVIEW [2026-12-15] Título exibido no formulário.
   title: { pt-BR: "Situação do cidadão", en: "Citizen status" }
-  // Tipo-base de máquina de estados.
+  // REVIEW [2026-12-15] Tipo-base de máquina de estados.
   base: state
-  // Estado inicial Active, alcançado pela transição Registered.
+  // REVIEW [2026-12-15] Estado inicial Active, alcançado pela transição Registered.
   initial: Active with transition Registered {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Cidadão cadastrado", en: "Citizen registered" }
-    // Dados carregados pela transição.
+    // REVIEW [2026-12-15] Dados carregados pela transição.
     payload {
-      // Nome de exibição do cidadão cadastrado.
+      // REVIEW [2026-12-15] Nome de exibição do cidadão cadastrado.
       displayName: string { title: { pt-BR: "Nome de exibição", en: "Display name" } }
     }
   }
-  // Estado Active: cadastro válido e utilizável.
+  // REVIEW [2026-12-15] Estado Active: cadastro válido e utilizável.
   value Active {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Ativo", en: "Active" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Active
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição de Active para Merged.
+    // REVIEW [2026-12-15] Transição de Active para Merged.
     transition Merged {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Cidadão mesclado", en: "Citizen merged" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Cidadão de destino da mesclagem.
+        // REVIEW [2026-12-15] Cidadão de destino da mesclagem.
         target: Citizen { title: { pt-BR: "Cidadão de destino", en: "Target citizen" } }
       }
     }
 
-    // Transição de Active para Blocked.
+    // REVIEW [2026-12-15] Transição de Active para Blocked.
     transition Blocked {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Cidadão bloqueado", en: "Citizen blocked" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Motivo do bloqueio do cadastro.
+        // REVIEW [2026-12-15] Motivo do bloqueio do cadastro.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado Merged: cadastro absorvido por outro.
+  // REVIEW [2026-12-15] Estado Merged: cadastro absorvido por outro.
   value Merged {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Mesclado", en: "Merged" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Merged
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
   }
-  // Estado Blocked: cadastro impedido de operar.
+  // REVIEW [2026-12-15] Estado Blocked: cadastro impedido de operar.
   value Blocked {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Bloqueado", en: "Blocked" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Blocked
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
   }
-  // Exibe o estado sem máscara.
+  // REVIEW [2026-12-15] Exibe o estado sem máscara.
   format: plain
 }
 
-// Forma de imagem usada no avatar do cidadão.
+// REVIEW [2026-12-15] Forma de imagem usada no avatar do cidadão.
 shape Image {
-  // Título exibido no formulário.
+  // REVIEW [2026-12-15] Título exibido no formulário.
   title: { pt-BR: "Imagem", en: "Image" }
-  // Tipo-base de imagem.
+  // REVIEW [2026-12-15] Tipo-base de imagem.
   base: image
-  // Capacidades habilitadas para a forma.
+  // REVIEW [2026-12-15] Capacidades habilitadas para a forma.
   capabilities { gui }
 }
 
-// Form de cadastro de cidadão.
+// REVIEW [2026-12-15] Form de cadastro de cidadão.
 form Registration {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cadastro de cidadão", en: "Citizen registration" }
-  // Documento-sujeito do form.
+  // REVIEW [2026-12-15] Documento-sujeito do form.
   document: Citizen
 
-  // Campos exibidos e coletados no form.
+  // REVIEW [2026-12-15] Campos exibidos e coletados no form.
   fields {
-    // Tipo do cidadão.
+    // REVIEW [2026-12-15] Tipo do cidadão.
     kind
-    // Nome de exibição do cidadão.
+    // REVIEW [2026-12-15] Nome de exibição do cidadão.
     displayName
-    // Imagem de perfil do cidadão.
+    // REVIEW [2026-12-15] Imagem de perfil do cidadão.
     avatar
-    // País do cidadão.
+    // REVIEW [2026-12-15] País do cidadão.
     country
-    // Nome legal (dado privado).
+    // REVIEW [2026-12-15] Nome legal (dado privado).
     legalName
-    // Data de nascimento (dado privado).
+    // REVIEW [2026-12-15] Data de nascimento (dado privado).
     birthDate
   }
 
-  // Ações disponíveis no form.
+  // REVIEW [2026-12-15] Ações disponíveis no form.
   actions {
-    // Cadastrar delega a ação register do documento.
+    // REVIEW [2026-12-15] Cadastrar delega a ação register do documento.
     register { calls: Citizen.register(kind, displayName, country, legalName, birthDate) }
   }
 }

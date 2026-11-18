@@ -1,16 +1,16 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Mensagem de atualização enviada ao back office.
+// REVIEW [2026-12-15] Mensagem de atualização enviada ao back office.
 message TicketUpdate {
-  // Título exibido no catálogo de mensagens.
+  // REVIEW [2026-12-15] Título exibido no catálogo de mensagens.
   title: { pt-BR: "Atualização do chamado", en: "Ticket update" }
-  // Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
   about: Ticket
-  // Dados levados pela mensagem.
+  // REVIEW [2026-12-15] Dados levados pela mensagem.
   payload {
-    // Assunto do chamado.
+    // REVIEW [2026-12-15] Assunto do chamado.
     subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
-    // Fila de destino do chamado.
+    // REVIEW [2026-12-15] Fila de destino do chamado.
     queue: TicketCategory { title: { pt-BR: "Fila", en: "Queue" } }
   }
 }

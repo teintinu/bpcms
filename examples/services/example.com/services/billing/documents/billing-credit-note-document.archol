@@ -1,157 +1,157 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Documento que registra créditos emitidos contra notas fiscais.
+// REVIEW [2026-12-15] Documento que registra créditos emitidos contra notas fiscais.
 document CreditNote {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Nota de crédito", en: "Credit note" }
-  version: 1 // Versão do documento usada em release e comparação.
-  // Área responsável pelo documento.
+  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
-  sync: live // Sincronização em tempo real entre as partes.
-  // Campos que compõem a nota de crédito.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.
+  // REVIEW [2026-12-15] Campos que compõem a nota de crédito.
   fields {
-    // Nota fiscal à qual o crédito se refere; consultável.
+    // REVIEW [2026-12-15] Nota fiscal à qual o crédito se refere; consultável.
     invoice: Invoice {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Nota fiscal", en: "Invoice" }
-      // Permite localizar a nota por este vínculo.
+      // REVIEW [2026-12-15] Permite localizar a nota por este vínculo.
       lookup
     }
-    // Valor monetário do crédito em reais; consultável.
+    // REVIEW [2026-12-15] Valor monetário do crédito em reais; consultável.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
-    // Justificativa do crédito.
+    // REVIEW [2026-12-15] Justificativa do crédito.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-    // Situação atual no ciclo de vida da nota de crédito; consultável.
+    // REVIEW [2026-12-15] Situação atual no ciclo de vida da nota de crédito; consultável.
     status: CreditNoteStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Data em que o crédito foi emitido.
+    // REVIEW [2026-12-15] Data em que o crédito foi emitido.
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
-    // Data em que o crédito foi aplicado.
+    // REVIEW [2026-12-15] Data em que o crédito foi aplicado.
     appliedAt: DateTime { title: { pt-BR: "Aplicado em", en: "Applied at" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Indexa as notas de crédito por nota fiscal.
+    // REVIEW [2026-12-15] Indexa as notas de crédito por nota fiscal.
     byInvoice: [invoice.id] hash
-    // Indexa situação e emissão para listar por estado.
+    // REVIEW [2026-12-15] Indexa situação e emissão para listar por estado.
     byStatus: [status, issuedAt] range
   }
 
 
-  // Ações que alteram o estado da nota de crédito.
+  // REVIEW [2026-12-15] Ações que alteram o estado da nota de crédito.
   actions {
-    // Emite a nota de crédito a partir do rascunho.
+    // REVIEW [2026-12-15] Emite a nota de crédito a partir do rascunho.
     issue(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Emitir", en: "Issue" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
-      // Transição para o estado emitido.
+      // REVIEW [2026-12-15] Transição para o estado emitido.
       to: status.Issued
-      // Emite o evento de emissão com a data atual.
+      // REVIEW [2026-12-15] Emite o evento de emissão com a data atual.
       emits { issuedAt: now() }
 
-      // Efeitos colaterais aplicados ao documento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao documento.
       {
-        // Grava a data de emissão.
+        // REVIEW [2026-12-15] Grava a data de emissão.
         issuedAt = now()
       }
     }
 
-    // Aplica o crédito para abater o valor da nota.
+    // REVIEW [2026-12-15] Aplica o crédito para abater o valor da nota.
     apply(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Aplicar", en: "Apply" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
-      // Transição para o estado aplicado.
+      // REVIEW [2026-12-15] Transição para o estado aplicado.
       to: status.Applied
-      // Emite o evento de aplicação com a data atual.
+      // REVIEW [2026-12-15] Emite o evento de aplicação com a data atual.
       emits { appliedAt: now() }
 
-      // Efeitos colaterais aplicados ao documento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao documento.
       {
-        // Grava a data de aplicação.
+        // REVIEW [2026-12-15] Grava a data de aplicação.
         appliedAt = now()
       }
     }
   }
 
-  // Invariante: o valor do crédito precisa ser positivo.
+  // REVIEW [2026-12-15] Invariante: o valor do crédito precisa ser positivo.
   rule amount > 0 {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "O valor deve ser maior que zero"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Amount must be greater than zero"
   }
-  // Invariante: limita o crédito a 100.000 BRL.
+  // REVIEW [2026-12-15] Invariante: limita o crédito a 100.000 BRL.
   rule amount <= 100000 BRL {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "O valor excede o limite de 100.000 BRL"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Amount exceeds the 100,000 BRL limit"
   }
 }
 
-// Shape de estado que modela o ciclo de vida da nota de crédito.
+// REVIEW [2026-12-15] Shape de estado que modela o ciclo de vida da nota de crédito.
 shape CreditNoteStatus {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Situação da nota de crédito", en: "Credit note status" }
-  // Deriva de uma máquina de estados.
+  // REVIEW [2026-12-15] Deriva de uma máquina de estados.
   base: state
-  // Estado inicial de toda nota de crédito.
+  // REVIEW [2026-12-15] Estado inicial de toda nota de crédito.
   initial: Draft
-  // Estado de rascunho, ainda não emitido.
+  // REVIEW [2026-12-15] Estado de rascunho, ainda não emitido.
   value Draft {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Draft
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição permitida de rascunho para emitida.
+    // REVIEW [2026-12-15] Transição permitida de rascunho para emitida.
     transition Issued {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota de crédito emitida", en: "Credit note issued" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data de emissão da nota de crédito.
+        // REVIEW [2026-12-15] Data de emissão da nota de crédito.
         issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
       }
     }
   }
-  // Estado em que a nota de crédito foi emitida.
+  // REVIEW [2026-12-15] Estado em que a nota de crédito foi emitida.
   value Issued {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Emitida", en: "Issued" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Issued
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
 
-    // Transição permitida de emitida para aplicada.
+    // REVIEW [2026-12-15] Transição permitida de emitida para aplicada.
     transition Applied {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota de crédito aplicada", en: "Credit note applied" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data de aplicação do crédito.
+        // REVIEW [2026-12-15] Data de aplicação do crédito.
         appliedAt: DateTime { title: { pt-BR: "Aplicada em", en: "Applied at" } }
       }
     }
   }
-  // Estado em que o crédito já foi aplicado.
+  // REVIEW [2026-12-15] Estado em que o crédito já foi aplicado.
   value Applied {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Aplicada", en: "Applied" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Applied
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
   }
-  // Formatação textual simples, sem máscara.
+  // REVIEW [2026-12-15] Formatação textual simples, sem máscara.
   format: plain
 }

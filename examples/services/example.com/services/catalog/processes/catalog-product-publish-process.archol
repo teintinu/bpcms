@@ -1,92 +1,92 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Declara o processo de publicação; o argumento é o documento-sujeito da instância.
+// REVIEW [2026-12-15] Declara o processo de publicação; o argumento é o documento-sujeito da instância.
 process ProductPublish(product: Product) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Publicação de produto", en: "Product publish" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Revisar e publicar o produto com aprovação em quatro olhos"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  // Gatilho: inicia uma instância quando o produto é submetido para revisão.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o produto é submetido para revisão.
   on [Product.SubmittedForReview]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: product
 
-  // Abre o form de revisão para o publicador decidir.
+  // REVIEW [2026-12-15] Abre o form de revisão para o publicador decidir.
   ProductReview.show({ product })
 
-  // Se a revisão publicou o produto...
+  // REVIEW [2026-12-15] Se a revisão publicou o produto...
   if (product.status == Published) {
-    // ...encerra no desfecho de sucesso.
+    // REVIEW [2026-12-15] ...encerra no desfecho de sucesso.
     return Published
   }
 
-  // Caso contrário, encerra no desfecho de rejeição.
+  // REVIEW [2026-12-15] Caso contrário, encerra no desfecho de rejeição.
   return Rejected
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Published {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Publicado", en: "Published" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Rejected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Form de revisão do produto executado pelo publicador.
+// REVIEW [2026-12-15] Form de revisão do produto executado pelo publicador.
 form ProductReview {
-  // Título exibido ao usuário na tarefa.
+  // REVIEW [2026-12-15] Título exibido ao usuário na tarefa.
   title: { pt-BR: "Revisar produto", en: "Review product" }
-  // Documento editado pelo form.
+  // REVIEW [2026-12-15] Documento editado pelo form.
   document: Product
-  // Papéis que podem executar o form.
+  // REVIEW [2026-12-15] Papéis que podem executar o form.
   roles: [Publisher]
-  // Prazo máximo para conclusão do form.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão do form.
   timeout: 1d
-  // Modo de atribuição: o executor puxa a tarefa da fila.
+  // REVIEW [2026-12-15] Modo de atribuição: o executor puxa a tarefa da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Código SKU do produto.
+    // REVIEW [2026-12-15] Código SKU do produto.
     sku
-    // Nome do produto.
+    // REVIEW [2026-12-15] Nome do produto.
     name
-    // Preço do produto.
+    // REVIEW [2026-12-15] Preço do produto.
     price
-    // Categoria do produto.
+    // REVIEW [2026-12-15] Categoria do produto.
     category
-    // Imagem do produto.
+    // REVIEW [2026-12-15] Imagem do produto.
     image
-    // Campo textual para o motivo da rejeição.
+    // REVIEW [2026-12-15] Campo textual para o motivo da rejeição.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
-      // Limite de caracteres aceito no motivo.
+      // REVIEW [2026-12-15] Limite de caracteres aceito no motivo.
       maxLength: 500
     }
   }
 
-  // Botões de decisão disponíveis no form.
+  // REVIEW [2026-12-15] Botões de decisão disponíveis no form.
   actions {
-    // Aprova e chama a action de publicação do documento.
+    // REVIEW [2026-12-15] Aprova e chama a action de publicação do documento.
     approve { calls: Product.publish }
-    // Rejeita e chama a action de rejeição passando o motivo informado.
+    // REVIEW [2026-12-15] Rejeita e chama a action de rejeição passando o motivo informado.
     reject { calls: Product.reject(reason) }
   }
 }

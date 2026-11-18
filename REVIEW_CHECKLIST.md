@@ -1396,11 +1396,12 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `archol check examples --app example.com/app/backoffice-loja` → **172 arquivos, 0 erros** (closure de 11 serviços).
 - `archol lock` testado em workspace temporário: cria 5 IDs, mantém IDs ao rodar de novo e poda `value/Cash` após remoção.
 - Navegação LSP: `Overdue` → declaração em `billing-invoice-document.archol`; `archol/usages` com 3 ocorrências; arquivo de outra app retorna `commentedOut: true`.
-- **63 testes Rust** e **44 JavaScript** verdes; `clippy`/`fmt` limpos.
+- **72 testes Rust** e **45 JavaScript** verdes; `clippy`/`fmt` limpos.
 - Aliases de aplicação/import (`as Identity`) recebem `ref` do serviço; hover/definition levam ao `identity-service.archol`. Documentos fora da closure recebem `W_OUTSIDE_APPLICATION` e o editor os exibe em itálico/apagado.
 - Menu de contexto: **Archol: Use as Current Application** no editor (só aparece em arquivos com declaração `application`, via context key `archol.isApplication`) e no Explorer para `.archol` (valida a declaração e recusa não-aplicações).
 - Lock atualizado automaticamente ao selecionar a app (servidor) e, após mudanças em `.archol`, com debounce de 10s (`archol.lockDebounceMs`); o plugin só atualiza se o arquivo alterado estiver na closure (`archol/inApplication`).
 - Popover de hover mostra o ID estável do identificador sob o cursor (declaração ou referência), permitindo correlacionar com o AST/lock.
 - Right-click em arquivo de aplicação (editor/Explorer) define a app atual; IDs manuais no lock ficam no topo e sobrevivem à poda.
+- `archol format`/`archol lint` e formatação LSP; pendências `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` no AST (`SourceFile.pending`) com due date, erro para sem data/passada e warning em até 15 dias. Pendências são metadados: aparecem em `SourceFile.pending`, mas não recebem ID nem linha no lock; o explorador as intercala na posição do código. Comentários dos 330 arquivos de exemplo marcados com `REVIEW [2026-12-15]` (13.064 comentários).
 
 **Arquivos afetados:** `archol/crates/archol-core` (AST/parser), `archol/crates/archol-analysis` (`ids`, `application`, `annotate`, lib), `archol/crates/archol-cli`, `archol/crates/archol-lsp`, `archol/editors/vscode`, `archol/scripts/smoke_lsp.py`, `archol/docs/*`, `archol/README.md`, `DSL_REFERENCE.md` (§1.6/§2), `AGENTS.md`, `REVIEW_CHECKLIST.md`.

@@ -1,148 +1,148 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Documento que representa uma conta a pagar a fornecedores.
+// REVIEW [2026-12-15] Documento que representa uma conta a pagar a fornecedores.
 document Bill {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Conta a pagar", en: "Bill" }
-  version: 1 // Versão do documento usada em release e comparação.
-  // Área responsável pelo documento.
+  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
-  sync: read // Sincronização apenas de leitura para consumidores externos.
-  // Campos que compõem a conta a pagar.
+  sync: read // REVIEW [2026-12-15] Sincronização apenas de leitura para consumidores externos.
+  // REVIEW [2026-12-15] Campos que compõem a conta a pagar.
   fields {
-    // Fornecedor credor da conta; consultável em buscas.
+    // REVIEW [2026-12-15] Fornecedor credor da conta; consultável em buscas.
     supplier: string { title: { pt-BR: "Fornecedor", en: "Supplier" }, maxLength: 120, lookup }
-    // Valor monetário da conta em reais; consultável em buscas.
+    // REVIEW [2026-12-15] Valor monetário da conta em reais; consultável em buscas.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
-    // Data de vencimento da conta.
+    // REVIEW [2026-12-15] Data de vencimento da conta.
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
-    // Situação atual no ciclo de vida da conta; consultável.
+    // REVIEW [2026-12-15] Situação atual no ciclo de vida da conta; consultável.
     status: BillStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Data em que a conta foi efetivamente paga.
+    // REVIEW [2026-12-15] Data em que a conta foi efetivamente paga.
     paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Indexa situação e vencimento para listar contas por estado.
+    // REVIEW [2026-12-15] Indexa situação e vencimento para listar contas por estado.
     byStatus: [status, dueAt] range
   }
 
 
-  // Ações que alteram o estado da conta.
+  // REVIEW [2026-12-15] Ações que alteram o estado da conta.
   actions {
-    // Registra o pagamento e move a conta para Paid.
+    // REVIEW [2026-12-15] Registra o pagamento e move a conta para Paid.
     pay(paidAt: DateTime){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Pagar", en: "Pay" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
 
-      // Transição para o estado pago.
+      // REVIEW [2026-12-15] Transição para o estado pago.
       to: status.Paid
-      // Emite o evento de pagamento com a data informada.
+      // REVIEW [2026-12-15] Emite o evento de pagamento com a data informada.
       emits { paidAt: now() }
 
-      // Efeitos colaterais aplicados ao documento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao documento.
       {
-        // Grava a data do pagamento.
+        // REVIEW [2026-12-15] Grava a data do pagamento.
         paidAt = now()
       }
     }
 
-    // Sinaliza que a conta venceu sem pagamento.
+    // REVIEW [2026-12-15] Sinaliza que a conta venceu sem pagamento.
     markOverdue(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
 
-      // Transição para o estado vencido.
+      // REVIEW [2026-12-15] Transição para o estado vencido.
       to: status.Overdue
     }
   }
 
-  // Invariante: o valor da conta precisa ser positivo.
+  // REVIEW [2026-12-15] Invariante: o valor da conta precisa ser positivo.
   rule amount > 0 {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "O valor deve ser maior que zero"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Amount must be greater than zero"
   }
 }
 
-// Shape de estado que modela o ciclo de vida da conta.
+// REVIEW [2026-12-15] Shape de estado que modela o ciclo de vida da conta.
 shape BillStatus {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Situação da conta", en: "Bill status" }
-  // Deriva de uma máquina de estados.
+  // REVIEW [2026-12-15] Deriva de uma máquina de estados.
   base: state
-  // Estado inicial de toda conta criada.
+  // REVIEW [2026-12-15] Estado inicial de toda conta criada.
   initial: Open
-  // Estado em que a conta está em aberto.
+  // REVIEW [2026-12-15] Estado em que a conta está em aberto.
   value Open {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Aberta", en: "Open" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Open
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição permitida de aberta para paga.
+    // REVIEW [2026-12-15] Transição permitida de aberta para paga.
     transition Paid {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Conta paga", en: "Bill paid" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a conta foi paga.
+        // REVIEW [2026-12-15] Data em que a conta foi paga.
         paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
-        // Valor pago na quitação.
+        // REVIEW [2026-12-15] Valor pago na quitação.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
 
-    // Transição permitida de aberta para vencida.
+    // REVIEW [2026-12-15] Transição permitida de aberta para vencida.
     transition Overdue {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Conta vencida", en: "Bill overdue" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a conta venceu.
+        // REVIEW [2026-12-15] Data em que a conta venceu.
         dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
       }
     }
   }
-  // Estado em que a conta foi quitada.
+  // REVIEW [2026-12-15] Estado em que a conta foi quitada.
   value Paid {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Paga", en: "Paid" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Paid
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
   }
-  // Estado em que a conta está vencida.
+  // REVIEW [2026-12-15] Estado em que a conta está vencida.
   value Overdue {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Vencida", en: "Overdue" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Overdue
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
 
-    // Transição permitida de vencida para paga.
+    // REVIEW [2026-12-15] Transição permitida de vencida para paga.
     transition Paid {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Conta paga", en: "Bill paid" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a conta foi paga.
+        // REVIEW [2026-12-15] Data em que a conta foi paga.
         paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
-        // Valor pago na quitação.
+        // REVIEW [2026-12-15] Valor pago na quitação.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
-  // Formatação textual simples, sem máscara.
+  // REVIEW [2026-12-15] Formatação textual simples, sem máscara.
   format: plain
 }

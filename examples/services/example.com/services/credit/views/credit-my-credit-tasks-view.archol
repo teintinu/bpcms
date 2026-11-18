@@ -1,18 +1,18 @@
-// service: example.com/services/credit
+// REVIEW [2026-12-15] service: example.com/services/credit
 
-// View de caixa de entrada com as tarefas do usuário logado.
+// REVIEW [2026-12-15] View de caixa de entrada com as tarefas do usuário logado.
 view MyCreditTasks {
-  // Título exibido na navegação da inbox.
+  // REVIEW [2026-12-15] Título exibido na navegação da inbox.
   title: { pt-BR: "Minhas tarefas de crédito", en: "My credit tasks" }
-  // Tipo inbox: lista de tarefas atribuídas ao usuário.
+  // REVIEW [2026-12-15] Tipo inbox: lista de tarefas atribuídas ao usuário.
   type: inbox
-  // Papéis que enxergam a inbox de crédito.
+  // REVIEW [2026-12-15] Papéis que enxergam a inbox de crédito.
   roles: [CreditAnalyst, CreditManager]
 
-  // Escopo mine: mostra apenas as tarefas do próprio usuário.
+  // REVIEW [2026-12-15] Escopo mine: mostra apenas as tarefas do próprio usuário.
   scope: mine
-  // Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  // Colunas exibidas em cada tarefa da lista.
+  // REVIEW [2026-12-15] Colunas exibidas em cada tarefa da lista.
   columns { title; subject; role; dueAt; priority }
 }

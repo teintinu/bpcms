@@ -1,18 +1,18 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Integração com o gateway dos laboratórios de apoio.
+// REVIEW [2026-12-15] Integração com o gateway dos laboratórios de apoio.
 integration SupportLabGateway {
-  protocol: rest // Protocolo de transporte usado na chamada.
-  baseUrl: env.SUPPORT_LAB_URL // Endereço base lido da variável de ambiente do serviço.
-  auth: oauth2 // Autenticação OAuth2 nas chamadas ao gateway.
-  timeout: 20s // Prazo máximo de cada chamada antes de estourar timeout.
-  retry: exponential(3) // Repetição exponencial limitada a três tentativas.
+  protocol: rest // REVIEW [2026-12-15] Protocolo de transporte usado na chamada.
+  baseUrl: env.SUPPORT_LAB_URL // REVIEW [2026-12-15] Endereço base lido da variável de ambiente do serviço.
+  auth: oauth2 // REVIEW [2026-12-15] Autenticação OAuth2 nas chamadas ao gateway.
+  timeout: 20s // REVIEW [2026-12-15] Prazo máximo de cada chamada antes de estourar timeout.
+  retry: exponential(3) // REVIEW [2026-12-15] Repetição exponencial limitada a três tentativas.
 
-  // Operações expostas pela integração.
+  // REVIEW [2026-12-15] Operações expostas pela integração.
   operations {
-    // Envia a amostra ao laboratório de apoio e devolve o protocolo.
+    // REVIEW [2026-12-15] Envia a amostra ao laboratório de apoio e devolve o protocolo.
     sendSample(sample: Sample): string
-    // Recebe o resultado do laboratório de apoio para a amostra.
+    // REVIEW [2026-12-15] Recebe o resultado do laboratório de apoio para a amostra.
     receiveResult(sample: Sample): ExamResult
   }
 }

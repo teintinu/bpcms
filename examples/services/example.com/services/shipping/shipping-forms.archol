@@ -1,53 +1,53 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Formulário para o gerente informar o frete manualmente.
+// REVIEW [2026-12-15] Formulário para o gerente informar o frete manualmente.
 form FreightOverride {
-  // Título exibido na caixa de entrada e no formulário.
+  // REVIEW [2026-12-15] Título exibido na caixa de entrada e no formulário.
   title: { pt-BR: "Informar frete", en: "Enter freight" }
-  // Documento-sujeito alterado pelo formulário.
+  // REVIEW [2026-12-15] Documento-sujeito alterado pelo formulário.
   document: Shipment
-  // Papéis que podem executar o formulário.
+  // REVIEW [2026-12-15] Papéis que podem executar o formulário.
   roles: [Manager]
-  // Prazo para conclusão antes do timeout do caso.
+  // REVIEW [2026-12-15] Prazo para conclusão antes do timeout do caso.
   timeout: 1d
-  // Prioridade na fila de trabalho.
+  // REVIEW [2026-12-15] Prioridade na fila de trabalho.
   priority: 60
-  // Distribuição por retirada manual da fila.
+  // REVIEW [2026-12-15] Distribuição por retirada manual da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Pedido relacionado à remessa, exibido como referência.
+    // REVIEW [2026-12-15] Pedido relacionado à remessa, exibido como referência.
     order
-    // Peso bruto da remessa, exibido para conferência.
+    // REVIEW [2026-12-15] Peso bruto da remessa, exibido para conferência.
     pesoBruto
-    // Nome da transportadora informada manualmente.
+    // REVIEW [2026-12-15] Nome da transportadora informada manualmente.
     carrier: string {
-      // Título do campo no formulário.
+      // REVIEW [2026-12-15] Título do campo no formulário.
       title: { pt-BR: "Transportadora", en: "Carrier" }
-      // Limita o nome a sessenta caracteres.
+      // REVIEW [2026-12-15] Limita o nome a sessenta caracteres.
       maxLength: 60
-      // Torna o campo obrigatório.
+      // REVIEW [2026-12-15] Torna o campo obrigatório.
       required
     }
-    // Valor do frete informado manualmente.
+    // REVIEW [2026-12-15] Valor do frete informado manualmente.
     amount: std.Money {
-      // Título do campo no formulário.
+      // REVIEW [2026-12-15] Título do campo no formulário.
       title: { pt-BR: "Frete", en: "Freight" }
-      // Moeda do valor em reais.
+      // REVIEW [2026-12-15] Moeda do valor em reais.
       currency: BRL
-      // Torna o valor obrigatório.
+      // REVIEW [2026-12-15] Torna o valor obrigatório.
       required
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Ação que aplica o frete manual à remessa.
+    // REVIEW [2026-12-15] Ação que aplica o frete manual à remessa.
     apply {
-      // Título do botão de ação.
+      // REVIEW [2026-12-15] Título do botão de ação.
       title: { pt-BR: "Aplicar frete", en: "Apply freight" }
-      // Chama a action do documento com os campos preenchidos.
+      // REVIEW [2026-12-15] Chama a action do documento com os campos preenchidos.
       calls: Shipment.applyFreight(carrier, amount)
     }
   }

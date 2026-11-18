@@ -1,33 +1,33 @@
-// service: example.com/services/claims
+// REVIEW [2026-12-15] service: example.com/services/claims
 
-// Painel operacional com indicadores agregados de sinistros e liquidações.
+// REVIEW [2026-12-15] Painel operacional com indicadores agregados de sinistros e liquidações.
 view ClaimsDashboard {
-  // Título exibido na navegação do painel.
+  // REVIEW [2026-12-15] Título exibido na navegação do painel.
   title: { pt-BR: "Painel de sinistros", en: "Claims dashboard" }
-  // Tipo da view: painel com métricas.
+  // REVIEW [2026-12-15] Tipo da view: painel com métricas.
   type: dashboard
-  // Documentos consultados pelas métricas.
+  // REVIEW [2026-12-15] Documentos consultados pelas métricas.
   sources: [Claim, Settlement]
-  // Papéis que podem abrir o painel.
+  // REVIEW [2026-12-15] Papéis que podem abrir o painel.
   roles: [Manager, FinanceAnalyst]
-  // Atualização em tempo real conforme os documentos mudam.
+  // REVIEW [2026-12-15] Atualização em tempo real conforme os documentos mudam.
   mode: live
 
-  // Filtros disponíveis para recortar os indicadores.
+  // REVIEW [2026-12-15] Filtros disponíveis para recortar os indicadores.
   filters { status; type; period }
-  // Métricas calculadas sobre os documentos de origem.
+  // REVIEW [2026-12-15] Métricas calculadas sobre os documentos de origem.
   metrics {
-    // Sinistros ainda em andamento (nem pagos nem recusados).
+    // REVIEW [2026-12-15] Sinistros ainda em andamento (nem pagos nem recusados).
     openClaims: count(Claim) where Claim.status != Paid and Claim.status != Rejected
-    // Soma dos valores reclamados, ignorando os recusados.
+    // REVIEW [2026-12-15] Soma dos valores reclamados, ignorando os recusados.
     claimedAmount: sum(Claim.amount) where Claim.status != Rejected
-    // Soma das liquidações efetivamente pagas.
+    // REVIEW [2026-12-15] Soma das liquidações efetivamente pagas.
     settledAmount: sum(Settlement.amount) where Settlement.status == Paid
-    // Contagem de sinistros abertos na faixa de fraude alta.
+    // REVIEW [2026-12-15] Contagem de sinistros abertos na faixa de fraude alta.
     highRisk: count(Claim) where Claim.fraudBand == High and Claim.status != Rejected
   }
-  // Moeda usada na exibição dos valores monetários.
+  // REVIEW [2026-12-15] Moeda usada na exibição dos valores monetários.
   units { claimedAmount: BRL; settledAmount: BRL }
-  // Janela de tolerância de dados antes de recarregar.
+  // REVIEW [2026-12-15] Janela de tolerância de dados antes de recarregar.
   freshness: 5m
 }

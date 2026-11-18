@@ -1,23 +1,23 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Tela de detalhe de uma remessa.
+// REVIEW [2026-12-15] Tela de detalhe de uma remessa.
 view ShipmentDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
-  // Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Shipment
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; items; timeline }
-  // Ações disponíveis na tela de detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis na tela de detalhe.
   actions {
-    // Abre o andamento do processo de despacho.
+    // REVIEW [2026-12-15] Abre o andamento do processo de despacho.
     progress -> DispatchProgress
-    // Abre o andamento do processo de entrega.
+    // REVIEW [2026-12-15] Abre o andamento do processo de entrega.
     delivery -> DeliveryProgress
   }
 }

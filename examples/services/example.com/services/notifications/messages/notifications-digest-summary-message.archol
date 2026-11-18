@@ -1,17 +1,17 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Mensagem de resumo diário enviada pelo processo DailyDigest.
+// REVIEW [2026-12-15] Mensagem de resumo diário enviada pelo processo DailyDigest.
 message DigestSummary {
-  // Rótulo da mensagem exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo da mensagem exibido no construtor.
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
-  // Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
   about: Notification
 
-  // Dados carregados no envio da mensagem.
+  // REVIEW [2026-12-15] Dados carregados no envio da mensagem.
   payload {
-    // Destinatário do resumo.
+    // REVIEW [2026-12-15] Destinatário do resumo.
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" } }
-    // Canal de entrega do resumo.
+    // REVIEW [2026-12-15] Canal de entrega do resumo.
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
   }
 }

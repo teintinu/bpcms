@@ -1,115 +1,115 @@
-// service: example.com/services/inventory
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
-// Processo agendado que repõe os itens de estoque abaixo do ponto de pedido.
+// REVIEW [2026-12-15] service: example.com/services/inventory
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] Processo agendado que repõe os itens de estoque abaixo do ponto de pedido.
 
-// Declara o processo StockReplenishment; o argumento é o documento-sujeito da instância.
+// REVIEW [2026-12-15] Declara o processo StockReplenishment; o argumento é o documento-sujeito da instância.
 process StockReplenishment(stockItem: StockItem) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Reposição de estoque", en: "Stock replenishment" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Identificar itens abaixo do ponto de pedido e criar a requisição de compra"
   }
 
-  // Agenda diária às 5h para varrer os itens de estoque.
+  // REVIEW [2026-12-15] Agenda diária às 5h para varrer os itens de estoque.
   schedule: "0 5 * * *"
-  // Cria uma instância por item cujo disponível esteja no ponto de pedido.
+  // REVIEW [2026-12-15] Cria uma instância por item cujo disponível esteja no ponto de pedido.
   fanOut: StockItem where available <= reorderPoint
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: stockItem
 
-  // Variável durável da instância: decisão de reposição do item.
+  // REVIEW [2026-12-15] Variável durável da instância: decisão de reposição do item.
   let decision: ReorderDecision
 
-  // Avalia o ponto de pedido do item e guarda a decisão retornada.
+  // REVIEW [2026-12-15] Avalia o ponto de pedido do item e guarda a decisão retornada.
   decision = ReorderPoint.evaluate({
-    // Quantidade atualmente disponível no armazém.
+    // REVIEW [2026-12-15] Quantidade atualmente disponível no armazém.
     available: stockItem.available,
-    // Nível que dispara a reposição.
+    // REVIEW [2026-12-15] Nível que dispara a reposição.
     reorderPoint: stockItem.reorderPoint
   })
 
-  // Se a decisão indicar que o item precisa ser reposto...
+  // REVIEW [2026-12-15] Se a decisão indicar que o item precisa ser reposto...
   if (decision == Reorder) {
-    // ...cria a requisição de reposição para o item.
+    // REVIEW [2026-12-15] ...cria a requisição de reposição para o item.
     ReplenishmentRequest.create({ stockItem })
-    // Encerra no desfecho Requested.
+    // REVIEW [2026-12-15] Encerra no desfecho Requested.
     return Requested
   }
 
-  // Sem necessidade de reposição, encerra no desfecho NotNeeded.
+  // REVIEW [2026-12-15] Sem necessidade de reposição, encerra no desfecho NotNeeded.
   return NotNeeded
 
-  // Declara o desfecho de requisição criada.
+  // REVIEW [2026-12-15] Declara o desfecho de requisição criada.
   end Requested {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de estoque suficiente.
+  // REVIEW [2026-12-15] Declara o desfecho de estoque suficiente.
   end NotNeeded {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Sem reposição", en: "No replenishment needed" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 }
 
-// Shape de classificação que expressa a decisão de reposição.
+// REVIEW [2026-12-15] Shape de classificação que expressa a decisão de reposição.
 shape ReorderDecision {
-  // Título exibido no builder e nos filtros.
+  // REVIEW [2026-12-15] Título exibido no builder e nos filtros.
   title: { pt-BR: "Decisão de reposição", en: "Reorder decision" }
-  // Base do shape: classificação (sem transições).
+  // REVIEW [2026-12-15] Base do shape: classificação (sem transições).
   base: classification
-  // Classificação de que o item precisa ser reposto.
+  // REVIEW [2026-12-15] Classificação de que o item precisa ser reposto.
   value Reorder {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Repor", en: "Reorder" }
-    // Ícone associado à classificação.
+    // REVIEW [2026-12-15] Ícone associado à classificação.
     icon: Reorder
-    // Ordem de exibição da classificação no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição da classificação no fluxo.
     ordinal: 10
   }
-  // Classificação de que o estoque é suficiente.
+  // REVIEW [2026-12-15] Classificação de que o estoque é suficiente.
   value Ok {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Suficiente", en: "Sufficient" }
-    // Ícone associado à classificação.
+    // REVIEW [2026-12-15] Ícone associado à classificação.
     icon: Ok
-    // Ordem de exibição da classificação no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição da classificação no fluxo.
     ordinal: 20
   }
-  // Formato de apresentação do shape.
+  // REVIEW [2026-12-15] Formato de apresentação do shape.
   format: plain
 }
 
-// Decisão de negócio que compara o disponível com o ponto de pedido.
+// REVIEW [2026-12-15] Decisão de negócio que compara o disponível com o ponto de pedido.
 decision ReorderPoint {
-  // Título exibido no builder e na revisão.
+  // REVIEW [2026-12-15] Título exibido no builder e na revisão.
   title: { pt-BR: "Ponto de pedido", en: "Reorder point" }
-  // Área responsável pela decisão.
+  // REVIEW [2026-12-15] Área responsável pela decisão.
   owner: "Supply Chain"
-  // Shape de classificação devolvido pela decisão.
+  // REVIEW [2026-12-15] Shape de classificação devolvido pela decisão.
   returns: ReorderDecision
 
-  // Entradas necessárias para avaliar a decisão.
+  // REVIEW [2026-12-15] Entradas necessárias para avaliar a decisão.
   inputs {
-    // Quantidade atualmente disponível no armazém.
+    // REVIEW [2026-12-15] Quantidade atualmente disponível no armazém.
     available: std.Count
-    // Nível que dispara a reposição.
+    // REVIEW [2026-12-15] Nível que dispara a reposição.
     reorderPoint: std.Count
   }
 
-  // Casos avaliados em ordem até o primeiro que casar.
+  // REVIEW [2026-12-15] Casos avaliados em ordem até o primeiro que casar.
   cases {
-    // Se o disponível alcançou o ponto de pedido, decide repor.
+    // REVIEW [2026-12-15] Se o disponível alcançou o ponto de pedido, decide repor.
     available <= reorderPoint -> Reorder
-    // Caso contrário, considera o estoque suficiente.
+    // REVIEW [2026-12-15] Caso contrário, considera o estoque suficiente.
     else -> Ok
   }
 }

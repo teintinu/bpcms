@@ -1,14 +1,14 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Serviço de notificações: canais, modelos e histórico de envios.
+// REVIEW [2026-12-15] Serviço de notificações: canais, modelos e histórico de envios.
 service "example.com/services/notifications" {
-  // Rótulo exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo exibido no construtor.
   title: { pt-BR: "Notificações", en: "Notifications" }
-  version: 1.0.0 // Versão do serviço comparada pelo lock e pelo release.
-  owner: "Customer Success" // Área responsável pelo serviço.
-  // Dependências externas do serviço.
+  version: 1.0.0 // REVIEW [2026-12-15] Versão do serviço comparada pelo lock e pelo release.
+  owner: "Customer Success" // REVIEW [2026-12-15] Área responsável pelo serviço.
+  // REVIEW [2026-12-15] Dependências externas do serviço.
   imports {
-    // Importa o serviço Citizen com o alias Citizen (tipos de e-mail, telefone etc.).
+    // REVIEW [2026-12-15] Importa o serviço Citizen com o alias Citizen (tipos de e-mail, telefone etc.).
     service "example.com/services/citizen" as Citizen
   }
 }

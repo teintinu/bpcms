@@ -1,17 +1,17 @@
-// service: example.com/services/checkout
-// Declara o serviço de negócio "checkout"; é o escopo de todos os artefatos da pasta.
+// REVIEW [2026-12-15] service: example.com/services/checkout
+// REVIEW [2026-12-15] Declara o serviço de negócio "checkout"; é o escopo de todos os artefatos da pasta.
 service "example.com/services/checkout" {
-  // Nome exibido no builder e nos seletores de serviço.
+  // REVIEW [2026-12-15] Nome exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
-  // Versão do serviço; releases e diffs comparam este valor.
+  // REVIEW [2026-12-15] Versão do serviço; releases e diffs comparam este valor.
   version: 1.1.0
-  // Área responsável pelo serviço.
+  // REVIEW [2026-12-15] Área responsável pelo serviço.
   owner: "Checkout"
-  // Dependências externas usadas pelos artefatos deste serviço.
+  // REVIEW [2026-12-15] Dependências externas usadas pelos artefatos deste serviço.
   imports {
-    // Importa as medidas/constantes padrão do construtor (Money, Count etc.).
+    // REVIEW [2026-12-15] Importa as medidas/constantes padrão do construtor (Money, Count etc.).
     service "bpcms.org/std" as std
-    // Importa o serviço de identidade, dono do tipo User usado nas sessões.
+    // REVIEW [2026-12-15] Importa o serviço de identidade, dono do tipo User usado nas sessões.
     service "example.com/services/identity" as Identity
   }
 }

@@ -1,97 +1,97 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// Organograma que define a hierarquia da operação de campo.
+// REVIEW [2026-12-15] Organograma que define a hierarquia da operação de campo.
 organogram FieldOperations {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Organograma de campo", en: "Field operations organogram" }
 
-  // Relações de subordinação entre os papéis.
+  // REVIEW [2026-12-15] Relações de subordinação entre os papéis.
   hierarchy {
-    // Supervisor acima do despachante, que acima do técnico de campo.
+    // REVIEW [2026-12-15] Supervisor acima do despachante, que acima do técnico de campo.
     Supervisor > Dispatcher > FieldTechnician
-    // O despachante também atende o cliente.
+    // REVIEW [2026-12-15] O despachante também atende o cliente.
     Dispatcher > Customer
   }
 
-  // O supervisor gerencia despachantes e técnicos.
+  // REVIEW [2026-12-15] O supervisor gerencia despachantes e técnicos.
   Supervisor manages [Dispatcher, FieldTechnician]
-  // Na ausência do supervisor por três dias, o despachante assume.
+  // REVIEW [2026-12-15] Na ausência do supervisor por três dias, o despachante assume.
   Supervisor delegates to Dispatcher when absent for 3d
 
-  // Papéis cuja assinatura vale como aprovação formal.
+  // REVIEW [2026-12-15] Papéis cuja assinatura vale como aprovação formal.
   signature {
-    // O técnico de campo assina a conclusão do atendimento.
+    // REVIEW [2026-12-15] O técnico de campo assina a conclusão do atendimento.
     FieldTechnician
   }
 }
 
-// Papel que coordena e distribui o trabalho de campo.
+// REVIEW [2026-12-15] Papel que coordena e distribui o trabalho de campo.
 role Dispatcher {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Despachante", en: "Dispatcher" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consultar visitas.
+    // REVIEW [2026-12-15] Consultar visitas.
     visit.view,
-    // Agendar visitas.
+    // REVIEW [2026-12-15] Agendar visitas.
     visit.schedule,
-    // Reagendar visitas.
+    // REVIEW [2026-12-15] Reagendar visitas.
     visit.reschedule,
-    // Despachar visitas.
+    // REVIEW [2026-12-15] Despachar visitas.
     visit.dispatch,
-    // Consultar ordens de serviço.
+    // REVIEW [2026-12-15] Consultar ordens de serviço.
     workorder.view,
-    // Atribuir ordens de serviço.
+    // REVIEW [2026-12-15] Atribuir ordens de serviço.
     workorder.assign,
-    // Consultar técnicos.
+    // REVIEW [2026-12-15] Consultar técnicos.
     technician.view
   ]
 }
 
-// Papel que executa o atendimento no local.
+// REVIEW [2026-12-15] Papel que executa o atendimento no local.
 role FieldTechnician {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Técnico de campo", en: "Field technician" }
-  // Permissões concedidas ao papel.
+  // REVIEW [2026-12-15] Permissões concedidas ao papel.
   permissions: [
-    // Consultar visitas.
+    // REVIEW [2026-12-15] Consultar visitas.
     visit.view,
-    // Fazer check-in no site.
+    // REVIEW [2026-12-15] Fazer check-in no site.
     visit.checkin,
-    // Preencher o relatório da visita.
+    // REVIEW [2026-12-15] Preencher o relatório da visita.
     visit.report,
-    // Consultar ordens de serviço.
+    // REVIEW [2026-12-15] Consultar ordens de serviço.
     workorder.view,
-    // Iniciar a execução da ordem.
+    // REVIEW [2026-12-15] Iniciar a execução da ordem.
     workorder.start
   ]
 }
 
-// Papel que supervisiona a operação e trata escalações.
+// REVIEW [2026-12-15] Papel que supervisiona a operação e trata escalações.
 role Supervisor {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Supervisor de campo", en: "Field supervisor" }
-  // Herda todas as permissões do despachante.
+  // REVIEW [2026-12-15] Herda todas as permissões do despachante.
   inherits: Dispatcher
-  // Permissões adicionais do supervisor.
+  // REVIEW [2026-12-15] Permissões adicionais do supervisor.
   permissions: [
-    // Escalar o atendimento de uma visita.
+    // REVIEW [2026-12-15] Escalar o atendimento de uma visita.
     visit.escalate,
-    // Concluir ordens de serviço.
+    // REVIEW [2026-12-15] Concluir ordens de serviço.
     workorder.finish,
-    // Cancelar ordens de serviço.
+    // REVIEW [2026-12-15] Cancelar ordens de serviço.
     workorder.cancel,
-    // Gerenciar técnicos.
+    // REVIEW [2026-12-15] Gerenciar técnicos.
     technician.manage,
-    // Consultar relatórios.
+    // REVIEW [2026-12-15] Consultar relatórios.
     report.view
   ]
 }
 
-// Papel do cliente que recebe o atendimento.
+// REVIEW [2026-12-15] Papel do cliente que recebe o atendimento.
 role Customer {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cliente", en: "Customer" }
-  // Permissões restritas às próprias visitas.
+  // REVIEW [2026-12-15] Permissões restritas às próprias visitas.
   permissions: [visit.viewOwn, visit.confirm, visit.withdraw]
 }

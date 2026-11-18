@@ -1,43 +1,43 @@
-// application: Rota Certa (pedidos, entregas e suporte)
-// Declara a aplicação da URI example.com/app/rota-certa e abre sua composição.
+// REVIEW [2026-12-15] application: Rota Certa (pedidos, entregas e suporte)
+// REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/rota-certa e abre sua composição.
 application "example.com/app/rota-certa" {
-  source: registry // Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
-  version: 1.9.2 // Versão semver publicada da app; o lock fixa as versões dos serviços.
-  // Nome localizado da aplicação, exibido no construtor e no runtime.
+  source: registry // REVIEW [2026-12-15] Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
+  version: 1.9.2 // REVIEW [2026-12-15] Versão semver publicada da app; o lock fixa as versões dos serviços.
+  // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
-    pt-BR: "Rota Certa" // Título em português (idioma default).
-    en-US: "Right Route" // Título em inglês americano.
+    pt-BR: "Rota Certa" // REVIEW [2026-12-15] Título em português (idioma default).
+    en-US: "Right Route" // REVIEW [2026-12-15] Título em inglês americano.
   }
 
-  // Entry points da aplicação; cada alias local é usado nas referências cruzadas.
+  // REVIEW [2026-12-15] Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity // Identidade e autenticação dos usuários.
-    "example.com/services/orders" as Orders // Pedidos de venda que geram as entregas.
-    "example.com/services/shipping" as Shipping // Cotação, despacho e rastreio de entregas.
-    "example.com/services/support" as Support // Atendimento e ocorrências de suporte.
-    "example.com/services/notifications" as Notifications // Avisos e notificações aos usuários.
+    "example.com/services/identity" as Identity // REVIEW [2026-12-15] Identidade e autenticação dos usuários.
+    "example.com/services/orders" as Orders // REVIEW [2026-12-15] Pedidos de venda que geram as entregas.
+    "example.com/services/shipping" as Shipping // REVIEW [2026-12-15] Cotação, despacho e rastreio de entregas.
+    "example.com/services/support" as Support // REVIEW [2026-12-15] Atendimento e ocorrências de suporte.
+    "example.com/services/notifications" as Notifications // REVIEW [2026-12-15] Avisos e notificações aos usuários.
   }
-  // Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
+  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
   roles {
-    Dispatcher // Despachante: organiza as entregas.
-    Driver // Motorista: executa as entregas.
-    Manager // Gerente: responde pela operação.
-    Clerk // Balconista: apoia o atendimento e os pedidos.
-    SupportAgent // Agente de suporte: atende ocorrências.
-    // Manager é superior a Dispatcher, que é superior a Driver.
+    Dispatcher // REVIEW [2026-12-15] Despachante: organiza as entregas.
+    Driver // REVIEW [2026-12-15] Motorista: executa as entregas.
+    Manager // REVIEW [2026-12-15] Gerente: responde pela operação.
+    Clerk // REVIEW [2026-12-15] Balconista: apoia o atendimento e os pedidos.
+    SupportAgent // REVIEW [2026-12-15] Agente de suporte: atende ocorrências.
+    // REVIEW [2026-12-15] Manager é superior a Dispatcher, que é superior a Driver.
     Manager > Dispatcher > Driver
-    // Manager é superior a Clerk.
+    // REVIEW [2026-12-15] Manager é superior a Clerk.
     Manager > Clerk
-    // Manager é superior a SupportAgent.
+    // REVIEW [2026-12-15] Manager é superior a SupportAgent.
     Manager > SupportAgent
   }
-  theme: Ops // Tema visual fornecido pelo construtor (não é artefato de serviço).
-  locales: [pt-BR, en-US] // Idiomas da app; o primeiro (pt-BR) é o default.
-  environments: [dev, qa, prod] // Ambientes em que a aplicação é promovida.
+  theme: Ops // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
+  locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
+  environments: [dev, qa, prod] // REVIEW [2026-12-15] Ambientes em que a aplicação é promovida.
 
-  // Bloco de inicialização da app; só configura, não contém regra de negócio.
+  // REVIEW [2026-12-15] Bloco de inicialização da app; só configura, não contém regra de negócio.
   main {
-    // Inicializa Shipping.DefaultCarrier com a transportadora padrão CarrierX.
+    // REVIEW [2026-12-15] Inicializa Shipping.DefaultCarrier com a transportadora padrão CarrierX.
     set Shipping.DefaultCarrier = "CarrierX"
   }
 }

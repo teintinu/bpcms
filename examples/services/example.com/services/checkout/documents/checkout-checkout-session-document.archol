@@ -1,424 +1,424 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Documento que representa a sessão de finalização de uma compra.
+// REVIEW [2026-12-15] Documento que representa a sessão de finalização de uma compra.
 document CheckoutSession {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
-  // Versão do documento; releases e diffs comparam este valor.
+  // REVIEW [2026-12-15] Versão do documento; releases e diffs comparam este valor.
   version: 2
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Checkout"
-  // Mantém as telas abertas sincronizadas ao vivo com o documento.
+  // REVIEW [2026-12-15] Mantém as telas abertas sincronizadas ao vivo com o documento.
   sync: live
 
-  // Campos que compõem a sessão.
+  // REVIEW [2026-12-15] Campos que compõem a sessão.
   fields {
-    // Cliente que está finalizando a compra.
+    // REVIEW [2026-12-15] Cliente que está finalizando a compra.
     customer: User {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Cliente", en: "Customer" }
-      // Permite localizar sessões pelo cliente.
+      // REVIEW [2026-12-15] Permite localizar sessões pelo cliente.
       lookup
     }
-    // Valor total do pedido.
+    // REVIEW [2026-12-15] Valor total do pedido.
     total: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
-      // Permite localizar sessões pelo total.
+      // REVIEW [2026-12-15] Permite localizar sessões pelo total.
       lookup
-      // Moeda do valor total.
+      // REVIEW [2026-12-15] Moeda do valor total.
       currency: BRL
     }
-    // Valor do frete registrado para a sessão.
+    // REVIEW [2026-12-15] Valor do frete registrado para a sessão.
     freight: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Frete", en: "Freight" }
-      // Moeda do valor do frete.
+      // REVIEW [2026-12-15] Moeda do valor do frete.
       currency: BRL
     }
-    // Prazo de entrega acordado, em dias.
+    // REVIEW [2026-12-15] Prazo de entrega acordado, em dias.
     deliveryDays: std.Count {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Prazo de entrega", en: "Delivery days" }
-      // Menor prazo aceito, em dias.
+      // REVIEW [2026-12-15] Menor prazo aceito, em dias.
       min: 1
-      // Maior prazo aceito, em dias.
+      // REVIEW [2026-12-15] Maior prazo aceito, em dias.
       max: 90
     }
-    // Forma de pagamento escolhida pelo cliente.
+    // REVIEW [2026-12-15] Forma de pagamento escolhida pelo cliente.
     paymentMethod: PaymentMethod {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Método de pagamento", en: "Payment method" }
-      // Permite localizar sessões pela forma de pagamento.
+      // REVIEW [2026-12-15] Permite localizar sessões pela forma de pagamento.
       lookup
     }
-    // Código devolvido pelo gateway ao autorizar o pagamento.
+    // REVIEW [2026-12-15] Código devolvido pelo gateway ao autorizar o pagamento.
     authorizationCode: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Código de autorização", en: "Authorization code" }
-      // Limita o código a sessenta caracteres.
+      // REVIEW [2026-12-15] Limita o código a sessenta caracteres.
       maxLength: 60
     }
-    // Situação atual da sessão no ciclo de vida.
+    // REVIEW [2026-12-15] Situação atual da sessão no ciclo de vida.
     status: CheckoutStatus {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      // Permite localizar sessões pela situação.
+      // REVIEW [2026-12-15] Permite localizar sessões pela situação.
       lookup
     }
-    // Data e hora em que a sessão foi criada.
+    // REVIEW [2026-12-15] Data e hora em que a sessão foi criada.
     createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" } }
-    // Data e hora em que a compra foi confirmada.
+    // REVIEW [2026-12-15] Data e hora em que a compra foi confirmada.
     confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Ordena por cliente e data de criação para listar o histórico.
+    // REVIEW [2026-12-15] Ordena por cliente e data de criação para listar o histórico.
     byCustomer: [customer.id, createdAt] range
-    // Ordena por situação e data para filtros operacionais.
+    // REVIEW [2026-12-15] Ordena por situação e data para filtros operacionais.
     byStatus: [status, createdAt] range
   }
 
 
-  // Ações que alteram a sessão.
+  // REVIEW [2026-12-15] Ações que alteram a sessão.
   actions {
-    // Abre uma nova sessão de finalização para o cliente.
+    // REVIEW [2026-12-15] Abre uma nova sessão de finalização para o cliente.
     create(customer: User, total: std.Money) {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Abrir sessão", en: "Open session" }
-      // Papéis autorizados a abrir a sessão.
+      // REVIEW [2026-12-15] Papéis autorizados a abrir a sessão.
       roles: [Customer]
       {
-        // Registra o instante de criação da sessão.
+        // REVIEW [2026-12-15] Registra o instante de criação da sessão.
         createdAt = now()
       }
     }
 
-    // Valida o carrinho antes de seguir para o frete.
+    // REVIEW [2026-12-15] Valida o carrinho antes de seguir para o frete.
     validateCart() {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
-      // Papéis autorizados a validar o carrinho.
+      // REVIEW [2026-12-15] Papéis autorizados a validar o carrinho.
       roles: [Customer]
 
-      // Move a sessão para o estado Validated.
+      // REVIEW [2026-12-15] Move a sessão para o estado Validated.
       to: status.Validated
 
-      // Regra de negócio avaliada antes da transição.
+      // REVIEW [2026-12-15] Regra de negócio avaliada antes da transição.
       rule total > 0 {
-        // Mensagem de erro em português.
+        // REVIEW [2026-12-15] Mensagem de erro em português.
         pt-BR: "O carrinho está vazio"
-        // Mensagem de erro em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro em inglês.
         en: "The cart is empty"
       }
     }
 
-    // Registra o frete cotado e o prazo de entrega.
+    // REVIEW [2026-12-15] Registra o frete cotado e o prazo de entrega.
     quoteShipping(freightAmount: std.Money, days: std.Count) {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Registrar frete", en: "Record shipping" }
-      // Papéis autorizados a registrar o frete.
+      // REVIEW [2026-12-15] Papéis autorizados a registrar o frete.
       roles: [SessionEngine, SupportAgent]
 
-      // Move a sessão para o estado ShippingQuoted.
+      // REVIEW [2026-12-15] Move a sessão para o estado ShippingQuoted.
       to: status.ShippingQuoted
-      // Publica os valores de frete e prazo como dados da transição.
+      // REVIEW [2026-12-15] Publica os valores de frete e prazo como dados da transição.
       emits { freight: freightAmount; deliveryDays: days }
 
-      // Regra de negócio: o frete não pode ser negativo.
+      // REVIEW [2026-12-15] Regra de negócio: o frete não pode ser negativo.
       rule freightAmount >= 0 BRL {
-        // Mensagem de erro em português.
+        // REVIEW [2026-12-15] Mensagem de erro em português.
         pt-BR: "O frete não pode ser negativo"
-        // Mensagem de erro em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro em inglês.
         en: "Freight cannot be negative"
       }
       {
-        // Grava o valor do frete no documento.
+        // REVIEW [2026-12-15] Grava o valor do frete no documento.
         freight = freightAmount
-        // Grava o prazo de entrega no documento.
+        // REVIEW [2026-12-15] Grava o prazo de entrega no documento.
         deliveryDays = days
       }
     }
 
-    // Registra o código de autorização devolvido pelo gateway.
+    // REVIEW [2026-12-15] Registra o código de autorização devolvido pelo gateway.
     authorizePayment(authorization: string) {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Registrar autorização", en: "Record authorization" }
-      // Papéis autorizados a registrar a autorização.
+      // REVIEW [2026-12-15] Papéis autorizados a registrar a autorização.
       roles: [SessionEngine]
 
-      // Move a sessão para o estado PaymentAuthorized.
+      // REVIEW [2026-12-15] Move a sessão para o estado PaymentAuthorized.
       to: status.PaymentAuthorized
-      // Publica o código de autorização como dado da transição.
+      // REVIEW [2026-12-15] Publica o código de autorização como dado da transição.
       emits { authorizationCode: authorization }
 
-      // Regra de negócio: exige um código com tamanho mínimo.
+      // REVIEW [2026-12-15] Regra de negócio: exige um código com tamanho mínimo.
       rule authorization.length >= 4 {
-        // Mensagem de erro em português.
+        // REVIEW [2026-12-15] Mensagem de erro em português.
         pt-BR: "Informe o código de autorização"
-        // Mensagem de erro em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro em inglês.
         en: "Enter the authorization code"
       }
       {
-        // Grava o código de autorização no documento.
+        // REVIEW [2026-12-15] Grava o código de autorização no documento.
         authorizationCode = authorization
       }
     }
 
-    // Troca a forma de pagamento para uma nova tentativa.
+    // REVIEW [2026-12-15] Troca a forma de pagamento para uma nova tentativa.
     retryPayment(method: PaymentMethod) {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Trocar forma de pagamento", en: "Change payment method" }
-      // Papéis autorizados a trocar a forma de pagamento.
+      // REVIEW [2026-12-15] Papéis autorizados a trocar a forma de pagamento.
       roles: [Customer]
       {
-        // Atualiza a forma de pagamento escolhida.
+        // REVIEW [2026-12-15] Atualiza a forma de pagamento escolhida.
         paymentMethod = method
       }
     }
 
-    // Abandona a compra, encerrando a sessão.
+    // REVIEW [2026-12-15] Abandona a compra, encerrando a sessão.
     abandon(reason: string) {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Abandonar compra", en: "Abandon purchase" }
-      // Papéis autorizados a abandonar a sessão.
+      // REVIEW [2026-12-15] Papéis autorizados a abandonar a sessão.
       roles: [Customer, SupportAgent, SessionEngine]
 
-      // Move a sessão para o estado Abandoned.
+      // REVIEW [2026-12-15] Move a sessão para o estado Abandoned.
       to: status.Abandoned
 
-      // Regra de negócio: exige um motivo suficientemente descritivo.
+      // REVIEW [2026-12-15] Regra de negócio: exige um motivo suficientemente descritivo.
       rule reason.length >= 10 {
-        // Mensagem de erro em português.
+        // REVIEW [2026-12-15] Mensagem de erro em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de erro em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
 
-    // Confirma a compra após a autorização do pagamento.
+    // REVIEW [2026-12-15] Confirma a compra após a autorização do pagamento.
     confirmOrder() {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Confirmar compra", en: "Confirm purchase" }
-      // Papéis autorizados a confirmar a compra.
+      // REVIEW [2026-12-15] Papéis autorizados a confirmar a compra.
       roles: [SessionEngine]
 
-      // Move a sessão para o estado Confirmed.
+      // REVIEW [2026-12-15] Move a sessão para o estado Confirmed.
       to: status.Confirmed
       {
-        // Registra o instante da confirmação.
+        // REVIEW [2026-12-15] Registra o instante da confirmação.
         confirmedAt = now()
       }
     }
   }
 
-  // Invariante: toda sessão confirmada precisa ter data de confirmação.
+  // REVIEW [2026-12-15] Invariante: toda sessão confirmada precisa ter data de confirmação.
   rule status == Confirmed implies confirmedAt != null {
-    // Mensagem de erro em português.
+    // REVIEW [2026-12-15] Mensagem de erro em português.
     pt-BR: "Informe a data de confirmação"
-    // Mensagem de erro em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro em inglês.
     en: "Enter the confirmation date"
   }
 }
 
-// Forma de estado que modela o ciclo de vida da sessão.
+// REVIEW [2026-12-15] Forma de estado que modela o ciclo de vida da sessão.
 shape CheckoutStatus {
-  // Título exibido onde a forma aparece.
+  // REVIEW [2026-12-15] Título exibido onde a forma aparece.
   title: { pt-BR: "Situação da finalização", en: "Checkout status" }
-  // Base "state": os valores são estados com transições.
+  // REVIEW [2026-12-15] Base "state": os valores são estados com transições.
   base: state
-  // Estado em que toda sessão começa.
+  // REVIEW [2026-12-15] Estado em que toda sessão começa.
   initial: Draft
 
-  // Estado inicial: carrinho ainda não validado.
+  // REVIEW [2026-12-15] Estado inicial: carrinho ainda não validado.
   value Draft {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Draft
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 10
 
-    // Transição disparada quando o carrinho é validado.
+    // REVIEW [2026-12-15] Transição disparada quando o carrinho é validado.
     transition Validated {
-      // Evento que provoca a transição.
+      // REVIEW [2026-12-15] Evento que provoca a transição.
       event: CartValidated
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Carrinho validado", en: "Cart validated" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Cliente que validou o carrinho.
+        // REVIEW [2026-12-15] Cliente que validou o carrinho.
         customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
-        // Total do pedido no momento da validação.
+        // REVIEW [2026-12-15] Total do pedido no momento da validação.
         total: std.Money { title: { pt-BR: "Total", en: "Total" } }
       }
     }
 
-    // Transição que abandona a compra a partir do rascunho.
+    // REVIEW [2026-12-15] Transição que abandona a compra a partir do rascunho.
     transition Abandoned {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Motivo informado para o abandono.
+        // REVIEW [2026-12-15] Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado com o carrinho validado, à espera do frete.
+  // REVIEW [2026-12-15] Estado com o carrinho validado, à espera do frete.
   value Validated {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Carrinho validado", en: "Cart validated" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Validated
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 20
 
-    // Transição disparada após o registro do frete.
+    // REVIEW [2026-12-15] Transição disparada após o registro do frete.
     transition ShippingQuoted {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Valor do frete registrado.
+        // REVIEW [2026-12-15] Valor do frete registrado.
         freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
-        // Prazo de entrega registrado.
+        // REVIEW [2026-12-15] Prazo de entrega registrado.
         deliveryDays: std.Count { title: { pt-BR: "Prazo", en: "Days" } }
       }
     }
 
-    // Transição que abandona a compra depois da validação.
+    // REVIEW [2026-12-15] Transição que abandona a compra depois da validação.
     transition Abandoned {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Motivo informado para o abandono.
+        // REVIEW [2026-12-15] Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado com o frete cotado, à espera do pagamento.
+  // REVIEW [2026-12-15] Estado com o frete cotado, à espera do pagamento.
   value ShippingQuoted {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: ShippingQuoted
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 30
 
-    // Transição disparada após a autorização do pagamento.
+    // REVIEW [2026-12-15] Transição disparada após a autorização do pagamento.
     transition PaymentAuthorized {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Código devolvido pelo gateway.
+        // REVIEW [2026-12-15] Código devolvido pelo gateway.
         authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
       }
     }
 
-    // Transição que abandona a compra depois da cotação do frete.
+    // REVIEW [2026-12-15] Transição que abandona a compra depois da cotação do frete.
     transition Abandoned {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Motivo informado para o abandono.
+        // REVIEW [2026-12-15] Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado com o pagamento autorizado, à espera da confirmação.
+  // REVIEW [2026-12-15] Estado com o pagamento autorizado, à espera da confirmação.
   value PaymentAuthorized {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: PaymentAuthorized
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 40
 
-    // Transição que abandona a compra mesmo após a autorização.
+    // REVIEW [2026-12-15] Transição que abandona a compra mesmo após a autorização.
     transition Abandoned {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Motivo informado para o abandono.
+        // REVIEW [2026-12-15] Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
-    // Transição que confirma a compra.
+    // REVIEW [2026-12-15] Transição que confirma a compra.
     transition Confirmed {
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
-      // Dados que acompanham o evento.
+      // REVIEW [2026-12-15] Dados que acompanham o evento.
       payload {
-        // Instante em que a compra foi confirmada.
+        // REVIEW [2026-12-15] Instante em que a compra foi confirmada.
         confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
       }
     }
   }
-  // Estado final de sucesso.
+  // REVIEW [2026-12-15] Estado final de sucesso.
   value Confirmed {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Confirmed
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 50
   }
-  // Estado final de abandono.
+  // REVIEW [2026-12-15] Estado final de abandono.
   value Abandoned {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Abandonada", en: "Abandoned" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Abandoned
-    // Ordem do estado nas listas e no funil.
+    // REVIEW [2026-12-15] Ordem do estado nas listas e no funil.
     ordinal: 60
   }
 
-  // Formato de exibição simples, sem máscara.
+  // REVIEW [2026-12-15] Formato de exibição simples, sem máscara.
   format: plain
 }
 
-// Forma de classificação com as formas de pagamento aceitas.
+// REVIEW [2026-12-15] Forma de classificação com as formas de pagamento aceitas.
 shape PaymentMethod {
-  // Título exibido onde a forma aparece.
+  // REVIEW [2026-12-15] Título exibido onde a forma aparece.
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
-  // Base "classification": valores sem transições, usados como categoria.
+  // REVIEW [2026-12-15] Base "classification": valores sem transições, usados como categoria.
   base: classification
 
-  // Pagamento por cartão de crédito.
+  // REVIEW [2026-12-15] Pagamento por cartão de crédito.
   value CreditCard {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cartão de crédito", en: "Credit card" }
-    // Ícone associado à forma de pagamento.
+    // REVIEW [2026-12-15] Ícone associado à forma de pagamento.
     icon: CreditCard
-    // Ordem da opção nas listas.
+    // REVIEW [2026-12-15] Ordem da opção nas listas.
     ordinal: 10
   }
-  // Pagamento por Pix.
+  // REVIEW [2026-12-15] Pagamento por Pix.
   value Pix {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Pix", en: "Pix" }
-    // Ícone associado à forma de pagamento.
+    // REVIEW [2026-12-15] Ícone associado à forma de pagamento.
     icon: Pix
-    // Ordem da opção nas listas.
+    // REVIEW [2026-12-15] Ordem da opção nas listas.
     ordinal: 20
   }
-  // Pagamento por boleto.
+  // REVIEW [2026-12-15] Pagamento por boleto.
   value Boleto {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Boleto", en: "Boleto" }
-    // Ícone associado à forma de pagamento.
+    // REVIEW [2026-12-15] Ícone associado à forma de pagamento.
     icon: Boleto
-    // Ordem da opção nas listas.
+    // REVIEW [2026-12-15] Ordem da opção nas listas.
     ordinal: 30
   }
 
-  // Formato de exibição simples, sem máscara.
+  // REVIEW [2026-12-15] Formato de exibição simples, sem máscara.
   format: plain
 }

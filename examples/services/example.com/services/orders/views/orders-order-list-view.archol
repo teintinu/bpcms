@@ -1,30 +1,30 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// View de tabela que lista os pedidos para a operação.
+// REVIEW [2026-12-15] View de tabela que lista os pedidos para a operação.
 view OrderList {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Pedidos", en: "Orders" }
-  // Tipo da view: tabela.
+  // REVIEW [2026-12-15] Tipo da view: tabela.
   type: table
-  // Documento fonte da lista.
+  // REVIEW [2026-12-15] Documento fonte da lista.
   source: Order
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { customer; total; status; placedAt }
-  // Filtros disponíveis na tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tabela.
   filters { status; period; customer }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
 
-  // Ações disponíveis na lista.
+  // REVIEW [2026-12-15] Ações disponíveis na lista.
   actions {
-    // Abre o detalhe do pedido selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do pedido selecionado.
     open -> OrderDetail
-    // Cria um novo pedido a partir da lista.
+    // REVIEW [2026-12-15] Cria um novo pedido a partir da lista.
     newOrder -> Order.create(customer, discount)
-    // Solicita o cancelamento do pedido selecionado.
+    // REVIEW [2026-12-15] Solicita o cancelamento do pedido selecionado.
     requestCancellation -> Order.requestCancellation(reason)
   }
 }

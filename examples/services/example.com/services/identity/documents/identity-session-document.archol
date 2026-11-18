@@ -1,174 +1,174 @@
-// service: example.com/services/identity
+// REVIEW [2026-12-15] service: example.com/services/identity
 
-// Declara o documento de sessão de acesso do usuário.
+// REVIEW [2026-12-15] Declara o documento de sessão de acesso do usuário.
 document Session {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Sessão", en: "Session" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Time/área responsável pelo documento.
+  // REVIEW [2026-12-15] Time/área responsável pelo documento.
   owner: "Identity"
-  // Sincronização somente de leitura com a fonte de identidade.
+  // REVIEW [2026-12-15] Sincronização somente de leitura com a fonte de identidade.
   sync: read
 
-  // Campos do documento.
+  // REVIEW [2026-12-15] Campos do documento.
   fields {
-    // Referência ao usuário dono da sessão.
+    // REVIEW [2026-12-15] Referência ao usuário dono da sessão.
     user: User {
-      // Título exibido para o campo.
+      // REVIEW [2026-12-15] Título exibido para o campo.
       title: { pt-BR: "Usuário", en: "User" }
     }
-    // Momento de emissão da sessão, indexado para busca.
+    // REVIEW [2026-12-15] Momento de emissão da sessão, indexado para busca.
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" }, lookup }
-    // Momento em que a sessão deixa de valer.
+    // REVIEW [2026-12-15] Momento em que a sessão deixa de valer.
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
-    // Situação atual da sessão, indexada para busca.
+    // REVIEW [2026-12-15] Situação atual da sessão, indexada para busca.
     status: SessionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
   }
 
-  // Índices de consulta do documento.
+  // REVIEW [2026-12-15] Índices de consulta do documento.
   indexes {
-    // Índice por usuário e emissão, para listar sessões em ordem cronológica.
+    // REVIEW [2026-12-15] Índice por usuário e emissão, para listar sessões em ordem cronológica.
     byUser: [user.id, issuedAt] range
-    // Índice por expiração, para varrer sessões vencidas.
+    // REVIEW [2026-12-15] Índice por expiração, para varrer sessões vencidas.
     byExpiry: [expiresAt] range
   }
 
 
-  // Ações de escrita disponíveis no documento.
+  // REVIEW [2026-12-15] Ações de escrita disponíveis no documento.
   actions {
-    // Inicia uma sessão validando credenciais.
+    // REVIEW [2026-12-15] Inicia uma sessão validando credenciais.
     start(email: Email, password: string){
-      // Título exibido na ação.
+      // REVIEW [2026-12-15] Título exibido na ação.
       title: { pt-BR: "Iniciar sessão", en: "Sign in" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Customer]
-      // Corpo da ação: define emissão, expiração e emite o evento de início.
+      // REVIEW [2026-12-15] Corpo da ação: define emissão, expiração e emite o evento de início.
       {
-        // Marca o instante de emissão da sessão.
+        // REVIEW [2026-12-15] Marca o instante de emissão da sessão.
         issuedAt = now()
-        // Expira a sessão depois do TTL configurado no parâmetro SessionTtl.
+        // REVIEW [2026-12-15] Expira a sessão depois do TTL configurado no parâmetro SessionTtl.
         expiresAt = now() + SessionTtl
-        // Emite o evento Started, que leva o estado a Active.
+        // REVIEW [2026-12-15] Emite o evento Started, que leva o estado a Active.
         emit Started
       }
     }
 
-    // Encerra a sessão a pedido do usuário.
+    // REVIEW [2026-12-15] Encerra a sessão a pedido do usuário.
     end(){
-      // Título exibido na ação.
+      // REVIEW [2026-12-15] Título exibido na ação.
       title: { pt-BR: "Encerrar", en: "End" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Customer]
-      // Transição aplicada: leva o status para Ended.
+      // REVIEW [2026-12-15] Transição aplicada: leva o status para Ended.
       to: status.Ended
     }
 
-    // Expira a sessão em nome da administração.
+    // REVIEW [2026-12-15] Expira a sessão em nome da administração.
     expire(){
-      // Título exibido na ação.
+      // REVIEW [2026-12-15] Título exibido na ação.
       title: { pt-BR: "Expirar", en: "Expire" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Admin]
-      // Transição aplicada: leva o status para Expired.
+      // REVIEW [2026-12-15] Transição aplicada: leva o status para Expired.
       to: status.Expired
     }
   }
 
-  // Invariante: a expiração precisa ser posterior à emissão.
+  // REVIEW [2026-12-15] Invariante: a expiração precisa ser posterior à emissão.
   rule expiresAt > issuedAt {
-    // Mensagem da regra em português.
+    // REVIEW [2026-12-15] Mensagem da regra em português.
     pt-BR: "A expiração deve ser posterior à emissão"
-    // Mensagem da regra em inglês.
+    // REVIEW [2026-12-15] Mensagem da regra em inglês.
     en: "Expiration must be after issuance"
 
   }
 }
 
-// Shape de estados do ciclo de vida da sessão.
+// REVIEW [2026-12-15] Shape de estados do ciclo de vida da sessão.
 shape SessionStatus {
-  // Título exibido no construtor e nas telas.
+  // REVIEW [2026-12-15] Título exibido no construtor e nas telas.
   title: { pt-BR: "Situação da sessão", en: "Session status" }
-  // Base do shape: máquina de estados.
+  // REVIEW [2026-12-15] Base do shape: máquina de estados.
   base: state
-  // Estado inicial Active, alcançado pela transição Created.
+  // REVIEW [2026-12-15] Estado inicial Active, alcançado pela transição Created.
   initial: Active with transition Started {
-    // Título da transição de criação.
+    // REVIEW [2026-12-15] Título da transição de criação.
     title: { pt-BR: "Sessão iniciada", en: "Session started" }
   }
-  // Estado de sessão válida.
+  // REVIEW [2026-12-15] Estado de sessão válida.
   value Active {
-    // Título exibido para o valor.
+    // REVIEW [2026-12-15] Título exibido para o valor.
     title: { pt-BR: "Ativa", en: "Active" }
-    // Ícone exibido junto ao valor.
+    // REVIEW [2026-12-15] Ícone exibido junto ao valor.
     icon: Active
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 10
 
-    // Transição de encerramento da sessão.
+    // REVIEW [2026-12-15] Transição de encerramento da sessão.
     transition Ended {
-      // Título da transição.
+      // REVIEW [2026-12-15] Título da transição.
       title: { pt-BR: "Sessão encerrada", en: "Session ended" }
     }
 
-    // Transição de expiração da sessão.
+    // REVIEW [2026-12-15] Transição de expiração da sessão.
     transition Expired {
-      // Título da transição.
+      // REVIEW [2026-12-15] Título da transição.
       title: { pt-BR: "Sessão expirada", en: "Session expired" }
     }
   }
-  // Estado de sessão encerrada.
+  // REVIEW [2026-12-15] Estado de sessão encerrada.
   value Ended {
-    // Título exibido para o valor.
+    // REVIEW [2026-12-15] Título exibido para o valor.
     title: { pt-BR: "Encerrada", en: "Ended" }
-    // Ícone exibido junto ao valor.
+    // REVIEW [2026-12-15] Ícone exibido junto ao valor.
     icon: Ended
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 20
   }
-  // Estado de sessão expirada.
+  // REVIEW [2026-12-15] Estado de sessão expirada.
   value Expired {
-    // Título exibido para o valor.
+    // REVIEW [2026-12-15] Título exibido para o valor.
     title: { pt-BR: "Expirada", en: "Expired" }
-    // Ícone exibido junto ao valor.
+    // REVIEW [2026-12-15] Ícone exibido junto ao valor.
     icon: Expired
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 30
   }
-  // Formato de apresentação do shape: texto simples.
+  // REVIEW [2026-12-15] Formato de apresentação do shape: texto simples.
   format: plain
 }
 
-// Form de acesso que coleta as credenciais e inicia a sessão.
+// REVIEW [2026-12-15] Form de acesso que coleta as credenciais e inicia a sessão.
 form SignIn {
-  // Título exibido na tela de acesso.
+  // REVIEW [2026-12-15] Título exibido na tela de acesso.
   title: { pt-BR: "Formulário de acesso", en: "Sign in" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Session
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Correio eletrônico usado como identificação.
+    // REVIEW [2026-12-15] Correio eletrônico usado como identificação.
     email: Email {
-      // Título exibido para o campo.
+      // REVIEW [2026-12-15] Título exibido para o campo.
       title: { pt-BR: "Correio eletrônico", en: "Email" }
-      // Torna o preenchimento obrigatório.
+      // REVIEW [2026-12-15] Torna o preenchimento obrigatório.
       required
     }
-    // Senha informada pelo usuário.
+    // REVIEW [2026-12-15] Senha informada pelo usuário.
     password: string {
-      // Título exibido para o campo.
+      // REVIEW [2026-12-15] Título exibido para o campo.
       title: { pt-BR: "Senha", en: "Password" }
-      // Limite de caracteres aceito no campo.
+      // REVIEW [2026-12-15] Limite de caracteres aceito no campo.
       maxLength: 128
-      // Torna o preenchimento obrigatório.
+      // REVIEW [2026-12-15] Torna o preenchimento obrigatório.
       required
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Envia as credenciais; a action inicia a sessão com email e senha.
+    // REVIEW [2026-12-15] Envia as credenciais; a action inicia a sessão com email e senha.
     signIn { calls: Session.start(email, password) }
   }
 }

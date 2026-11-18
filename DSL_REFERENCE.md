@@ -175,6 +175,24 @@ b,example.com/services/billing#shape/InvoiceStatus/value/Overdue
 - O AST usa esses IDs (`id`, `ref`, `fieldRef`, `typeRefId`); listas de usos ficam no índice semântico (LSP), não no JSON, para evitar ciclos e tamanho.
 - O serviço não tem lock nem versões de imports. Versões de serviço/integridade por app ficam para a evolução do formato.
 
+### 1.6.1 Pendências em comentários
+
+Comentários que começam com **`TODO`**, **`FIXME`**, **`REVIEW`**, **`OPTIMIZE`** ou **`HACK`** viram nós `Pending` no AST (`SourceFile.pending`), utilizáveis pelo construtor.
+
+**Sintaxe:** `// <MARCADOR> [YYYY-MM-DD] <comentário>` (data opcional entre colchetes).
+
+```text
+// todo implementar criptografia
+// fixme precisamos corrigir uma possível invasão de código aqui
+// REVIEW [2027-03-12] revisar isso depois do carnaval
+// OPTIMIZE [2027-12-26] melhorar a performance depois do natal
+```
+
+- O marcador é **case-insensitive**; o AST e o `archol format` normalizam para maiúsculas.
+- A data é o **due date**: sem data ou data no passado é **erro** (`E_PENDING_NO_DATE`/`E_PENDING_EXPIRED`); data inválida é `E_PENDING_DATE`; vencimento em até **15 dias** gera **warning** (`W_PENDING_SOON`).
+- `archol format` (e o format-on-save do plugin) só ajusta o marcador para maiúsculas; `archol lint`/LSP publicam os diagnósticos.
+- Durante o brainstorm da DSL, os comentários legados dos exemplos foram marcados com `REVIEW [2026-12-15]`.
+
 ## 1.7 Capabilities
 
 `capabilities` usa conceitos de **alto nível**, não tecnologia. O construtor mapeia para HTTP, DB, UI kit, fila etc.

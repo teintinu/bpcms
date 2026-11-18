@@ -1,51 +1,51 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Documento que representa um laboratório de apoio terceirizado.
+// REVIEW [2026-12-15] Documento que representa um laboratório de apoio terceirizado.
 document SupportLab {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
-  version: 1 // Versão do artefato Document.
-  owner: "Laboratory" // Dono de negócio do documento.
-  sync: live // Sincronização em tempo real entre cliente e servidor.
-  // Campos que compõem o laboratório de apoio.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document.
+  owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio do documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
+  // REVIEW [2026-12-15] Campos que compõem o laboratório de apoio.
   fields {
-    // Nome do laboratório de apoio; consultável e obrigatório.
+    // REVIEW [2026-12-15] Nome do laboratório de apoio; consultável e obrigatório.
     name: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Nome", en: "Name" }
-      // Permite localizar o laboratório pelo nome.
+      // REVIEW [2026-12-15] Permite localizar o laboratório pelo nome.
       lookup
-      // Torna o nome obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o nome obrigatório no preenchimento.
       required
     }
-    // Número de acreditação do laboratório de apoio.
+    // REVIEW [2026-12-15] Número de acreditação do laboratório de apoio.
     accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
-    // Indica se o laboratório está ativo; começa ativo.
+    // REVIEW [2026-12-15] Indica se o laboratório está ativo; começa ativo.
     active: boolean { title: { pt-BR: "Ativo", en: "Active" }, default: true }
   }
 
-  // Ações que alteram o cadastro do laboratório de apoio.
+  // REVIEW [2026-12-15] Ações que alteram o cadastro do laboratório de apoio.
   actions {
-    // Action que reativa o laboratório de apoio.
+    // REVIEW [2026-12-15] Action que reativa o laboratório de apoio.
     activate(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Ativar", en: "Activate" }
-      roles: [LabManager] // Papéis autorizados a ativar.
-      // Corpo da action: marca o laboratório como ativo.
+      roles: [LabManager] // REVIEW [2026-12-15] Papéis autorizados a ativar.
+      // REVIEW [2026-12-15] Corpo da action: marca o laboratório como ativo.
       {
-        // Liga o indicador de laboratório ativo.
+        // REVIEW [2026-12-15] Liga o indicador de laboratório ativo.
         active = true
       }
     }
 
-    // Action que desativa o laboratório de apoio.
+    // REVIEW [2026-12-15] Action que desativa o laboratório de apoio.
     deactivate(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Desativar", en: "Deactivate" }
-      roles: [LabManager] // Papéis autorizados a desativar.
-      // Corpo da action: marca o laboratório como inativo.
+      roles: [LabManager] // REVIEW [2026-12-15] Papéis autorizados a desativar.
+      // REVIEW [2026-12-15] Corpo da action: marca o laboratório como inativo.
       {
-        // Desliga o indicador de laboratório ativo.
+        // REVIEW [2026-12-15] Desliga o indicador de laboratório ativo.
         active = false
       }
     }

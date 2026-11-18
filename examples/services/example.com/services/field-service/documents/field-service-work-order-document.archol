@@ -1,288 +1,288 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// Documento que representa uma ordem de serviço solicitada pelo cliente.
+// REVIEW [2026-12-15] Documento que representa uma ordem de serviço solicitada pelo cliente.
 document WorkOrder {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Ordem de serviço", en: "Work order" }
-  // Versão do artefato; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
   version: 1
-  // Responsável pela manutenção do documento.
+  // REVIEW [2026-12-15] Responsável pela manutenção do documento.
   owner: "Field Service"
-  // Sincronização em tempo real entre os usuários da operação.
+  // REVIEW [2026-12-15] Sincronização em tempo real entre os usuários da operação.
   sync: live
 
-  // Campos que compõem a ordem de serviço.
+  // REVIEW [2026-12-15] Campos que compõem a ordem de serviço.
   fields {
-    // Número da ordem; consultável, único e curto.
+    // REVIEW [2026-12-15] Número da ordem; consultável, único e curto.
     number: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
-      // Permite localizar a ordem pelo número.
+      // REVIEW [2026-12-15] Permite localizar a ordem pelo número.
       lookup
-      // Impede duas ordens com o mesmo número.
+      // REVIEW [2026-12-15] Impede duas ordens com o mesmo número.
       unique
-      // Limita o número a vinte e quatro caracteres.
+      // REVIEW [2026-12-15] Limita o número a vinte e quatro caracteres.
       maxLength: 24
     }
-    // Site onde o serviço será executado.
+    // REVIEW [2026-12-15] Site onde o serviço será executado.
     site: Site { title: { pt-BR: "Site", en: "Site" }, lookup }
-    // Cliente que solicitou a ordem.
+    // REVIEW [2026-12-15] Cliente que solicitou a ordem.
     customer: Identity.User { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
-    // Prioridade de atendimento; padrão é Normal.
+    // REVIEW [2026-12-15] Prioridade de atendimento; padrão é Normal.
     priority: WorkOrderPriority {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Prioridade", en: "Priority" }
-      // Permite localizar a ordem pela prioridade.
+      // REVIEW [2026-12-15] Permite localizar a ordem pela prioridade.
       lookup
-      // Prioridade assumida quando não informada.
+      // REVIEW [2026-12-15] Prioridade assumida quando não informada.
       default: Normal
     }
-    // Descrição do problema ou do serviço pedido.
+    // REVIEW [2026-12-15] Descrição do problema ou do serviço pedido.
     description: string { title: { pt-BR: "Descrição", en: "Description" }, maxLength: 1000 }
-    // Situação atual da ordem no seu ciclo de vida.
+    // REVIEW [2026-12-15] Situação atual da ordem no seu ciclo de vida.
     status: WorkOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Técnico designado para executar a ordem.
+    // REVIEW [2026-12-15] Técnico designado para executar a ordem.
     technician: Technician { title: { pt-BR: "Técnico", en: "Technician" } }
-    // Instante de abertura da ordem, preenchido pelo sistema.
+    // REVIEW [2026-12-15] Instante de abertura da ordem, preenchido pelo sistema.
     openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" }, readonly }
-    // Prazo combinado para a conclusão da ordem.
+    // REVIEW [2026-12-15] Prazo combinado para a conclusão da ordem.
     dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due at" } }
-    // Motivo registrado quando a ordem é cancelada.
+    // REVIEW [2026-12-15] Motivo registrado quando a ordem é cancelada.
     cancelReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }, maxLength: 500 }
   }
 
-  // Índices que aceleram as consultas sobre o documento.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas sobre o documento.
   indexes {
-    // Busca exata pelo número, garantindo unicidade no banco.
+    // REVIEW [2026-12-15] Busca exata pelo número, garantindo unicidade no banco.
     byNumber: [number] unique
-    // Consulta por situação e prazo em faixa.
+    // REVIEW [2026-12-15] Consulta por situação e prazo em faixa.
     byStatus: [status, dueAt] range
-    // Consulta por site, usando o identificador como hash.
+    // REVIEW [2026-12-15] Consulta por site, usando o identificador como hash.
     bySite: [site.id] hash
   }
 
 
-  // Ações que fazem a ordem avançar no seu ciclo de vida.
+  // REVIEW [2026-12-15] Ações que fazem a ordem avançar no seu ciclo de vida.
   actions {
-    // Atribui um técnico à ordem.
+    // REVIEW [2026-12-15] Atribui um técnico à ordem.
     assign(assignedTechnician: Technician) {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Atribuir técnico", en: "Assign technician" }
-      // Somente o despachante pode atribuir.
+      // REVIEW [2026-12-15] Somente o despachante pode atribuir.
       roles: [Dispatcher]
-      // Transição para o estado Assigned.
+      // REVIEW [2026-12-15] Transição para o estado Assigned.
       to: status.Assigned
-      // Emite o evento levando o técnico designado.
+      // REVIEW [2026-12-15] Emite o evento levando o técnico designado.
       emits { technician: assignedTechnician }
-      // Guarda o técnico no documento.
+      // REVIEW [2026-12-15] Guarda o técnico no documento.
       { technician = assignedTechnician }
     }
 
-    // Inicia a execução da ordem.
+    // REVIEW [2026-12-15] Inicia a execução da ordem.
     start() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Iniciar execução", en: "Start work" }
-      // Técnico ou despachante podem iniciar.
+      // REVIEW [2026-12-15] Técnico ou despachante podem iniciar.
       roles: [FieldTechnician, Dispatcher]
-      // Transição para o estado InProgress.
+      // REVIEW [2026-12-15] Transição para o estado InProgress.
       to: status.InProgress
-      // Emite o evento com o instante do início.
+      // REVIEW [2026-12-15] Emite o evento com o instante do início.
       emits { at: now() }
     }
 
-    // Conclui a ordem.
+    // REVIEW [2026-12-15] Conclui a ordem.
     finish() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Concluir ordem", en: "Finish work order" }
-      // Despachante ou supervisor podem concluir.
+      // REVIEW [2026-12-15] Despachante ou supervisor podem concluir.
       roles: [Dispatcher, Supervisor]
-      // Transição para o estado Done.
+      // REVIEW [2026-12-15] Transição para o estado Done.
       to: status.Done
-      // Emite o evento com o instante da conclusão.
+      // REVIEW [2026-12-15] Emite o evento com o instante da conclusão.
       emits { at: now() }
     }
 
-    // Cancela a ordem com um motivo obrigatório.
+    // REVIEW [2026-12-15] Cancela a ordem com um motivo obrigatório.
     cancel(reason: string) {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Cancelar ordem", en: "Cancel work order" }
-      // Somente o supervisor pode cancelar.
+      // REVIEW [2026-12-15] Somente o supervisor pode cancelar.
       roles: [Supervisor]
-      // Transição para o estado Cancelled.
+      // REVIEW [2026-12-15] Transição para o estado Cancelled.
       to: status.Cancelled
-      // Guarda o motivo no documento.
+      // REVIEW [2026-12-15] Guarda o motivo no documento.
       { cancelReason = reason }
     }
   }
 }
 
-// Máquina de estados do ciclo de vida da ordem de serviço.
+// REVIEW [2026-12-15] Máquina de estados do ciclo de vida da ordem de serviço.
 shape WorkOrderStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação da ordem de serviço", en: "Work order status" }
-  // Base da forma: máquina de estados.
+  // REVIEW [2026-12-15] Base da forma: máquina de estados.
   base: state
-  // Estado em que toda ordem começa.
+  // REVIEW [2026-12-15] Estado em que toda ordem começa.
   initial: Open
 
-  // Estado de ordem recém-aberta.
+  // REVIEW [2026-12-15] Estado de ordem recém-aberta.
   value Open {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Aberta", en: "Open" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.open
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 10
 
-    // Transição para o estado Assigned.
+    // REVIEW [2026-12-15] Transição para o estado Assigned.
     transition Assigned {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem atribuída", en: "Work order assigned" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Técnico designado para a ordem.
+        // REVIEW [2026-12-15] Técnico designado para a ordem.
         technician: Technician { title: { pt-BR: "Técnico", en: "Technician" } }
       }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de ordem com técnico designado.
+  // REVIEW [2026-12-15] Estado de ordem com técnico designado.
   value Assigned {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Atribuída", en: "Assigned" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.assigned
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 20
 
-    // Transição para o estado InProgress.
+    // REVIEW [2026-12-15] Transição para o estado InProgress.
     transition InProgress {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: Started
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem iniciada", en: "Work order started" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Instante do início da execução.
+        // REVIEW [2026-12-15] Instante do início da execução.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de ordem em execução.
+  // REVIEW [2026-12-15] Estado de ordem em execução.
   value InProgress {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em execução", en: "In progress" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.inProgress
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 30
 
-    // Transição para o estado Done.
+    // REVIEW [2026-12-15] Transição para o estado Done.
     transition Done {
-      // Nome do evento emitido na entrada do estado.
+      // REVIEW [2026-12-15] Nome do evento emitido na entrada do estado.
       event: Finished
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem concluída", en: "Work order finished" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Instante da conclusão.
+        // REVIEW [2026-12-15] Instante da conclusão.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Ordem cancelada", en: "Work order cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado final de ordem concluída.
+  // REVIEW [2026-12-15] Estado final de ordem concluída.
   value Done {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Concluída", en: "Done" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.done
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 40
   }
-  // Estado final de ordem cancelada.
+  // REVIEW [2026-12-15] Estado final de ordem cancelada.
   value Cancelled {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
-    // Ícone exibido no status.
+    // REVIEW [2026-12-15] Ícone exibido no status.
     icon: status.cancelled
-    // Ordem de exibição entre os estados.
+    // REVIEW [2026-12-15] Ordem de exibição entre os estados.
     ordinal: 50
   }
 }
 
-// Classificação da prioridade de atendimento da ordem.
+// REVIEW [2026-12-15] Classificação da prioridade de atendimento da ordem.
 shape WorkOrderPriority {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Prioridade da ordem", en: "Work order priority" }
-  // Base da forma: classificação fechada de valores.
+  // REVIEW [2026-12-15] Base da forma: classificação fechada de valores.
   base: classification
 
-  // Prioridade baixa.
+  // REVIEW [2026-12-15] Prioridade baixa.
   value Low {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Baixa", en: "Low" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: priority.low
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 10
   }
-  // Prioridade normal.
+  // REVIEW [2026-12-15] Prioridade normal.
   value Normal {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Normal", en: "Normal" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: priority.normal
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 20
   }
-  // Prioridade alta.
+  // REVIEW [2026-12-15] Prioridade alta.
   value High {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Alta", en: "High" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: priority.high
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 30
   }
-  // Prioridade urgente.
+  // REVIEW [2026-12-15] Prioridade urgente.
   value Urgent {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Urgente", en: "Urgent" }
-    // Ícone exibido na classificação.
+    // REVIEW [2026-12-15] Ícone exibido na classificação.
     icon: priority.urgent
-    // Ordem de exibição entre os valores.
+    // REVIEW [2026-12-15] Ordem de exibição entre os valores.
     ordinal: 40
   }
 }

@@ -1,143 +1,143 @@
-// service: example.com/services/checkout
-// Process: sintaxe atual documentada em DSL_REFERENCE.md §4.
+// REVIEW [2026-12-15] service: example.com/services/checkout
+// REVIEW [2026-12-15] Process: sintaxe atual documentada em DSL_REFERENCE.md §4.
 
-// Declara o processo Checkout; o argumento é o documento-sujeito da instância.
+// REVIEW [2026-12-15] Declara o processo Checkout; o argumento é o documento-sujeito da instância.
 process Checkout(session: CheckoutSession) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 1d
 
-  // Gatilho: inicia uma instância quando o documento emite CartValidated.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento emite CartValidated.
   on [CheckoutSession.CartValidated]
-  // Chave de identidade, correlação e dedup da instância.
-  key: session // o caso é a própria CheckoutSession
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
+  key: session // REVIEW [2026-12-15] o caso é a própria CheckoutSession
 
-  // Variável durável da instância: oferta de frete; começa nula.
+  // REVIEW [2026-12-15] Variável durável da instância: oferta de frete; começa nula.
   let offer: FreightOffer | null = null
-  // Flag durável que registra se o pagamento foi autorizado.
+  // REVIEW [2026-12-15] Flag durável que registra se o pagamento foi autorizado.
   let authorized = false
-  // Código de autorização devolvido pelo gateway de pagamento.
+  // REVIEW [2026-12-15] Código de autorização devolvido pelo gateway de pagamento.
   let authorization: string
 
-  // Bloco externo: captura timeout do caso e de qualquer form.
+  // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e de qualquer form.
   try {
-    // Bloco interno: tenta cotar o frete automaticamente.
+    // REVIEW [2026-12-15] Bloco interno: tenta cotar o frete automaticamente.
     try {
-      // Chama a integração de frete e guarda a oferta retornada.
+      // REVIEW [2026-12-15] Chama a integração de frete e guarda a oferta retornada.
       offer = FreightGateway.quote({ session })
-    // Captura a indisponibilidade da cotação para abrir o form manual.
+    // REVIEW [2026-12-15] Captura a indisponibilidade da cotação para abrir o form manual.
     } catch (Unavailable) {
-      // Se a cotação falhar, o suporte informa o frete manualmente pelo form.
+      // REVIEW [2026-12-15] Se a cotação falhar, o suporte informa o frete manualmente pelo form.
       FreightReview.show({ session })
     }
 
-    // Só registra o frete automático quando a cotação produziu uma oferta.
+    // REVIEW [2026-12-15] Só registra o frete automático quando a cotação produziu uma oferta.
     if (offer != null) {
-      // Persiste frete e prazo no documento; a action dispara a transição.
+      // REVIEW [2026-12-15] Persiste frete e prazo no documento; a action dispara a transição.
       CheckoutSession.quoteShipping({
-        // Valor do frete cotado.
+        // REVIEW [2026-12-15] Valor do frete cotado.
         freightAmount: offer.freight,
-        // Prazo de entrega em dias.
+        // REVIEW [2026-12-15] Prazo de entrega em dias.
         days: offer.days
       })
     }
 
-    // Laço de tentativas de pagamento, limitado a três iterações.
+    // REVIEW [2026-12-15] Laço de tentativas de pagamento, limitado a três iterações.
     loop PaymentAttempt max 3 {
-      // Tenta autorizar o pagamento a cada iteração.
+      // REVIEW [2026-12-15] Tenta autorizar o pagamento a cada iteração.
       try {
-        // Chama o gateway e guarda o código de autorização.
+        // REVIEW [2026-12-15] Chama o gateway e guarda o código de autorização.
         authorization = PaymentGateway.authorize({
-          // Total do pedido a autorizar.
+          // REVIEW [2026-12-15] Total do pedido a autorizar.
           total: session.total,
-          // Forma de pagamento escolhida pelo cliente.
+          // REVIEW [2026-12-15] Forma de pagamento escolhida pelo cliente.
           method: session.paymentMethod
         })
 
-        // Registra a autorização no documento.
+        // REVIEW [2026-12-15] Registra a autorização no documento.
         CheckoutSession.authorizePayment({ authorization })
-        // Marca que a autorização ocorreu.
+        // REVIEW [2026-12-15] Marca que a autorização ocorreu.
         authorized = true
-        // Sai do laço de tentativas.
+        // REVIEW [2026-12-15] Sai do laço de tentativas.
         break
-      // Captura a recusa do pagamento para oferecer nova tentativa.
+      // REVIEW [2026-12-15] Captura a recusa do pagamento para oferecer nova tentativa.
       } catch (Declined) {
-        // Pagamento recusado: abre o form para tentar de novo ou desistir.
+        // REVIEW [2026-12-15] Pagamento recusado: abre o form para tentar de novo ou desistir.
         PaymentRetry.show({ session })
 
-        // Se o cliente desistiu, o documento foi abandonado.
+        // REVIEW [2026-12-15] Se o cliente desistiu, o documento foi abandonado.
         if (session.status == Abandoned) {
-          // Encerra o processo no desfecho Abandoned.
+          // REVIEW [2026-12-15] Encerra o processo no desfecho Abandoned.
           return Abandoned
         }
       }
     }
 
-    // Se as três tentativas terminaram sem autorização...
+    // REVIEW [2026-12-15] Se as três tentativas terminaram sem autorização...
     if (!authorized) {
-      // ...abandona a sessão com um motivo legível.
+      // REVIEW [2026-12-15] ...abandona a sessão com um motivo legível.
       CheckoutSession.abandon({ reason: "Tentativas de pagamento esgotadas" })
-      // ...e encerra no desfecho Expired.
+      // REVIEW [2026-12-15] ...e encerra no desfecho Expired.
       return Expired
     }
 
-    // Confirma a compra no documento.
+    // REVIEW [2026-12-15] Confirma a compra no documento.
     CheckoutSession.confirmOrder()
-    // Encerra no desfecho de sucesso.
+    // REVIEW [2026-12-15] Encerra no desfecho de sucesso.
     return Confirmed
-  // Captura o estouro de prazo do caso ou de um form.
+  // REVIEW [2026-12-15] Captura o estouro de prazo do caso ou de um form.
   } catch (Timeout) {
-    // Timeout de form ou do caso: abandona a sessão e encerra em Expired.
+    // REVIEW [2026-12-15] Timeout de form ou do caso: abandona a sessão e encerra em Expired.
     CheckoutSession.abandon({ reason: "Prazo de finalização esgotado sem conclusão" })
-    // Retorna o desfecho de falha.
+    // REVIEW [2026-12-15] Retorna o desfecho de falha.
     return Expired
   }
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Confirmed {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Abandoned {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
-  // Declara o desfecho de falha do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de falha do caso.
   end Expired {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Expirada", en: "Expired" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Erro de negócio: frete indisponível.
+// REVIEW [2026-12-15] Erro de negócio: frete indisponível.
 error Unavailable {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Frete indisponível", en: "Freight unavailable" }
 }
 
-// Erro de negócio: pagamento recusado.
+// REVIEW [2026-12-15] Erro de negócio: pagamento recusado.
 error Declined {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Pagamento recusado", en: "Payment declined" }
 }
 
-// Erro reservado de prazo.
+// REVIEW [2026-12-15] Erro reservado de prazo.
 error Timeout {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Prazo esgotado", en: "Timed out" }
 }

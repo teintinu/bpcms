@@ -1,26 +1,26 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Tela de detalhe de um item de estoque.
+// REVIEW [2026-12-15] Tela de detalhe de um item de estoque.
 view StockDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do item", en: "Stock item detail" }
-  // Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: StockItem
-  // Papéis autorizados a abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o detalhe.
   roles: [WarehouseOperator, StockManager]
 
-  // Seções fixas exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela de detalhe.
   sections { summary; movements }
 
-  // Ações disponíveis na tela de detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis na tela de detalhe.
   actions {
-    // Ajusta o saldo do item.
+    // REVIEW [2026-12-15] Ajusta o saldo do item.
     adjust -> StockItem.adjust(quantity, reason)
-    // Bloqueia o item.
+    // REVIEW [2026-12-15] Bloqueia o item.
     block -> StockItem.block(reason)
-    // Desbloqueia o item.
+    // REVIEW [2026-12-15] Desbloqueia o item.
     unblock -> StockItem.unblock
   }
 }

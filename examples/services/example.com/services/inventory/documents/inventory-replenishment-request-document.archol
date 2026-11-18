@@ -1,126 +1,126 @@
-// service: example.com/services/inventory
-// Documento que registra o pedido de reposição de um item de estoque.
+// REVIEW [2026-12-15] service: example.com/services/inventory
+// REVIEW [2026-12-15] Documento que registra o pedido de reposição de um item de estoque.
 document ReplenishmentRequest {
-  // Título exibido no builder, na inbox e nos históricos.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Requisição de reposição", en: "Replenishment request" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Inventory"
-  // Sincronização em tempo real entre as instâncias do documento.
+  // REVIEW [2026-12-15] Sincronização em tempo real entre as instâncias do documento.
   sync: live
 
-  // Campos persistidos na requisição de reposição.
+  // REVIEW [2026-12-15] Campos persistidos na requisição de reposição.
   fields {
-    // Referência ao item de estoque que precisa ser reposto.
+    // REVIEW [2026-12-15] Referência ao item de estoque que precisa ser reposto.
     stockItem: StockItem {
-      // Título exibido no formulário e nas colunas.
+      // REVIEW [2026-12-15] Título exibido no formulário e nas colunas.
       title: { pt-BR: "Item de estoque", en: "Stock item" }
-      // Permite buscar e filtrar pelo item relacionado.
+      // REVIEW [2026-12-15] Permite buscar e filtrar pelo item relacionado.
       lookup
     }
-    // Quantidade solicitada de reposição.
+    // REVIEW [2026-12-15] Quantidade solicitada de reposição.
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
-    // Situação da requisição no shape RequisitionStatus.
+    // REVIEW [2026-12-15] Situação da requisição no shape RequisitionStatus.
     status: RequisitionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Data e hora em que a requisição foi criada.
+    // REVIEW [2026-12-15] Data e hora em que a requisição foi criada.
     requestedAt: DateTime { title: { pt-BR: "Solicitada em", en: "Requested at" } }
-    // Motivo informado quando a requisição é cancelada.
+    // REVIEW [2026-12-15] Motivo informado quando a requisição é cancelada.
     cancelledReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Consulta por situação, ordenada pela data da solicitação.
+    // REVIEW [2026-12-15] Consulta por situação, ordenada pela data da solicitação.
     byStatus: [status, requestedAt] range
-    // Consulta por item, ordenada pela data da solicitação.
+    // REVIEW [2026-12-15] Consulta por item, ordenada pela data da solicitação.
     byItem: [stockItem.id, requestedAt] range
   }
 
 
-  // Ações que alteram a requisição de reposição.
+  // REVIEW [2026-12-15] Ações que alteram a requisição de reposição.
   actions {
-    // Cria a requisição para o item informado.
+    // REVIEW [2026-12-15] Cria a requisição para o item informado.
     create(stockItem: StockItem){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Criar requisição", en: "Create request" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [StockManager]
-      // Documento devolvido pela ação após a criação.
+      // REVIEW [2026-12-15] Documento devolvido pela ação após a criação.
       returns: ReplenishmentRequest
       {
-        // Sugere repor até o ponto de reposição do item.
+        // REVIEW [2026-12-15] Sugere repor até o ponto de reposição do item.
         quantity = stockItem.reorderPoint
-        // Grava o instante da solicitação.
+        // REVIEW [2026-12-15] Grava o instante da solicitação.
         requestedAt = now()
-        // Emite o evento de solicitação com a quantidade pedida.
+        // REVIEW [2026-12-15] Emite o evento de solicitação com a quantidade pedida.
         emit Requested { quantity }
       }
     }
 
-    // Cancela a requisição com um motivo obrigatório.
+    // REVIEW [2026-12-15] Cancela a requisição com um motivo obrigatório.
     cancel(reason: string){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar requisição", en: "Cancel request" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [StockManager]
 
-      // Transição automática para a situação Cancelled.
+      // REVIEW [2026-12-15] Transição automática para a situação Cancelled.
       to: status.Cancelled
 
       {
-        // Persiste o motivo informado no cancelamento.
+        // REVIEW [2026-12-15] Persiste o motivo informado no cancelamento.
         cancelledReason = reason
       }
     }
   }
 }
 
-// Shape de estado que modela o ciclo de vida da requisição.
+// REVIEW [2026-12-15] Shape de estado que modela o ciclo de vida da requisição.
 shape RequisitionStatus {
-  // Título exibido no builder e nos filtros.
+  // REVIEW [2026-12-15] Título exibido no builder e nos filtros.
   title: { pt-BR: "Situação da requisição", en: "Requisition status" }
-  // Base do shape: máquina de estados.
+  // REVIEW [2026-12-15] Base do shape: máquina de estados.
   base: state
-  // Estado inicial e transição disparada pela criação da requisição.
+  // REVIEW [2026-12-15] Estado inicial e transição disparada pela criação da requisição.
   initial: Requested with transition Requested {
-    // Título exibido no histórico da transição.
+    // REVIEW [2026-12-15] Título exibido no histórico da transição.
     title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
-    // Dados carregados pela transição de criação.
+    // REVIEW [2026-12-15] Dados carregados pela transição de criação.
     payload {
-      // Quantidade pedida na requisição.
+      // REVIEW [2026-12-15] Quantidade pedida na requisição.
       quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
     }
   }
-  // Estado em que a requisição está aberta aguardando atendimento.
+  // REVIEW [2026-12-15] Estado em que a requisição está aberta aguardando atendimento.
   value Requested {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Solicitada", en: "Requested" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Requested
-    // Ordem de exibição do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição do estado no fluxo.
     ordinal: 10
 
-    // Transição para Cancelled quando a requisição é cancelada.
+    // REVIEW [2026-12-15] Transição para Cancelled quando a requisição é cancelada.
     transition Cancelled {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Requisição cancelada", en: "Request cancelled" }
-      // Dados carregados pela transição de cancelamento.
+      // REVIEW [2026-12-15] Dados carregados pela transição de cancelamento.
       payload {
-        // Motivo do cancelamento informado pelo gestor.
+        // REVIEW [2026-12-15] Motivo do cancelamento informado pelo gestor.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado final de requisição cancelada.
+  // REVIEW [2026-12-15] Estado final de requisição cancelada.
   value Cancelled {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Cancelled
-    // Ordem de exibição do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem de exibição do estado no fluxo.
     ordinal: 20
   }
-  // Formato de apresentação do shape.
+  // REVIEW [2026-12-15] Formato de apresentação do shape.
   format: plain
 }

@@ -1,26 +1,26 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// View de detalhe de uma notificação.
+// REVIEW [2026-12-15] View de detalhe de uma notificação.
 view NotificationDetail {
-  // Rótulo da view exibido na navegação.
+  // REVIEW [2026-12-15] Rótulo da view exibido na navegação.
   title: { pt-BR: "Detalhe da notificação", en: "Notification detail" }
-  // Tipo detalhe: tela de um único registro.
+  // REVIEW [2026-12-15] Tipo detalhe: tela de um único registro.
   type: detail
-  // Documento exibido na tela.
+  // REVIEW [2026-12-15] Documento exibido na tela.
   document: Notification
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
-  // Seções fixas exibidas na tela.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela.
   sections { summary; delivery; timeline }
 
-  // Ações expostas como botões na tela.
+  // REVIEW [2026-12-15] Ações expostas como botões na tela.
   actions {
-    // Envia a notificação a partir do detalhe.
+    // REVIEW [2026-12-15] Envia a notificação a partir do detalhe.
     send -> Notification.send
-    // Repete o envio a partir do detalhe.
+    // REVIEW [2026-12-15] Repete o envio a partir do detalhe.
     retry -> Notification.retry
-    // Suprime a notificação informando o motivo.
+    // REVIEW [2026-12-15] Suprime a notificação informando o motivo.
     suppress -> Notification.suppress(reason)
   }
 }

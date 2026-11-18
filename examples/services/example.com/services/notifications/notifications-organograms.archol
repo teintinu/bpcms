@@ -1,34 +1,34 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Organograma do time de sucesso do cliente, dono das notificações.
+// REVIEW [2026-12-15] Organograma do time de sucesso do cliente, dono das notificações.
 organogram CustomerSuccess {
-  // Rótulo do organograma exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo do organograma exibido no construtor.
   title: { pt-BR: "Organograma de sucesso do cliente", en: "Customer success organogram" }
 
-  // Estrutura hierárquica dos papéis.
+  // REVIEW [2026-12-15] Estrutura hierárquica dos papéis.
   hierarchy {
-    // O gerente fica acima do agente na hierarquia.
+    // REVIEW [2026-12-15] O gerente fica acima do agente na hierarquia.
     SuccessManager > SuccessAgent
   }
 
-  // Declara explicitamente quem o gerente administra.
+  // REVIEW [2026-12-15] Declara explicitamente quem o gerente administra.
   SuccessManager manages [SuccessAgent]
 }
 
-// Papel operacional que atende, revisa e suprime notificações.
+// REVIEW [2026-12-15] Papel operacional que atende, revisa e suprime notificações.
 role SuccessAgent {
-  // Rótulo do papel exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo do papel exibido no construtor.
   title: { pt-BR: "Agente de sucesso do cliente", en: "Customer success agent" }
-  // Permissões de rotina: ver, revisar e suprimir notificações.
+  // REVIEW [2026-12-15] Permissões de rotina: ver, revisar e suprimir notificações.
   permissions: [notification.view, notification.review, notification.suppress]
 }
 
-// Papel de gestão, herda as permissões do agente.
+// REVIEW [2026-12-15] Papel de gestão, herda as permissões do agente.
 role SuccessManager {
-  // Rótulo do papel exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo do papel exibido no construtor.
   title: { pt-BR: "Gerente de sucesso do cliente", en: "Customer success manager" }
-  // Herda todas as permissões do papel de agente.
+  // REVIEW [2026-12-15] Herda todas as permissões do papel de agente.
   inherits: SuccessAgent
-  // Permissões adicionais: gerir notificações, modelos e relatórios.
+  // REVIEW [2026-12-15] Permissões adicionais: gerir notificações, modelos e relatórios.
   permissions: [notification.manage, notification.template.manage, report.view]
 }

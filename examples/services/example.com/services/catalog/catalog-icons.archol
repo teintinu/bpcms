@@ -1,49 +1,49 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Ícone do estado Rascunho.
+// REVIEW [2026-12-15] Ícone do estado Rascunho.
 icon Draft {
-  // Título exibido em listas e detalhes.
+  // REVIEW [2026-12-15] Título exibido em listas e detalhes.
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
-// Ícone do estado Em revisão.
+// REVIEW [2026-12-15] Ícone do estado Em revisão.
 icon InReview {
-  // Título exibido em listas e detalhes.
+  // REVIEW [2026-12-15] Título exibido em listas e detalhes.
   title: { pt-BR: "Em revisão", en: "In review" }
 }
 
-// Ícone do estado Publicado.
+// REVIEW [2026-12-15] Ícone do estado Publicado.
 icon Published {
-  // Título exibido em listas e detalhes.
+  // REVIEW [2026-12-15] Título exibido em listas e detalhes.
   title: { pt-BR: "Publicado", en: "Published" }
 }
 
-// Ícone do estado Rejeitado.
+// REVIEW [2026-12-15] Ícone do estado Rejeitado.
 icon Rejected {
-  // Título exibido em listas e detalhes.
+  // REVIEW [2026-12-15] Título exibido em listas e detalhes.
   title: { pt-BR: "Rejeitado", en: "Rejected" }
 }
 
-// Ícone do estado Arquivado.
+// REVIEW [2026-12-15] Ícone do estado Arquivado.
 icon Archived {
-  // Título exibido em listas e detalhes.
+  // REVIEW [2026-12-15] Título exibido em listas e detalhes.
   title: { pt-BR: "Arquivado", en: "Archived" }
 }
 
-// Ícone da moeda Real brasileiro.
+// REVIEW [2026-12-15] Ícone da moeda Real brasileiro.
 icon Brl {
-  // Título exibido no seletor de moedas.
+  // REVIEW [2026-12-15] Título exibido no seletor de moedas.
   title: { pt-BR: "Real", en: "Brazilian real" }
 }
 
-// Ícone da moeda Dólar americano.
+// REVIEW [2026-12-15] Ícone da moeda Dólar americano.
 icon Usd {
-  // Título exibido no seletor de moedas.
+  // REVIEW [2026-12-15] Título exibido no seletor de moedas.
   title: { pt-BR: "Dólar", en: "US dollar" }
 }
 
-// Ícone da moeda Euro.
+// REVIEW [2026-12-15] Ícone da moeda Euro.
 icon Eur {
-  // Título exibido no seletor de moedas.
+  // REVIEW [2026-12-15] Título exibido no seletor de moedas.
   title: { pt-BR: "Euro", en: "Euro" }
 }

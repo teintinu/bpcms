@@ -1,20 +1,20 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Parâmetro que define o regime tributário padrão do faturamento.
+// REVIEW [2026-12-15] Parâmetro que define o regime tributário padrão do faturamento.
 parameter TaxRegime {
-  // Título exibido na configuração.
+  // REVIEW [2026-12-15] Título exibido na configuração.
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
-  // Tipo do valor aceito pelo parâmetro.
+  // REVIEW [2026-12-15] Tipo do valor aceito pelo parâmetro.
   type: TaxRegimeCode
-  default: "SIMPLES" // Regime tributário inicial: Simples Nacional.
+  default: "SIMPLES" // REVIEW [2026-12-15] Regime tributário inicial: Simples Nacional.
 }
 
-// Parâmetro que define a série padrão das notas fiscais.
+// REVIEW [2026-12-15] Parâmetro que define a série padrão das notas fiscais.
 parameter InvoiceSeries {
-  // Título exibido na configuração.
+  // REVIEW [2026-12-15] Título exibido na configuração.
   title: { pt-BR: "Série da nota", en: "Invoice series" }
-  // Tipo textual do valor da série.
+  // REVIEW [2026-12-15] Tipo textual do valor da série.
   type: string
-  default: "A" // Série inicial usada na numeração.
-  maxLength: 10 // Tamanho máximo permitido para a série.
+  default: "A" // REVIEW [2026-12-15] Série inicial usada na numeração.
+  maxLength: 10 // REVIEW [2026-12-15] Tamanho máximo permitido para a série.
 }

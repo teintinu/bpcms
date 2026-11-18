@@ -1,30 +1,30 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Tabela de notas com filtros e ações rápidas.
+// REVIEW [2026-12-15] Tabela de notas com filtros e ações rápidas.
 view InvoiceTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Notas fiscais", en: "Invoices" }
-  // Tipo do artefato: tabela.
+  // REVIEW [2026-12-15] Tipo do artefato: tabela.
   type: table
-  // Documento exibido na tabela.
+  // REVIEW [2026-12-15] Documento exibido na tabela.
   source: Invoice
-  // Papéis autorizados a abrir a tabela.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a tabela.
   roles: [Clerk, CollectionAgent, FinanceManager]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { number; customer; total; status; dueAt }
-  // Filtros disponíveis na tela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tela.
   filters { status; period; customer }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
 
-  // Ações disponíveis na tabela.
+  // REVIEW [2026-12-15] Ações disponíveis na tabela.
   actions {
-    // Abre o detalhe da nota selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da nota selecionada.
     open -> InvoiceDetail
-    // Emite a nota selecionada.
+    // REVIEW [2026-12-15] Emite a nota selecionada.
     issue -> Invoice.issue
-    // Cancela a nota solicitando o motivo.
+    // REVIEW [2026-12-15] Cancela a nota solicitando o motivo.
     cancel -> Invoice.cancel(reason)
   }
 }

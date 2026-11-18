@@ -1,26 +1,26 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// View kanban com produtos agrupados por situação.
+// REVIEW [2026-12-15] View kanban com produtos agrupados por situação.
 view ProductKanban {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Produtos por situação", en: "Products by status" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento exibido nos cartões.
+  // REVIEW [2026-12-15] Documento exibido nos cartões.
   source: Product
-  // Papéis autorizados a abrir a view.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
-  // Campos usados para formar as colunas do quadro.
+  // REVIEW [2026-12-15] Campos usados para formar as colunas do quadro.
   groupBy: status
-  // Colunas exibidas nos cartões.
+  // REVIEW [2026-12-15] Colunas exibidas nos cartões.
   columns { sku; name; price }
-  // Conteúdo resumido de cada cartão.
+  // REVIEW [2026-12-15] Conteúdo resumido de cada cartão.
   card { sku; name; price; status }
 
-  // Ações disponíveis no quadro.
+  // REVIEW [2026-12-15] Ações disponíveis no quadro.
   actions {
-    // Abre o detalhe do produto do cartão.
+    // REVIEW [2026-12-15] Abre o detalhe do produto do cartão.
     open -> ProductDetail
   }
 }

@@ -1,26 +1,26 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Quadro kanban das notas agrupadas por situação.
+// REVIEW [2026-12-15] Quadro kanban das notas agrupadas por situação.
 view InvoiceKanban {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Notas por situação", en: "Invoices by status" }
-  // Tipo do artefato: kanban.
+  // REVIEW [2026-12-15] Tipo do artefato: kanban.
   type: kanban
-  // Documento exibido no quadro.
+  // REVIEW [2026-12-15] Documento exibido no quadro.
   source: Invoice
-  // Papéis autorizados a abrir o quadro.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o quadro.
   roles: [Clerk, CollectionAgent, FinanceManager]
 
-  // Agrupa os cartões pela situação da nota.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação da nota.
   groupBy: status
-  // Colunas exibidas em cada cartão.
+  // REVIEW [2026-12-15] Colunas exibidas em cada cartão.
   columns { number; customer; total; dueAt }
-  // Conteúdo resumido do cartão.
+  // REVIEW [2026-12-15] Conteúdo resumido do cartão.
   card { number; customer; total; dueAt }
 
-  // Ações disponíveis no quadro.
+  // REVIEW [2026-12-15] Ações disponíveis no quadro.
   actions {
-    // Abre o detalhe da nota selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da nota selecionada.
     open -> InvoiceDetail
   }
 }

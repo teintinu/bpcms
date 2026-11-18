@@ -144,6 +144,11 @@
           "group": "navigation@10"
         }
       ]
+    },
+    "configurationDefaults": {
+      "[archol]": {
+        "editor.formatOnSave": true
+      }
     }
   },
   "scripts": {

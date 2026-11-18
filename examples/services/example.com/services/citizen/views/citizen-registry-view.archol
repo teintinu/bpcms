@@ -1,20 +1,20 @@
-// service: example.com/services/citizen
+// REVIEW [2026-12-15] service: example.com/services/citizen
 
-// View de consulta tabular dos cidadãos cadastrados.
+// REVIEW [2026-12-15] View de consulta tabular dos cidadãos cadastrados.
 view Registry {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
-  // Tipo da view: tabela de consulta.
+  // REVIEW [2026-12-15] Tipo da view: tabela de consulta.
   type: table
-  // Documento consultado pela view.
+  // REVIEW [2026-12-15] Documento consultado pela view.
   source: Citizen
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Clerk, Manager, Auditor]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { avatar; displayName; kind; country; status }
-  // Filtros disponíveis na tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tabela.
   filters { kind; country; status }
-  // Tamanho da página da tabela.
+  // REVIEW [2026-12-15] Tamanho da página da tabela.
   pagination: 50
 }

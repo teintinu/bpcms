@@ -1,56 +1,56 @@
-// service: example.com/services/fraud-checkout
-// Declara o serviço de finalização de compra com verificação antifraude.
+// REVIEW [2026-12-15] service: example.com/services/fraud-checkout
+// REVIEW [2026-12-15] Declara o serviço de finalização de compra com verificação antifraude.
 service "example.com/services/fraud-checkout" {
-  // Título exibido no builder e na navegação.
+  // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
-  // Versão do artefato de serviço.
+  // REVIEW [2026-12-15] Versão do artefato de serviço.
   version: 1.0.0
-  // Área de negócio responsável pelo serviço.
+  // REVIEW [2026-12-15] Área de negócio responsável pelo serviço.
   owner: "Risk"
-  // Serviços externos usados por este serviço.
+  // REVIEW [2026-12-15] Serviços externos usados por este serviço.
   imports {
-    // Importa a finalização de compra com o alias Checkout.
+    // REVIEW [2026-12-15] Importa a finalização de compra com o alias Checkout.
     service "example.com/services/checkout" as Checkout
   }
 
-  // Reabre o shape CheckoutStatus do checkout para acrescentar valores.
+  // REVIEW [2026-12-15] Reabre o shape CheckoutStatus do checkout para acrescentar valores.
   reintroduce Checkout.CheckoutStatus {
-    // Novo valor ShippingQuoted, alcançável pela transição FraudChecked.
+    // REVIEW [2026-12-15] Novo valor ShippingQuoted, alcançável pela transição FraudChecked.
     value ShippingQuoted {
-      // Transição que leva ao estado de risco verificado.
+      // REVIEW [2026-12-15] Transição que leva ao estado de risco verificado.
       transition FraudChecked {
-        // Título exibido na timeline do documento.
+        // REVIEW [2026-12-15] Título exibido na timeline do documento.
         title: { pt-BR: "Risco verificado", en: "Risk checked" }
       }
     }
 
-    // Novo estado FraudChecked, de risco verificado.
+    // REVIEW [2026-12-15] Novo estado FraudChecked, de risco verificado.
     value FraudChecked {
-      // Título exibido na timeline do documento.
+      // REVIEW [2026-12-15] Título exibido na timeline do documento.
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
-      // Ícone do estado, definido neste serviço.
+      // REVIEW [2026-12-15] Ícone do estado, definido neste serviço.
       icon: status.fraudChecked
-      // Posição do estado na ordenação do shape.
+      // REVIEW [2026-12-15] Posição do estado na ordenação do shape.
       ordinal: 25
     }
 
-    // Insere FraudChecked antes de PaymentAuthorized na ordem dos estados.
+    // REVIEW [2026-12-15] Insere FraudChecked antes de PaymentAuthorized na ordem dos estados.
     insert FraudChecked before PaymentAuthorized
   }
 
-  // Reabre o documento CheckoutSession do checkout para acrescentar ação.
+  // REVIEW [2026-12-15] Reabre o documento CheckoutSession do checkout para acrescentar ação.
   reintroduce Checkout.CheckoutSession {
-    // Nova action de verificação de risco na sessão de checkout.
+    // REVIEW [2026-12-15] Nova action de verificação de risco na sessão de checkout.
     action checkFraud() {
-      // Título exibido no botão da action.
+      // REVIEW [2026-12-15] Título exibido no botão da action.
       title: { pt-BR: "Verificar risco", en: "Check risk" }
-      // Papéis autorizados a executar a action.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
-      // Estado de destino após a action.
+      // REVIEW [2026-12-15] Estado de destino após a action.
       to: status.FraudChecked
     }
   }
 
-  // Composição do passo FraudCheck no processo Checkout fica adiada nesta versão
-  // (não há insert/task em processo-código; ver DSL_REFERENCE.md §4.12).
+  // REVIEW [2026-12-15] Composição do passo FraudCheck no processo Checkout fica adiada nesta versão
+  // REVIEW [2026-12-15] (não há insert/task em processo-código; ver DSL_REFERENCE.md §4.12).
 }

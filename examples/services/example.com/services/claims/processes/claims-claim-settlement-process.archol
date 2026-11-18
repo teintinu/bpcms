@@ -1,369 +1,369 @@
-// service: example.com/services/claims
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/claims
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Processo de liquidação de sinistro: triagem, risco, decisão, pagamento e desfecho.
+// REVIEW [2026-12-15] Processo de liquidação de sinistro: triagem, risco, decisão, pagamento e desfecho.
 process ClaimSettlement(claim: Claim) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Liquidação do sinistro", en: "Claim settlement" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Indenizar o sinistro com cobertura verificada, risco rastreável e compensação"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 10d
 
-  // Gatilho: inicia uma instância quando o documento emite Opened.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento emite Opened.
   on [Claim.Opened]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: claim
 
-  // Variável durável com a faixa de risco de fraude avaliada.
+  // REVIEW [2026-12-15] Variável durável com a faixa de risco de fraude avaliada.
   let fraudBand: FraudBand
-  // Variável durável que guarda a liquidação aberta para o sinistro.
+  // REVIEW [2026-12-15] Variável durável que guarda a liquidação aberta para o sinistro.
   let settlement: Settlement
-  // Flag durável que registra se a triagem foi escalonada.
+  // REVIEW [2026-12-15] Flag durável que registra se a triagem foi escalonada.
   let escalated = false
 
-  // Triagem obrigatória: abre o formulário para o atendente.
+  // REVIEW [2026-12-15] Triagem obrigatória: abre o formulário para o atendente.
   try {
-    // Abre o formulário de triagem para o sinistro.
+    // REVIEW [2026-12-15] Abre o formulário de triagem para o sinistro.
     ClaimTriage.show({ claim })
-  } catch (Timeout) { // prazo da triagem esgotado
-    // Sem triagem no prazo, marca o escalonamento...
+  } catch (Timeout) { // REVIEW [2026-12-15] prazo da triagem esgotado
+    // REVIEW [2026-12-15] Sem triagem no prazo, marca o escalonamento...
     escalated = true
-    // ...e abre a tarefa manual de escalonamento.
+    // REVIEW [2026-12-15] ...e abre a tarefa manual de escalonamento.
     EscalateSettlement.show({ claim })
   }
 
-  // Se a triagem já recusou o sinistro, encerra como recusado.
+  // REVIEW [2026-12-15] Se a triagem já recusou o sinistro, encerra como recusado.
   if (claim.status == Rejected) {
-    // Retorna o desfecho Rejected.
+    // REVIEW [2026-12-15] Retorna o desfecho Rejected.
     return Rejected
   }
 
-  // Sem escalonamento, segue o caminho automático de análise.
+  // REVIEW [2026-12-15] Sem escalonamento, segue o caminho automático de análise.
   if (!escalated) {
-    // Coleta a declaração do segurado, tolerando o estouro de prazo.
+    // REVIEW [2026-12-15] Coleta a declaração do segurado, tolerando o estouro de prazo.
     try {
-      // Abre o formulário de declaração para o segurado.
+      // REVIEW [2026-12-15] Abre o formulário de declaração para o segurado.
       ClaimStatement.show({ claim })
-    } catch (Timeout) { // prazo da declaração esgotado
-      // Sem declaração no prazo: segue para a avaliação de risco.
+    } catch (Timeout) { // REVIEW [2026-12-15] prazo da declaração esgotado
+      // REVIEW [2026-12-15] Sem declaração no prazo: segue para a avaliação de risco.
     }
 
-    // Avalia o risco de fraude a partir do valor e do tipo do sinistro.
+    // REVIEW [2026-12-15] Avalia o risco de fraude a partir do valor e do tipo do sinistro.
     fraudBand = FraudRisk.evaluate({
-      // Valor reclamado usado no cálculo.
+      // REVIEW [2026-12-15] Valor reclamado usado no cálculo.
       amount: claim.amount,
-      // Tipo do sinistro usado no cálculo.
+      // REVIEW [2026-12-15] Tipo do sinistro usado no cálculo.
       type: claim.type
     })
 
-    // Persiste a faixa de risco no documento.
+    // REVIEW [2026-12-15] Persiste a faixa de risco no documento.
     Claim.recordRisk({ band: fraudBand })
-    // Inicia a análise do sinistro.
+    // REVIEW [2026-12-15] Inicia a análise do sinistro.
     Claim.startReview()
 
-    // Risco alto exige a análise especializada de fraude.
+    // REVIEW [2026-12-15] Risco alto exige a análise especializada de fraude.
     if (fraudBand == High) {
-      // Executa o subprocesso de análise de fraude para o sinistro.
+      // REVIEW [2026-12-15] Executa o subprocesso de análise de fraude para o sinistro.
       ClaimFraudReview.run({ claim })
 
-      // Fraude confirmada leva à recusa do sinistro.
+      // REVIEW [2026-12-15] Fraude confirmada leva à recusa do sinistro.
       if (claim.fraudConfirmed) {
-        // Abre o formulário de recusa.
+        // REVIEW [2026-12-15] Abre o formulário de recusa.
         ClaimRejection.show({ claim })
-        // Retorna o desfecho Rejected.
+        // REVIEW [2026-12-15] Retorna o desfecho Rejected.
         return Rejected
       }
     }
 
-    // Cobertura não confirmada também leva à recusa.
+    // REVIEW [2026-12-15] Cobertura não confirmada também leva à recusa.
     if (!claim.covered) {
-      // Abre o formulário de recusa.
+      // REVIEW [2026-12-15] Abre o formulário de recusa.
       ClaimRejection.show({ claim })
-      // Retorna o desfecho Rejected.
+      // REVIEW [2026-12-15] Retorna o desfecho Rejected.
       return Rejected
     }
   }
 
-  // Decisão do ajustador, tolerando o estouro de prazo com escalonamento.
+  // REVIEW [2026-12-15] Decisão do ajustador, tolerando o estouro de prazo com escalonamento.
   try {
-    // Abre o formulário de decisão para o ajustador.
+    // REVIEW [2026-12-15] Abre o formulário de decisão para o ajustador.
     ClaimDecision.show({ claim })
-  } catch (Timeout) { // prazo da decisão esgotado
-    // Sem decisão no prazo, escala a tarefa ao gerente.
+  } catch (Timeout) { // REVIEW [2026-12-15] prazo da decisão esgotado
+    // REVIEW [2026-12-15] Sem decisão no prazo, escala a tarefa ao gerente.
     EscalateSettlement.show({ claim })
-    // Reapresenta o formulário de decisão após o escalonamento.
+    // REVIEW [2026-12-15] Reapresenta o formulário de decisão após o escalonamento.
     ClaimDecision.show({ claim })
   }
 
-  // Se a decisão recusou o sinistro, encerra como recusado.
+  // REVIEW [2026-12-15] Se a decisão recusou o sinistro, encerra como recusado.
   if (claim.status == Rejected) {
-    // Retorna o desfecho Rejected.
+    // REVIEW [2026-12-15] Retorna o desfecho Rejected.
     return Rejected
   }
 
-  // Abre a liquidação do sinistro aprovado.
+  // REVIEW [2026-12-15] Abre a liquidação do sinistro aprovado.
   settlement = Claim.openSettlement()
 
-  // Envia a instrução de pagamento para o setor financeiro.
+  // REVIEW [2026-12-15] Envia a instrução de pagamento para o setor financeiro.
   send PaymentInstruction {
-    // Correlaciona a mensagem ao sinistro.
+    // REVIEW [2026-12-15] Correlaciona a mensagem ao sinistro.
     key: claim
-    // Dados preenchidos na mensagem.
+    // REVIEW [2026-12-15] Dados preenchidos na mensagem.
     with {
-      // Número da liquidação criada.
+      // REVIEW [2026-12-15] Número da liquidação criada.
       settlementNumber: settlement.number
-      // Valor aprovado para pagamento.
+      // REVIEW [2026-12-15] Valor aprovado para pagamento.
       amount: claim.approvedAmount
     }
   }
 
-  // Aguarda a confirmação de pagamento com prazo de dois dias.
+  // REVIEW [2026-12-15] Aguarda a confirmação de pagamento com prazo de dois dias.
   try {
-    // Recebe a confirmação e aplica o comando que marca o sinistro como pago.
+    // REVIEW [2026-12-15] Recebe a confirmação e aplica o comando que marca o sinistro como pago.
     receive PaymentConfirmation {
-      // Correlaciona a resposta ao sinistro.
+      // REVIEW [2026-12-15] Correlaciona a resposta ao sinistro.
       key: claim
-      // Prazo máximo de espera pela confirmação.
+      // REVIEW [2026-12-15] Prazo máximo de espera pela confirmação.
       timeout: 2d
-      // Ação executada quando a confirmação chega.
+      // REVIEW [2026-12-15] Ação executada quando a confirmação chega.
       apply: Claim.confirmPayment
     }
-  } catch (Timeout, PaymentRejected) { // sem confirmação de pagamento
-    // Sem pagamento confirmado, reabre a análise do sinistro.
+  } catch (Timeout, PaymentRejected) { // REVIEW [2026-12-15] sem confirmação de pagamento
+    // REVIEW [2026-12-15] Sem pagamento confirmado, reabre a análise do sinistro.
     Claim.reopen()
-    // Retorna o desfecho Cancelled.
+    // REVIEW [2026-12-15] Retorna o desfecho Cancelled.
     return Cancelled
   }
 
-  // Pagamento confirmado: retorna o desfecho de sucesso.
+  // REVIEW [2026-12-15] Pagamento confirmado: retorna o desfecho de sucesso.
   return Settled
 
-  // Desfecho que indica sinistro indenizado.
+  // REVIEW [2026-12-15] Desfecho que indica sinistro indenizado.
   end Settled {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Indenizado", en: "Settled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Desfecho que indica sinistro recusado.
+  // REVIEW [2026-12-15] Desfecho que indica sinistro recusado.
   end Rejected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Recusado", en: "Rejected" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 
-  // Desfecho que indica processo cancelado sem indenização.
+  // REVIEW [2026-12-15] Desfecho que indica processo cancelado sem indenização.
   end Cancelled {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Formulário de triagem que confirma cobertura e atribui o ajustador.
+// REVIEW [2026-12-15] Formulário de triagem que confirma cobertura e atribui o ajustador.
 form ClaimTriage {
-  // Título exibido na inbox.
+  // REVIEW [2026-12-15] Título exibido na inbox.
   title: { pt-BR: "Triagem do sinistro", en: "Claim triage" }
-  // Documento manipulado pelo formulário.
+  // REVIEW [2026-12-15] Documento manipulado pelo formulário.
   document: Claim
-  // Papéis que recebem a tarefa.
+  // REVIEW [2026-12-15] Papéis que recebem a tarefa.
   roles: [Clerk]
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 4h
-  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  // REVIEW [2026-12-15] Tarefa puxada pelo próprio usuário a partir da inbox.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Segurado reaproveitado do documento.
+    // REVIEW [2026-12-15] Segurado reaproveitado do documento.
     claimant
-    // Cobertura reaproveitada do documento.
+    // REVIEW [2026-12-15] Cobertura reaproveitada do documento.
     coverage
-    // Tipo de sinistro reaproveitado do documento.
+    // REVIEW [2026-12-15] Tipo de sinistro reaproveitado do documento.
     type
-    // Valor reclamado reaproveitado do documento.
+    // REVIEW [2026-12-15] Valor reclamado reaproveitado do documento.
     amount
-    // Descrição reaproveitada do documento.
+    // REVIEW [2026-12-15] Descrição reaproveitada do documento.
     description
-    // Confirmação de cobertura reaproveitada do documento.
+    // REVIEW [2026-12-15] Confirmação de cobertura reaproveitada do documento.
     covered
-    // Ajustador responsável reaproveitado do documento.
+    // REVIEW [2026-12-15] Ajustador responsável reaproveitado do documento.
     adjuster
-    // Motivo da recusa, quando a triagem recusar o sinistro.
+    // REVIEW [2026-12-15] Motivo da recusa, quando a triagem recusar o sinistro.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Tria o sinistro com cobertura, tipo e ajustador informados.
+    // REVIEW [2026-12-15] Tria o sinistro com cobertura, tipo e ajustador informados.
     triage { calls: Claim.triage(covered, type, adjuster) }
-    // Recusa o sinistro com o motivo informado.
+    // REVIEW [2026-12-15] Recusa o sinistro com o motivo informado.
     reject { calls: Claim.reject(reason) }
   }
 }
 
-// Formulário em que o segurado declara o ocorrido.
+// REVIEW [2026-12-15] Formulário em que o segurado declara o ocorrido.
 form ClaimStatement {
-  // Título exibido na inbox.
+  // REVIEW [2026-12-15] Título exibido na inbox.
   title: { pt-BR: "Declaração do segurado", en: "Policyholder statement" }
-  // Documento manipulado pelo formulário.
+  // REVIEW [2026-12-15] Documento manipulado pelo formulário.
   document: Claim
-  // Papéis que recebem a tarefa.
+  // REVIEW [2026-12-15] Papéis que recebem a tarefa.
   roles: [Policyholder]
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 3d
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Texto da declaração do segurado, obrigatório.
+    // REVIEW [2026-12-15] Texto da declaração do segurado, obrigatório.
     text: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Declaração", en: "Statement" }
-      // Limita a declaração a dois mil caracteres.
+      // REVIEW [2026-12-15] Limita a declaração a dois mil caracteres.
       maxLength: 2000
-      // Torna a declaração obrigatória no preenchimento.
+      // REVIEW [2026-12-15] Torna a declaração obrigatória no preenchimento.
       required
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Registra a declaração no documento.
+    // REVIEW [2026-12-15] Registra a declaração no documento.
     describe { calls: Claim.describe(text) }
   }
 }
 
-// Formulário de recusa do sinistro com o motivo informado.
+// REVIEW [2026-12-15] Formulário de recusa do sinistro com o motivo informado.
 form ClaimRejection {
-  // Título exibido na inbox.
+  // REVIEW [2026-12-15] Título exibido na inbox.
   title: { pt-BR: "Recusa do sinistro", en: "Claim rejection" }
-  // Documento manipulado pelo formulário.
+  // REVIEW [2026-12-15] Documento manipulado pelo formulário.
   document: Claim
-  // Papéis que recebem a tarefa.
+  // REVIEW [2026-12-15] Papéis que recebem a tarefa.
   roles: [Adjuster]
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 1d
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Motivo da recusa, obrigatório.
+    // REVIEW [2026-12-15] Motivo da recusa, obrigatório.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
-      // Torna o motivo obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o motivo obrigatório no preenchimento.
       required
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Recusa o sinistro com o motivo informado.
+    // REVIEW [2026-12-15] Recusa o sinistro com o motivo informado.
     reject { calls: Claim.reject(reason) }
   }
 }
 
-// Formulário de decisão do ajustador: aprova ou recusa o sinistro.
+// REVIEW [2026-12-15] Formulário de decisão do ajustador: aprova ou recusa o sinistro.
 form ClaimDecision {
-  // Título exibido na inbox.
+  // REVIEW [2026-12-15] Título exibido na inbox.
   title: { pt-BR: "Decisão do ajustador", en: "Adjuster decision" }
-  // Documento manipulado pelo formulário.
+  // REVIEW [2026-12-15] Documento manipulado pelo formulário.
   document: Claim
-  // Papéis que recebem a tarefa.
+  // REVIEW [2026-12-15] Papéis que recebem a tarefa.
   roles: [Adjuster]
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 2d
-  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  // REVIEW [2026-12-15] Tarefa puxada pelo próprio usuário a partir da inbox.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Valor aprovado reaproveitado do documento.
+    // REVIEW [2026-12-15] Valor aprovado reaproveitado do documento.
     approvedAmount
-    // Motivo da recusa, usado quando a decisão for desfavorável.
+    // REVIEW [2026-12-15] Motivo da recusa, usado quando a decisão for desfavorável.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Aprova o sinistro com o valor informado.
+    // REVIEW [2026-12-15] Aprova o sinistro com o valor informado.
     approve { calls: Claim.approve(approvedAmount) }
-    // Recusa o sinistro com o motivo informado.
+    // REVIEW [2026-12-15] Recusa o sinistro com o motivo informado.
     reject { calls: Claim.reject(reason) }
   }
 }
 
-// Tarefa manual de escalonamento quando os prazos do caso estouram.
+// REVIEW [2026-12-15] Tarefa manual de escalonamento quando os prazos do caso estouram.
 manual EscalateSettlement {
-  // Título exibido na inbox.
+  // REVIEW [2026-12-15] Título exibido na inbox.
   title: { pt-BR: "Escalonar o sinistro", en: "Escalate claim" }
-  // Documento manipulado pela tarefa.
+  // REVIEW [2026-12-15] Documento manipulado pela tarefa.
   document: Claim
-  // Papéis que recebem a tarefa.
+  // REVIEW [2026-12-15] Papéis que recebem a tarefa.
   roles: [Manager]
-  // Orientações exibidas ao responsável pela tarefa.
+  // REVIEW [2026-12-15] Orientações exibidas ao responsável pela tarefa.
   instructions: "Revisar o caso com o ajustador e registrar a decisão de prazo"
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 1d
-  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  // REVIEW [2026-12-15] Tarefa puxada pelo próprio usuário a partir da inbox.
   assign: pull
 }
 
-// Erro de negócio: pagamento recusado pelo meio de pagamento.
+// REVIEW [2026-12-15] Erro de negócio: pagamento recusado pelo meio de pagamento.
 error PaymentRejected {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Pagamento recusado", en: "Payment rejected" }
 }
 
-// Decisão que calcula a faixa de risco de fraude de um sinistro.
+// REVIEW [2026-12-15] Decisão que calcula a faixa de risco de fraude de um sinistro.
 decision FraudRisk {
-  // Título exibido no builder e na revisão.
+  // REVIEW [2026-12-15] Título exibido no builder e na revisão.
   title: { pt-BR: "Risco de fraude do sinistro", en: "Claim fraud risk" }
-  // Tipo devolvido pela decisão.
+  // REVIEW [2026-12-15] Tipo devolvido pela decisão.
   returns: FraudBand
 
-  // Entradas necessárias para o cálculo.
+  // REVIEW [2026-12-15] Entradas necessárias para o cálculo.
   inputs {
-    // Valor reclamado considerado no cálculo.
+    // REVIEW [2026-12-15] Valor reclamado considerado no cálculo.
     amount: std.Money
-    // Tipo do sinistro considerado no cálculo.
+    // REVIEW [2026-12-15] Tipo do sinistro considerado no cálculo.
     type: ClaimType
   }
 
-  // Regras avaliadas em ordem até a primeira que casar.
+  // REVIEW [2026-12-15] Regras avaliadas em ordem até a primeira que casar.
   cases {
-    // Valores acima de cinquenta mil reais indicam risco alto.
+    // REVIEW [2026-12-15] Valores acima de cinquenta mil reais indicam risco alto.
     amount > 50000 BRL -> High
-    // Furto acima de vinte mil reais também indica risco alto.
+    // REVIEW [2026-12-15] Furto acima de vinte mil reais também indica risco alto.
     type == Theft and amount > 20000 BRL -> High
-    // Valores acima de quinze mil reais indicam risco médio.
+    // REVIEW [2026-12-15] Valores acima de quinze mil reais indicam risco médio.
     amount > 15000 BRL -> Medium
-    // Demais casos ficam na faixa de risco baixo.
+    // REVIEW [2026-12-15] Demais casos ficam na faixa de risco baixo.
     else -> Low
   }
 
-  // Norma que fundamenta as regras da decisão.
+  // REVIEW [2026-12-15] Norma que fundamenta as regras da decisão.
   source: "Política Antifraude v4"
-  // Área responsável pela manutenção da decisão.
+  // REVIEW [2026-12-15] Área responsável pela manutenção da decisão.
   owner: "Fraud"
 }

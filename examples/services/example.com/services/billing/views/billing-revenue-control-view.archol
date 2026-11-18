@@ -1,29 +1,29 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Painel de acompanhamento do faturamento e das contas.
+// REVIEW [2026-12-15] Painel de acompanhamento do faturamento e das contas.
 view RevenueControl {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Controle de faturamento", en: "Billing control" }
-  // Tipo do artefato: dashboard.
+  // REVIEW [2026-12-15] Tipo do artefato: dashboard.
   type: dashboard
-  // Documentos usados como fonte dos dados.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos dados.
   sources: [Invoice, Bill]
-  // Papéis autorizados a abrir o painel.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o painel.
   roles: [FinanceManager]
-  // Atualização em tempo real dos dados.
+  // REVIEW [2026-12-15] Atualização em tempo real dos dados.
   mode: live
 
-  // Filtros disponíveis no painel.
+  // REVIEW [2026-12-15] Filtros disponíveis no painel.
   filters { status; period }
 
-  // Métricas calculadas a partir das fontes.
+  // REVIEW [2026-12-15] Métricas calculadas a partir das fontes.
   metrics {
-    // Quantidade de notas vencidas.
+    // REVIEW [2026-12-15] Quantidade de notas vencidas.
     overdue: count(Invoice) where status == Overdue
-    // Quantidade de contas ainda não pagas.
+    // REVIEW [2026-12-15] Quantidade de contas ainda não pagas.
     openBills: count(Bill) where status != Paid
   }
 
-  // Tempo máximo antes de recomputar os dados.
+  // REVIEW [2026-12-15] Tempo máximo antes de recomputar os dados.
   freshness: 15m
 }

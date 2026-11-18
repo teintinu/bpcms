@@ -1,278 +1,278 @@
-// service: example.com/services/credit
+// REVIEW [2026-12-15] service: example.com/services/credit
 
-// Declara o processo de análise de crédito; o argumento é o documento-sujeito.
+// REVIEW [2026-12-15] Declara o processo de análise de crédito; o argumento é o documento-sujeito.
 process CreditApplicationFlow(creditApplication: CreditApplication) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
   }
-  // SLA brando do caso: alvo de lead time de dez dias, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time de dez dias, não é timer.
   sla: 10d
 
-  // Gatilho: inicia uma instância quando a proposta emite Submitted.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a proposta emite Submitted.
   on [CreditApplication.Submitted]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: creditApplication
 
-  // Variável durável da instância: score do bureau; começa nula.
+  // REVIEW [2026-12-15] Variável durável da instância: score do bureau; começa nula.
   let bureauScore: std.Count | null = null
-  // Variável durável da instância: faixa de risco; começa nula.
+  // REVIEW [2026-12-15] Variável durável da instância: faixa de risco; começa nula.
   let band: RiskBand | null = null
 
-  // Inicia a análise manual da proposta antes de consultar o bureau.
+  // REVIEW [2026-12-15] Inicia a análise manual da proposta antes de consultar o bureau.
   CreditApplication.startReview()
 
-  // Bloco de tentativa: captura falha de disponibilidade do bureau.
+  // REVIEW [2026-12-15] Bloco de tentativa: captura falha de disponibilidade do bureau.
   try {
-    // Chama o bureau de crédito e guarda o score retornado.
+    // REVIEW [2026-12-15] Chama o bureau de crédito e guarda o score retornado.
     bureauScore = CreditBureau.score({ application: creditApplication })
-  // Tratamento do erro de bureau indisponível.
+  // REVIEW [2026-12-15] Tratamento do erro de bureau indisponível.
   } catch (BureauUnavailable) {
-    // Bureau indisponível: a proposta segue direto para a análise manual.
+    // REVIEW [2026-12-15] Bureau indisponível: a proposta segue direto para a análise manual.
   }
 
-  // Só calcula a faixa de risco quando o bureau devolveu um score.
+  // REVIEW [2026-12-15] Só calcula a faixa de risco quando o bureau devolveu um score.
   if (bureauScore != null) {
-    // Chama a decisão de scoring com score, valor e exposição da proposta.
+    // REVIEW [2026-12-15] Chama a decisão de scoring com score, valor e exposição da proposta.
     band = CreditScoring.evaluate({
-      // Score apurado no bureau.
+      // REVIEW [2026-12-15] Score apurado no bureau.
       bureauScore: bureauScore,
-      // Valor solicitado na proposta.
+      // REVIEW [2026-12-15] Valor solicitado na proposta.
       requestedAmount: creditApplication.requestedAmount,
-      // Exposição de crédito já existente do proponente.
+      // REVIEW [2026-12-15] Exposição de crédito já existente do proponente.
       existingExposure: creditApplication.existingExposure
     })
 
-    // Registra score e faixa de risco no documento da proposta.
+    // REVIEW [2026-12-15] Registra score e faixa de risco no documento da proposta.
     CreditApplication.recordRisk({
-      // Score apurado que será persistido.
+      // REVIEW [2026-12-15] Score apurado que será persistido.
       bureauScore: bureauScore,
-      // Faixa de risco apurada que será persistida.
+      // REVIEW [2026-12-15] Faixa de risco apurada que será persistida.
       riskBand: band
     })
   }
 
-  // Sem score do bureau, abre a decisão manual do analista.
+  // REVIEW [2026-12-15] Sem score do bureau, abre a decisão manual do analista.
   if (bureauScore == null) {
-    // Análise manual sem score do bureau.
+    // REVIEW [2026-12-15] Análise manual sem score do bureau.
     try {
-      // Abre o form de decisão para o analista.
+      // REVIEW [2026-12-15] Abre o form de decisão para o analista.
       CreditDecision.show({ creditApplication })
-    // Tratamento do timeout ao aguardar a decisão do form.
+    // REVIEW [2026-12-15] Tratamento do timeout ao aguardar a decisão do form.
     } catch (Timeout) {
-      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      // REVIEW [2026-12-15] Sem resposta no prazo, escala a decisão para a alçada gerencial.
       Escalate.show({ creditApplication })
     }
-  // Ramo automático: risco baixo e valor dentro do teto de vinte mil reais.
+  // REVIEW [2026-12-15] Ramo automático: risco baixo e valor dentro do teto de vinte mil reais.
   } else if (band == Low and creditApplication.requestedAmount <= 20000 BRL) {
-    // Risco baixo e valor até vinte mil reais: aprova automaticamente.
+    // REVIEW [2026-12-15] Risco baixo e valor até vinte mil reais: aprova automaticamente.
     CreditApplication.approve({
-      // Aprova exatamente o valor solicitado.
+      // REVIEW [2026-12-15] Aprova exatamente o valor solicitado.
       approvedLimit: creditApplication.requestedAmount
     })
-  // Ramo de decisão humana: risco baixo acima do teto ou risco médio.
+  // REVIEW [2026-12-15] Ramo de decisão humana: risco baixo acima do teto ou risco médio.
   } else if (band == Low or band == Medium) {
-    // Risco baixo ou médio acima do limite automático: decisão humana.
+    // REVIEW [2026-12-15] Risco baixo ou médio acima do limite automático: decisão humana.
     try {
-      // Abre o form de decisão para o analista.
+      // REVIEW [2026-12-15] Abre o form de decisão para o analista.
       CreditDecision.show({ creditApplication })
-    // Tratamento do timeout ao aguardar a decisão do form.
+    // REVIEW [2026-12-15] Tratamento do timeout ao aguardar a decisão do form.
     } catch (Timeout) {
-      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      // REVIEW [2026-12-15] Sem resposta no prazo, escala a decisão para a alçada gerencial.
       Escalate.show({ creditApplication })
     }
-  // Ramo de risco alto: a decisão nunca é automática.
+  // REVIEW [2026-12-15] Ramo de risco alto: a decisão nunca é automática.
   } else {
-    // Risco alto: decisão humana obrigatória.
+    // REVIEW [2026-12-15] Risco alto: decisão humana obrigatória.
     try {
-      // Abre o form de decisão para o analista.
+      // REVIEW [2026-12-15] Abre o form de decisão para o analista.
       CreditDecision.show({ creditApplication })
-    // Tratamento do timeout ao aguardar a decisão do form.
+    // REVIEW [2026-12-15] Tratamento do timeout ao aguardar a decisão do form.
     } catch (Timeout) {
-      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      // REVIEW [2026-12-15] Sem resposta no prazo, escala a decisão para a alçada gerencial.
       Escalate.show({ creditApplication })
     }
   }
 
-  // Se a proposta terminou rejeitada, encerra o caso nesse desfecho.
+  // REVIEW [2026-12-15] Se a proposta terminou rejeitada, encerra o caso nesse desfecho.
   if (creditApplication.status == Rejected) {
-    // Retorna o desfecho de falha, sem criar limite.
+    // REVIEW [2026-12-15] Retorna o desfecho de falha, sem criar limite.
     return Rejected
   }
 
-  // Cria o limite de crédito com o valor aprovado na proposta.
+  // REVIEW [2026-12-15] Cria o limite de crédito com o valor aprovado na proposta.
   CreditLimit.set({
-    // Proposta que origina o limite.
+    // REVIEW [2026-12-15] Proposta que origina o limite.
     application: creditApplication,
-    // Titular do limite: o proponente da proposta.
+    // REVIEW [2026-12-15] Titular do limite: o proponente da proposta.
     holder: creditApplication.applicant,
-    // Valor do limite: o limite aprovado na análise.
+    // REVIEW [2026-12-15] Valor do limite: o limite aprovado na análise.
     amount: creditApplication.approvedLimit
   })
 
-  // Encerra no desfecho de sucesso.
+  // REVIEW [2026-12-15] Encerra no desfecho de sucesso.
   return Approved
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Approved {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de falha do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de falha do caso.
   end Rejected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Crédito negado", en: "Credit rejected" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Erro de negócio: bureau de crédito fora do ar.
+// REVIEW [2026-12-15] Erro de negócio: bureau de crédito fora do ar.
 error BureauUnavailable {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Bureau de crédito indisponível", en: "Credit bureau unavailable" }
 }
 
-// Erro reservado de prazo esgotado.
+// REVIEW [2026-12-15] Erro reservado de prazo esgotado.
 error Timeout {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Prazo esgotado", en: "Timed out" }
 }
 
-// Form de decisão manual da proposta pelo analista.
+// REVIEW [2026-12-15] Form de decisão manual da proposta pelo analista.
 form CreditDecision {
-  // Título exibido na inbox e no cabeçalho do form.
+  // REVIEW [2026-12-15] Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Decisão de crédito", en: "Credit decision" }
-  // Documento cujos dados o form apresenta e atualiza.
+  // REVIEW [2026-12-15] Documento cujos dados o form apresenta e atualiza.
   document: CreditApplication
-  // Papéis que podem atender o form.
+  // REVIEW [2026-12-15] Papéis que podem atender o form.
   roles: [CreditAnalyst, CreditManager]
-  // Prazo de atendimento: três dias antes de escalar.
+  // REVIEW [2026-12-15] Prazo de atendimento: três dias antes de escalar.
   timeout: 3d
-  // Prioridade de exibição na fila de tarefas.
+  // REVIEW [2026-12-15] Prioridade de exibição na fila de tarefas.
   priority: 40
-  // Distribuição pull: o próprio atendente puxa a tarefa.
+  // REVIEW [2026-12-15] Distribuição pull: o próprio atendente puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Proponente exibido somente para leitura.
+    // REVIEW [2026-12-15] Proponente exibido somente para leitura.
     applicant { readonly }
-    // Valor solicitado exibido somente para leitura.
+    // REVIEW [2026-12-15] Valor solicitado exibido somente para leitura.
     requestedAmount { readonly }
-    // Score do bureau exibido somente para leitura.
+    // REVIEW [2026-12-15] Score do bureau exibido somente para leitura.
     bureauScore { readonly }
-    // Faixa de risco exibida somente para leitura.
+    // REVIEW [2026-12-15] Faixa de risco exibida somente para leitura.
     riskBand { readonly }
-    // Limite aprovado informado na decisão.
+    // REVIEW [2026-12-15] Limite aprovado informado na decisão.
     approvedLimit
-    // Motivo da rejeição informado na decisão.
+    // REVIEW [2026-12-15] Motivo da rejeição informado na decisão.
     rejectionReason
   }
 
-  // Botões do formulário e as actions que eles disparam.
+  // REVIEW [2026-12-15] Botões do formulário e as actions que eles disparam.
   actions {
-    // Aprovar chama a action approve com o limite informado.
+    // REVIEW [2026-12-15] Aprovar chama a action approve com o limite informado.
     approve { calls: CreditApplication.approve(approvedLimit) }
-    // Rejeitar chama a action reject com o motivo informado.
+    // REVIEW [2026-12-15] Rejeitar chama a action reject com o motivo informado.
     reject { calls: CreditApplication.reject(rejectionReason) }
   }
 }
 
-// Form de decisão escalada para a alçada gerencial.
+// REVIEW [2026-12-15] Form de decisão escalada para a alçada gerencial.
 form Escalate {
-  // Título exibido na inbox e no cabeçalho do form.
+  // REVIEW [2026-12-15] Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Decisão de crédito — alçada gerencial", en: "Credit decision — manager approval" }
-  // Documento cujos dados o form apresenta e atualiza.
+  // REVIEW [2026-12-15] Documento cujos dados o form apresenta e atualiza.
   document: CreditApplication
-  // Papéis que podem atender o form.
+  // REVIEW [2026-12-15] Papéis que podem atender o form.
   roles: [CreditManager]
-  // Prazo de atendimento: um dia antes de expirar.
+  // REVIEW [2026-12-15] Prazo de atendimento: um dia antes de expirar.
   timeout: 1d
-  // Distribuição pull: o próprio gerente puxa a tarefa.
+  // REVIEW [2026-12-15] Distribuição pull: o próprio gerente puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Proponente exibido somente para leitura.
+    // REVIEW [2026-12-15] Proponente exibido somente para leitura.
     applicant { readonly }
-    // Valor solicitado exibido somente para leitura.
+    // REVIEW [2026-12-15] Valor solicitado exibido somente para leitura.
     requestedAmount { readonly }
-    // Score do bureau exibido somente para leitura.
+    // REVIEW [2026-12-15] Score do bureau exibido somente para leitura.
     bureauScore { readonly }
-    // Faixa de risco exibida somente para leitura.
+    // REVIEW [2026-12-15] Faixa de risco exibida somente para leitura.
     riskBand { readonly }
-    // Limite aprovado informado na decisão.
+    // REVIEW [2026-12-15] Limite aprovado informado na decisão.
     approvedLimit
-    // Motivo da rejeição informado na decisão.
+    // REVIEW [2026-12-15] Motivo da rejeição informado na decisão.
     rejectionReason
   }
 
-  // Botões do formulário e as actions que eles disparam.
+  // REVIEW [2026-12-15] Botões do formulário e as actions que eles disparam.
   actions {
-    // Aprovar chama a action approve com o limite informado.
+    // REVIEW [2026-12-15] Aprovar chama a action approve com o limite informado.
     approve { calls: CreditApplication.approve(approvedLimit) }
-    // Rejeitar chama a action reject com o motivo informado.
+    // REVIEW [2026-12-15] Rejeitar chama a action reject com o motivo informado.
     reject { calls: CreditApplication.reject(rejectionReason) }
   }
 }
 
-// Decisão de scoring que converte score e valores em uma faixa de risco.
+// REVIEW [2026-12-15] Decisão de scoring que converte score e valores em uma faixa de risco.
 decision CreditScoring {
-  // Título exibido na revisão e no painel de decisões.
+  // REVIEW [2026-12-15] Título exibido na revisão e no painel de decisões.
   title: { pt-BR: "Faixa de risco da proposta", en: "Credit application risk band" }
-  // Tipo devolvido pela decisão.
+  // REVIEW [2026-12-15] Tipo devolvido pela decisão.
   returns: RiskBand
-  // Entradas exigidas para avaliar a faixa de risco.
+  // REVIEW [2026-12-15] Entradas exigidas para avaliar a faixa de risco.
   inputs {
-    // Score apurado no bureau de crédito.
+    // REVIEW [2026-12-15] Score apurado no bureau de crédito.
     bureauScore: std.Count
-    // Valor de crédito solicitado na proposta.
+    // REVIEW [2026-12-15] Valor de crédito solicitado na proposta.
     requestedAmount: std.Money
-    // Exposição de crédito já existente do proponente.
+    // REVIEW [2026-12-15] Exposição de crédito já existente do proponente.
     existingExposure: std.Money
   }
-  // Casos avaliados em ordem até o primeiro que casar.
+  // REVIEW [2026-12-15] Casos avaliados em ordem até o primeiro que casar.
   cases {
-    // Score alto e valores contidos nos limites da política: risco baixo.
+    // REVIEW [2026-12-15] Score alto e valores contidos nos limites da política: risco baixo.
     bureauScore >= 750 and requestedAmount <= 50000 BRL and existingExposure <= 10000 BRL -> Low
-    // Score ainda razoável: risco médio.
+    // REVIEW [2026-12-15] Score ainda razoável: risco médio.
     bureauScore >= 550 -> Medium
-    // Qualquer outro caso: risco alto.
+    // REVIEW [2026-12-15] Qualquer outro caso: risco alto.
     else -> High
   }
-  // Documento-fonte da política de crédito aplicada.
+  // REVIEW [2026-12-15] Documento-fonte da política de crédito aplicada.
   source: "Política de Crédito v4"
-  // Área responsável pela manutenção da decisão.
+  // REVIEW [2026-12-15] Área responsável pela manutenção da decisão.
   owner: "Credit"
 }
 
-// Integração REST com o bureau externo de crédito.
+// REVIEW [2026-12-15] Integração REST com o bureau externo de crédito.
 integration CreditBureau {
-  // Protocolo de comunicação da integração.
+  // REVIEW [2026-12-15] Protocolo de comunicação da integração.
   protocol: rest
-  // URL base lida da variável de ambiente do serviço.
+  // REVIEW [2026-12-15] URL base lida da variável de ambiente do serviço.
   baseUrl: env.CREDIT_BUREAU_URL
-  // Autenticação por chave de API.
+  // REVIEW [2026-12-15] Autenticação por chave de API.
   auth: api-key
-  // Tempo máximo de espera por chamada: cinco segundos.
+  // REVIEW [2026-12-15] Tempo máximo de espera por chamada: cinco segundos.
   timeout: 5s
-  // Até três tentativas com espera exponencial.
+  // REVIEW [2026-12-15] Até três tentativas com espera exponencial.
   retry: exponential(3)
-  // Envia o cabeçalho de idempotência para evitar cobrança duplicada.
+  // REVIEW [2026-12-15] Envia o cabeçalho de idempotência para evitar cobrança duplicada.
   idempotency: header "Idempotency-Key"
 
-  // Operações expostas pela integração.
+  // REVIEW [2026-12-15] Operações expostas pela integração.
   operations {
-    // Consulta o score do bureau para uma proposta, devolvendo um count.
+    // REVIEW [2026-12-15] Consulta o score do bureau para uma proposta, devolvendo um count.
     score(application: CreditApplication): std.Count
   }
 }

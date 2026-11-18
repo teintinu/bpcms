@@ -50,6 +50,26 @@ Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 `NullLiteral`, `List`, `Object` (`typeRef`, `members`), `Call` (callee + args),
 `NamedArgument`, `MemberAccess`, `Binary`, `Unary`, `Raw`.
 
+## Pending comments
+
+`SourceFile.pending` is an array of `Pending` nodes for comments beginning with
+`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE` or `HACK` (case-insensitive). A `Date`
+value is the due date. Pendings are **metadata, not artifacts**: they have no
+`id` and never appear in the application lock. The AST explorer merges them
+into the tree at their source position.
+
+```json
+{
+  "kind": "Pending",
+  "keyword": "REVIEW",
+  "dueDate": "2026-12-15",
+  "dateText": "2026-12-15",
+  "message": "revisar depois do carnaval",
+  "span": { "start": 0, "end": 63 },
+  "keywordSpan": { "start": 3, "end": 9 }
+}
+```
+
 ## Identifier ids and references
 
 Declarations may carry `id`; identifier references may carry `ref` plus

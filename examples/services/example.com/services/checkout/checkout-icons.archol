@@ -1,55 +1,55 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Ícone do estado inicial da sessão.
+// REVIEW [2026-12-15] Ícone do estado inicial da sessão.
 icon Draft {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
-// Ícone do estado em que o carrinho já foi validado.
+// REVIEW [2026-12-15] Ícone do estado em que o carrinho já foi validado.
 icon Validated {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Carrinho validado", en: "Cart validated" }
 }
 
-// Ícone do estado após o registro do frete.
+// REVIEW [2026-12-15] Ícone do estado após o registro do frete.
 icon ShippingQuoted {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
 }
 
-// Ícone do estado após a autorização do pagamento.
+// REVIEW [2026-12-15] Ícone do estado após a autorização do pagamento.
 icon PaymentAuthorized {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
 }
 
-// Ícone do estado final de sucesso.
+// REVIEW [2026-12-15] Ícone do estado final de sucesso.
 icon Confirmed {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
 }
 
-// Ícone do estado final de abandono.
+// REVIEW [2026-12-15] Ícone do estado final de abandono.
 icon Abandoned {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Abandonada", en: "Abandoned" }
 }
 
-// Ícone da forma de pagamento por cartão de crédito.
+// REVIEW [2026-12-15] Ícone da forma de pagamento por cartão de crédito.
 icon CreditCard {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cartão de crédito", en: "Credit card" }
 }
 
-// Ícone da forma de pagamento Pix.
+// REVIEW [2026-12-15] Ícone da forma de pagamento Pix.
 icon Pix {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pix", en: "Pix" }
 }
 
-// Ícone da forma de pagamento por boleto.
+// REVIEW [2026-12-15] Ícone da forma de pagamento por boleto.
 icon Boleto {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Boleto", en: "Boleto" }
 }

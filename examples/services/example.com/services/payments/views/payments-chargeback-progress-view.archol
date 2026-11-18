@@ -1,15 +1,15 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// View de andamento derivada da instância do processo.
+// REVIEW [2026-12-15] View de andamento derivada da instância do processo.
 view ChargebackProgress {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Andamento da contestação", en: "Chargeback progress" }
-  type: process // Tipo da view: uma tela de andamento de processo.
-  // Processo cujo andamento esta view exibe.
+  type: process // REVIEW [2026-12-15] Tipo da view: uma tela de andamento de processo.
+  // REVIEW [2026-12-15] Processo cujo andamento esta view exibe.
   process: ChargebackDispute
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
-  // Seções fixas exibidas na tela de andamento.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }

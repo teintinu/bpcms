@@ -309,3 +309,65 @@ fn ast_with_app_contains_typed_references() {
     assert!(stdout.contains("\"typeRefId\":"), "{stdout}");
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn pending_comments_are_metadata_and_never_get_ids() {
+    let dir = temp_dir("pending-ids");
+    let service = service_fixture(&dir);
+    let mut source = std::fs::read_to_string(&service).unwrap();
+    source.push_str("\n// REVIEW [2099-01-01] pending text only\n");
+    write(&service, &source);
+    let app_path = app_fixture(&dir, APP, SERVICE);
+    let output = run(&["lock", dir.to_str().unwrap(), "--app", APP]);
+    assert_eq!(output.status.code(), Some(0));
+    let lock = std::fs::read_to_string(app_path.with_extension("lock")).unwrap();
+    assert!(!lock.contains("pending"), "{lock}");
+    assert!(!lock.contains("REVIEW"), "{lock}");
+    assert_eq!(
+        lock.lines().filter(|line| !line.is_empty()).count(),
+        2,
+        "{lock}"
+    );
+
+    let ast = run(&["ast", service.to_str().unwrap()]);
+    assert_eq!(ast.status.code(), Some(0));
+    let ast: serde_json::Value = serde_json::from_slice(&ast.stdout).unwrap();
+    let pending = &ast["pending"][0];
+    assert_eq!(pending["kind"], "Pending");
+    assert!(pending.get("id").is_none(), "{pending}");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn check_reports_pending_without_a_due_date() {
+    let dir = temp_dir("pending");
+    let service = service_fixture(&dir);
+    let mut source = std::fs::read_to_string(&service).unwrap();
+    source.push_str("\n// todo fix this\n");
+    write(&service, &source);
+    app_fixture(&dir, APP, SERVICE);
+    let output = run(&["check", dir.to_str().unwrap(), "--app", APP]);
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("E_PENDING_NO_DATE"), "{stdout}");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn format_uppercases_pending_keywords_and_check_reports_changes() {
+    let dir = temp_dir("format");
+    let file = dir.join("demo.archol");
+    write(&file, "// todo lower\n// keep this\n");
+    let check = run(&["format", file.to_str().unwrap(), "--check"]);
+    assert_eq!(check.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&check.stdout).contains("demo.archol"));
+    let formatted = run(&["format", file.to_str().unwrap()]);
+    assert_eq!(formatted.status.code(), Some(0));
+    assert_eq!(
+        std::fs::read_to_string(&file).unwrap(),
+        "// TODO lower\n// keep this\n"
+    );
+    let clean = run(&["format", file.to_str().unwrap(), "--check"]);
+    assert_eq!(clean.status.code(), Some(0));
+    let _ = std::fs::remove_dir_all(dir);
+}

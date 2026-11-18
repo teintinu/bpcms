@@ -1,18 +1,18 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Caixa de entrada operacional das notificações a tratar.
+// REVIEW [2026-12-15] Caixa de entrada operacional das notificações a tratar.
 view NotificationInbox {
-  // Rótulo da view exibido na navegação.
+  // REVIEW [2026-12-15] Rótulo da view exibido na navegação.
   title: { pt-BR: "Fila de notificações", en: "Notification queue" }
-  // Tipo inbox: fila de trabalho distribuída por papel.
+  // REVIEW [2026-12-15] Tipo inbox: fila de trabalho distribuída por papel.
   type: inbox
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
-  scope: roles // Escopo da fila definido pelos papéis do usuário.
-  // Filtro: mostra só itens dos papéis do usuário atual.
+  scope: roles // REVIEW [2026-12-15] Escopo da fila definido pelos papéis do usuário.
+  // REVIEW [2026-12-15] Filtro: mostra só itens dos papéis do usuário atual.
   filter { role in currentUser.roles }
-  groupBy: process // Agrupa a fila por processo.
-  // Colunas exibidas em cada grupo da fila.
+  groupBy: process // REVIEW [2026-12-15] Agrupa a fila por processo.
+  // REVIEW [2026-12-15] Colunas exibidas em cada grupo da fila.
   columns { title; subject; role; dueAt; priority }
 }

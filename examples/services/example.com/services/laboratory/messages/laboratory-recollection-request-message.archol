@@ -1,15 +1,15 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Mensagem que pede a recoleta de uma amostra rejeitada.
+// REVIEW [2026-12-15] Mensagem que pede a recoleta de uma amostra rejeitada.
 message RecollectionRequest {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
-  about: Sample // Documento ao qual a mensagem se refere.
-  // Dados levados pela mensagem.
+  about: Sample // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Dados levados pela mensagem.
   payload {
-    // Código da amostra a recoletar.
+    // REVIEW [2026-12-15] Código da amostra a recoletar.
     code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
-    // Instante em que a recoleta foi solicitada.
+    // REVIEW [2026-12-15] Instante em que a recoleta foi solicitada.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
 }

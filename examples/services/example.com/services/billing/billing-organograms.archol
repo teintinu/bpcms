@@ -1,41 +1,41 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Declara o organograma financeiro e suas relações de hierarquia.
+// REVIEW [2026-12-15] Declara o organograma financeiro e suas relações de hierarquia.
 organogram Finance {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
 
-  // Define a cadeia de subordinação entre os papéis financeiros.
+  // REVIEW [2026-12-15] Define a cadeia de subordinação entre os papéis financeiros.
   hierarchy {
-    // O gerente financeiro lidera o agente de cobrança, que lidera o faturista.
+    // REVIEW [2026-12-15] O gerente financeiro lidera o agente de cobrança, que lidera o faturista.
     FinanceManager > CollectionAgent > Clerk
   }
 
-  FinanceManager manages [CollectionAgent, Clerk] // O gerente gerencia os demais papéis.
+  FinanceManager manages [CollectionAgent, Clerk] // REVIEW [2026-12-15] O gerente gerencia os demais papéis.
 }
 
-// Papel operacional que cria e emite notas e contas.
+// REVIEW [2026-12-15] Papel operacional que cria e emite notas e contas.
 role Clerk {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Faturista", en: "Billing clerk" }
-  // Permissões operacionais concedidas ao faturista.
+  // REVIEW [2026-12-15] Permissões operacionais concedidas ao faturista.
   permissions: [invoice.view, invoice.create, invoice.issue, invoice.collect]
 }
 
-// Papel de cobrança que herda as permissões do faturista.
+// REVIEW [2026-12-15] Papel de cobrança que herda as permissões do faturista.
 role CollectionAgent {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Agente de cobrança", en: "Collection agent" }
-  inherits: Clerk // Herda as permissões do papel Clerk.
-  // Permissões adicionais de cobrança e cancelamento.
+  inherits: Clerk // REVIEW [2026-12-15] Herda as permissões do papel Clerk.
+  // REVIEW [2026-12-15] Permissões adicionais de cobrança e cancelamento.
   permissions: [invoice.collect, invoice.cancel]
 }
 
-// Papel de gestão financeira que herda as permissões de cobrança.
+// REVIEW [2026-12-15] Papel de gestão financeira que herda as permissões de cobrança.
 role FinanceManager {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Gerente financeiro", en: "Finance manager" }
-  inherits: CollectionAgent // Herda as permissões do papel CollectionAgent.
-  // Permissões de aprovação, fechamento e relatórios.
+  inherits: CollectionAgent // REVIEW [2026-12-15] Herda as permissões do papel CollectionAgent.
+  // REVIEW [2026-12-15] Permissões de aprovação, fechamento e relatórios.
   permissions: [invoice.approve, period.close, report.view]
 }

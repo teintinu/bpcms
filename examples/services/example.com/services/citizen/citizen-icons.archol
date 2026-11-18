@@ -1,31 +1,31 @@
-// service: example.com/services/citizen
+// REVIEW [2026-12-15] service: example.com/services/citizen
 
-// Ícone de pessoa; usado por values de classificação (ex.: CitizenKind.Person).
+// REVIEW [2026-12-15] Ícone de pessoa; usado por values de classificação (ex.: CitizenKind.Person).
 icon Person {
-  // Título exibido na interface e no builder.
+  // REVIEW [2026-12-15] Título exibido na interface e no builder.
   title: { pt-BR: "Pessoa", en: "Person" }
 }
 
-// Ícone de organização; usado por values de classificação.
+// REVIEW [2026-12-15] Ícone de organização; usado por values de classificação.
 icon Organization {
-  // Título exibido na interface e no builder.
+  // REVIEW [2026-12-15] Título exibido na interface e no builder.
   title: { pt-BR: "Organização", en: "Organization" }
 }
 
-// Ícone de situação ativa; usado pelo value Active de CitizenStatus.
+// REVIEW [2026-12-15] Ícone de situação ativa; usado pelo value Active de CitizenStatus.
 icon Active {
-  // Título exibido na interface e no builder.
+  // REVIEW [2026-12-15] Título exibido na interface e no builder.
   title: { pt-BR: "Ativo", en: "Active" }
 }
 
-// Ícone de cadastro mesclado; usado pelo value Merged de CitizenStatus.
+// REVIEW [2026-12-15] Ícone de cadastro mesclado; usado pelo value Merged de CitizenStatus.
 icon Merged {
-  // Título exibido na interface e no builder.
+  // REVIEW [2026-12-15] Título exibido na interface e no builder.
   title: { pt-BR: "Mesclado", en: "Merged" }
 }
 
-// Ícone de cadastro bloqueado; usado pelo value Blocked de CitizenStatus.
+// REVIEW [2026-12-15] Ícone de cadastro bloqueado; usado pelo value Blocked de CitizenStatus.
 icon Blocked {
-  // Título exibido na interface e no builder.
+  // REVIEW [2026-12-15] Título exibido na interface e no builder.
   title: { pt-BR: "Bloqueado", en: "Blocked" }
 }

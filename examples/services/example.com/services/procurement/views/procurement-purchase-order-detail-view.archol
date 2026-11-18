@@ -1,16 +1,16 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// View de detalhe de um pedido de compra.
+// REVIEW [2026-12-15] View de detalhe de um pedido de compra.
 view PurchaseOrderDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do pedido de compra", en: "Purchase order detail" }
-  // Tipo da view: detalhe.
+  // REVIEW [2026-12-15] Tipo da view: detalhe.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: PurchaseOrder
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Buyer, ProcurementManager, ReceivingClerk]
 
-  // Seções exibidas na tela.
+  // REVIEW [2026-12-15] Seções exibidas na tela.
   sections { summary; items; timeline }
 }

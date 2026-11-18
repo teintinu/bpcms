@@ -1,16 +1,16 @@
-// Raiz do serviço de estoque; declara a URI canônica e os metadados de negócio.
+// REVIEW [2026-12-15] Raiz do serviço de estoque; declara a URI canônica e os metadados de negócio.
 service "example.com/services/inventory" {
-  // Nome exibido do serviço no builder e nos catálogos.
+  // REVIEW [2026-12-15] Nome exibido do serviço no builder e nos catálogos.
   title: { pt-BR: "Estoque", en: "Inventory" }
-  // Versão do artefato Service usada em release e compatibilidade.
+  // REVIEW [2026-12-15] Versão do artefato Service usada em release e compatibilidade.
   version: 1.0.0
-  // Área de negócio responsável pelo serviço.
+  // REVIEW [2026-12-15] Área de negócio responsável pelo serviço.
   owner: "Supply Chain"
-  // Bloco de dependências externas usadas pelos artefatos do serviço.
+  // REVIEW [2026-12-15] Bloco de dependências externas usadas pelos artefatos do serviço.
   imports {
-    // Importa as medidas e constantes padrão do construtor sob o alias std.
+    // REVIEW [2026-12-15] Importa as medidas e constantes padrão do construtor sob o alias std.
     service "bpcms.org/std" as std
-    // Importa o catálogo, dono do tipo Product referenciado pelo estoque.
+    // REVIEW [2026-12-15] Importa o catálogo, dono do tipo Product referenciado pelo estoque.
     service "example.com/services/catalog" as Catalog
   }
 }

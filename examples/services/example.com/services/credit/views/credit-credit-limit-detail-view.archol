@@ -1,16 +1,16 @@
-// service: example.com/services/credit
+// REVIEW [2026-12-15] service: example.com/services/credit
 
-// View de detalhe de um limite de crédito.
+// REVIEW [2026-12-15] View de detalhe de um limite de crédito.
 view CreditLimitDetail {
-  // Título exibido na navegação e no cabeçalho da tela.
+  // REVIEW [2026-12-15] Título exibido na navegação e no cabeçalho da tela.
   title: { pt-BR: "Detalhe do limite", en: "Credit limit detail" }
-  // Tipo detail: tela de detalhe de um registro.
+  // REVIEW [2026-12-15] Tipo detail: tela de detalhe de um registro.
   type: detail
-  // Documento exibido pela view.
+  // REVIEW [2026-12-15] Documento exibido pela view.
   document: CreditLimit
-  // Papéis autorizados a abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o detalhe.
   roles: [CreditAnalyst, CreditManager]
 
-  // Seções fixas exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela de detalhe.
   sections { summary; timeline }
 }

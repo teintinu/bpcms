@@ -1,25 +1,25 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Tela de detalhe de um chamado.
+// REVIEW [2026-12-15] Tela de detalhe de um chamado.
 view TicketDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do chamado", en: "Ticket detail" }
-  // Tipo da view: tela de detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: tela de detalhe de documento.
   type: detail
-  // Documento exibido na tela.
+  // REVIEW [2026-12-15] Documento exibido na tela.
   document: Ticket
-  // Papéis que podem abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis que podem abrir o detalhe.
   roles: [SupportAgent, Manager]
 
-  // Seções fixas exibidas na tela.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela.
   sections { summary; timeline }
-  // Campos calculados exibidos na tela.
+  // REVIEW [2026-12-15] Campos calculados exibidos na tela.
   computed { breached; remaining }
-  // Ações oferecidas na tela de detalhe.
+  // REVIEW [2026-12-15] Ações oferecidas na tela de detalhe.
   actions {
-    // Resolve o chamado.
+    // REVIEW [2026-12-15] Resolve o chamado.
     resolve -> Ticket.resolve
-    // Escala o chamado pedindo a justificativa.
+    // REVIEW [2026-12-15] Escala o chamado pedindo a justificativa.
     escalate -> Ticket.escalate(justification)
   }
 }

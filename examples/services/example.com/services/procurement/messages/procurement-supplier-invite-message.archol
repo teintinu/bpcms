@@ -1,16 +1,16 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// Mensagem de convite enviada ao fornecedor para o portal.
+// REVIEW [2026-12-15] Mensagem de convite enviada ao fornecedor para o portal.
 message SupplierInvite {
-  // Título exibido na notificação.
+  // REVIEW [2026-12-15] Título exibido na notificação.
   title: { pt-BR: "Convite ao portal do fornecedor", en: "Supplier portal invite" }
-  // Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
   about: Supplier
-  // Dados carregados pela mensagem.
+  // REVIEW [2026-12-15] Dados carregados pela mensagem.
   payload {
-    // Data e hora do convite.
+    // REVIEW [2026-12-15] Data e hora do convite.
     invitedAt: DateTime { title: { pt-BR: "Convidado em", en: "Invited at" } }
-    // Data e hora de expiração do convite.
+    // REVIEW [2026-12-15] Data e hora de expiração do convite.
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 }

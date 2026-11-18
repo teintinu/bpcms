@@ -1,106 +1,106 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// Organograma do serviço: define a hierarquia e as roles de compras.
+// REVIEW [2026-12-15] Organograma do serviço: define a hierarquia e as roles de compras.
 organogram Sourcing {
-  // Título exibido no builder e nos painéis de organização.
+  // REVIEW [2026-12-15] Título exibido no builder e nos painéis de organização.
   title: { pt-BR: "Organograma de compras", en: "Procurement organogram" }
 
-  // Relações de subordinação entre as roles.
+  // REVIEW [2026-12-15] Relações de subordinação entre as roles.
   hierarchy {
-    // O gestor de compras responde acima do aprovador.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do aprovador.
     ProcurementManager > Approver
-    // O gestor de compras responde acima do comprador.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do comprador.
     ProcurementManager > Buyer
-    // O comprador responde acima do solicitante.
+    // REVIEW [2026-12-15] O comprador responde acima do solicitante.
     Buyer > Requester
-    // O gestor de compras responde acima do analista de conformidade.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do analista de conformidade.
     ProcurementManager > ComplianceAnalyst
-    // O gestor de compras responde acima do analista de contas a pagar.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do analista de contas a pagar.
     ProcurementManager > PayablesClerk
-    // O gestor de compras responde acima do recebedor.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do recebedor.
     ProcurementManager > ReceivingClerk
-    // O gestor de compras responde acima do inspetor de qualidade.
+    // REVIEW [2026-12-15] O gestor de compras responde acima do inspetor de qualidade.
     ProcurementManager > QualityInspector
   }
 
-  // Declara formalmente quem o gestor de compras gerencia.
+  // REVIEW [2026-12-15] Declara formalmente quem o gestor de compras gerencia.
   ProcurementManager manages [Buyer, Approver, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
 
-  // Impede que a mesma pessoa envie e aprove a solicitação.
+  // REVIEW [2026-12-15] Impede que a mesma pessoa envie e aprove a solicitação.
   segregation {
-    // Quem envia a solicitação de compra não pode aprová-la.
+    // REVIEW [2026-12-15] Quem envia a solicitação de compra não pode aprová-la.
     purchaseRequest.submit != purchaseRequest.approve
   }
 }
 
-// Papel de quem abre a solicitação de compra.
+// REVIEW [2026-12-15] Papel de quem abre a solicitação de compra.
 role Requester {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Solicitante", en: "Requester" }
-  // Permissões de solicitar e consultar compras.
+  // REVIEW [2026-12-15] Permissões de solicitar e consultar compras.
   permissions: [purchase.request, purchase.view]
 }
 
-// Papel de quem compra: emite pedidos e gerencia fornecedores e cotações.
+// REVIEW [2026-12-15] Papel de quem compra: emite pedidos e gerencia fornecedores e cotações.
 role Buyer {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Comprador", en: "Buyer" }
-  // Permissões de consulta, emissão de pedido, fornecedor e cotação.
+  // REVIEW [2026-12-15] Permissões de consulta, emissão de pedido, fornecedor e cotação.
   permissions: [purchase.view, purchase.order, supplier.manage, rfq.manage]
 }
 
-// Papel de quem decide a aprovação da compra.
+// REVIEW [2026-12-15] Papel de quem decide a aprovação da compra.
 role Approver {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Aprovador", en: "Approver" }
-  // Permissões de consulta e aprovação de compras.
+  // REVIEW [2026-12-15] Permissões de consulta e aprovação de compras.
   permissions: [purchase.view, purchase.approve]
 }
 
-// Papel do gestor de compras, com alçada ampliada e acesso a relatórios.
+// REVIEW [2026-12-15] Papel do gestor de compras, com alçada ampliada e acesso a relatórios.
 role ProcurementManager {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Gestor de compras", en: "Procurement manager" }
-  // Permissões de consulta, aprovação, pedido e relatórios.
+  // REVIEW [2026-12-15] Permissões de consulta, aprovação, pedido e relatórios.
   permissions: [purchase.view, purchase.approve, purchase.order, report.view]
 }
 
-// Papel de conformidade, responsável por verificar e aprovar fornecedores.
+// REVIEW [2026-12-15] Papel de conformidade, responsável por verificar e aprovar fornecedores.
 role ComplianceAnalyst {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Analista de conformidade", en: "Compliance analyst" }
-  // Permissões de consulta, verificação e aprovação de fornecedores.
+  // REVIEW [2026-12-15] Permissões de consulta, verificação e aprovação de fornecedores.
   permissions: [supplier.view, supplier.verify, supplier.approve]
 }
 
-// Papel de contas a pagar, responsável por habilitar o fornecedor financeiramente.
+// REVIEW [2026-12-15] Papel de contas a pagar, responsável por habilitar o fornecedor financeiramente.
 role PayablesClerk {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Analista de contas a pagar", en: "Payables clerk" }
-  // Permissões de consulta do fornecedor e de habilitação de pagamentos.
+  // REVIEW [2026-12-15] Permissões de consulta do fornecedor e de habilitação de pagamentos.
   permissions: [supplier.view, supplier.payables]
 }
 
-// Papel de quem recebe a mercadoria no depósito.
+// REVIEW [2026-12-15] Papel de quem recebe a mercadoria no depósito.
 role ReceivingClerk {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Recebedor", en: "Receiving clerk" }
-  // Permissões de consulta, recebimento e inspeção.
+  // REVIEW [2026-12-15] Permissões de consulta, recebimento e inspeção.
   permissions: [receipt.view, receipt.receive, receipt.inspect]
 }
 
-// Papel de quem inspeciona a qualidade do recebimento.
+// REVIEW [2026-12-15] Papel de quem inspeciona a qualidade do recebimento.
 role QualityInspector {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Inspetor de qualidade", en: "Quality inspector" }
-  // Permissões de consulta, inspeção e aceite do recebimento.
+  // REVIEW [2026-12-15] Permissões de consulta, inspeção e aceite do recebimento.
   permissions: [receipt.view, receipt.inspect, receipt.accept]
 }
 
-// Papel do usuário do fornecedor, que preenche o cadastro no portal.
+// REVIEW [2026-12-15] Papel do usuário do fornecedor, que preenche o cadastro no portal.
 role SupplierUser {
-  // Título exibido na atribuição de tarefas e nos filtros.
+  // REVIEW [2026-12-15] Título exibido na atribuição de tarefas e nos filtros.
   title: { pt-BR: "Usuário do fornecedor", en: "Supplier user" }
-  // Permissões de cadastro e acesso ao portal do fornecedor.
+  // REVIEW [2026-12-15] Permissões de cadastro e acesso ao portal do fornecedor.
   permissions: [supplier.registration, supplier.portal]
 }

@@ -1,19 +1,19 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// View de caixa de entrada que organiza os chamados por papel.
+// REVIEW [2026-12-15] View de caixa de entrada que organiza os chamados por papel.
 view TicketQueue {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de atendimento", en: "Ticket queue" }
-  // Tipo da view: inbox de trabalho por papel.
+  // REVIEW [2026-12-15] Tipo da view: inbox de trabalho por papel.
   type: inbox
-  // Papéis que podem abrir a fila.
+  // REVIEW [2026-12-15] Papéis que podem abrir a fila.
   roles: [SupportAgent, Manager]
-  // Escopo por papel: cada usuário vê a fila que lhe cabe.
+  // REVIEW [2026-12-15] Escopo por papel: cada usuário vê a fila que lhe cabe.
   scope: roles
-  // Agrupa os itens pela role do usuário na fila.
+  // REVIEW [2026-12-15] Agrupa os itens pela role do usuário na fila.
   groupBy: role
-  // Mostra apenas linhas das roles do usuário atual.
+  // REVIEW [2026-12-15] Mostra apenas linhas das roles do usuário atual.
   filter { role in currentUser.roles }
-  // Colunas exibidas na lista.
+  // REVIEW [2026-12-15] Colunas exibidas na lista.
   columns { title; subject; role; dueAt; priority }
 }

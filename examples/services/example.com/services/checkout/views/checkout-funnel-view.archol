@@ -1,35 +1,35 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Relatório de funil: acompanha o avanço das sessões por etapa.
+// REVIEW [2026-12-15] Relatório de funil: acompanha o avanço das sessões por etapa.
 view Funnel {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Funil de finalização", en: "Checkout funnel" }
-  // Tipo da view: relatório agregado.
+  // REVIEW [2026-12-15] Tipo da view: relatório agregado.
   type: report
-  // Documentos usados como fonte dos dados.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos dados.
   sources: [CheckoutSession]
-  // Papéis que podem abrir o relatório.
+  // REVIEW [2026-12-15] Papéis que podem abrir o relatório.
   roles: [SupportAgent]
 
-  // Filtros oferecidos ao usuário.
+  // REVIEW [2026-12-15] Filtros oferecidos ao usuário.
   filters { period; status }
-  // Métricas calculadas sobre as sessões.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as sessões.
   metrics {
-    // Total de sessões iniciadas.
+    // REVIEW [2026-12-15] Total de sessões iniciadas.
     started: count(CheckoutSession)
-    // Sessões que passaram do rascunho.
+    // REVIEW [2026-12-15] Sessões que passaram do rascunho.
     validated: count(CheckoutSession) where status != Draft
-    // Sessões confirmadas.
+    // REVIEW [2026-12-15] Sessões confirmadas.
     paid: count(CheckoutSession) where status == Confirmed
-    // Sessões abandonadas.
+    // REVIEW [2026-12-15] Sessões abandonadas.
     abandoned: count(CheckoutSession) where status == Abandoned
-    // Receita somada das sessões confirmadas.
+    // REVIEW [2026-12-15] Receita somada das sessões confirmadas.
     revenue: sum(CheckoutSession.total) where status == Confirmed
   }
-  // Unidade usada pela métrica de receita.
+  // REVIEW [2026-12-15] Unidade usada pela métrica de receita.
   units { revenue: BRL }
-  // Idade máxima dos dados antes de recarregar.
+  // REVIEW [2026-12-15] Idade máxima dos dados antes de recarregar.
   freshness: 10m
-  // Formatos de exportação permitidos.
+  // REVIEW [2026-12-15] Formatos de exportação permitidos.
   export: [pdf, csv]
 }

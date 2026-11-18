@@ -115,6 +115,13 @@ Regras:
 - **AST não carrega listas de usos.** Declarações têm `id`; referências têm `ref`/`refKind`, `fieldRef`, `typeRefId`. Usos e navegação vêm do índice semântico (`archol/declaration`, `archol/usages`), evitando ciclos e JSON grande.
 - **Idioma do compilador e do plugin: inglês.** Todo o `archol/crates`, `archol/scripts`, `archol/docs`, `archol/README.md` e `archol/editors/vscode` usam **inglês** em identificadores, comentários, mensagens de diagnóstico/CLI/LSP, UI do plugin, testes e documentação. O restante do repositório (specs de produto em português) permanece em português; dados de exemplo Archol com `pt-BR` não são traduzidos.
 
+## Pendências e brainstorm da DSL
+
+- **Marcadores de pendência:** `TODO`, `FIXME`, `REVIEW`, `OPTIMIZE` e `HACK` no início de um comentário (`// TODO ...`). O compilador aceita maiúsculas/minúsculas; o AST e o `archol format` normalizam para maiúsculas.
+- **Sintaxe:** `// <MARCADOR> [YYYY-MM-DD] <comentário>`. A data é o **due date** (vencimento): sem data ou data no passado é **erro**; vencimento em até 15 dias é **warning**. O AST expõe `pending` em `SourceFile` para o construtor. Pendências **não são artefatos**: não recebem ID nem entram no lock.
+- **Durante este brainstorm/planejamento da DSL:** toda linha criada/modificada nos exemplos deve manter um comentário explicativo (como já está) e o `REVIEW` com due date de **+30 dias** a partir da data da alteração. Os comentários legados dos exemplos foram marcados com `REVIEW [2026-12-15]`.
+- `format` e `lint` rodam no compilador (`archol format`, `archol lint`) e no plugin: formatação ao salvar e lint contínuo via diagnósticos do LSP.
+
 ## Documentos vivos
 
 - `BRAINSTORM.md` é a baseline de decisões.

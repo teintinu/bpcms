@@ -1,13 +1,13 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Mensagem que confirma a renovação do contrato.
+// REVIEW [2026-12-15] Mensagem que confirma a renovação do contrato.
 message RenewalConfirmed {
-  // Título exibido na caixa de mensagens.
+  // REVIEW [2026-12-15] Título exibido na caixa de mensagens.
   title: { pt-BR: "Renovação confirmada", en: "Renewal confirmed" }
-  about: Contract // Documento ao qual a mensagem se refere.
-  // Dados transportados pela mensagem.
+  about: Contract // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Dados transportados pela mensagem.
   payload {
-    // Data e hora da assinatura da renovação.
+    // REVIEW [2026-12-15] Data e hora da assinatura da renovação.
     signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
   }
 }

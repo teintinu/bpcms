@@ -1,16 +1,16 @@
-// service: example.com/services/fraud-checkout
+// REVIEW [2026-12-15] service: example.com/services/fraud-checkout
 
-// View de detalhe de uma verificação antifraude.
+// REVIEW [2026-12-15] View de detalhe de uma verificação antifraude.
 view FraudDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe da verificação", en: "Fraud check detail" }
-  // Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
   type: detail
-  // Documento exibido pela view.
+  // REVIEW [2026-12-15] Documento exibido pela view.
   document: FraudCheck
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
-  // Seções fixas exibidas no detalhe.
+  // REVIEW [2026-12-15] Seções fixas exibidas no detalhe.
   sections { summary; decision; timeline }
 }

@@ -1,144 +1,144 @@
-// service: example.com/services/billing
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/billing
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Processo de cobrança que acompanha cada nota vencida.
+// REVIEW [2026-12-15] Processo de cobrança que acompanha cada nota vencida.
 process Dunning(invoice: Invoice) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Cobrança", en: "Dunning" }
-  version: 1 // Versão do artefato Process; diff e release comparam.
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 30d
 
-  // Agenda a execução diária às seis da manhã.
+  // REVIEW [2026-12-15] Agenda a execução diária às seis da manhã.
   schedule: "0 6 * * *"
-  // Cria uma instância para cada nota vencida.
+  // REVIEW [2026-12-15] Cria uma instância para cada nota vencida.
   fanOut: Invoice where status == Overdue
-  key: invoice // Chave de identidade, correlação e dedup da instância.
+  key: invoice // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
 
-  // Envia o lembrete de pagamento ao cliente.
+  // REVIEW [2026-12-15] Envia o lembrete de pagamento ao cliente.
   send PaymentReminder {
-    // Correlaciona a mensagem com a nota.
+    // REVIEW [2026-12-15] Correlaciona a mensagem com a nota.
     key: invoice
-    // Preenche os dados da mensagem a partir da nota.
+    // REVIEW [2026-12-15] Preenche os dados da mensagem a partir da nota.
     with {
-      // Número da nota.
+      // REVIEW [2026-12-15] Número da nota.
       number: invoice.number
-      // Total em aberto.
+      // REVIEW [2026-12-15] Total em aberto.
       total: invoice.total
-      // Data de vencimento.
+      // REVIEW [2026-12-15] Data de vencimento.
       dueAt: invoice.dueAt
     }
   }
 
-  // Aguarda cinco dias antes de reavaliar a cobrança.
+  // REVIEW [2026-12-15] Aguarda cinco dias antes de reavaliar a cobrança.
   wait 5d
 
-  // Só escala a cobrança se a nota continuar vencida.
+  // REVIEW [2026-12-15] Só escala a cobrança se a nota continuar vencida.
   if (invoice.status == Overdue) {
-    // Abre a tarefa manual de negociação com o cliente.
+    // REVIEW [2026-12-15] Abre a tarefa manual de negociação com o cliente.
     Escalate.show({ invoice })
 
-    // Aguarda mais sete dias antes da próxima verificação.
+    // REVIEW [2026-12-15] Aguarda mais sete dias antes da próxima verificação.
     wait 7d
 
-    // Reavalia a nota após a negociação.
+    // REVIEW [2026-12-15] Reavalia a nota após a negociação.
     if (invoice.status == Overdue) {
-      // Abre o formulário para cancelar a nota vencida.
+      // REVIEW [2026-12-15] Abre o formulário para cancelar a nota vencida.
       DunningCancellation.show({ invoice })
 
-      // Encerra como cancelada se o formulário cancelou a nota.
+      // REVIEW [2026-12-15] Encerra como cancelada se o formulário cancelou a nota.
       if (invoice.status == Cancelled) {
-        // Retorna o desfecho de cancelamento.
+        // REVIEW [2026-12-15] Retorna o desfecho de cancelamento.
         return Cancelled
       }
     }
   }
 
-  // Encerra como liquidada quando a nota deixou de estar vencida.
+  // REVIEW [2026-12-15] Encerra como liquidada quando a nota deixou de estar vencida.
   return Settled
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Settled {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Liquidada", en: "Settled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Cancelled {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Tarefa manual de negociação de pagamento com o cliente.
+// REVIEW [2026-12-15] Tarefa manual de negociação de pagamento com o cliente.
 manual Escalate {
-  // Título exibido na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido na inbox e no histórico.
   title: { pt-BR: "Negociar pagamento", en: "Negotiate payment" }
-  // Documento-sujeito da tarefa.
+  // REVIEW [2026-12-15] Documento-sujeito da tarefa.
   document: Invoice
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [CollectionAgent]
-  // Orientações exibidas ao responsável.
+  // REVIEW [2026-12-15] Orientações exibidas ao responsável.
   instructions: {
-    // Instrução em português.
+    // REVIEW [2026-12-15] Instrução em português.
     pt-BR: "Ligar ao cliente e negociar o pagamento"
   }
-  // Prazo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo para conclusão da tarefa.
   timeout: 2d
-  // Prioridade na fila de trabalho.
+  // REVIEW [2026-12-15] Prioridade na fila de trabalho.
   priority: 60
-  // Distribuição da tarefa por retirada da fila.
+  // REVIEW [2026-12-15] Distribuição da tarefa por retirada da fila.
   assign: pull
 }
 
-// Formulário para cancelar uma nota vencida durante a cobrança.
+// REVIEW [2026-12-15] Formulário para cancelar uma nota vencida durante a cobrança.
 form DunningCancellation {
-  // Título exibido no formulário.
+  // REVIEW [2026-12-15] Título exibido no formulário.
   title: { pt-BR: "Cancelar nota vencida", en: "Cancel overdue invoice" }
-  // Documento manipulado pelo formulário.
+  // REVIEW [2026-12-15] Documento manipulado pelo formulário.
   document: Invoice
-  // Papéis que podem preencher o formulário.
+  // REVIEW [2026-12-15] Papéis que podem preencher o formulário.
   roles: [FinanceManager]
-  // Prazo para preenchimento e envio.
+  // REVIEW [2026-12-15] Prazo para preenchimento e envio.
   timeout: 1d
-  // Prioridade na fila de trabalho.
+  // REVIEW [2026-12-15] Prioridade na fila de trabalho.
   priority: 70
-  // Distribuição da tarefa por retirada da fila.
+  // REVIEW [2026-12-15] Distribuição da tarefa por retirada da fila.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Número da nota como contexto somente leitura.
+    // REVIEW [2026-12-15] Número da nota como contexto somente leitura.
     number
-    // Cliente da nota como contexto somente leitura.
+    // REVIEW [2026-12-15] Cliente da nota como contexto somente leitura.
     customer
-    // Total da nota como contexto somente leitura.
+    // REVIEW [2026-12-15] Total da nota como contexto somente leitura.
     total
-    // Vencimento da nota como contexto somente leitura.
+    // REVIEW [2026-12-15] Vencimento da nota como contexto somente leitura.
     dueAt
-    // Motivo do cancelamento informado pelo usuário.
+    // REVIEW [2026-12-15] Motivo do cancelamento informado pelo usuário.
     reason: string {
-      // Título exibido no campo.
+      // REVIEW [2026-12-15] Título exibido no campo.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
-      // Torna o motivo obrigatório.
+      // REVIEW [2026-12-15] Torna o motivo obrigatório.
       required
     }
   }
 
-  // Ações disparadas pelo formulário.
+  // REVIEW [2026-12-15] Ações disparadas pelo formulário.
   actions {
-    // Cancela a nota chamando a ação do documento com o motivo.
+    // REVIEW [2026-12-15] Cancela a nota chamando a ação do documento com o motivo.
     cancel { calls: Invoice.cancel(reason) }
   }
 }

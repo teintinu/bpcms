@@ -1,20 +1,20 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Tela de detalhe de um pagamento.
+// REVIEW [2026-12-15] Tela de detalhe de um pagamento.
 view PaymentDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
-  type: detail // Tipo da view: detalhe de documento.
-  // Documento exibido na tela.
+  type: detail // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Documento exibido na tela.
   document: Payment
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; refunds; timeline }
-  // Ações disponíveis na tela de detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis na tela de detalhe.
   actions {
-    // Abre o andamento do processo de captura.
+    // REVIEW [2026-12-15] Abre o andamento do processo de captura.
     progress -> PaymentProgress
   }
 }

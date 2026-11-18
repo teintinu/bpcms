@@ -1,31 +1,31 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Relatório de envelhecimento do estoque por armazém e categoria.
+// REVIEW [2026-12-15] Relatório de envelhecimento do estoque por armazém e categoria.
 view StockAging {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
-  // Tipo da view: relatório analítico.
+  // REVIEW [2026-12-15] Tipo da view: relatório analítico.
   type: report
-  // Fontes de dados consultadas pelo relatório.
+  // REVIEW [2026-12-15] Fontes de dados consultadas pelo relatório.
   sources: [StockItem, Product]
-  // Papéis autorizados a abrir o relatório.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o relatório.
   roles: [StockManager]
 
-  // Filtros disponíveis na tela do relatório.
+  // REVIEW [2026-12-15] Filtros disponíveis na tela do relatório.
   filters { warehouse; category }
 
-  // Métricas calculadas sobre as fontes do relatório.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as fontes do relatório.
   metrics {
-    // Soma da quantidade disponível de todos os itens.
+    // REVIEW [2026-12-15] Soma da quantidade disponível de todos os itens.
     quantity: sum(StockItem.available)
-    // Valor financeiro do estoque disponível.
+    // REVIEW [2026-12-15] Valor financeiro do estoque disponível.
     value: sum(StockItem.available * Product.price)
-    // Faixas de envelhecimento pela data da última movimentação.
+    // REVIEW [2026-12-15] Faixas de envelhecimento pela data da última movimentação.
     aging: bucket(StockItem.lastMovement, [30d, 60d, 90d, 180d])
   }
 
-  // Recalcula os dados a cada 15 minutos (cache).
+  // REVIEW [2026-12-15] Recalcula os dados a cada 15 minutos (cache).
   freshness: 15m
-  // Formatos de exportação oferecidos ao usuário.
+  // REVIEW [2026-12-15] Formatos de exportação oferecidos ao usuário.
   export: [csv, xlsx]
 }

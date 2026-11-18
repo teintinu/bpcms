@@ -1,30 +1,30 @@
-// service: example.com/services/hr
+// REVIEW [2026-12-15] service: example.com/services/hr
 
-// Tela de detalhe de um candidato.
+// REVIEW [2026-12-15] Tela de detalhe de um candidato.
 view CandidateDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do candidato", en: "Candidate detail" }
-  // Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Candidate
-  // Papéis que podem abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis que podem abrir o detalhe.
   roles: [Recruiter, HiringManager, Candidate]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; interviews; timeline }
 
-  // Ações disponíveis na tela de detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis na tela de detalhe.
   actions {
-    // Coloca o candidato em triagem.
+    // REVIEW [2026-12-15] Coloca o candidato em triagem.
     screen -> Candidate.screen
-    // Agenda a entrevista do candidato.
+    // REVIEW [2026-12-15] Agenda a entrevista do candidato.
     scheduleInterview -> Candidate.scheduleInterview
-    // Envia a proposta ao candidato.
+    // REVIEW [2026-12-15] Envia a proposta ao candidato.
     extendOffer -> Candidate.extendOffer
-    // Contrata o candidato.
+    // REVIEW [2026-12-15] Contrata o candidato.
     hire -> Candidate.hire
-    // Recusa o candidato, pedindo o motivo.
+    // REVIEW [2026-12-15] Recusa o candidato, pedindo o motivo.
     reject -> Candidate.reject(reason)
   }
 }

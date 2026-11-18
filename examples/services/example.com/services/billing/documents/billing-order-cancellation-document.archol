@@ -1,51 +1,51 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Documento que registra o cancelamento de um pedido.
+// REVIEW [2026-12-15] Documento que registra o cancelamento de um pedido.
 document OrderCancellation {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
-  version: 1 // Versão do documento usada em release e comparação.
-  // Área responsável pelo documento.
+  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
-  sync: live // Sincronização em tempo real entre as partes.
-  // Campos que compõem o cancelamento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.
+  // REVIEW [2026-12-15] Campos que compõem o cancelamento.
   fields {
-    // Pedido cancelado; consultável.
+    // REVIEW [2026-12-15] Pedido cancelado; consultável.
     order: Order {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
-      // Permite localizar o cancelamento pelo pedido.
+      // REVIEW [2026-12-15] Permite localizar o cancelamento pelo pedido.
       lookup
     }
-    // Motivo do cancelamento; consultável.
+    // REVIEW [2026-12-15] Motivo do cancelamento; consultável.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, lookup }
-    // Data em que o pedido foi cancelado.
+    // REVIEW [2026-12-15] Data em que o pedido foi cancelado.
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
   }
 
-  // Ações disponíveis sobre o cancelamento.
+  // REVIEW [2026-12-15] Ações disponíveis sobre o cancelamento.
   actions {
-    // Cancela o pedido com o motivo informado.
+    // REVIEW [2026-12-15] Cancela o pedido com o motivo informado.
     cancel(reason: string){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [FinanceManager]
-      // Exige um motivo com pelo menos dez caracteres.
+      // REVIEW [2026-12-15] Exige um motivo com pelo menos dez caracteres.
       rule reason.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
   }
 
-  // Invariante: todo cancelamento precisa de um motivo.
+  // REVIEW [2026-12-15] Invariante: todo cancelamento precisa de um motivo.
   rule reason != null {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "Preencha os campos obrigatórios"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Fill the required fields"
   }
 }

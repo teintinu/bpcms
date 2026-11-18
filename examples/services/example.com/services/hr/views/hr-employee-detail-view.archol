@@ -1,26 +1,26 @@
-// service: example.com/services/hr
+// REVIEW [2026-12-15] service: example.com/services/hr
 
-// Tela de detalhe de um colaborador.
+// REVIEW [2026-12-15] Tela de detalhe de um colaborador.
 view EmployeeDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do colaborador", en: "Employee detail" }
-  // Tipo da view: detalhe de documento.
+  // REVIEW [2026-12-15] Tipo da view: detalhe de documento.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Employee
-  // Papéis que podem abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis que podem abrir o detalhe.
   roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; onboarding; access; equipment; timeline }
 
-  // Ações disponíveis na tela de detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis na tela de detalhe.
   actions {
-    // Abre o andamento da integração.
+    // REVIEW [2026-12-15] Abre o andamento da integração.
     open -> OnboardingProgress
-    // Cancela a integração, pedindo o motivo.
+    // REVIEW [2026-12-15] Cancela a integração, pedindo o motivo.
     cancelOnboarding -> Employee.cancelOnboarding(reason)
-    // Desliga o colaborador.
+    // REVIEW [2026-12-15] Desliga o colaborador.
     terminate -> Employee.terminate
   }
 }

@@ -1,24 +1,24 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// View de detalhe de uma visita.
+// REVIEW [2026-12-15] View de detalhe de uma visita.
 view VisitDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe da visita", en: "Visit detail" }
-  // Tipo da view: ficha de detalhe.
+  // REVIEW [2026-12-15] Tipo da view: ficha de detalhe.
   type: detail
-  // Documento exibido na ficha.
+  // REVIEW [2026-12-15] Documento exibido na ficha.
   document: Visit
-  // Papéis que podem abrir a view, incluindo o cliente.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view, incluindo o cliente.
   roles: [Dispatcher, FieldTechnician, Supervisor, Customer]
 
-  // Seções fixas exibidas na ficha.
+  // REVIEW [2026-12-15] Seções fixas exibidas na ficha.
   sections { summary; checkin; report; timeline }
 
-  // Ações expostas na ficha.
+  // REVIEW [2026-12-15] Ações expostas na ficha.
   actions {
-    // Abre o andamento do processo da visita.
+    // REVIEW [2026-12-15] Abre o andamento do processo da visita.
     open -> VisitProgress
-    // Faz o check-in com o ponto informado.
+    // REVIEW [2026-12-15] Faz o check-in com o ponto informado.
     checkIn -> Visit.checkIn(point)
   }
 }

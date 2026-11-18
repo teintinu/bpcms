@@ -1,188 +1,188 @@
-// service: example.com/services/orders
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/orders
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo de entrada; o argumento é o pedido-sujeito da instância.
+// REVIEW [2026-12-15] Declara o processo de entrada; o argumento é o pedido-sujeito da instância.
 process OrderIntake(order: Order) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Entrada de pedido", en: "Order intake" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Levar o rascunho à confirmação e reservar o estoque"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  // Gatilho: inicia uma instância quando o pedido emite Drafted.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o pedido emite Drafted.
   on [Order.Drafted]
-  // Chave de identidade, correlação e dedup da instância.
-  key: order // o caso é o próprio pedido
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
+  key: order // REVIEW [2026-12-15] o caso é o próprio pedido
 
-  // Variável durável que percorre cada item do pedido.
+  // REVIEW [2026-12-15] Variável durável que percorre cada item do pedido.
   let item: OrderItem
 
-  // Bloco externo: captura o timeout da revisão do rascunho.
+  // REVIEW [2026-12-15] Bloco externo: captura o timeout da revisão do rascunho.
   try {
-    // Abre o form para o atendente revisar e confirmar o rascunho.
+    // REVIEW [2026-12-15] Abre o form para o atendente revisar e confirmar o rascunho.
     DraftReview.show({ order })
-  } catch (Timeout) { // captura o timeout da revisão
-    // O prazo da revisão esgotou: expira o rascunho cancelando o pedido.
+  } catch (Timeout) { // REVIEW [2026-12-15] captura o timeout da revisão
+    // REVIEW [2026-12-15] O prazo da revisão esgotou: expira o rascunho cancelando o pedido.
     Order.cancel({ reason: "Rascunho expirado sem confirmação do cliente" })
-    // Encerra o caso no desfecho Expired.
+    // REVIEW [2026-12-15] Encerra o caso no desfecho Expired.
     return Expired
   }
 
-  // Se o pedido já foi cancelado durante a revisão, o caso termina.
+  // REVIEW [2026-12-15] Se o pedido já foi cancelado durante a revisão, o caso termina.
   if (order.status == Cancelled) {
-    // Retorna o desfecho de cancelamento.
+    // REVIEW [2026-12-15] Retorna o desfecho de cancelamento.
     return Cancelled
   }
 
-  // Bloco que tenta reservar o estoque de todos os itens.
+  // REVIEW [2026-12-15] Bloco que tenta reservar o estoque de todos os itens.
   try {
-    // Reserva em paralelo um item por vez, acelerando pedidos com vários itens.
+    // REVIEW [2026-12-15] Reserva em paralelo um item por vez, acelerando pedidos com vários itens.
     parallel each item in order.items {
-      // Chama o estoque pedindo a reserva do item.
+      // REVIEW [2026-12-15] Chama o estoque pedindo a reserva do item.
       Inventory.Reservation.request({
-        // Produto a reservar.
+        // REVIEW [2026-12-15] Produto a reservar.
         product: item.product,
-        // Quantidade solicitada do produto.
+        // REVIEW [2026-12-15] Quantidade solicitada do produto.
         quantity: item.quantity,
-        // Referência externa que correlaciona a reserva ao pedido.
+        // REVIEW [2026-12-15] Referência externa que correlaciona a reserva ao pedido.
         externalRef: order.id
       })
     }
-  } catch (StockOut) { // captura a falta de estoque
-    // Sem estoque suficiente: avisa o cliente e encerra o caso.
+  } catch (StockOut) { // REVIEW [2026-12-15] captura a falta de estoque
+    // REVIEW [2026-12-15] Sem estoque suficiente: avisa o cliente e encerra o caso.
     Unavailable.show({ order })
-    // Retorna o desfecho de falta de estoque.
+    // REVIEW [2026-12-15] Retorna o desfecho de falta de estoque.
     return OutOfStock
   }
 
-  // Confirma no documento que todos os itens foram reservados.
+  // REVIEW [2026-12-15] Confirma no documento que todos os itens foram reservados.
   Order.confirmReservation()
-  // Encerra no desfecho de sucesso da reserva.
+  // REVIEW [2026-12-15] Encerra no desfecho de sucesso da reserva.
   return Reserved
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Reserved {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Reservado", en: "Reserved" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Cancelled {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
-  // Declara o desfecho de falta de estoque.
+  // REVIEW [2026-12-15] Declara o desfecho de falta de estoque.
   end OutOfStock {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Sem estoque", en: "Out of stock" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
-  // Declara o desfecho de expiração do prazo.
+  // REVIEW [2026-12-15] Declara o desfecho de expiração do prazo.
   end Expired {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Expirado", en: "Expired" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Erro de negócio: estoque insuficiente para reservar os itens.
+// REVIEW [2026-12-15] Erro de negócio: estoque insuficiente para reservar os itens.
 error StockOut {
-  // Título do erro exibido ao usuário.
+  // REVIEW [2026-12-15] Título do erro exibido ao usuário.
   title: { pt-BR: "Estoque insuficiente", en: "Out of stock" }
 }
 
-// Form de revisão do rascunho antes de confirmar o pedido.
+// REVIEW [2026-12-15] Form de revisão do rascunho antes de confirmar o pedido.
 form DraftReview {
-  // Título exibido na inbox e na tarefa.
+  // REVIEW [2026-12-15] Título exibido na inbox e na tarefa.
   title: { pt-BR: "Revisar rascunho do pedido", en: "Review order draft" }
-  // Documento que a tarefa manipula.
+  // REVIEW [2026-12-15] Documento que a tarefa manipula.
   document: Order
-  // Papéis que podem executar a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem executar a tarefa.
   roles: [Clerk]
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 2d
-  // Prioridade da tarefa na fila.
+  // REVIEW [2026-12-15] Prioridade da tarefa na fila.
   priority: 50
-  // Modo de atribuição: puxada pelo usuário da fila.
+  // REVIEW [2026-12-15] Modo de atribuição: puxada pelo usuário da fila.
   assign: pull
 
-  // Campos do pedido e entradas livres exibidos na tarefa.
+  // REVIEW [2026-12-15] Campos do pedido e entradas livres exibidos na tarefa.
   fields {
-    // Cliente do pedido.
+    // REVIEW [2026-12-15] Cliente do pedido.
     customer
-    // Itens do pedido.
+    // REVIEW [2026-12-15] Itens do pedido.
     items
-    // Total do pedido.
+    // REVIEW [2026-12-15] Total do pedido.
     total
-    // Motivo do cancelamento, caso o atendente cancele.
+    // REVIEW [2026-12-15] Motivo do cancelamento, caso o atendente cancele.
     reason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
-      // Limita o motivo a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
-    // Observação livre digitada pelo atendente.
+    // REVIEW [2026-12-15] Observação livre digitada pelo atendente.
     note: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
-      // Limita a observação a quinhentos caracteres.
+      // REVIEW [2026-12-15] Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
-  // Ações disponíveis na tarefa.
+  // REVIEW [2026-12-15] Ações disponíveis na tarefa.
   actions {
-    // Confirma o pedido e o leva à situação Placed.
+    // REVIEW [2026-12-15] Confirma o pedido e o leva à situação Placed.
     confirm {
-      // Título do botão exibido na tarefa.
+      // REVIEW [2026-12-15] Título do botão exibido na tarefa.
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
-      // Chama a action do documento que realiza o pedido.
+      // REVIEW [2026-12-15] Chama a action do documento que realiza o pedido.
       calls: Order.place
     }
-    // Cancela o pedido com o motivo informado.
+    // REVIEW [2026-12-15] Cancela o pedido com o motivo informado.
     cancel {
-      // Título do botão exibido na tarefa.
+      // REVIEW [2026-12-15] Título do botão exibido na tarefa.
       title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
-      // Chama a action do documento passando o motivo preenchido.
+      // REVIEW [2026-12-15] Chama a action do documento passando o motivo preenchido.
       calls: Order.cancel(reason)
     }
-    // Salva a observação sem sair da tarefa.
+    // REVIEW [2026-12-15] Salva a observação sem sair da tarefa.
     save {
-      // Título do botão exibido na tarefa.
+      // REVIEW [2026-12-15] Título do botão exibido na tarefa.
       title: { pt-BR: "Salvar observação", en: "Save note" }
-      // Chama a action do documento que grava a observação.
+      // REVIEW [2026-12-15] Chama a action do documento que grava a observação.
       calls: Order.annotate(note)
-      // Mantém a tarefa aberta após salvar.
+      // REVIEW [2026-12-15] Mantém a tarefa aberta após salvar.
       stay
     }
   }
 }
 
-// Tarefa manual para avisar o cliente sobre a falta de estoque.
+// REVIEW [2026-12-15] Tarefa manual para avisar o cliente sobre a falta de estoque.
 manual Unavailable {
-  // Título exibido na inbox e na tarefa.
+  // REVIEW [2026-12-15] Título exibido na inbox e na tarefa.
   title: { pt-BR: "Avisar cliente da falta de estoque", en: "Notify customer of stock outage" }
-  // Documento que a tarefa manipula.
+  // REVIEW [2026-12-15] Documento que a tarefa manipula.
   document: Order
-  // Papéis que podem executar a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem executar a tarefa.
   roles: [Clerk]
-  // Instruções mostradas ao executor da tarefa.
+  // REVIEW [2026-12-15] Instruções mostradas ao executor da tarefa.
   instructions: "Avisar o cliente da falta de estoque e sugerir substitutos"
-  // Prazo máximo para conclusão da tarefa.
+  // REVIEW [2026-12-15] Prazo máximo para conclusão da tarefa.
   timeout: 2h
-  // Prioridade da tarefa na fila.
+  // REVIEW [2026-12-15] Prioridade da tarefa na fila.
   priority: 50
-  // Modo de atribuição: puxada pelo usuário da fila.
+  // REVIEW [2026-12-15] Modo de atribuição: puxada pelo usuário da fila.
   assign: pull
 }

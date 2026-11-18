@@ -1,22 +1,22 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Lista tabular de contestações.
+// REVIEW [2026-12-15] Lista tabular de contestações.
 view Chargebacks {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Contestações", en: "Chargebacks" }
-  type: table // Tipo da view: tabela.
-  // Documento que alimenta a tabela.
+  type: table // REVIEW [2026-12-15] Tipo da view: tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: Chargeback
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { payment; amount; status; dueAt }
-  // Filtros disponíveis no topo da tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis no topo da tabela.
   filters { status; period }
-  // Ações disponíveis sobre as linhas.
+  // REVIEW [2026-12-15] Ações disponíveis sobre as linhas.
   actions {
-    // Abre o detalhe da contestação selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da contestação selecionada.
     open -> ChargebackDetail
   }
 }

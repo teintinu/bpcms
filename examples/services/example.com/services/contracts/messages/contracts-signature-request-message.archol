@@ -1,15 +1,15 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Mensagem enviada ao fornecedor solicitando a assinatura.
+// REVIEW [2026-12-15] Mensagem enviada ao fornecedor solicitando a assinatura.
 message SignatureRequest {
-  // Título exibido na caixa de mensagens.
+  // REVIEW [2026-12-15] Título exibido na caixa de mensagens.
   title: { pt-BR: "Solicitação de assinatura", en: "Signature request" }
-  about: Contract // Documento ao qual a mensagem se refere.
-  // Dados transportados pela mensagem.
+  about: Contract // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Dados transportados pela mensagem.
   payload {
-    // Número do contrato a assinar.
+    // REVIEW [2026-12-15] Número do contrato a assinar.
     contractNumber: string { title: { pt-BR: "Número do contrato", en: "Contract number" } }
-    // Data-limite para a assinatura.
+    // REVIEW [2026-12-15] Data-limite para a assinatura.
     expiresAt: Date { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 }

@@ -1,290 +1,290 @@
-// service: example.com/services/support
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/support
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo RefundCase; a solicitação de devolução é o documento-sujeito.
+// REVIEW [2026-12-15] Declara o processo RefundCase; a solicitação de devolução é o documento-sujeito.
 process RefundCase(returnRequest: ReturnRequest) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Caso de devolução", en: "Refund case" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Decidir a elegibilidade, aprovar por alçada e reembolsar o cliente"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 5d
 
-  // Gatilho: inicia uma instância quando a devolução emite Requested.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a devolução emite Requested.
   on [ReturnRequest.Requested]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: returnRequest
 
-  // Variável durável da instância: parecer de elegibilidade.
+  // REVIEW [2026-12-15] Variável durável da instância: parecer de elegibilidade.
   let verdict: RefundVerdict
-  // Flag durável que registra se o caso foi escalonado por timeout.
+  // REVIEW [2026-12-15] Flag durável que registra se o caso foi escalonado por timeout.
   let escalated = false
 
-  // Bloco que captura timeout do form de conferência.
+  // REVIEW [2026-12-15] Bloco que captura timeout do form de conferência.
   try {
-    // Abre o form de conferência da devolução para o agente.
+    // REVIEW [2026-12-15] Abre o form de conferência da devolução para o agente.
     RefundReview.show({ returnRequest })
   } catch (Timeout) {
-    // Sem conferência no prazo, o caso é escalonado.
+    // REVIEW [2026-12-15] Sem conferência no prazo, o caso é escalonado.
     escalated = true
   }
 
-  // Decide o parecer conforme a escalada.
+  // REVIEW [2026-12-15] Decide o parecer conforme a escalada.
   if (escalated) {
-    // Escalado sem análise: exige aprovação do gerente.
+    // REVIEW [2026-12-15] Escalado sem análise: exige aprovação do gerente.
     verdict = ApprovalRequired
   } else {
-    // Calcula a elegibilidade a partir do valor e da idade do pedido.
+    // REVIEW [2026-12-15] Calcula a elegibilidade a partir do valor e da idade do pedido.
     verdict = RefundEligibility.evaluate({
-      // Valor pedido para reembolso.
+      // REVIEW [2026-12-15] Valor pedido para reembolso.
       amount: returnRequest.refundAmount,
-      // Idade do pedido em dias.
+      // REVIEW [2026-12-15] Idade do pedido em dias.
       orderAgeDays: returnRequest.order.ageDays
     })
   }
 
-  // Encaminha o caso conforme o parecer.
+  // REVIEW [2026-12-15] Encaminha o caso conforme o parecer.
   if (verdict == Eligible) {
-    // Elegível: aprova a devolução automaticamente.
+    // REVIEW [2026-12-15] Elegível: aprova a devolução automaticamente.
     ReturnRequest.approve()
   } else if (verdict == ApprovalRequired) {
-    // Exige aprovação: abre o form do gerente.
+    // REVIEW [2026-12-15] Exige aprovação: abre o form do gerente.
     RefundApproval.show({ returnRequest })
   } else {
-    // Não elegível: abre o form de recusa.
+    // REVIEW [2026-12-15] Não elegível: abre o form de recusa.
     RefundRejection.show({ returnRequest })
   }
 
-  // Se o gerente rejeitou, encerra o caso.
+  // REVIEW [2026-12-15] Se o gerente rejeitou, encerra o caso.
   if (returnRequest.status == Rejected) {
-    // Retorna o desfecho de recusa.
+    // REVIEW [2026-12-15] Retorna o desfecho de recusa.
     return Rejected
   }
 
-  // Registra o recebimento da devolução.
+  // REVIEW [2026-12-15] Registra o recebimento da devolução.
   ReturnRequest.receive()
-  // Chama o serviço de pagamentos para estornar o valor.
+  // REVIEW [2026-12-15] Chama o serviço de pagamentos para estornar o valor.
   Payments.Payment.refund({ refundAmount: returnRequest.refundAmount })
-  // Marca a devolução como reembolsada.
+  // REVIEW [2026-12-15] Marca a devolução como reembolsada.
   ReturnRequest.refund()
 
-  // Envia a mensagem com a decisão final ao cliente.
+  // REVIEW [2026-12-15] Envia a mensagem com a decisão final ao cliente.
   send RefundDecision {
-    // Correlaciona a mensagem com a devolução.
+    // REVIEW [2026-12-15] Correlaciona a mensagem com a devolução.
     key: returnRequest
-    // Preenche o payload da mensagem.
+    // REVIEW [2026-12-15] Preenche o payload da mensagem.
     with {
-      // Parecer final da análise.
+      // REVIEW [2026-12-15] Parecer final da análise.
       verdict: verdict
-      // Valor reembolsado.
+      // REVIEW [2026-12-15] Valor reembolsado.
       amount: returnRequest.refundAmount
     }
   }
 
-  // Escuta o cancelamento da devolução enquanto o caso corre.
+  // REVIEW [2026-12-15] Escuta o cancelamento da devolução enquanto o caso corre.
   cancel on ReturnRequest.Cancelled {
-    // Encerra o caso no desfecho de cancelamento.
+    // REVIEW [2026-12-15] Encerra o caso no desfecho de cancelamento.
     return Cancelled
   }
 
-  // Encerra no desfecho de reembolso concluído.
+  // REVIEW [2026-12-15] Encerra no desfecho de reembolso concluído.
   return Refunded
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Refunded {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Devolução reembolsada", en: "Return refunded" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de recusa do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de recusa do caso.
   end Rejected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Devolução recusada", en: "Return rejected" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 
-  // Declara o desfecho de cancelamento do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de cancelamento do caso.
   end Cancelled {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Devolução cancelada", en: "Return cancelled" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: cancelled
   }
 }
 
-// Classificação que expressa o parecer de elegibilidade da devolução.
+// REVIEW [2026-12-15] Classificação que expressa o parecer de elegibilidade da devolução.
 shape RefundVerdict {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Parecer da devolução", en: "Refund verdict" }
-  // Base de classificação: valores sem transições.
+  // REVIEW [2026-12-15] Base de classificação: valores sem transições.
   base: classification
-  // Valor de devolução elegível para reembolso automático.
+  // REVIEW [2026-12-15] Valor de devolução elegível para reembolso automático.
   value Eligible {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Elegível", en: "Eligible" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: Eligible
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 10
   }
-  // Valor que exige aprovação de gerente.
+  // REVIEW [2026-12-15] Valor que exige aprovação de gerente.
   value ApprovalRequired {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Exige aprovação", en: "Approval required" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: ApprovalRequired
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 20
   }
-  // Valor de devolução não elegível.
+  // REVIEW [2026-12-15] Valor de devolução não elegível.
   value NotEligible {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Não elegível", en: "Not eligible" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: NotEligible
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 30
   }
-  // Renderização sem formatação especial.
+  // REVIEW [2026-12-15] Renderização sem formatação especial.
   format: plain
 }
 
-// Form de conferência da devolução pelo agente.
+// REVIEW [2026-12-15] Form de conferência da devolução pelo agente.
 form RefundReview {
-  // Título exibido na inbox e no cabeçalho do form.
+  // REVIEW [2026-12-15] Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Conferência da devolução", en: "Refund review" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: ReturnRequest
-  // Apenas agentes conferem a devolução.
+  // REVIEW [2026-12-15] Apenas agentes conferem a devolução.
   roles: [SupportAgent]
-  // Prazo para a conferência; expira em Timeout.
+  // REVIEW [2026-12-15] Prazo para a conferência; expira em Timeout.
   timeout: 4h
-  // Distribuição por retirada: o agente assume o item.
+  // REVIEW [2026-12-15] Distribuição por retirada: o agente assume o item.
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Pedido devolvido.
+    // REVIEW [2026-12-15] Pedido devolvido.
     order
-    // Pagamento a estornar.
+    // REVIEW [2026-12-15] Pagamento a estornar.
     payment
-    // Remessa devolvida.
+    // REVIEW [2026-12-15] Remessa devolvida.
     shipment
-    // Motivo declarado pelo cliente.
+    // REVIEW [2026-12-15] Motivo declarado pelo cliente.
     reason
-    // Valor pedido para reembolso.
+    // REVIEW [2026-12-15] Valor pedido para reembolso.
     refundAmount
   }
 
-  // Ações oferecidas no form.
+  // REVIEW [2026-12-15] Ações oferecidas no form.
   actions {
-    // Confirma a conferência chamando a ação do documento.
+    // REVIEW [2026-12-15] Confirma a conferência chamando a ação do documento.
     confirm { calls: ReturnRequest.review }
   }
 }
 
-// Form de aprovação da devolução pelo gerente.
+// REVIEW [2026-12-15] Form de aprovação da devolução pelo gerente.
 form RefundApproval {
-  // Título exibido na inbox e no cabeçalho do form.
+  // REVIEW [2026-12-15] Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Aprovação da devolução", en: "Refund approval" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: ReturnRequest
-  // Apenas gerentes aprovam ou rejeitam.
+  // REVIEW [2026-12-15] Apenas gerentes aprovam ou rejeitam.
   roles: [Manager]
-  // Prazo para a decisão; expira em Timeout.
+  // REVIEW [2026-12-15] Prazo para a decisão; expira em Timeout.
   timeout: 2d
-  // Distribuição por retirada: o gerente assume o item.
+  // REVIEW [2026-12-15] Distribuição por retirada: o gerente assume o item.
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Pedido devolvido.
+    // REVIEW [2026-12-15] Pedido devolvido.
     order
-    // Valor a reembolsar.
+    // REVIEW [2026-12-15] Valor a reembolsar.
     refundAmount
-    // Justificativa digitada ao rejeitar.
+    // REVIEW [2026-12-15] Justificativa digitada ao rejeitar.
     justification: string {
-      // Título exibido no campo.
+      // REVIEW [2026-12-15] Título exibido no campo.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
     }
   }
 
-  // Ações oferecidas no form.
+  // REVIEW [2026-12-15] Ações oferecidas no form.
   actions {
-    // Aprova a devolução chamando a ação do documento.
+    // REVIEW [2026-12-15] Aprova a devolução chamando a ação do documento.
     approve { calls: ReturnRequest.approve }
-    // Rejeita a devolução com a justificativa informada.
+    // REVIEW [2026-12-15] Rejeita a devolução com a justificativa informada.
     reject { calls: ReturnRequest.reject(justification) }
   }
 }
 
-// Form de recusa da devolução pelo gerente.
+// REVIEW [2026-12-15] Form de recusa da devolução pelo gerente.
 form RefundRejection {
-  // Título exibido na inbox e no cabeçalho do form.
+  // REVIEW [2026-12-15] Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Recusa da devolução", en: "Refund rejection" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: ReturnRequest
-  // Apenas gerentes registram a recusa.
+  // REVIEW [2026-12-15] Apenas gerentes registram a recusa.
   roles: [Manager]
-  // Prazo para registrar a recusa; expira em Timeout.
+  // REVIEW [2026-12-15] Prazo para registrar a recusa; expira em Timeout.
   timeout: 3d
-  // Distribuição por retirada: o gerente assume o item.
+  // REVIEW [2026-12-15] Distribuição por retirada: o gerente assume o item.
   assign: pull
 
-  // Campos exibidos no form.
+  // REVIEW [2026-12-15] Campos exibidos no form.
   fields {
-    // Pedido devolvido.
+    // REVIEW [2026-12-15] Pedido devolvido.
     order
-    // Motivo declarado pelo cliente.
+    // REVIEW [2026-12-15] Motivo declarado pelo cliente.
     reason
-    // Justificativa digitada ao rejeitar.
+    // REVIEW [2026-12-15] Justificativa digitada ao rejeitar.
     justification: string {
-      // Título exibido no campo.
+      // REVIEW [2026-12-15] Título exibido no campo.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
     }
   }
 
-  // Ações oferecidas no form.
+  // REVIEW [2026-12-15] Ações oferecidas no form.
   actions {
-    // Rejeita a devolução com a justificativa informada.
+    // REVIEW [2026-12-15] Rejeita a devolução com a justificativa informada.
     reject { calls: ReturnRequest.reject(justification) }
   }
 }
 
-// Decisão que calcula a elegibilidade da devolução.
+// REVIEW [2026-12-15] Decisão que calcula a elegibilidade da devolução.
 decision RefundEligibility {
-  // Título exibido no builder e nos logs de decisão.
+  // REVIEW [2026-12-15] Título exibido no builder e nos logs de decisão.
   title: { pt-BR: "Elegibilidade da devolução", en: "Refund eligibility" }
-  // Tipo devolvido pela decisão: o parecer calculado.
+  // REVIEW [2026-12-15] Tipo devolvido pela decisão: o parecer calculado.
   returns: RefundVerdict
-  // Entradas exigidas para avaliar a decisão.
+  // REVIEW [2026-12-15] Entradas exigidas para avaliar a decisão.
   inputs {
-    // Valor pedido para reembolso.
+    // REVIEW [2026-12-15] Valor pedido para reembolso.
     amount: std.Money
-    // Idade do pedido em dias.
+    // REVIEW [2026-12-15] Idade do pedido em dias.
     orderAgeDays: std.Count
   }
-  // Regras avaliadas em ordem até o primeiro caso verdadeiro.
+  // REVIEW [2026-12-15] Regras avaliadas em ordem até o primeiro caso verdadeiro.
   cases {
-    // Dentro do limite e do prazo de trinta dias: elegível.
+    // REVIEW [2026-12-15] Dentro do limite e do prazo de trinta dias: elegível.
     amount <= RefundLimit and orderAgeDays <= 30 -> Eligible
-    // Acima do prazo de trinta dias: não elegível.
+    // REVIEW [2026-12-15] Acima do prazo de trinta dias: não elegível.
     amount <= RefundLimit -> NotEligible
-    // Acima do limite, mas dentro do prazo: exige aprovação.
+    // REVIEW [2026-12-15] Acima do limite, mas dentro do prazo: exige aprovação.
     orderAgeDays <= 30 -> ApprovalRequired
-    // Acima do limite e do prazo: não elegível.
+    // REVIEW [2026-12-15] Acima do limite e do prazo: não elegível.
     else -> NotEligible
   }
-  // Origem normativa da regra de negócio.
+  // REVIEW [2026-12-15] Origem normativa da regra de negócio.
   source: "Política de devolução v1"
-  // Área dona da decisão.
+  // REVIEW [2026-12-15] Área dona da decisão.
   owner: Support
 }

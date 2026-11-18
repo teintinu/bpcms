@@ -1,66 +1,66 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// Documento que representa um site atendido pela operação de campo.
+// REVIEW [2026-12-15] Documento que representa um site atendido pela operação de campo.
 document Site {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Site", en: "Site" }
-  // Versão do artefato; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
   version: 1
-  // Responsável pela manutenção do documento.
+  // REVIEW [2026-12-15] Responsável pela manutenção do documento.
   owner: "Field Service"
 
-  // Campos que compõem o site.
+  // REVIEW [2026-12-15] Campos que compõem o site.
   fields {
-    // Código identificador do site; consultável, único e curto.
+    // REVIEW [2026-12-15] Código identificador do site; consultável, único e curto.
     code: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Código", en: "Code" }
-      // Permite localizar o site pelo código.
+      // REVIEW [2026-12-15] Permite localizar o site pelo código.
       lookup
-      // Impede dois sites com o mesmo código.
+      // REVIEW [2026-12-15] Impede dois sites com o mesmo código.
       unique
-      // Limita o código a vinte caracteres.
+      // REVIEW [2026-12-15] Limita o código a vinte caracteres.
       maxLength: 20
     }
-    // Nome legível do site; consultável e limitado.
+    // REVIEW [2026-12-15] Nome legível do site; consultável e limitado.
     name: string { title: { pt-BR: "Nome", en: "Name" }, lookup, maxLength: 120 }
-    // Endereço livre do site, usado na navegação do técnico.
+    // REVIEW [2026-12-15] Endereço livre do site, usado na navegação do técnico.
     address: string { title: { pt-BR: "Endereço", en: "Address" }, maxLength: 240 }
-    // Coordenadas geográficas usadas no check-in por localização.
+    // REVIEW [2026-12-15] Coordenadas geográficas usadas no check-in por localização.
     point: GeoPoint { title: { pt-BR: "Coordenadas", en: "Coordinates" } }
-    // Instrução de acesso ao local, como portaria ou chave.
+    // REVIEW [2026-12-15] Instrução de acesso ao local, como portaria ou chave.
     accessNote: string { title: { pt-BR: "Instrução de acesso", en: "Access note" }, maxLength: 500 }
-    // Indica se o site está disponível para novos atendimentos; começa ativo.
+    // REVIEW [2026-12-15] Indica se o site está disponível para novos atendimentos; começa ativo.
     active: boolean { title: { pt-BR: "Ativo", en: "Active" }, default: true }
   }
 
-  // Índices que aceleram as consultas sobre o documento.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas sobre o documento.
   indexes {
-    // Busca exata por código, garantindo unicidade no banco.
+    // REVIEW [2026-12-15] Busca exata por código, garantindo unicidade no banco.
     byCode: [code] unique
-    // Busca textual pelo nome do site.
+    // REVIEW [2026-12-15] Busca textual pelo nome do site.
     byName: [name] search
   }
 
-  // Ações que mudam o ciclo de vida do site.
+  // REVIEW [2026-12-15] Ações que mudam o ciclo de vida do site.
   actions {
-    // Desativa o site, retirando-o da operação.
+    // REVIEW [2026-12-15] Desativa o site, retirando-o da operação.
     deactivate() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Desativar site", en: "Deactivate site" }
-      // Somente o supervisor pode desativar.
+      // REVIEW [2026-12-15] Somente o supervisor pode desativar.
       roles: [Supervisor]
-      // Efeito da ação: marca o site como inativo.
+      // REVIEW [2026-12-15] Efeito da ação: marca o site como inativo.
       { active = false }
     }
 
-    // Reativa o site para voltar a receber atendimentos.
+    // REVIEW [2026-12-15] Reativa o site para voltar a receber atendimentos.
     reactivate() {
-      // Título exibido no botão e no histórico.
+      // REVIEW [2026-12-15] Título exibido no botão e no histórico.
       title: { pt-BR: "Reativar site", en: "Reactivate site" }
-      // Somente o supervisor pode reativar.
+      // REVIEW [2026-12-15] Somente o supervisor pode reativar.
       roles: [Supervisor]
-      // Efeito da ação: marca o site como ativo.
+      // REVIEW [2026-12-15] Efeito da ação: marca o site como ativo.
       { active = true }
     }
   }

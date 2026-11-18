@@ -1,17 +1,17 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// View de inbox que mostra as tarefas de pedido atribuídas ao atendente.
+// REVIEW [2026-12-15] View de inbox que mostra as tarefas de pedido atribuídas ao atendente.
 view SalesInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Minha fila de pedidos", en: "My order queue" }
-  // Tipo da view: fila de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: fila de trabalho.
   type: inbox
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Clerk]
-  // Escopo da fila: apenas itens do próprio usuário.
+  // REVIEW [2026-12-15] Escopo da fila: apenas itens do próprio usuário.
   scope: mine
-  // Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  // Colunas exibidas na lista.
+  // REVIEW [2026-12-15] Colunas exibidas na lista.
   columns { title; subject; role; dueAt; priority }
 }

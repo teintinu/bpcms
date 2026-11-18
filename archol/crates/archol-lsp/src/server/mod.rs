@@ -96,6 +96,10 @@ impl Server {
                 self.rpc.respond(id, Value::Null);
                 self.alive = false;
             }
+            "textDocument/formatting" => {
+                let result = self.formatting(&params);
+                self.rpc.respond(id, result);
+            }
             "textDocument/hover" => {
                 let result = self.hover(&params);
                 self.rpc.respond(id, result);
@@ -455,6 +459,24 @@ impl Server {
         json!({ "links": links })
     }
 
+    fn formatting(&mut self, params: &Value) -> Value {
+        let Some(uri) = params.pointer("/textDocument/uri").and_then(Value::as_str) else {
+            return Value::Null;
+        };
+        let Some(path) = self.resolve_path(uri) else {
+            return Value::Null;
+        };
+        let Some(text) = self.document_source(&path) else {
+            return Value::Null;
+        };
+        let parsed = archol_core::parse(&text, path);
+        let edits: Vec<Value> = archol_core::pending::format_edits(&text, &parsed.ast.pending)
+            .into_iter()
+            .map(|(span, new_text)| json!({ "range": range(&text, span), "newText": new_text }))
+            .collect();
+        Value::Array(edits)
+    }
+
     fn ast(&mut self, uri: &str) -> Value {
         let Some(path) = self.resolve_path(uri) else {
             return json!({ "ast": Value::Null, "inApplication": false });
@@ -759,6 +781,7 @@ fn capabilities() -> Value {
             "resolveProvider": false
         },
         "definitionProvider": true,
+        "documentFormattingProvider": true,
         "documentSymbolProvider": true,
         "referencesProvider": true,
         "documentHighlightProvider": true,

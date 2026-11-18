@@ -1,11 +1,11 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Parâmetro do serviço: tempo de vida padrão de uma reserva de estoque.
+// REVIEW [2026-12-15] Parâmetro do serviço: tempo de vida padrão de uma reserva de estoque.
 parameter ReservationTtl {
-  // Título exibido na tela de configuração.
+  // REVIEW [2026-12-15] Título exibido na tela de configuração.
   title: { pt-BR: "Validade da reserva", en: "Reservation TTL" }
-  // Tipo do valor: duração padrão fornecida pelo construtor.
+  // REVIEW [2026-12-15] Tipo do valor: duração padrão fornecida pelo construtor.
   type: std.Duration
-  // Valor padrão de 30 minutos quando a aplicação não sobrescreve.
+  // REVIEW [2026-12-15] Valor padrão de 30 minutos quando a aplicação não sobrescreve.
   default: 30m
 }

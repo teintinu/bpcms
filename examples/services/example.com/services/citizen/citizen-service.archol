@@ -1,15 +1,15 @@
-// service: example.com/services/citizen
-// Declara o serviço Cidadão; a URI é a identidade do serviço no workspace.
+// REVIEW [2026-12-15] service: example.com/services/citizen
+// REVIEW [2026-12-15] Declara o serviço Cidadão; a URI é a identidade do serviço no workspace.
 service "example.com/services/citizen" {
-  // Título exibido no builder e nos seletores de serviço.
+  // REVIEW [2026-12-15] Título exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Cidadão", en: "Citizen" }
-  // Versão do artefato Service; usada em diff, lock e release.
+  // REVIEW [2026-12-15] Versão do artefato Service; usada em diff, lock e release.
   version: 1.0.0
-  // Responsável pela governança do serviço.
+  // REVIEW [2026-12-15] Responsável pela governança do serviço.
   owner: "Platform Citizen"
-  // Bloco de dependências externas do serviço.
+  // REVIEW [2026-12-15] Bloco de dependências externas do serviço.
   imports {
-    // Importa as medidas/constantes padrão do construtor sob o apelido std.
+    // REVIEW [2026-12-15] Importa as medidas/constantes padrão do construtor sob o apelido std.
     service "bpcms.org/std" as std
   }
 }

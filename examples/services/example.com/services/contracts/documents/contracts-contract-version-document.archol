@@ -1,154 +1,154 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Documento que registra cada versão revisada de um contrato.
+// REVIEW [2026-12-15] Documento que registra cada versão revisada de um contrato.
 document ContractVersion {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Versão do contrato", en: "Contract version" }
-  version: 1 // Versão do artefato Document; diff e release comparam.
-  owner: "Contracts" // Área responsável pelo documento.
-  sync: read // Expõe os dados em modo somente leitura a outros serviços.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
+  owner: "Contracts" // REVIEW [2026-12-15] Área responsável pelo documento.
+  sync: read // REVIEW [2026-12-15] Expõe os dados em modo somente leitura a outros serviços.
 
-  // Campos que compõem a versão.
+  // REVIEW [2026-12-15] Campos que compõem a versão.
   fields {
-    // Contrato ao qual esta versão pertence.
+    // REVIEW [2026-12-15] Contrato ao qual esta versão pertence.
     contract: Contract {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Contrato", en: "Contract" }
-      lookup // Permite localizar versões pelo contrato.
+      lookup // REVIEW [2026-12-15] Permite localizar versões pelo contrato.
     }
-    // Número sequencial da versão dentro do contrato.
+    // REVIEW [2026-12-15] Número sequencial da versão dentro do contrato.
     versionNumber: std.Count {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Número da versão", en: "Version number" }
-      required // Exige preenchimento.
+      required // REVIEW [2026-12-15] Exige preenchimento.
     }
-    // Situação atual da versão, governada pela forma ContractVersionStatus.
+    // REVIEW [2026-12-15] Situação atual da versão, governada pela forma ContractVersionStatus.
     status: ContractVersionStatus {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      lookup // Permite filtrar versões pela situação.
+      lookup // REVIEW [2026-12-15] Permite filtrar versões pela situação.
     }
-    // Resumo legível das mudanças desta versão.
+    // REVIEW [2026-12-15] Resumo legível das mudanças desta versão.
     summary: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Resumo das mudanças", en: "Change summary" }
-      maxLength: 500 // Limite de tamanho do resumo.
+      maxLength: 500 // REVIEW [2026-12-15] Limite de tamanho do resumo.
     }
-    // Instante em que a versão foi aprovada.
+    // REVIEW [2026-12-15] Instante em que a versão foi aprovada.
     approvedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Aprovada em", en: "Approved at" }
     }
-    // Instante em que a versão foi substituída por outra.
+    // REVIEW [2026-12-15] Instante em que a versão foi substituída por outra.
     supersededAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Substituída em", en: "Superseded at" }
     }
   }
 
 
-  // Ações de negócio que mudam a situação da versão.
+  // REVIEW [2026-12-15] Ações de negócio que mudam a situação da versão.
   actions {
-    // Aprova a versão, carimbando a data de aprovação.
+    // REVIEW [2026-12-15] Aprova a versão, carimbando a data de aprovação.
     approve() {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Aprovar versão", en: "Approve version" }
-      roles: [LegalCounsel] // Somente o jurídico aprova versões.
-      to: status.Approved // Move a versão para Aprovada.
-      // Efeitos colaterais aplicados à versão na transição.
+      roles: [LegalCounsel] // REVIEW [2026-12-15] Somente o jurídico aprova versões.
+      to: status.Approved // REVIEW [2026-12-15] Move a versão para Aprovada.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados à versão na transição.
       {
-        approvedAt = now() // Registra o instante da aprovação.
+        approvedAt = now() // REVIEW [2026-12-15] Registra o instante da aprovação.
       }
     }
 
-    // Substitui a versão por uma mais nova, carimbando a data.
+    // REVIEW [2026-12-15] Substitui a versão por uma mais nova, carimbando a data.
     supersede() {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Substituir versão", en: "Supersede version" }
-      roles: [ContractManager] // Somente o gestor substitui versões.
-      to: status.Superseded // Move a versão para Substituída.
-      // Efeitos colaterais aplicados à versão na transição.
+      roles: [ContractManager] // REVIEW [2026-12-15] Somente o gestor substitui versões.
+      to: status.Superseded // REVIEW [2026-12-15] Move a versão para Substituída.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados à versão na transição.
       {
-        supersededAt = now() // Registra o instante da substituição.
+        supersededAt = now() // REVIEW [2026-12-15] Registra o instante da substituição.
       }
     }
   }
 
-  // Índices que aceleram as consultas por contrato e situação.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas por contrato e situação.
   indexes {
-    // Faixa ordenada por contrato e número da versão.
+    // REVIEW [2026-12-15] Faixa ordenada por contrato e número da versão.
     byContract: [contract.id, versionNumber] range
-    // Hash para localizar versões pela situação.
+    // REVIEW [2026-12-15] Hash para localizar versões pela situação.
     byStatus: [status] hash
   }
 
-  // Validação: o número da versão precisa ser positivo.
+  // REVIEW [2026-12-15] Validação: o número da versão precisa ser positivo.
   rule versionNumber > 0 {
-    // Mensagem de erro exibida em português.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em português.
     pt-BR: "O número da versão precisa ser positivo"
-    // Mensagem de erro exibida em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em inglês.
     en: "Version number must be positive"
   }
 }
 
-// Máquina de estados que governa o ciclo de vida de uma versão.
+// REVIEW [2026-12-15] Máquina de estados que governa o ciclo de vida de uma versão.
 shape ContractVersionStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação da versão do contrato", en: "Contract version status" }
-  base: state // Forma de estado: valores representam fases com transições.
-  initial: Draft // Situação inicial de toda versão nova.
-  // Estado de elaboração: versão ainda não aprovada.
+  base: state // REVIEW [2026-12-15] Forma de estado: valores representam fases com transições.
+  initial: Draft // REVIEW [2026-12-15] Situação inicial de toda versão nova.
+  // REVIEW [2026-12-15] Estado de elaboração: versão ainda não aprovada.
   value Draft {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    icon: Draft // Ícone usado para o estado.
-    ordinal: 10 // Posição do estado na linha do tempo.
+    icon: Draft // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 10 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição para Aprovada, disparada na aprovação jurídica.
+    // REVIEW [2026-12-15] Transição para Aprovada, disparada na aprovação jurídica.
     transition Approved {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Versão aprovada", en: "Version approved" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que a versão foi aprovada.
+        // REVIEW [2026-12-15] Data em que a versão foi aprovada.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
       }
     }
 
-    // Transição para Substituída quando uma versão nova assume.
+    // REVIEW [2026-12-15] Transição para Substituída quando uma versão nova assume.
     transition Superseded {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Versão substituída", en: "Version superseded" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que a versão foi substituída.
+        // REVIEW [2026-12-15] Data em que a versão foi substituída.
         supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
       }
     }
   }
-  // Estado aprovado: versão validada pelo jurídico.
+  // REVIEW [2026-12-15] Estado aprovado: versão validada pelo jurídico.
   value Approved {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Aprovada", en: "Approved" }
-    icon: Approved // Ícone usado para o estado.
-    ordinal: 20 // Posição do estado na linha do tempo.
+    icon: Approved // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 20 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição para Substituída quando uma versão mais nova entra em vigor.
+    // REVIEW [2026-12-15] Transição para Substituída quando uma versão mais nova entra em vigor.
     transition Superseded {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Versão substituída", en: "Version superseded" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que a versão foi substituída.
+        // REVIEW [2026-12-15] Data em que a versão foi substituída.
         supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
       }
     }
   }
-  // Estado final: versão que já foi trocada por outra.
+  // REVIEW [2026-12-15] Estado final: versão que já foi trocada por outra.
   value Superseded {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Substituída", en: "Superseded" }
-    icon: Superseded // Ícone usado para o estado.
-    ordinal: 30 // Posição do estado na linha do tempo.
+    icon: Superseded // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 30 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
   }
 }

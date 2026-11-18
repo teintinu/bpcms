@@ -1,18 +1,18 @@
-// Declara o serviço de faturamento no caminho canônico do workspace.
+// REVIEW [2026-12-15] Declara o serviço de faturamento no caminho canônico do workspace.
 service "example.com/services/billing" {
-  // Título legível do serviço exibido no construtor.
+  // REVIEW [2026-12-15] Título legível do serviço exibido no construtor.
   title: { pt-BR: "Faturamento", en: "Billing" }
-  version: 1.0.0 // Versão do serviço usada em release e comparação.
-  owner: "Billing" // Área responsável pela manutenção do serviço.
-  // Dependências externas referenciadas por este serviço.
+  version: 1.0.0 // REVIEW [2026-12-15] Versão do serviço usada em release e comparação.
+  owner: "Billing" // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
+  // REVIEW [2026-12-15] Dependências externas referenciadas por este serviço.
   imports {
-    // Importa medidas e constantes padrão do construtor sob o alias std.
+    // REVIEW [2026-12-15] Importa medidas e constantes padrão do construtor sob o alias std.
     service "bpcms.org/std" as std
-    // Importa o serviço de pedidos para referenciar Order.
+    // REVIEW [2026-12-15] Importa o serviço de pedidos para referenciar Order.
     service "example.com/services/orders" as Orders
-    // Importa o serviço de pagamentos para referenciar Payment.
+    // REVIEW [2026-12-15] Importa o serviço de pagamentos para referenciar Payment.
     service "example.com/services/payments" as Payments
-    // Importa o serviço de identidade para referenciar User.
+    // REVIEW [2026-12-15] Importa o serviço de identidade para referenciar User.
     service "example.com/services/identity" as Identity
   }
 }

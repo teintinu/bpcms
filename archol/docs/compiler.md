@@ -1,6 +1,6 @@
 # Compiler
 
-Pipeline: **application → lexer → parser → check → link → resolve references → assign used ids**.
+Pipeline: **application → lexer → parser (+ pending comments) → check → link → resolve references → assign used ids**.
 
 ```text
 application (.archol)
@@ -39,8 +39,20 @@ The check is more than type inference:
   `E_FILE_READ` (it is not silently discarded).
 - The same artifact name, in the same service and type, is `E_DUP_ARTIFACT`.
 
+Pending comments (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
+`SourceFile.pending`. A missing or past due date is an error
+(`E_PENDING_NO_DATE`/`E_PENDING_EXPIRED`); a due date within 15 days is a
+warning (`W_PENDING_SOON`); malformed dates are `E_PENDING_DATE`.
+
 Diagnostics carry a stable code, message, and `span`. The CLI prints
 `file:line:column: severity code: message`.
+
+## Format and lint
+
+`archol format [dir] [--check]` uppercases pending comment keywords and reports
+files that would change; `archol lint` is the same diagnostics pass as
+`archol check`. The LSP exposes `textDocument/formatting` (format-on-save by
+default for Archol) and publishes the lint diagnostics continuously.
 
 ## Identifiers and references
 

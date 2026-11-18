@@ -1,30 +1,30 @@
-// service: example.com/services/claims
+// REVIEW [2026-12-15] service: example.com/services/claims
 
-// Tabela operacional que lista os sinistros para triagem e análise.
+// REVIEW [2026-12-15] Tabela operacional que lista os sinistros para triagem e análise.
 view ClaimsTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Sinistros", en: "Claims" }
-  // Tipo da view: tabela.
+  // REVIEW [2026-12-15] Tipo da view: tabela.
   type: table
-  // Documento exibido pela view.
+  // REVIEW [2026-12-15] Documento exibido pela view.
   source: Claim
-  // Papéis que podem abrir a tabela.
+  // REVIEW [2026-12-15] Papéis que podem abrir a tabela.
   roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { number; claimant; type; amount; status; openedAt }
-  // Filtros disponíveis para recortar a lista.
+  // REVIEW [2026-12-15] Filtros disponíveis para recortar a lista.
   filters { status; type; period; coverage }
-  // Quantidade de linhas carregadas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas carregadas por página.
   pagination: 50
 
-  // Ações disparadas a partir da tabela.
+  // REVIEW [2026-12-15] Ações disparadas a partir da tabela.
   actions {
-    // Abre o detalhe do sinistro selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do sinistro selecionado.
     open -> ClaimDetail
-    // Executa a triagem com os parâmetros do formulário.
+    // REVIEW [2026-12-15] Executa a triagem com os parâmetros do formulário.
     triage -> Claim.triage(coveredNow, claimType, assignedAdjuster)
-    // Executa a recusa com o motivo informado.
+    // REVIEW [2026-12-15] Executa a recusa com o motivo informado.
     reject -> Claim.reject(reason)
   }
 }

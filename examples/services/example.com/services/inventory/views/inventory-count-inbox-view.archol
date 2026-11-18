@@ -1,20 +1,20 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Fila de contagens pendentes para operadores e gestores.
+// REVIEW [2026-12-15] Fila de contagens pendentes para operadores e gestores.
 view CountInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de contagens", en: "Count queue" }
-  // Tipo da view: caixa de entrada de tarefas.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de tarefas.
   type: inbox
-  // Papéis que enxergam esta fila.
+  // REVIEW [2026-12-15] Papéis que enxergam esta fila.
   roles: [WarehouseOperator, StockManager]
 
-  // Escopo da fila: apenas tarefas atribuídas aos papéis do usuário.
+  // REVIEW [2026-12-15] Escopo da fila: apenas tarefas atribuídas aos papéis do usuário.
   scope: roles
-  // Filtro que restringe as tarefas aos papéis do usuário atual.
+  // REVIEW [2026-12-15] Filtro que restringe as tarefas aos papéis do usuário atual.
   filter { role in currentUser.roles }
-  // Agrupa os cartões pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa os cartões pelo processo de origem.
   groupBy: process
-  // Colunas exibidas em cada item da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada item da fila.
   columns { title; subject; role; dueAt; priority }
 }

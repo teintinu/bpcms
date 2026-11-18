@@ -1,25 +1,25 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Quadro kanban da expedição por situação.
+// REVIEW [2026-12-15] Quadro kanban da expedição por situação.
 view DispatchBoard {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento exibido nas colunas do quadro.
+  // REVIEW [2026-12-15] Documento exibido nas colunas do quadro.
   source: Shipment
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
-  // Agrupa os cartões pela situação da remessa.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação da remessa.
   groupBy: status
-  // Campos exibidos em cada cartão.
+  // REVIEW [2026-12-15] Campos exibidos em cada cartão.
   card { order; tracking; frete }
-  // Oculta remessas canceladas do quadro.
+  // REVIEW [2026-12-15] Oculta remessas canceladas do quadro.
   filter { status != Cancelled }
-  // Ações disponíveis nos cartões.
+  // REVIEW [2026-12-15] Ações disponíveis nos cartões.
   actions {
-    // Abre o detalhe da remessa selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da remessa selecionada.
     open -> ShipmentDetail
   }
 }

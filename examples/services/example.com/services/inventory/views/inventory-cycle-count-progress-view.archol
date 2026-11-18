@@ -1,16 +1,16 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// View de andamento derivada da instância do processo.
+// REVIEW [2026-12-15] View de andamento derivada da instância do processo.
 view CycleCountProgress {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Andamento da contagem", en: "Count progress" }
-  // Tipo da view: uma tela de andamento de processo.
+  // REVIEW [2026-12-15] Tipo da view: uma tela de andamento de processo.
   type: process
-  // Processo cujo andamento esta view exibe.
+  // REVIEW [2026-12-15] Processo cujo andamento esta view exibe.
   process: CycleCount
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [WarehouseOperator, StockManager]
 
-  // Seções fixas exibidas na tela de andamento.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

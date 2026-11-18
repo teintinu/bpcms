@@ -1,46 +1,46 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Declara o organograma de merchandising do serviço.
+// REVIEW [2026-12-15] Declara o organograma de merchandising do serviço.
 organogram Merchandising {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Organograma de merchandising", en: "Merchandising organogram" }
 
-  // Estrutura hierárquica de subordinação entre as roles.
+  // REVIEW [2026-12-15] Estrutura hierárquica de subordinação entre as roles.
   hierarchy {
-    // Publisher é o superior imediato de Curator.
+    // REVIEW [2026-12-15] Publisher é o superior imediato de Curator.
     Publisher > Curator
   }
 
-  // Declara explicitamente que Publisher gerencia Curator.
+  // REVIEW [2026-12-15] Declara explicitamente que Publisher gerencia Curator.
   Publisher manages [Curator]
 
-  // Regra de quatro olhos para operações sensíveis.
+  // REVIEW [2026-12-15] Regra de quatro olhos para operações sensíveis.
   fourEyes {
-    // A publicação de produto exige aprovação de um Publisher.
+    // REVIEW [2026-12-15] A publicação de produto exige aprovação de um Publisher.
     product.publish requires Publisher
   }
 
-  // Segregação de funções entre etapas do fluxo de publicação.
+  // REVIEW [2026-12-15] Segregação de funções entre etapas do fluxo de publicação.
   segregation {
-    // Quem submete para revisão não pode ser quem publica.
+    // REVIEW [2026-12-15] Quem submete para revisão não pode ser quem publica.
     product.submitForReview != product.publish
   }
 }
 
-// Role de editor do catálogo.
+// REVIEW [2026-12-15] Role de editor do catálogo.
 role Curator {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Editor de catálogo", en: "Catalog editor" }
-  // Permissões de edição, envio para revisão e leitura do catálogo.
+  // REVIEW [2026-12-15] Permissões de edição, envio para revisão e leitura do catálogo.
   permissions: [product.edit, product.submitForReview, catalog.view]
 }
 
-// Role de gerente do catálogo, com poder de publicação.
+// REVIEW [2026-12-15] Role de gerente do catálogo, com poder de publicação.
 role Publisher {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Gerente de catálogo", en: "Catalog manager" }
-  // Herda todas as permissões de Curator.
+  // REVIEW [2026-12-15] Herda todas as permissões de Curator.
   inherits: Curator
-  // Permissões exclusivas de publicação, rejeição e relatórios.
+  // REVIEW [2026-12-15] Permissões exclusivas de publicação, rejeição e relatórios.
   permissions: [product.publish, product.reject, report.view]
 }

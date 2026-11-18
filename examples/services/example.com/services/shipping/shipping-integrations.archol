@@ -1,57 +1,57 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Integração REST com a transportadora para cotação, etiqueta e rastreio.
+// REVIEW [2026-12-15] Integração REST com a transportadora para cotação, etiqueta e rastreio.
 integration Carrier {
-  // Protocolo usado na comunicação.
+  // REVIEW [2026-12-15] Protocolo usado na comunicação.
   protocol: rest
-  // URL base lida da variável de ambiente da aplicação.
+  // REVIEW [2026-12-15] URL base lida da variável de ambiente da aplicação.
   baseUrl: env.CARRIER_URL
-  // Autenticação OAuth2 junto à transportadora.
+  // REVIEW [2026-12-15] Autenticação OAuth2 junto à transportadora.
   auth: oauth2
-  // Tempo máximo de espera de cada chamada.
+  // REVIEW [2026-12-15] Tempo máximo de espera de cada chamada.
   timeout: 20s
 
-  // Operações expostas pela integração.
+  // REVIEW [2026-12-15] Operações expostas pela integração.
   operations {
-    // Cota o frete de uma remessa com a transportadora informada.
+    // REVIEW [2026-12-15] Cota o frete de uma remessa com a transportadora informada.
     quote(shipment: Shipment, carrier: string): std.Money
-    // Emite a etiqueta de envio e devolve o código de rastreio.
+    // REVIEW [2026-12-15] Emite a etiqueta de envio e devolve o código de rastreio.
     createLabel(shipment: Shipment, carrier: string): TrackingCode
-    // Consulta os eventos de rastreio de um código.
+    // REVIEW [2026-12-15] Consulta os eventos de rastreio de um código.
     track(tracking: TrackingCode): TrackingEvent[]
   }
 }
 
-// Integração MQTT com a balança do posto de expedição.
+// REVIEW [2026-12-15] Integração MQTT com a balança do posto de expedição.
 integration ScaleDevice {
-  // Declara a integração como equipamento conectado.
+  // REVIEW [2026-12-15] Declara a integração como equipamento conectado.
   capabilities { equipment }
-  // Protocolo de mensagens usado pela balança.
+  // REVIEW [2026-12-15] Protocolo de mensagens usado pela balança.
   protocol: mqtt
-  // Host lido da variável de ambiente da aplicação.
+  // REVIEW [2026-12-15] Host lido da variável de ambiente da aplicação.
   host: env.SCALE_HOST
-  // Tópico assinado para receber as leituras de peso.
+  // REVIEW [2026-12-15] Tópico assinado para receber as leituras de peso.
   topic: "scales/+/reading"
-  // Autenticação por certificado digital.
+  // REVIEW [2026-12-15] Autenticação por certificado digital.
   auth: certificate
 
-  // Operações expostas pela integração.
+  // REVIEW [2026-12-15] Operações expostas pela integração.
   operations {
-    // Lê o peso atual de um dispositivo pelo identificador.
+    // REVIEW [2026-12-15] Lê o peso atual de um dispositivo pelo identificador.
     read(deviceId: string): std.Mass
   }
 
-  // Eventos recebidos do equipamento e seu destino no documento.
+  // REVIEW [2026-12-15] Eventos recebidos do equipamento e seu destino no documento.
   events {
-    // Cada leitura atualiza o peso bruto da remessa.
+    // REVIEW [2026-12-15] Cada leitura atualiza o peso bruto da remessa.
     reading -> Shipment.pesoBruto
   }
 
-  // Regras de qualidade dos dados do equipamento.
+  // REVIEW [2026-12-15] Regras de qualidade dos dados do equipamento.
   quality {
-    // Considera a leitura desatualizada após cinco minutos.
+    // REVIEW [2026-12-15] Considera a leitura desatualizada após cinco minutos.
     staleAfter: 5m
-    // Exige calibração mensal do equipamento.
+    // REVIEW [2026-12-15] Exige calibração mensal do equipamento.
     calibrate: monthly
   }
 }

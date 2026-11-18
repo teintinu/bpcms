@@ -1,29 +1,29 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Relatório de cumprimento do prazo de atendimento.
+// REVIEW [2026-12-15] Relatório de cumprimento do prazo de atendimento.
 view SlaCompliance {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
-  // Tipo da view: relatório com métricas agregadas.
+  // REVIEW [2026-12-15] Tipo da view: relatório com métricas agregadas.
   type: report
-  // Documentos consultados pelo relatório.
+  // REVIEW [2026-12-15] Documentos consultados pelo relatório.
   sources: [Ticket]
-  // Apenas gerentes abrem o relatório.
+  // REVIEW [2026-12-15] Apenas gerentes abrem o relatório.
   roles: [Manager]
 
-  // Filtros disponíveis na tela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tela.
   filters { period; priority }
-  // Métricas calculadas sobre os chamados.
+  // REVIEW [2026-12-15] Métricas calculadas sobre os chamados.
   metrics {
-    // Percentual de chamados com prazo cumprido.
+    // REVIEW [2026-12-15] Percentual de chamados com prazo cumprido.
     compliance: percentage(Ticket.slaMet)
-    // Contagem de chamados com prazo estourado.
+    // REVIEW [2026-12-15] Contagem de chamados com prazo estourado.
     breached: count(Ticket) where breached == true
-    // Média do tempo de resolução.
+    // REVIEW [2026-12-15] Média do tempo de resolução.
     avgResolution: avg(Ticket.resolutionTime)
   }
-  // Janela de atualização dos dados do relatório.
+  // REVIEW [2026-12-15] Janela de atualização dos dados do relatório.
   freshness: 5m
-  // Formatos de exportação oferecidos.
+  // REVIEW [2026-12-15] Formatos de exportação oferecidos.
   export: [pdf, csv]
 }

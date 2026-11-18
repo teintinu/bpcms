@@ -1,453 +1,453 @@
-// service: example.com/services/hr
+// REVIEW [2026-12-15] service: example.com/services/hr
 
-// Documento que representa o vínculo de um colaborador com a empresa.
+// REVIEW [2026-12-15] Documento que representa o vínculo de um colaborador com a empresa.
 document Employee {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Colaborador", en: "Employee" }
-  // Versão do artefato usada em diff e release.
+  // REVIEW [2026-12-15] Versão do artefato usada em diff e release.
   version: 1
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "People"
-  // Sincronização em tempo real entre instâncias e telas.
+  // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias e telas.
   sync: live
-  // Prazo de retenção dos dados do colaborador.
+  // REVIEW [2026-12-15] Prazo de retenção dos dados do colaborador.
   retention: 10y
 
-  // Campos que compõem o colaborador.
+  // REVIEW [2026-12-15] Campos que compõem o colaborador.
   fields {
-    // Matrícula única e consultável do colaborador.
+    // REVIEW [2026-12-15] Matrícula única e consultável do colaborador.
     number: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Matrícula", en: "Employee number" }
-      // Permite localizar o colaborador pela matrícula.
+      // REVIEW [2026-12-15] Permite localizar o colaborador pela matrícula.
       lookup
-      // Impede duas matrículas iguais.
+      // REVIEW [2026-12-15] Impede duas matrículas iguais.
       unique
-      // Limita a matrícula a vinte caracteres.
+      // REVIEW [2026-12-15] Limita a matrícula a vinte caracteres.
       maxLength: 20
     }
-    // Usuário de identidade ligado ao colaborador; consultável.
+    // REVIEW [2026-12-15] Usuário de identidade ligado ao colaborador; consultável.
     person: Identity.User { title: { pt-BR: "Pessoa", en: "Person" }, lookup }
-    // Candidato que originou a contratação; consultável.
+    // REVIEW [2026-12-15] Candidato que originou a contratação; consultável.
     candidate: Candidate { title: { pt-BR: "Candidato", en: "Candidate" }, lookup }
-    // Cargo exercido pelo colaborador; consultável.
+    // REVIEW [2026-12-15] Cargo exercido pelo colaborador; consultável.
     position: string { title: { pt-BR: "Cargo", en: "Position" }, lookup, maxLength: 120 }
-    // Área à qual o colaborador pertence; consultável.
+    // REVIEW [2026-12-15] Área à qual o colaborador pertence; consultável.
     department: Department { title: { pt-BR: "Área", en: "Department" }, lookup }
-    // Tipo de vínculo empregatício; consultável.
+    // REVIEW [2026-12-15] Tipo de vínculo empregatício; consultável.
     employmentType: EmploymentType { title: { pt-BR: "Vínculo", en: "Employment type" }, lookup }
-    // Gestor direto do colaborador.
+    // REVIEW [2026-12-15] Gestor direto do colaborador.
     manager: Identity.User { title: { pt-BR: "Gestor", en: "Manager" } }
-    // Situação atual do colaborador; consultável.
+    // REVIEW [2026-12-15] Situação atual do colaborador; consultável.
     status: EmployeeStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Data e hora da contratação; preenchida pelo sistema.
+    // REVIEW [2026-12-15] Data e hora da contratação; preenchida pelo sistema.
     hiredAt: DateTime { title: { pt-BR: "Contratado em", en: "Hired at" }, readonly }
-    // Data de início no trabalho.
+    // REVIEW [2026-12-15] Data de início no trabalho.
     startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
-    // Último dia de trabalho antes do desligamento.
+    // REVIEW [2026-12-15] Último dia de trabalho antes do desligamento.
     lastWorkingDay: DateTime { title: { pt-BR: "Último dia", en: "Last working day" } }
-    // Documento de identidade do colaborador; dado sensível.
+    // REVIEW [2026-12-15] Documento de identidade do colaborador; dado sensível.
     identityDocument: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Documento de identidade", en: "Identity document" }
-      // Trata o valor como dado pessoal sensível.
+      // REVIEW [2026-12-15] Trata o valor como dado pessoal sensível.
       sensitive
-      // Limita o documento a quarenta caracteres.
+      // REVIEW [2026-12-15] Limita o documento a quarenta caracteres.
       maxLength: 40
     }
-    // Indica se os documentos obrigatórios foram entregues.
+    // REVIEW [2026-12-15] Indica se os documentos obrigatórios foram entregues.
     documentsComplete: boolean {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Documentos completos", en: "Documents complete" }
-      // Começa desmarcado até o envio dos documentos.
+      // REVIEW [2026-12-15] Começa desmarcado até o envio dos documentos.
       default: false
     }
-    // Indica se a caixa de e-mail já foi provisionada.
+    // REVIEW [2026-12-15] Indica se a caixa de e-mail já foi provisionada.
     mailboxProvisioned: boolean {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Caixa de e-mail provisionada", en: "Mailbox provisioned" }
-      // Começa desmarcado até o provisionamento.
+      // REVIEW [2026-12-15] Começa desmarcado até o provisionamento.
       default: false
     }
-    // Indica se os sistemas de trabalho já foram provisionados.
+    // REVIEW [2026-12-15] Indica se os sistemas de trabalho já foram provisionados.
     systemsProvisioned: boolean {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Sistemas provisionados", en: "Systems provisioned" }
-      // Começa desmarcado até o provisionamento.
+      // REVIEW [2026-12-15] Começa desmarcado até o provisionamento.
       default: false
     }
-    // Indica se a pessoa confirmou que os acessos funcionam.
+    // REVIEW [2026-12-15] Indica se a pessoa confirmou que os acessos funcionam.
     accessConfirmed: boolean { title: { pt-BR: "Acesso confirmado", en: "Access confirmed" }, default: false }
-    // Problema de acesso relatado pela pessoa.
+    // REVIEW [2026-12-15] Problema de acesso relatado pela pessoa.
     accessIssue: string { title: { pt-BR: "Problema de acesso", en: "Access issue" }, maxLength: 500 }
-    // Data e hora da revogação dos acessos; preenchida pelo sistema.
+    // REVIEW [2026-12-15] Data e hora da revogação dos acessos; preenchida pelo sistema.
     accessRevokedAt: DateTime { title: { pt-BR: "Acessos revogados em", en: "Access revoked at" }, readonly }
-    // Data e hora da devolução do equipamento; preenchida pelo sistema.
+    // REVIEW [2026-12-15] Data e hora da devolução do equipamento; preenchida pelo sistema.
     equipmentReturnedAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Equipamento devolvido em", en: "Equipment returned at" }
-      // Impede edição manual da data.
+      // REVIEW [2026-12-15] Impede edição manual da data.
       readonly
     }
-    // Tipo do último equipamento pedido ou devolvido.
+    // REVIEW [2026-12-15] Tipo do último equipamento pedido ou devolvido.
     lastEquipmentKind: EquipmentKind { title: { pt-BR: "Último equipamento", en: "Last equipment" } }
-    // Anotações da entrevista de saída.
+    // REVIEW [2026-12-15] Anotações da entrevista de saída.
     exitInterviewNotes: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Entrevista de saída", en: "Exit interview" }
-      // Limita as anotações a dois mil caracteres.
+      // REVIEW [2026-12-15] Limita as anotações a dois mil caracteres.
       maxLength: 2000
     }
-    // Motivo registrado para o desligamento.
+    // REVIEW [2026-12-15] Motivo registrado para o desligamento.
     offboardingReason: string { title: { pt-BR: "Motivo do desligamento", en: "Offboarding reason" }, maxLength: 500 }
-    // Observação registrada no check-in do gestor.
+    // REVIEW [2026-12-15] Observação registrada no check-in do gestor.
     checkinNote: string { title: { pt-BR: "Nota do check-in", en: "Check-in note" }, maxLength: 500 }
   }
 
-  // Índices que aceleram as consultas do documento.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas do documento.
   indexes {
-    // Índice único por matrícula.
+    // REVIEW [2026-12-15] Índice único por matrícula.
     byNumber: [number] unique
-    // Índice ordenado por situação e data de início.
+    // REVIEW [2026-12-15] Índice ordenado por situação e data de início.
     byStatus: [status, startedAt] range
-    // Índice hash por área.
+    // REVIEW [2026-12-15] Índice hash por área.
     byDepartment: [department] hash
-    // Índice hash por pessoa de identidade.
+    // REVIEW [2026-12-15] Índice hash por pessoa de identidade.
     byPerson: [person.id] hash
   }
 
 
-  // Ações que alteram o vínculo do colaborador.
+  // REVIEW [2026-12-15] Ações que alteram o vínculo do colaborador.
   actions {
-    // Registra a contratação, emitindo o evento Hired.
+    // REVIEW [2026-12-15] Registra a contratação, emitindo o evento Hired.
     hire(firstDay: DateTime) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar contratação", en: "Register hire" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps]
-      // Efeito da ação.
+      // REVIEW [2026-12-15] Efeito da ação.
       {
-        // Emite o evento Hired com a data de início.
+        // REVIEW [2026-12-15] Emite o evento Hired com a data de início.
         emit Hired { startedAt: firstDay }
-        // Grava a data e hora da contratação.
+        // REVIEW [2026-12-15] Grava a data e hora da contratação.
         hiredAt = now()
-        // Grava a data de início informada.
+        // REVIEW [2026-12-15] Grava a data de início informada.
         startedAt = firstDay
       }
     }
 
-    // Registra o envio dos documentos e marca o checklist como completo.
+    // REVIEW [2026-12-15] Registra o envio dos documentos e marca o checklist como completo.
     submitDocuments(documentNumber: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Enviar documentos", en: "Submit documents" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [NewHire, PeopleOps]
-      // Efeito da ação: grava o documento e conclui o checklist.
+      // REVIEW [2026-12-15] Efeito da ação: grava o documento e conclui o checklist.
       { identityDocument = documentNumber; documentsComplete = true }
     }
 
-    // Marca a caixa de e-mail como provisionada.
+    // REVIEW [2026-12-15] Marca a caixa de e-mail como provisionada.
     provisionMailbox() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Provisionar e-mail", en: "Provision mailbox" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [ITAdmin]
-      // Efeito da ação: marca o provisionamento do e-mail.
+      // REVIEW [2026-12-15] Efeito da ação: marca o provisionamento do e-mail.
       { mailboxProvisioned = true }
     }
 
-    // Marca os sistemas de trabalho como provisionados.
+    // REVIEW [2026-12-15] Marca os sistemas de trabalho como provisionados.
     provisionSystems() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Provisionar sistemas", en: "Provision systems" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [ITAdmin]
-      // Efeito da ação: marca o provisionamento dos sistemas.
+      // REVIEW [2026-12-15] Efeito da ação: marca o provisionamento dos sistemas.
       { systemsProvisioned = true }
     }
 
-    // Registra que a pessoa confirmou o funcionamento dos acessos.
+    // REVIEW [2026-12-15] Registra que a pessoa confirmou o funcionamento dos acessos.
     confirmAccess() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Confirmar acesso", en: "Confirm access" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [NewHire]
-      // Efeito da ação: marca o acesso como confirmado.
+      // REVIEW [2026-12-15] Efeito da ação: marca o acesso como confirmado.
       { accessConfirmed = true }
     }
 
-    // Registra um problema de acesso relatado pela pessoa.
+    // REVIEW [2026-12-15] Registra um problema de acesso relatado pela pessoa.
     reportAccessIssue(note: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Relatar problema de acesso", en: "Report access issue" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [NewHire]
-      // Efeito da ação: guarda o relato e desfaz a confirmação.
+      // REVIEW [2026-12-15] Efeito da ação: guarda o relato e desfaz a confirmação.
       { accessIssue = note; accessConfirmed = false }
     }
 
-    // Registra o pedido de equipamento do colaborador.
+    // REVIEW [2026-12-15] Registra o pedido de equipamento do colaborador.
     orderEquipment(kind: EquipmentKind) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Pedir equipamento", en: "Order equipment" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [ITAdmin, PeopleOps]
-      // Documento retornado pela ação.
+      // REVIEW [2026-12-15] Documento retornado pela ação.
       returns: EquipmentOrder
-      // Efeito da ação: guarda o tipo do último equipamento.
+      // REVIEW [2026-12-15] Efeito da ação: guarda o tipo do último equipamento.
       { lastEquipmentKind = kind }
     }
 
-    // Registra a observação do check-in feito pelo gestor.
+    // REVIEW [2026-12-15] Registra a observação do check-in feito pelo gestor.
     recordCheckinNote(note: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar check-in do gestor", en: "Record manager check-in" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [HiringManager]
-      // Efeito da ação: grava a observação do gestor.
+      // REVIEW [2026-12-15] Efeito da ação: grava a observação do gestor.
       { checkinNote = note }
     }
 
-    // Conclui a integração e torna o colaborador ativo.
+    // REVIEW [2026-12-15] Conclui a integração e torna o colaborador ativo.
     activate() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Concluir integração", en: "Complete onboarding" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [HiringManager, PeopleOps]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Active
-      // Payload do evento emitido pela transição.
+      // REVIEW [2026-12-15] Payload do evento emitido pela transição.
       emits { at: now() }
     }
 
-    // Cancela a integração e encerra o vínculo.
+    // REVIEW [2026-12-15] Cancela a integração e encerra o vínculo.
     cancelOnboarding(reason: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar integração", en: "Cancel onboarding" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Terminated
-      // Efeito da ação: grava o motivo do encerramento.
+      // REVIEW [2026-12-15] Efeito da ação: grava o motivo do encerramento.
       { offboardingReason = reason }
     }
 
-    // Inicia o desligamento do colaborador.
+    // REVIEW [2026-12-15] Inicia o desligamento do colaborador.
     startOffboarding(reason: string, lastDay: DateTime) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Iniciar desligamento", en: "Start offboarding" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps, HiringManager]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Offboarding
-      // Efeito da ação: grava motivo e último dia de trabalho.
+      // REVIEW [2026-12-15] Efeito da ação: grava motivo e último dia de trabalho.
       { offboardingReason = reason; lastWorkingDay = lastDay }
     }
 
-    // Cancela o desligamento e devolve o colaborador à ativa.
+    // REVIEW [2026-12-15] Cancela o desligamento e devolve o colaborador à ativa.
     cancelOffboarding(reason: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar desligamento", en: "Cancel offboarding" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Active
     }
 
-    // Revoga todos os acessos e registra a observação.
+    // REVIEW [2026-12-15] Revoga todos os acessos e registra a observação.
     revokeAllAccess(note: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Revogar acessos", en: "Revoke all access" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [ITAdmin]
-      // Efeito da ação: grava a data da revogação e a observação.
+      // REVIEW [2026-12-15] Efeito da ação: grava a data da revogação e a observação.
       { accessRevokedAt = now(); accessIssue = note }
     }
 
-    // Registra a devolução de um equipamento.
+    // REVIEW [2026-12-15] Registra a devolução de um equipamento.
     returnEquipment(kind: EquipmentKind) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar devolução", en: "Register equipment return" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [ITAdmin]
-      // Efeito da ação: grava a data da devolução e o tipo devolvido.
+      // REVIEW [2026-12-15] Efeito da ação: grava a data da devolução e o tipo devolvido.
       { equipmentReturnedAt = now(); lastEquipmentKind = kind }
     }
 
-    // Registra as anotações da entrevista de saída.
+    // REVIEW [2026-12-15] Registra as anotações da entrevista de saída.
     recordExitInterview(notes: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar entrevista de saída", en: "Record exit interview" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps]
-      // Efeito da ação: grava as anotações da entrevista.
+      // REVIEW [2026-12-15] Efeito da ação: grava as anotações da entrevista.
       { exitInterviewNotes = notes }
     }
 
-    // Desliga o colaborador ao final do processo.
+    // REVIEW [2026-12-15] Desliga o colaborador ao final do processo.
     terminate() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Desligar colaborador", en: "Terminate employee" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [PeopleOps]
-      // Transição de situação disparada pela ação.
+      // REVIEW [2026-12-15] Transição de situação disparada pela ação.
       to: status.Terminated
-      // Payload do evento emitido pela transição.
+      // REVIEW [2026-12-15] Payload do evento emitido pela transição.
       emits { at: now() }
     }
   }
 }
 
-// Máquina de estados da situação do colaborador.
+// REVIEW [2026-12-15] Máquina de estados da situação do colaborador.
 shape EmployeeStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do colaborador", en: "Employee status" }
-  // Base de estado: valores com ciclo de vida e transições.
+  // REVIEW [2026-12-15] Base de estado: valores com ciclo de vida e transições.
   base: state
-  // Situação inicial em integração, com a transição Hired declarada junto.
+  // REVIEW [2026-12-15] Situação inicial em integração, com a transição Hired declarada junto.
   initial: Onboarding with transition Hired {
-    // Título exibido no histórico da transição.
+    // REVIEW [2026-12-15] Título exibido no histórico da transição.
     title: { pt-BR: "Colaborador contratado", en: "Employee hired" }
-    // Dados carregados pelo evento da transição.
+    // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
     payload {
-      // Data de início informada na contratação.
+      // REVIEW [2026-12-15] Data de início informada na contratação.
       startedAt: DateTime { title: { pt-BR: "Início", en: "Start date" } }
     }
   }
 
-  // Situação de colaborador em integração.
+  // REVIEW [2026-12-15] Situação de colaborador em integração.
   value Onboarding {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Em integração", en: "Onboarding" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: status.onboarding
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 10
 
-    // Transição para colaborador ativo.
+    // REVIEW [2026-12-15] Transição para colaborador ativo.
     transition Active {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: Activated
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Integração concluída", en: "Onboarding completed" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data e hora da conclusão.
+        // REVIEW [2026-12-15] Data e hora da conclusão.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
-    // Transição para integração cancelada.
+    // REVIEW [2026-12-15] Transição para integração cancelada.
     transition Terminated {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: OnboardingCancelled
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Situação de colaborador ativo.
+  // REVIEW [2026-12-15] Situação de colaborador ativo.
   value Active {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Ativo", en: "Active" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: status.active
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 20
 
-    // Transição para desligamento iniciado.
+    // REVIEW [2026-12-15] Transição para desligamento iniciado.
     transition Offboarding {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: OffboardingStarted
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Desligamento iniciado", en: "Offboarding started" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do desligamento.
+        // REVIEW [2026-12-15] Motivo do desligamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Situação de colaborador em desligamento.
+  // REVIEW [2026-12-15] Situação de colaborador em desligamento.
   value Offboarding {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Em desligamento", en: "Offboarding" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: status.offboarding
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 30
 
-    // Transição de volta para colaborador ativo.
+    // REVIEW [2026-12-15] Transição de volta para colaborador ativo.
     transition Active {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: OffboardingCancelled
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Desligamento cancelado", en: "Offboarding cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
-    // Transição para colaborador desligado.
+    // REVIEW [2026-12-15] Transição para colaborador desligado.
     transition Terminated {
-      // Título exibido no histórico da transição.
+      // REVIEW [2026-12-15] Título exibido no histórico da transição.
       title: { pt-BR: "Colaborador desligado", en: "Employee terminated" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data e hora do desligamento.
+        // REVIEW [2026-12-15] Data e hora do desligamento.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
-  // Situação final de colaborador desligado.
+  // REVIEW [2026-12-15] Situação final de colaborador desligado.
   value Terminated {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Desligado", en: "Terminated" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: status.terminated
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 40
   }
 }
 
-// Classificação dos tipos de vínculo empregatício.
+// REVIEW [2026-12-15] Classificação dos tipos de vínculo empregatício.
 shape EmploymentType {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Vínculo", en: "Employment type" }
-  // Base de classificação: valores estáticos, sem ciclo de vida.
+  // REVIEW [2026-12-15] Base de classificação: valores estáticos, sem ciclo de vida.
   base: classification
 
-  // Valor para tempo integral.
+  // REVIEW [2026-12-15] Valor para tempo integral.
   value FullTime {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Tempo integral", en: "Full time" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: employment.fullTime
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 10
   }
-  // Valor para meio período.
+  // REVIEW [2026-12-15] Valor para meio período.
   value PartTime {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Meio período", en: "Part time" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: employment.partTime
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 20
   }
-  // Valor para prestador de serviço.
+  // REVIEW [2026-12-15] Valor para prestador de serviço.
   value Contractor {
-    // Rótulo exibido para o valor.
+    // REVIEW [2026-12-15] Rótulo exibido para o valor.
     title: { pt-BR: "Prestador", en: "Contractor" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: employment.contractor
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 30
   }
 }

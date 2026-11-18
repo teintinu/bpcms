@@ -1,29 +1,29 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Painel ao vivo com o pulso operacional das sessões.
+// REVIEW [2026-12-15] Painel ao vivo com o pulso operacional das sessões.
 view SessionPulse {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Pulso das finalizações", en: "Session pulse" }
-  // Tipo da view: painel de indicadores.
+  // REVIEW [2026-12-15] Tipo da view: painel de indicadores.
   type: dashboard
-  // Documentos usados como fonte dos dados.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos dados.
   sources: [CheckoutSession]
-  // Papéis que podem abrir o painel.
+  // REVIEW [2026-12-15] Papéis que podem abrir o painel.
   roles: [SupportAgent]
-  // Atualização em tempo real enquanto o painel está aberto.
+  // REVIEW [2026-12-15] Atualização em tempo real enquanto o painel está aberto.
   mode: live
 
-  // Filtros oferecidos ao usuário.
+  // REVIEW [2026-12-15] Filtros oferecidos ao usuário.
   filters { status }
-  // Métricas calculadas sobre as sessões.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as sessões.
   metrics {
-    // Sessões aguardando pagamento.
+    // REVIEW [2026-12-15] Sessões aguardando pagamento.
     awaitingPayment: count(CheckoutSession) where status == PaymentAuthorized
-    // Sessões aguardando cotação de frete.
+    // REVIEW [2026-12-15] Sessões aguardando cotação de frete.
     awaitingQuote: count(CheckoutSession) where status == Validated
-    // Sessões abandonadas no dia.
+    // REVIEW [2026-12-15] Sessões abandonadas no dia.
     abandonedToday: count(CheckoutSession) where status == Abandoned
   }
-  // Idade máxima dos dados antes de recarregar.
+  // REVIEW [2026-12-15] Idade máxima dos dados antes de recarregar.
   freshness: 1m
 }

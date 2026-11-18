@@ -1,20 +1,20 @@
-// service: example.com/services/fraud-checkout
+// REVIEW [2026-12-15] service: example.com/services/fraud-checkout
 
-// Declara a caixa de entrada da fila de risco.
+// REVIEW [2026-12-15] Declara a caixa de entrada da fila de risco.
 view RiskInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de risco", en: "Risk queue" }
-  // Tipo da view: caixa de entrada de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de trabalho.
   type: inbox
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
-  // Escopo dos itens: apenas os papéis do usuário corrente.
+  // REVIEW [2026-12-15] Escopo dos itens: apenas os papéis do usuário corrente.
   scope: roles
-  // Filtro aplicado à lista de itens.
+  // REVIEW [2026-12-15] Filtro aplicado à lista de itens.
   filter { role in currentUser.roles }
-  // Agrupa os itens por processo.
+  // REVIEW [2026-12-15] Agrupa os itens por processo.
   groupBy: process
-  // Colunas exibidas na fila.
+  // REVIEW [2026-12-15] Colunas exibidas na fila.
   columns { title; subject; role; dueAt; priority }
 }

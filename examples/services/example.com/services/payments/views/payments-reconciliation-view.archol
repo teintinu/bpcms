@@ -1,31 +1,31 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Relatório de conciliação que consolida pagamentos, estornos e contestações.
+// REVIEW [2026-12-15] Relatório de conciliação que consolida pagamentos, estornos e contestações.
 view Reconciliation {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Conciliação de pagamentos", en: "Payment reconciliation" }
-  type: report // Tipo da view: relatório analítico.
-  // Documentos lidos para montar os números.
+  type: report // REVIEW [2026-12-15] Tipo da view: relatório analítico.
+  // REVIEW [2026-12-15] Documentos lidos para montar os números.
   sources: [Payment, Refund, Chargeback]
-  // Papéis que podem abrir o relatório.
+  // REVIEW [2026-12-15] Papéis que podem abrir o relatório.
   roles: [Manager]
 
-  // Filtros disponíveis no topo do relatório.
+  // REVIEW [2026-12-15] Filtros disponíveis no topo do relatório.
   filters { period; status; method }
-  // Indicadores calculados sobre as fontes.
+  // REVIEW [2026-12-15] Indicadores calculados sobre as fontes.
   metrics {
-    // Soma dos pagamentos capturados.
+    // REVIEW [2026-12-15] Soma dos pagamentos capturados.
     captured: sum(Payment.amount) where Payment.status == Captured
-    // Soma dos reembolsos concluídos.
+    // REVIEW [2026-12-15] Soma dos reembolsos concluídos.
     refunded: sum(Refund.amount) where Refund.status == Completed
-    // Quantidade de pagamentos que falharam.
+    // REVIEW [2026-12-15] Quantidade de pagamentos que falharam.
     failed: count(Payment) where Payment.status == Failed
-    // Quantidade de contestações ainda em aberto.
+    // REVIEW [2026-12-15] Quantidade de contestações ainda em aberto.
     disputes: count(Chargeback) where Chargeback.status != Lost
   }
-  // Unidade monetária dos indicadores.
+  // REVIEW [2026-12-15] Unidade monetária dos indicadores.
   units { captured: BRL; refunded: BRL }
-  // Janela de atualização dos dados.
+  // REVIEW [2026-12-15] Janela de atualização dos dados.
   freshness: 5m
-  export: [csv, pdf] // Formatos de exportação oferecidos.
+  export: [csv, pdf] // REVIEW [2026-12-15] Formatos de exportação oferecidos.
 }

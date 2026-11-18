@@ -1,25 +1,25 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// View de detalhe que mostra um pedido e permite operá-lo.
+// REVIEW [2026-12-15] View de detalhe que mostra um pedido e permite operá-lo.
 view OrderDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
-  // Tipo da view: detalhe.
+  // REVIEW [2026-12-15] Tipo da view: detalhe.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Order
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
-  // Seções fixas exibidas no detalhe.
+  // REVIEW [2026-12-15] Seções fixas exibidas no detalhe.
   sections { summary; items; timeline }
-  // Ações disponíveis no detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis no detalhe.
   actions {
-    // Abre a view de andamento do processo.
+    // REVIEW [2026-12-15] Abre a view de andamento do processo.
     progress -> OrderProgress
-    // Cancela o pedido informando o motivo.
+    // REVIEW [2026-12-15] Cancela o pedido informando o motivo.
     cancel -> Order.cancel(reason)
-    // Reabre o pedido cancelado.
+    // REVIEW [2026-12-15] Reabre o pedido cancelado.
     reopen -> Order.reopen
   }
 }

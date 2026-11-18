@@ -1,21 +1,21 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Detalhe de uma sessão de finalização.
+// REVIEW [2026-12-15] Detalhe de uma sessão de finalização.
 view SessionDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe da sessão", en: "Session detail" }
-  // Tipo da view: tela de detalhe de registro.
+  // REVIEW [2026-12-15] Tipo da view: tela de detalhe de registro.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: CheckoutSession
-  // Papéis que podem abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis que podem abrir o detalhe.
   roles: [SupportAgent, Customer]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; timeline }
-  // Ações disponíveis no detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis no detalhe.
   actions {
-    // Leva à view de andamento do processo.
+    // REVIEW [2026-12-15] Leva à view de andamento do processo.
     progress -> CheckoutProgress
   }
 }

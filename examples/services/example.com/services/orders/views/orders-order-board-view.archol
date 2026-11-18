@@ -1,25 +1,25 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// View de quadro kanban que agrupa os pedidos por situação.
+// REVIEW [2026-12-15] View de quadro kanban que agrupa os pedidos por situação.
 view OrderBoard {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Quadro de pedidos", en: "Order board" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento fonte do quadro.
+  // REVIEW [2026-12-15] Documento fonte do quadro.
   source: Order
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
-  // Campo usado para formar as colunas do quadro.
+  // REVIEW [2026-12-15] Campo usado para formar as colunas do quadro.
   groupBy: status
-  // Campos exibidos em cada cartão.
+  // REVIEW [2026-12-15] Campos exibidos em cada cartão.
   card { customer; total; placedAt }
-  // Filtro que esconde pedidos cancelados.
+  // REVIEW [2026-12-15] Filtro que esconde pedidos cancelados.
   filter { status != Cancelled }
-  // Ações disponíveis no quadro.
+  // REVIEW [2026-12-15] Ações disponíveis no quadro.
   actions {
-    // Abre o detalhe do pedido do cartão.
+    // REVIEW [2026-12-15] Abre o detalhe do pedido do cartão.
     open -> OrderDetail
   }
 }

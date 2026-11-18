@@ -1,18 +1,18 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// Mensagem de aviso quando o recebimento apresenta divergência.
+// REVIEW [2026-12-15] Mensagem de aviso quando o recebimento apresenta divergência.
 message DivergenceNotice {
-  // Título exibido na notificação.
+  // REVIEW [2026-12-15] Título exibido na notificação.
   title: { pt-BR: "Aviso de divergência no recebimento", en: "Goods receipt divergence notice" }
-  // Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
   about: GoodsReceipt
-  // Dados carregados pela mensagem.
+  // REVIEW [2026-12-15] Dados carregados pela mensagem.
   payload {
-    // Motivo da divergência.
+    // REVIEW [2026-12-15] Motivo da divergência.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
-    // Peso esperado para conferência.
+    // REVIEW [2026-12-15] Peso esperado para conferência.
     expectedWeight: std.Mass { title: { pt-BR: "Peso esperado", en: "Expected weight" } }
-    // Peso efetivamente recebido.
+    // REVIEW [2026-12-15] Peso efetivamente recebido.
     receivedWeight: std.Mass { title: { pt-BR: "Peso recebido", en: "Received weight" } }
   }
 }

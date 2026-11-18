@@ -1,191 +1,191 @@
-// service: example.com/services/procurement
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/procurement
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo de aprovação de compra; o argumento é o documento-sujeito.
+// REVIEW [2026-12-15] Declara o processo de aprovação de compra; o argumento é o documento-sujeito.
 process PurchaseApproval(purchaseRequest: PurchaseRequest) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Aprovar a compra na alçada certa, com rastro e sem travar o pedido simples"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 5d
-  // Prazo rígido do caso: estourar dispara o tratamento de Timeout.
+  // REVIEW [2026-12-15] Prazo rígido do caso: estourar dispara o tratamento de Timeout.
   timeout: 5d
 
-  // Gatilho: inicia uma instância quando a solicitação é enviada.
+  // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a solicitação é enviada.
   on [PurchaseRequest.Submitted]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: purchaseRequest
 
-  // Variável durável da instância: alçada calculada para a compra.
+  // REVIEW [2026-12-15] Variável durável da instância: alçada calculada para a compra.
   let tier: ApproverTier
 
-  // Bloco externo: captura timeout do caso e dos forms.
+  // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e dos forms.
   try {
-    // Consulta a decisão de alçada com valor e fornecedor da solicitação.
+    // REVIEW [2026-12-15] Consulta a decisão de alçada com valor e fornecedor da solicitação.
     tier = ApprovalLimit.evaluate({
-      // Valor da compra enviado à avaliação.
+      // REVIEW [2026-12-15] Valor da compra enviado à avaliação.
       amount: purchaseRequest.amount,
-      // Fornecedor enviado à avaliação.
+      // REVIEW [2026-12-15] Fornecedor enviado à avaliação.
       supplier: purchaseRequest.supplier
     })
 
-    // Compras dentro da alçada automática não passam por aprovação humana.
+    // REVIEW [2026-12-15] Compras dentro da alçada automática não passam por aprovação humana.
     if (tier == Auto) {
-      // Aprova a solicitação diretamente.
+      // REVIEW [2026-12-15] Aprova a solicitação diretamente.
       PurchaseRequest.approve()
-      // Encerra no desfecho de sucesso.
+      // REVIEW [2026-12-15] Encerra no desfecho de sucesso.
       return Approved
     }
 
-    // Bloco interno: tenta abrir a decisão de aprovação.
+    // REVIEW [2026-12-15] Bloco interno: tenta abrir a decisão de aprovação.
     try {
-      // Abre o form de decisão para o aprovador.
+      // REVIEW [2026-12-15] Abre o form de decisão para o aprovador.
       ApprovalDecision.show({ purchaseRequest })
     } catch (Timeout) {
-      // Escalada da alçada: a mesma decisão volta para a gestão de compras.
+      // REVIEW [2026-12-15] Escalada da alçada: a mesma decisão volta para a gestão de compras.
       ApprovalDecision.show({ purchaseRequest })
     }
 
-    // Se a decisão aprovou a solicitação...
+    // REVIEW [2026-12-15] Se a decisão aprovou a solicitação...
     if (purchaseRequest.status == Approved) {
-      // ...encerra no desfecho de sucesso.
+      // REVIEW [2026-12-15] ...encerra no desfecho de sucesso.
       return Approved
     }
 
-    // Sem aprovação, encerra no desfecho de rejeição.
+    // REVIEW [2026-12-15] Sem aprovação, encerra no desfecho de rejeição.
     return Rejected
   } catch (Timeout) {
-    // Breach do caso: desvia a decisão para a alçada superior.
+    // REVIEW [2026-12-15] Breach do caso: desvia a decisão para a alçada superior.
     ApprovalDecision.show({ purchaseRequest })
 
-    // Se a decisão escalada aprovou a solicitação...
+    // REVIEW [2026-12-15] Se a decisão escalada aprovou a solicitação...
     if (purchaseRequest.status == Approved) {
-      // ...encerra no desfecho de sucesso.
+      // REVIEW [2026-12-15] ...encerra no desfecho de sucesso.
       return Approved
     }
 
-    // Sem aprovação, encerra no desfecho de rejeição.
+    // REVIEW [2026-12-15] Sem aprovação, encerra no desfecho de rejeição.
     return Rejected
   }
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Approved {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Compra aprovada", en: "Purchase approved" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de falha do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de falha do caso.
   end Rejected {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Compra rejeitada", en: "Purchase rejected" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Forma de classificação das alçadas de aprovação.
+// REVIEW [2026-12-15] Forma de classificação das alçadas de aprovação.
 shape ApproverTier {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Alçada de aprovação", en: "Approval tier" }
-  // Base da forma: classificação.
+  // REVIEW [2026-12-15] Base da forma: classificação.
   base: classification
-  // Alçada automática, sem decisão humana.
+  // REVIEW [2026-12-15] Alçada automática, sem decisão humana.
   value Auto {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Automática", en: "Automatic" }
-    // Ícone associado à alçada.
+    // REVIEW [2026-12-15] Ícone associado à alçada.
     icon: Auto
-    // Ordem de exibição da alçada.
+    // REVIEW [2026-12-15] Ordem de exibição da alçada.
     ordinal: 10
   }
-  // Alçada da gerência.
+  // REVIEW [2026-12-15] Alçada da gerência.
   value Manager {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Gerência", en: "Manager" }
-    // Ícone associado à alçada.
+    // REVIEW [2026-12-15] Ícone associado à alçada.
     icon: Manager
-    // Ordem de exibição da alçada.
+    // REVIEW [2026-12-15] Ordem de exibição da alçada.
     ordinal: 20
   }
-  // Alçada da diretoria.
+  // REVIEW [2026-12-15] Alçada da diretoria.
   value Director {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Diretoria", en: "Director" }
-    // Ícone associado à alçada.
+    // REVIEW [2026-12-15] Ícone associado à alçada.
     icon: Director
-    // Ordem de exibição da alçada.
+    // REVIEW [2026-12-15] Ordem de exibição da alçada.
     ordinal: 30
   }
 }
 
-// Form de decisão de aprovação apresentado ao aprovador.
+// REVIEW [2026-12-15] Form de decisão de aprovação apresentado ao aprovador.
 form ApprovalDecision {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Decisão de aprovação", en: "Approval decision" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: PurchaseRequest
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [Approver, ProcurementManager]
-  // Prazo para responder; estourar dispara Timeout.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout.
   timeout: 2d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 50
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Valor da compra, somente leitura.
+    // REVIEW [2026-12-15] Valor da compra, somente leitura.
     amount { readonly }
-    // Fornecedor da compra, somente leitura.
+    // REVIEW [2026-12-15] Fornecedor da compra, somente leitura.
     supplier { readonly }
-    // Justificativa da compra, somente leitura.
+    // REVIEW [2026-12-15] Justificativa da compra, somente leitura.
     justification { readonly }
-    // Motivo da rejeição, preenchido quando o aprovador rejeita.
+    // REVIEW [2026-12-15] Motivo da rejeição, preenchido quando o aprovador rejeita.
     rejectionReason
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Aprova chamando a ação de aprovação da solicitação.
+    // REVIEW [2026-12-15] Aprova chamando a ação de aprovação da solicitação.
     approved { calls: PurchaseRequest.approve }
-    // Rejeita chamando a ação de rejeição com o motivo informado.
+    // REVIEW [2026-12-15] Rejeita chamando a ação de rejeição com o motivo informado.
     rejected { calls: PurchaseRequest.reject(rejectionReason) }
   }
 }
 
-// Decisão que calcula a alçada de aprovação a partir da política de compras.
+// REVIEW [2026-12-15] Decisão que calcula a alçada de aprovação a partir da política de compras.
 decision ApprovalLimit {
-  // Título exibido no builder e na documentação da decisão.
+  // REVIEW [2026-12-15] Título exibido no builder e na documentação da decisão.
   title: { pt-BR: "Alçada de aprovação de compra", en: "Purchase approval limit" }
-  // Tipo devolvido pela decisão.
+  // REVIEW [2026-12-15] Tipo devolvido pela decisão.
   returns: ApproverTier
-  // Entradas necessárias para avaliar a alçada.
+  // REVIEW [2026-12-15] Entradas necessárias para avaliar a alçada.
   inputs {
-    // Valor da compra a avaliar.
+    // REVIEW [2026-12-15] Valor da compra a avaliar.
     amount: std.Money
-    // Fornecedor da compra a avaliar.
+    // REVIEW [2026-12-15] Fornecedor da compra a avaliar.
     supplier: Supplier
   }
-  // Casos avaliados em ordem até o primeiro que casar.
+  // REVIEW [2026-12-15] Casos avaliados em ordem até o primeiro que casar.
   cases {
-    // Até cinco mil reais, a aprovação é automática.
+    // REVIEW [2026-12-15] Até cinco mil reais, a aprovação é automática.
     amount <= 5000 BRL -> Auto
-    // Até cinquenta mil, com fornecedor de risco baixo, decide a gerência.
+    // REVIEW [2026-12-15] Até cinquenta mil, com fornecedor de risco baixo, decide a gerência.
     amount <= 50000 BRL and supplier != null and supplier.risk == Low -> Manager
-    // Demais casos vão para a diretoria.
+    // REVIEW [2026-12-15] Demais casos vão para a diretoria.
     else -> Director
   }
-  // Fonte normativa da política aplicada.
+  // REVIEW [2026-12-15] Fonte normativa da política aplicada.
   source: "Política de Compras v3"
-  // Área responsável pela política.
+  // REVIEW [2026-12-15] Área responsável pela política.
   owner: "Procurement"
 }

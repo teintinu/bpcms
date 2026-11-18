@@ -1,17 +1,17 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// Forma reutilizável que representa um ponto geográfico.
+// REVIEW [2026-12-15] Forma reutilizável que representa um ponto geográfico.
 shape GeoPoint {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Ponto geográfico", en: "Geo point" }
 
-  // Campos que compõem o ponto geográfico.
+  // REVIEW [2026-12-15] Campos que compõem o ponto geográfico.
   fields {
-    // Latitude em graus decimais.
+    // REVIEW [2026-12-15] Latitude em graus decimais.
     lat: number { title: { pt-BR: "Latitude", en: "Latitude" } }
-    // Longitude em graus decimais.
+    // REVIEW [2026-12-15] Longitude em graus decimais.
     lng: number { title: { pt-BR: "Longitude", en: "Longitude" } }
-    // Margem de erro da leitura de GPS, em metros.
+    // REVIEW [2026-12-15] Margem de erro da leitura de GPS, em metros.
     accuracy: number { title: { pt-BR: "Precisão (m)", en: "Accuracy (m)" } }
   }
 }

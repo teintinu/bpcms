@@ -1,26 +1,26 @@
-// service: example.com/services/fraud-checkout
+// REVIEW [2026-12-15] service: example.com/services/fraud-checkout
 
-// View de tabela que lista as verificações antifraude.
+// REVIEW [2026-12-15] View de tabela que lista as verificações antifraude.
 view FraudTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Verificações antifraude", en: "Fraud checks" }
-  // Tipo da view: tabela de documentos.
+  // REVIEW [2026-12-15] Tipo da view: tabela de documentos.
   type: table
-  // Documento consultado pela tabela.
+  // REVIEW [2026-12-15] Documento consultado pela tabela.
   source: FraudCheck
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { session; score; approved; status; evaluatedAt }
-  // Filtros disponíveis na tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tabela.
   filters { status; period }
-  // Quantidade de itens por página.
+  // REVIEW [2026-12-15] Quantidade de itens por página.
   pagination: 50
 
-  // Ações da tabela.
+  // REVIEW [2026-12-15] Ações da tabela.
   actions {
-    // Abre o detalhe da verificação selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da verificação selecionada.
     open -> FraudDetail
   }
 }

@@ -1,222 +1,222 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Documento que representa um pedido de reembolso sobre um pagamento.
+// REVIEW [2026-12-15] Documento que representa um pedido de reembolso sobre um pagamento.
 document Refund {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Reembolso", en: "Refund" }
-  version: 2 // Versão do artefato Document; entra no diff e no release.
-  owner: "Payments" // Área responsável pelo documento.
-  sync: live // Sincronização em tempo real entre instâncias.
+  version: 2 // REVIEW [2026-12-15] Versão do artefato Document; entra no diff e no release.
+  owner: "Payments" // REVIEW [2026-12-15] Área responsável pelo documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias.
 
-  // Campos que compõem o reembolso.
+  // REVIEW [2026-12-15] Campos que compõem o reembolso.
   fields {
-    // Pagamento de origem do reembolso; consultável.
+    // REVIEW [2026-12-15] Pagamento de origem do reembolso; consultável.
     payment: Payment {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pagamento", en: "Payment" }
-      lookup // Permite localizar o reembolso pelo pagamento.
+      lookup // REVIEW [2026-12-15] Permite localizar o reembolso pelo pagamento.
     }
-    // Valor reembolsado em reais; consultável.
+    // REVIEW [2026-12-15] Valor reembolsado em reais; consultável.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
-    // Motivo declarado pelo solicitante.
+    // REVIEW [2026-12-15] Motivo declarado pelo solicitante.
     requestReason: string { title: { pt-BR: "Motivo", en: "Reason" }, maxLength: 500 }
-    // Situação atual do reembolso; consultável.
+    // REVIEW [2026-12-15] Situação atual do reembolso; consultável.
     status: RefundStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Instante em que o reembolso foi solicitado.
+    // REVIEW [2026-12-15] Instante em que o reembolso foi solicitado.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
-    // Instante em que o reembolso foi aprovado.
+    // REVIEW [2026-12-15] Instante em que o reembolso foi aprovado.
     approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
-    // Instante em que o reembolso foi concluído.
+    // REVIEW [2026-12-15] Instante em que o reembolso foi concluído.
     completedAt: DateTime { title: { pt-BR: "Concluído em", en: "Completed at" } }
   }
 
-  // Índices de consulta do documento.
+  // REVIEW [2026-12-15] Índices de consulta do documento.
   indexes {
-    // Busca os reembolsos de um pagamento por hash.
+    // REVIEW [2026-12-15] Busca os reembolsos de um pagamento por hash.
     byPayment: [payment.id] hash
-    // Ordena os reembolsos por situação e data da solicitação.
+    // REVIEW [2026-12-15] Ordena os reembolsos por situação e data da solicitação.
     byStatus: [status, requestedAt] range
   }
 
 
-  // Ações que alteram o reembolso e disparam transições de situação.
+  // REVIEW [2026-12-15] Ações que alteram o reembolso e disparam transições de situação.
   actions {
-    // Registra a solicitação de reembolso com um motivo.
+    // REVIEW [2026-12-15] Registra a solicitação de reembolso com um motivo.
     request(reason: string) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Solicitar reembolso", en: "Request refund" }
-      // Papéis autorizados a solicitar reembolso.
+      // REVIEW [2026-12-15] Papéis autorizados a solicitar reembolso.
       roles: [Analyst]
 
-      // Regra de negócio: exige motivo minimamente descritivo.
+      // REVIEW [2026-12-15] Regra de negócio: exige motivo minimamente descritivo.
       rule reason.length >= 10 {
-        // Mensagem da regra em português.
+        // REVIEW [2026-12-15] Mensagem da regra em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem da regra em inglês.
+        // REVIEW [2026-12-15] Mensagem da regra em inglês.
         en: "Enter a reason with at least 10 characters"
       }
       {
-        // Persiste o motivo da solicitação.
+        // REVIEW [2026-12-15] Persiste o motivo da solicitação.
         requestReason = reason
-        // Carimba o instante da solicitação.
+        // REVIEW [2026-12-15] Carimba o instante da solicitação.
         requestedAt = now()
-        emit Requested // Emite o evento de reembolso solicitado.
+        emit Requested // REVIEW [2026-12-15] Emite o evento de reembolso solicitado.
       }
     }
 
-    // Aprova o reembolso solicitado.
+    // REVIEW [2026-12-15] Aprova o reembolso solicitado.
     approve() {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Aprovar", en: "Approve" }
-      // Papéis autorizados a aprovar.
+      // REVIEW [2026-12-15] Papéis autorizados a aprovar.
       roles: [Manager]
 
-      // Move a situação para Aprovado.
+      // REVIEW [2026-12-15] Move a situação para Aprovado.
       to: status.Approved
       {
-        // Carimba o instante da aprovação.
+        // REVIEW [2026-12-15] Carimba o instante da aprovação.
         approvedAt = now()
       }
     }
 
-    // Conclui o reembolso aprovado.
+    // REVIEW [2026-12-15] Conclui o reembolso aprovado.
     complete() {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Concluir", en: "Complete" }
-      // Papéis autorizados a concluir.
+      // REVIEW [2026-12-15] Papéis autorizados a concluir.
       roles: [PaymentEngine]
 
-      // Move a situação para Concluído.
+      // REVIEW [2026-12-15] Move a situação para Concluído.
       to: status.Completed
       {
-        // Carimba o instante da conclusão.
+        // REVIEW [2026-12-15] Carimba o instante da conclusão.
         completedAt = now()
       }
     }
 
-    // Rejeita o reembolso solicitado.
+    // REVIEW [2026-12-15] Rejeita o reembolso solicitado.
     reject(reason: string) {
-      // Título exibido no botão e na trilha.
+      // REVIEW [2026-12-15] Título exibido no botão e na trilha.
       title: { pt-BR: "Rejeitar", en: "Reject" }
-      // Papéis autorizados a rejeitar.
+      // REVIEW [2026-12-15] Papéis autorizados a rejeitar.
       roles: [Manager]
 
-      // Move a situação para Rejeitado.
+      // REVIEW [2026-12-15] Move a situação para Rejeitado.
       to: status.Rejected
     }
   }
 
-  // Regra de negócio: todo reembolso precisa ter valor positivo.
+  // REVIEW [2026-12-15] Regra de negócio: todo reembolso precisa ter valor positivo.
   rule amount > 0 {
-    // Mensagem da regra em português.
+    // REVIEW [2026-12-15] Mensagem da regra em português.
     pt-BR: "O valor deve ser maior que zero"
-    // Mensagem da regra em inglês.
+    // REVIEW [2026-12-15] Mensagem da regra em inglês.
     en: "Amount must be greater than zero"
   }
-  // Regra de negócio: teto de valor por reembolso.
+  // REVIEW [2026-12-15] Regra de negócio: teto de valor por reembolso.
   rule amount <= 100000 BRL {
-    // Mensagem da regra em português.
+    // REVIEW [2026-12-15] Mensagem da regra em português.
     pt-BR: "O valor excede o limite de 100.000 BRL"
-    // Mensagem da regra em inglês.
+    // REVIEW [2026-12-15] Mensagem da regra em inglês.
     en: "Amount exceeds the 100,000 BRL limit"
   }
 }
 
-// Máquina de estados da situação do reembolso.
+// REVIEW [2026-12-15] Máquina de estados da situação do reembolso.
 shape RefundStatus {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Situação do reembolso", en: "Refund status" }
-  base: state // Forma de estado: valores com transições.
-  // Estado inicial e transição que o cria.
+  base: state // REVIEW [2026-12-15] Forma de estado: valores com transições.
+  // REVIEW [2026-12-15] Estado inicial e transição que o cria.
   initial: Requested with transition Requested {
-    // Título da transição exibido na trilha.
+    // REVIEW [2026-12-15] Título da transição exibido na trilha.
     title: { pt-BR: "Reembolso solicitado", en: "Refund requested" }
-    // Dados que acompanham a transição inicial.
+    // REVIEW [2026-12-15] Dados que acompanham a transição inicial.
     payload {
-      // Valor solicitado no payload.
+      // REVIEW [2026-12-15] Valor solicitado no payload.
       amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-      // Motivo da solicitação no payload.
+      // REVIEW [2026-12-15] Motivo da solicitação no payload.
       reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
     }
   }
 
-  // Estado de reembolso recém-solicitado.
+  // REVIEW [2026-12-15] Estado de reembolso recém-solicitado.
   value Requested {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Solicitado", en: "Requested" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Requested
-    ordinal: 10 // Ordem de exibição entre os estados.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
 
-    // Transição para Aprovado.
+    // REVIEW [2026-12-15] Transição para Aprovado.
     transition Approved {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Reembolso aprovado", en: "Refund approved" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da aprovação.
+        // REVIEW [2026-12-15] Instante da aprovação.
         approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
       }
     }
 
-    // Transição para Rejeitado.
+    // REVIEW [2026-12-15] Transição para Rejeitado.
     transition Rejected {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Reembolso rejeitado", en: "Refund rejected" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Motivo da rejeição.
+        // REVIEW [2026-12-15] Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de reembolso aprovado.
+  // REVIEW [2026-12-15] Estado de reembolso aprovado.
   value Approved {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Aprovado", en: "Approved" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Approved
-    ordinal: 20 // Ordem de exibição entre os estados.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
 
-    // Transição para Concluído.
+    // REVIEW [2026-12-15] Transição para Concluído.
     transition Completed {
-      // Título da transição exibido na trilha.
+      // REVIEW [2026-12-15] Título da transição exibido na trilha.
       title: { pt-BR: "Reembolso concluído", en: "Refund completed" }
-      // Dados que acompanham a transição.
+      // REVIEW [2026-12-15] Dados que acompanham a transição.
       payload {
-        // Instante da conclusão.
+        // REVIEW [2026-12-15] Instante da conclusão.
         completedAt: DateTime { title: { pt-BR: "Concluído em", en: "Completed at" } }
       }
     }
   }
-  // Estado final de reembolso concluído.
+  // REVIEW [2026-12-15] Estado final de reembolso concluído.
   value Completed {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Concluído", en: "Completed" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Completed
-    ordinal: 30 // Ordem de exibição entre os estados.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
   }
-  // Estado final de reembolso rejeitado.
+  // REVIEW [2026-12-15] Estado final de reembolso rejeitado.
   value Rejected {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Rejected
-    ordinal: 40 // Ordem de exibição entre os estados.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição entre os estados.
   }
 
-  format: plain // Formato simples de exibição da situação.
+  format: plain // REVIEW [2026-12-15] Formato simples de exibição da situação.
 }
 
-// Política que exige aprovação por um segundo usuário.
+// REVIEW [2026-12-15] Política que exige aprovação por um segundo usuário.
 policy FourEyesRefund {
-  // Ação do documento à qual a política se aplica.
+  // REVIEW [2026-12-15] Ação do documento à qual a política se aplica.
   appliesTo: Refund.approve
-  // Regra: quem aprova não pode ser quem criou.
+  // REVIEW [2026-12-15] Regra: quem aprova não pode ser quem criou.
   rule: approver != creator
-  severity: block // Severidade: bloqueia a ação quando violada.
-  // Mensagem exibida quando a política bloqueia.
+  severity: block // REVIEW [2026-12-15] Severidade: bloqueia a ação quando violada.
+  // REVIEW [2026-12-15] Mensagem exibida quando a política bloqueia.
   message: "Reembolso exige segundo aprovador"
-  audit: true // Registra a avaliação da política na auditoria.
+  audit: true // REVIEW [2026-12-15] Registra a avaliação da política na auditoria.
 }

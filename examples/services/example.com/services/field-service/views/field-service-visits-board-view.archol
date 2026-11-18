@@ -1,26 +1,26 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// View de quadro kanban com as visitas por situação.
+// REVIEW [2026-12-15] View de quadro kanban com as visitas por situação.
 view VisitsBoard {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Quadro de visitas", en: "Visits board" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento que alimenta o quadro.
+  // REVIEW [2026-12-15] Documento que alimenta o quadro.
   source: Visit
-  // Papéis que podem abrir o quadro.
+  // REVIEW [2026-12-15] Papéis que podem abrir o quadro.
   roles: [Dispatcher, Supervisor]
-  // Agrupa os cartões pela situação da visita.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação da visita.
   groupBy: status
 
-  // Colunas exibidas em cada cartão.
+  // REVIEW [2026-12-15] Colunas exibidas em cada cartão.
   columns { number; site; windowStart }
-  // Campos exibidos no resumo do cartão.
+  // REVIEW [2026-12-15] Campos exibidos no resumo do cartão.
   card { number; site; technician }
 
-  // Ações expostas no quadro.
+  // REVIEW [2026-12-15] Ações expostas no quadro.
   actions {
-    // Abre o detalhe da visita selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da visita selecionada.
     open -> VisitDetail
   }
 }

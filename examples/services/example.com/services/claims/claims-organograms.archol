@@ -1,111 +1,111 @@
-// service: example.com/services/claims
+// REVIEW [2026-12-15] service: example.com/services/claims
 
-// Organograma que define a estrutura de papéis e a separação de funções em sinistros.
+// REVIEW [2026-12-15] Organograma que define a estrutura de papéis e a separação de funções em sinistros.
 organogram Indemnity {
-  // Título exibido no builder e nos relatórios de estrutura.
+  // REVIEW [2026-12-15] Título exibido no builder e nos relatórios de estrutura.
   title: { pt-BR: "Organograma de sinistros", en: "Claims organogram" }
 
-  // Relações de subordinação direta entre os papéis do serviço.
+  // REVIEW [2026-12-15] Relações de subordinação direta entre os papéis do serviço.
   hierarchy {
-    // Ajustador responde ao gerente e o atendente responde ao ajustador.
+    // REVIEW [2026-12-15] Ajustador responde ao gerente e o atendente responde ao ajustador.
     Manager > Adjuster > Clerk
-    // O analista antifraude reporta diretamente ao gerente.
+    // REVIEW [2026-12-15] O analista antifraude reporta diretamente ao gerente.
     Manager > FraudAnalyst
-    // O analista financeiro reporta diretamente ao gerente.
+    // REVIEW [2026-12-15] O analista financeiro reporta diretamente ao gerente.
     Manager > FinanceAnalyst
-    // O segurado é atendido pelo atendente de sinistros.
+    // REVIEW [2026-12-15] O segurado é atendido pelo atendente de sinistros.
     Clerk > Policyholder
   }
 
-  // Papéis sob gestão direta do gerente de sinistros.
+  // REVIEW [2026-12-15] Papéis sob gestão direta do gerente de sinistros.
   Manager manages [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst]
-  // Delega as atribuições ao ajustador quando o gerente se ausenta por sete dias.
+  // REVIEW [2026-12-15] Delega as atribuições ao ajustador quando o gerente se ausenta por sete dias.
   Manager delegates to Adjuster when absent for 7d
 
-  // Separação de funções: impede que a mesma pessoa aprove e pague a liquidação.
+  // REVIEW [2026-12-15] Separação de funções: impede que a mesma pessoa aprove e pague a liquidação.
   segregation {
-    // Aprovar e pagar a mesma liquidação exige pessoas diferentes.
+    // REVIEW [2026-12-15] Aprovar e pagar a mesma liquidação exige pessoas diferentes.
     settlement.approve != settlement.pay
   }
 }
 
-// Papel de atendimento: registra, tria e recusa avisos de sinistro.
+// REVIEW [2026-12-15] Papel de atendimento: registra, tria e recusa avisos de sinistro.
 role Clerk {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Atendente de sinistros", en: "Claims clerk" }
-  // Permissões concedidas ao atendente.
+  // REVIEW [2026-12-15] Permissões concedidas ao atendente.
   permissions: [
-    claim.view, // consultar sinistros
-    claim.register, // registrar aviso de sinistro
-    claim.triage, // triar sinistro
-    claim.reject, // recusar sinistro
-    coverage.view, // consultar coberturas
-    coverage.manage // manter coberturas
+    claim.view, // REVIEW [2026-12-15] consultar sinistros
+    claim.register, // REVIEW [2026-12-15] registrar aviso de sinistro
+    claim.triage, // REVIEW [2026-12-15] triar sinistro
+    claim.reject, // REVIEW [2026-12-15] recusar sinistro
+    coverage.view, // REVIEW [2026-12-15] consultar coberturas
+    coverage.manage // REVIEW [2026-12-15] manter coberturas
   ]
 }
 
-// Papel de análise: conduz a revisão, coleta evidências e aprova o sinistro.
+// REVIEW [2026-12-15] Papel de análise: conduz a revisão, coleta evidências e aprova o sinistro.
 role Adjuster {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Ajustador", en: "Adjuster" }
-  // Permissões concedidas ao ajustador.
+  // REVIEW [2026-12-15] Permissões concedidas ao ajustador.
   permissions: [
-    claim.view, // consultar sinistros
-    claim.review, // revisar sinistros
-    claim.approve, // aprovar sinistros
-    claim.reject, // recusar sinistros
-    evidence.record, // registrar evidências
-    settlement.view // consultar liquidações
+    claim.view, // REVIEW [2026-12-15] consultar sinistros
+    claim.review, // REVIEW [2026-12-15] revisar sinistros
+    claim.approve, // REVIEW [2026-12-15] aprovar sinistros
+    claim.reject, // REVIEW [2026-12-15] recusar sinistros
+    evidence.record, // REVIEW [2026-12-15] registrar evidências
+    settlement.view // REVIEW [2026-12-15] consultar liquidações
   ]
 }
 
-// Papel especializado: investiga e decide sobre suspeitas de fraude.
+// REVIEW [2026-12-15] Papel especializado: investiga e decide sobre suspeitas de fraude.
 role FraudAnalyst {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Analista antifraude", en: "Fraud analyst" }
-  // Permissões concedidas ao analista antifraude.
+  // REVIEW [2026-12-15] Permissões concedidas ao analista antifraude.
   permissions: [
-    claim.view, // consultar sinistros
-    fraud.review, // revisar suspeitas de fraude
-    fraud.decide, // decidir sobre fraude
-    evidence.record // registrar evidências
+    claim.view, // REVIEW [2026-12-15] consultar sinistros
+    fraud.review, // REVIEW [2026-12-15] revisar suspeitas de fraude
+    fraud.decide, // REVIEW [2026-12-15] decidir sobre fraude
+    evidence.record // REVIEW [2026-12-15] registrar evidências
   ]
 }
 
-// Papel financeiro: aprova, paga e acompanha liquidações.
+// REVIEW [2026-12-15] Papel financeiro: aprova, paga e acompanha liquidações.
 role FinanceAnalyst {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
-  // Permissões concedidas ao analista financeiro.
+  // REVIEW [2026-12-15] Permissões concedidas ao analista financeiro.
   permissions: [
-    claim.view, // consultar sinistros
-    claim.pay, // pagar sinistros
-    settlement.view, // consultar liquidações
-    settlement.approve, // aprovar liquidações
-    settlement.pay // pagar liquidações
+    claim.view, // REVIEW [2026-12-15] consultar sinistros
+    claim.pay, // REVIEW [2026-12-15] pagar sinistros
+    settlement.view, // REVIEW [2026-12-15] consultar liquidações
+    settlement.approve, // REVIEW [2026-12-15] aprovar liquidações
+    settlement.pay // REVIEW [2026-12-15] pagar liquidações
   ]
 }
 
-// Papel de gestão: herda as permissões do ajustador e adiciona controles amplos.
+// REVIEW [2026-12-15] Papel de gestão: herda as permissões do ajustador e adiciona controles amplos.
 role Manager {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Gerente de sinistros", en: "Claims manager" }
-  // Herda todas as permissões do papel Adjuster.
+  // REVIEW [2026-12-15] Herda todas as permissões do papel Adjuster.
   inherits: Adjuster
-  // Permissões adicionais exclusivas do gerente.
+  // REVIEW [2026-12-15] Permissões adicionais exclusivas do gerente.
   permissions: [
-    claim.reopen, // reabrir sinistros
-    claim.escalate, // escalonar sinistros
-    settlement.approve, // aprovar liquidações
-    settlement.reverse, // estornar liquidações
-    report.view // consultar relatórios
+    claim.reopen, // REVIEW [2026-12-15] reabrir sinistros
+    claim.escalate, // REVIEW [2026-12-15] escalonar sinistros
+    settlement.approve, // REVIEW [2026-12-15] aprovar liquidações
+    settlement.reverse, // REVIEW [2026-12-15] estornar liquidações
+    report.view // REVIEW [2026-12-15] consultar relatórios
   ]
 }
 
-// Papel externo: permite ao segurado acompanhar e registrar seus próprios sinistros.
+// REVIEW [2026-12-15] Papel externo: permite ao segurado acompanhar e registrar seus próprios sinistros.
 role Policyholder {
-  // Título exibido na administração de papéis.
+  // REVIEW [2026-12-15] Título exibido na administração de papéis.
   title: { pt-BR: "Segurado", en: "Policyholder" }
-  // Permissões restritas ao próprio sinistro.
+  // REVIEW [2026-12-15] Permissões restritas ao próprio sinistro.
   permissions: [claim.viewOwn, claim.register, claim.describe]
 }

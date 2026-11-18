@@ -1,13 +1,13 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// View de andamento derivada da instância do processo.
+// REVIEW [2026-12-15] View de andamento derivada da instância do processo.
 view ContractSignatureProgress {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Andamento da assinatura", en: "Contract signature progress" }
-  type: process // Tipo da view: uma tela de andamento de processo.
-  process: ContractSignature // Processo cujo andamento esta view exibe.
-  roles: [ContractManager, LegalCounsel] // Papéis que podem abrir a view.
+  type: process // REVIEW [2026-12-15] Tipo da view: uma tela de andamento de processo.
+  process: ContractSignature // REVIEW [2026-12-15] Processo cujo andamento esta view exibe.
+  roles: [ContractManager, LegalCounsel] // REVIEW [2026-12-15] Papéis que podem abrir a view.
 
-  // Seções fixas exibidas na tela de andamento.
+  // REVIEW [2026-12-15] Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

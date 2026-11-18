@@ -1,29 +1,29 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// View de painel que mostra o pulso operacional dos pedidos.
+// REVIEW [2026-12-15] View de painel que mostra o pulso operacional dos pedidos.
 view OrderPulse {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Pulso dos pedidos", en: "Order pulse" }
-  // Tipo da view: painel.
+  // REVIEW [2026-12-15] Tipo da view: painel.
   type: dashboard
-  // Documentos consultados pelo painel.
+  // REVIEW [2026-12-15] Documentos consultados pelo painel.
   sources: [Order]
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Manager]
-  // Atualização em tempo real do painel.
+  // REVIEW [2026-12-15] Atualização em tempo real do painel.
   mode: live
 
-  // Filtros disponíveis no painel.
+  // REVIEW [2026-12-15] Filtros disponíveis no painel.
   filters { status }
-  // Métricas calculadas sobre os pedidos.
+  // REVIEW [2026-12-15] Métricas calculadas sobre os pedidos.
   metrics {
-    // Pedidos em rascunho aguardando revisão.
+    // REVIEW [2026-12-15] Pedidos em rascunho aguardando revisão.
     awaitingReview: count(Order) where status == Draft
-    // Pedidos realizados aguardando reserva.
+    // REVIEW [2026-12-15] Pedidos realizados aguardando reserva.
     awaitingReservation: count(Order) where status == Placed
-    // Pedidos aguardando decisão de cancelamento.
+    // REVIEW [2026-12-15] Pedidos aguardando decisão de cancelamento.
     awaitingDecision: count(Order) where status == CancellationRequested
   }
-  // Idade máxima dos dados antes de atualizar.
+  // REVIEW [2026-12-15] Idade máxima dos dados antes de atualizar.
   freshness: 5m
 }

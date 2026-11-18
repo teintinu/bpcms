@@ -1,328 +1,328 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Documento que representa o pedido de exame laboratorial.
+// REVIEW [2026-12-15] Documento que representa o pedido de exame laboratorial.
 document ExamOrder {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pedido de exame", en: "Exam order" }
-  version: 1 // Versão do artefato Document.
-  owner: "Laboratory" // Dono de negócio do documento.
-  sync: live // Sincronização em tempo real entre cliente e servidor.
-  // Campos que compõem o pedido de exame.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document.
+  owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio do documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
+  // REVIEW [2026-12-15] Campos que compõem o pedido de exame.
   fields {
-    // Laboratório responsável pelo pedido.
+    // REVIEW [2026-12-15] Laboratório responsável pelo pedido.
     laboratory: Laboratory {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
-    // Amostra associada ao pedido; consultável.
+    // REVIEW [2026-12-15] Amostra associada ao pedido; consultável.
     sample: Sample {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Amostra", en: "Sample" }
-      // Permite localizar pedidos pela amostra.
+      // REVIEW [2026-12-15] Permite localizar pedidos pela amostra.
       lookup
     }
-    // Exame solicitado; consultável para filtros.
+    // REVIEW [2026-12-15] Exame solicitado; consultável para filtros.
     exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" }, lookup }
-    // Situação do pedido; consultável para filtros.
+    // REVIEW [2026-12-15] Situação do pedido; consultável para filtros.
     status: ExamOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Usuário responsável pela execução.
+    // REVIEW [2026-12-15] Usuário responsável pela execução.
     assignedTo: User {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
-    // Laboratório de apoio para onde o exame foi encaminhado.
+    // REVIEW [2026-12-15] Laboratório de apoio para onde o exame foi encaminhado.
     referredTo: SupportLab {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Encaminhado para", en: "Referred to" }
     }
-    // Instante em que o pedido foi solicitado.
+    // REVIEW [2026-12-15] Instante em que o pedido foi solicitado.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
-    // Instante em que o resultado foi emitido.
+    // REVIEW [2026-12-15] Instante em que o resultado foi emitido.
     resultedAt: DateTime { title: { pt-BR: "Resultado em", en: "Resulted at" } }
   }
 
-  // Índices secundários para consulta.
+  // REVIEW [2026-12-15] Índices secundários para consulta.
   indexes {
-    // Índice por situação e data de solicitação, consultado por faixa.
+    // REVIEW [2026-12-15] Índice por situação e data de solicitação, consultado por faixa.
     byStatus: [status, requestedAt] range
-    // Índice por amostra, consultado por igualdade.
+    // REVIEW [2026-12-15] Índice por amostra, consultado por igualdade.
     bySample: [sample.id] hash
   }
 
 
-  // Ações que movimentam o pedido.
+  // REVIEW [2026-12-15] Ações que movimentam o pedido.
   actions {
-    // Action que abre o pedido para um exame e uma amostra.
+    // REVIEW [2026-12-15] Action que abre o pedido para um exame e uma amostra.
     request(exam: ExamCode, sample: Sample){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Solicitar exame", en: "Request exam" }
-      roles: [Collector] // Papéis autorizados a solicitar.
-      // Corpo da action: registra a data e emite o evento Requested.
+      roles: [Collector] // REVIEW [2026-12-15] Papéis autorizados a solicitar.
+      // REVIEW [2026-12-15] Corpo da action: registra a data e emite o evento Requested.
       {
-        // Registra o instante da solicitação.
+        // REVIEW [2026-12-15] Registra o instante da solicitação.
         requestedAt = now()
-        // Emite o evento que dispara o processo de exame.
+        // REVIEW [2026-12-15] Emite o evento que dispara o processo de exame.
         emit Requested { exam }
       }
     }
 
-    // Action que registra a coleta do material.
+    // REVIEW [2026-12-15] Action que registra a coleta do material.
     collect(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Coletar", en: "Collect" }
-      roles: [Collector] // Papéis autorizados a coletar.
-      to: status.Collected // Transição automática para o estado Collected.
+      roles: [Collector] // REVIEW [2026-12-15] Papéis autorizados a coletar.
+      to: status.Collected // REVIEW [2026-12-15] Transição automática para o estado Collected.
     }
 
-    // Action que inicia a análise do exame.
+    // REVIEW [2026-12-15] Action que inicia a análise do exame.
     process(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Iniciar análise", en: "Start analysis" }
-      roles: [Analyst] // Papéis autorizados a iniciar a análise.
-      to: status.Processing // Transição automática para o estado Processing.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a iniciar a análise.
+      to: status.Processing // REVIEW [2026-12-15] Transição automática para o estado Processing.
     }
 
-    // Action que encaminha o exame a um laboratório de apoio.
+    // REVIEW [2026-12-15] Action que encaminha o exame a um laboratório de apoio.
     refer(lab: SupportLab){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Encaminhar ao apoio", en: "Refer to support" }
-      roles: [SupportLiaison] // Papéis autorizados a encaminhar.
-      to: status.Referred // Transição automática para o estado Referred.
-      // Emite a transição levando o laboratório de destino.
+      roles: [SupportLiaison] // REVIEW [2026-12-15] Papéis autorizados a encaminhar.
+      to: status.Referred // REVIEW [2026-12-15] Transição automática para o estado Referred.
+      // REVIEW [2026-12-15] Emite a transição levando o laboratório de destino.
       emits { supportLab: lab }
     }
 
-    // Action que registra o resultado no pedido.
+    // REVIEW [2026-12-15] Action que registra o resultado no pedido.
     result(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Resultar", en: "Result" }
-      roles: [Analyst] // Papéis autorizados a resultar.
-      to: status.Resulted // Transição automática para o estado Resulted.
-      // Corpo da action: grava a data do resultado.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a resultar.
+      to: status.Resulted // REVIEW [2026-12-15] Transição automática para o estado Resulted.
+      // REVIEW [2026-12-15] Corpo da action: grava a data do resultado.
       {
-        // Registra o instante em que o resultado foi emitido.
+        // REVIEW [2026-12-15] Registra o instante em que o resultado foi emitido.
         resultedAt = now()
       }
     }
 
-    // Action que cancela o pedido com justificativa.
+    // REVIEW [2026-12-15] Action que cancela o pedido com justificativa.
     cancel(justification: string){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      roles: [LabManager] // Papéis autorizados a cancelar.
-      to: status.Cancelled // Transição automática para o estado Cancelled.
-      // Emite a transição levando o motivo do cancelamento.
+      roles: [LabManager] // REVIEW [2026-12-15] Papéis autorizados a cancelar.
+      to: status.Cancelled // REVIEW [2026-12-15] Transição automática para o estado Cancelled.
+      // REVIEW [2026-12-15] Emite a transição levando o motivo do cancelamento.
       emits { reason: justification }
     }
 
-    // Action que atribui um responsável ao pedido.
+    // REVIEW [2026-12-15] Action que atribui um responsável ao pedido.
     assign(user: User){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Atribuir", en: "Assign" }
-      roles: [Pathologist] // Papéis autorizados a atribuir.
-      // Corpo da action: grava o responsável escolhido.
+      roles: [Pathologist] // REVIEW [2026-12-15] Papéis autorizados a atribuir.
+      // REVIEW [2026-12-15] Corpo da action: grava o responsável escolhido.
       {
-        // Grava o usuário responsável pelo pedido.
+        // REVIEW [2026-12-15] Grava o usuário responsável pelo pedido.
         assignedTo = user
       }
     }
   }
 
-  // Exige data de resultado quando o pedido está Resulted.
+  // REVIEW [2026-12-15] Exige data de resultado quando o pedido está Resulted.
   rule status == Resulted implies resultedAt != null {
-    pt-BR: "Informe a data do resultado" // Mensagem do erro em português.
-    en: "Enter the result date" // Mensagem do erro em inglês.
+    pt-BR: "Informe a data do resultado" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Enter the result date" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
-  // Exige laboratório de destino quando o pedido está Referred.
+  // REVIEW [2026-12-15] Exige laboratório de destino quando o pedido está Referred.
   rule status == Referred implies referredTo != null {
-    pt-BR: "Selecione o laboratório de destino" // Mensagem do erro em português.
-    en: "Select the destination lab" // Mensagem do erro em inglês.
+    pt-BR: "Selecione o laboratório de destino" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Select the destination lab" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
 }
 
-// Shape de classificação com os exames disponíveis.
+// REVIEW [2026-12-15] Shape de classificação com os exames disponíveis.
 shape ExamCode {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Exame", en: "Exam" }
-  base: classification // Tipo base: classificação fechada.
-  // Valor do exame "hemograma".
+  base: classification // REVIEW [2026-12-15] Tipo base: classificação fechada.
+  // REVIEW [2026-12-15] Valor do exame "hemograma".
   value Hemogram {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Hemograma", en: "Complete blood count" }
-    icon: Hemogram // Ícone associado ao valor.
-    ordinal: 10 // Ordem de exibição do valor.
+    icon: Hemogram // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor do exame "glicemia".
+  // REVIEW [2026-12-15] Valor do exame "glicemia".
   value Glucose {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Glicemia", en: "Glucose" }
-    icon: Glucose // Ícone associado ao valor.
-    ordinal: 20 // Ordem de exibição do valor.
+    icon: Glucose // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor do exame "cultura".
+  // REVIEW [2026-12-15] Valor do exame "cultura".
   value Culture {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cultura", en: "Culture" }
-    icon: Culture // Ícone associado ao valor.
-    ordinal: 30 // Ordem de exibição do valor.
+    icon: Culture // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor do exame "hemoglobina glicada".
+  // REVIEW [2026-12-15] Valor do exame "hemoglobina glicada".
   value Hba1c {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
-    icon: Hba1c // Ícone associado ao valor.
-    ordinal: 40 // Ordem de exibição do valor.
+    icon: Hba1c // REVIEW [2026-12-15] Ícone associado ao valor.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  format: plain // Exibição sem máscara.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }
 
-// Shape de estado que acompanha o ciclo de vida do pedido.
+// REVIEW [2026-12-15] Shape de estado que acompanha o ciclo de vida do pedido.
 shape ExamOrderStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do exame", en: "Exam order status" }
-  base: state // Tipo base: máquina de estados.
-  // Estado inicial Requested, criado pela transição Requested.
+  base: state // REVIEW [2026-12-15] Tipo base: máquina de estados.
+  // REVIEW [2026-12-15] Estado inicial Requested, criado pela transição Requested.
   initial: Requested with transition Requested {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Exame solicitado", en: "Exam requested" }
-    // Dados levados pela transição inicial.
+    // REVIEW [2026-12-15] Dados levados pela transição inicial.
     payload {
-      exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // Exame que foi solicitado.
+      exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // REVIEW [2026-12-15] Exame que foi solicitado.
     }
   }
-  // Estado "solicitado".
+  // REVIEW [2026-12-15] Estado "solicitado".
   value Requested {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Solicitado", en: "Requested" }
-    icon: Requested // Ícone associado ao estado.
-    ordinal: 10 // Ordem de exibição do estado.
+    icon: Requested // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Collected.
+    // REVIEW [2026-12-15] Transição para o estado Collected.
     transition Collected {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame coletado", en: "Exam collected" }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado "coletado".
+  // REVIEW [2026-12-15] Estado "coletado".
   value Collected {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Coletado", en: "Collected" }
-    icon: Collected // Ícone associado ao estado.
-    ordinal: 20 // Ordem de exibição do estado.
+    icon: Collected // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Processing.
+    // REVIEW [2026-12-15] Transição para o estado Processing.
     transition Processing {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame em processamento", en: "Exam processing" }
     }
 
-    // Transição para o estado Referred.
+    // REVIEW [2026-12-15] Transição para o estado Referred.
     transition Referred {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Laboratório de apoio de destino.
+        // REVIEW [2026-12-15] Laboratório de apoio de destino.
         supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
       }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado "em processamento".
+  // REVIEW [2026-12-15] Estado "em processamento".
   value Processing {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em processamento", en: "Processing" }
-    icon: Processing // Ícone associado ao estado.
-    ordinal: 30 // Ordem de exibição do estado.
+    icon: Processing // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Referred.
+    // REVIEW [2026-12-15] Transição para o estado Referred.
     transition Referred {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame encaminhado", en: "Exam referred" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Laboratório de apoio de destino.
+        // REVIEW [2026-12-15] Laboratório de apoio de destino.
         supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
       }
     }
 
-    // Transição para o estado Resulted.
+    // REVIEW [2026-12-15] Transição para o estado Resulted.
     transition Resulted {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Resultado emitido", en: "Result issued" }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado "resultado emitido".
+  // REVIEW [2026-12-15] Estado "resultado emitido".
   value Resulted {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Resultado emitido", en: "Resulted" }
-    icon: Resulted // Ícone associado ao estado.
-    ordinal: 40 // Ordem de exibição do estado.
+    icon: Resulted // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição do estado.
   }
-  // Estado "encaminhado ao apoio".
+  // REVIEW [2026-12-15] Estado "encaminhado ao apoio".
   value Referred {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Encaminhado ao apoio", en: "Referred to support" }
-    icon: Referred // Ícone associado ao estado.
-    ordinal: 50 // Ordem de exibição do estado.
+    icon: Referred // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 50 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Resulted.
+    // REVIEW [2026-12-15] Transição para o estado Resulted.
     transition Resulted {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Resultado emitido", en: "Result issued" }
     }
 
-    // Transição para o estado Cancelled.
+    // REVIEW [2026-12-15] Transição para o estado Cancelled.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado "cancelado".
+  // REVIEW [2026-12-15] Estado "cancelado".
   value Cancelled {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
-    icon: Cancelled // Ícone associado ao estado.
-    ordinal: 60 // Ordem de exibição do estado.
+    icon: Cancelled // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 60 // REVIEW [2026-12-15] Ordem de exibição do estado.
   }
-  format: plain // Exibição sem máscara.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }

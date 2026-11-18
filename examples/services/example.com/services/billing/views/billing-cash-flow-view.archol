@@ -1,30 +1,30 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Relatório consolidado de entradas e saídas de caixa.
+// REVIEW [2026-12-15] Relatório consolidado de entradas e saídas de caixa.
 view CashFlow {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
-  type: report // Tipo do artefato: relatório.
-  // Documentos usados como fonte dos dados.
+  type: report // REVIEW [2026-12-15] Tipo do artefato: relatório.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos dados.
   sources: [Invoice, Payment, Bill]
-  // Papéis autorizados a abrir o relatório.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o relatório.
   roles: [FinanceManager]
 
-  // Filtros disponíveis na tela.
+  // REVIEW [2026-12-15] Filtros disponíveis na tela.
   filters { period; store }
 
-  // Métricas calculadas a partir das fontes.
+  // REVIEW [2026-12-15] Métricas calculadas a partir das fontes.
   metrics {
-    // Soma dos pagamentos capturados no período.
+    // REVIEW [2026-12-15] Soma dos pagamentos capturados no período.
     inflow: sum(Payment.amount) where status == Captured
-    // Soma das contas pagas no período.
+    // REVIEW [2026-12-15] Soma das contas pagas no período.
     outflow: sum(Bill.amount) where status == Paid
-    // Saldo líquido entre entradas e saídas.
+    // REVIEW [2026-12-15] Saldo líquido entre entradas e saídas.
     balance: inflow - outflow
   }
 
-  // Unidade monetária de cada métrica.
+  // REVIEW [2026-12-15] Unidade monetária de cada métrica.
   units { inflow: BRL; outflow: BRL; balance: BRL }
-  freshness: 1h // Tempo máximo antes de recomputar os dados.
-  export: [pdf, csv] // Formatos disponíveis para exportação.
+  freshness: 1h // REVIEW [2026-12-15] Tempo máximo antes de recomputar os dados.
+  export: [pdf, csv] // REVIEW [2026-12-15] Formatos disponíveis para exportação.
 }

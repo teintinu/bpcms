@@ -1,48 +1,48 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Shape de classificação para os regimes tributários aceitos.
+// REVIEW [2026-12-15] Shape de classificação para os regimes tributários aceitos.
 shape TaxRegimeCode {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
-  // Deriva de uma classificação fechada de valores.
+  // REVIEW [2026-12-15] Deriva de uma classificação fechada de valores.
   base: classification
-  // Valor do Simples Nacional.
+  // REVIEW [2026-12-15] Valor do Simples Nacional.
   value SIMPLES {
-    // Rótulo do regime.
+    // REVIEW [2026-12-15] Rótulo do regime.
     title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
-    // Ícone associado ao regime.
+    // REVIEW [2026-12-15] Ícone associado ao regime.
     icon: Simples
-    ordinal: 10 // Ordem de exibição do valor.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor do Lucro Presumido.
+  // REVIEW [2026-12-15] Valor do Lucro Presumido.
   value LUCRO_PRESUMIDO {
-    // Rótulo do regime.
+    // REVIEW [2026-12-15] Rótulo do regime.
     title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
-    // Ícone associado ao regime.
+    // REVIEW [2026-12-15] Ícone associado ao regime.
     icon: LucroPresumido
-    ordinal: 20 // Ordem de exibição do valor.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do valor.
   }
-  // Valor do Lucro Real.
+  // REVIEW [2026-12-15] Valor do Lucro Real.
   value LUCRO_REAL {
-    // Rótulo do regime.
+    // REVIEW [2026-12-15] Rótulo do regime.
     title: { pt-BR: "Lucro Real", en: "Actual profit" }
-    // Ícone associado ao regime.
+    // REVIEW [2026-12-15] Ícone associado ao regime.
     icon: LucroReal
-    // Ordem de exibição do valor.
+    // REVIEW [2026-12-15] Ordem de exibição do valor.
     ordinal: 30
   }
-  // Formatação textual simples, sem máscara.
+  // REVIEW [2026-12-15] Formatação textual simples, sem máscara.
   format: plain
 }
 
-// Shape textual que representa um ano e mês.
+// REVIEW [2026-12-15] Shape textual que representa um ano e mês.
 shape YearMonth {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Ano/mês", en: "Year-month" }
-  // Deriva do tipo textual nativo.
+  // REVIEW [2026-12-15] Deriva do tipo textual nativo.
   base: string
-  // Valida o formato ano-mês.
+  // REVIEW [2026-12-15] Valida o formato ano-mês.
   validate: year-month
-  // Formatação textual simples, sem máscara.
+  // REVIEW [2026-12-15] Formatação textual simples, sem máscara.
   format: plain
 }

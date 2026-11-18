@@ -1,415 +1,415 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Documento fiscal que representa a nota emitida para um pedido.
+// REVIEW [2026-12-15] Documento fiscal que representa a nota emitida para um pedido.
 document Invoice {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Nota fiscal", en: "Invoice" }
-  version: 1 // Versão do documento usada em release e comparação.
-  // Área responsável pelo documento.
+  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
-  sync: live // Sincronização em tempo real entre as partes.
-  retention: 5y // Retenção obrigatória do documento por cinco anos.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.
+  retention: 5y // REVIEW [2026-12-15] Retenção obrigatória do documento por cinco anos.
 
-  // Campos que compõem a nota fiscal.
+  // REVIEW [2026-12-15] Campos que compõem a nota fiscal.
   fields {
-    // Loja emissora; obrigatória e com padrão São Paulo.
+    // REVIEW [2026-12-15] Loja emissora; obrigatória e com padrão São Paulo.
     store: Store {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Loja", en: "Store" }
-      // Torna a loja obrigatória no preenchimento.
+      // REVIEW [2026-12-15] Torna a loja obrigatória no preenchimento.
       required
-      // Loja padrão ao criar uma nota.
+      // REVIEW [2026-12-15] Loja padrão ao criar uma nota.
       default: Store.SP
     }
-    // Exercício fiscal da nota; obrigatório e com padrão 2026.
+    // REVIEW [2026-12-15] Exercício fiscal da nota; obrigatório e com padrão 2026.
     fiscalYear: FiscalYear {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Exercício", en: "Fiscal year" }
-      // Torna o exercício obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o exercício obrigatório no preenchimento.
       required
-      // Exercício padrão ao criar uma nota.
+      // REVIEW [2026-12-15] Exercício padrão ao criar uma nota.
       default: FiscalYear.Y2026
     }
-    // Número da nota; sequencial, único e consultável.
+    // REVIEW [2026-12-15] Número da nota; sequencial, único e consultável.
     number: InvoiceNumber {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
-      // Formato ano, código da loja e sequência.
+      // REVIEW [2026-12-15] Formato ano, código da loja e sequência.
       format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
-      // Reinicia a sequência por loja e exercício.
+      // REVIEW [2026-12-15] Reinicia a sequência por loja e exercício.
       sequence: per(Store, FiscalYear)
-      // Impede números de nota repetidos.
+      // REVIEW [2026-12-15] Impede números de nota repetidos.
       unique
-      // Permite localizar a nota pelo número.
+      // REVIEW [2026-12-15] Permite localizar a nota pelo número.
       lookup
     }
-    // Pedido que originou a nota.
+    // REVIEW [2026-12-15] Pedido que originou a nota.
     order: Order {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
     }
-    // Cliente destinatário da nota; consultável.
+    // REVIEW [2026-12-15] Cliente destinatário da nota; consultável.
     customer: User {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Cliente", en: "Customer" }
-      // Permite localizar a nota pelo cliente.
+      // REVIEW [2026-12-15] Permite localizar a nota pelo cliente.
       lookup
     }
-    // Itens que compõem a nota.
+    // REVIEW [2026-12-15] Itens que compõem a nota.
     items: InvoiceItem[] { title: { pt-BR: "Itens", en: "Items" } }
-    // Subtotal calculado pela soma dos itens.
+    // REVIEW [2026-12-15] Subtotal calculado pela soma dos itens.
     subtotal: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Subtotal", en: "Subtotal" }
-      // Moeda do subtotal.
+      // REVIEW [2026-12-15] Moeda do subtotal.
       currency: BRL
-      // Calcula o subtotal a partir dos itens.
+      // REVIEW [2026-12-15] Calcula o subtotal a partir dos itens.
       computed: items.sum(total)
     }
-    // Imposto incidente sobre a nota.
+    // REVIEW [2026-12-15] Imposto incidente sobre a nota.
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
-    // Total da nota; consultável.
+    // REVIEW [2026-12-15] Total da nota; consultável.
     total: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
-      // Permite localizar a nota pelo total.
+      // REVIEW [2026-12-15] Permite localizar a nota pelo total.
       lookup
-      // Moeda do total.
+      // REVIEW [2026-12-15] Moeda do total.
       currency: BRL
-      // Calcula o total somando subtotal e imposto.
+      // REVIEW [2026-12-15] Calcula o total somando subtotal e imposto.
       computed: subtotal + tax
     }
-    // Situação atual no ciclo de vida da nota; consultável.
+    // REVIEW [2026-12-15] Situação atual no ciclo de vida da nota; consultável.
     status: InvoiceStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Data de emissão da nota.
+    // REVIEW [2026-12-15] Data de emissão da nota.
     issuedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
-    // Data de vencimento da nota.
+    // REVIEW [2026-12-15] Data de vencimento da nota.
     dueAt: DateTime { title: { pt-BR: "Vence em", en: "Due at" } }
   }
 
-  // Índices que aceleram as consultas mais frequentes.
+  // REVIEW [2026-12-15] Índices que aceleram as consultas mais frequentes.
   indexes {
-    // Garante unicidade do número da nota.
+    // REVIEW [2026-12-15] Garante unicidade do número da nota.
     number: [number] unique
-    // Indexa as notas por pedido de origem.
+    // REVIEW [2026-12-15] Indexa as notas por pedido de origem.
     byOrder: [order.id] hash
-    // Indexa situação e vencimento para listar por estado.
+    // REVIEW [2026-12-15] Indexa situação e vencimento para listar por estado.
     byStatus: [status, dueAt] range
   }
 
-  // Ações que alteram o estado da nota.
+  // REVIEW [2026-12-15] Ações que alteram o estado da nota.
   actions {
-    // Solicita a emissão da nota a partir de um pedido.
+    // REVIEW [2026-12-15] Solicita a emissão da nota a partir de um pedido.
     request(order: Order){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Solicitar nota", en: "Request invoice" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
-      // Devolve a nota criada.
+      // REVIEW [2026-12-15] Devolve a nota criada.
       returns: Invoice
-      // Efeitos colaterais aplicados ao documento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao documento.
       {
-        // Copia o cliente do pedido para a nota.
+        // REVIEW [2026-12-15] Copia o cliente do pedido para a nota.
         customer = order.customer
-        // Emite o evento de nota solicitada com o pedido.
+        // REVIEW [2026-12-15] Emite o evento de nota solicitada com o pedido.
         emit Requested { order: order }
       }
     }
 
-    // Deriva os dados da nota a partir do pedido.
+    // REVIEW [2026-12-15] Deriva os dados da nota a partir do pedido.
     deriveFromOrder(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Derivar do pedido", en: "Derive from order" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
     }
 
-    // Aplica o imposto correspondente ao regime tributário.
+    // REVIEW [2026-12-15] Aplica o imposto correspondente ao regime tributário.
     applyTax(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Aplicar imposto", en: "Apply tax" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
     }
 
-    // Emite a nota e registra a data de emissão.
+    // REVIEW [2026-12-15] Emite a nota e registra a data de emissão.
     issue(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Emitir", en: "Issue" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
-      // Transição para o estado emitido.
+      // REVIEW [2026-12-15] Transição para o estado emitido.
       to: status.Issued
-      // Emite o evento de emissão com a data atual.
+      // REVIEW [2026-12-15] Emite o evento de emissão com a data atual.
       emits { issuedAt: now() }
 
-      // Exige total positivo para emitir a nota.
+      // REVIEW [2026-12-15] Exige total positivo para emitir a nota.
       rule total > 0 BRL {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "O valor deve ser maior que zero"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Value must be greater than zero"
       }
 
-      // Efeitos colaterais aplicados ao documento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao documento.
       {
-        // Grava a data de emissão.
+        // REVIEW [2026-12-15] Grava a data de emissão.
         issuedAt = now()
       }
     }
 
-    // Registra o pagamento da nota.
+    // REVIEW [2026-12-15] Registra o pagamento da nota.
     pay(paidAt: DateTime){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Pagar", en: "Pay" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
 
-      // Transição para o estado pago.
+      // REVIEW [2026-12-15] Transição para o estado pago.
       to: status.Paid
-      // Emite o valor total como evento de pagamento.
+      // REVIEW [2026-12-15] Emite o valor total como evento de pagamento.
       emits { amount: total }
     }
 
-    // Sinaliza que a nota venceu sem pagamento.
+    // REVIEW [2026-12-15] Sinaliza que a nota venceu sem pagamento.
     markOverdue(){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Marcar vencida", en: "Mark overdue" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [Clerk]
 
-      // Transição para o estado vencido.
+      // REVIEW [2026-12-15] Transição para o estado vencido.
       to: status.Overdue
     }
 
-    // Cancela a nota com um motivo justificado.
+    // REVIEW [2026-12-15] Cancela a nota com um motivo justificado.
     cancel(reason: string){
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar", en: "Cancel" }
-      // Papéis autorizados a executar a ação.
+      // REVIEW [2026-12-15] Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
-      // Transição para o estado cancelado.
+      // REVIEW [2026-12-15] Transição para o estado cancelado.
       to: status.Cancelled
 
-      // Exige um motivo com pelo menos dez caracteres.
+      // REVIEW [2026-12-15] Exige um motivo com pelo menos dez caracteres.
       rule reason.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
   }
 
-  // Invariante: nota emitida precisa ter data de emissão.
+  // REVIEW [2026-12-15] Invariante: nota emitida precisa ter data de emissão.
   rule status == Issued implies issuedAt != null {
-    // Mensagem de validação em português.
+    // REVIEW [2026-12-15] Mensagem de validação em português.
     pt-BR: "Informe a data de emissão"
-    // Mensagem de validação em inglês.
+    // REVIEW [2026-12-15] Mensagem de validação em inglês.
     en: "Enter the issue date"
   }
 }
 
-// Shape que representa uma linha de item da nota.
+// REVIEW [2026-12-15] Shape que representa uma linha de item da nota.
 shape InvoiceItem {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Item da nota", en: "Invoice item" }
 
-  // Campos que compõem o item da nota.
+  // REVIEW [2026-12-15] Campos que compõem o item da nota.
   fields {
-    // Produto vendido; consultável.
+    // REVIEW [2026-12-15] Produto vendido; consultável.
     product: Product {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Produto", en: "Product" }
-      // Permite localizar o item pelo produto.
+      // REVIEW [2026-12-15] Permite localizar o item pelo produto.
       lookup
     }
-    // Quantidade vendida; consultável.
+    // REVIEW [2026-12-15] Quantidade vendida; consultável.
     quantity: std.Count {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Quantidade", en: "Quantity" }
-      // Permite localizar o item pela quantidade.
+      // REVIEW [2026-12-15] Permite localizar o item pela quantidade.
       lookup
     }
-    // Preço unitário do produto em reais.
+    // REVIEW [2026-12-15] Preço unitário do produto em reais.
     unitPrice: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Preço unitário", en: "Unit price" }
-      // Moeda do preço unitário.
+      // REVIEW [2026-12-15] Moeda do preço unitário.
       currency: BRL
     }
-    // Total do item calculado por quantidade e preço.
+    // REVIEW [2026-12-15] Total do item calculado por quantidade e preço.
     total: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
-      // Moeda do total do item.
+      // REVIEW [2026-12-15] Moeda do total do item.
       currency: BRL
-      // Calcula o total multiplicando quantidade e preço.
+      // REVIEW [2026-12-15] Calcula o total multiplicando quantidade e preço.
       computed: quantity * unitPrice
     }
   }
 }
 
-// Shape de estado que modela o ciclo de vida da nota fiscal.
+// REVIEW [2026-12-15] Shape de estado que modela o ciclo de vida da nota fiscal.
 shape InvoiceStatus {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
-  // Deriva de uma máquina de estados.
+  // REVIEW [2026-12-15] Deriva de uma máquina de estados.
   base: state
-  // Estado inicial de rascunho, já com a transição de solicitação.
+  // REVIEW [2026-12-15] Estado inicial de rascunho, já com a transição de solicitação.
   initial: Draft with transition Requested {
-    // Título da transição no histórico.
+    // REVIEW [2026-12-15] Título da transição no histórico.
     title: { pt-BR: "Nota solicitada", en: "Invoice requested" }
-    // Dados carregados junto com a transição.
+    // REVIEW [2026-12-15] Dados carregados junto com a transição.
     payload {
-      // Pedido que originou a nota.
+      // REVIEW [2026-12-15] Pedido que originou a nota.
       order: Order { title: { pt-BR: "Pedido", en: "Order" } }
     }
   }
 
-  // Estado de rascunho, ainda não emitido.
+  // REVIEW [2026-12-15] Estado de rascunho, ainda não emitido.
   value Draft {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    // Ícone do estado no namespace status.
+    // REVIEW [2026-12-15] Ícone do estado no namespace status.
     icon: status.draft
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição permitida de rascunho para emitida.
+    // REVIEW [2026-12-15] Transição permitida de rascunho para emitida.
     transition Issued {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota emitida", en: "Invoice issued" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data de emissão da nota.
+        // REVIEW [2026-12-15] Data de emissão da nota.
         issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
-        // Número atribuído à nota.
+        // REVIEW [2026-12-15] Número atribuído à nota.
         number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
-        // Total apurado na emissão.
+        // REVIEW [2026-12-15] Total apurado na emissão.
         total: std.Money { title: { pt-BR: "Total", en: "Total" } }
       }
     }
   }
-  // Estado em que a nota foi emitida.
+  // REVIEW [2026-12-15] Estado em que a nota foi emitida.
   value Issued {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Emitida", en: "Issued" }
-    // Ícone do estado no namespace finance.
+    // REVIEW [2026-12-15] Ícone do estado no namespace finance.
     icon: finance.invoice.issued
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
 
-    // Transição permitida de emitida para paga.
+    // REVIEW [2026-12-15] Transição permitida de emitida para paga.
     transition Paid {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota paga", en: "Invoice paid" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a nota foi paga.
+        // REVIEW [2026-12-15] Data em que a nota foi paga.
         paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
-        // Valor pago na quitação.
+        // REVIEW [2026-12-15] Valor pago na quitação.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
 
-    // Transição permitida de emitida para vencida.
+    // REVIEW [2026-12-15] Transição permitida de emitida para vencida.
     transition Overdue {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota vencida", en: "Invoice overdue" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a nota venceu.
+        // REVIEW [2026-12-15] Data em que a nota venceu.
         dueAt: DateTime { title: { pt-BR: "Vencia em", en: "Due at" } }
       }
     }
 
-    // Transição permitida de emitida para cancelada.
+    // REVIEW [2026-12-15] Transição permitida de emitida para cancelada.
     transition Cancelled {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado em que a nota foi paga.
+  // REVIEW [2026-12-15] Estado em que a nota foi paga.
   value Paid {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Paga", en: "Paid" }
-    // Ícone do estado no namespace status.
+    // REVIEW [2026-12-15] Ícone do estado no namespace status.
     icon: status.paid
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
   }
-  // Estado em que a nota está vencida.
+  // REVIEW [2026-12-15] Estado em que a nota está vencida.
   value Overdue {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Vencida", en: "Overdue" }
-    // Ícone do estado no namespace status.
+    // REVIEW [2026-12-15] Ícone do estado no namespace status.
     icon: status.overdue
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 40
 
-    // Transição permitida de vencida para paga.
+    // REVIEW [2026-12-15] Transição permitida de vencida para paga.
     transition Paid {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota paga", en: "Invoice paid" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Data em que a nota foi paga.
+        // REVIEW [2026-12-15] Data em que a nota foi paga.
         paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
-        // Valor pago na quitação.
+        // REVIEW [2026-12-15] Valor pago na quitação.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
 
-    // Transição permitida de vencida para cancelada.
+    // REVIEW [2026-12-15] Transição permitida de vencida para cancelada.
     transition Cancelled {
-      // Título da transição no histórico.
+      // REVIEW [2026-12-15] Título da transição no histórico.
       title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }
-      // Dados carregados junto com a transição.
+      // REVIEW [2026-12-15] Dados carregados junto com a transição.
       payload {
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado em que a nota foi cancelada.
+  // REVIEW [2026-12-15] Estado em que a nota foi cancelada.
   value Cancelled {
-    // Rótulo do estado.
+    // REVIEW [2026-12-15] Rótulo do estado.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Cancelled
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 50
   }
-  // Formatação textual simples, sem máscara.
+  // REVIEW [2026-12-15] Formatação textual simples, sem máscara.
   format: plain
 }
 
-// Shape textual que representa o número da nota.
+// REVIEW [2026-12-15] Shape textual que representa o número da nota.
 shape InvoiceNumber {
-  // Título exibido no construtor.
+  // REVIEW [2026-12-15] Título exibido no construtor.
   title: { pt-BR: "Número da nota", en: "Invoice number" }
-  // Deriva do tipo textual nativo.
+  // REVIEW [2026-12-15] Deriva do tipo textual nativo.
   base: string
-  // Limita o número a quarenta caracteres.
+  // REVIEW [2026-12-15] Limita o número a quarenta caracteres.
   maxLength: 40
 }
 
-// Política de retenção e anonimização das notas.
+// REVIEW [2026-12-15] Política de retenção e anonimização das notas.
 policy InvoiceRetention {
-  // Documento ao qual a política se aplica.
+  // REVIEW [2026-12-15] Documento ao qual a política se aplica.
   appliesTo: Invoice
-  // Retém por cinco anos e depois anonimiza.
+  // REVIEW [2026-12-15] Retém por cinco anos e depois anonimiza.
   rule: retainFor(5y) then anonymize
-  // Aplica a política de forma obrigatória.
+  // REVIEW [2026-12-15] Aplica a política de forma obrigatória.
   severity: enforce
-  // Registra a execução da política em auditoria.
+  // REVIEW [2026-12-15] Registra a execução da política em auditoria.
   audit: true
 }

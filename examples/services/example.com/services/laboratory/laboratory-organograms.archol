@@ -1,113 +1,113 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Organograma que estrutura papéis e hierarquia do laboratório.
+// REVIEW [2026-12-15] Organograma que estrutura papéis e hierarquia do laboratório.
 organogram Laboratory {
-  // Título exibido no builder e na revisão.
+  // REVIEW [2026-12-15] Título exibido no builder e na revisão.
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scopes: [Laboratory] // Escopos em que as roles deste organograma valem.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que as roles deste organograma valem.
 
-  // Hierarquia de subordinação entre as roles.
+  // REVIEW [2026-12-15] Hierarquia de subordinação entre as roles.
   hierarchy {
-    // Cadeia principal: gestor, patologista, analista e coletador.
+    // REVIEW [2026-12-15] Cadeia principal: gestor, patologista, analista e coletador.
     LabManager > Pathologist > Analyst > Collector
-    // O gestor também responde pela ligação com laboratórios de apoio.
+    // REVIEW [2026-12-15] O gestor também responde pela ligação com laboratórios de apoio.
     LabManager > SupportLiaison
-    // O gestor também responde pelo equipamento analisador.
+    // REVIEW [2026-12-15] O gestor também responde pelo equipamento analisador.
     LabManager > AnalyzerDevice
   }
 
-  // O gestor administra as roles operacionais abaixo dele.
+  // REVIEW [2026-12-15] O gestor administra as roles operacionais abaixo dele.
   LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
-  // Delega ao patologista após sete dias de ausência do gestor.
+  // REVIEW [2026-12-15] Delega ao patologista após sete dias de ausência do gestor.
   LabManager delegates to Pathologist when absent for 7d
 
-  // Regras de segregação de funções.
+  // REVIEW [2026-12-15] Regras de segregação de funções.
   segregation {
-    // Quem executa o exame não pode liberar o resultado.
+    // REVIEW [2026-12-15] Quem executa o exame não pode liberar o resultado.
     exam.perform != exam.release
   }
 
-  // Assinatura exigida nas decisões do organograma.
+  // REVIEW [2026-12-15] Assinatura exigida nas decisões do organograma.
   signature {
-    // Papel que assina as liberações.
+    // REVIEW [2026-12-15] Papel que assina as liberações.
     Pathologist
   }
 }
 
-// Papel responsável pela coleta das amostras.
+// REVIEW [2026-12-15] Papel responsável pela coleta das amostras.
 role Collector {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Coletador", en: "Collector" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  // Permissões concedidas ao coletador.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  // REVIEW [2026-12-15] Permissões concedidas ao coletador.
   permissions: [
-    // Coleta de amostra para hemograma.
+    // REVIEW [2026-12-15] Coleta de amostra para hemograma.
     sample.collect.hemogram,
-    // Coleta de amostra para glicemia.
+    // REVIEW [2026-12-15] Coleta de amostra para glicemia.
     sample.collect.glucose,
-    // Consulta de amostras.
+    // REVIEW [2026-12-15] Consulta de amostras.
     sample.view,
-    // Execução de exame de hemograma.
+    // REVIEW [2026-12-15] Execução de exame de hemograma.
     exam.perform.hemogram
   ]
 }
 
-// Papel do equipamento analisador automatizado.
+// REVIEW [2026-12-15] Papel do equipamento analisador automatizado.
 role AnalyzerDevice {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Equipamento analisador", en: "Analyzer device" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  // Capacidades técnicas do equipamento.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  // REVIEW [2026-12-15] Capacidades técnicas do equipamento.
   capabilities { equipment, laboratory-protocol }
-  // Permissão de execução do hemograma.
+  // REVIEW [2026-12-15] Permissão de execução do hemograma.
   permissions: [exam.perform.hemogram]
 }
 
-// Papel do analista que processa as amostras.
+// REVIEW [2026-12-15] Papel do analista que processa as amostras.
 role Analyst {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Analista", en: "Analyst" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  inherits: Collector // Herda as permissões do coletador.
-  // Permissões adicionais do analista.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  inherits: Collector // REVIEW [2026-12-15] Herda as permissões do coletador.
+  // REVIEW [2026-12-15] Permissões adicionais do analista.
   permissions: [
-    // Coleta de amostra para cultura.
+    // REVIEW [2026-12-15] Coleta de amostra para cultura.
     sample.collect.culture,
-    // Coleta de amostra para hemoglobina glicada.
+    // REVIEW [2026-12-15] Coleta de amostra para hemoglobina glicada.
     sample.collect.hba1c,
-    // Execução de exame de cultura.
+    // REVIEW [2026-12-15] Execução de exame de cultura.
     exam.perform.culture,
-    // Execução de exame de hemoglobina glicada.
+    // REVIEW [2026-12-15] Execução de exame de hemoglobina glicada.
     exam.perform.hba1c,
-    // Registro de resultados.
+    // REVIEW [2026-12-15] Registro de resultados.
     result.enter
   ]
 }
 
-// Papel do patologista que revisa e libera resultados.
+// REVIEW [2026-12-15] Papel do patologista que revisa e libera resultados.
 role Pathologist {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Patologista", en: "Pathologist" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  // Permissões de revisão e liberação.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  // REVIEW [2026-12-15] Permissões de revisão e liberação.
   permissions: [exam.review, exam.release, result.release]
 }
 
-// Papel de ligação com os laboratórios de apoio.
+// REVIEW [2026-12-15] Papel de ligação com os laboratórios de apoio.
 role SupportLiaison {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  // Permissões de recebimento e encaminhamento.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  // REVIEW [2026-12-15] Permissões de recebimento e encaminhamento.
   permissions: [sample.receive, support.refer]
 }
 
-// Papel do gestor do laboratório.
+// REVIEW [2026-12-15] Papel do gestor do laboratório.
 role LabManager {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
-  scopes: [Laboratory] // Escopos em que a role é válida.
-  inherits: Pathologist // Herda as permissões do patologista.
-  // Permissões administrativas e de encaminhamento.
+  scopes: [Laboratory] // REVIEW [2026-12-15] Escopos em que a role é válida.
+  inherits: Pathologist // REVIEW [2026-12-15] Herda as permissões do patologista.
+  // REVIEW [2026-12-15] Permissões administrativas e de encaminhamento.
   permissions: [lab.manage, support.refer]
 }

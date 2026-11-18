@@ -1,20 +1,20 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// View de caixa de entrada que lista o trabalho de despacho pendente.
+// REVIEW [2026-12-15] View de caixa de entrada que lista o trabalho de despacho pendente.
 view DispatchWork {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de despacho", en: "Dispatch queue" }
-  // Tipo da view: inbox de tarefas.
+  // REVIEW [2026-12-15] Tipo da view: inbox de tarefas.
   type: inbox
-  // Papéis que podem abrir a fila.
+  // REVIEW [2026-12-15] Papéis que podem abrir a fila.
   roles: [Dispatcher, FieldTechnician]
-  // Escopo por papel: cada usuário enxerga apenas o trabalho do seu papel.
+  // REVIEW [2026-12-15] Escopo por papel: cada usuário enxerga apenas o trabalho do seu papel.
   scope: roles
-  // Agrupa os itens da fila por papel.
+  // REVIEW [2026-12-15] Agrupa os itens da fila por papel.
   groupBy: role
-  // Filtro que restringe a fila aos papéis do usuário atual.
+  // REVIEW [2026-12-15] Filtro que restringe a fila aos papéis do usuário atual.
   filter { role in currentUser.roles }
 
-  // Colunas exibidas em cada item da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada item da fila.
   columns { title; subject; role; dueAt; priority }
 }

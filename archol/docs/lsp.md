@@ -81,6 +81,7 @@ different services are not mixed.
 | `archol/status` | `{}` | `{ "application", "files", "services" }` or nulls |
 | `archol/declaration` | `{ "id": "..." }` | `{ "uri", "range" }` or `null` |
 | `archol/usages` | `{ "id": "..." }` | `{ "count", "locations": [{uri,range,kind}] }` |
+| `textDocument/formatting` | `{ textDocument }` | `TextEdit[]` (uppercases pending keywords) |
 | `archol/lock` | `{}` | `{ "application", "path", "identifiers" }` (writes the application lock file) |
 | `archol/inApplication` | `{ "uri": "file:///..." }` | `{ "inApplication": bool }` |
 

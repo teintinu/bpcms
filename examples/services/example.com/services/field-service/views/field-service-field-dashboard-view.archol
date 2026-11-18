@@ -1,31 +1,31 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// View de painel com os indicadores operacionais do serviço de campo.
+// REVIEW [2026-12-15] View de painel com os indicadores operacionais do serviço de campo.
 view FieldDashboard {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Painel de campo", en: "Field dashboard" }
-  // Tipo da view: painel de métricas.
+  // REVIEW [2026-12-15] Tipo da view: painel de métricas.
   type: dashboard
-  // Documentos que alimentam o painel.
+  // REVIEW [2026-12-15] Documentos que alimentam o painel.
   sources: [Visit, WorkOrder]
-  // Papéis que podem abrir o painel.
+  // REVIEW [2026-12-15] Papéis que podem abrir o painel.
   roles: [Supervisor, Dispatcher]
-  // Atualização em tempo real, sem recarregar a tela.
+  // REVIEW [2026-12-15] Atualização em tempo real, sem recarregar a tela.
   mode: live
 
-  // Filtros globais oferecidos no painel.
+  // REVIEW [2026-12-15] Filtros globais oferecidos no painel.
   filters { site; status; period }
-  // Métricas calculadas sobre as fontes declaradas.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as fontes declaradas.
   metrics {
-    // Visitas ainda abertas, ou seja, nem concluídas nem falhas.
+    // REVIEW [2026-12-15] Visitas ainda abertas, ou seja, nem concluídas nem falhas.
     openVisits: count(Visit) where Visit.status != Completed and Visit.status != Failed
-    // Visitas em que o técnico já fez check-in no local.
+    // REVIEW [2026-12-15] Visitas em que o técnico já fez check-in no local.
     onSite: count(Visit) where Visit.status == OnSite
-    // Visitas encerradas em falha.
+    // REVIEW [2026-12-15] Visitas encerradas em falha.
     failedVisits: count(Visit) where Visit.status == Failed
-    // Ordens de serviço ainda em andamento, nem concluídas nem canceladas.
+    // REVIEW [2026-12-15] Ordens de serviço ainda em andamento, nem concluídas nem canceladas.
     openOrders: count(WorkOrder) where WorkOrder.status != Done and WorkOrder.status != Cancelled
   }
-  // Idade máxima aceita dos dados antes de atualizar o painel.
+  // REVIEW [2026-12-15] Idade máxima aceita dos dados antes de atualizar o painel.
   freshness: 5m
 }

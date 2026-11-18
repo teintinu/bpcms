@@ -1,30 +1,30 @@
-// service: example.com/services/field-service
+// REVIEW [2026-12-15] service: example.com/services/field-service
 
-// View de tabela que lista as visitas técnicas.
+// REVIEW [2026-12-15] View de tabela que lista as visitas técnicas.
 view VisitsTable {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Visitas técnicas", en: "Visits" }
-  // Tipo da view: tabela de registros.
+  // REVIEW [2026-12-15] Tipo da view: tabela de registros.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: Visit
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Dispatcher, FieldTechnician, Supervisor]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { number; site; technician; status; windowStart }
-  // Filtros disponíveis sobre a tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis sobre a tabela.
   filters { status; site; technician; period }
-  // Quantidade de linhas por página.
+  // REVIEW [2026-12-15] Quantidade de linhas por página.
   pagination: 50
 
-  // Ações expostas na tabela, ligadas às ações do documento.
+  // REVIEW [2026-12-15] Ações expostas na tabela, ligadas às ações do documento.
   actions {
-    // Abre o detalhe da visita selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da visita selecionada.
     open -> VisitDetail
-    // Despacha a visita selecionada.
+    // REVIEW [2026-12-15] Despacha a visita selecionada.
     dispatch -> Visit.dispatch
-    // Registra a falha com o motivo informado.
+    // REVIEW [2026-12-15] Registra a falha com o motivo informado.
     fail -> Visit.fail(failureReason)
   }
 }

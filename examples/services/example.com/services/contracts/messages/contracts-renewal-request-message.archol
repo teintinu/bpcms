@@ -1,17 +1,17 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Mensagem que leva a proposta de renovação ao fornecedor.
+// REVIEW [2026-12-15] Mensagem que leva a proposta de renovação ao fornecedor.
 message RenewalRequest {
-  // Título exibido na caixa de mensagens.
+  // REVIEW [2026-12-15] Título exibido na caixa de mensagens.
   title: { pt-BR: "Proposta de renovação", en: "Renewal request" }
-  about: Contract // Documento ao qual a mensagem se refere.
-  // Dados transportados pela mensagem.
+  about: Contract // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Dados transportados pela mensagem.
   payload {
-    // Número do contrato a renovar.
+    // REVIEW [2026-12-15] Número do contrato a renovar.
     contractNumber: string { title: { pt-BR: "Número do contrato", en: "Contract number" } }
-    // Novo término proposto para o contrato.
+    // REVIEW [2026-12-15] Novo término proposto para o contrato.
     proposedEndsAt: Date { title: { pt-BR: "Novo término proposto", en: "Proposed end date" } }
-    // Data-limite para resposta à proposta.
+    // REVIEW [2026-12-15] Data-limite para resposta à proposta.
     expiresAt: Date { title: { pt-BR: "Resposta até", en: "Respond by" } }
   }
 }

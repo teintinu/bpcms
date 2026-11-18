@@ -1,28 +1,28 @@
-// service: example.com/services/claims
+// REVIEW [2026-12-15] service: example.com/services/claims
 
-// Quadro kanban que agrupa sinistros por situação para gestão visual.
+// REVIEW [2026-12-15] Quadro kanban que agrupa sinistros por situação para gestão visual.
 view ClaimsKanban {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Quadro de sinistros", en: "Claims board" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento exibido pelo quadro.
+  // REVIEW [2026-12-15] Documento exibido pelo quadro.
   source: Claim
-  // Papéis que podem abrir o quadro.
+  // REVIEW [2026-12-15] Papéis que podem abrir o quadro.
   roles: [Clerk, Adjuster, Manager]
-  // Agrupa os cartões pela situação do sinistro.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação do sinistro.
   groupBy: status
 
-  // Colunas exibidas em cada cartão resumido.
+  // REVIEW [2026-12-15] Colunas exibidas em cada cartão resumido.
   columns { number; amount; type }
-  // Campos exibidos no cartão do quadro.
+  // REVIEW [2026-12-15] Campos exibidos no cartão do quadro.
   card { number; amount; adjuster }
-  // Filtra o quadro para os sinistros do usuário atual.
+  // REVIEW [2026-12-15] Filtra o quadro para os sinistros do usuário atual.
   filter { adjuster = currentUser }
 
-  // Ações disparadas a partir do quadro.
+  // REVIEW [2026-12-15] Ações disparadas a partir do quadro.
   actions {
-    // Abre o detalhe do sinistro selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do sinistro selecionado.
     open -> ClaimDetail
   }
 }

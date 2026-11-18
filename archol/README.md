@@ -54,6 +54,8 @@ cargo run -q --bin archol -- ast ../examples/services/example.com/services/billi
 
 ```text
 archol check [dir] --app <uri|path> [--json]   compile one application closure
+archol lint [dir] --app <uri|path> [--json]    check diagnostics (lint)
+archol format [dir] [--check]                  uppercase pending keywords (format)
 archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
 archol ast <file> [--app <uri|path>] [--json]  syntax AST, or annotated with ids
@@ -66,7 +68,10 @@ archol lsp                                    LSP server over stdio
 `check` exits with code 1 when there is an error and prints
 `file:line:column: severity code: message`. `lock` writes one identifier per
 line (CSV `id,path`); the AST then carries stable `id`/`ref` values from the lock. Only used identifiers get ids; append `*` to a path to pin it. The plugin refreshes the lock on application selection and, with a 10 s debounce, after `.archol` edits.
-`links` produces, among other things, which artifacts require each `role`.
+`format` uppercases `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` comment markers and
+`--check` exits 1 when a file would change. `lint` runs the same diagnostics as
+`check` (including pending due dates). `links` produces, among other things,
+which artifacts require each `role`.
 Files outside the application closure are treated as commented out (CLI and
 LSP). See [`docs/identifiers.md`](docs/identifiers.md).
 

@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const vscode = require('vscode');
 const { buildAstHtml } = require('./ast-view-html');
 const { normalizeAstResult, usageQuickPickItem } = require('./app-support');
-const { byteOffsetAtText, findNodePathAtOffset, textOffsetsForByteSpan } = require('./ast-tree');
+const { byteOffsetAtText, findNodePathAtOffset, mergePending, textOffsetsForByteSpan } = require('./ast-tree');
 
 const VIEW_TYPE = 'archol.astExplorer';
 const REFRESH_DEBOUNCE_MS = 400;
@@ -79,7 +79,7 @@ class AstExplorer {
     try {
       const result = normalizeAstResult(await this._getAst(uri));
       if (requestId !== this._requestSeq || this._disposed || !this._panel) return;
-      const ast = result.ast;
+      const ast = mergePending(result.ast);
       if (!ast) throw new Error('The server did not return an AST for this document.');
       const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
       const explicitOffset = options.selectOffset !== undefined && options.selectOffset !== null;

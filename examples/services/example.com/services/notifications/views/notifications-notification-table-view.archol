@@ -1,25 +1,25 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// View tabular com todas as notificações.
+// REVIEW [2026-12-15] View tabular com todas as notificações.
 view NotificationTable {
-  // Rótulo da view exibido na navegação.
+  // REVIEW [2026-12-15] Rótulo da view exibido na navegação.
   title: { pt-BR: "Notificações", en: "Notifications" }
-  // Tipo tabela: listagem paginada de registros.
+  // REVIEW [2026-12-15] Tipo tabela: listagem paginada de registros.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: Notification
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { recipient; channel; status; sentAt; error }
-  // Filtros disponíveis na barra da tabela.
+  // REVIEW [2026-12-15] Filtros disponíveis na barra da tabela.
   filters { status; channel; period }
-  pagination: 50 // Tamanho da página da tabela.
+  pagination: 50 // REVIEW [2026-12-15] Tamanho da página da tabela.
 
-  // Ações disponíveis nos itens da tabela.
+  // REVIEW [2026-12-15] Ações disponíveis nos itens da tabela.
   actions {
-    // Abre o detalhe da notificação selecionada.
+    // REVIEW [2026-12-15] Abre o detalhe da notificação selecionada.
     open -> NotificationDetail
   }
 }

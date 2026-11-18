@@ -1,504 +1,504 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Documento que representa um chamado de atendimento.
+// REVIEW [2026-12-15] Documento que representa um chamado de atendimento.
 document Ticket {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Chamado", en: "Ticket" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pelo documento.
+  // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Support"
-  // Sincronização ao vivo: réplicas acompanham cada transição.
+  // REVIEW [2026-12-15] Sincronização ao vivo: réplicas acompanham cada transição.
   sync: live
-  // Campos que compõem o chamado.
+  // REVIEW [2026-12-15] Campos que compõem o chamado.
   fields {
-    // Cliente autor do chamado; referência a usuário consultável.
+    // REVIEW [2026-12-15] Cliente autor do chamado; referência a usuário consultável.
     customer: User {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Cliente", en: "Customer" }
-      // Permite localizar o chamado pelo cliente.
+      // REVIEW [2026-12-15] Permite localizar o chamado pelo cliente.
       lookup
     }
-    // Pedido relacionado ao chamado, quando houver.
+    // REVIEW [2026-12-15] Pedido relacionado ao chamado, quando houver.
     order: Order {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
     }
-    // Assunto curto do chamado, consultável e limitado a 160 caracteres.
+    // REVIEW [2026-12-15] Assunto curto do chamado, consultável e limitado a 160 caracteres.
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
-    // Descrição detalhada do problema; dado sensível em tela e export.
+    // REVIEW [2026-12-15] Descrição detalhada do problema; dado sensível em tela e export.
     description: string { title: { pt-BR: "Descrição", en: "Description" }, sensitive }
-    // Prioridade do chamado, consultável e com padrão P3.
+    // REVIEW [2026-12-15] Prioridade do chamado, consultável e com padrão P3.
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" }, lookup, default: P3 }
-    // Categoria do chamado, consultável e com padrão General.
+    // REVIEW [2026-12-15] Categoria do chamado, consultável e com padrão General.
     category: TicketCategory { title: { pt-BR: "Categoria", en: "Category" }, lookup, default: General }
-    // Anotação interna visível só à equipe; campo privado.
+    // REVIEW [2026-12-15] Anotação interna visível só à equipe; campo privado.
     internalNote: string { title: { pt-BR: "Nota interna", en: "Internal note" }, private }
-    // Orçamento associado ao atendimento, em dinheiro padrão.
+    // REVIEW [2026-12-15] Orçamento associado ao atendimento, em dinheiro padrão.
     budget: std.Money { title: { pt-BR: "Orçamento", en: "Budget" } }
-    // Situação atual do chamado, conduzida pelas transições do shape.
+    // REVIEW [2026-12-15] Situação atual do chamado, conduzida pelas transições do shape.
     status: TicketStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Agente responsável pelo atendimento.
+    // REVIEW [2026-12-15] Agente responsável pelo atendimento.
     assignee: User {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Responsável", en: "Assignee" }
     }
-    // Prazo-limite de atendimento calculado a partir do SLA.
+    // REVIEW [2026-12-15] Prazo-limite de atendimento calculado a partir do SLA.
     slaDue: DateTime { title: { pt-BR: "Prazo até", en: "SLA due" } }
-    // Tempo total gasto até a resolução do chamado.
+    // REVIEW [2026-12-15] Tempo total gasto até a resolução do chamado.
     resolutionTime: std.Duration { title: { pt-BR: "Tempo de resolução", en: "Resolution time" } }
-    // Marca se o prazo foi cumprido na resolução.
+    // REVIEW [2026-12-15] Marca se o prazo foi cumprido na resolução.
     slaMet: boolean { title: { pt-BR: "Prazo cumprido", en: "SLA met" } }
-    // Indica em tempo real se o prazo já estourou.
+    // REVIEW [2026-12-15] Indica em tempo real se o prazo já estourou.
     breached: boolean {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Prazo estourado", en: "SLA breached" }
-      // Valor derivado: verdadeiro quando o prazo já passou.
+      // REVIEW [2026-12-15] Valor derivado: verdadeiro quando o prazo já passou.
       computed: slaDue < now()
-      // Campo calculado, não editável pelo usuário.
+      // REVIEW [2026-12-15] Campo calculado, não editável pelo usuário.
       readonly
     }
-    // Tempo restante até o prazo, recalculado a cada leitura.
+    // REVIEW [2026-12-15] Tempo restante até o prazo, recalculado a cada leitura.
     remaining: std.Duration {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Tempo restante", en: "Time remaining" }
-      // Valor derivado: diferença entre o prazo e o instante atual.
+      // REVIEW [2026-12-15] Valor derivado: diferença entre o prazo e o instante atual.
       computed: slaDue - now()
-      // Campo calculado, não editável pelo usuário.
+      // REVIEW [2026-12-15] Campo calculado, não editável pelo usuário.
       readonly
     }
-    // Instante de abertura do chamado.
+    // REVIEW [2026-12-15] Instante de abertura do chamado.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
-  // Índices que sustentam filas, filtros e busca.
+  // REVIEW [2026-12-15] Índices que sustentam filas, filtros e busca.
   indexes {
-    // Fila operacional ordenada por prazo, com filtros por situação e prioridade.
+    // REVIEW [2026-12-15] Fila operacional ordenada por prazo, com filtros por situação e prioridade.
     byStatus: [status, priority, slaDue] range
-    // Consulta dos chamados de um responsável específico.
+    // REVIEW [2026-12-15] Consulta dos chamados de um responsável específico.
     byAssignee: [assignee.id] hash
-    // Índice textual para busca em assunto e descrição.
+    // REVIEW [2026-12-15] Índice textual para busca em assunto e descrição.
     search: [subject, description] search
   }
 
-  // Eventos disparados pelo documento.
+  // REVIEW [2026-12-15] Eventos disparados pelo documento.
   events {
-    // Evento de escalonamento do chamado.
+    // REVIEW [2026-12-15] Evento de escalonamento do chamado.
     Escalated {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado escalonado", en: "Ticket escalated" }
-      // Dados levados pelo evento.
+      // REVIEW [2026-12-15] Dados levados pelo evento.
       payload {
-        // Motivo do escalonamento.
+        // REVIEW [2026-12-15] Motivo do escalonamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
 
-  // Ações que operam o ciclo de vida do chamado.
+  // REVIEW [2026-12-15] Ações que operam o ciclo de vida do chamado.
   actions {
-    // Abre o chamado registrando assunto e cliente.
+    // REVIEW [2026-12-15] Abre o chamado registrando assunto e cliente.
     open(subject: string, customer: User){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Abrir chamado", en: "Open ticket" }
-      // Só agentes de suporte podem abrir chamados.
+      // REVIEW [2026-12-15] Só agentes de suporte podem abrir chamados.
       roles: [SupportAgent]
-      // Impede abrir chamado sem assunto.
+      // REVIEW [2026-12-15] Impede abrir chamado sem assunto.
       rule subject.length > 0 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe o assunto do chamado"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter the ticket subject"
       }
-      // Efeitos executados quando a validação passa.
+      // REVIEW [2026-12-15] Efeitos executados quando a validação passa.
       {
-        // Registra o instante de abertura.
+        // REVIEW [2026-12-15] Registra o instante de abertura.
         createdAt = now()
-        // Emite o evento Opened com o assunto informado.
+        // REVIEW [2026-12-15] Emite o evento Opened com o assunto informado.
         emit Opened { subject }
       }
     }
 
-    // Assume o chamado, passando para Em andamento.
+    // REVIEW [2026-12-15] Assume o chamado, passando para Em andamento.
     claim(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Assumir", en: "Claim" }
-      // Apenas agentes assumem chamados.
+      // REVIEW [2026-12-15] Apenas agentes assumem chamados.
       roles: [SupportAgent]
-      // Transição para Em andamento.
+      // REVIEW [2026-12-15] Transição para Em andamento.
       to: status.InProgress
     }
 
-    // Coloca o chamado em espera.
+    // REVIEW [2026-12-15] Coloca o chamado em espera.
     hold(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Aguardar", en: "Hold" }
-      // Agentes e gerentes podem colocar em espera.
+      // REVIEW [2026-12-15] Agentes e gerentes podem colocar em espera.
       roles: [SupportAgent, Manager]
-      // Transição para Aguardando.
+      // REVIEW [2026-12-15] Transição para Aguardando.
       to: status.Waiting
     }
 
-    // Retoma o atendimento de um chamado em espera.
+    // REVIEW [2026-12-15] Retoma o atendimento de um chamado em espera.
     resume(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Retomar", en: "Resume" }
-      // Apenas agentes retomam o atendimento.
+      // REVIEW [2026-12-15] Apenas agentes retomam o atendimento.
       roles: [SupportAgent]
-      // Transição de volta para Em andamento.
+      // REVIEW [2026-12-15] Transição de volta para Em andamento.
       to: status.InProgress
     }
 
-    // Resolve o chamado e calcula os indicadores de prazo.
+    // REVIEW [2026-12-15] Resolve o chamado e calcula os indicadores de prazo.
     resolve(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Resolver", en: "Resolve" }
-      // Agentes e gerentes podem resolver.
+      // REVIEW [2026-12-15] Agentes e gerentes podem resolver.
       roles: [SupportAgent, Manager]
-      // Transição para Resolvido.
+      // REVIEW [2026-12-15] Transição para Resolvido.
       to: status.Resolved
-      // Exige responsável atribuído antes de resolver.
+      // REVIEW [2026-12-15] Exige responsável atribuído antes de resolver.
       rule assignee != null {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Atribua o chamado antes de resolver"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Assign the ticket before resolving"
       }
-      // Efeitos executados após a validação.
+      // REVIEW [2026-12-15] Efeitos executados após a validação.
       {
-        // Calcula o tempo total até a resolução.
+        // REVIEW [2026-12-15] Calcula o tempo total até a resolução.
         resolutionTime = now() - createdAt
-        // Registra se o prazo foi cumprido.
+        // REVIEW [2026-12-15] Registra se o prazo foi cumprido.
         slaMet = now() <= slaDue
       }
     }
 
-    // Fecha o chamado após a resolução.
+    // REVIEW [2026-12-15] Fecha o chamado após a resolução.
     close(){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Fechar", en: "Close" }
-      // Apenas agentes fecham o chamado.
+      // REVIEW [2026-12-15] Apenas agentes fecham o chamado.
       roles: [SupportAgent]
-      // Transição para Fechado.
+      // REVIEW [2026-12-15] Transição para Fechado.
       to: status.Closed
     }
 
-    // Reabre um chamado fechado com justificativa obrigatória.
+    // REVIEW [2026-12-15] Reabre um chamado fechado com justificativa obrigatória.
     reopen(justification: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Reabrir", en: "Reopen" }
-      // Somente gerentes reabrem chamados.
+      // REVIEW [2026-12-15] Somente gerentes reabrem chamados.
       roles: [Manager]
-      // Transição de volta para Aberto, levando o motivo como payload.
+      // REVIEW [2026-12-15] Transição de volta para Aberto, levando o motivo como payload.
       to: status.Open
-      // Mapeia a justificativa para o campo reason do evento Reopened.
+      // REVIEW [2026-12-15] Mapeia a justificativa para o campo reason do evento Reopened.
       emits { reason: justification }
-      // Exige justificativa com pelo menos 10 caracteres.
+      // REVIEW [2026-12-15] Exige justificativa com pelo menos 10 caracteres.
       rule justification.length >= 10 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
 
-    // Atribui um responsável ao chamado.
+    // REVIEW [2026-12-15] Atribui um responsável ao chamado.
     assign(user: User){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Atribuir", en: "Assign" }
-      // Apenas agentes distribuem chamados.
+      // REVIEW [2026-12-15] Apenas agentes distribuem chamados.
       roles: [SupportAgent]
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Grava o usuário escolhido como responsável.
+        // REVIEW [2026-12-15] Grava o usuário escolhido como responsável.
         assignee = user
       }
     }
 
-    // Altera a categoria do chamado.
+    // REVIEW [2026-12-15] Altera a categoria do chamado.
     categorize(target: TicketCategory){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Categorizar", en: "Categorize" }
-      // Apenas agentes categorizam.
+      // REVIEW [2026-12-15] Apenas agentes categorizam.
       roles: [SupportAgent]
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Grava a categoria escolhida.
+        // REVIEW [2026-12-15] Grava a categoria escolhida.
         category = target
       }
     }
 
-    // Registra um comentário na nota interna.
+    // REVIEW [2026-12-15] Registra um comentário na nota interna.
     comment(note: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Comentar", en: "Comment" }
-      // Apenas agentes comentam.
+      // REVIEW [2026-12-15] Apenas agentes comentam.
       roles: [SupportAgent]
-      // Impede comentário vazio.
+      // REVIEW [2026-12-15] Impede comentário vazio.
       rule note.length > 0 {
-        // Mensagem de validação em português.
+        // REVIEW [2026-12-15] Mensagem de validação em português.
         pt-BR: "Escreva o comentário"
-        // Mensagem de validação em inglês.
+        // REVIEW [2026-12-15] Mensagem de validação em inglês.
         en: "Write the comment"
       }
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Guarda o texto na nota interna do chamado.
+        // REVIEW [2026-12-15] Guarda o texto na nota interna do chamado.
         internalNote = note
       }
     }
 
-    // Escala o chamado para o gerente com justificativa.
+    // REVIEW [2026-12-15] Escala o chamado para o gerente com justificativa.
     escalate(justification: string){
-      // Título exibido no botão.
+      // REVIEW [2026-12-15] Título exibido no botão.
       title: { pt-BR: "Escalar", en: "Escalate" }
-      // Agentes e gerentes podem escalar.
+      // REVIEW [2026-12-15] Agentes e gerentes podem escalar.
       roles: [SupportAgent, Manager]
-      // Efeitos da ação.
+      // REVIEW [2026-12-15] Efeitos da ação.
       {
-        // Registra a justificativa na nota interna.
+        // REVIEW [2026-12-15] Registra a justificativa na nota interna.
         internalNote = justification
-        // Emite o evento Escalated com o motivo.
+        // REVIEW [2026-12-15] Emite o evento Escalated com o motivo.
         emit Escalated { reason: justification }
       }
     }
   }
 
-  // Invariante do documento: chamado resolvido precisa de responsável.
+  // REVIEW [2026-12-15] Invariante do documento: chamado resolvido precisa de responsável.
   rule status == Resolved implies assignee != null {
-    // Mensagem da invariante em português.
+    // REVIEW [2026-12-15] Mensagem da invariante em português.
     pt-BR: "Atribua o chamado antes de resolver"
-    // Mensagem da invariante em inglês.
+    // REVIEW [2026-12-15] Mensagem da invariante em inglês.
     en: "Assign the ticket before resolving"
 
   }
 }
 
-// Máquina de estados que conduz a situação do chamado.
+// REVIEW [2026-12-15] Máquina de estados que conduz a situação do chamado.
 shape TicketStatus {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Situação do chamado", en: "Ticket status" }
-  // Base de estado: valores com transições nomeadas.
+  // REVIEW [2026-12-15] Base de estado: valores com transições nomeadas.
   base: state
-  // Estado inicial Aberto, alcançado pela transição Opened.
+  // REVIEW [2026-12-15] Estado inicial Aberto, alcançado pela transição Opened.
   initial: Open with transition Opened {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Chamado aberto", en: "Ticket opened" }
-    // Dados exigidos para entrar no estado inicial.
+    // REVIEW [2026-12-15] Dados exigidos para entrar no estado inicial.
     payload {
-      // Assunto do chamado na abertura.
+      // REVIEW [2026-12-15] Assunto do chamado na abertura.
       subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
     }
   }
-  // Estado Aberto.
+  // REVIEW [2026-12-15] Estado Aberto.
   value Open {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Aberta", en: "Open" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Open
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 10
 
-    // Transição de Aberto para Em andamento.
+    // REVIEW [2026-12-15] Transição de Aberto para Em andamento.
     transition InProgress {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: Claimed
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado assumido", en: "Ticket claimed" }
     }
   }
-  // Estado Em andamento.
+  // REVIEW [2026-12-15] Estado Em andamento.
   value InProgress {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Em andamento", en: "In progress" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: InProgress
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 20
 
-    // Transição de Em andamento para Aguardando.
+    // REVIEW [2026-12-15] Transição de Em andamento para Aguardando.
     transition Waiting {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: Held
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado aguardando", en: "Ticket held" }
     }
 
-    // Transição de Em andamento para Resolvido.
+    // REVIEW [2026-12-15] Transição de Em andamento para Resolvido.
     transition Resolved {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
-      // Dados levados ao entrar em Resolvido.
+      // REVIEW [2026-12-15] Dados levados ao entrar em Resolvido.
       payload {
-        // Responsável que resolveu o chamado.
+        // REVIEW [2026-12-15] Responsável que resolveu o chamado.
         assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
       }
     }
   }
-  // Estado Aguardando.
+  // REVIEW [2026-12-15] Estado Aguardando.
   value Waiting {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Aguardando", en: "Waiting" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Waiting
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 30
 
-    // Transição de Aguardando de volta para Em andamento.
+    // REVIEW [2026-12-15] Transição de Aguardando de volta para Em andamento.
     transition InProgress {
-      // Evento que dispara a transição.
+      // REVIEW [2026-12-15] Evento que dispara a transição.
       event: Resumed
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado retomado", en: "Ticket resumed" }
     }
 
-    // Transição de Aguardando para Resolvido.
+    // REVIEW [2026-12-15] Transição de Aguardando para Resolvido.
     transition Resolved {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado resolvido", en: "Ticket resolved" }
-      // Dados levados ao entrar em Resolvido.
+      // REVIEW [2026-12-15] Dados levados ao entrar em Resolvido.
       payload {
-        // Responsável que resolveu o chamado.
+        // REVIEW [2026-12-15] Responsável que resolveu o chamado.
         assignee: User { title: { pt-BR: "Responsável", en: "Assignee" } }
       }
     }
   }
-  // Estado Resolvido.
+  // REVIEW [2026-12-15] Estado Resolvido.
   value Resolved {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Resolvido", en: "Resolved" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Resolved
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 40
 
-    // Transição de Resolvido para Fechado.
+    // REVIEW [2026-12-15] Transição de Resolvido para Fechado.
     transition Closed {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado fechado", en: "Ticket closed" }
     }
 
-    // Transição de Resolvido de volta para Aberto.
+    // REVIEW [2026-12-15] Transição de Resolvido de volta para Aberto.
     transition Open {
-      // Evento que dispara a reabertura.
+      // REVIEW [2026-12-15] Evento que dispara a reabertura.
       event: Reopened
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Chamado reaberto", en: "Ticket reopened" }
-      // Dados levados ao reabrir.
+      // REVIEW [2026-12-15] Dados levados ao reabrir.
       payload {
-        // Motivo da reabertura.
+        // REVIEW [2026-12-15] Motivo da reabertura.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado terminal Fechado.
+  // REVIEW [2026-12-15] Estado terminal Fechado.
   value Closed {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Fechado", en: "Closed" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Closed
-    // Ordem do estado no fluxo.
+    // REVIEW [2026-12-15] Ordem do estado no fluxo.
     ordinal: 50
   }
-  // Renderização sem formatação especial.
+  // REVIEW [2026-12-15] Renderização sem formatação especial.
   format: plain
 }
 
-// Classificação que ordena a prioridade do chamado.
+// REVIEW [2026-12-15] Classificação que ordena a prioridade do chamado.
 shape TicketPriority {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
-  // Base de classificação: valores sem transições.
+  // REVIEW [2026-12-15] Base de classificação: valores sem transições.
   base: classification
-  // Valor de prioridade máxima.
+  // REVIEW [2026-12-15] Valor de prioridade máxima.
   value P1 {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Prioridade 1", en: "Priority 1" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: P1
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 10
   }
-  // Valor de segunda prioridade.
+  // REVIEW [2026-12-15] Valor de segunda prioridade.
   value P2 {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Prioridade 2", en: "Priority 2" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: P2
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 20
   }
-  // Valor de prioridade padrão.
+  // REVIEW [2026-12-15] Valor de prioridade padrão.
   value P3 {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Prioridade 3", en: "Priority 3" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: P3
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 30
   }
-  // Valor de prioridade mais baixa.
+  // REVIEW [2026-12-15] Valor de prioridade mais baixa.
   value P4 {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Prioridade 4", en: "Priority 4" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: P4
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 40
   }
-  // Renderização sem formatação especial.
+  // REVIEW [2026-12-15] Renderização sem formatação especial.
   format: plain
 }
 
-// Classificação que agrupa o chamado em filas de assunto.
+// REVIEW [2026-12-15] Classificação que agrupa o chamado em filas de assunto.
 shape TicketCategory {
-  // Título exibido no builder.
+  // REVIEW [2026-12-15] Título exibido no builder.
   title: { pt-BR: "Categoria do chamado", en: "Ticket category" }
-  // Base de classificação: valores sem transições.
+  // REVIEW [2026-12-15] Base de classificação: valores sem transições.
   base: classification
-  // Valor da categoria de problema técnico.
+  // REVIEW [2026-12-15] Valor da categoria de problema técnico.
   value Technical {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Técnico", en: "Technical" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: Technical
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 10
   }
-  // Valor da categoria de cobrança.
+  // REVIEW [2026-12-15] Valor da categoria de cobrança.
   value Billing {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Cobrança", en: "Billing" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: Billing
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 20
   }
-  // Valor da categoria geral, usada como padrão.
+  // REVIEW [2026-12-15] Valor da categoria geral, usada como padrão.
   value General {
-    // Título exibido nas telas e filtros.
+    // REVIEW [2026-12-15] Título exibido nas telas e filtros.
     title: { pt-BR: "Geral", en: "General" }
-    // Ícone associado ao valor.
+    // REVIEW [2026-12-15] Ícone associado ao valor.
     icon: General
-    // Ordem do valor na classificação.
+    // REVIEW [2026-12-15] Ordem do valor na classificação.
     ordinal: 30
   }
-  // Renderização sem formatação especial.
+  // REVIEW [2026-12-15] Renderização sem formatação especial.
   format: plain
 }
 
-// Política que obriga escalonamento de chamado fora do prazo.
+// REVIEW [2026-12-15] Política que obriga escalonamento de chamado fora do prazo.
 policy SlaEscalation {
-  // Documento ao qual a política se aplica.
+  // REVIEW [2026-12-15] Documento ao qual a política se aplica.
   appliesTo: Ticket
-  // Condição verificada: exige que o prazo não esteja estourado.
+  // REVIEW [2026-12-15] Condição verificada: exige que o prazo não esteja estourado.
   rule: not breached
-  // Severidade que bloqueia a operação em caso de violação.
+  // REVIEW [2026-12-15] Severidade que bloqueia a operação em caso de violação.
   severity: enforce
-  // Texto explicativo exibido na violação.
+  // REVIEW [2026-12-15] Texto explicativo exibido na violação.
   message: "Chamado fora do prazo deve ser escalonado ao gerente"
-  // Canais que recebem a notificação.
+  // REVIEW [2026-12-15] Canais que recebem a notificação.
   notification: [Email, WhatsApp]
-  // Registra a avaliação da política na trilha de auditoria.
+  // REVIEW [2026-12-15] Registra a avaliação da política na trilha de auditoria.
   audit: true
 }

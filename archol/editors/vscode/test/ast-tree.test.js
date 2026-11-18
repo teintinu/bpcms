@@ -7,6 +7,7 @@ const {
   findNodeAtOffset,
   findNodePathAtOffset,
   getChildren,
+  mergePending,
   nodeAtPath,
   nodeCategory,
   nodeSummary,
@@ -159,4 +160,40 @@ test('textOffsetsForByteSpan normalizes an inverted span and out-of-range values
   assert.equal(end, sample.length);
   const [a, b] = textOffsetsForByteSpan(sample, 3, 5);
   assert.equal(sample.slice(a, b), 'ç');
+});
+
+
+test('mergePending inserts comments into the containing node in source order', () => {
+  const pendingAst = {
+    kind: 'SourceFile',
+    path: '/workspace/demo.archol',
+    span: { start: 0, end: 120 },
+    items: [
+      {
+        kind: 'Artifact',
+        artifactKind: 'Process',
+        name: 'P',
+        span: { start: 10, end: 110 },
+        body: [
+          { kind: 'MemberA', span: { start: 30, end: 40 } },
+          { kind: 'MemberB', span: { start: 80, end: 90 } },
+        ],
+      },
+    ],
+    pending: [
+      { kind: 'Pending', keyword: 'HACK', span: { start: 60, end: 70 } },
+      { kind: 'Pending', keyword: 'TODO', span: { start: 0, end: 5 } },
+      { kind: 'Pending', keyword: 'REVIEW', span: { start: 20, end: 25 } },
+    ],
+  };
+  mergePending(pendingAst);
+  assert.equal(pendingAst.pending, undefined);
+  const rootChildren = getChildren(pendingAst);
+  assert.equal(rootChildren[0].kind, 'Pending');
+  assert.equal(rootChildren[0].keyword, 'TODO');
+  assert.equal(rootChildren[1].kind, 'Artifact');
+  const body = getChildren(rootChildren[1]);
+  assert.deepEqual(body.map((node) => node.kind), ['Pending', 'MemberA', 'Pending', 'MemberB']);
+  assert.equal(body[0].keyword, 'REVIEW');
+  assert.equal(body[2].keyword, 'HACK');
 });

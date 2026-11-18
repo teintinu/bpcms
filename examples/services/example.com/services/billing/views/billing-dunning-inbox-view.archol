@@ -1,20 +1,20 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Caixa de entrada das tarefas de cobrança.
+// REVIEW [2026-12-15] Caixa de entrada das tarefas de cobrança.
 view DunningInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de cobrança", en: "Dunning queue" }
-  // Tipo do artefato: inbox.
+  // REVIEW [2026-12-15] Tipo do artefato: inbox.
   type: inbox
-  // Papéis que podem atender a fila.
+  // REVIEW [2026-12-15] Papéis que podem atender a fila.
   roles: [CollectionAgent, FinanceManager]
 
-  // Restringe os itens da fila aos papéis do usuário atual.
+  // REVIEW [2026-12-15] Restringe os itens da fila aos papéis do usuário atual.
   scope: roles
-  // Filtro que mantém apenas itens de papéis do usuário logado.
+  // REVIEW [2026-12-15] Filtro que mantém apenas itens de papéis do usuário logado.
   filter { role in currentUser.roles }
-  // Agrupa os itens pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa os itens pelo processo de origem.
   groupBy: process
-  // Colunas exibidas em cada item da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada item da fila.
   columns { title; subject; role; dueAt; priority }
 }

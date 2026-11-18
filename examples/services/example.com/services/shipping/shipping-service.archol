@@ -1,20 +1,20 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Declara o serviço de expedição e a URI que o identifica no workspace.
+// REVIEW [2026-12-15] Declara o serviço de expedição e a URI que o identifica no workspace.
 service "example.com/services/shipping" {
-  // Título exibido no builder e na navegação.
+  // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Expedição", en: "Shipping" }
-  // Versão do serviço; releases e locks comparam este valor.
+  // REVIEW [2026-12-15] Versão do serviço; releases e locks comparam este valor.
   version: 1.1.0
-  // Área responsável pelo serviço.
+  // REVIEW [2026-12-15] Área responsável pelo serviço.
   owner: "Shipping"
-  // Serviços externos usados por este serviço, com alias local.
+  // REVIEW [2026-12-15] Serviços externos usados por este serviço, com alias local.
   imports {
-    // Medidas e constantes padrão do construtor (massa, dinheiro, contagem).
+    // REVIEW [2026-12-15] Medidas e constantes padrão do construtor (massa, dinheiro, contagem).
     service "bpcms.org/std" as std
-    // Catálogo de produtos, usado nos itens da remessa.
+    // REVIEW [2026-12-15] Catálogo de produtos, usado nos itens da remessa.
     service "example.com/services/catalog" as Catalog
-    // Pedidos de venda, origem do documento Order.
+    // REVIEW [2026-12-15] Pedidos de venda, origem do documento Order.
     service "example.com/services/orders" as Orders
   }
 }

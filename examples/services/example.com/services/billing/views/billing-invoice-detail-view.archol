@@ -1,24 +1,24 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Tela de detalhe de uma nota fiscal.
+// REVIEW [2026-12-15] Tela de detalhe de uma nota fiscal.
 view InvoiceDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
-  // Tipo do artefato: detalhe.
+  // REVIEW [2026-12-15] Tipo do artefato: detalhe.
   type: detail
-  // Documento exibido no detalhe.
+  // REVIEW [2026-12-15] Documento exibido no detalhe.
   document: Invoice
-  // Papéis autorizados a abrir o detalhe.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o detalhe.
   roles: [Clerk, CollectionAgent, FinanceManager]
 
-  // Seções exibidas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções exibidas na tela de detalhe.
   sections { summary; items; customer; timeline }
 
-  // Ações disponíveis no detalhe.
+  // REVIEW [2026-12-15] Ações disponíveis no detalhe.
   actions {
-    // Registra o pagamento da nota.
+    // REVIEW [2026-12-15] Registra o pagamento da nota.
     pay -> Invoice.pay(paidAt)
-    // Cancela a nota solicitando o motivo.
+    // REVIEW [2026-12-15] Cancela a nota solicitando o motivo.
     cancel -> Invoice.cancel(reason)
   }
 }

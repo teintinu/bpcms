@@ -1,23 +1,23 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// View de tabela com a lista de pedidos de exame.
+// REVIEW [2026-12-15] View de tabela com a lista de pedidos de exame.
 view ExamOrderList {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Pedidos de exame", en: "Exam orders" }
-  // Tipo da view: tabela de registros.
+  // REVIEW [2026-12-15] Tipo da view: tabela de registros.
   type: table
-  // Documento que alimenta a tabela.
+  // REVIEW [2026-12-15] Documento que alimenta a tabela.
   source: ExamOrder
-  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a lista.
+  roles: [Collector, Analyst, Pathologist, LabManager] // REVIEW [2026-12-15] Papéis que podem abrir a lista.
 
-  // Colunas exibidas na tabela.
+  // REVIEW [2026-12-15] Colunas exibidas na tabela.
   columns { sample; exam; status; requestedAt; resultedAt }
-  // Filtros disponíveis na lista.
+  // REVIEW [2026-12-15] Filtros disponíveis na lista.
   filters { status; exam; period }
-  pagination: 50 // Itens por página.
-  // Ações disparadas a partir da lista.
+  pagination: 50 // REVIEW [2026-12-15] Itens por página.
+  // REVIEW [2026-12-15] Ações disparadas a partir da lista.
   actions {
-    // Abre o andamento do processo de exame para o item selecionado.
+    // REVIEW [2026-12-15] Abre o andamento do processo de exame para o item selecionado.
     open -> LabExamProgress
   }
 }

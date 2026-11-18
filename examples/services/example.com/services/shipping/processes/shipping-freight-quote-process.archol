@@ -1,129 +1,129 @@
-// service: example.com/services/shipping
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/shipping
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Processo que cota o frete em paralelo e aplica a melhor oferta.
+// REVIEW [2026-12-15] Processo que cota o frete em paralelo e aplica a melhor oferta.
 process FreightQuote(shipment: Shipment) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Cotação de frete", en: "Freight quote" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Cotar frete em várias transportadoras e aplicar a melhor oferta"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 1d
 
-  // Gatilho: inicia um caso quando a remessa emite QuoteRequested.
+  // REVIEW [2026-12-15] Gatilho: inicia um caso quando a remessa emite QuoteRequested.
   on [Shipment.QuoteRequested]
-  // Chave de identidade, correlação e dedup da instância.
+  // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: shipment
 
-  // Oferta da transportadora A; começa nula.
+  // REVIEW [2026-12-15] Oferta da transportadora A; começa nula.
   let quoteA: std.Money | null = null
-  // Oferta da transportadora B; começa nula.
+  // REVIEW [2026-12-15] Oferta da transportadora B; começa nula.
   let quoteB: std.Money | null = null
-  // Oferta da transportadora C; começa nula.
+  // REVIEW [2026-12-15] Oferta da transportadora C; começa nula.
   let quoteC: std.Money | null = null
 
-  // Executa as três cotações em paralelo e junta os resultados.
+  // REVIEW [2026-12-15] Executa as três cotações em paralelo e junta os resultados.
   parallel {
-    // Ramo que cota com a transportadora A.
+    // REVIEW [2026-12-15] Ramo que cota com a transportadora A.
     branch AskA {
-      // Tenta obter a oferta da transportadora A.
+      // REVIEW [2026-12-15] Tenta obter a oferta da transportadora A.
       try {
-        // Guarda o valor cotado pela transportadora A.
+        // REVIEW [2026-12-15] Guarda o valor cotado pela transportadora A.
         quoteA = Carrier.quote({ shipment, carrier: "CarrierA" })
       } catch (Timeout) {
-        // Oferta ausente: após o join, o frete é informado manualmente.
+        // REVIEW [2026-12-15] Oferta ausente: após o join, o frete é informado manualmente.
       }
     }
-    // Ramo que cota com a transportadora B.
+    // REVIEW [2026-12-15] Ramo que cota com a transportadora B.
     branch AskB {
-      // Tenta obter a oferta da transportadora B.
+      // REVIEW [2026-12-15] Tenta obter a oferta da transportadora B.
       try {
-        // Guarda o valor cotado pela transportadora B.
+        // REVIEW [2026-12-15] Guarda o valor cotado pela transportadora B.
         quoteB = Carrier.quote({ shipment, carrier: "CarrierB" })
       } catch (Timeout) {
-        // Oferta ausente: após o join, o frete é informado manualmente.
+        // REVIEW [2026-12-15] Oferta ausente: após o join, o frete é informado manualmente.
       }
     }
-    // Ramo que cota com a transportadora C.
+    // REVIEW [2026-12-15] Ramo que cota com a transportadora C.
     branch AskC {
-      // Tenta obter a oferta da transportadora C.
+      // REVIEW [2026-12-15] Tenta obter a oferta da transportadora C.
       try {
-        // Guarda o valor cotado pela transportadora C.
+        // REVIEW [2026-12-15] Guarda o valor cotado pela transportadora C.
         quoteC = Carrier.quote({ shipment, carrier: "CarrierC" })
       } catch (Timeout) {
-        // Oferta ausente: após o join, o frete é informado manualmente.
+        // REVIEW [2026-12-15] Oferta ausente: após o join, o frete é informado manualmente.
       }
     }
   }
 
-  // Só compara as ofertas quando as três transportadoras responderam.
+  // REVIEW [2026-12-15] Só compara as ofertas quando as três transportadoras responderam.
   if (quoteA != null and quoteB != null and quoteC != null) {
-    // A oferta da transportadora A é a mais barata.
+    // REVIEW [2026-12-15] A oferta da transportadora A é a mais barata.
     if (quoteA <= quoteB and quoteA <= quoteC) {
-      // Aplica o frete da transportadora A na remessa.
+      // REVIEW [2026-12-15] Aplica o frete da transportadora A na remessa.
       Shipment.applyFreight({ carrier: "CarrierA", amount: quoteA })
-    // A oferta da transportadora B é a mais barata entre as restantes.
+    // REVIEW [2026-12-15] A oferta da transportadora B é a mais barata entre as restantes.
     } else if (quoteB <= quoteC) {
-      // Aplica o frete da transportadora B na remessa.
+      // REVIEW [2026-12-15] Aplica o frete da transportadora B na remessa.
       Shipment.applyFreight({ carrier: "CarrierB", amount: quoteB })
     } else {
-      // Aplica o frete da transportadora C na remessa.
+      // REVIEW [2026-12-15] Aplica o frete da transportadora C na remessa.
       Shipment.applyFreight({ carrier: "CarrierC", amount: quoteC })
     }
 
-    // Encerra o caso no desfecho de sucesso.
+    // REVIEW [2026-12-15] Encerra o caso no desfecho de sucesso.
     return Quoted
   }
 
-  // Sem as três ofertas, pede ao gerente que informe o frete manualmente.
+  // REVIEW [2026-12-15] Sem as três ofertas, pede ao gerente que informe o frete manualmente.
   try {
-    // Abre o formulário de frete manual.
+    // REVIEW [2026-12-15] Abre o formulário de frete manual.
     FreightOverride.show({ shipment })
   } catch (Timeout) {
-    // Se o formulário expirar, abre a tarefa de encerramento da cotação.
+    // REVIEW [2026-12-15] Se o formulário expirar, abre a tarefa de encerramento da cotação.
     AbandonQuote.show({ shipment })
-    // Encerra o caso no desfecho de falha.
+    // REVIEW [2026-12-15] Encerra o caso no desfecho de falha.
     return Expired
   }
 
-  // Encerra o caso no desfecho de sucesso.
+  // REVIEW [2026-12-15] Encerra o caso no desfecho de sucesso.
   return Quoted
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Quoted {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Cotada", en: "Quoted" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
-  // Declara o desfecho de falha do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de falha do caso.
   end Expired {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Cotação expirada", en: "Quote expired" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Tarefa manual para encerrar a cotação como expirada.
+// REVIEW [2026-12-15] Tarefa manual para encerrar a cotação como expirada.
 manual AbandonQuote {
-  // Título exibido na caixa de entrada.
+  // REVIEW [2026-12-15] Título exibido na caixa de entrada.
   title: { pt-BR: "Encerrar cotação", en: "Abandon quote" }
-  // Documento-sujeito da tarefa.
+  // REVIEW [2026-12-15] Documento-sujeito da tarefa.
   document: Shipment
-  // Papéis que podem executar a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem executar a tarefa.
   roles: [Manager]
-  // Orientação exibida ao executor.
+  // REVIEW [2026-12-15] Orientação exibida ao executor.
   instructions: "Encerrar a cotação como expirada e avisar o despachante"
-  // Prazo para conclusão antes do timeout.
+  // REVIEW [2026-12-15] Prazo para conclusão antes do timeout.
   timeout: 1h
-  // Prioridade na fila de trabalho.
+  // REVIEW [2026-12-15] Prioridade na fila de trabalho.
   priority: 70
-  // Distribuição por retirada manual da fila.
+  // REVIEW [2026-12-15] Distribuição por retirada manual da fila.
   assign: pull
 }

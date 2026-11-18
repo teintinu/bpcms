@@ -1,11 +1,11 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Parâmetro configurável que define a moeda padrão do catálogo.
+// REVIEW [2026-12-15] Parâmetro configurável que define a moeda padrão do catálogo.
 parameter DefaultCurrency {
-  // Título exibido na tela de configuração.
+  // REVIEW [2026-12-15] Título exibido na tela de configuração.
   title: { pt-BR: "Moeda padrão", en: "Default currency" }
-  // Tipo do parâmetro: moeda declarada no std.
+  // REVIEW [2026-12-15] Tipo do parâmetro: moeda declarada no std.
   type: std.Currency
-  // Valor inicial usado enquanto não houver configuração.
+  // REVIEW [2026-12-15] Valor inicial usado enquanto não houver configuração.
   default: "BRL"
 }

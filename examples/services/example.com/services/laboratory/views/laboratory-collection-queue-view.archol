@@ -1,16 +1,16 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// View de inbox com a fila de coleta por papel.
+// REVIEW [2026-12-15] View de inbox com a fila de coleta por papel.
 view CollectionQueue {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de coleta", en: "Collection queue" }
-  // Tipo da view: caixa de entrada de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de trabalho.
   type: inbox
-  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a fila.
-  scope: roles // Restringe a fila ao escopo das roles do usuário.
-  groupBy: role // Agrupa os itens da fila por papel.
-  // Mostra apenas itens das roles do usuário atual.
+  roles: [Collector, Analyst, Pathologist, LabManager] // REVIEW [2026-12-15] Papéis que podem abrir a fila.
+  scope: roles // REVIEW [2026-12-15] Restringe a fila ao escopo das roles do usuário.
+  groupBy: role // REVIEW [2026-12-15] Agrupa os itens da fila por papel.
+  // REVIEW [2026-12-15] Mostra apenas itens das roles do usuário atual.
   filter { role in currentUser.roles }
-  // Colunas exibidas em cada item da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada item da fila.
   columns { title; subject; role; dueAt; priority }
 }

@@ -1,17 +1,17 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// View de caixa de entrada com as tarefas de expedição do usuário.
+// REVIEW [2026-12-15] View de caixa de entrada com as tarefas de expedição do usuário.
 view LogisticsInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Minha fila de expedição", en: "My dispatch queue" }
-  // Tipo da view: caixa de entrada de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de trabalho.
   type: inbox
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Packer, Dispatcher]
-  // Restringe a lista às tarefas atribuídas ao usuário.
+  // REVIEW [2026-12-15] Restringe a lista às tarefas atribuídas ao usuário.
   scope: mine
-  // Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  // Colunas exibidas em cada linha da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha da fila.
   columns { title; subject; dueAt; priority }
 }

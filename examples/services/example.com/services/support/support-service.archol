@@ -1,22 +1,22 @@
-// Raiz do serviço de Atendimento; a URI é a identidade do serviço no workspace.
+// REVIEW [2026-12-15] Raiz do serviço de Atendimento; a URI é a identidade do serviço no workspace.
 service "example.com/services/support" {
-  // Título exibido no builder e na navegação.
+  // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Atendimento", en: "Support" }
-  // Versão do serviço, comparada em release e no lock.
+  // REVIEW [2026-12-15] Versão do serviço, comparada em release e no lock.
   version: 1.0.0
-  // Área responsável pelo serviço, usada em governança.
+  // REVIEW [2026-12-15] Área responsável pelo serviço, usada em governança.
   owner: "Support"
-  // Dependências externas trazidas para o escopo por alias.
+  // REVIEW [2026-12-15] Dependências externas trazidas para o escopo por alias.
   imports {
-    // Medidas e constantes padrão do construtor (dinheiro, duração, contagem).
+    // REVIEW [2026-12-15] Medidas e constantes padrão do construtor (dinheiro, duração, contagem).
     service "bpcms.org/std" as std
-    // Pedidos do cliente, usados nos campos Order dos documentos.
+    // REVIEW [2026-12-15] Pedidos do cliente, usados nos campos Order dos documentos.
     service "example.com/services/orders" as Orders
-    // Pagamentos, usados para executar o reembolso da devolução.
+    // REVIEW [2026-12-15] Pagamentos, usados para executar o reembolso da devolução.
     service "example.com/services/payments" as Payments
-    // Remessas, usadas para conferir a devolução recebida.
+    // REVIEW [2026-12-15] Remessas, usadas para conferir a devolução recebida.
     service "example.com/services/shipping" as Shipping
-    // Identidade, origem dos usuários que abrem chamados e assumem filas.
+    // REVIEW [2026-12-15] Identidade, origem dos usuários que abrem chamados e assumem filas.
     service "example.com/services/identity" as Identity
   }
 }

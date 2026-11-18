@@ -1,251 +1,251 @@
-// service: example.com/services/procurement
-// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// REVIEW [2026-12-15] service: example.com/services/procurement
+// REVIEW [2026-12-15] Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-// Declara o processo de habilitação; o argumento é o fornecedor-sujeito.
+// REVIEW [2026-12-15] Declara o processo de habilitação; o argumento é o fornecedor-sujeito.
 process SupplierOnboarding(supplier: Supplier) {
-  // Título exibido no builder, na inbox e no histórico.
+  // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Habilitação de fornecedor", en: "Supplier onboarding" }
-  // Versão do artefato Process; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   version: 1
-  // Objetivo de negócio usado na revisão e no painel do processo.
+  // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
-    // Texto do objetivo em português.
+    // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Habilitar fornecedor com cadastro no portal, documentos verificados e contas a pagar prontas"
   }
-  // SLA brando do caso: alvo de lead time, não é timer.
+  // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
   sla: 10d
 
-  // Restringe a instância às tarefas da role comprador.
+  // REVIEW [2026-12-15] Restringe a instância às tarefas da role comprador.
   by: [Buyer]
 
-  // Convida o fornecedor a preencher o cadastro no portal.
+  // REVIEW [2026-12-15] Convida o fornecedor a preencher o cadastro no portal.
   send SupplierInvite {
-    // Chave de correlação da mensagem com o fornecedor.
+    // REVIEW [2026-12-15] Chave de correlação da mensagem com o fornecedor.
     key: supplier
-    // Dados preenchidos na mensagem.
+    // REVIEW [2026-12-15] Dados preenchidos na mensagem.
     with {
-      // Instante em que o convite é enviado.
+      // REVIEW [2026-12-15] Instante em que o convite é enviado.
       invitedAt: now()
-      // Prazo de sete dias para o convite expirar.
+      // REVIEW [2026-12-15] Prazo de sete dias para o convite expirar.
       expiresAt: now() + 7d
     }
   }
 
-  // Bloco externo: captura o timeout do cadastro no portal.
+  // REVIEW [2026-12-15] Bloco externo: captura o timeout do cadastro no portal.
   try {
-    // Abre o form de cadastro para o usuário do fornecedor.
+    // REVIEW [2026-12-15] Abre o form de cadastro para o usuário do fornecedor.
     SupplierRegistration.show({ supplier })
   } catch (Timeout) {
-    // O prazo do cadastro no portal esgotou: bloqueia a habilitação.
+    // REVIEW [2026-12-15] O prazo do cadastro no portal esgotou: bloqueia a habilitação.
     BlockSupplier.show({ supplier })
-    // Encerra no desfecho de bloqueio.
+    // REVIEW [2026-12-15] Encerra no desfecho de bloqueio.
     return Blocked
   }
 
-  // Abre o form de verificação documental para a conformidade.
+  // REVIEW [2026-12-15] Abre o form de verificação documental para a conformidade.
   DocumentVerification.show({ supplier })
 
-  // Se a verificação bloqueou o fornecedor...
+  // REVIEW [2026-12-15] Se a verificação bloqueou o fornecedor...
   if (supplier.status == Blocked) {
-    // ...encerra no desfecho de bloqueio.
+    // REVIEW [2026-12-15] ...encerra no desfecho de bloqueio.
     return Blocked
   }
 
-  // Bloco interno: tenta abrir a aprovação de conformidade.
+  // REVIEW [2026-12-15] Bloco interno: tenta abrir a aprovação de conformidade.
   try {
-    // Abre o form de aprovação do fornecedor.
+    // REVIEW [2026-12-15] Abre o form de aprovação do fornecedor.
     ComplianceApproval.show({ supplier })
   } catch (Timeout) {
-    // Escalada da aprovação para a gestão de compras.
+    // REVIEW [2026-12-15] Escalada da aprovação para a gestão de compras.
     ComplianceApproval.show({ supplier })
   }
 
-  // Se a aprovação bloqueou o fornecedor...
+  // REVIEW [2026-12-15] Se a aprovação bloqueou o fornecedor...
   if (supplier.status == Blocked) {
-    // ...encerra no desfecho de bloqueio.
+    // REVIEW [2026-12-15] ...encerra no desfecho de bloqueio.
     return Blocked
   }
 
-  // Abre a configuração de contas a pagar para o fornecedor habilitado.
+  // REVIEW [2026-12-15] Abre a configuração de contas a pagar para o fornecedor habilitado.
   PayablesSetup.show({ supplier })
-  // Encerra no desfecho de sucesso.
+  // REVIEW [2026-12-15] Encerra no desfecho de sucesso.
   return Onboarded
 
-  // Declara o desfecho de sucesso do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de sucesso do caso.
   end Onboarded {
-    // Título exibido no histórico e nos filtros.
+    // REVIEW [2026-12-15] Título exibido no histórico e nos filtros.
     title: { pt-BR: "Fornecedor habilitado", en: "Supplier onboarded" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: success
   }
 
-  // Declara o desfecho de falha do caso.
+  // REVIEW [2026-12-15] Declara o desfecho de falha do caso.
   end Blocked {
-    // Título exibido no histórico.
+    // REVIEW [2026-12-15] Título exibido no histórico.
     title: { pt-BR: "Habilitação bloqueada", en: "Onboarding blocked" }
-    // Classificação do desfecho para KPI.
+    // REVIEW [2026-12-15] Classificação do desfecho para KPI.
     outcome: failure
   }
 }
 
-// Form de cadastro do fornecedor no portal.
+// REVIEW [2026-12-15] Form de cadastro do fornecedor no portal.
 form SupplierRegistration {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Supplier
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [SupplierUser]
-  // Prazo para responder; estourar dispara Timeout e bloqueia a habilitação.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout e bloqueia a habilitação.
   timeout: 7d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 70
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Razão social, obrigatória no cadastro.
+    // REVIEW [2026-12-15] Razão social, obrigatória no cadastro.
     legalName { required }
-    // Nome fantasia, opcional no cadastro.
+    // REVIEW [2026-12-15] Nome fantasia, opcional no cadastro.
     tradeName
-    // Correio eletrônico, obrigatório no cadastro.
+    // REVIEW [2026-12-15] Correio eletrônico, obrigatório no cadastro.
     email { required }
-    // Telefone, opcional no cadastro.
+    // REVIEW [2026-12-15] Telefone, opcional no cadastro.
     phone
-    // Categoria de atuação, obrigatória no cadastro.
+    // REVIEW [2026-12-15] Categoria de atuação, obrigatória no cadastro.
     category { required }
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Envia o cadastro com todos os dados informados pelo fornecedor.
+    // REVIEW [2026-12-15] Envia o cadastro com todos os dados informados pelo fornecedor.
     submit { calls: Supplier.submitRegistration(legalName, tradeName, email, phone, category) }
   }
 }
 
-// Form de verificação documental e classificação de risco.
+// REVIEW [2026-12-15] Form de verificação documental e classificação de risco.
 form DocumentVerification {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Verificação documental", en: "Document verification" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Supplier
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [ComplianceAnalyst]
-  // Prazo para responder; estourar dispara Timeout.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout.
   timeout: 2d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 50
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Nível de risco atribuído ao fornecedor.
+    // REVIEW [2026-12-15] Nível de risco atribuído ao fornecedor.
     risk
-    // Motivo do bloqueio, quando a verificação reprova o fornecedor.
+    // REVIEW [2026-12-15] Motivo do bloqueio, quando a verificação reprova o fornecedor.
     blockedReason
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Marca a documentação como verificada.
+    // REVIEW [2026-12-15] Marca a documentação como verificada.
     verified { calls: Supplier.verifyDocuments }
-    // Classifica o risco e mantém a tarefa aberta para revisão.
+    // REVIEW [2026-12-15] Classifica o risco e mantém a tarefa aberta para revisão.
     classify { calls: Supplier.classifyRisk(risk); stay }
-    // Bloqueia o fornecedor com o motivo informado.
+    // REVIEW [2026-12-15] Bloqueia o fornecedor com o motivo informado.
     rejected { calls: Supplier.block(blockedReason) }
   }
 }
 
-// Form de aprovação final de conformidade do fornecedor.
+// REVIEW [2026-12-15] Form de aprovação final de conformidade do fornecedor.
 form ComplianceApproval {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Aprovação de fornecedor", en: "Supplier approval" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Supplier
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [Approver, ProcurementManager]
-  // Prazo para responder; estourar dispara Timeout.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout.
   timeout: 3d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 50
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Razão social, somente leitura.
+    // REVIEW [2026-12-15] Razão social, somente leitura.
     legalName { readonly }
-    // Nível de risco, somente leitura.
+    // REVIEW [2026-12-15] Nível de risco, somente leitura.
     risk { readonly }
-    // Motivo do bloqueio, quando a aprovação reprova o fornecedor.
+    // REVIEW [2026-12-15] Motivo do bloqueio, quando a aprovação reprova o fornecedor.
     blockedReason
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Aprova o fornecedor chamando a ação do documento.
+    // REVIEW [2026-12-15] Aprova o fornecedor chamando a ação do documento.
     approved { calls: Supplier.approve }
-    // Bloqueia o fornecedor com o motivo informado.
+    // REVIEW [2026-12-15] Bloqueia o fornecedor com o motivo informado.
     rejected { calls: Supplier.block(blockedReason) }
   }
 }
 
-// Form de configuração de contas a pagar do fornecedor.
+// REVIEW [2026-12-15] Form de configuração de contas a pagar do fornecedor.
 form PayablesSetup {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Configuração de contas a pagar", en: "Payables setup" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Supplier
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [PayablesClerk]
-  // Prazo para responder; estourar dispara Timeout.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout.
   timeout: 1d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 50
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Razão social, somente leitura.
+    // REVIEW [2026-12-15] Razão social, somente leitura.
     legalName { readonly }
-    // Condição de pagamento acordada com o fornecedor.
+    // REVIEW [2026-12-15] Condição de pagamento acordada com o fornecedor.
     paymentTerms
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Habilita o fornecedor em contas a pagar com a condição informada.
+    // REVIEW [2026-12-15] Habilita o fornecedor em contas a pagar com a condição informada.
     enable { calls: Supplier.enablePayables(paymentTerms) }
   }
 }
 
-// Form usado para bloquear a habilitação do fornecedor.
+// REVIEW [2026-12-15] Form usado para bloquear a habilitação do fornecedor.
 form BlockSupplier {
-  // Título exibido na tarefa e no formulário.
+  // REVIEW [2026-12-15] Título exibido na tarefa e no formulário.
   title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
-  // Documento manipulado pelo form.
+  // REVIEW [2026-12-15] Documento manipulado pelo form.
   document: Supplier
-  // Papéis que podem atender a tarefa.
+  // REVIEW [2026-12-15] Papéis que podem atender a tarefa.
   roles: [ComplianceAnalyst]
-  // Prazo para responder; estourar dispara Timeout.
+  // REVIEW [2026-12-15] Prazo para responder; estourar dispara Timeout.
   timeout: 1d
-  // Prioridade da tarefa na inbox.
+  // REVIEW [2026-12-15] Prioridade da tarefa na inbox.
   priority: 60
-  // Modo de atribuição: o usuário puxa a tarefa.
+  // REVIEW [2026-12-15] Modo de atribuição: o usuário puxa a tarefa.
   assign: pull
 
-  // Campos exibidos no formulário.
+  // REVIEW [2026-12-15] Campos exibidos no formulário.
   fields {
-    // Motivo do bloqueio, obrigatório para registrar a decisão.
+    // REVIEW [2026-12-15] Motivo do bloqueio, obrigatório para registrar a decisão.
     blockedReason
   }
 
-  // Ações disponíveis no formulário.
+  // REVIEW [2026-12-15] Ações disponíveis no formulário.
   actions {
-    // Bloqueia o fornecedor com o motivo informado.
+    // REVIEW [2026-12-15] Bloqueia o fornecedor com o motivo informado.
     block { calls: Supplier.block(blockedReason) }
   }
 }

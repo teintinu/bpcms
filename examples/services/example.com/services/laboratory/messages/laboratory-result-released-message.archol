@@ -1,13 +1,13 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Mensagem que avisa a liberação do resultado de um exame.
+// REVIEW [2026-12-15] Mensagem que avisa a liberação do resultado de um exame.
 message ResultReleased {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Resultado liberado", en: "Result released" }
-  about: ExamOrder // Documento ao qual a mensagem se refere.
-  // Dados levados pela mensagem.
+  about: ExamOrder // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Dados levados pela mensagem.
   payload {
-    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // Exame cujo resultado foi liberado.
-    sample: Sample { title: { pt-BR: "Amostra", en: "Sample" } } // Amostra associada ao resultado.
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // REVIEW [2026-12-15] Exame cujo resultado foi liberado.
+    sample: Sample { title: { pt-BR: "Amostra", en: "Sample" } } // REVIEW [2026-12-15] Amostra associada ao resultado.
   }
 }

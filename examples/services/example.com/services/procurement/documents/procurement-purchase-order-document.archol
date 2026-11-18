@@ -1,303 +1,303 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// Documento que representa um pedido de compra emitido ao fornecedor.
+// REVIEW [2026-12-15] Documento que representa um pedido de compra emitido ao fornecedor.
 document PurchaseOrder {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pedido de compra", en: "Purchase order" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pela manutenção do artefato.
+  // REVIEW [2026-12-15] Área responsável pela manutenção do artefato.
   owner: "Procurement"
-  // Modo de sincronização do documento: leitura.
+  // REVIEW [2026-12-15] Modo de sincronização do documento: leitura.
   sync: read
 
-  // Campos que compõem o pedido de compra.
+  // REVIEW [2026-12-15] Campos que compõem o pedido de compra.
   fields {
-    // Número identificador do pedido; único e consultável.
+    // REVIEW [2026-12-15] Número identificador do pedido; único e consultável.
     number: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
-      // Limita o número a quarenta caracteres.
+      // REVIEW [2026-12-15] Limita o número a quarenta caracteres.
       maxLength: 40
-      // Impede dois pedidos com o mesmo número.
+      // REVIEW [2026-12-15] Impede dois pedidos com o mesmo número.
       unique
-      // Permite localizar o pedido pelo número.
+      // REVIEW [2026-12-15] Permite localizar o pedido pelo número.
       lookup
     }
-    // Fornecedor que receberá o pedido.
+    // REVIEW [2026-12-15] Fornecedor que receberá o pedido.
     supplier: Supplier {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Fornecedor", en: "Supplier" }
-      // Permite localizar o pedido pelo fornecedor.
+      // REVIEW [2026-12-15] Permite localizar o pedido pelo fornecedor.
       lookup
     }
-    // Itens que compõem o pedido.
+    // REVIEW [2026-12-15] Itens que compõem o pedido.
     items: PurchaseItem[] {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Itens", en: "Items" }
     }
-    // Valor total do pedido, em moeda forte.
+    // REVIEW [2026-12-15] Valor total do pedido, em moeda forte.
     amount: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Valor total", en: "Total amount" }
-      // Moeda do valor do pedido.
+      // REVIEW [2026-12-15] Moeda do valor do pedido.
       currency: BRL
-      // Torna o valor obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o valor obrigatório no preenchimento.
       required
     }
-    // Condição de pagamento negociada com o fornecedor.
+    // REVIEW [2026-12-15] Condição de pagamento negociada com o fornecedor.
     paymentTerms: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
-      // Limita a condição a cento e vinte caracteres.
+      // REVIEW [2026-12-15] Limita a condição a cento e vinte caracteres.
       maxLength: 120
     }
-    // Situação atual do pedido no ciclo de vida.
+    // REVIEW [2026-12-15] Situação atual do pedido no ciclo de vida.
     status: PurchaseOrderStatus {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      // Permite localizar o pedido pela situação.
+      // REVIEW [2026-12-15] Permite localizar o pedido pela situação.
       lookup
     }
-    // Data e hora em que o pedido foi enviado ao fornecedor.
+    // REVIEW [2026-12-15] Data e hora em que o pedido foi enviado ao fornecedor.
     sentAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Enviado em", en: "Sent at" }
     }
-    // Data e hora em que o fornecedor confirmou o pedido.
+    // REVIEW [2026-12-15] Data e hora em que o fornecedor confirmou o pedido.
     confirmedAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Confirmado em", en: "Confirmed at" }
     }
-    // Data e hora em que a mercadoria foi recebida.
+    // REVIEW [2026-12-15] Data e hora em que a mercadoria foi recebida.
     receivedAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Recebido em", en: "Received at" }
     }
-    // Data e hora em que o pedido foi cancelado.
+    // REVIEW [2026-12-15] Data e hora em que o pedido foi cancelado.
     cancelledAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Cancelado em", en: "Cancelled at" }
     }
-    // Motivo que levou ao cancelamento do pedido.
+    // REVIEW [2026-12-15] Motivo que levou ao cancelamento do pedido.
     cancellationReason: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
-      // Limita o motivo a duzentos e oitenta caracteres.
+      // REVIEW [2026-12-15] Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
   }
 
 
-  // Ações que conduzem o pedido pelo ciclo de envio, confirmação e recebimento.
+  // REVIEW [2026-12-15] Ações que conduzem o pedido pelo ciclo de envio, confirmação e recebimento.
   actions {
-    // Envia o pedido ao fornecedor e o move para Sent.
+    // REVIEW [2026-12-15] Envia o pedido ao fornecedor e o move para Sent.
     send() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Enviar pedido", en: "Send order" }
-      // Papéis autorizados a enviar o pedido.
+      // REVIEW [2026-12-15] Papéis autorizados a enviar o pedido.
       roles: [Buyer]
-      // Transição disparada ao enviar.
+      // REVIEW [2026-12-15] Transição disparada ao enviar.
       to: status.Sent
       {
-        // Registra o instante do envio.
+        // REVIEW [2026-12-15] Registra o instante do envio.
         sentAt = now()
       }
     }
 
-    // Confirma o pedido e o move para Confirmed.
+    // REVIEW [2026-12-15] Confirma o pedido e o move para Confirmed.
     confirm() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
-      // Papéis autorizados a confirmar o pedido.
+      // REVIEW [2026-12-15] Papéis autorizados a confirmar o pedido.
       roles: [Buyer]
-      // Transição disparada ao confirmar.
+      // REVIEW [2026-12-15] Transição disparada ao confirmar.
       to: status.Confirmed
       {
-        // Registra o instante da confirmação.
+        // REVIEW [2026-12-15] Registra o instante da confirmação.
         confirmedAt = now()
       }
     }
 
-    // Registra o recebimento da mercadoria e move o pedido para Received.
+    // REVIEW [2026-12-15] Registra o recebimento da mercadoria e move o pedido para Received.
     receive() {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
-      // Papéis autorizados a registrar o recebimento.
+      // REVIEW [2026-12-15] Papéis autorizados a registrar o recebimento.
       roles: [ReceivingClerk]
-      // Transição disparada ao receber.
+      // REVIEW [2026-12-15] Transição disparada ao receber.
       to: status.Received
       {
-        // Registra o instante do recebimento.
+        // REVIEW [2026-12-15] Registra o instante do recebimento.
         receivedAt = now()
       }
     }
 
-    // Cancela o pedido informando o motivo.
+    // REVIEW [2026-12-15] Cancela o pedido informando o motivo.
     cancel(cancellationReason: string) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
-      // Papéis autorizados a cancelar o pedido.
+      // REVIEW [2026-12-15] Papéis autorizados a cancelar o pedido.
       roles: [Buyer, ProcurementManager]
-      // Transição disparada ao cancelar.
+      // REVIEW [2026-12-15] Transição disparada ao cancelar.
       to: status.Cancelled
-      // Emite o evento com o motivo do cancelamento.
+      // REVIEW [2026-12-15] Emite o evento com o motivo do cancelamento.
       emits { reason: cancellationReason }
       {
-        // Registra o instante do cancelamento.
+        // REVIEW [2026-12-15] Registra o instante do cancelamento.
         cancelledAt = now()
       }
     }
   }
 
-  // Índices de consulta mantidos para o documento.
+  // REVIEW [2026-12-15] Índices de consulta mantidos para o documento.
   indexes {
-    // Índice único pelo número, evitando duplicidade.
+    // REVIEW [2026-12-15] Índice único pelo número, evitando duplicidade.
     byNumber: [number] unique
-    // Índice de faixa por situação e envio, para listagens ordenadas.
+    // REVIEW [2026-12-15] Índice de faixa por situação e envio, para listagens ordenadas.
     byStatus: [status, sentAt] range
-    // Índice hash pelo fornecedor, para busca direta.
+    // REVIEW [2026-12-15] Índice hash pelo fornecedor, para busca direta.
     bySupplier: [supplier.id] hash
   }
 
-  // Regra que exige valor positivo no pedido.
+  // REVIEW [2026-12-15] Regra que exige valor positivo no pedido.
   rule amount > 0 BRL {
-    // Mensagem da regra em português.
+    // REVIEW [2026-12-15] Mensagem da regra em português.
     pt-BR: "O pedido precisa ter valor positivo"
-    // Mensagem da regra em inglês.
+    // REVIEW [2026-12-15] Mensagem da regra em inglês.
     en: "The order must have a positive amount"
   }
 }
 
-// Forma do ciclo de vida do pedido de compra.
+// REVIEW [2026-12-15] Forma do ciclo de vida do pedido de compra.
 shape PurchaseOrderStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do pedido de compra", en: "Purchase order status" }
-  // Base da forma: máquina de estados.
+  // REVIEW [2026-12-15] Base da forma: máquina de estados.
   base: state
-  // Estado inicial de todo pedido criado.
+  // REVIEW [2026-12-15] Estado inicial de todo pedido criado.
   initial: Draft
-  // Estado de rascunho, antes do envio ao fornecedor.
+  // REVIEW [2026-12-15] Estado de rascunho, antes do envio ao fornecedor.
   value Draft {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Draft
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição para pedido enviado.
+    // REVIEW [2026-12-15] Transição para pedido enviado.
     transition Sent {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Pedido enviado", en: "Purchase order sent" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora do envio.
+        // REVIEW [2026-12-15] Data e hora do envio.
         sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
       }
     }
 
-    // Transição para pedido cancelado.
+    // REVIEW [2026-12-15] Transição para pedido cancelado.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora do cancelamento.
+        // REVIEW [2026-12-15] Data e hora do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de pedido enviado ao fornecedor.
+  // REVIEW [2026-12-15] Estado de pedido enviado ao fornecedor.
   value Sent {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Enviado", en: "Sent" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Sent
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
 
-    // Transição para pedido confirmado.
+    // REVIEW [2026-12-15] Transição para pedido confirmado.
     transition Confirmed {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Pedido confirmado", en: "Purchase order confirmed" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora da confirmação.
+        // REVIEW [2026-12-15] Data e hora da confirmação.
         confirmedAt: DateTime { title: { pt-BR: "Confirmado em", en: "Confirmed at" } }
       }
     }
 
-    // Transição para pedido cancelado.
+    // REVIEW [2026-12-15] Transição para pedido cancelado.
     transition Cancelled {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora do cancelamento.
+        // REVIEW [2026-12-15] Data e hora do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
-        // Motivo do cancelamento.
+        // REVIEW [2026-12-15] Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de pedido confirmado pelo fornecedor.
+  // REVIEW [2026-12-15] Estado de pedido confirmado pelo fornecedor.
   value Confirmed {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Confirmado", en: "Confirmed" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Confirmed
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
 
-    // Transição para pedido recebido.
+    // REVIEW [2026-12-15] Transição para pedido recebido.
     transition Received {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Pedido recebido", en: "Purchase order received" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora do recebimento.
+        // REVIEW [2026-12-15] Data e hora do recebimento.
         receivedAt: DateTime { title: { pt-BR: "Recebido em", en: "Received at" } }
       }
     }
   }
-  // Estado de pedido recebido.
+  // REVIEW [2026-12-15] Estado de pedido recebido.
   value Received {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Recebido", en: "Received" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Received
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 40
   }
-  // Estado de pedido cancelado.
+  // REVIEW [2026-12-15] Estado de pedido cancelado.
   value Cancelled {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Cancelled
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 50
   }
 }
 
-// Forma que descreve uma linha de item do pedido de compra.
+// REVIEW [2026-12-15] Forma que descreve uma linha de item do pedido de compra.
 shape PurchaseItem {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Item de compra", en: "Purchase item" }
-  // Campos que compõem o item.
+  // REVIEW [2026-12-15] Campos que compõem o item.
   fields {
-    // Descrição do item comprado.
+    // REVIEW [2026-12-15] Descrição do item comprado.
     description: string { title: { pt-BR: "Descrição", en: "Description" } }
-    // Quantidade comprada.
+    // REVIEW [2026-12-15] Quantidade comprada.
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
-    // Preço unitário do item, em moeda forte.
+    // REVIEW [2026-12-15] Preço unitário do item, em moeda forte.
     unitPrice: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Preço unitário", en: "Unit price" }
-      // Moeda do preço unitário.
+      // REVIEW [2026-12-15] Moeda do preço unitário.
       currency: BRL
     }
   }

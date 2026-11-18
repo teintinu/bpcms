@@ -1,17 +1,17 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// Forma reutilizável que descreve a oferta de frete devolvida pela cotação.
+// REVIEW [2026-12-15] Forma reutilizável que descreve a oferta de frete devolvida pela cotação.
 shape FreightOffer {
-  // Título exibido onde a forma aparece.
+  // REVIEW [2026-12-15] Título exibido onde a forma aparece.
   title: { pt-BR: "Oferta de frete", en: "Freight offer" }
 
-  // Campos que compõem a oferta de frete.
+  // REVIEW [2026-12-15] Campos que compõem a oferta de frete.
   fields {
-    // Nome da transportadora responsável pela entrega.
+    // REVIEW [2026-12-15] Nome da transportadora responsável pela entrega.
     carrier: string { title: { pt-BR: "Transportadora", en: "Carrier" } }
-    // Valor do frete; usa o tipo monetário padrão importado de std.
+    // REVIEW [2026-12-15] Valor do frete; usa o tipo monetário padrão importado de std.
     freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
-    // Prazo estimado de entrega, contado em dias.
+    // REVIEW [2026-12-15] Prazo estimado de entrega, contado em dias.
     days: std.Count { title: { pt-BR: "Prazo em dias", en: "Days" } }
   }
 }

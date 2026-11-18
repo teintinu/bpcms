@@ -1,26 +1,26 @@
-// service: example.com/services/inventory
+// REVIEW [2026-12-15] service: example.com/services/inventory
 
-// Quadro kanban do estoque agrupado por situação.
+// REVIEW [2026-12-15] Quadro kanban do estoque agrupado por situação.
 view StockKanban {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Estoque por situação", en: "Stock by status" }
-  // Tipo da view: quadro kanban.
+  // REVIEW [2026-12-15] Tipo da view: quadro kanban.
   type: kanban
-  // Documento exibido no quadro.
+  // REVIEW [2026-12-15] Documento exibido no quadro.
   source: StockItem
-  // Papéis autorizados a abrir o quadro.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir o quadro.
   roles: [WarehouseOperator, StockManager]
 
-  // Agrupa os cartões pela situação do item.
+  // REVIEW [2026-12-15] Agrupa os cartões pela situação do item.
   groupBy: status
-  // Colunas exibidas em cada cartão do quadro.
+  // REVIEW [2026-12-15] Colunas exibidas em cada cartão do quadro.
   columns { product; warehouse; available; reorderPoint }
-  // Resumo exibido no cartão do kanban.
+  // REVIEW [2026-12-15] Resumo exibido no cartão do kanban.
   card { product; warehouse; available; status }
 
-  // Ações disponíveis nos cartões do quadro.
+  // REVIEW [2026-12-15] Ações disponíveis nos cartões do quadro.
   actions {
-    // Abre o detalhe do item selecionado.
+    // REVIEW [2026-12-15] Abre o detalhe do item selecionado.
     open -> StockDetail
   }
 }

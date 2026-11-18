@@ -1,15 +1,15 @@
-// service: example.com/services/orders
+// REVIEW [2026-12-15] service: example.com/services/orders
 
-// Parâmetro configurável que limita a quantidade de itens por pedido.
+// REVIEW [2026-12-15] Parâmetro configurável que limita a quantidade de itens por pedido.
 parameter MaxItemsPerOrder {
-  // Título exibido na tela de configuração.
+  // REVIEW [2026-12-15] Título exibido na tela de configuração.
   title: { pt-BR: "Máximo de itens por pedido", en: "Max items per order" }
-  // Tipo do valor: contagem inteira do padrão.
+  // REVIEW [2026-12-15] Tipo do valor: contagem inteira do padrão.
   type: std.Count
-  // Valor inicial aplicado quando nada é configurado.
+  // REVIEW [2026-12-15] Valor inicial aplicado quando nada é configurado.
   default: 50
-  // Menor valor aceito na configuração.
+  // REVIEW [2026-12-15] Menor valor aceito na configuração.
   min: 1
-  // Maior valor aceito na configuração.
+  // REVIEW [2026-12-15] Maior valor aceito na configuração.
   max: 200
 }

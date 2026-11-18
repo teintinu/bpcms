@@ -233,6 +233,20 @@ function registerLanguageFeatures(context, dependencies) {
     },
   };
 
+  const formattingProvider = {
+    async provideDocumentFormattingEdits(document) {
+      const result = await request('textDocument/formatting', {
+        textDocument: { uri: document.uri.toString() },
+        options: { tabSize: 2, insertSpaces: true },
+      });
+      if (!Array.isArray(result)) return [];
+      return result.map((edit) => ({
+        range: toRange(edit.range),
+        newText: String(edit.newText ?? ''),
+      }));
+    },
+  };
+
   const referenceProvider = {
     async provideReferences(document, position, options) {
       const result = await request('textDocument/references', {
@@ -250,6 +264,7 @@ function registerLanguageFeatures(context, dependencies) {
     vscode.languages.registerDefinitionProvider({ language: 'archol' }, definitionProvider),
     vscode.languages.registerDocumentSymbolProvider({ language: 'archol' }, documentSymbolProvider),
     vscode.languages.registerReferenceProvider({ language: 'archol' }, referenceProvider),
+    vscode.languages.registerDocumentFormattingEditProvider({ language: 'archol' }, formattingProvider),
   );
 }
 

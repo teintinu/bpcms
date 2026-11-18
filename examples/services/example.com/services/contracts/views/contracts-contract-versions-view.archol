@@ -1,16 +1,16 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Lista tabular das versões de contrato.
+// REVIEW [2026-12-15] Lista tabular das versões de contrato.
 view ContractVersions {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Versões do contrato", en: "Contract versions" }
-  type: table // Tipo do artefato: tabela.
-  source: ContractVersion // Documento que alimenta a lista.
-  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
+  type: table // REVIEW [2026-12-15] Tipo do artefato: tabela.
+  source: ContractVersion // REVIEW [2026-12-15] Documento que alimenta a lista.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // REVIEW [2026-12-15] Papéis autorizados.
 
-  // Colunas exibidas em cada linha.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha.
   columns { contract; versionNumber; status; summary; approvedAt }
-  // Filtros oferecidos na barra da lista.
+  // REVIEW [2026-12-15] Filtros oferecidos na barra da lista.
   filters { status; contract }
-  pagination: 50 // Quantidade de linhas por página.
+  pagination: 50 // REVIEW [2026-12-15] Quantidade de linhas por página.
 }

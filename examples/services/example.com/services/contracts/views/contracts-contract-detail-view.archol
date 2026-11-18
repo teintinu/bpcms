@@ -1,13 +1,13 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Tela de detalhe de um contrato, agregando visão e histórico.
+// REVIEW [2026-12-15] Tela de detalhe de um contrato, agregando visão e histórico.
 view ContractDetail {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Detalhe do contrato", en: "Contract detail" }
-  type: detail // Tipo do artefato: tela de detalhe.
-  document: Contract // Documento exibido na tela.
-  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
+  type: detail // REVIEW [2026-12-15] Tipo do artefato: tela de detalhe.
+  document: Contract // REVIEW [2026-12-15] Documento exibido na tela.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // REVIEW [2026-12-15] Papéis autorizados.
 
-  // Seções mostradas na tela de detalhe.
+  // REVIEW [2026-12-15] Seções mostradas na tela de detalhe.
   sections { summary; timeline }
 }

@@ -1,25 +1,25 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Parâmetro configurável da transportadora usada por padrão.
+// REVIEW [2026-12-15] Parâmetro configurável da transportadora usada por padrão.
 parameter DefaultCarrier {
-  // Título exibido na configuração do parâmetro.
+  // REVIEW [2026-12-15] Título exibido na configuração do parâmetro.
   title: { pt-BR: "Transportadora padrão", en: "Default carrier" }
-  // Tipo de dado aceito pelo parâmetro.
+  // REVIEW [2026-12-15] Tipo de dado aceito pelo parâmetro.
   type: string
-  // Valor inicial usado quando a aplicação não define outro.
+  // REVIEW [2026-12-15] Valor inicial usado quando a aplicação não define outro.
   default: "CarrierX"
 }
 
-// Parâmetro de limite máximo de peso aceito por remessa.
+// REVIEW [2026-12-15] Parâmetro de limite máximo de peso aceito por remessa.
 parameter MaxWeight {
-  // Título exibido na configuração do parâmetro.
+  // REVIEW [2026-12-15] Título exibido na configuração do parâmetro.
   title: { pt-BR: "Peso máximo", en: "Max weight" }
-  // Tipo de medida de massa, importado do serviço std.
+  // REVIEW [2026-12-15] Tipo de medida de massa, importado do serviço std.
   type: std.Mass
-  // Peso padrão de trinta quilos.
+  // REVIEW [2026-12-15] Peso padrão de trinta quilos.
   default: 30 kg
-  // Menor valor permitido na configuração.
+  // REVIEW [2026-12-15] Menor valor permitido na configuração.
   min: 1 kg
-  // Maior valor permitido na configuração.
+  // REVIEW [2026-12-15] Maior valor permitido na configuração.
   max: 500 kg
 }

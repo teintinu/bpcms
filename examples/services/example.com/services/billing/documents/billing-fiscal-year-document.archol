@@ -1,37 +1,37 @@
-// service: example.com/services/billing
+// REVIEW [2026-12-15] service: example.com/services/billing
 
-// Documento com escopo por instância que representa um exercício fiscal.
+// REVIEW [2026-12-15] Documento com escopo por instância que representa um exercício fiscal.
 scopable document FiscalYear {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
-  // Campos que compõem o exercício fiscal.
+  // REVIEW [2026-12-15] Campos que compõem o exercício fiscal.
   fields {
-    // Ano do exercício; único, consultável e obrigatório.
+    // REVIEW [2026-12-15] Ano do exercício; único, consultável e obrigatório.
     year: integer {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Ano", en: "Year" }
-      // Impede dois exercícios com o mesmo ano.
+      // REVIEW [2026-12-15] Impede dois exercícios com o mesmo ano.
       unique
-      // Permite localizar o exercício pelo ano.
+      // REVIEW [2026-12-15] Permite localizar o exercício pelo ano.
       lookup
-      // Torna o ano obrigatório no preenchimento.
+      // REVIEW [2026-12-15] Torna o ano obrigatório no preenchimento.
       required
     }
-    // Data de início do exercício.
+    // REVIEW [2026-12-15] Data de início do exercício.
     startsAt: DateTime { title: { pt-BR: "Início", en: "Start" } }
-    // Data de fim do exercício.
+    // REVIEW [2026-12-15] Data de fim do exercício.
     endsAt: DateTime { title: { pt-BR: "Fim", en: "End" } }
   }
 
-  // Dados iniciais semeados com o serviço.
+  // REVIEW [2026-12-15] Dados iniciais semeados com o serviço.
   seed {
-    // Exercício de 2026.
+    // REVIEW [2026-12-15] Exercício de 2026.
     Y2026 {
-      // Ano do exercício semeado.
+      // REVIEW [2026-12-15] Ano do exercício semeado.
       year: 2026
-      // Início em primeiro de janeiro de 2026.
+      // REVIEW [2026-12-15] Início em primeiro de janeiro de 2026.
       startsAt: 2026-01-01
-      // Fim em trinta e um de dezembro de 2026.
+      // REVIEW [2026-12-15] Fim em trinta e um de dezembro de 2026.
       endsAt: 2026-12-31
     }
   }

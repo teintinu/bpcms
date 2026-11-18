@@ -1,16 +1,16 @@
-// service: example.com/services/support
+// REVIEW [2026-12-15] service: example.com/services/support
 
-// Mensagem de confirmação de recebimento do chamado.
+// REVIEW [2026-12-15] Mensagem de confirmação de recebimento do chamado.
 message TicketAcknowledged {
-  // Título exibido no catálogo de mensagens.
+  // REVIEW [2026-12-15] Título exibido no catálogo de mensagens.
   title: { pt-BR: "Chamado recebido", en: "Ticket acknowledged" }
-  // Documento ao qual a mensagem se refere.
+  // REVIEW [2026-12-15] Documento ao qual a mensagem se refere.
   about: Ticket
-  // Dados levados pela mensagem.
+  // REVIEW [2026-12-15] Dados levados pela mensagem.
   payload {
-    // Assunto do chamado.
+    // REVIEW [2026-12-15] Assunto do chamado.
     subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
-    // Prioridade do chamado.
+    // REVIEW [2026-12-15] Prioridade do chamado.
     priority: TicketPriority { title: { pt-BR: "Prioridade", en: "Priority" } }
   }
 }

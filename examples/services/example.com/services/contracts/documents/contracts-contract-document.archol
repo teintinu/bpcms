@@ -1,420 +1,420 @@
-// service: example.com/services/contracts
+// REVIEW [2026-12-15] service: example.com/services/contracts
 
-// Documento raiz que representa o contrato firmado com um fornecedor.
+// REVIEW [2026-12-15] Documento raiz que representa o contrato firmado com um fornecedor.
 document Contract {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Contrato", en: "Contract" }
-  version: 1 // Versão do artefato Document; diff e release comparam.
-  owner: "Contracts" // Área responsável pelo documento.
-  sync: read // Expõe os dados em modo somente leitura a outros serviços.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
+  owner: "Contracts" // REVIEW [2026-12-15] Área responsável pelo documento.
+  sync: read // REVIEW [2026-12-15] Expõe os dados em modo somente leitura a outros serviços.
 
-  // Campos que compõem o contrato.
+  // REVIEW [2026-12-15] Campos que compõem o contrato.
   fields {
-    // Número do contrato; único, consultável e limitado a quarenta caracteres.
+    // REVIEW [2026-12-15] Número do contrato; único, consultável e limitado a quarenta caracteres.
     number: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
-      maxLength: 40 // Limite de tamanho do código.
-      unique // Impede que dois contratos tenham o mesmo número.
-      lookup // Permite localizar o contrato pelo número.
+      maxLength: 40 // REVIEW [2026-12-15] Limite de tamanho do código.
+      unique // REVIEW [2026-12-15] Impede que dois contratos tenham o mesmo número.
+      lookup // REVIEW [2026-12-15] Permite localizar o contrato pelo número.
     }
-    // Objeto do contrato; consultável e obrigatório.
+    // REVIEW [2026-12-15] Objeto do contrato; consultável e obrigatório.
     subject: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Objeto", en: "Subject" }
-      maxLength: 240 // Limite de tamanho do texto.
-      lookup // Permite localizar o contrato pelo objeto.
-      required // Exige preenchimento.
+      maxLength: 240 // REVIEW [2026-12-15] Limite de tamanho do texto.
+      lookup // REVIEW [2026-12-15] Permite localizar o contrato pelo objeto.
+      required // REVIEW [2026-12-15] Exige preenchimento.
     }
-    // Tipo do contrato, usualmente escolhido entre as formas de ContractKind.
+    // REVIEW [2026-12-15] Tipo do contrato, usualmente escolhido entre as formas de ContractKind.
     kind: ContractKind {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Tipo", en: "Kind" }
-      lookup // Permite filtrar contratos pelo tipo.
+      lookup // REVIEW [2026-12-15] Permite filtrar contratos pelo tipo.
     }
-    // Fornecedor do contrato, vindo do serviço de compras por alias.
+    // REVIEW [2026-12-15] Fornecedor do contrato, vindo do serviço de compras por alias.
     supplier: Procurement.Supplier {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Fornecedor", en: "Supplier" }
-      lookup // Permite localizar contratos por fornecedor.
+      lookup // REVIEW [2026-12-15] Permite localizar contratos por fornecedor.
     }
-    // Valor monetário do contrato no tipo padrão do construtor.
+    // REVIEW [2026-12-15] Valor monetário do contrato no tipo padrão do construtor.
     amount: std.Money {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Valor", en: "Amount" }
-      currency: BRL // Moeda usada no campo.
-      required // Exige preenchimento.
+      currency: BRL // REVIEW [2026-12-15] Moeda usada no campo.
+      required // REVIEW [2026-12-15] Exige preenchimento.
     }
-    // Data de início da vigência do contrato.
+    // REVIEW [2026-12-15] Data de início da vigência do contrato.
     startsAt: Date {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Início", en: "Start date" }
-      required // Exige preenchimento.
+      required // REVIEW [2026-12-15] Exige preenchimento.
     }
-    // Data de término da vigência do contrato.
+    // REVIEW [2026-12-15] Data de término da vigência do contrato.
     endsAt: Date {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Término", en: "End date" }
-      required // Exige preenchimento.
+      required // REVIEW [2026-12-15] Exige preenchimento.
     }
-    // Situação atual do contrato, governada pela forma ContractStatus.
+    // REVIEW [2026-12-15] Situação atual do contrato, governada pela forma ContractStatus.
     status: ContractStatus {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      lookup // Permite filtrar contratos pela situação.
+      lookup // REVIEW [2026-12-15] Permite filtrar contratos pela situação.
     }
-    // Instante em que o contrato foi enviado para revisão.
+    // REVIEW [2026-12-15] Instante em que o contrato foi enviado para revisão.
     submittedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Enviado para revisão em", en: "Submitted for review at" }
     }
-    // Instante em que o jurídico liberou o contrato.
+    // REVIEW [2026-12-15] Instante em que o jurídico liberou o contrato.
     legalClearedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Liberado pelo jurídico em", en: "Legal cleared at" }
     }
-    // Novo término proposto durante a negociação da renovação.
+    // REVIEW [2026-12-15] Novo término proposto durante a negociação da renovação.
     proposedEndsAt: Date {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Término proposto", en: "Proposed end date" }
     }
-    // Instante em que o contrato foi assinado.
+    // REVIEW [2026-12-15] Instante em que o contrato foi assinado.
     signedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Assinado em", en: "Signed at" }
     }
-    // Identificador devolvido pelo provedor de assinatura.
+    // REVIEW [2026-12-15] Identificador devolvido pelo provedor de assinatura.
     signatureId: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Identificador da assinatura", en: "Signature id" }
-      maxLength: 80 // Limite de tamanho do identificador.
+      maxLength: 80 // REVIEW [2026-12-15] Limite de tamanho do identificador.
     }
-    // Instante em que o contrato foi renovado.
+    // REVIEW [2026-12-15] Instante em que o contrato foi renovado.
     renewedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Renovado em", en: "Renewed at" }
     }
-    // Instante em que o contrato foi marcado como a vencer.
+    // REVIEW [2026-12-15] Instante em que o contrato foi marcado como a vencer.
     markedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Marcado a vencer em", en: "Marked expiring at" }
     }
-    // Instante em que o contrato foi cancelado.
+    // REVIEW [2026-12-15] Instante em que o contrato foi cancelado.
     cancelledAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Cancelado em", en: "Cancelled at" }
     }
-    // Motivo informado no cancelamento.
+    // REVIEW [2026-12-15] Motivo informado no cancelamento.
     cancellationReason: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
-      maxLength: 280 // Limite de tamanho do texto.
+      maxLength: 280 // REVIEW [2026-12-15] Limite de tamanho do texto.
     }
-    // Instante em que o contrato foi encerrado.
+    // REVIEW [2026-12-15] Instante em que o contrato foi encerrado.
     terminatedAt: DateTime {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Encerrado em", en: "Terminated at" }
     }
-    // Motivo informado no encerramento.
+    // REVIEW [2026-12-15] Motivo informado no encerramento.
     terminationReason: string {
-      // Rótulo exibido no formulário.
+      // REVIEW [2026-12-15] Rótulo exibido no formulário.
       title: { pt-BR: "Motivo do encerramento", en: "Termination reason" }
-      maxLength: 280 // Limite de tamanho do texto.
+      maxLength: 280 // REVIEW [2026-12-15] Limite de tamanho do texto.
     }
   }
 
 
-  // Ações de negócio que mudam o estado ou registram datas do contrato.
+  // REVIEW [2026-12-15] Ações de negócio que mudam o estado ou registram datas do contrato.
   actions {
-    // Envia o contrato para revisão, carimbando a data do envio.
+    // REVIEW [2026-12-15] Envia o contrato para revisão, carimbando a data do envio.
     submit() {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
-      roles: [ContractAnalyst] // Único papel autorizado a enviar.
-      to: status.InReview // Move o contrato para Em revisão.
-      // Efeitos colaterais aplicados ao contrato na transição.
+      roles: [ContractAnalyst] // REVIEW [2026-12-15] Único papel autorizado a enviar.
+      to: status.InReview // REVIEW [2026-12-15] Move o contrato para Em revisão.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato na transição.
       {
-        submittedAt = now() // Registra o instante do envio.
+        submittedAt = now() // REVIEW [2026-12-15] Registra o instante do envio.
       }
     }
 
-    // Marca a liberação jurídica sem mudar a situação do contrato.
+    // REVIEW [2026-12-15] Marca a liberação jurídica sem mudar a situação do contrato.
     clearLegal() {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Liberar pelo jurídico", en: "Clear by legal" }
-      roles: [LegalCounsel] // Somente o jurídico pode liberar.
-      // Efeitos colaterais aplicados ao contrato.
+      roles: [LegalCounsel] // REVIEW [2026-12-15] Somente o jurídico pode liberar.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato.
       {
-        legalClearedAt = now() // Registra o instante da liberação.
+        legalClearedAt = now() // REVIEW [2026-12-15] Registra o instante da liberação.
       }
     }
 
-    // Assina o contrato e o ativa; recebe os dados da assinatura.
+    // REVIEW [2026-12-15] Assina o contrato e o ativa; recebe os dados da assinatura.
     sign(signatureId: string, signedAt: DateTime) {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Assinar contrato", en: "Sign contract" }
-      roles: [LegalCounsel, ContractManager] // Papéis que podem assinar.
-      to: status.Active // Ativa o contrato após a assinatura.
+      roles: [LegalCounsel, ContractManager] // REVIEW [2026-12-15] Papéis que podem assinar.
+      to: status.Active // REVIEW [2026-12-15] Ativa o contrato após a assinatura.
     }
 
-    // Marca o contrato como próximo do vencimento.
+    // REVIEW [2026-12-15] Marca o contrato como próximo do vencimento.
     markExpiring() {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Marcar a vencer", en: "Mark expiring" }
-      roles: [ContractManager] // Somente o gestor pode marcar.
-      to: status.Expiring // Move o contrato para A vencer.
-      // Efeitos colaterais aplicados ao contrato na transição.
+      roles: [ContractManager] // REVIEW [2026-12-15] Somente o gestor pode marcar.
+      to: status.Expiring // REVIEW [2026-12-15] Move o contrato para A vencer.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato na transição.
       {
-        markedAt = now() // Registra o instante da marcação.
+        markedAt = now() // REVIEW [2026-12-15] Registra o instante da marcação.
       }
     }
 
-    // Registra a proposta de novo término, sem efetivar a renovação.
+    // REVIEW [2026-12-15] Registra a proposta de novo término, sem efetivar a renovação.
     proposeRenewal(proposedEndsAt: Date) {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Propor renovação", en: "Propose renewal" }
-      roles: [LegalCounsel, ContractAnalyst] // Papéis que podem propor.
+      roles: [LegalCounsel, ContractAnalyst] // REVIEW [2026-12-15] Papéis que podem propor.
     }
 
-    // Confirma a renovação e estende a vigência até o término proposto.
+    // REVIEW [2026-12-15] Confirma a renovação e estende a vigência até o término proposto.
     confirmRenewal(signedAt: DateTime) {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Confirmar renovação", en: "Confirm renewal" }
-      roles: [ContractManager] // Somente o gestor confirma.
-      to: status.Active // Renovação devolve o contrato ao estado Ativo.
-      // Efeitos colaterais aplicados ao contrato na transição.
+      roles: [ContractManager] // REVIEW [2026-12-15] Somente o gestor confirma.
+      to: status.Active // REVIEW [2026-12-15] Renovação devolve o contrato ao estado Ativo.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato na transição.
       {
-        endsAt = proposedEndsAt // Aplica o novo término acordado.
-        renewedAt = signedAt // Registra a data da assinatura da renovação.
+        endsAt = proposedEndsAt // REVIEW [2026-12-15] Aplica o novo término acordado.
+        renewedAt = signedAt // REVIEW [2026-12-15] Registra a data da assinatura da renovação.
       }
     }
 
-    // Encerra o contrato antecipadamente, registrando o motivo.
+    // REVIEW [2026-12-15] Encerra o contrato antecipadamente, registrando o motivo.
     terminate(terminationReason: string) {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Encerrar contrato", en: "Terminate contract" }
-      roles: [ContractManager] // Somente o gestor pode encerrar.
-      to: status.Terminated // Move o contrato para Encerrado.
-      emits { reason: terminationReason } // Publica o motivo no evento.
-      // Efeitos colaterais aplicados ao contrato na transição.
+      roles: [ContractManager] // REVIEW [2026-12-15] Somente o gestor pode encerrar.
+      to: status.Terminated // REVIEW [2026-12-15] Move o contrato para Encerrado.
+      emits { reason: terminationReason } // REVIEW [2026-12-15] Publica o motivo no evento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato na transição.
       {
-        terminatedAt = now() // Registra o instante do encerramento.
+        terminatedAt = now() // REVIEW [2026-12-15] Registra o instante do encerramento.
       }
     }
 
-    // Cancela o contrato, registrando o motivo informado.
+    // REVIEW [2026-12-15] Cancela o contrato, registrando o motivo informado.
     cancel(cancellationReason: string) {
-      // Rótulo do botão da ação.
+      // REVIEW [2026-12-15] Rótulo do botão da ação.
       title: { pt-BR: "Cancelar contrato", en: "Cancel contract" }
-      roles: [ContractManager, LegalCounsel] // Papéis que podem cancelar.
-      to: status.Terminated // O cancelamento também encerra o contrato.
-      emits { reason: cancellationReason } // Publica o motivo no evento.
-      // Efeitos colaterais aplicados ao contrato na transição.
+      roles: [ContractManager, LegalCounsel] // REVIEW [2026-12-15] Papéis que podem cancelar.
+      to: status.Terminated // REVIEW [2026-12-15] O cancelamento também encerra o contrato.
+      emits { reason: cancellationReason } // REVIEW [2026-12-15] Publica o motivo no evento.
+      // REVIEW [2026-12-15] Efeitos colaterais aplicados ao contrato na transição.
       {
-        cancelledAt = now() // Registra o instante do cancelamento.
+        cancelledAt = now() // REVIEW [2026-12-15] Registra o instante do cancelamento.
       }
     }
   }
 
-  // Índices que garantem unicidade e aceleram as consultas.
+  // REVIEW [2026-12-15] Índices que garantem unicidade e aceleram as consultas.
   indexes {
-    // Garante número único e serve de busca por número.
+    // REVIEW [2026-12-15] Garante número único e serve de busca por número.
     byNumber: [number] unique
-    // Faixa para consultas por situação e data de término.
+    // REVIEW [2026-12-15] Faixa para consultas por situação e data de término.
     byStatus: [status, endsAt] range
-    // Faixa para localizar contratos pela data de término.
+    // REVIEW [2026-12-15] Faixa para localizar contratos pela data de término.
     byEndsAt: [endsAt] range
-    // Hash para localizar contratos por fornecedor.
+    // REVIEW [2026-12-15] Hash para localizar contratos por fornecedor.
     bySupplier: [supplier.id] hash
   }
 
-  // Validação: o término precisa ser posterior ao início.
+  // REVIEW [2026-12-15] Validação: o término precisa ser posterior ao início.
   rule endsAt > startsAt {
-    // Mensagem de erro exibida em português.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em português.
     pt-BR: "O término do contrato deve ser posterior ao início"
-    // Mensagem de erro exibida em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em inglês.
     en: "Contract end date must be after its start date"
   }
 
-  // Validação: o valor do contrato precisa ser positivo e em reais.
+  // REVIEW [2026-12-15] Validação: o valor do contrato precisa ser positivo e em reais.
   rule amount > 0 BRL {
-    // Mensagem de erro exibida em português.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em português.
     pt-BR: "O contrato precisa ter valor positivo"
-    // Mensagem de erro exibida em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro exibida em inglês.
     en: "The contract must have a positive amount"
   }
 }
 
-// Máquina de estados que governa o ciclo de vida do contrato.
+// REVIEW [2026-12-15] Máquina de estados que governa o ciclo de vida do contrato.
 shape ContractStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do contrato", en: "Contract status" }
-  base: state // Forma de estado: valores representam fases com transições.
-  initial: Draft // Situação inicial de todo contrato novo.
-  // Estado de elaboração: contrato ainda não enviado para revisão.
+  base: state // REVIEW [2026-12-15] Forma de estado: valores representam fases com transições.
+  initial: Draft // REVIEW [2026-12-15] Situação inicial de todo contrato novo.
+  // REVIEW [2026-12-15] Estado de elaboração: contrato ainda não enviado para revisão.
   value Draft {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    icon: Draft // Ícone usado para o estado.
-    ordinal: 10 // Posição do estado na linha do tempo.
+    icon: Draft // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 10 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição para Em revisão, disparada no envio do contrato.
+    // REVIEW [2026-12-15] Transição para Em revisão, disparada no envio do contrato.
     transition InReview {
-      event: Submitted // Nome do evento emitido na transição.
-      // Título exibido no histórico.
+      event: Submitted // REVIEW [2026-12-15] Nome do evento emitido na transição.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato enviado para revisão", en: "Contract submitted for review" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi enviado.
+        // REVIEW [2026-12-15] Data em que o contrato foi enviado.
         submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
       }
     }
 
-    // Transição para Encerrado quando o rascunho é cancelado.
+    // REVIEW [2026-12-15] Transição para Encerrado quando o rascunho é cancelado.
     transition Terminated {
-      event: Cancelled // Nome do evento emitido na transição.
-      // Título exibido no histórico.
+      event: Cancelled // REVIEW [2026-12-15] Nome do evento emitido na transição.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato cancelado", en: "Contract cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi cancelado.
+        // REVIEW [2026-12-15] Data em que o contrato foi cancelado.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
-        // Motivo informado no cancelamento.
+        // REVIEW [2026-12-15] Motivo informado no cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado de revisão: contrato aguardando liberação e assinatura.
+  // REVIEW [2026-12-15] Estado de revisão: contrato aguardando liberação e assinatura.
   value InReview {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Em revisão", en: "In review" }
-    icon: InReview // Ícone usado para o estado.
-    ordinal: 20 // Posição do estado na linha do tempo.
+    icon: InReview // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 20 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição para Ativo, disparada na assinatura do contrato.
+    // REVIEW [2026-12-15] Transição para Ativo, disparada na assinatura do contrato.
     transition Active {
-      event: Signed // Nome do evento emitido na transição.
-      // Título exibido no histórico.
+      event: Signed // REVIEW [2026-12-15] Nome do evento emitido na transição.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato assinado", en: "Contract signed" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi assinado.
+        // REVIEW [2026-12-15] Data em que o contrato foi assinado.
         signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
-        // Identificador da assinatura registrada.
+        // REVIEW [2026-12-15] Identificador da assinatura registrada.
         signatureId: string { title: { pt-BR: "Identificador da assinatura", en: "Signature id" } }
       }
     }
 
-    // Transição para Encerrado quando o contrato é cancelado na revisão.
+    // REVIEW [2026-12-15] Transição para Encerrado quando o contrato é cancelado na revisão.
     transition Terminated {
-      event: Cancelled // Nome do evento emitido na transição.
-      // Título exibido no histórico.
+      event: Cancelled // REVIEW [2026-12-15] Nome do evento emitido na transição.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato cancelado", en: "Contract cancelled" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi cancelado.
+        // REVIEW [2026-12-15] Data em que o contrato foi cancelado.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
-        // Motivo informado no cancelamento.
+        // REVIEW [2026-12-15] Motivo informado no cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado ativo: contrato em vigência e apto a renovação.
+  // REVIEW [2026-12-15] Estado ativo: contrato em vigência e apto a renovação.
   value Active {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Ativo", en: "Active" }
-    icon: Active // Ícone usado para o estado.
-    ordinal: 30 // Posição do estado na linha do tempo.
+    icon: Active // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 30 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição para A vencer quando o gestor marca a proximidade do término.
+    // REVIEW [2026-12-15] Transição para A vencer quando o gestor marca a proximidade do término.
     transition Expiring {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato a vencer", en: "Contract expiring" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi marcado a vencer.
+        // REVIEW [2026-12-15] Data em que o contrato foi marcado a vencer.
         markedAt: DateTime { title: { pt-BR: "Marcado em", en: "Marked at" } }
       }
     }
 
-    // Transição para Encerrado quando o contrato é encerrado.
+    // REVIEW [2026-12-15] Transição para Encerrado quando o contrato é encerrado.
     transition Terminated {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi encerrado.
+        // REVIEW [2026-12-15] Data em que o contrato foi encerrado.
         terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
-        // Motivo informado no encerramento.
+        // REVIEW [2026-12-15] Motivo informado no encerramento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado a vencer: contrato próximo do término, em negociação.
+  // REVIEW [2026-12-15] Estado a vencer: contrato próximo do término, em negociação.
   value Expiring {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "A vencer", en: "Expiring" }
-    icon: Expiring // Ícone usado para o estado.
-    ordinal: 40 // Posição do estado na linha do tempo.
+    icon: Expiring // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 40 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
 
-    // Transição de volta a Ativo quando a renovação é confirmada.
+    // REVIEW [2026-12-15] Transição de volta a Ativo quando a renovação é confirmada.
     transition Active {
-      event: Renewed // Nome do evento emitido na transição.
-      // Título exibido no histórico.
+      event: Renewed // REVIEW [2026-12-15] Nome do evento emitido na transição.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato renovado", en: "Contract renewed" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data da assinatura da renovação.
+        // REVIEW [2026-12-15] Data da assinatura da renovação.
         signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
       }
     }
 
-    // Transição para Encerrado quando não há acordo de renovação.
+    // REVIEW [2026-12-15] Transição para Encerrado quando não há acordo de renovação.
     transition Terminated {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Contrato encerrado", en: "Contract terminated" }
-      // Dados carregados pelo evento da transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento da transição.
       payload {
-        // Data em que o contrato foi encerrado.
+        // REVIEW [2026-12-15] Data em que o contrato foi encerrado.
         terminatedAt: DateTime { title: { pt-BR: "Encerrado em", en: "Terminated at" } }
-        // Motivo informado no encerramento.
+        // REVIEW [2026-12-15] Motivo informado no encerramento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Estado final: contrato encerrado ou cancelado.
+  // REVIEW [2026-12-15] Estado final: contrato encerrado ou cancelado.
   value Terminated {
-    // Título exibido no seletor de estado.
+    // REVIEW [2026-12-15] Título exibido no seletor de estado.
     title: { pt-BR: "Encerrado", en: "Terminated" }
-    icon: Terminated // Ícone usado para o estado.
-    ordinal: 50 // Posição do estado na linha do tempo.
+    icon: Terminated // REVIEW [2026-12-15] Ícone usado para o estado.
+    ordinal: 50 // REVIEW [2026-12-15] Posição do estado na linha do tempo.
   }
 }
 
-// Classificação que distingue as naturezas de contrato.
+// REVIEW [2026-12-15] Classificação que distingue as naturezas de contrato.
 shape ContractKind {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Tipo de contrato", en: "Contract kind" }
-  base: classification // Forma de classificação: apenas rótulos, sem transições.
-  // Contrato de fornecimento de bens.
+  base: classification // REVIEW [2026-12-15] Forma de classificação: apenas rótulos, sem transições.
+  // REVIEW [2026-12-15] Contrato de fornecimento de bens.
   value Supply {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Fornecimento", en: "Supply" }
-    icon: Supply // Ícone usado para o valor.
-    ordinal: 10 // Ordem de exibição.
+    icon: Supply // REVIEW [2026-12-15] Ícone usado para o valor.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição.
   }
-  // Contrato de prestação de serviços.
+  // REVIEW [2026-12-15] Contrato de prestação de serviços.
   value Service {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Serviço", en: "Service" }
-    icon: Service // Ícone usado para o valor.
-    ordinal: 20 // Ordem de exibição.
+    icon: Service // REVIEW [2026-12-15] Ícone usado para o valor.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição.
   }
-  // Contrato de licenciamento de software.
+  // REVIEW [2026-12-15] Contrato de licenciamento de software.
   value License {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Licença", en: "License" }
-    icon: License // Ícone usado para o valor.
-    ordinal: 30 // Ordem de exibição.
+    icon: License // REVIEW [2026-12-15] Ícone usado para o valor.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição.
   }
 }

@@ -1,34 +1,34 @@
-// service: example.com/services/payments
+// REVIEW [2026-12-15] service: example.com/services/payments
 
-// Organograma que estrutura os papéis financeiros do serviço.
+// REVIEW [2026-12-15] Organograma que estrutura os papéis financeiros do serviço.
 organogram Treasury {
-  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" } // Título exibido no builder.
+  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" } // REVIEW [2026-12-15] Título exibido no builder.
 
-  // Relações de subordinação entre os papéis.
+  // REVIEW [2026-12-15] Relações de subordinação entre os papéis.
   hierarchy {
-    Manager > Analyst // O gerente está acima do analista.
+    Manager > Analyst // REVIEW [2026-12-15] O gerente está acima do analista.
   }
 
-  Manager manages [Analyst] // Explicita que o gerente gerencia analistas.
+  Manager manages [Analyst] // REVIEW [2026-12-15] Explicita que o gerente gerencia analistas.
 }
 
-// Papel operacional que registra cobranças e responde contestações.
+// REVIEW [2026-12-15] Papel operacional que registra cobranças e responde contestações.
 role Analyst {
-  // Título do papel exibido na interface.
+  // REVIEW [2026-12-15] Título do papel exibido na interface.
   title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
-  permissions: [payment.view, refund.request, chargeback.respond] // Permissões concedidas ao analista.
+  permissions: [payment.view, refund.request, chargeback.respond] // REVIEW [2026-12-15] Permissões concedidas ao analista.
 }
 
-// Papel de supervisão com poderes de aprovação e decisão.
+// REVIEW [2026-12-15] Papel de supervisão com poderes de aprovação e decisão.
 role Manager {
-  title: { pt-BR: "Gerente financeiro", en: "Finance manager" } // Título do papel exibido na interface.
-  inherits: Analyst // Herda as permissões do analista.
-  // Permissões adicionais concedidas ao gerente.
+  title: { pt-BR: "Gerente financeiro", en: "Finance manager" } // REVIEW [2026-12-15] Título do papel exibido na interface.
+  inherits: Analyst // REVIEW [2026-12-15] Herda as permissões do analista.
+  // REVIEW [2026-12-15] Permissões adicionais concedidas ao gerente.
   permissions: [payment.refund, chargeback.decide, report.view]
 }
 
-// Papel técnico usado por automações e integrações.
+// REVIEW [2026-12-15] Papel técnico usado por automações e integrações.
 role PaymentEngine {
-  title: { pt-BR: "Motor de pagamentos", en: "Payment engine" } // Título do papel exibido na interface.
-  permissions: [payment.capture, chargeback.receive] // Permissões de execução automática do motor.
+  title: { pt-BR: "Motor de pagamentos", en: "Payment engine" } // REVIEW [2026-12-15] Título do papel exibido na interface.
+  permissions: [payment.capture, chargeback.receive] // REVIEW [2026-12-15] Permissões de execução automática do motor.
 }

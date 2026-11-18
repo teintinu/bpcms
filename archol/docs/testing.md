@@ -18,15 +18,15 @@ node --test editors/vscode/test
 | `archol-core/tests/corpus.rs` | the 330 real examples parse without error |
 | `archol-cli/tests/cli.rs` | exit codes, `E_FILE_READ` for invalid UTF-8, `tokens` with trailing `\`, deep nesting |
 | `archol-analysis/tests/annotate.rs` | typed references (`Reference`/`ref`), field refs, lock ids and pruning |
-| `archol-analysis/src/ids.rs` (inline tests) | sequential used-only ids, CSV roundtrip, pinned `*` entries, duplicate rejection |
+| `archol-analysis/src/ids.rs` (inline tests) | sequential used-only ids, usage-first allocation, base36, CSV roundtrip, pinned `*`, duplicate rejection |
 | `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
 | `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
-| `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast` |
+| `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast`, `format --check`, pending diagnostics |
 | `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker, lock debouncer |
 
 ## Status
 
-Today: **63 Rust tests** (`cargo test`) and **44 JavaScript tests**
+Today: **72 Rust tests** (`cargo test`) and **45 JavaScript tests**
 (`node --test editors/vscode/test`); `clippy` and `fmt --check` clean.
 
 ## Corpus

@@ -1,17 +1,17 @@
-// service: example.com/services/checkout
+// REVIEW [2026-12-15] service: example.com/services/checkout
 
-// View de inbox com as finalizações do próprio usuário.
+// REVIEW [2026-12-15] View de inbox com as finalizações do próprio usuário.
 view MyCheckouts {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Minhas finalizações", en: "My checkouts" }
-  // Tipo da view: lista de tarefas de entrada.
+  // REVIEW [2026-12-15] Tipo da view: lista de tarefas de entrada.
   type: inbox
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Customer, SupportAgent]
-  // Mostra apenas os itens do próprio usuário.
+  // REVIEW [2026-12-15] Mostra apenas os itens do próprio usuário.
   scope: mine
-  // Agrupa os itens pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa os itens pelo processo de origem.
   groupBy: process
-  // Colunas exibidas na lista.
+  // REVIEW [2026-12-15] Colunas exibidas na lista.
   columns { title; subject; dueAt; priority }
 }

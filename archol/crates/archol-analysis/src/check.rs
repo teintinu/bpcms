@@ -3,7 +3,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use archol_core::pending::{self, Date};
+use archol_core::pending;
 use archol_core::{Artifact, Diagnostic, Expr, Member, Stmt};
 
 use crate::index::{ident_list, Symbols, PRIMITIVES};
@@ -48,9 +48,6 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
     }
     diagnostics
 }
-
-#[allow(dead_code)]
-fn _pending_date_reference(_: Date) {}
 
 fn check_artifact(
     symbols: &Symbols,

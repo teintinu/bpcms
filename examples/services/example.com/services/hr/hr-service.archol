@@ -1,18 +1,18 @@
-// service: example.com/services/hr
-// Declara o serviço de Recursos Humanos; a URI é o escopo de todos os seus artefatos.
+// REVIEW [2026-12-15] service: example.com/services/hr
+// REVIEW [2026-12-15] Declara o serviço de Recursos Humanos; a URI é o escopo de todos os seus artefatos.
 service "example.com/services/hr" {
-  // Título exibido no construtor e na navegação.
+  // REVIEW [2026-12-15] Título exibido no construtor e na navegação.
   title: { pt-BR: "Recursos humanos", en: "Human resources" }
-  // Versão do serviço usada em diff e release.
+  // REVIEW [2026-12-15] Versão do serviço usada em diff e release.
   version: 1.0.0
-  // Área responsável pela manutenção do serviço.
+  // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
   owner: "People"
 
-  // Dependências externas expostas por alias neste arquivo.
+  // REVIEW [2026-12-15] Dependências externas expostas por alias neste arquivo.
   imports {
-    // Importa as medidas e constantes padrão do construtor.
+    // REVIEW [2026-12-15] Importa as medidas e constantes padrão do construtor.
     service "bpcms.org/std" as std
-    // Importa o serviço de identidade, dono de Identity.User.
+    // REVIEW [2026-12-15] Importa o serviço de identidade, dono de Identity.User.
     service "example.com/services/identity" as Identity
   }
 }

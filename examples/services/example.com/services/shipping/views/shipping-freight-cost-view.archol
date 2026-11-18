@@ -1,33 +1,33 @@
-// service: example.com/services/shipping
+// REVIEW [2026-12-15] service: example.com/services/shipping
 
-// Relatório de custos de frete por período, transportadora e situação.
+// REVIEW [2026-12-15] Relatório de custos de frete por período, transportadora e situação.
 view FreightCost {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Custo de frete", en: "Freight cost" }
-  // Tipo da view: relatório agregado.
+  // REVIEW [2026-12-15] Tipo da view: relatório agregado.
   type: report
-  // Documentos usados como fonte dos dados.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos dados.
   sources: [Shipment]
-  // Papéis que podem abrir a view.
+  // REVIEW [2026-12-15] Papéis que podem abrir a view.
   roles: [Manager]
 
-  // Filtros disponíveis no relatório.
+  // REVIEW [2026-12-15] Filtros disponíveis no relatório.
   filters { period; carrierName; status }
-  // Métricas calculadas sobre as remessas.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as remessas.
   metrics {
-    // Total de remessas no período.
+    // REVIEW [2026-12-15] Total de remessas no período.
     shipments: count(Shipment)
-    // Soma dos valores de frete.
+    // REVIEW [2026-12-15] Soma dos valores de frete.
     freight: sum(Shipment.frete)
-    // Peso bruto médio das remessas.
+    // REVIEW [2026-12-15] Peso bruto médio das remessas.
     avgWeight: avg(Shipment.pesoBruto)
-    // Remessas com tentativa de entrega falha.
+    // REVIEW [2026-12-15] Remessas com tentativa de entrega falha.
     failedAttempts: count(Shipment) where status == AttemptFailed
   }
-  // Unidades usadas na exibição das métricas.
+  // REVIEW [2026-12-15] Unidades usadas na exibição das métricas.
   units { freight: BRL; avgWeight: kg }
-  // Considera os dados atualizados por quinze minutos.
+  // REVIEW [2026-12-15] Considera os dados atualizados por quinze minutos.
   freshness: 15m
-  // Formatos de exportação disponíveis.
+  // REVIEW [2026-12-15] Formatos de exportação disponíveis.
   export: [pdf, csv]
 }

@@ -1,28 +1,28 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// View de relatório com indicadores de qualidade do laboratório.
+// REVIEW [2026-12-15] View de relatório com indicadores de qualidade do laboratório.
 view LabQuality {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
-  // Tipo da view: relatório com métricas agregadas.
+  // REVIEW [2026-12-15] Tipo da view: relatório com métricas agregadas.
   type: report
-  // Documentos usados como fonte dos indicadores.
+  // REVIEW [2026-12-15] Documentos usados como fonte dos indicadores.
   sources: [Sample, ExamResult]
-  roles: [Pathologist, LabManager] // Papéis que podem abrir o relatório.
+  roles: [Pathologist, LabManager] // REVIEW [2026-12-15] Papéis que podem abrir o relatório.
 
-  // Filtros disponíveis no relatório.
+  // REVIEW [2026-12-15] Filtros disponíveis no relatório.
   filters { period; exam; laboratory }
-  // Métricas calculadas sobre as fontes.
+  // REVIEW [2026-12-15] Métricas calculadas sobre as fontes.
   metrics {
-    // Amostras rejeitadas no período.
+    // REVIEW [2026-12-15] Amostras rejeitadas no período.
     rejected: count(Sample) where status == Rejected
-    // Resultados marcados como críticos.
+    // REVIEW [2026-12-15] Resultados marcados como críticos.
     criticalResults: count(ExamResult) where critical == true
-    // Resultados já liberados.
+    // REVIEW [2026-12-15] Resultados já liberados.
     releasedResults: count(ExamResult) where status == Released
-    // Resultados já assinados.
+    // REVIEW [2026-12-15] Resultados já assinados.
     signedResults: count(ExamResult) where status == Signed
   }
-  freshness: 15m // Janela de atualização dos dados do relatório.
-  export: [pdf, csv] // Formatos de exportação habilitados.
+  freshness: 15m // REVIEW [2026-12-15] Janela de atualização dos dados do relatório.
+  export: [pdf, csv] // REVIEW [2026-12-15] Formatos de exportação habilitados.
 }

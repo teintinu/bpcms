@@ -1,190 +1,190 @@
-// service: example.com/services/laboratory
+// REVIEW [2026-12-15] service: example.com/services/laboratory
 
-// Documento que representa o resultado de um exame laboratorial.
+// REVIEW [2026-12-15] Documento que representa o resultado de um exame laboratorial.
 document ExamResult {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Resultado de exame", en: "Exam result" }
-  version: 1 // Versão do artefato Document.
-  owner: "Laboratory" // Dono de negócio do documento.
-  sync: live // Sincronização em tempo real entre cliente e servidor.
-  // Campos que compõem o resultado.
+  version: 1 // REVIEW [2026-12-15] Versão do artefato Document.
+  owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio do documento.
+  sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
+  // REVIEW [2026-12-15] Campos que compõem o resultado.
   fields {
-    // Laboratório responsável pelo resultado.
+    // REVIEW [2026-12-15] Laboratório responsável pelo resultado.
     laboratory: Laboratory {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
-    // Pedido de exame de origem; consultável.
+    // REVIEW [2026-12-15] Pedido de exame de origem; consultável.
     examOrder: ExamOrder {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Exam order" }
-      // Permite localizar resultados pelo pedido.
+      // REVIEW [2026-12-15] Permite localizar resultados pelo pedido.
       lookup
     }
-    // Amostra analisada; consultável.
+    // REVIEW [2026-12-15] Amostra analisada; consultável.
     sample: Sample {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Amostra", en: "Sample" }
-      // Permite localizar resultados pela amostra.
+      // REVIEW [2026-12-15] Permite localizar resultados pela amostra.
       lookup
     }
-    value: string { title: { pt-BR: "Valor", en: "Value" } } // Valor medido na análise.
-    unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // Unidade de medida do valor.
-    // Marca se o resultado é crítico.
+    value: string { title: { pt-BR: "Valor", en: "Value" } } // REVIEW [2026-12-15] Valor medido na análise.
+    unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // REVIEW [2026-12-15] Unidade de medida do valor.
+    // REVIEW [2026-12-15] Marca se o resultado é crítico.
     critical: boolean { title: { pt-BR: "Resultado crítico", en: "Critical result" } }
-    // Situação do resultado; consultável para filtros.
+    // REVIEW [2026-12-15] Situação do resultado; consultável para filtros.
     status: ExamResultStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Instante em que o resultado foi validado.
+    // REVIEW [2026-12-15] Instante em que o resultado foi validado.
     validatedAt: DateTime { title: { pt-BR: "Validado em", en: "Validated at" } }
-    // Instante em que o resultado foi assinado.
+    // REVIEW [2026-12-15] Instante em que o resultado foi assinado.
     signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
-    // Instante em que o resultado foi liberado.
+    // REVIEW [2026-12-15] Instante em que o resultado foi liberado.
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
   }
 
-  // Índices secundários para consulta.
+  // REVIEW [2026-12-15] Índices secundários para consulta.
   indexes {
-    // Índice por pedido de exame, consultado por igualdade.
+    // REVIEW [2026-12-15] Índice por pedido de exame, consultado por igualdade.
     byOrder: [examOrder.id] hash
-    // Índice por situação e data de liberação, consultado por faixa.
+    // REVIEW [2026-12-15] Índice por situação e data de liberação, consultado por faixa.
     byStatus: [status, releasedAt] range
   }
 
 
-  // Ações que movimentam o resultado.
+  // REVIEW [2026-12-15] Ações que movimentam o resultado.
   actions {
-    // Action que registra a leitura do analisador no resultado.
+    // REVIEW [2026-12-15] Action que registra a leitura do analisador no resultado.
     record(order: ExamOrder, sampleRef: Sample, measured: string, measUnit: string, isCritical: boolean){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Registrar leitura", en: "Record reading" }
-      roles: [Analyst] // Papéis autorizados a registrar a leitura.
-      returns: ExamResult // Devolve o resultado criado ao chamador.
-      // Corpo da action: grava os dados medidos.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a registrar a leitura.
+      returns: ExamResult // REVIEW [2026-12-15] Devolve o resultado criado ao chamador.
+      // REVIEW [2026-12-15] Corpo da action: grava os dados medidos.
       {
-        // Vincula o resultado ao pedido de exame.
+        // REVIEW [2026-12-15] Vincula o resultado ao pedido de exame.
         examOrder = order
-        // Vincula o resultado à amostra analisada.
+        // REVIEW [2026-12-15] Vincula o resultado à amostra analisada.
         sample = sampleRef
-        // Grava o valor medido.
+        // REVIEW [2026-12-15] Grava o valor medido.
         value = measured
-        // Grava a unidade de medida.
+        // REVIEW [2026-12-15] Grava a unidade de medida.
         unit = measUnit
-        // Grava a marca de resultado crítico.
+        // REVIEW [2026-12-15] Grava a marca de resultado crítico.
         critical = isCritical
       }
     }
 
-    // Action que valida o resultado.
+    // REVIEW [2026-12-15] Action que valida o resultado.
     validate(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Validar", en: "Validate" }
-      roles: [Analyst] // Papéis autorizados a validar.
-      to: status.Validated // Transição para o estado Validated.
-      // Corpo da action: grava a data de validação.
+      roles: [Analyst] // REVIEW [2026-12-15] Papéis autorizados a validar.
+      to: status.Validated // REVIEW [2026-12-15] Transição para o estado Validated.
+      // REVIEW [2026-12-15] Corpo da action: grava a data de validação.
       {
-        // Registra o instante da validação.
+        // REVIEW [2026-12-15] Registra o instante da validação.
         validatedAt = now()
       }
     }
 
-    // Action que assina o resultado.
+    // REVIEW [2026-12-15] Action que assina o resultado.
     sign(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Assinar", en: "Sign" }
-      roles: [Pathologist] // Papéis autorizados a assinar.
-      to: status.Signed // Transição para o estado Signed.
-      // Corpo da action: grava a data de assinatura.
+      roles: [Pathologist] // REVIEW [2026-12-15] Papéis autorizados a assinar.
+      to: status.Signed // REVIEW [2026-12-15] Transição para o estado Signed.
+      // REVIEW [2026-12-15] Corpo da action: grava a data de assinatura.
       {
-        // Registra o instante da assinatura.
+        // REVIEW [2026-12-15] Registra o instante da assinatura.
         signedAt = now()
       }
     }
 
-    // Action que libera o resultado ao solicitante.
+    // REVIEW [2026-12-15] Action que libera o resultado ao solicitante.
     release(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Liberar", en: "Release" }
-      roles: [Pathologist] // Papéis autorizados a liberar.
-      to: status.Released // Transição para o estado Released.
-      // Corpo da action: grava a data de liberação.
+      roles: [Pathologist] // REVIEW [2026-12-15] Papéis autorizados a liberar.
+      to: status.Released // REVIEW [2026-12-15] Transição para o estado Released.
+      // REVIEW [2026-12-15] Corpo da action: grava a data de liberação.
       {
-        // Registra o instante da liberação.
+        // REVIEW [2026-12-15] Registra o instante da liberação.
         releasedAt = now()
       }
     }
   }
 
-  // Exige data de liberação quando o resultado está Released.
+  // REVIEW [2026-12-15] Exige data de liberação quando o resultado está Released.
   rule status == Released implies releasedAt != null {
-    pt-BR: "Informe a data de liberação" // Mensagem do erro em português.
-    en: "Enter the release date" // Mensagem do erro em inglês.
+    pt-BR: "Informe a data de liberação" // REVIEW [2026-12-15] Mensagem do erro em português.
+    en: "Enter the release date" // REVIEW [2026-12-15] Mensagem do erro em inglês.
 
   }
 
-  // Assinatura exigida para liberar o resultado.
+  // REVIEW [2026-12-15] Assinatura exigida para liberar o resultado.
   signature {
-    // Papel que assina a liberação.
+    // REVIEW [2026-12-15] Papel que assina a liberação.
     release: Pathologist
   }
 }
 
-// Shape de estado que acompanha o ciclo de vida do resultado.
+// REVIEW [2026-12-15] Shape de estado que acompanha o ciclo de vida do resultado.
 shape ExamResultStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do resultado", en: "Exam result status" }
-  base: state // Tipo base: máquina de estados.
-  // Estado inicial do resultado.
+  base: state // REVIEW [2026-12-15] Tipo base: máquina de estados.
+  // REVIEW [2026-12-15] Estado inicial do resultado.
   initial: Draft
-  // Estado "registrado".
+  // REVIEW [2026-12-15] Estado "registrado".
   value Draft {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Registrado", en: "Recorded" }
-    icon: Draft // Ícone associado ao estado.
-    ordinal: 10 // Ordem de exibição do estado.
+    icon: Draft // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 10 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Validated.
+    // REVIEW [2026-12-15] Transição para o estado Validated.
     transition Validated {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Resultado validado", en: "Result validated" }
     }
   }
-  // Estado "validado".
+  // REVIEW [2026-12-15] Estado "validado".
   value Validated {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Validado", en: "Validated" }
-    icon: Validated // Ícone associado ao estado.
-    ordinal: 20 // Ordem de exibição do estado.
+    icon: Validated // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 20 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Signed.
+    // REVIEW [2026-12-15] Transição para o estado Signed.
     transition Signed {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Resultado assinado", en: "Result signed" }
     }
   }
-  // Estado "assinado".
+  // REVIEW [2026-12-15] Estado "assinado".
   value Signed {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Assinado", en: "Signed" }
-    icon: Signed // Ícone associado ao estado.
-    ordinal: 30 // Ordem de exibição do estado.
+    icon: Signed // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 30 // REVIEW [2026-12-15] Ordem de exibição do estado.
 
-    // Transição para o estado Released.
+    // REVIEW [2026-12-15] Transição para o estado Released.
     transition Released {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Resultado liberado", en: "Result released" }
-      // Dados levados pela transição.
+      // REVIEW [2026-12-15] Dados levados pela transição.
       payload {
-        value: string { title: { pt-BR: "Valor", en: "Value" } } // Valor liberado do resultado.
-        unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // Unidade de medida do valor liberado.
+        value: string { title: { pt-BR: "Valor", en: "Value" } } // REVIEW [2026-12-15] Valor liberado do resultado.
+        unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // REVIEW [2026-12-15] Unidade de medida do valor liberado.
       }
     }
   }
-  // Estado "liberado".
+  // REVIEW [2026-12-15] Estado "liberado".
   value Released {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Liberado", en: "Released" }
-    icon: Released // Ícone associado ao estado.
-    ordinal: 40 // Ordem de exibição do estado.
+    icon: Released // REVIEW [2026-12-15] Ícone associado ao estado.
+    ordinal: 40 // REVIEW [2026-12-15] Ordem de exibição do estado.
   }
-  format: plain // Exibição sem máscara.
+  format: plain // REVIEW [2026-12-15] Exibição sem máscara.
 }

@@ -1,33 +1,33 @@
-// service: example.com/services/notifications
+// REVIEW [2026-12-15] service: example.com/services/notifications
 
-// Forma de classificação com os canais de entrega disponíveis.
+// REVIEW [2026-12-15] Forma de classificação com os canais de entrega disponíveis.
 shape Channel {
-  // Rótulo da forma exibido no construtor.
+  // REVIEW [2026-12-15] Rótulo da forma exibido no construtor.
   title: { pt-BR: "Canal", en: "Channel" }
-  base: classification // Base classificação: conjunto fechado de valores.
-  // Canal de correio eletrônico.
+  base: classification // REVIEW [2026-12-15] Base classificação: conjunto fechado de valores.
+  // REVIEW [2026-12-15] Canal de correio eletrônico.
   value Email {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "Correio eletrônico", en: "Email" }
-    // Ícone do contêiner de ícones do construtor (namespace channels).
+    // REVIEW [2026-12-15] Ícone do contêiner de ícones do construtor (namespace channels).
     icon: channels.email
-    ordinal: 10 // Posição do valor na ordenação.
+    ordinal: 10 // REVIEW [2026-12-15] Posição do valor na ordenação.
   }
-  // Canal de WhatsApp.
+  // REVIEW [2026-12-15] Canal de WhatsApp.
   value Whatsapp {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "WhatsApp", en: "WhatsApp" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: WhatsApp
-    ordinal: 20 // Posição do valor na ordenação.
+    ordinal: 20 // REVIEW [2026-12-15] Posição do valor na ordenação.
   }
-  // Canal dentro do próprio aplicativo.
+  // REVIEW [2026-12-15] Canal dentro do próprio aplicativo.
   value InApp {
-    // Rótulo do valor.
+    // REVIEW [2026-12-15] Rótulo do valor.
     title: { pt-BR: "No aplicativo", en: "In-app" }
-    // Ícone do serviço de notificações.
+    // REVIEW [2026-12-15] Ícone do serviço de notificações.
     icon: InApp
-    ordinal: 30 // Posição do valor na ordenação.
+    ordinal: 30 // REVIEW [2026-12-15] Posição do valor na ordenação.
   }
-  format: plain // Renderização em texto simples.
+  format: plain // REVIEW [2026-12-15] Renderização em texto simples.
 }

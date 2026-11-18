@@ -1,18 +1,18 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// View de caixa de entrada com as tarefas de compras do usuário logado.
+// REVIEW [2026-12-15] View de caixa de entrada com as tarefas de compras do usuário logado.
 view MyProcurementTasks {
-  // Título exibido na navegação e no cabeçalho da inbox.
+  // REVIEW [2026-12-15] Título exibido na navegação e no cabeçalho da inbox.
   title: { pt-BR: "Minhas tarefas de compras", en: "My procurement tasks" }
-  // Tipo da view: caixa de entrada de tarefas.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de tarefas.
   type: inbox
-  // Papéis que podem abrir a inbox e ver as próprias tarefas.
+  // REVIEW [2026-12-15] Papéis que podem abrir a inbox e ver as próprias tarefas.
   roles: [Requester, Buyer, Approver, ProcurementManager, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
 
-  // Restringe o conteúdo às tarefas atribuídas ao usuário logado.
+  // REVIEW [2026-12-15] Restringe o conteúdo às tarefas atribuídas ao usuário logado.
   scope: mine
-  // Agrupa as tarefas pelo processo de origem.
+  // REVIEW [2026-12-15] Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  // Colunas exibidas em cada linha da inbox.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha da inbox.
   columns { title; subject; role; dueAt; priority }
 }

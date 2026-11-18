@@ -1,350 +1,350 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// Documento que representa o produto do catálogo.
+// REVIEW [2026-12-15] Documento que representa o produto do catálogo.
 document Product {
-  // Título exibido no builder e na interface.
+  // REVIEW [2026-12-15] Título exibido no builder e na interface.
   title: { pt-BR: "Produto", en: "Product" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área de negócio responsável pelo documento.
+  // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
   owner: "Catalog"
-  // Modo de sincronização: atualização em tempo real entre instâncias.
+  // REVIEW [2026-12-15] Modo de sincronização: atualização em tempo real entre instâncias.
   sync: live
-  // Campos persistidos do produto.
+  // REVIEW [2026-12-15] Campos persistidos do produto.
   fields {
-    // Código SKU do produto: único e pesquisável.
+    // REVIEW [2026-12-15] Código SKU do produto: único e pesquisável.
     sku: SKU { title: { pt-BR: "Código", en: "SKU" }, unique, lookup }
-    // Nome do produto: obrigatório, limitado e pesquisável.
+    // REVIEW [2026-12-15] Nome do produto: obrigatório, limitado e pesquisável.
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
-    // Categoria à qual o produto pertence.
+    // REVIEW [2026-12-15] Categoria à qual o produto pertence.
     category: Category {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Categoria", en: "Category" }
     }
-    // Preço em dinheiro, com duas casas decimais e moeda BRL.
+    // REVIEW [2026-12-15] Preço em dinheiro, com duas casas decimais e moeda BRL.
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
-    // Peso do produto, com unidade de massa do std.
+    // REVIEW [2026-12-15] Peso do produto, com unidade de massa do std.
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
-    // Comprimento do produto, com unidade de comprimento do std.
+    // REVIEW [2026-12-15] Comprimento do produto, com unidade de comprimento do std.
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
-    // Situação do produto no ciclo de vida, indexada para busca.
+    // REVIEW [2026-12-15] Situação do produto no ciclo de vida, indexada para busca.
     status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
-    // Imagem principal do produto.
+    // REVIEW [2026-12-15] Imagem principal do produto.
     image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
-    // Vídeo de apresentação do produto.
+    // REVIEW [2026-12-15] Vídeo de apresentação do produto.
     video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
-    // Áudio descritivo do produto.
+    // REVIEW [2026-12-15] Áudio descritivo do produto.
     audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
-    // Manual em anexo do produto.
+    // REVIEW [2026-12-15] Manual em anexo do produto.
     manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
-    // Descrição rica, formatada, do produto.
+    // REVIEW [2026-12-15] Descrição rica, formatada, do produto.
     richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
-    // Data e hora de criação do registro.
+    // REVIEW [2026-12-15] Data e hora de criação do registro.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
-    // Data e hora em que o produto foi submetido para revisão.
+    // REVIEW [2026-12-15] Data e hora em que o produto foi submetido para revisão.
     submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
-    // Data e hora em que o produto foi publicado.
+    // REVIEW [2026-12-15] Data e hora em que o produto foi publicado.
     publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
-    // Data e hora em que o produto foi arquivado.
+    // REVIEW [2026-12-15] Data e hora em que o produto foi arquivado.
     archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
   }
 
-  // Índices que sustentam unicidade, busca, filtros e ordenação.
+  // REVIEW [2026-12-15] Índices que sustentam unicidade, busca, filtros e ordenação.
   indexes {
-    // Garante unicidade do código SKU.
+    // REVIEW [2026-12-15] Garante unicidade do código SKU.
     sku: [sku] unique
-    // Índice de busca textual sobre o nome do produto.
+    // REVIEW [2026-12-15] Índice de busca textual sobre o nome do produto.
     name: [name] search
-    // Índice por intervalo para filtrar situação e data de criação.
+    // REVIEW [2026-12-15] Índice por intervalo para filtrar situação e data de criação.
     byStatus: [status, createdAt] range
-    // Índice por intervalo sobre o peso normalizado.
+    // REVIEW [2026-12-15] Índice por intervalo sobre o peso normalizado.
     byWeight: [weight.normalized] range
   }
 
 
-  // Ações de negócio que alteram o ciclo de vida do produto.
+  // REVIEW [2026-12-15] Ações de negócio que alteram o ciclo de vida do produto.
   actions {
-    // Cria um novo produto com os dados mínimos.
+    // REVIEW [2026-12-15] Cria um novo produto com os dados mínimos.
     create(sku: SKU, name: string, price: std.Money){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Criar produto", en: "Create product" }
-      // Papéis autorizados a criar produtos.
+      // REVIEW [2026-12-15] Papéis autorizados a criar produtos.
       roles: [Curator]
     }
-    // Atualiza nome e preço de um produto existente.
+    // REVIEW [2026-12-15] Atualiza nome e preço de um produto existente.
     update(name: string, price: std.Money){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Atualizar", en: "Update" }
-      // Papéis autorizados a atualizar produtos.
+      // REVIEW [2026-12-15] Papéis autorizados a atualizar produtos.
       roles: [Curator]
     }
-    // Envia o produto para a revisão de publicação.
+    // REVIEW [2026-12-15] Envia o produto para a revisão de publicação.
     submitForReview(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
-      // Papéis autorizados a enviar para revisão.
+      // REVIEW [2026-12-15] Papéis autorizados a enviar para revisão.
       roles: [Curator]
 
-      // Muda a situação do produto para Em revisão.
+      // REVIEW [2026-12-15] Muda a situação do produto para Em revisão.
       to: status.InReview
-      // Emite o evento de transição com a data de submissão.
+      // REVIEW [2026-12-15] Emite o evento de transição com a data de submissão.
       emits { submittedAt: now() }
 
-      // Bloco de efeito colateral executado na transição.
+      // REVIEW [2026-12-15] Bloco de efeito colateral executado na transição.
       {
-        // Grava o carimbo de tempo da submissão no documento.
+        // REVIEW [2026-12-15] Grava o carimbo de tempo da submissão no documento.
         submittedAt = now()
       }
     }
-    // Publica o produto no catálogo.
+    // REVIEW [2026-12-15] Publica o produto no catálogo.
     publish(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Publicar", en: "Publish" }
-      // Papéis autorizados a publicar produtos.
+      // REVIEW [2026-12-15] Papéis autorizados a publicar produtos.
       roles: [Publisher]
 
-      // Muda a situação do produto para Publicado.
+      // REVIEW [2026-12-15] Muda a situação do produto para Publicado.
       to: status.Published
-      // Emite o evento de transição com a data de publicação.
+      // REVIEW [2026-12-15] Emite o evento de transição com a data de publicação.
       emits { publishedAt: now() }
 
-      // Bloco de efeito colateral executado na transição.
+      // REVIEW [2026-12-15] Bloco de efeito colateral executado na transição.
       {
-        // Grava o carimbo de tempo da publicação no documento.
+        // REVIEW [2026-12-15] Grava o carimbo de tempo da publicação no documento.
         publishedAt = now()
       }
     }
-    // Rejeita o produto com um motivo obrigatório.
+    // REVIEW [2026-12-15] Rejeita o produto com um motivo obrigatório.
     reject(reason: string){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Rejeitar", en: "Reject" }
-      // Papéis autorizados a rejeitar produtos.
+      // REVIEW [2026-12-15] Papéis autorizados a rejeitar produtos.
       roles: [Publisher]
 
-      // Muda a situação do produto para Rejeitado.
+      // REVIEW [2026-12-15] Muda a situação do produto para Rejeitado.
       to: status.Rejected
 
-      // Validação do motivo antes de concluir a rejeição.
+      // REVIEW [2026-12-15] Validação do motivo antes de concluir a rejeição.
       rule reason.length >= 5 {
-        // Mensagem de erro em português.
+        // REVIEW [2026-12-15] Mensagem de erro em português.
         pt-BR: "Informe o motivo da rejeição"
-        // Mensagem de erro em inglês.
+        // REVIEW [2026-12-15] Mensagem de erro em inglês.
         en: "Enter the rejection reason"
       }
     }
-    // Arquiva o produto, retirando-o do catálogo ativo.
+    // REVIEW [2026-12-15] Arquiva o produto, retirando-o do catálogo ativo.
     archive(){
-      // Título exibido na interface.
+      // REVIEW [2026-12-15] Título exibido na interface.
       title: { pt-BR: "Arquivar", en: "Archive" }
-      // Papéis autorizados a arquivar produtos.
+      // REVIEW [2026-12-15] Papéis autorizados a arquivar produtos.
       roles: [Publisher]
 
-      // Muda a situação do produto para Arquivado.
+      // REVIEW [2026-12-15] Muda a situação do produto para Arquivado.
       to: status.Archived
-      // Emite o evento de transição com a data de arquivamento.
+      // REVIEW [2026-12-15] Emite o evento de transição com a data de arquivamento.
       emits { archivedAt: now() }
 
-      // Bloco de efeito colateral executado na transição.
+      // REVIEW [2026-12-15] Bloco de efeito colateral executado na transição.
       {
-        // Grava o carimbo de tempo do arquivamento no documento.
+        // REVIEW [2026-12-15] Grava o carimbo de tempo do arquivamento no documento.
         archivedAt = now()
       }
     }
   }
 
-  // Regra de integridade: o preço precisa ser positivo.
+  // REVIEW [2026-12-15] Regra de integridade: o preço precisa ser positivo.
   rule price > 0 {
-    // Mensagem de erro em português.
+    // REVIEW [2026-12-15] Mensagem de erro em português.
     pt-BR: "O preço deve ser maior que zero"
-    // Mensagem de erro em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro em inglês.
     en: "Price must be greater than zero"
   }
-  // Regra de consistência: produto publicado precisa de preço válido.
+  // REVIEW [2026-12-15] Regra de consistência: produto publicado precisa de preço válido.
   rule status == Published implies price > 0 {
-    // Mensagem de erro em português.
+    // REVIEW [2026-12-15] Mensagem de erro em português.
     pt-BR: "Publique apenas produtos com preço"
-    // Mensagem de erro em inglês.
+    // REVIEW [2026-12-15] Mensagem de erro em inglês.
     en: "Publish only products with a price"
   }
 }
 
-// Shape do código SKU, com normalização de caixa e espaços.
+// REVIEW [2026-12-15] Shape do código SKU, com normalização de caixa e espaços.
 shape SKU {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Código", en: "SKU" }
-  // Tipo base do shape.
+  // REVIEW [2026-12-15] Tipo base do shape.
   base: string
-  // Normaliza o valor para maiúsculas e remove espaços nas pontas.
+  // REVIEW [2026-12-15] Normaliza o valor para maiúsculas e remove espaços nas pontas.
   normalize: upper-trim
-  // Comprimento máximo do código.
+  // REVIEW [2026-12-15] Comprimento máximo do código.
   maxLength: 40
-  // Formato de entrada e exibição, sem máscara.
+  // REVIEW [2026-12-15] Formato de entrada e exibição, sem máscara.
   format: plain
 }
 
-// Shape da imagem do produto.
+// REVIEW [2026-12-15] Shape da imagem do produto.
 shape ProductImage {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Imagem do produto", en: "Product image" }
-  // Tipo base do shape.
+  // REVIEW [2026-12-15] Tipo base do shape.
   base: image
-  // Habilita o editor de imagem na GUI.
+  // REVIEW [2026-12-15] Habilita o editor de imagem na GUI.
   capabilities { gui }
 }
 
-// Shape do vídeo do produto.
+// REVIEW [2026-12-15] Shape do vídeo do produto.
 shape ProductVideo {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Vídeo do produto", en: "Product video" }
-  // Tipo base do shape.
+  // REVIEW [2026-12-15] Tipo base do shape.
   base: video
-  // Habilita o editor de vídeo na GUI.
+  // REVIEW [2026-12-15] Habilita o editor de vídeo na GUI.
   capabilities { gui }
 }
 
-// Shape do áudio do produto.
+// REVIEW [2026-12-15] Shape do áudio do produto.
 shape ProductAudio {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Áudio do produto", en: "Product audio" }
-  // Tipo base do shape.
+  // REVIEW [2026-12-15] Tipo base do shape.
   base: audio
-  // Habilita o editor de áudio na GUI.
+  // REVIEW [2026-12-15] Habilita o editor de áudio na GUI.
   capabilities { gui }
 }
 
-// Shape do manual em anexo do produto.
+// REVIEW [2026-12-15] Shape do manual em anexo do produto.
 shape ProductManual {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Manual do produto", en: "Product manual" }
-  // Tipo base do shape.
+  // REVIEW [2026-12-15] Tipo base do shape.
   base: attachment
-  // Tipos MIME aceitos no anexo.
+  // REVIEW [2026-12-15] Tipos MIME aceitos no anexo.
   mime: [application/pdf]
-  // Habilita a gestão de anexos.
+  // REVIEW [2026-12-15] Habilita a gestão de anexos.
   capabilities { attachments }
 }
 
-// Shape da descrição rica do produto.
+// REVIEW [2026-12-15] Shape da descrição rica do produto.
 shape ProductRichDescription {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Descrição rica", en: "Rich description" }
-  // Tipo base do shape: texto com formatação.
+  // REVIEW [2026-12-15] Tipo base do shape: texto com formatação.
   base: richtext
 }
 
-// Shape do estado do produto no ciclo de vida.
+// REVIEW [2026-12-15] Shape do estado do produto no ciclo de vida.
 shape ProductStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação do produto", en: "Product status" }
-  // Tipo base do shape: máquina de estados.
+  // REVIEW [2026-12-15] Tipo base do shape: máquina de estados.
   base: state
-  // Valor inicial assumido por um novo produto.
+  // REVIEW [2026-12-15] Valor inicial assumido por um novo produto.
   initial: Draft
-  // Valor de situação Rascunho.
+  // REVIEW [2026-12-15] Valor de situação Rascunho.
   value Draft {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    // Ícone associado a esta situação.
+    // REVIEW [2026-12-15] Ícone associado a esta situação.
     icon: Draft
-    // Ordem de exibição da situação.
+    // REVIEW [2026-12-15] Ordem de exibição da situação.
     ordinal: 10
 
-    // Transição de Rascunho para Em revisão.
+    // REVIEW [2026-12-15] Transição de Rascunho para Em revisão.
     transition InReview {
-      // Nome do evento emitido por esta transição.
+      // REVIEW [2026-12-15] Nome do evento emitido por esta transição.
       event: SubmittedForReview
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Produto em revisão", en: "Product submitted for review" }
-      // Dados carregados pelo evento de transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento de transição.
       payload {
-        // Data e hora da submissão.
+        // REVIEW [2026-12-15] Data e hora da submissão.
         submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
       }
     }
   }
-  // Valor de situação Em revisão.
+  // REVIEW [2026-12-15] Valor de situação Em revisão.
   value InReview {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Em revisão", en: "In review" }
-    // Ícone associado a esta situação.
+    // REVIEW [2026-12-15] Ícone associado a esta situação.
     icon: InReview
-    // Ordem de exibição da situação.
+    // REVIEW [2026-12-15] Ordem de exibição da situação.
     ordinal: 20
 
-    // Transição de Em revisão para Publicado.
+    // REVIEW [2026-12-15] Transição de Em revisão para Publicado.
     transition Published {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Produto publicado", en: "Product published" }
-      // Dados carregados pelo evento de transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento de transição.
       payload {
-        // Data e hora da publicação.
+        // REVIEW [2026-12-15] Data e hora da publicação.
         publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
       }
     }
 
-    // Transição de Em revisão para Rejeitado.
+    // REVIEW [2026-12-15] Transição de Em revisão para Rejeitado.
     transition Rejected {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Produto rejeitado", en: "Product rejected" }
-      // Dados carregados pelo evento de transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento de transição.
       payload {
-        // Motivo textual da rejeição.
+        // REVIEW [2026-12-15] Motivo textual da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
-  // Valor de situação Publicado.
+  // REVIEW [2026-12-15] Valor de situação Publicado.
   value Published {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Publicado", en: "Published" }
-    // Ícone associado a esta situação.
+    // REVIEW [2026-12-15] Ícone associado a esta situação.
     icon: Published
-    // Ordem de exibição da situação.
+    // REVIEW [2026-12-15] Ordem de exibição da situação.
     ordinal: 30
 
-    // Transição de Publicado para Arquivado.
+    // REVIEW [2026-12-15] Transição de Publicado para Arquivado.
     transition Archived {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Produto arquivado", en: "Product archived" }
-      // Dados carregados pelo evento de transição.
+      // REVIEW [2026-12-15] Dados carregados pelo evento de transição.
       payload {
-        // Data e hora do arquivamento.
+        // REVIEW [2026-12-15] Data e hora do arquivamento.
         archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
       }
     }
   }
-  // Valor de situação Rejeitado, estado terminal.
+  // REVIEW [2026-12-15] Valor de situação Rejeitado, estado terminal.
   value Rejected {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
-    // Ícone associado a esta situação.
+    // REVIEW [2026-12-15] Ícone associado a esta situação.
     icon: Rejected
-    // Ordem de exibição da situação.
+    // REVIEW [2026-12-15] Ordem de exibição da situação.
     ordinal: 40
   }
-  // Valor de situação Arquivado, estado terminal.
+  // REVIEW [2026-12-15] Valor de situação Arquivado, estado terminal.
   value Archived {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Arquivado", en: "Archived" }
-    // Ícone associado a esta situação.
+    // REVIEW [2026-12-15] Ícone associado a esta situação.
     icon: Archived
-    // Ordem de exibição da situação.
+    // REVIEW [2026-12-15] Ordem de exibição da situação.
     ordinal: 50
   }
-  // Formato de exibição do estado, sem máscara.
+  // REVIEW [2026-12-15] Formato de exibição do estado, sem máscara.
   format: plain
 }
 
-// Política que bloqueia a publicação de produto inválido.
+// REVIEW [2026-12-15] Política que bloqueia a publicação de produto inválido.
 policy PublishApproval {
-  // Action do documento à qual a política se aplica.
+  // REVIEW [2026-12-15] Action do documento à qual a política se aplica.
   appliesTo: Product.publish
-  // Condição que precisa ser verdadeira para permitir a action.
+  // REVIEW [2026-12-15] Condição que precisa ser verdadeira para permitir a action.
   rule: price > 0 and status == InReview
-  // Severidade: bloqueia a execução da action.
+  // REVIEW [2026-12-15] Severidade: bloqueia a execução da action.
   severity: block
-  // Mensagem exibida quando a política falha.
+  // REVIEW [2026-12-15] Mensagem exibida quando a política falha.
   message: "Produto precisa de preço e estar em rascunho para publicar"
-  // Registra a avaliação na trilha de auditoria.
+  // REVIEW [2026-12-15] Registra a avaliação na trilha de auditoria.
   audit: true
 }

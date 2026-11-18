@@ -1,18 +1,18 @@
-// service: example.com/services/hr
+// REVIEW [2026-12-15] service: example.com/services/hr
 
-// Caixa de tarefas de pessoas do usuário.
+// REVIEW [2026-12-15] Caixa de tarefas de pessoas do usuário.
 view PeopleWork {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Minhas tarefas de pessoas", en: "My people work" }
-  // Tipo da view: caixa de entrada de tarefas.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de tarefas.
   type: inbox
-  // Papéis que podem abrir a caixa de tarefas.
+  // REVIEW [2026-12-15] Papéis que podem abrir a caixa de tarefas.
   roles: [PeopleOps, ITAdmin, HiringManager]
-  // Restringe a exibição às tarefas atribuídas ao usuário.
+  // REVIEW [2026-12-15] Restringe a exibição às tarefas atribuídas ao usuário.
   scope: mine
-  // Agrupa as tarefas por processo.
+  // REVIEW [2026-12-15] Agrupa as tarefas por processo.
   groupBy: process
 
-  // Colunas exibidas na lista de tarefas.
+  // REVIEW [2026-12-15] Colunas exibidas na lista de tarefas.
   columns { title; subject; dueAt; priority }
 }

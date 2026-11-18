@@ -1,20 +1,20 @@
-// service: example.com/services/catalog
+// REVIEW [2026-12-15] service: example.com/services/catalog
 
-// View de inbox com a fila de publicação por papel.
+// REVIEW [2026-12-15] View de inbox com a fila de publicação por papel.
 view PublishInbox {
-  // Título exibido na navegação.
+  // REVIEW [2026-12-15] Título exibido na navegação.
   title: { pt-BR: "Fila de publicação", en: "Publish queue" }
-  // Tipo da view: caixa de entrada de trabalho.
+  // REVIEW [2026-12-15] Tipo da view: caixa de entrada de trabalho.
   type: inbox
-  // Papéis autorizados a abrir a inbox.
+  // REVIEW [2026-12-15] Papéis autorizados a abrir a inbox.
   roles: [Publisher]
 
-  // Escopo dos itens: apenas os papéis do usuário atual.
+  // REVIEW [2026-12-15] Escopo dos itens: apenas os papéis do usuário atual.
   scope: roles
-  // Filtro aplicado aos itens exibidos na lista.
+  // REVIEW [2026-12-15] Filtro aplicado aos itens exibidos na lista.
   filter { role in currentUser.roles }
-  // Agrupa os itens por processo.
+  // REVIEW [2026-12-15] Agrupa os itens por processo.
   groupBy: process
-  // Colunas exibidas em cada linha da fila.
+  // REVIEW [2026-12-15] Colunas exibidas em cada linha da fila.
   columns { title; subject; role; dueAt; priority }
 }

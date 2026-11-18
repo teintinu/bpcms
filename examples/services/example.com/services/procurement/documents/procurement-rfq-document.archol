@@ -1,176 +1,176 @@
-// service: example.com/services/procurement
+// REVIEW [2026-12-15] service: example.com/services/procurement
 
-// Documento que representa uma cotação (request for quotation) de compra.
+// REVIEW [2026-12-15] Documento que representa uma cotação (request for quotation) de compra.
 document RFQ {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cotação", en: "Request for quotation" }
-  // Versão do artefato Document; diff e release comparam.
+  // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   version: 1
-  // Área responsável pela manutenção do artefato.
+  // REVIEW [2026-12-15] Área responsável pela manutenção do artefato.
   owner: "Procurement"
-  // Modo de sincronização do documento: leitura.
+  // REVIEW [2026-12-15] Modo de sincronização do documento: leitura.
   sync: read
 
-  // Campos que compõem a cotação.
+  // REVIEW [2026-12-15] Campos que compõem a cotação.
   fields {
-    // Número identificador da cotação; único e consultável.
+    // REVIEW [2026-12-15] Número identificador da cotação; único e consultável.
     number: string {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
-      // Limita o número a quarenta caracteres.
+      // REVIEW [2026-12-15] Limita o número a quarenta caracteres.
       maxLength: 40
-      // Impede duas cotações com o mesmo número.
+      // REVIEW [2026-12-15] Impede duas cotações com o mesmo número.
       unique
-      // Permite localizar a cotação pelo número.
+      // REVIEW [2026-12-15] Permite localizar a cotação pelo número.
       lookup
     }
-    // Solicitação de compra que originou a cotação.
+    // REVIEW [2026-12-15] Solicitação de compra que originou a cotação.
     request: PurchaseRequest {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Solicitação", en: "Purchase request" }
-      // Permite localizar a cotação pela solicitação.
+      // REVIEW [2026-12-15] Permite localizar a cotação pela solicitação.
       lookup
     }
-    // Prazo limite para receber a cotação do fornecedor.
+    // REVIEW [2026-12-15] Prazo limite para receber a cotação do fornecedor.
     dueAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Prazo da cotação", en: "Quote deadline" }
     }
-    // Situação atual da cotação no ciclo de vida.
+    // REVIEW [2026-12-15] Situação atual da cotação no ciclo de vida.
     status: RFQStatus {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      // Permite localizar a cotação pela situação.
+      // REVIEW [2026-12-15] Permite localizar a cotação pela situação.
       lookup
     }
-    // Valor cotado e registrado pelo comprador.
+    // REVIEW [2026-12-15] Valor cotado e registrado pelo comprador.
     quotedAmount: std.Money {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Valor cotado", en: "Quoted amount" }
-      // Moeda do valor cotado.
+      // REVIEW [2026-12-15] Moeda do valor cotado.
       currency: BRL
     }
-    // Data e hora em que a cotação foi registrada.
+    // REVIEW [2026-12-15] Data e hora em que a cotação foi registrada.
     quotedAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Cotado em", en: "Quoted at" }
     }
-    // Fornecedor vencedor da cotação.
+    // REVIEW [2026-12-15] Fornecedor vencedor da cotação.
     awardedSupplier: Supplier {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Fornecedor adjudicado", en: "Awarded supplier" }
     }
-    // Data e hora em que a cotação foi adjudicada.
+    // REVIEW [2026-12-15] Data e hora em que a cotação foi adjudicada.
     awardedAt: DateTime {
-      // Título exibido no formulário.
+      // REVIEW [2026-12-15] Título exibido no formulário.
       title: { pt-BR: "Adjudicado em", en: "Awarded at" }
     }
   }
 
 
-  // Ações que registram a cotação e a adjudicação ao fornecedor.
+  // REVIEW [2026-12-15] Ações que registram a cotação e a adjudicação ao fornecedor.
   actions {
-    // Registra o valor cotado e move a cotação para Quoted.
+    // REVIEW [2026-12-15] Registra o valor cotado e move a cotação para Quoted.
     quote(quotedAmount: std.Money) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Registrar cotação", en: "Record quote" }
-      // Papéis autorizados a registrar a cotação.
+      // REVIEW [2026-12-15] Papéis autorizados a registrar a cotação.
       roles: [Buyer]
-      // Transição disparada ao registrar a cotação.
+      // REVIEW [2026-12-15] Transição disparada ao registrar a cotação.
       to: status.Quoted
-      // Emite o evento com o valor cotado.
+      // REVIEW [2026-12-15] Emite o evento com o valor cotado.
       emits { amount: quotedAmount }
       {
-        // Registra o instante em que a cotação foi anotada.
+        // REVIEW [2026-12-15] Registra o instante em que a cotação foi anotada.
         quotedAt = now()
       }
     }
 
-    // Adjudica a cotação ao fornecedor vencedor e a move para Awarded.
+    // REVIEW [2026-12-15] Adjudica a cotação ao fornecedor vencedor e a move para Awarded.
     award(awardedSupplier: Supplier) {
-      // Título exibido no botão da ação.
+      // REVIEW [2026-12-15] Título exibido no botão da ação.
       title: { pt-BR: "Adjudicar cotação", en: "Award quote" }
-      // Papéis autorizados a adjudicar a cotação.
+      // REVIEW [2026-12-15] Papéis autorizados a adjudicar a cotação.
       roles: [Buyer, ProcurementManager]
-      // Transição disparada ao adjudicar.
+      // REVIEW [2026-12-15] Transição disparada ao adjudicar.
       to: status.Awarded
-      // Emite o evento com o fornecedor adjudicado.
+      // REVIEW [2026-12-15] Emite o evento com o fornecedor adjudicado.
       emits { supplier: awardedSupplier }
       {
-        // Registra o instante da adjudicação.
+        // REVIEW [2026-12-15] Registra o instante da adjudicação.
         awardedAt = now()
       }
     }
   }
 
-  // Índices de consulta mantidos para o documento.
+  // REVIEW [2026-12-15] Índices de consulta mantidos para o documento.
   indexes {
-    // Índice único pelo número, evitando duplicidade.
+    // REVIEW [2026-12-15] Índice único pelo número, evitando duplicidade.
     byNumber: [number] unique
-    // Índice de faixa por situação e prazo, para listagens ordenadas.
+    // REVIEW [2026-12-15] Índice de faixa por situação e prazo, para listagens ordenadas.
     byStatus: [status, dueAt] range
   }
 }
 
-// Forma do ciclo de vida da cotação.
+// REVIEW [2026-12-15] Forma do ciclo de vida da cotação.
 shape RFQStatus {
-  // Título exibido na interface.
+  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Situação da cotação", en: "RFQ status" }
-  // Base da forma: máquina de estados.
+  // REVIEW [2026-12-15] Base da forma: máquina de estados.
   base: state
-  // Estado inicial de toda cotação criada.
+  // REVIEW [2026-12-15] Estado inicial de toda cotação criada.
   initial: Open
-  // Estado de cotação aberta, aguardando resposta.
+  // REVIEW [2026-12-15] Estado de cotação aberta, aguardando resposta.
   value Open {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Aberta", en: "Open" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Open
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 10
 
-    // Transição para cotação recebida.
+    // REVIEW [2026-12-15] Transição para cotação recebida.
     transition Quoted {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Cotação recebida", en: "Quote received" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora em que a cotação foi registrada.
+        // REVIEW [2026-12-15] Data e hora em que a cotação foi registrada.
         quotedAt: DateTime { title: { pt-BR: "Cotado em", en: "Quoted at" } }
-        // Valor cotado.
+        // REVIEW [2026-12-15] Valor cotado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
-  // Estado de cotação já respondida.
+  // REVIEW [2026-12-15] Estado de cotação já respondida.
   value Quoted {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Cotada", en: "Quoted" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Quoted
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 20
 
-    // Transição para cotação adjudicada.
+    // REVIEW [2026-12-15] Transição para cotação adjudicada.
     transition Awarded {
-      // Título exibido no histórico.
+      // REVIEW [2026-12-15] Título exibido no histórico.
       title: { pt-BR: "Cotação adjudicada", en: "Quote awarded" }
-      // Dados carregados pela transição.
+      // REVIEW [2026-12-15] Dados carregados pela transição.
       payload {
-        // Data e hora da adjudicação.
+        // REVIEW [2026-12-15] Data e hora da adjudicação.
         awardedAt: DateTime { title: { pt-BR: "Adjudicado em", en: "Awarded at" } }
-        // Fornecedor vencedor da cotação.
+        // REVIEW [2026-12-15] Fornecedor vencedor da cotação.
         supplier: Supplier { title: { pt-BR: "Fornecedor", en: "Supplier" } }
       }
     }
   }
-  // Estado de cotação adjudicada.
+  // REVIEW [2026-12-15] Estado de cotação adjudicada.
   value Awarded {
-    // Título exibido na interface.
+    // REVIEW [2026-12-15] Título exibido na interface.
     title: { pt-BR: "Adjudicada", en: "Awarded" }
-    // Ícone associado ao estado.
+    // REVIEW [2026-12-15] Ícone associado ao estado.
     icon: Awarded
-    // Ordem de exibição do estado.
+    // REVIEW [2026-12-15] Ordem de exibição do estado.
     ordinal: 30
   }
 }
