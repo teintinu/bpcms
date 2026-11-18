@@ -133,7 +133,7 @@ fn deep_nesting_does_not_overflow_stack() {
 }
 
 #[test]
-fn lock_creates_stable_jsonl_and_prunes_removed_identifiers() {
+fn lock_creates_stable_csv_and_prunes_removed_identifiers() {
     let dir = temp_dir("lock");
     service_fixture(&dir);
     let shapes = dir
@@ -150,8 +150,14 @@ fn lock_creates_stable_jsonl_and_prunes_removed_identifiers() {
             .join("demo-document.archol"),
         "document Invoice {\n  title: { pt-BR: \"Nota\" }\n  fields {\n    regime: Regime { title: { pt-BR: \"Regime\" } }\n  }\n}",
     );
+    write(
+        &dir.join("services")
+            .join(SERVICE)
+            .join("demo-process.archol"),
+        "process P(invoice: Invoice) {\n  if (invoice.regime == SIMPLES) {\n    return Done\n  }\n}",
+    );
     let app_path = app_fixture(&dir, APP, SERVICE);
-    let lock_path = app_path.parent().unwrap().join("bpcms.lock");
+    let lock_path = app_path.with_extension("lock");
 
     let first = run(&["lock", dir.to_str().unwrap(), "--app", APP]);
     assert_eq!(first.status.code(), Some(0));
@@ -163,29 +169,39 @@ fn lock_creates_stable_jsonl_and_prunes_removed_identifiers() {
     assert!(stdout.contains("identifiers:"), "{stdout}");
 
     let text = std::fs::read_to_string(&lock_path).unwrap();
-    let entries: Vec<serde_json::Value> = text
+    let entries: Vec<(String, String)> = text
         .lines()
         .filter(|line| !line.is_empty())
-        .map(|line| serde_json::from_str(line).unwrap())
+        .map(|line| {
+            let (id, path) = line.split_once(',').expect("id,path");
+            (id.to_string(), path.to_string())
+        })
         .collect();
     assert_eq!(
         entries.len(),
         text.lines().filter(|line| !line.is_empty()).count()
     );
     assert!(!entries.is_empty());
-    let mut paths = Vec::new();
-    for entry in &entries {
-        let id = entry["id"].as_str().unwrap();
-        assert!(!id.chars().next().unwrap().is_ascii_digit(), "{id}");
-        paths.push(entry["path"].as_str().unwrap().to_string());
-    }
-    assert!(paths.contains(&format!("{SERVICE}#service")), "{paths:?}");
+    let ids: Vec<&str> = entries.iter().map(|(id, _)| id.as_str()).collect();
+    let mut sorted = ids.clone();
+    sorted.sort_by_key(|id| id.len());
+    assert!(ids.contains(&"a"), "{ids:?}");
+    let unique: std::collections::BTreeSet<_> = ids.iter().collect();
+    assert_eq!(unique.len(), ids.len(), "duplicate id: {ids:?}");
+    assert!(ids
+        .iter()
+        .all(|id| id.chars().all(|ch| ch.is_ascii_lowercase())));
+    let paths: Vec<&str> = entries.iter().map(|(_, path)| path.as_str()).collect();
     assert!(
-        paths.contains(&format!("{SERVICE}#shape/Regime/value/SIMPLES")),
+        paths.contains(&format!("{SERVICE}#service").as_str()),
         "{paths:?}"
     );
     assert!(
-        paths.contains(&format!("{SERVICE}#document/Invoice/field/regime")),
+        paths.contains(&format!("{SERVICE}#shape/Regime/value/SIMPLES").as_str()),
+        "{paths:?}"
+    );
+    assert!(
+        paths.contains(&format!("{SERVICE}#document/Invoice/field/regime").as_str()),
         "{paths:?}"
     );
 
@@ -202,7 +218,40 @@ fn lock_creates_stable_jsonl_and_prunes_removed_identifiers() {
     assert_eq!(third.status.code(), Some(0));
     let pruned = std::fs::read_to_string(&lock_path).unwrap();
     assert!(!pruned.contains("#shape/Regime/value/SIMPLES"), "{pruned}");
-    assert!(pruned.contains("#shape/Regime/value/OUTRO"), "{pruned}");
+    assert!(pruned.contains("#shape/Regime"), "{pruned}");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn lock_preserves_starred_manual_entries_at_the_top() {
+    let dir = temp_dir("lock-star");
+    service_fixture(&dir);
+    app_fixture(&dir, APP, SERVICE);
+    let output = run(&["lock", dir.to_str().unwrap(), "--app", APP]);
+    assert_eq!(output.status.code(), Some(0));
+    let app_path = dir.join("applications").join("example.com/app/demo");
+    let _ = app_path;
+    let lock_path = dir
+        .join("applications")
+        .join("example.com")
+        .join("app")
+        .join("demo")
+        .join("demo-application.lock");
+    let text = std::fs::read_to_string(&lock_path).unwrap();
+    let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+    lines.insert(
+        0,
+        "external,example.com/app/demo#shape/Kept/value/Manual*".to_string(),
+    );
+    let manual_path = lock_path.with_extension("lock");
+    std::fs::write(&manual_path, lines.join("\n") + "\n").unwrap();
+    let output = run(&["lock", dir.to_str().unwrap(), "--app", APP]);
+    assert_eq!(output.status.code(), Some(0));
+    let text = std::fs::read_to_string(&lock_path).unwrap();
+    assert!(
+        text.lines().next().unwrap().ends_with("value/Manual*"),
+        "{text}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 

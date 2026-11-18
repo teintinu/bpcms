@@ -44,9 +44,14 @@ impl Server {
         let service = file.service.clone();
         let service_ref = service.as_deref();
         let artifact = features::artifact_at(&file.ast, offset);
+        let identifier = features::identifier_at(&file.ast, offset);
         if let Some((uri, _)) = features::service_entry_at(&file.ast, offset) {
+            let id_line = identifier
+                .as_ref()
+                .map(|(id, _)| format!("\n\nid: `{id}`"))
+                .unwrap_or_default();
             let markdown = format!(
-                "**service** `{uri}`\n\n{}",
+                "**service** `{uri}`{id_line}\n\n{}",
                 ast_link(&path, &text, word_span)
             );
             return json!({
@@ -116,6 +121,12 @@ impl Server {
             }
         }
 
+        if let Some((id, kind)) = &identifier {
+            if parts.is_empty() {
+                parts.push(format!("**{kind}** `{word}`"));
+            }
+            parts.push(format!("id: `{id}`"));
+        }
         if parts.is_empty() {
             return Value::Null;
         }

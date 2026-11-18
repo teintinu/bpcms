@@ -64,7 +64,7 @@ fn analysis() -> Analysis {
 }
 
 /// Ids come from the semantic index; the lock is fresh in memory because
-/// `write_lock` is false and no `bpcms.lock` exists under the fixture path.
+/// `write_lock` is false and no application lock file exists under the fixture path.
 fn overdue_id(analysis: &Analysis) -> String {
     analysis
         .semantic
@@ -72,9 +72,7 @@ fn overdue_id(analysis: &Analysis) -> String {
         .expect("semantic index")
         .declarations
         .iter()
-        .find(|(_, declaration)| {
-            declaration.entry.kind == "value" && declaration.entry.name == "Overdue"
-        })
+        .find(|(_, declaration)| declaration.kind == "value" && declaration.name == "Overdue")
         .map(|(id, _)| id.clone())
         .expect("Overdue declaration id")
 }

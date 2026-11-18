@@ -1,7 +1,12 @@
 'use strict';
 
 const vscode = require('vscode');
-const { applicationDisplayName, applicationQuickPickItem } = require('./app-support');
+const {
+  applicationDisplayName,
+  applicationQuickPickItem,
+  applicationUriFromSource,
+  isApplicationSource,
+} = require('./app-support');
 const { applicationSetting } = require('./session-support');
 const { isArcholDocument } = require('./vscode-utils');
 
@@ -21,6 +26,29 @@ function normalizeCommandArgs(args) {
 
 function registerCommands(context, dependencies) {
   const { session, astExplorer, output, applyApplication } = dependencies;
+
+  const activateApplication = async (uri, application) => {
+    try {
+      await vscode.workspace
+        .getConfiguration('archol')
+        .update('application', uri, vscode.ConfigurationTarget.Window);
+    } catch (error) {
+      vscode.window.showErrorMessage(`Archol: could not save archol.application: ${error.message}`);
+      return null;
+    }
+    const name = applicationDisplayName(application);
+    applyApplication?.(uri, name);
+    try {
+      const applied = await session.setApplication(uri);
+      applyApplication?.(uri, applied?.application?.name || name);
+      return applied;
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Archol: the application was saved, but the server did not confirm it: ${error.message}`,
+      );
+      return null;
+    }
+  };
 
   const selectApplication = async () => {
     let instance;
@@ -59,22 +87,70 @@ function registerCommands(context, dependencies) {
       vscode.window.showErrorMessage('Archol: the selected application has no URI.');
       return;
     }
-    try {
-      await vscode.workspace
-        .getConfiguration('archol')
-        .update('application', uri, vscode.ConfigurationTarget.Window);
-    } catch (error) {
-      vscode.window.showErrorMessage(`Archol: could not save archol.application: ${error.message}`);
+    const applied = await activateApplication(uri, application);
+    if (applied) {
+      const lock = applied.lock ? ` Lock: ${applied.lock}.` : '';
+      vscode.window.showInformationMessage(
+        `Archol: current application is ${applicationDisplayName(application)}.${lock}`,
+      );
+    }
+  };
+
+  // Context-menu entry: use the clicked/active file as the current application.
+  const useApplicationFile = async (...args) => {
+    const [resource] = normalizeCommandArgs(args);
+    const resourceUri = resource && typeof resource === 'object' && typeof resource.toString === 'function'
+      ? resource.toString()
+      : resource;
+    const editor = vscode.window.activeTextEditor;
+    const uri = resourceUri
+      ? String(resourceUri)
+      : editor && isArcholDocument(editor.document)
+        ? editor.document.uri.toString()
+        : '';
+    if (!uri) {
+      vscode.window.showInformationMessage('Archol: open an application file first.');
       return;
     }
-    const name = applicationDisplayName(application);
-    applyApplication?.(uri, name);
+    let text = '';
     try {
-      const applied = await session.setApplication(uri);
-      applyApplication?.(uri, applied?.application?.name || name);
+      const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+      text = document.getText();
     } catch (error) {
-      vscode.window.showErrorMessage(
-        `Archol: the application was saved, but the server did not confirm it: ${error.message}`,
+      vscode.window.showErrorMessage(`Archol: could not read the file: ${error.message}`);
+      return;
+    }
+    if (!isApplicationSource(text)) {
+      vscode.window.showWarningMessage(
+        'Archol: this file is not an application (no top-level `application` declaration).',
+      );
+      return;
+    }
+    let applications = [];
+    try {
+      const instance = await session.ensureClient();
+      const result = await instance.request('archol/applications', {});
+      applications = Array.isArray(result?.applications) ? result.applications : [];
+    } catch {
+      // The server may still be starting; fall back to the declared URI.
+    }
+    const fsPath = vscode.Uri.parse(uri).fsPath;
+    const declared = applicationUriFromSource(text);
+    const application = applications.find(
+      (candidate) => candidate.path && vscode.Uri.file(candidate.path).toString() === uri,
+    )
+      || applications.find((candidate) => candidate.path === fsPath)
+      || applications.find((candidate) => candidate.uri === declared)
+      || { uri: declared, name: applicationDisplayName({ uri: declared }) };
+    if (!application.uri) {
+      vscode.window.showErrorMessage('Archol: the application declaration has no URI.');
+      return;
+    }
+    const applied = await activateApplication(application.uri, application);
+    if (applied) {
+      const lock = applied.lock ? ` Lock: ${applied.lock}.` : '';
+      vscode.window.showInformationMessage(
+        `Archol: current application is ${applicationDisplayName(application)}.${lock}`,
       );
     }
   };
@@ -133,7 +209,7 @@ function registerCommands(context, dependencies) {
     try {
       const result = await instance.request('archol/lock', {});
       const count = Number(result?.identifiers) || 0;
-      const path = String(result?.path || 'bpcms.lock');
+      const path = String(result?.path || 'application.lock');
       vscode.window.showInformationMessage(
         `Archol lock updated: ${count} identifier(s) in ${path}.`,
       );
@@ -154,6 +230,7 @@ function registerCommands(context, dependencies) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('archol.selectApplication', selectApplication),
+    vscode.commands.registerCommand('archol.useApplicationFile', useApplicationFile),
     vscode.commands.registerCommand('archol.updateLock', updateLock),
     vscode.commands.registerCommand('archol.showAst', showAst),
     vscode.commands.registerCommand('archol.showLinks', showLinks),

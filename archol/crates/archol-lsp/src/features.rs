@@ -353,6 +353,69 @@ fn walk_stmt_properties<'a>(statement: &'a Stmt, visit: &mut impl FnMut(&'a str,
     }
 }
 
+/// Smallest declaration/reference id that covers `offset`, with its kind.
+pub fn identifier_at(ast: &SourceFile, offset: usize) -> Option<(String, String)> {
+    let mut best: Option<(usize, String, String)> = None;
+    let mut consider = |span: Span, id: Option<&String>, kind: &str| {
+        let Some(id) = id else { return };
+        if !contains(span, offset) {
+            return;
+        }
+        let size = span.end.saturating_sub(span.start);
+        if best
+            .as_ref()
+            .map(|(current, _, _)| size < *current)
+            .unwrap_or(true)
+        {
+            best = Some((size, id.clone(), kind.to_string()));
+        }
+    };
+    for artifact in &ast.items {
+        consider(artifact.span, artifact.id.as_ref(), "artifact");
+        for param in &artifact.params {
+            consider(param.span, param.id.as_ref(), "param");
+        }
+        walk(&artifact.body, &mut |member| match member {
+            Member::EnumValueDeclaration { span, id, .. } => {
+                consider(*span, id.as_ref(), "enumValue")
+            }
+            Member::PropertyAssignment { span, id, .. } => consider(*span, id.as_ref(), "field"),
+            Member::ServiceEntry {
+                span,
+                target: Some(id),
+                ..
+            }
+            | Member::ImportDeclaration {
+                span,
+                target: Some(id),
+                ..
+            } => consider(*span, Some(id), "service"),
+            _ => {}
+        });
+        walk_exprs(&artifact.body, &mut |expr| match expr {
+            Expr::Reference { span, target, .. } => consider(*span, Some(target), "reference"),
+            Expr::MemberAccess {
+                span,
+                name,
+                field_ref: Some(id),
+                ..
+            } => {
+                let name_start = span.end.saturating_sub(name.len());
+                if offset >= name_start {
+                    consider(*span, Some(id), "field");
+                }
+            }
+            Expr::Object {
+                span,
+                type_ref_id: Some(id),
+                ..
+            } => consider(*span, Some(id), "type"),
+            _ => {}
+        });
+    }
+    best.map(|(_, id, kind)| (id, kind))
+}
+
 /// Application `services` entry or service `imports` entry at `offset`.
 pub fn service_entry_at(ast: &SourceFile, offset: usize) -> Option<(&str, Option<&str>)> {
     let mut found = None;

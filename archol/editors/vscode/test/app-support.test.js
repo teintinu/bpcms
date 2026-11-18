@@ -5,6 +5,8 @@ const assert = require('node:assert/strict');
 const {
   applicationDisplayName,
   applicationNameFromUri,
+  applicationUriFromSource,
+  isApplicationSource,
   applicationQuickPickItem,
   browserNodeHelpersSource,
   declarationTargetId,
@@ -125,4 +127,19 @@ test('browserNodeHelpersSource exposes the same tested functions to the webview'
   assert.match(source, /function referenceSummary\(node\)/);
   assert.match(source, /function declarationTargetId\(node\)/);
   assert.match(source, /function usageTargetId\(node\)/);
+});
+
+test('isApplicationSource recognizes application declarations only', () => {
+  assert.equal(isApplicationSource('application "example.com/app/demo" {\n  services {}\n}'), true);
+  assert.equal(isApplicationSource('// application "example.com/app/demo"\nservice "x" {}'), false);
+  assert.equal(isApplicationSource('document Invoice {}'), false);
+  assert.equal(isApplicationSource(''), false);
+});
+
+test('applicationUriFromSource extracts the declared URI', () => {
+  assert.equal(
+    applicationUriFromSource('// header\napplication "example.com/app/demo" {\n}'),
+    'example.com/app/demo',
+  );
+  assert.equal(applicationUriFromSource('service "example.com/services/a" {}'), '');
 });

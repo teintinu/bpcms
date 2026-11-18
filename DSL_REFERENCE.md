@@ -144,31 +144,36 @@ stream.readStreamArray(): stream[]
 
 ## 1.6 Lock file e IDs
 
-O app tem **um lock file** (`bpcms.lock`), gerado e versionado ao lado do arquivo da aplicação. Ele guarda **um ID estável para cada identificador** da closure e é a única fonte de IDs do app.
+O app tem **um lock file** na mesma pasta do arquivo da aplicação, com o mesmo nome e apenas a extensão trocada: `loja-do-joao-application.archol` → `loja-do-joao-application.lock`. Ele guarda **um ID estável para cada identificador usado** da closure.
 
-**Formato:** JSON Lines — um identificador por linha, ordenado por `path`, para facilitar merge no Git.
+**Formato:** CSV com duas colunas, `id,path` — um identificador por linha, sem cabeçalho e sem vírgula no path. Entradas fixadas vêm primeiro; as geradas seguem a ordem dos IDs.
 
-```json
-{"id":"Xq3m9_Kd2Aa","path":"example.com/services/billing#service","kind":"service","name":"billing"}
-{"id":"Tz8n1Rf4Pq0","path":"example.com/services/billing#shape/InvoiceStatus/value/Overdue","kind":"value","name":"Overdue"}
-{"id":"Lm5p2Wd7Yt1","path":"example.com/services/billing#document/Invoice/field/status","kind":"field","name":"status"}
+```csv
+checkoutStatus,example.com/services/checkout#shape/CheckoutStatus*
+a,example.com/services/billing#service
+b,example.com/services/billing#shape/InvoiceStatus/value/Overdue
 ```
 
 | Campo | Funcionamento |
 | :--- | :--- |
-| `id` | ID estável em base64url (`-` vira `_`), sem padding; **nunca começa por dígito**, para poder ser usado como identificador na linguagem de destino. |
-| `path` | Caminho seguro e independente de máquina: `<uri-do-serviço>#<tipo>/<Nome>[/...]`; nunca é caminho de arquivo. |
-| `kind` / `name` | Tipo e nome legíveis do identificador, para revisão do lock. |
+| `id` | ID estável; gerados são **sequenciais em base 26 minúscula começando em `a`** (`a`…`z`, `aa`, …), sem duplicidade. |
+| `path` | Caminho seguro `<uri-do-serviço>#<tipo>/<Nome>[/...]`; nunca é caminho de arquivo. Um `*` no final marca o identificador como fixo. |
+
+**Ciclo de compilação:**
+
+1. durante a compilação, referências são resolvidas para **paths**, sem gerar número;
+2. no final, IDs são atribuídos **apenas aos identificadores usados** — artefatos da closure são raízes; campos, valores de enum e parâmetros só recebem ID quando referenciados;
+3. identificadores nunca referenciados ficam sem ID e sem linha no lock.
 
 **Caminhos canônicos:** aplicação `<app-uri>#application`; serviço `<service-uri>#service`; artefato `<service-uri>#<tipo>/<Nome>`; campo `<service-uri>#document/<Documento>/field/<campo>`; valor de enum `<service-uri>#shape/<Shape>/value/<Valor>`; parâmetro `<service-uri>#process/<Processo>/param/<param>`.
 
 **Regras:**
 
-- Gerar/podar: `archol lock --app <uri-ou-arquivo>`. Identificadores removidos do fonte saem do lock; os demais mantêm o ID.
-- **Apagar o lock reinicia os IDs**; não há comando de reset separado.
+- Gerar/podar: `archol lock --app <uri-ou-arquivo>`; apagar o lock reinicia os IDs em `a`.
+- **Fixar um identificador:** edite a linha e acrescente `*` ao final do path (o `*` fica no nome do identificador). O compilador apenas preserva o `*` nas reescritas e mantém essas linhas no topo; não renumera, não poda e não gera ID duplicado.
 - IDs duplicados entre branches são responsabilidade de quem faz o merge; o carregador recusa duplicatas e pede para resolver.
 - O AST usa esses IDs (`id`, `ref`, `fieldRef`, `typeRefId`); listas de usos ficam no índice semântico (LSP), não no JSON, para evitar ciclos e tamanho.
-- O serviço não tem lock nem versões de imports. Versões de serviço/integridade por app ficam para a evolução do formato; esta versão inicial grava apenas identificadores.
+- O serviço não tem lock nem versões de imports. Versões de serviço/integridade por app ficam para a evolução do formato.
 
 ## 1.7 Capabilities
 
@@ -366,7 +371,7 @@ name: string {
 | `main` | `main { ... }` | Bloco opcional de inicialização/configuração; sem regra de negócio. |
 | `set` | `set <Alias>.<Parameter\|Secret> = <valor\|secret.NOME>` | Inicializa/sobrescreve Parameter/Secret; segredo só como `secret.NOME`. |
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
-| `lock` | `lock: "bpcms.lock"` | Lock do app: IDs estáveis dos identificadores da closure (versões por serviço em evolução). |
+| `lock` | `lock: "<app>.lock"` | Lock do app: IDs estáveis dos identificadores da closure (versões por serviço em evolução). |
 
 **Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure. **A compilação começa sempre pela aplicação**: `check`, `lock`, `links` e o LSP exigem uma aplicação e só carregam a closure; arquivos fora dela são inertes (o LSP os trata como comentado). O lock fixa os IDs dos identificadores da closure. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
@@ -374,7 +379,7 @@ name: string {
 application "example.com/app/loja-do-joao" {
   source: registry
   version: 1.4.0
-  lock: "bpcms.lock"
+  lock: "<app>.lock"
   title: {
     pt-BR: "Loja do João"
     en-US: "João's Store"
@@ -3043,7 +3048,7 @@ widget SignaturePad {
 | `<selector>` | `1.4.0`, `semver("...")`, `tag("...")`, `commit("...")` | Versão publicada. |
 | `application` | `application: "<uri>"` | Aplicação alvo. |
 | `service` | `service: "<uri>"` | Serviço alvo (release de serviço). |
-| `lock` | `lock: "bpcms.lock"` | Lock do app; fixa os IDs estáveis (versões por serviço em evolução). |
+| `lock` | `lock: "<app>.lock"` | Lock do app; fixa os IDs estáveis (versões por serviço em evolução). |
 | `migrations` | `migrations: [M-2026-11-01]` | Migrações aplicadas. |
 | `approvals` | `approvals: [QA, Owner]` | Aprovações exigidas. |
 | `strategy` | `strategy: rolling \| immediate \| canary(10%, 30m)` | Estratégia de implantação. |

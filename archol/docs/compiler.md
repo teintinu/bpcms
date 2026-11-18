@@ -1,6 +1,6 @@
 # Compiler
 
-Pipeline: **application → lexer → parser → check → link → annotate**.
+Pipeline: **application → lexer → parser → check → link → resolve references → assign used ids**.
 
 ```text
 application (.archol)
@@ -11,7 +11,7 @@ application (.archol)
   ├── archol_analysis::Symbols      closure artifacts, enums, and roles
   ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
   ├── archol_analysis::build_links  role → artifacts, enum → values, refs
-  └── archol_analysis::annotate     ids + typed references (bpcms.lock)
+  └── archol_analysis::annotate     reference paths, then ids for used paths
 ```
 
 **There is no compilation without an application.** `check`, `lock`, `links`
@@ -44,9 +44,11 @@ Diagnostics carry a stable code, message, and `span`. The CLI prints
 
 ## Identifiers and references
 
-`archol lock --app <app>` writes `bpcms.lock` next to the application: JSON
-Lines, one identifier per line, stable base64url ids that never start with a
-digit, and a safe path (`<service-uri>#<kind>/<Name>`). References in the AST
+`archol lock --app <app>` writes `<app>.lock` next to the application file
+(same basename, extension changed): CSV `id,path`, one identifier per line.
+Ids are assigned only for used paths, sequentially `a`, `b`, …, `z`, `aa`, ….
+A `*` at the end of a path pins the entry (top of file, never pruned or
+renumbered). References in the AST
 use those ids (`ref`, `fieldRef`, `typeRefId`), including application/import
 service aliases, so the JSON is acyclic and small. See [`identifiers.md`](identifiers.md).
 

@@ -1386,7 +1386,7 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 **Pedido:** o AST não deve tratar valores de enum como `Identifier`; precisa haver ligação tipada com a origem (`Overdue` → `value Overdue` → `InvoiceStatus` → serviço), referências em várias direções, IDs estáveis no lock da aplicação e compilação somente a partir de uma Application; o plugin deve saber a aplicação atual e o LSP tratar como comentário os arquivos fora da closure.
 
 **Decisões aplicadas:**
-- `bpcms.lock` ao lado da aplicação, **JSON Lines** (um identificador por linha, ordenado por `path`), com IDs **base64url/`_` que nunca começam por dígito**, `path` seguro (`<uri>#<kind>/<Nome>[...]`), poda de removidos e reset ao apagar o arquivo. Duplicatas de merge são responsabilidade de quem faz o merge; o loader recusa e pede correção.
+- Lock na mesma pasta/nome da aplicação, só trocando a extensão (`X-application.archol` → `X-application.lock`), **CSV `id,path`**, IDs atribuídos no fim **somente a identificadores usados**, sequenciais `a`, `b`, …, `z`, `aa`, … sem duplicidade, `path` seguro (`<uri>#<kind>/<Nome>[...]`), poda de não usados e reset em `a` ao apagar o arquivo. Linhas com `*` no fim do path são fixas: ficam no topo, mantêm o ID e nunca são podadas/renumeradas. Duplicatas de merge são responsabilidade de quem faz o merge; o loader recusa e pede correção.
 - AST anotado: declarações com `id`; referências com `ref`/`refKind` (`enumValue`, `document`, `role`, ...); `fieldRef` em acesso a campo; `typeRefId` em tipo; `arg` de `fanOut` e comparações resolvidos. Listas de usos ficam no índice semântico (sem ciclos nem JSON gigante).
 - Compilação por **Application**: closure de serviços via `services` + `imports` transitivos; `check`, `lock`, `links` e LSP exigem aplicação (`--app`/`archol.application`); arquivos fora da closure são inertes.
 - Plugin: setting `archol.application`, comandos **Select Application** e **Update Identifier Lock**, status bar com a app, `initializationOptions.application`, banner “commented out” e navegação **Go to Declaration** / **Find Usages**.
@@ -1396,7 +1396,11 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `archol check examples --app example.com/app/backoffice-loja` → **172 arquivos, 0 erros** (closure de 11 serviços).
 - `archol lock` testado em workspace temporário: cria 5 IDs, mantém IDs ao rodar de novo e poda `value/Cash` após remoção.
 - Navegação LSP: `Overdue` → declaração em `billing-invoice-document.archol`; `archol/usages` com 3 ocorrências; arquivo de outra app retorna `commentedOut: true`.
-- **56 testes Rust** e **40 JavaScript** verdes; `clippy`/`fmt` limpos.
+- **59 testes Rust** e **44 JavaScript** verdes; `clippy`/`fmt` limpos.
 - Aliases de aplicação/import (`as Identity`) recebem `ref` do serviço; hover/definition levam ao `identity-service.archol`. Documentos fora da closure recebem `W_OUTSIDE_APPLICATION` e o editor os exibe em itálico/apagado.
+- Menu de contexto: **Archol: Use as Current Application** no editor (só aparece em arquivos com declaração `application`, via context key `archol.isApplication`) e no Explorer para `.archol` (valida a declaração e recusa não-aplicações).
+- Lock atualizado automaticamente ao selecionar a app (servidor) e, após mudanças em `.archol`, com debounce de 10s (`archol.lockDebounceMs`); o plugin só atualiza se o arquivo alterado estiver na closure (`archol/inApplication`).
+- Popover de hover mostra o ID estável do identificador sob o cursor (declaração ou referência), permitindo correlacionar com o AST/lock.
+- Right-click em arquivo de aplicação (editor/Explorer) define a app atual; IDs manuais no lock ficam no topo e sobrevivem à poda.
 
 **Arquivos afetados:** `archol/crates/archol-core` (AST/parser), `archol/crates/archol-analysis` (`ids`, `application`, `annotate`, lib), `archol/crates/archol-cli`, `archol/crates/archol-lsp`, `archol/editors/vscode`, `archol/scripts/smoke_lsp.py`, `archol/docs/*`, `archol/README.md`, `DSL_REFERENCE.md` (§1.6/§2), `AGENTS.md`, `REVIEW_CHECKLIST.md`.

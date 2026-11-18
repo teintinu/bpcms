@@ -54,7 +54,7 @@ Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 
 Declarations may carry `id`; identifier references may carry `ref` plus
 `refKind`; member access may carry `fieldRef`; type references may carry
-`typeRefId`. All values come from `bpcms.lock`. See
+`typeRefId`. All values come from the application lock (`<app>.lock`). See
 [`identifiers.md`](identifiers.md) for the lock format and traversal examples.
 
 ## Compatibility with TypeScript

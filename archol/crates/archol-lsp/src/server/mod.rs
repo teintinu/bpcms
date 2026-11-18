@@ -133,6 +133,14 @@ impl Server {
                 let result = self.ast(uri);
                 self.rpc.respond(id, result);
             }
+            "archol/inApplication" => {
+                let uri = params.get("uri").and_then(Value::as_str).unwrap_or("");
+                let inside = uri_to_path(uri)
+                    .map(|path| normalize(&path))
+                    .map(|path| app::in_application(self.analysis(), &path))
+                    .unwrap_or(false);
+                self.rpc.respond(id, json!({ "inApplication": inside }));
+            }
             "archol/links" => {
                 let result = self.links();
                 self.rpc.respond(id, result);
@@ -313,15 +321,25 @@ impl Server {
             .clone();
         let root = self.services_root();
         let files = self.collect_files();
-        let analysis = analyze_application(files, Some(&root), &application.uri, false)?;
+        let analysis = analyze_application(files, Some(&root), &application.uri, true)?;
         let closure = analysis
             .closure
             .as_ref()
             .ok_or_else(|| format!("application `{}` has no closure", application.uri))?;
+        let lock_path = archol_analysis::ids::lock_path_for_application(std::path::Path::new(
+            &application.path,
+        ));
+        let identifiers = analysis
+            .semantic
+            .as_ref()
+            .map(|semantic| semantic.lock.entries.len())
+            .unwrap_or(0);
         let result = json!({
             "application": closure.application.uri,
             "files": closure.files.len(),
             "services": closure.services.len(),
+            "lock": lock_path.to_string_lossy(),
+            "identifiers": identifiers,
         });
         self.application = Some(application.uri);
         self.applications = Some(applications);
@@ -330,7 +348,7 @@ impl Server {
         Ok(result)
     }
 
-    /// Creates/prunes `bpcms.lock` for the current application.
+    /// Creates/prunes the application lock file for the current application.
     fn update_lock(&mut self) -> Result<Value, String> {
         let Some(selector) = self.application.clone() else {
             return Err("no application selected".to_string());

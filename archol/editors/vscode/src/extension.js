@@ -4,9 +4,10 @@ const vscode = require('vscode');
 const { AstExplorer } = require('./ast-view');
 const { registerCommands } = require('./commands');
 const { registerOutsideDecorations } = require('./diagnostics');
+const { registerLockSync } = require('./lock-sync');
 const { ArcholSession } = require('./session');
 const { registerLanguageFeatures } = require('./lsp-features');
-const { applicationNameFromUri } = require('./app-support');
+const { applicationNameFromUri, isApplicationSource } = require('./app-support');
 const { applicationSetting } = require('./session-support');
 const { isArcholDocument } = require('./vscode-utils');
 
@@ -93,6 +94,25 @@ function activate(context) {
 
   registerOutsideDecorations(context);
 
+  const updateApplicationContext = (editor) => {
+    const active = Boolean(
+      editor
+        && editor.document
+        && editor.document.languageId === 'archol'
+        && isApplicationSource(editor.document.getText()),
+    );
+    vscode.commands.executeCommand('setContext', 'archol.isApplication', active);
+  };
+  updateApplicationContext(vscode.window.activeTextEditor);
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(updateApplicationContext),
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      if (vscode.window.activeTextEditor?.document === document) {
+        updateApplicationContext(vscode.window.activeTextEditor);
+      }
+    }),
+  );
+
   session = new ArcholSession({
     diagnostics,
     log,
@@ -100,6 +120,13 @@ function activate(context) {
     showOutput: () => output.show(true),
     setState: applyStatus,
     getAstExplorer: () => astExplorer,
+  });
+
+  registerLockSync(context, {
+    session,
+    getApplication: () => applicationSetting(),
+    getDelay: () => vscode.workspace.getConfiguration('archol').get('lockDebounceMs', 10000),
+    log,
   });
 
   context.subscriptions.push(output, diagnostics, statusBar, astExplorer, {

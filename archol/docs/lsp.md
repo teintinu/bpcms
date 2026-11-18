@@ -38,7 +38,9 @@ application the server still starts and reports
 `TaxRegimeCode` shows the enumeration with the titles of each value; `SIMPLES`
 shows that it is a value of `TaxRegimeCode`; `Invoice` shows the artifact type
 and the service; an application/import alias (`as Identity`) shows the service
-URI and jumps to the service file. Every hover ends with:
+URI and jumps to the service file. Every hover also shows the stable lock id
+(`id: \`...\``) of the identifier under the cursor — the same id used by the
+AST and by the builder. Every hover ends with:
 
 ```md
 [Explore AST](command:archol.showAst?%5B%22file%3A...%22%2C12%2C4%5D)
@@ -79,7 +81,8 @@ different services are not mixed.
 | `archol/status` | `{}` | `{ "application", "files", "services" }` or nulls |
 | `archol/declaration` | `{ "id": "..." }` | `{ "uri", "range" }` or `null` |
 | `archol/usages` | `{ "id": "..." }` | `{ "count", "locations": [{uri,range,kind}] }` |
-| `archol/lock` | `{}` | `{ "application", "path", "identifiers" }` (writes `bpcms.lock`) |
+| `archol/lock` | `{}` | `{ "application", "path", "identifiers" }` (writes the application lock file) |
+| `archol/inApplication` | `{ "uri": "file:///..." }` | `{ "inApplication": bool }` |
 
 ## Diagnostics
 
@@ -102,8 +105,9 @@ Starts the real binary with `initializationOptions.application`, runs
 
 - Application-closure analysis on every change; enough for 172 files in the
   backoffice app, optimizable with per-file caching when necessary.
-- `archol/lock` is explicit (command or CLI); ids are random until the lock is
-  written.
+- `archol/lock` is refreshed automatically on application selection and, after
+  `.archol` edits, once every 10 s (debounced by the plugin); the CLI command
+  remains for explicit runs.
 - Columns in UTF-16 (LSP standard); internal offsets are bytes.
 - No `semanticTokens` in this initial version: the TextMate grammar covers
   colors.

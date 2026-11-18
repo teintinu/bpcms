@@ -26,7 +26,8 @@
     "onCommand:archol.showLinks",
     "onCommand:archol.restartServer",
     "onCommand:archol.showOutput",
-    "onCommand:archol.updateLock"
+    "onCommand:archol.updateLock",
+    "onCommand:archol.useApplicationFile"
   ],
   "contributes": {
     "languages": [
@@ -85,6 +86,11 @@
         "command": "archol.updateLock",
         "title": "Update Identifier Lock",
         "category": "Archol"
+      },
+      {
+        "command": "archol.useApplicationFile",
+        "title": "Use as Current Application",
+        "category": "Archol"
       }
     ],
     "keybindings": [
@@ -124,8 +130,30 @@
             "lsp"
           ],
           "markdownDescription": "Arguments passed to the LSP server executable. The default `[\"lsp\"]` runs `archol lsp`; use `[]` if the path points to a dedicated server that does not accept a subcommand."
+        },
+        "archol.lockDebounceMs": {
+          "type": "number",
+          "default": 10000,
+          "minimum": 0,
+          "description": "Debounce (ms) before refreshing <app>.lock after .archol changes. Default 10000 (10s)."
         }
       }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "archol.useApplicationFile",
+          "when": "editorLangId == archol && archol.isApplication",
+          "group": "navigation@10"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "archol.useApplicationFile",
+          "when": "resourceExtname == .archol",
+          "group": "navigation@10"
+        }
+      ]
     }
   },
   "scripts": {

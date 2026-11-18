@@ -97,6 +97,7 @@ def main():
         {"textDocument": {"uri": uri}, "position": {"line": line, "character": 8}},
     )["result"]
     assert "TaxRegimeCode" in hover["contents"]["value"]
+    assert "id: `" in hover["contents"]["value"]
     assert "command:archol.showAst" in hover["contents"]["value"]
 
     temp = os.path.join(

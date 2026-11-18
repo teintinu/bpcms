@@ -39,7 +39,7 @@ fn usage() {
     eprintln!(
         "archol <command> [args]\n\n\
          \x20 check [dir] --app <uri-or-path> [--json]   compiles the application closure\n\
-         \x20 lock [dir] --app <uri-or-path>              creates or prunes bpcms.lock\n\
+         \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
          \x20 ast <file> [--app <uri-or-path>] [--json]   prints the AST (annotated with --app)\n\
          \x20 tokens <file>                               prints the tokens\n\

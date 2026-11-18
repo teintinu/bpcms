@@ -36,7 +36,7 @@ pub struct Artifact {
     pub params: Vec<Param>,
     pub body: Vec<Member>,
     pub span: Span,
-    /// Stable identifier from `bpcms.lock` (assigned by the semantic pass).
+    /// Stable identifier from the application lock (assigned by the semantic pass).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }
@@ -109,7 +109,7 @@ pub enum Member {
         uri: String,
         alias: String,
         span: Span,
-        /// Service declaration id from `bpcms.lock`.
+        /// Service declaration id from the application lock.
         #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
         target: Option<String>,
     },
@@ -120,7 +120,7 @@ pub enum Member {
         uri: String,
         alias: String,
         span: Span,
-        /// Service declaration id from `bpcms.lock`.
+        /// Service declaration id from the application lock.
         #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
         target: Option<String>,
     },
@@ -214,7 +214,7 @@ pub enum Expr {
         object: Box<Expr>,
         name: String,
         span: Span,
-        /// Field identifier (from `bpcms.lock`) resolved by the semantic pass.
+        /// Field identifier (from the application lock) resolved by the semantic pass.
         #[serde(rename = "fieldRef", skip_serializing_if = "Option::is_none")]
         field_ref: Option<String>,
     },

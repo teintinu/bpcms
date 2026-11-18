@@ -54,7 +54,7 @@ cargo run -q --bin archol -- ast ../examples/services/example.com/services/billi
 
 ```text
 archol check [dir] --app <uri|path> [--json]   compile one application closure
-archol lock [dir] --app <uri|path>             create/prune bpcms.lock (stable ids)
+archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
 archol ast <file> [--app <uri|path>] [--json]  syntax AST, or annotated with ids
 archol tokens <file>                           tokens (lexer debugging)
@@ -65,7 +65,7 @@ archol lsp                                    LSP server over stdio
 `check` without `--app` exits with code 2 and lists the available applications.
 `check` exits with code 1 when there is an error and prints
 `file:line:column: severity code: message`. `lock` writes one identifier per
-line (JSON Lines); the AST then carries stable `id`/`ref` values from the lock.
+line (CSV `id,path`); the AST then carries stable `id`/`ref` values from the lock. Only used identifiers get ids; append `*` to a path to pin it. The plugin refreshes the lock on application selection and, with a 10 s debounce, after `.archol` edits.
 `links` produces, among other things, which artifacts require each `role`.
 Files outside the application closure are treated as commented out (CLI and
 LSP). See [`docs/identifiers.md`](docs/identifiers.md).

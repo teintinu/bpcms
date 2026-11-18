@@ -68,6 +68,7 @@ if needed.
 | `archol.application` | `""` | URI of the current Archol application. **Required for compile and LSP**: the compiler and the server work from an application. Run **Archol: Select Application** to choose it; saved with *Window* scope. |
 | `archol.server.path` | `archol` | Path to the LSP server executable. |
 | `archol.server.args` | `["lsp"]` | Arguments passed to the executable (the `archol` binary uses the `lsp` subcommand). Use `[]` for a dedicated server. |
+| `archol.lockDebounceMs` | `10000` | Debounce before refreshing `<app>.lock` after `.archol` changes. |
 
 The selected application URI is sent both in `initialize`
 (`initializationOptions.application`) and with `archol/setApplication`. Changing
@@ -95,6 +96,7 @@ the path, run **Archol: Restart LSP Server**.
 - Snippets: document, process, `base: classification` shape and table view.
 - Server diagnostics with severity and code, source `archol`.
 - Hover, completion, definition, document symbols and references via LSP.
+  Hover shows the stable identifier id from the application lock.
   `Cmd+Click` (macOS) or `Ctrl+Click` (Windows/Linux) and `F12` use the same
   definition: document field, variable, enum or artifact.
 - Hover with an **Open AST** link (`command:archol.showAst?...`) that opens the
@@ -117,14 +119,24 @@ the path, run **Archol: Restart LSP Server**.
   `Archol: no app` (warning color) otherwise, with the LSP state icon
   (`stopped`, `starting`, `ready`, `error`); click to select the application.
 
+## Selecting the application
+
+Three ways, all ending in the same `archol.application` setting:
+
+1. **Archol: Select Application** in the Command Palette (pick from a list);
+2. **right-click an application file** in the editor or Explorer and choose
+   **Archol: Use as Current Application** (non-application files are rejected);
+3. edit `archol.application` directly in Settings.
+
 ## Commands and shortcuts
 
 | Command | Palette | Shortcut | Description |
 | :--- | :--- | :--- | :--- |
 | `archol.selectApplication` | Archol: Select Application | — | Starts the server if needed, lists the applications (`archol/applications`), saves the pick to `archol.application` and calls `archol/setApplication`. |
+| `archol.useApplicationFile` | Archol: Use as Current Application | right-click | Right-click an application file (editor or Explorer) and choose this item; the declared URI becomes `archol.application`. |
 | `archol.showAst` | Archol: Open AST Explorer | `Ctrl+Alt+A` / `Cmd+Alt+A` | Opens the AST and selects the node at the current position. |
 | `archol.showLinks` | Archol: Show Server Links | `Ctrl+Alt+L` / `Cmd+Alt+L` | Requests `archol/links` and opens the response in a JSON document. |
-| `archol.updateLock` | Archol: Update Identifier Lock | — | Requests `archol/lock`; creates/prunes `bpcms.lock` with stable ids for the current application. |
+| `archol.updateLock` | Archol: Update Identifier Lock | — | Requests `archol/lock`; creates/prunes `<app>.lock` (CSV `id,path`) with ids for used identifiers; `*` pins entries at the top. |
 | `archol.restartServer` | Archol: Restart LSP Server | — | Stops and starts the server; reopens the open files. |
 | `archol.showOutput` | Archol: Show Server Output | — | Shows the **Archol LSP** channel. |
 

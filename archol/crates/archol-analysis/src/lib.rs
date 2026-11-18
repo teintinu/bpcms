@@ -73,7 +73,7 @@ pub fn analyze(files: Vec<FileInput>, services_root: Option<&str>) -> Analysis {
 
 /// Compiles from an application: closure, diagnostics, links and ids.
 ///
-/// `write_lock` persists `bpcms.lock` next to the application file (creating or
+/// `write_lock` persists the application lock file next to the application file (creating or
 /// pruning ids). Read-only analyses keep the lock untouched.
 pub fn analyze_application(
     files: Vec<FileInput>,

@@ -1,8 +1,9 @@
-//! Semantic annotation: stable ids for declarations and typed references.
+//! Semantic annotation: identifier paths during compilation, ids at the end.
 //!
-//! The AST keeps only lock ids on nodes (`id`, `ref`, `fieldRef`, `typeRefId`),
-//! so JSON stays small and acyclic. Usages are collected into [`SemanticIndex`]
-//! for the LSP and the builder.
+//! References are resolved to **paths** while walking the closure. Only after
+//! the whole application is compiled do we assign ids (and only for used
+//! paths); the AST is then rewritten with those ids. Unused declarations keep
+//! no id.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -10,13 +11,16 @@ use archol_core::{Artifact, Expr, Member, Span, Stmt};
 
 use crate::application::Closure;
 use crate::ids::{
-    artifact_path, field_path, param_path, service_path, value_path, Lock, LockEntry,
+    application_path, artifact_path, field_path, param_path, service_path, value_path, Lock,
+    LockEntry,
 };
 use crate::workspace::Workspace;
 
 #[derive(Clone, Debug)]
 pub struct DeclInfo {
     pub entry: LockEntry,
+    pub kind: String,
+    pub name: String,
     pub file: String,
     pub service: Option<String>,
     pub span: Span,
@@ -33,9 +37,9 @@ pub struct Usage {
 #[derive(Clone, Debug, Default)]
 pub struct SemanticIndex {
     pub lock: Lock,
-    /// id -> declaration.
+    /// id -> declaration (only used identifiers).
     pub declarations: BTreeMap<String, DeclInfo>,
-    /// References collected while annotating, in source order.
+    /// References, in source order.
     pub usages: Vec<Usage>,
     /// Files outside the application closure (treated as commented out).
     pub outside: BTreeSet<String>,
@@ -49,7 +53,6 @@ struct Scope {
 
 #[derive(Clone)]
 struct FieldDecl {
-    id: String,
     path: String,
     type_ref: Option<String>,
     span: Span,
@@ -57,24 +60,24 @@ struct FieldDecl {
 
 #[derive(Clone)]
 struct ValueDecl {
-    id: String,
     path: String,
     span: Span,
 }
 
 #[derive(Clone)]
 struct ParamDecl {
-    id: String,
     path: String,
     span: Span,
 }
 
 #[derive(Clone)]
 struct Decl {
-    id: String,
+    path: String,
     kind: String,
     name: String,
     service: Option<String>,
+    file: String,
+    span: Span,
     fields: BTreeMap<String, FieldDecl>,
     values: BTreeMap<String, ValueDecl>,
     params: BTreeMap<String, ParamDecl>,
@@ -97,115 +100,52 @@ impl Scope {
             .and_then(|field| field.type_ref.clone())
     }
 
-    fn field_id(&self, type_name: &str, field: &str, service: Option<&str>) -> Option<String> {
+    fn field_path(&self, type_name: &str, field: &str, service: Option<&str>) -> Option<String> {
         self.artifact(type_name, service)?
             .fields
             .get(field)
-            .map(|field| field.id.clone())
+            .map(|field| field.path.clone())
     }
 
-    fn value_id(&self, type_name: &str, value: &str, service: Option<&str>) -> Option<String> {
+    fn value_path(&self, type_name: &str, value: &str, service: Option<&str>) -> Option<String> {
         self.artifact(type_name, service)?
             .values
             .get(value)
-            .map(|value| value.id.clone())
+            .map(|value| value.path.clone())
     }
 }
 
-/// Assigns ids to declarations in the closure and annotates references.
+/// Compiles references to paths, then assigns ids only to used identifiers.
 pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) -> SemanticIndex {
     let mut scope = Scope::default();
-    let mut declarations = BTreeMap::new();
-    let mut used_paths = BTreeSet::new();
+    let mut roots = BTreeSet::new();
 
-    // Pass 1: declarations and their ids.
+    // Pass 1: declarations and their canonical paths (no ids yet).
     for file_index in 0..workspace.files.len() {
-        let path = workspace.files[file_index].path.clone();
-        if !closure.contains_file(&path) {
+        let file_path = workspace.files[file_index].path.clone();
+        if !closure.contains_file(&file_path) {
             continue;
         }
         let service = workspace.files[file_index].service.clone();
         let artifacts_len = workspace.files[file_index].ast.items.len();
         for artifact_index in 0..artifacts_len {
-            let (decl, decl_info) = {
-                let mut artifact = workspace.files[file_index].ast.items[artifact_index].clone();
-                let entry = assign_artifact(
-                    &mut artifact,
-                    service.as_deref(),
-                    &path,
-                    &mut lock,
-                    &mut used_paths,
-                );
-                let decl = build_decl(&artifact, entry.clone(), service.clone());
-                let decl_info = DeclInfo {
-                    entry,
-                    file: path.clone(),
-                    service: service.clone(),
-                    span: artifact.span,
-                };
-                (decl, decl_info)
-            };
-            // Re-apply only the mutated ids to the real artifact later.
-            let decl_index = scope.decls.len();
+            let artifact = &mut workspace.files[file_index].ast.items[artifact_index];
+            let decl = declare_artifact(artifact, service.clone(), file_path.clone());
+            roots.insert(decl.path.clone());
             scope
                 .by_name
                 .entry(decl.name.clone())
                 .or_default()
-                .push(decl_index);
-            declarations.insert(decl.id.clone(), decl_info);
-            for field in decl.fields.values() {
-                if let Some(entry) = lock.entry_for(&field.path) {
-                    declarations.insert(
-                        entry.id.clone(),
-                        DeclInfo {
-                            entry: entry.clone(),
-                            file: path.clone(),
-                            service: service.clone(),
-                            span: field.span,
-                        },
-                    );
-                }
-            }
-            for value in decl.values.values() {
-                if let Some(entry) = lock.entry_for(&value.path) {
-                    declarations.insert(
-                        entry.id.clone(),
-                        DeclInfo {
-                            entry: entry.clone(),
-                            file: path.clone(),
-                            service: service.clone(),
-                            span: value.span,
-                        },
-                    );
-                }
-            }
-            for param in decl.params.values() {
-                if let Some(entry) = lock.entry_for(&param.path) {
-                    declarations.insert(
-                        entry.id.clone(),
-                        DeclInfo {
-                            entry: entry.clone(),
-                            file: path.clone(),
-                            service: service.clone(),
-                            span: param.span,
-                        },
-                    );
-                }
-            }
+                .push(scope.decls.len());
             scope.decls.push(decl);
-            // Apply ids from scope to the actual AST node.
-            apply_decl_ids(
-                &mut workspace.files[file_index].ast.items[artifact_index],
-                &scope.decls[decl_index],
-            );
         }
     }
 
-    // Pass 2: references.
+    // Pass 2: resolve references to paths.
     let mut usages = Vec::new();
     for file_index in 0..workspace.files.len() {
-        let path = workspace.files[file_index].path.clone();
-        if !closure.contains_file(&path) {
+        let file_path = workspace.files[file_index].path.clone();
+        if !closure.contains_file(&file_path) {
             continue;
         }
         let service = workspace.files[file_index].service.clone();
@@ -215,14 +155,14 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
             let known = artifact
                 .id
                 .as_ref()
-                .map(|id| scope.decls.iter().any(|decl| &decl.id == id))
+                .map(|path| scope.decls.iter().any(|decl| &decl.path == path))
                 .unwrap_or(false);
             if known {
                 let mut ctx = Ctx {
                     scope: &scope,
                     service: service.as_deref(),
                     locals: locals_of(artifact),
-                    file: &path,
+                    file: &file_path,
                     usages: Vec::new(),
                 };
                 annotate_param_types(artifact, &mut ctx);
@@ -233,7 +173,31 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
         }
     }
 
-    lock.retain(&used_paths);
+    // End of compilation: assign ids only to used paths.
+    let mut used = roots;
+    for usage in &usages {
+        used.insert(usage.id.clone());
+    }
+    let ids = lock.assign(&used);
+
+    // Rewrite the AST with final ids and drop temporary paths.
+    for file_index in 0..workspace.files.len() {
+        if !closure.contains_file(&workspace.files[file_index].path) {
+            continue;
+        }
+        for artifact in &mut workspace.files[file_index].ast.items {
+            finalize_artifact(artifact, &ids);
+        }
+    }
+    let usages: Vec<Usage> = usages
+        .into_iter()
+        .map(|usage| Usage {
+            id: ids.get(&usage.id).cloned().unwrap_or(usage.id),
+            ..usage
+        })
+        .collect();
+    let declarations = build_declarations(&scope, &ids);
+
     SemanticIndex {
         lock,
         declarations,
@@ -242,102 +206,27 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
     }
 }
 
-fn assign_artifact(
-    artifact: &mut Artifact,
-    service: Option<&str>,
-    file: &str,
-    lock: &mut Lock,
-    used: &mut BTreeSet<String>,
-) -> LockEntry {
-    let _ = file;
+fn declare_artifact(artifact: &mut Artifact, service: Option<String>, file: String) -> Decl {
     let kind = artifact.artifact_kind.to_ascii_lowercase();
-    let path = if artifact.artifact_kind == "Application" {
-        format!("{}#application", artifact.name)
-    } else if artifact.artifact_kind == "Service" {
-        service_path(artifact.name.as_str())
-    } else {
-        artifact_path(
-            service.unwrap_or(""),
+    let path = match kind.as_str() {
+        "application" => application_path(&artifact.name),
+        "service" => service_path(&artifact.name),
+        _ => artifact_path(
+            service.as_deref().unwrap_or(""),
             &artifact.artifact_kind,
             &artifact.name,
-        )
+        ),
     };
-    let id = lock.ensure(&path, &kind, &artifact.name);
-    artifact.id = Some(id.clone());
-    used.insert(path.clone());
+    artifact.id = Some(path.clone());
 
-    let service_uri = service.unwrap_or("");
-    if let Some(Member::Block { name, body, .. }) = artifact
+    let service_uri = service.as_deref().unwrap_or("");
+    let artifact_name = artifact.name.clone();
+    let mut fields = BTreeMap::new();
+    if let Some(Member::Block { body, .. }) = artifact
         .body
         .iter_mut()
         .find(|member| matches!(member, Member::Block { name, .. } if name == "fields"))
     {
-        let _ = name;
-        for member in body {
-            if let Member::PropertyAssignment { name, id, .. } = member {
-                let field_path = field_path(service_uri, &artifact.name, name);
-                let field_id = lock.ensure(&field_path, "field", name);
-                *id = Some(field_id);
-                used.insert(field_path);
-            }
-        }
-    }
-    for member in &mut artifact.body {
-        if let Member::EnumValueDeclaration { name, id, .. } = member {
-            let value_path = value_path(service_uri, &artifact.name, name);
-            let value_id = lock.ensure(&value_path, "value", name);
-            *id = Some(value_id);
-            used.insert(value_path);
-        }
-    }
-    for param in &mut artifact.params {
-        let param_path = param_path(
-            service_uri,
-            &artifact.artifact_kind,
-            &artifact.name,
-            &param.name,
-        );
-        let param_id = lock.ensure(&param_path, "param", &param.name);
-        param.id = Some(param_id);
-        used.insert(param_path);
-    }
-
-    lock.entry_for(&path).cloned().unwrap_or(LockEntry {
-        id,
-        path,
-        kind,
-        name: artifact.name.clone(),
-    })
-}
-
-fn annotate_param_types(artifact: &mut Artifact, ctx: &mut Ctx<'_>) {
-    for param in &mut artifact.params {
-        let Some(type_ref) = param.type_ref.clone() else {
-            continue;
-        };
-        if let Some(decl) = ctx.scope.artifact(base_type(&type_ref), ctx.service) {
-            param.type_ref_id = Some(decl.id.clone());
-            ctx.usages.push(Usage {
-                id: decl.id.clone(),
-                file: ctx.file.to_string(),
-                span: param.span,
-                kind: "typeRef".to_string(),
-            });
-        }
-    }
-}
-
-fn build_decl(artifact: &Artifact, entry: LockEntry, service: Option<String>) -> Decl {
-    let mut fields = BTreeMap::new();
-    let mut values = BTreeMap::new();
-    let mut params = BTreeMap::new();
-
-    if let Some(Member::Block { name, body, .. }) = artifact
-        .body
-        .iter()
-        .find(|member| matches!(member, Member::Block { name, .. } if name == "fields"))
-    {
-        let _ = name;
         for member in body {
             if let Member::PropertyAssignment {
                 name,
@@ -346,11 +235,12 @@ fn build_decl(artifact: &Artifact, entry: LockEntry, service: Option<String>) ->
                 id,
             } = member
             {
+                let field_path = field_path(service_uri, &artifact_name, name);
+                *id = Some(field_path.clone());
                 fields.insert(
                     name.clone(),
                     FieldDecl {
-                        id: id.clone().unwrap_or_default(),
-                        path: field_path(service_ref(&service), &artifact.name, name),
+                        path: field_path,
                         type_ref: type_ref_of(value),
                         span: *span,
                     },
@@ -358,79 +248,238 @@ fn build_decl(artifact: &Artifact, entry: LockEntry, service: Option<String>) ->
             }
         }
     }
-    for member in &artifact.body {
+
+    let mut values = BTreeMap::new();
+    for member in &mut artifact.body {
         if let Member::EnumValueDeclaration { name, span, id, .. } = member {
+            let value_path = value_path(service_uri, &artifact_name, name);
+            *id = Some(value_path.clone());
             values.insert(
                 name.clone(),
                 ValueDecl {
-                    id: id.clone().unwrap_or_default(),
-                    path: value_path(service_ref(&service), &artifact.name, name),
+                    path: value_path,
                     span: *span,
                 },
             );
         }
     }
-    for param in &artifact.params {
+
+    let mut params = BTreeMap::new();
+    for param in &mut artifact.params {
+        let param_path = param_path(
+            service_uri,
+            &artifact.artifact_kind,
+            &artifact_name,
+            &param.name,
+        );
+        param.id = Some(param_path.clone());
         params.insert(
             param.name.clone(),
             ParamDecl {
-                id: param.id.clone().unwrap_or_default(),
-                path: param_path(
-                    service_ref(&service),
-                    &artifact.artifact_kind,
-                    &artifact.name,
-                    &param.name,
-                ),
+                path: param_path,
                 span: param.span,
             },
         );
     }
 
     Decl {
-        id: entry.id.clone(),
-        kind: artifact.artifact_kind.to_ascii_lowercase(),
+        path,
+        kind,
         name: artifact.name.clone(),
         service,
+        file,
+        span: artifact.span,
         fields,
         values,
         params,
     }
 }
 
-/// Copies ids computed in `decl` onto the real AST node (and its children).
-fn apply_decl_ids(artifact: &mut Artifact, decl: &Decl) {
-    artifact.id = Some(decl.id.clone());
-    if let Some(Member::Block { name, body, .. }) = artifact
-        .body
-        .iter_mut()
-        .find(|member| matches!(member, Member::Block { name, .. } if name == "fields"))
-    {
-        let _ = name;
-        for member in body {
-            if let Member::PropertyAssignment { name, id, .. } = member {
-                if let Some(field) = decl.fields.get(name) {
-                    *id = Some(field.id.clone());
-                }
-            }
-        }
+fn finalize_artifact(artifact: &mut Artifact, ids: &BTreeMap<String, String>) {
+    artifact.id = finalize_opt(artifact.id.take(), ids);
+    for param in &mut artifact.params {
+        param.id = finalize_opt(param.id.take(), ids);
+        param.type_ref_id = finalize_opt(param.type_ref_id.take(), ids);
     }
-    for member in &mut artifact.body {
-        if let Member::EnumValueDeclaration { name, id, .. } = member {
-            if let Some(value) = decl.values.get(name) {
-                *id = Some(value.id.clone());
+    finalize_members(&mut artifact.body, ids);
+}
+
+fn finalize_members(members: &mut [Member], ids: &BTreeMap<String, String>) {
+    for member in members {
+        match member {
+            Member::PropertyAssignment { value, id, .. } => {
+                *id = finalize_opt(id.take(), ids);
+                finalize_expr(value, ids);
             }
+            Member::EnumValueDeclaration { id, body, .. } => {
+                *id = finalize_opt(id.take(), ids);
+                finalize_members(body, ids);
+            }
+            Member::Block { body, .. } => finalize_members(body, ids),
+            Member::ServiceEntry { target, .. } | Member::ImportDeclaration { target, .. } => {
+                *target = finalize_opt(target.take(), ids);
+            }
+            Member::Statement { statement, .. } => finalize_statement(statement, ids),
+            _ => {}
         }
-    }
-    for (index, param) in artifact.params.iter_mut().enumerate() {
-        if let Some(decl_param) = decl.params.get(&param.name) {
-            param.id = Some(decl_param.id.clone());
-        }
-        let _ = index;
     }
 }
 
-fn service_ref(service: &Option<String>) -> &str {
-    service.as_deref().unwrap_or("")
+fn finalize_expr(expr: &mut Expr, ids: &BTreeMap<String, String>) {
+    match expr {
+        Expr::Reference { target, .. } => {
+            if let Some(id) = ids.get(target) {
+                *target = id.clone();
+            }
+        }
+        Expr::MemberAccess {
+            object, field_ref, ..
+        } => {
+            *field_ref = finalize_opt(field_ref.take(), ids);
+            finalize_expr(object, ids);
+        }
+        Expr::Object {
+            type_ref_id,
+            members,
+            ..
+        } => {
+            *type_ref_id = finalize_opt(type_ref_id.take(), ids);
+            finalize_members(members, ids);
+        }
+        Expr::List { elements, .. } => {
+            for element in elements {
+                finalize_expr(element, ids);
+            }
+        }
+        Expr::Call { args, .. } => {
+            for arg in args {
+                finalize_expr(arg, ids);
+            }
+        }
+        Expr::Binary { left, right, .. } => {
+            finalize_expr(left, ids);
+            finalize_expr(right, ids);
+        }
+        Expr::Unary { operand, .. } => finalize_expr(operand, ids),
+        Expr::NamedArgument { value, .. } => finalize_expr(value, ids),
+        _ => {}
+    }
+}
+
+fn finalize_statement(statement: &mut Stmt, ids: &BTreeMap<String, String>) {
+    match statement {
+        Stmt::ConstDeclaration { init, .. } | Stmt::LetDeclaration { init, .. } => {
+            if let Some(init) = init {
+                finalize_expr(init, ids);
+            }
+        }
+        Stmt::IfStatement {
+            condition,
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            finalize_expr(condition, ids);
+            finalize_members(then_branch, ids);
+            if let Some(else_branch) = else_branch {
+                finalize_members(else_branch, ids);
+            }
+        }
+        Stmt::TryStatement { body, catches, .. } => {
+            finalize_members(body, ids);
+            for catch in catches {
+                finalize_members(&mut catch.body, ids);
+            }
+        }
+        Stmt::ReturnStatement { value, .. } => {
+            if let Some(value) = value {
+                finalize_expr(value, ids);
+            }
+        }
+        Stmt::ExpressionStatement { expression, .. } => finalize_expr(expression, ids),
+        Stmt::RawStatement { .. } => {}
+    }
+}
+
+fn finalize_opt(path: Option<String>, ids: &BTreeMap<String, String>) -> Option<String> {
+    path.and_then(|path| ids.get(&path).cloned())
+}
+
+fn build_declarations(scope: &Scope, ids: &BTreeMap<String, String>) -> BTreeMap<String, DeclInfo> {
+    let mut declarations = BTreeMap::new();
+    for decl in &scope.decls {
+        if let Some(id) = ids.get(&decl.path) {
+            declarations.insert(
+                id.clone(),
+                DeclInfo {
+                    entry: LockEntry {
+                        id: id.clone(),
+                        path: decl.path.clone(),
+                    },
+                    kind: decl.kind.clone(),
+                    name: decl.name.clone(),
+                    file: decl.file.clone(),
+                    service: decl.service.clone(),
+                    span: decl.span,
+                },
+            );
+        }
+        for (name, field) in &decl.fields {
+            if let Some(id) = ids.get(&field.path) {
+                declarations.insert(
+                    id.clone(),
+                    DeclInfo {
+                        entry: LockEntry {
+                            id: id.clone(),
+                            path: field.path.clone(),
+                        },
+                        kind: "field".to_string(),
+                        name: name.clone(),
+                        file: decl.file.clone(),
+                        service: decl.service.clone(),
+                        span: field.span,
+                    },
+                );
+            }
+        }
+        for (name, value) in &decl.values {
+            if let Some(id) = ids.get(&value.path) {
+                declarations.insert(
+                    id.clone(),
+                    DeclInfo {
+                        entry: LockEntry {
+                            id: id.clone(),
+                            path: value.path.clone(),
+                        },
+                        kind: "value".to_string(),
+                        name: name.clone(),
+                        file: decl.file.clone(),
+                        service: decl.service.clone(),
+                        span: value.span,
+                    },
+                );
+            }
+        }
+        for (name, param) in &decl.params {
+            if let Some(id) = ids.get(&param.path) {
+                declarations.insert(
+                    id.clone(),
+                    DeclInfo {
+                        entry: LockEntry {
+                            id: id.clone(),
+                            path: param.path.clone(),
+                        },
+                        kind: "param".to_string(),
+                        name: name.clone(),
+                        file: decl.file.clone(),
+                        service: decl.service.clone(),
+                        span: param.span,
+                    },
+                );
+            }
+        }
+    }
+    declarations
 }
 
 fn type_ref_of(value: &Expr) -> Option<String> {
@@ -494,14 +543,29 @@ fn collect_locals(members: &[Member], locals: &mut BTreeMap<String, Option<Strin
     }
 }
 
+fn annotate_param_types(artifact: &mut Artifact, ctx: &mut Ctx<'_>) {
+    for param in &mut artifact.params {
+        let Some(type_ref) = param.type_ref.clone() else {
+            continue;
+        };
+        if let Some(decl) = ctx.scope.artifact(base_type(&type_ref), ctx.service) {
+            param.type_ref_id = Some(decl.path.clone());
+            ctx.usages.push(Usage {
+                id: decl.path.clone(),
+                file: ctx.file.to_string(),
+                span: param.span,
+                kind: "typeRef".to_string(),
+            });
+        }
+    }
+}
+
 fn annotate_members(members: &mut [Member], ctx: &mut Ctx<'_>) {
     for member in members {
         match member {
-            Member::PropertyAssignment { name, value, .. } => {
-                annotate_property(name, value, ctx);
-            }
+            Member::PropertyAssignment { name, value, .. } => annotate_property(name, value, ctx),
             Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
-                annotate_members(body, ctx);
+                annotate_members(body, ctx)
             }
             Member::Statement { statement, .. } => annotate_statement(statement, ctx),
             Member::ServiceEntry {
@@ -522,9 +586,9 @@ fn annotate_service_ref(uri: &str, span: Span, target: &mut Option<String>, ctx:
     if decl.kind != "service" {
         return;
     }
-    *target = Some(decl.id.clone());
+    *target = Some(decl.path.clone());
     ctx.usages.push(Usage {
-        id: decl.id.clone(),
+        id: decl.path.clone(),
         file: ctx.file.to_string(),
         span,
         kind: "serviceRef".to_string(),
@@ -554,7 +618,7 @@ fn annotate_artifact_refs(
             let span = *span;
             if let Some(decl) = ctx.scope.artifact(&name, ctx.service) {
                 if kind_filter.map(|kind| decl.kind == kind).unwrap_or(true) {
-                    let target = decl.id.clone();
+                    let target = decl.path.clone();
                     let ref_kind = decl.kind.clone();
                     *value = Expr::Reference {
                         ref_kind,
@@ -595,11 +659,17 @@ fn annotate_expr(expr: &mut Expr, ctx: &mut Ctx<'_>) {
             type_ref,
             type_ref_id,
             members,
-            ..
+            span,
         } => {
             if let Some(ty) = type_ref.as_deref() {
                 if let Some(decl) = ctx.scope.artifact(base_type(ty), ctx.service) {
-                    *type_ref_id = Some(decl.id.clone());
+                    *type_ref_id = Some(decl.path.clone());
+                    ctx.usages.push(Usage {
+                        id: decl.path.clone(),
+                        file: ctx.file.to_string(),
+                        span: *span,
+                        kind: "typeRef".to_string(),
+                    });
                 }
             }
             annotate_members(members, ctx);
@@ -617,11 +687,11 @@ fn annotate_expr(expr: &mut Expr, ctx: &mut Ctx<'_>) {
         } => {
             annotate_expr(object, ctx);
             if let Some(ty) = expr_type(object, ctx) {
-                if let Some(field_id) = ctx.scope.field_id(base_type(&ty), name, ctx.service) {
-                    *field_ref = Some(field_id.clone());
+                if let Some(field_path) = ctx.scope.field_path(base_type(&ty), name, ctx.service) {
+                    *field_ref = Some(field_path.clone());
                     let name_start = span.end.saturating_sub(name.len());
                     ctx.usages.push(Usage {
-                        id: field_id,
+                        id: field_path,
                         file: ctx.file.to_string(),
                         span: Span::new(name_start, span.end),
                         kind: "fieldRef".to_string(),
@@ -669,7 +739,6 @@ fn annotate_expr(expr: &mut Expr, ctx: &mut Ctx<'_>) {
     }
 }
 
-/// `variable == LITERAL`: resolve the enum value and replace the literal node.
 fn annotate_enum_literal(variable: &Expr, literal: &mut Expr, ctx: &mut Ctx<'_>) {
     let Some(ty) = expr_type(variable, ctx) else {
         return;
@@ -677,25 +746,23 @@ fn annotate_enum_literal(variable: &Expr, literal: &mut Expr, ctx: &mut Ctx<'_>)
     replace_enum_literal(literal, &ty, ctx);
 }
 
-/// Replaces `LITERAL` by a `Reference` when it names a value of enum `ty`.
 fn replace_enum_literal(literal: &mut Expr, ty: &str, ctx: &mut Ctx<'_>) {
     let Some(name) = literal.as_ident().map(str::to_string) else {
         return;
     };
-    let Some(value_id) = ctx.scope.value_id(base_type(ty), &name, ctx.service) else {
+    let Some(target) = ctx.scope.value_path(base_type(ty), &name, ctx.service) else {
         return;
     };
     if let Expr::Identifier { span, .. } = literal {
         let span = *span;
-        let name = name.clone();
         *literal = Expr::Reference {
             ref_kind: "enumValue".to_string(),
             name,
-            target: value_id.clone(),
+            target: target.clone(),
             span,
         };
         ctx.usages.push(Usage {
-            id: value_id,
+            id: target,
             file: ctx.file.to_string(),
             span,
             kind: "enumValue".to_string(),
@@ -733,19 +800,20 @@ fn annotate_statement(statement: &mut Stmt, ctx: &mut Ctx<'_>) {
             if let Some(init) = init {
                 if let Some(type_ref) = type_ref {
                     if let Some(name) = init.as_ident().map(str::to_string) {
-                        if let Some(value_id) =
-                            ctx.scope.value_id(base_type(type_ref), &name, ctx.service)
+                        if let Some(target) =
+                            ctx.scope
+                                .value_path(base_type(type_ref), &name, ctx.service)
                         {
                             if let Expr::Identifier { span, .. } = init {
                                 let span = *span;
                                 *init = Expr::Reference {
                                     ref_kind: "enumValue".to_string(),
                                     name,
-                                    target: value_id.clone(),
+                                    target: target.clone(),
                                     span,
                                 };
                                 ctx.usages.push(Usage {
-                                    id: value_id,
+                                    id: target,
                                     file: ctx.file.to_string(),
                                     span,
                                     kind: "enumValue".to_string(),
@@ -793,3 +861,6 @@ fn outside_files(workspace: &Workspace, closure: &Closure) -> BTreeSet<String> {
         .filter(|path| !closure.contains_file(path))
         .collect()
 }
+
+#[allow(dead_code)]
+fn _unused(_: &Lock) {}

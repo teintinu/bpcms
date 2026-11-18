@@ -31,6 +31,17 @@ function applicationNameFromUri(uri) {
   return name || text;
 }
 
+// True when the source declares `application "<uri>" {` (ignores comments).
+function isApplicationSource(text) {
+  return /^\s*application\s+"[^"]+"\s*\{/m.test(String(text || ''));
+}
+
+// URI declared by an application source, or an empty string.
+function applicationUriFromSource(text) {
+  const match = /^\s*application\s+"([^"]+)"/m.exec(String(text || ''));
+  return match ? match[1] : '';
+}
+
 function applicationDisplayName(application) {
   if (!application || typeof application !== 'object') return '';
   const name = typeof application.name === 'string' ? application.name.trim() : '';
@@ -146,6 +157,8 @@ function browserNodeHelpersSource() {
 module.exports = {
   applicationDisplayName,
   applicationNameFromUri,
+  applicationUriFromSource,
+  isApplicationSource,
   applicationQuickPickItem,
   browserNodeHelpersSource,
   declarationTargetId,
