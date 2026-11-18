@@ -5,8 +5,10 @@
 //! with two columns, `id,path`, one identifier per line. Removing the file
 //! resets every id.
 //!
-//! Ids are allocated **at the end of compilation, only for used identifiers**.
-//! Generated ids are sequential lowercase base-26 strings starting at `a`.
+//! Ids are allocated **at the end of compilation, only for used identifiers**,
+//! most referenced first.
+//! Generated ids are sequential lowercase base-36 strings (letters and digits,
+//! first character always a letter) starting at `a`.
 //! A `*` at the end of the path's identifier name pins the entry: it keeps its
 //! id, stays at the top of the file, and is never pruned.
 
@@ -69,13 +71,47 @@ impl Lock {
             if line.is_empty() || line == "id,path" {
                 continue;
             }
-            let (id, path) = line.split_once(',').ok_or_else(|| {
-                format!(
-                    "{}:{}: lock line must be `id,path`",
-                    lock_path.display(),
-                    index + 1
-                )
-            })?;
+            // Older versions wrote JSON Lines; read them once and save CSV later.
+            let (id, path, legacy) = if line.starts_with('{') {
+                let value: serde_json::Value = serde_json::from_str(line).map_err(|error| {
+                    format!(
+                        "{}:{}: invalid legacy lock line: {error}",
+                        lock_path.display(),
+                        index + 1
+                    )
+                })?;
+                let id = value
+                    .get("id")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
+                let mut path = value
+                    .get("path")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
+                if value
+                    .get("manual")
+                    .and_then(serde_json::Value::as_bool)
+                    .unwrap_or(false)
+                    && !path.ends_with('*')
+                {
+                    path.push('*');
+                }
+                (id, path, true)
+            } else {
+                let (id, path) = line.split_once(',').ok_or_else(|| {
+                    format!(
+                        "{}:{}: lock line must be `id,path`",
+                        lock_path.display(),
+                        index + 1
+                    )
+                })?;
+                (id.trim().to_string(), path.trim().to_string(), false)
+            };
+            if legacy {
+                lock.dirty = true;
+            }
             if path.contains(',') {
                 return Err(format!(
                     "{}:{}: path must not contain a comma",
@@ -150,12 +186,8 @@ impl Lock {
             .values()
             .filter(|entry| !entry.pinned())
             .collect();
-        generated.sort_by_key(|entry| {
-            (
-                base26_value(&entry.id).unwrap_or(usize::MAX),
-                entry.path.clone(),
-            )
-        });
+        generated
+            .sort_by_key(|entry| (id_rank(&entry.id).unwrap_or(usize::MAX), entry.path.clone()));
         for entry in generated {
             write_entry(&mut body, entry)?;
         }
@@ -164,12 +196,13 @@ impl Lock {
     }
 
     /// Assigns ids only to `used` paths; drops unused generated entries.
-    /// Pinned entries are always preserved. Returns `path -> id` for used paths.
-    pub fn assign(&mut self, used: &BTreeSet<String>) -> BTreeMap<String, String> {
+    /// New ids go first to the most referenced paths (`usage` value), breaking
+    /// ties by path. Pinned entries keep their id. Returns `path -> id`.
+    pub fn assign(&mut self, usage: &BTreeMap<String, usize>) -> BTreeMap<String, String> {
         let stale: Vec<String> = self
             .entries
             .iter()
-            .filter(|(path, entry)| !entry.pinned() && !used.contains(*path))
+            .filter(|(path, entry)| !entry.pinned() && !usage.contains_key(*path))
             .map(|(path, _)| path.clone())
             .collect();
         for path in stale {
@@ -177,8 +210,15 @@ impl Lock {
             self.dirty = true;
         }
 
+        let mut ranked: Vec<(&String, &usize)> = usage.iter().collect();
+        ranked.sort_by(|(left_path, left_count), (right_path, right_count)| {
+            right_count
+                .cmp(left_count)
+                .then_with(|| left_path.cmp(right_path))
+        });
+
         let mut ids_by_path = BTreeMap::new();
-        for path in used {
+        for (path, _) in ranked {
             if let Some(entry) = self.entries.get(path) {
                 ids_by_path.insert(path.clone(), entry.id.clone());
                 continue;
@@ -216,12 +256,12 @@ impl Lock {
             .entries
             .values()
             .filter(|entry| !entry.pinned())
-            .filter_map(|entry| base26_value(&entry.id))
+            .filter_map(|entry| id_rank(&entry.id))
             .max()
             .unwrap_or(0)
             + 1;
         loop {
-            let id = base26_string(candidate);
+            let id = rank_id(candidate);
             if !used.contains(id.as_str()) {
                 return id;
             }
@@ -255,26 +295,69 @@ pub fn is_safe_id(id: &str) -> bool {
     chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
 }
 
-/// `a` → 1, `z` → 26, `aa` → 27 (lowercase only).
-fn base26_value(id: &str) -> Option<usize> {
-    let mut value = 0usize;
-    for ch in id.chars() {
-        if !ch.is_ascii_lowercase() {
-            return None;
-        }
-        value = value * 26 + (ch as usize - 'a' as usize + 1);
+/// Rank of a generated id in the sequence `a..z, aa..az, a0..a9, ba..`.
+fn id_rank(id: &str) -> Option<usize> {
+    let mut chars = id.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_lowercase() {
+        return None;
     }
-    (!id.is_empty()).then_some(value)
+    let first_index = (first as u8 - b'a') as usize;
+    let rest: Option<Vec<usize>> = chars
+        .map(|ch| {
+            if ch.is_ascii_lowercase() {
+                Some((ch as u8 - b'a') as usize)
+            } else if ch.is_ascii_digit() {
+                Some((ch as u8 - b'0') as usize + 26)
+            } else {
+                None
+            }
+        })
+        .collect();
+    let rest = rest?;
+    let length = rest.len() + 1;
+    if length == 1 {
+        return Some(first_index + 1);
+    }
+    let mut index = first_index;
+    for digit in rest {
+        index = index * 36 + digit;
+    }
+    let mut prior = 0usize;
+    let mut capacity = 36usize;
+    for _ in 2..length {
+        prior += 26 * capacity;
+        capacity *= 36;
+    }
+    Some(26 + prior + index + 1)
 }
 
-fn base26_string(mut value: usize) -> String {
-    let mut chars = Vec::new();
-    while value > 0 {
-        value -= 1;
-        chars.push((b'a' + (value % 26) as u8) as char);
-        value /= 26;
+/// Inverse of [`id_rank`]; first character is always a letter.
+fn rank_id(mut rank: usize) -> String {
+    if rank <= 26 {
+        return ((b'a' + (rank.saturating_sub(1)) as u8) as char).to_string();
     }
-    chars.iter().rev().collect()
+    rank -= 26;
+    let mut length = 2usize;
+    let mut capacity = 26 * 36;
+    while rank > capacity {
+        rank -= capacity;
+        length += 1;
+        capacity *= 36;
+    }
+    let mut value = rank - 1;
+    let mut suffix = vec![0usize; length - 1];
+    for slot in suffix.iter_mut().rev() {
+        *slot = value % 36;
+        value /= 36;
+    }
+    const DIGITS: &[u8; 36] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+    let mut id = String::with_capacity(length);
+    id.push((b'a' + value as u8) as char);
+    for digit in suffix {
+        id.push(DIGITS[digit] as char);
+    }
+    id
 }
 
 // --- canonical identifier paths -----------------------------------------
@@ -317,8 +400,8 @@ mod tests {
         dir.join("demo-application.lock")
     }
 
-    fn used(paths: &[&str]) -> BTreeSet<String> {
-        paths.iter().map(|path| path.to_string()).collect()
+    fn used(paths: &[&str]) -> BTreeMap<String, usize> {
+        paths.iter().map(|path| (path.to_string(), 1)).collect()
     }
 
     #[test]
@@ -397,10 +480,91 @@ mod tests {
     }
 
     #[test]
+    fn new_ids_follow_reference_count_then_path() {
+        let mut lock = Lock::new("app");
+        let usage = BTreeMap::from([
+            ("svc#document/rare".to_string(), 1),
+            ("svc#document/hot".to_string(), 7),
+            ("svc#document/warm".to_string(), 3),
+        ]);
+        let ids = lock.assign(&usage);
+        assert_eq!(ids["svc#document/hot"], "a");
+        assert_eq!(ids["svc#document/warm"], "b");
+        assert_eq!(ids["svc#document/rare"], "c");
+        // Existing ids are stable; only new paths consume the next ids.
+        let next = BTreeMap::from([
+            ("svc#document/hot".to_string(), 7),
+            ("svc#document/warm".to_string(), 3),
+            ("svc#document/rare".to_string(), 1),
+            ("svc#document/new".to_string(), 9),
+        ]);
+        let ids = lock.assign(&next);
+        assert_eq!(ids["svc#document/hot"], "a");
+        assert_eq!(ids["svc#document/new"], "d");
+    }
+
+    #[test]
+    fn legacy_jsonl_lock_is_read_and_rewritten_as_csv() {
+        let path = temp_path("legacy");
+        std::fs::write(
+            &path,
+            "{\"id\":\"a\",\"path\":\"svc#service\",\"kind\":\"service\",\"name\":\"svc\",\"manual\":true}\n",
+        )
+        .unwrap();
+        let mut lock = Lock::load(&path, "app").unwrap();
+        assert!(lock.dirty);
+        assert!(lock.entry_for("svc#service").unwrap().pinned());
+        lock.assign(&used(&["svc#service"]));
+        lock.save(&path).unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "a,svc#service*\n");
+    }
+
+    #[test]
     fn rejects_duplicate_ids_on_load() {
         let path = temp_path("duplicate");
         std::fs::write(&path, "a,a#service\na,b#service\n").unwrap();
         let error = Lock::load(&path, "app").unwrap_err();
         assert!(error.contains("duplicate id"), "{error}");
+    }
+}
+
+#[cfg(test)]
+mod base36_tests {
+    use super::*;
+
+    #[test]
+    fn generated_ids_use_base36_but_start_with_a_letter() {
+        let mut lock = Lock::new("app");
+        let used: BTreeMap<String, usize> = (0..63)
+            .map(|index| (format!("svc#document/D{index:03}"), 1))
+            .collect();
+        let ids = lock.assign(&used);
+        let assigned: Vec<String> = (0..63)
+            .map(|index| ids[&format!("svc#document/D{index:03}")].clone())
+            .collect();
+        assert_eq!(assigned[0], "a");
+        assert_eq!(assigned[25], "z");
+        assert_eq!(assigned[26], "aa");
+        assert_eq!(assigned[51], "az");
+        assert_eq!(assigned[52], "a0");
+        assert_eq!(assigned[61], "a9");
+        assert_eq!(assigned[62], "ba");
+        assert!(assigned.iter().all(|id| {
+            id.chars().next().unwrap().is_ascii_lowercase()
+                && id
+                    .chars()
+                    .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit())
+        }));
+        let unique: BTreeSet<&String> = assigned.iter().collect();
+        assert_eq!(unique.len(), assigned.len());
+    }
+
+    #[test]
+    fn rank_encoding_roundtrips_and_keeps_letter_first() {
+        for rank in 1..5000 {
+            let id = rank_id(rank);
+            assert!(id.chars().next().unwrap().is_ascii_lowercase(), "{id}");
+            assert_eq!(id_rank(&id), Some(rank), "{id}");
+        }
     }
 }

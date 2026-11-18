@@ -14,6 +14,9 @@ pub struct SourceFile {
     pub kind: &'static str,
     pub path: String,
     pub items: Vec<Artifact>,
+    /// TODO/FIXME/REVIEW/OPTIMIZE/HACK comments found in the file.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub pending: Vec<Pending>,
 }
 
 impl SourceFile {
@@ -22,8 +25,28 @@ impl SourceFile {
             kind: "SourceFile",
             path: path.into(),
             items,
+            pending: Vec::new(),
         }
     }
+}
+
+/// Pending comment: `// TODO [2027-01-31] fix this`.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Pending {
+    pub kind: &'static str,
+    /// Canonical uppercase keyword (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`).
+    pub keyword: String,
+    /// Valid due date (`YYYY-MM-DD`), when present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub due_date: Option<String>,
+    /// Raw text inside `[...]`, including invalid dates.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_text: Option<String>,
+    pub message: String,
+    pub span: Span,
+    /// Span of the keyword itself, used by `archol format`.
+    pub keyword_span: Span,
 }
 
 /// Top-level declaration: `document Invoice { ... }`.

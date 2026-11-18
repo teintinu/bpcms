@@ -3,6 +3,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use archol_core::pending::{self, Date};
 use archol_core::{Artifact, Diagnostic, Expr, Member, Stmt};
 
 use crate::index::{ident_list, Symbols, PRIMITIVES};
@@ -37,8 +38,19 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
         check_artifact(symbols, file.service.as_deref(), artifact, &mut local);
         diagnostics.extend(local.into_iter().map(|d| (file.path.clone(), d)));
     }
+    let today = pending::today();
+    for file in &workspace.files {
+        for item in &file.ast.pending {
+            for diagnostic in pending::validate(item, today) {
+                diagnostics.push((file.path.clone(), diagnostic));
+            }
+        }
+    }
     diagnostics
 }
+
+#[allow(dead_code)]
+fn _pending_date_reference(_: Date) {}
 
 fn check_artifact(
     symbols: &Symbols,

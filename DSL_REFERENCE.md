@@ -156,7 +156,7 @@ b,example.com/services/billing#shape/InvoiceStatus/value/Overdue
 
 | Campo | Funcionamento |
 | :--- | :--- |
-| `id` | ID estável; gerados são **sequenciais em base 26 minúscula começando em `a`** (`a`…`z`, `aa`, …), sem duplicidade. |
+| `id` | ID estável; gerados são **sequenciais em base 36 minúscula começando em `a`**, com o **primeiro caractere sempre letra** (`a`…`z`, `aa`…`az`, `a0`…`a9`, `ba`…), sem duplicidade. Novos IDs vão primeiro para os identificadores **mais referenciados** (empate por path); IDs existentes não mudam. |
 | `path` | Caminho seguro `<uri-do-serviço>#<tipo>/<Nome>[/...]`; nunca é caminho de arquivo. Um `*` no final marca o identificador como fixo. |
 
 **Ciclo de compilação:**

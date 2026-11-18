@@ -28,6 +28,7 @@ pub struct ParseResult {
 
 pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
     let lexed = lex(source);
+    let pending = crate::pending::collect(source, &lexed.tokens);
     let tokens = lexed
         .tokens
         .into_iter()
@@ -42,7 +43,8 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
         depth: 0,
         depth_reported: false,
     };
-    let ast = parser.parse_file(path.into());
+    let mut ast = parser.parse_file(path.into());
+    ast.pending = pending;
     ParseResult {
         ast,
         diagnostics: parser.diagnostics,

@@ -26,7 +26,7 @@ node --test editors/vscode/test
 
 ## Status
 
-Today: **59 Rust tests** (`cargo test`) and **44 JavaScript tests**
+Today: **63 Rust tests** (`cargo test`) and **44 JavaScript tests**
 (`node --test editors/vscode/test`); `clippy` and `fmt --check` clean.
 
 ## Corpus

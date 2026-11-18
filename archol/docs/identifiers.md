@@ -52,12 +52,18 @@ end:
 
 ### Id rules
 
-Generated ids are **sequential lowercase base-26 strings starting at `a`**:
+Generated ids are **sequential lowercase base-36 strings starting at `a`**.
+The first character is **always a letter** (an identifier cannot start with a
+digit); later characters may be letters or digits:
 
-`a`, `b`, …, `z`, `aa`, `ab`, …, `zz`, `aaa`, …
+`a`, `b`, …, `z`, `aa`, `ab`, …, `az`, `a0`, …, `a9`, `ba`, …, `z9`, `aaa`, …
 
-They never duplicate: the allocator skips ids already present (including
-pinned/custom ones). They are valid identifiers in most target languages.
+New ids are allocated in **descending reference count**; ties are broken by
+path. Identifiers that are only roots (never referenced) get the remaining ids
+after all referenced ones. Existing ids are never changed; only new paths
+consume new numbers. They never duplicate: the allocator skips ids already
+present (including pinned/custom ones). They are valid identifiers in most
+target languages.
 
 ### Pinned ids with `*`
 

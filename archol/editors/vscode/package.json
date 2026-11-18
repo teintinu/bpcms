@@ -19,16 +19,6 @@
     "ast"
   ],
   "main": "./src/extension.js",
-  "activationEvents": [
-    "onLanguage:archol",
-    "onCommand:archol.selectApplication",
-    "onCommand:archol.showAst",
-    "onCommand:archol.showLinks",
-    "onCommand:archol.restartServer",
-    "onCommand:archol.showOutput",
-    "onCommand:archol.updateLock",
-    "onCommand:archol.useApplicationFile"
-  ],
   "contributes": {
     "languages": [
       {

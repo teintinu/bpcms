@@ -173,12 +173,12 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
         }
     }
 
-    // End of compilation: assign ids only to used paths.
-    let mut used = roots;
+    // End of compilation: assign ids only to used paths, most referenced first.
+    let mut weights: BTreeMap<String, usize> = roots.into_iter().map(|path| (path, 0)).collect();
     for usage in &usages {
-        used.insert(usage.id.clone());
+        *weights.entry(usage.id.clone()).or_default() += 1;
     }
-    let ids = lock.assign(&used);
+    let ids = lock.assign(&weights);
 
     // Rewrite the AST with final ids and drop temporary paths.
     for file_index in 0..workspace.files.len() {
