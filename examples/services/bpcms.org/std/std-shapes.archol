@@ -1445,7 +1445,6 @@ shape Currency {
   // Ouro do Zimbábue: código 924, 2 casas decimais.
   value ZWG { numeric: "924", scale: 2 }
   // Encerra o bloco de valores ISO declarados acima.
-  }
 
   // Serializa a moeda como o código de três letras.
   write(value, out) {
@@ -1469,6 +1468,7 @@ shape Currency {
   format(value, flags) {
     // Não há formatação adicional para o código da moeda.
     return value;
+  }
 }
 // Shape de duração: intervalos de tempo de nanossegundos a semanas.
 shape Duration {
