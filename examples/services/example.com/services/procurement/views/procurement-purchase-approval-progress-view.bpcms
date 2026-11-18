@@ -1,0 +1,16 @@
+// service: example.com/services/procurement
+
+// View de andamento do processo de aprovação.
+view PurchaseApprovalProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da aprovação de compra", en: "Purchase approval progress" }
+  // Tipo da view: andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: PurchaseApproval
+  // Papéis que podem abrir a view.
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

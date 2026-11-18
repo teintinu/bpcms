@@ -141,18 +141,3 @@ error Timeout {
   // Título do erro exibido ao usuário.
   title: { pt-BR: "Prazo esgotado", en: "Timed out" }
 }
-
-// View de andamento derivada da instância do processo.
-view CheckoutProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da finalização", en: "Checkout progress" }
-  // Tipo da view: uma tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: Checkout
-  // Papéis que podem abrir a view.
-  roles: [SupportAgent, Customer]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; next }
-}

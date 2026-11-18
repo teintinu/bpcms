@@ -165,21 +165,6 @@ manual EscalateMerge {
   timeout: 1d
 }
 
-// View de andamento derivada da instância do processo.
-view MergeProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da mesclagem", en: "Merge progress" }
-  // Tipo da view: tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: CitizenMerge
-  // Papéis que podem abrir a view.
-  roles: [Clerk, Manager, Auditor]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
-
 // Integração com o diretório externo de identidade.
 integration IdentityDirectory {
   // Protocolo de comunicação usado pela integração.

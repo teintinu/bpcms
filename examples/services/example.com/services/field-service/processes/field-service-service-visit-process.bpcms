@@ -255,18 +255,3 @@ manual EscalateVisit {
   // Prazo para concluir a escalação antes de estourar o timeout.
   timeout: 1h
 }
-
-// View de andamento derivada da instância do processo.
-view VisitProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da visita", en: "Visit progress" }
-  // Tipo da view: uma tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: ServiceVisit
-  // Papéis que podem abrir a view.
-  roles: [Dispatcher, FieldTechnician, Supervisor, Customer]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
-}

@@ -1,0 +1,25 @@
+// service: example.com/services/orders
+
+// View de quadro kanban que agrupa os pedidos por situação.
+view OrderBoard {
+  // Título exibido na navegação.
+  title: { pt-BR: "Quadro de pedidos", en: "Order board" }
+  // Tipo da view: quadro kanban.
+  type: kanban
+  // Documento fonte do quadro.
+  source: Order
+  // Papéis que podem abrir a view.
+  roles: [Clerk, Manager]
+
+  // Campo usado para formar as colunas do quadro.
+  groupBy: status
+  // Campos exibidos em cada cartão.
+  card { customer; total; placedAt }
+  // Filtro que esconde pedidos cancelados.
+  filter { status != Cancelled }
+  // Ações disponíveis no quadro.
+  actions {
+    // Abre o detalhe do pedido do cartão.
+    open -> OrderDetail
+  }
+}

@@ -1,0 +1,16 @@
+// service: example.com/services/shipping
+
+// View de andamento derivada da instância do processo.
+view DeliveryProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da entrega", en: "Delivery progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: DeliveryTracking
+  // Papéis que podem abrir a view.
+  roles: [Packer, Dispatcher, Manager]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

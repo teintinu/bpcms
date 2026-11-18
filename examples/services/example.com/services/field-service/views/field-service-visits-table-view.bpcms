@@ -1,0 +1,30 @@
+// service: example.com/services/field-service
+
+// View de tabela que lista as visitas técnicas.
+view VisitsTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Visitas técnicas", en: "Visits" }
+  // Tipo da view: tabela de registros.
+  type: table
+  // Documento que alimenta a tabela.
+  source: Visit
+  // Papéis que podem abrir a view.
+  roles: [Dispatcher, FieldTechnician, Supervisor]
+
+  // Colunas exibidas em cada linha.
+  columns { number; site; technician; status; windowStart }
+  // Filtros disponíveis sobre a tabela.
+  filters { status; site; technician; period }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações expostas na tabela, ligadas às ações do documento.
+  actions {
+    // Abre o detalhe da visita selecionada.
+    open -> VisitDetail
+    // Despacha a visita selecionada.
+    dispatch -> Visit.dispatch
+    // Registra a falha com o motivo informado.
+    fail -> Visit.fail(failureReason)
+  }
+}

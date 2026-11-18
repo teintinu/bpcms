@@ -1,0 +1,17 @@
+// service: example.com/services/shipping
+
+// Mensagem que solicita a coleta da remessa à transportadora.
+message PickupRequest {
+  // Título exibido no histórico e nas integrações.
+  title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
+  // Documento ao qual a mensagem se refere.
+  about: Shipment
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Data/hora em que a coleta foi solicitada.
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    // Janela de horário para a coleta.
+    window: Duration { title: { pt-BR: "Janela de coleta", en: "Pickup window" } }
+  }
+}

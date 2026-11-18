@@ -1,0 +1,16 @@
+// service: example.com/services/support
+
+// Mensagem de atualização enviada ao back office.
+message TicketUpdate {
+  // Título exibido no catálogo de mensagens.
+  title: { pt-BR: "Atualização do chamado", en: "Ticket update" }
+  // Documento ao qual a mensagem se refere.
+  about: Ticket
+  // Dados levados pela mensagem.
+  payload {
+    // Assunto do chamado.
+    subject: string { title: { pt-BR: "Assunto", en: "Subject" } }
+    // Fila de destino do chamado.
+    queue: TicketCategory { title: { pt-BR: "Fila", en: "Queue" } }
+  }
+}

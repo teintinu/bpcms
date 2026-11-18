@@ -1,0 +1,30 @@
+// service: example.com/services/orders
+
+// View de tabela que lista os pedidos para a operação.
+view OrderList {
+  // Título exibido na navegação.
+  title: { pt-BR: "Pedidos", en: "Orders" }
+  // Tipo da view: tabela.
+  type: table
+  // Documento fonte da lista.
+  source: Order
+  // Papéis que podem abrir a view.
+  roles: [Clerk, Manager]
+
+  // Colunas exibidas na tabela.
+  columns { customer; total; status; placedAt }
+  // Filtros disponíveis na tabela.
+  filters { status; period; customer }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis na lista.
+  actions {
+    // Abre o detalhe do pedido selecionado.
+    open -> OrderDetail
+    // Cria um novo pedido a partir da lista.
+    newOrder -> Order.create(customer, discount)
+    // Solicita o cancelamento do pedido selecionado.
+    requestCancellation -> Order.requestCancellation(reason)
+  }
+}

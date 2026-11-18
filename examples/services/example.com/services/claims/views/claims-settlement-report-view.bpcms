@@ -1,0 +1,31 @@
+// service: example.com/services/claims
+
+// Relatório de liquidações com recortes e exportação.
+view SettlementReport {
+  // Título exibido na navegação do relatório.
+  title: { pt-BR: "Relatório de liquidações", en: "Settlement report" }
+  // Tipo da view: relatório analítico.
+  type: report
+  // Documentos consultados pelas métricas.
+  sources: [Claim, Settlement]
+  // Papéis que podem abrir o relatório.
+  roles: [Manager, FinanceAnalyst]
+
+  // Filtros disponíveis para recortar o relatório.
+  filters { status; type; method; period }
+  // Métricas calculadas sobre os documentos de origem.
+  metrics {
+    // Total liquidado por forma de pagamento.
+    settledAmount: sum(Settlement.amount) where Settlement.status == Paid by method
+    // Contagem de sinistros recusados por tipo.
+    rejectedClaims: count(Claim) where Claim.status == Rejected by type
+    // Média dos valores aprovados nos sinistros pagos.
+    averageApproved: avg(Claim.approvedAmount) where Claim.status == Paid
+  }
+  // Moeda usada na exibição dos valores monetários.
+  units { settledAmount: BRL; averageApproved: BRL }
+  // Janela de tolerância de dados antes de recarregar.
+  freshness: 1h
+  // Formatos disponíveis para exportação do relatório.
+  export: [pdf, csv]
+}

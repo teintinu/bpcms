@@ -1,0 +1,29 @@
+// service: example.com/services/support
+
+// Quadro kanban que movimenta chamados pelas colunas de situação.
+view TicketKanban {
+  // Título exibido na navegação.
+  title: { pt-BR: "Quadro de chamados", en: "Ticket kanban" }
+  // Tipo da view: quadro kanban.
+  type: kanban
+  // Documento que alimenta o quadro.
+  source: Ticket
+  // Papéis que podem abrir o quadro.
+  roles: [SupportAgent, Manager]
+  // Agrupa os cartões pela situação do chamado.
+  groupBy: status
+
+  // Colunas exibidas em cada cartão.
+  columns { subject; priority; slaDue }
+  // Campos exibidos no resumo do cartão.
+  card { subject; priority; slaDue; assignee }
+  // Oculta chamados já fechados do quadro.
+  filter { status != Closed }
+  // Ações oferecidas no quadro.
+  actions {
+    // Abre o detalhe do chamado.
+    open -> TicketDetail
+    // Assume o chamado direto do quadro.
+    claim -> Ticket.claim
+  }
+}

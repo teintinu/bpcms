@@ -1,0 +1,33 @@
+// service: example.com/services/shipping
+
+// Relatório de custos de frete por período, transportadora e situação.
+view FreightCost {
+  // Título exibido na navegação.
+  title: { pt-BR: "Custo de frete", en: "Freight cost" }
+  // Tipo da view: relatório agregado.
+  type: report
+  // Documentos usados como fonte dos dados.
+  sources: [Shipment]
+  // Papéis que podem abrir a view.
+  roles: [Manager]
+
+  // Filtros disponíveis no relatório.
+  filters { period; carrierName; status }
+  // Métricas calculadas sobre as remessas.
+  metrics {
+    // Total de remessas no período.
+    shipments: count(Shipment)
+    // Soma dos valores de frete.
+    freight: sum(Shipment.frete)
+    // Peso bruto médio das remessas.
+    avgWeight: avg(Shipment.pesoBruto)
+    // Remessas com tentativa de entrega falha.
+    failedAttempts: count(Shipment) where status == AttemptFailed
+  }
+  // Unidades usadas na exibição das métricas.
+  units { freight: BRL; avgWeight: kg }
+  // Considera os dados atualizados por quinze minutos.
+  freshness: 15m
+  // Formatos de exportação disponíveis.
+  export: [pdf, csv]
+}

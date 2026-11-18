@@ -1,0 +1,16 @@
+// service: example.com/services/support
+
+// View de andamento derivada da instância do processo.
+view TicketTriageProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da triagem", en: "Ticket triage progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: TicketTriage
+  // Papéis que podem abrir a view.
+  roles: [SupportAgent, Manager]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; next }
+}

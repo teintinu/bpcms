@@ -1,0 +1,33 @@
+// service: example.com/services/orders
+
+// View de relatório que acompanha o funil de pedidos.
+view OrderPipeline {
+  // Título exibido na navegação.
+  title: { pt-BR: "Funil de pedidos", en: "Order pipeline" }
+  // Tipo da view: relatório.
+  type: report
+  // Documentos consultados pelo relatório.
+  sources: [Order]
+  // Papéis que podem abrir a view.
+  roles: [Manager]
+
+  // Filtros disponíveis no relatório.
+  filters { period; status }
+  // Métricas calculadas sobre os pedidos.
+  metrics {
+    // Conta os pedidos na situação Placed.
+    placed: count(Order) where status == Placed
+    // Conta os pedidos na situação Cancelled.
+    cancelled: count(Order) where status == Cancelled
+    // Soma o total dos pedidos não cancelados.
+    revenue: sum(Order.total) where status != Cancelled
+    // Calcula o ticket médio dos pedidos.
+    avgTicket: avg(Order.total)
+  }
+  // Unidades monetárias das métricas.
+  units { revenue: BRL; avgTicket: BRL }
+  // Idade máxima dos dados antes de atualizar.
+  freshness: 10m
+  // Formatos de exportação disponíveis.
+  export: [pdf, csv]
+}

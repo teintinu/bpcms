@@ -1,0 +1,13 @@
+// service: example.com/services/laboratory
+
+// Mensagem de alerta sobre resultado crítico de um exame.
+message CriticalResultAlert {
+  // Título exibido na interface.
+  title: { pt-BR: "Alerta de resultado crítico", en: "Critical result alert" }
+  about: ExamOrder // Documento ao qual a mensagem se refere.
+  // Dados levados pela mensagem.
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // Exame que gerou o alerta.
+    value: string { title: { pt-BR: "Valor", en: "Value" } } // Valor medido que disparou o alerta.
+  }
+}

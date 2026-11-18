@@ -1,0 +1,20 @@
+// service: example.com/services/catalog
+
+// View de inbox com a fila de publicação por papel.
+view PublishInbox {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fila de publicação", en: "Publish queue" }
+  // Tipo da view: caixa de entrada de trabalho.
+  type: inbox
+  // Papéis autorizados a abrir a inbox.
+  roles: [Publisher]
+
+  // Escopo dos itens: apenas os papéis do usuário atual.
+  scope: roles
+  // Filtro aplicado aos itens exibidos na lista.
+  filter { role in currentUser.roles }
+  // Agrupa os itens por processo.
+  groupBy: process
+  // Colunas exibidas em cada linha da fila.
+  columns { title; subject; role; dueAt; priority }
+}

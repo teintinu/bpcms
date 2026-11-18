@@ -1,0 +1,16 @@
+// service: example.com/services/procurement
+
+// View de detalhe de um fornecedor.
+view SupplierDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do fornecedor", en: "Supplier detail" }
+  // Tipo da view: detalhe.
+  type: detail
+  // Documento exibido no detalhe.
+  document: Supplier
+  // Papéis que podem abrir a view.
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
+
+  // Seções exibidas na tela.
+  sections { summary; timeline }
+}

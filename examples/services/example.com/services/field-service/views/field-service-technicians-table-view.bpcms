@@ -1,0 +1,28 @@
+// service: example.com/services/field-service
+
+// View de tabela que lista os técnicos.
+view TechniciansTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Técnicos", en: "Technicians" }
+  // Tipo da view: tabela de registros.
+  type: table
+  // Documento que alimenta a tabela.
+  source: Technician
+  // Papéis que podem abrir a view.
+  roles: [Dispatcher, Supervisor]
+
+  // Colunas exibidas em cada linha.
+  columns { registration; person; zone; availability; dailyCapacity }
+  // Filtros disponíveis sobre a tabela.
+  filters { availability; zone }
+
+  // Ações expostas na tabela, ligadas às ações do documento.
+  actions {
+    // Atribui o técnico selecionado.
+    assign -> Technician.assign
+    // Libera o técnico selecionado.
+    release -> Technician.release
+    // Afasta o técnico com o motivo informado.
+    goOffDuty -> Technician.goOffDuty(reason)
+  }
+}

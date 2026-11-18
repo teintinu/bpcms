@@ -1,0 +1,18 @@
+// service: example.com/services/procurement
+
+// Mensagem de aviso quando o recebimento apresenta divergência.
+message DivergenceNotice {
+  // Título exibido na notificação.
+  title: { pt-BR: "Aviso de divergência no recebimento", en: "Goods receipt divergence notice" }
+  // Documento ao qual a mensagem se refere.
+  about: GoodsReceipt
+  // Dados carregados pela mensagem.
+  payload {
+    // Motivo da divergência.
+    reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    // Peso esperado para conferência.
+    expectedWeight: std.Mass { title: { pt-BR: "Peso esperado", en: "Expected weight" } }
+    // Peso efetivamente recebido.
+    receivedWeight: std.Mass { title: { pt-BR: "Peso recebido", en: "Received weight" } }
+  }
+}

@@ -322,45 +322,6 @@ shape ReturnStatus {
   format: plain
 }
 
-// Tabela que lista as solicitações de devolução.
-view ReturnRequests {
-  // Título exibido na navegação.
-  title: { pt-BR: "Solicitações de devolução", en: "Return requests" }
-  // Tipo da view: tabela paginada.
-  type: table
-  // Documento que alimenta a tabela.
-  source: ReturnRequest
-  // Papéis que podem abrir a lista.
-  roles: [SupportAgent, Manager]
-
-  // Colunas exibidas na tabela.
-  columns { order; status; refundAmount; requestedAt }
-  // Filtros disponíveis na tela.
-  filters { status; period }
-  // Quantidade de linhas por página.
-  pagination: 50
-  // Ações oferecidas na lista.
-  actions {
-    // Abre o andamento do caso de devolução.
-    open -> RefundCaseProgress
-  }
-}
-
-// Mensagem com a decisão tomada sobre a devolução.
-message RefundDecision {
-  // Título exibido no catálogo de mensagens.
-  title: { pt-BR: "Decisão da devolução", en: "Refund decision" }
-  // Documento ao qual a mensagem se refere.
-  about: ReturnRequest
-  // Dados levados pela mensagem.
-  payload {
-    // Parecer final da análise de elegibilidade.
-    verdict: RefundVerdict { title: { pt-BR: "Parecer", en: "Verdict" } }
-    // Valor decidido para reembolso.
-    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
-  }
-}
-
 // Política que restringe reembolso acima do limite configurado.
 policy RefundAuthorization {
   // Ação específica à qual a política se aplica.

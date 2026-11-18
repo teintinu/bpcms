@@ -1,0 +1,13 @@
+// service: example.com/services/contracts
+
+// View de andamento derivada da instância do processo.
+view ContractRenewalProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da renovação", en: "Contract renewal progress" }
+  type: process // Tipo da view: uma tela de andamento de processo.
+  process: ContractRenewal // Processo cujo andamento esta view exibe.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis que podem abrir a view.
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

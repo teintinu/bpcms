@@ -1,0 +1,21 @@
+// service: example.com/services/contracts
+
+// Lista tabular de contratos com filtros e acesso ao detalhe.
+view Contracts {
+  // Título exibido na navegação.
+  title: { pt-BR: "Contratos", en: "Contracts" }
+  type: table // Tipo do artefato: tabela.
+  source: Contract // Documento que alimenta a lista.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
+
+  // Colunas exibidas em cada linha.
+  columns { number; subject; supplier; amount; status; endsAt }
+  // Filtros oferecidos na barra da lista.
+  filters { status; supplier; kind }
+  pagination: 50 // Quantidade de linhas por página.
+
+  // Ações disponíveis sobre a lista.
+  actions {
+    open -> ContractDetail // Abre o detalhe do contrato selecionado.
+  }
+}

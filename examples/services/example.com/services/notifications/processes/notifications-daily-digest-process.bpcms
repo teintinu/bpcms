@@ -93,18 +93,3 @@ form OptOutReview {
     suppress { calls: Notification.suppress(reason) }
   }
 }
-
-// View de andamento derivada da instância do processo.
-view DigestProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento do resumo", en: "Digest progress" }
-  // Tipo da view: tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: DailyDigest
-  // Papéis que podem abrir a view.
-  roles: [SuccessAgent, SuccessManager]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}

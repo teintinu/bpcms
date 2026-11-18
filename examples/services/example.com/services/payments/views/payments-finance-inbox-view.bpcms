@@ -1,0 +1,16 @@
+// service: example.com/services/payments
+
+// Caixa de entrada que organiza as tarefas por papel do usuário.
+view FinanceInbox {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fila do financeiro", en: "Finance queue" }
+  type: inbox // Tipo da view: caixa de entrada de trabalho.
+  // Papéis que podem abrir a fila.
+  roles: [Analyst, Manager]
+  scope: roles // Escopo das tarefas: apenas dos papéis do usuário.
+  // Restringe as tarefas aos papéis do usuário atual.
+  filter { role in currentUser.roles }
+  groupBy: role // Agrupa as tarefas pela coluna de papel.
+  // Colunas exibidas em cada linha da fila.
+  columns { title; subject; role; dueAt; priority }
+}

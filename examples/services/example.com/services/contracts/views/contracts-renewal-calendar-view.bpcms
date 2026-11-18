@@ -1,0 +1,18 @@
+// service: example.com/services/contracts
+
+// Calendário das datas de término para planejar renovações.
+view RenewalCalendar {
+  // Título exibido na navegação.
+  title: { pt-BR: "Calendário de renovação", en: "Renewal calendar" }
+  type: calendar // Tipo do artefato: calendário.
+  source: Contract // Documento que alimenta o calendário.
+  date: endsAt // Campo usado para posicionar os itens no calendário.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
+
+  // Filtros oferecidos na barra do calendário.
+  filters { status; supplier }
+  // Ações disponíveis sobre o calendário.
+  actions {
+    open -> ContractDetail // Abre o detalhe do contrato selecionado.
+  }
+}

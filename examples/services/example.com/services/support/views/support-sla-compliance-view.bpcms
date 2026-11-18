@@ -1,0 +1,29 @@
+// service: example.com/services/support
+
+// Relatório de cumprimento do prazo de atendimento.
+view SlaCompliance {
+  // Título exibido na navegação.
+  title: { pt-BR: "Cumprimento de prazo", en: "SLA compliance" }
+  // Tipo da view: relatório com métricas agregadas.
+  type: report
+  // Documentos consultados pelo relatório.
+  sources: [Ticket]
+  // Apenas gerentes abrem o relatório.
+  roles: [Manager]
+
+  // Filtros disponíveis na tela.
+  filters { period; priority }
+  // Métricas calculadas sobre os chamados.
+  metrics {
+    // Percentual de chamados com prazo cumprido.
+    compliance: percentage(Ticket.slaMet)
+    // Contagem de chamados com prazo estourado.
+    breached: count(Ticket) where breached == true
+    // Média do tempo de resolução.
+    avgResolution: avg(Ticket.resolutionTime)
+  }
+  // Janela de atualização dos dados do relatório.
+  freshness: 5m
+  // Formatos de exportação oferecidos.
+  export: [pdf, csv]
+}

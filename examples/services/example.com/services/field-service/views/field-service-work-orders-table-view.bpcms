@@ -1,0 +1,32 @@
+// service: example.com/services/field-service
+
+// View de tabela que lista as ordens de serviço.
+view WorkOrdersTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Ordens de serviço", en: "Work orders" }
+  // Tipo da view: tabela de registros.
+  type: table
+  // Documento que alimenta a tabela.
+  source: WorkOrder
+  // Papéis que podem abrir a view.
+  roles: [Dispatcher, Supervisor]
+
+  // Colunas exibidas em cada linha.
+  columns { number; site; priority; status; dueAt }
+  // Filtros disponíveis sobre a tabela.
+  filters { status; priority; site; period }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações expostas na tabela, ligadas às ações do documento.
+  actions {
+    // Atribui um técnico à ordem selecionada.
+    assign -> WorkOrder.assign(assignedTechnician)
+    // Inicia a ordem selecionada.
+    start -> WorkOrder.start
+    // Conclui a ordem selecionada.
+    finish -> WorkOrder.finish
+    // Cancela a ordem com o motivo informado.
+    cancel -> WorkOrder.cancel(reason)
+  }
+}

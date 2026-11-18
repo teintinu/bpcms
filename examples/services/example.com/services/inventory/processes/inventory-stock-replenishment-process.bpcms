@@ -88,21 +88,6 @@ shape ReorderDecision {
   format: plain
 }
 
-// View de andamento derivada da instância do processo.
-view StockProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da reposição", en: "Replenishment progress" }
-  // Tipo da view: uma tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: StockReplenishment
-  // Papéis que podem abrir a view.
-  roles: [WarehouseOperator, StockManager]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
-
 // Decisão de negócio que compara o disponível com o ponto de pedido.
 decision ReorderPoint {
   // Título exibido no builder e na revisão.

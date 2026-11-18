@@ -1,0 +1,26 @@
+// service: example.com/services/inventory
+
+// Tela de detalhe de um item de estoque.
+view StockDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do item", en: "Stock item detail" }
+  // Tipo da view: detalhe de documento.
+  type: detail
+  // Documento exibido no detalhe.
+  document: StockItem
+  // Papéis autorizados a abrir o detalhe.
+  roles: [WarehouseOperator, StockManager]
+
+  // Seções fixas exibidas na tela de detalhe.
+  sections { summary; movements }
+
+  // Ações disponíveis na tela de detalhe.
+  actions {
+    // Ajusta o saldo do item.
+    adjust -> StockItem.adjust(quantity, reason)
+    // Bloqueia o item.
+    block -> StockItem.block(reason)
+    // Desbloqueia o item.
+    unblock -> StockItem.unblock
+  }
+}

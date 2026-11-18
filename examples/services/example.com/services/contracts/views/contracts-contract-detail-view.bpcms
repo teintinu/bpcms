@@ -1,0 +1,13 @@
+// service: example.com/services/contracts
+
+// Tela de detalhe de um contrato, agregando visão e histórico.
+view ContractDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do contrato", en: "Contract detail" }
+  type: detail // Tipo do artefato: tela de detalhe.
+  document: Contract // Documento exibido na tela.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
+
+  // Seções mostradas na tela de detalhe.
+  sections { summary; timeline }
+}

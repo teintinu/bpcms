@@ -1,0 +1,29 @@
+// service: example.com/services/inventory
+
+// Painel de controle de estoque do gestor.
+view StockControl {
+  // Título exibido na navegação.
+  title: { pt-BR: "Controle de estoque", en: "Stock control" }
+  // Tipo da view: painel com métricas.
+  type: dashboard
+  // Fonte de dados do painel.
+  sources: [StockItem]
+  // Papéis autorizados a abrir o painel.
+  roles: [StockManager]
+  // Modo de atualização dos dados do painel.
+  mode: live
+
+  // Filtro disponível no painel.
+  filters { warehouse }
+
+  // Métricas calculadas sobre os itens de estoque.
+  metrics {
+    // Conta os itens cujo disponível atingiu o ponto de reposição.
+    lowStock: count(StockItem) where available <= reorderPoint
+    // Soma a quantidade reservada de todos os itens.
+    reserved: sum(StockItem.reserved)
+  }
+
+  // Recalcula os dados a cada 15 minutos (cache).
+  freshness: 15m
+}

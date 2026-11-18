@@ -1,0 +1,30 @@
+// service: example.com/services/shipping
+
+// Tabela de remessas com filtros e ações rápidas.
+view Shipments {
+  // Título exibido na navegação.
+  title: { pt-BR: "Remessas", en: "Shipments" }
+  // Tipo da view: tabela de documentos.
+  type: table
+  // Documento listado na tabela.
+  source: Shipment
+  // Papéis que podem abrir a view.
+  roles: [Packer, Dispatcher, Manager]
+
+  // Colunas exibidas na tabela.
+  columns { order; carrierName; status; tracking; frete }
+  // Filtros disponíveis na tabela.
+  filters { status; period; carrierName }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis nas linhas da tabela.
+  actions {
+    // Abre o detalhe da remessa selecionada.
+    open -> ShipmentDetail
+    // Cria uma remessa a partir do pedido.
+    receive -> Shipment.create(order)
+    // Solicita a cotação de frete da remessa.
+    requestQuote -> Shipment.requestQuote
+  }
+}

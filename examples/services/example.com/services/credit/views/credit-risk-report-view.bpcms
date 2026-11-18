@@ -1,0 +1,29 @@
+// service: example.com/services/credit
+
+// View de relatório agregado de risco de crédito.
+view RiskReport {
+  // Título exibido na navegação do construtor e do painel.
+  title: { pt-BR: "Relatório de risco de crédito", en: "Credit risk report" }
+  // Tipo report: visão somente leitura, agregada e exportável.
+  type: report
+  // Documentos que fornecem os dados do relatório.
+  sources: [CreditApplication, RiskAssessment]
+  // Papéis autorizados a abrir o relatório.
+  roles: [CreditAnalyst, CreditManager]
+
+  // Filtros disponíveis: situação da proposta e período.
+  filters { status; period }
+  // Métricas calculadas sobre os documentos de origem.
+  metrics {
+    // Quantidade total de propostas de crédito.
+    applications: count(CreditApplication)
+    // Quantidade de avaliações na faixa de risco alta.
+    highRisk: count(RiskAssessment) where band == High
+    // Score médio das avaliações de risco.
+    averageScore: avg(RiskAssessment.score)
+  }
+  // Janela de atualização dos dados agregados: quinze minutos.
+  freshness: 15m
+  // Formatos de exportação oferecidos: PDF e CSV.
+  export: [pdf, csv]
+}

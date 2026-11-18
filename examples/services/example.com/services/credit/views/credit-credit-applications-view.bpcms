@@ -1,0 +1,26 @@
+// service: example.com/services/credit
+
+// View de listagem das propostas de crédito.
+view CreditApplications {
+  // Título exibido na navegação.
+  title: { pt-BR: "Propostas de crédito", en: "Credit applications" }
+  // Tipo table: listagem paginada em formato tabular.
+  type: table
+  // Documento que fornece as linhas da tabela.
+  source: CreditApplication
+  // Papéis autorizados a abrir a listagem.
+  roles: [CreditAnalyst, CreditManager]
+
+  // Colunas exibidas em cada linha da tabela.
+  columns { number; applicant; requestedAmount; monthlyIncome; riskBand; status; submittedAt }
+  // Filtros disponíveis na listagem.
+  filters { status; riskBand; applicant }
+  // Tamanho da página: cinquenta registros por vez.
+  pagination: 50
+
+  // Ações de linha disponíveis na listagem.
+  actions {
+    // Abrir uma proposta navega para a view de detalhe.
+    open -> CreditApplicationDetail
+  }
+}

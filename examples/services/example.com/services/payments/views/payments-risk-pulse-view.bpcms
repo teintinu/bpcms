@@ -1,0 +1,27 @@
+// service: example.com/services/payments
+
+// Painel ao vivo do risco de contestações.
+view RiskPulse {
+  // Título exibido na navegação.
+  title: { pt-BR: "Pulso de risco", en: "Risk pulse" }
+  type: dashboard // Tipo da view: painel de indicadores.
+  // Documentos lidos para montar os indicadores.
+  sources: [Chargeback, Payment]
+  // Papéis que podem abrir o painel.
+  roles: [Manager]
+  mode: live // Atualização em tempo real.
+
+  // Filtro disponível no painel.
+  filters { status }
+  // Indicadores de risco calculados sobre as fontes.
+  metrics {
+    // Contestações abertas.
+    openDisputes: count(Chargeback) where Chargeback.status == Open
+    // Contestações abertas com prazo de resposta vencido.
+    overdue: count(Chargeback) where Chargeback.status == Open and Chargeback.dueAt < now()
+    // Contestações perdidas.
+    lost: count(Chargeback) where Chargeback.status == Lost
+  }
+  // Janela de atualização dos dados.
+  freshness: 5m
+}

@@ -1,0 +1,15 @@
+// service: example.com/services/contracts
+
+// Mensagem que confirma a assinatura do contrato.
+message SignatureConfirmed {
+  // Título exibido na caixa de mensagens.
+  title: { pt-BR: "Assinatura confirmada", en: "Signature confirmed" }
+  about: Contract // Documento ao qual a mensagem se refere.
+  // Dados transportados pela mensagem.
+  payload {
+    // Identificador da assinatura registrada.
+    signatureId: string { title: { pt-BR: "Identificador da assinatura", en: "Signature id" } }
+    // Data e hora da assinatura.
+    signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+  }
+}

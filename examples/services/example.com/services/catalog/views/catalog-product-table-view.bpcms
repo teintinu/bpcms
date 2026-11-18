@@ -1,0 +1,32 @@
+// service: example.com/services/catalog
+
+// View de tabela com a listagem de produtos.
+view ProductTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Produtos", en: "Products" }
+  // Tipo da view: tabela paginada.
+  type: table
+  // Documento exibido nas linhas da tabela.
+  source: Product
+  // Papéis autorizados a abrir a view.
+  roles: [Curator, Publisher]
+
+  // Colunas exibidas em cada linha.
+  columns { image; sku; name; price; weight; status; createdAt }
+  // Filtros disponíveis sobre a listagem.
+  filters { status; category; period }
+  // Quantidade de itens por página.
+  pagination: 50
+
+  // Ações disponíveis na tabela.
+  actions {
+    // Abre o detalhe do produto selecionado.
+    open -> ProductDetail
+    // Envia o produto para revisão.
+    submit -> Product.submitForReview
+    // Publica o produto.
+    publish -> Product.publish
+    // Arquiva o produto.
+    archive -> Product.archive
+  }
+}

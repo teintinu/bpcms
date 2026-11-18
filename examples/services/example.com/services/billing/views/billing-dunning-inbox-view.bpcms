@@ -1,0 +1,20 @@
+// service: example.com/services/billing
+
+// Caixa de entrada das tarefas de cobrança.
+view DunningInbox {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fila de cobrança", en: "Dunning queue" }
+  // Tipo do artefato: inbox.
+  type: inbox
+  // Papéis que podem atender a fila.
+  roles: [CollectionAgent, FinanceManager]
+
+  // Restringe os itens da fila aos papéis do usuário atual.
+  scope: roles
+  // Filtro que mantém apenas itens de papéis do usuário logado.
+  filter { role in currentUser.roles }
+  // Agrupa os itens pelo processo de origem.
+  groupBy: process
+  // Colunas exibidas em cada item da fila.
+  columns { title; subject; role; dueAt; priority }
+}

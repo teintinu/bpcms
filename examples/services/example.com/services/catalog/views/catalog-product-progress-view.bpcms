@@ -1,0 +1,16 @@
+// service: example.com/services/catalog
+
+// View de andamento derivada da instância do processo.
+view ProductProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da publicação", en: "Publish progress" }
+  // Tipo da view: tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: ProductPublish
+  // Papéis que podem abrir a view.
+  roles: [Curator, Publisher]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

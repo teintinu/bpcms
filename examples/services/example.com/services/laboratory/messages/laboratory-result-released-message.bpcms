@@ -1,0 +1,13 @@
+// service: example.com/services/laboratory
+
+// Mensagem que avisa a liberação do resultado de um exame.
+message ResultReleased {
+  // Título exibido na interface.
+  title: { pt-BR: "Resultado liberado", en: "Result released" }
+  about: ExamOrder // Documento ao qual a mensagem se refere.
+  // Dados levados pela mensagem.
+  payload {
+    exam: ExamCode { title: { pt-BR: "Exame", en: "Exam" } } // Exame cujo resultado foi liberado.
+    sample: Sample { title: { pt-BR: "Amostra", en: "Sample" } } // Amostra associada ao resultado.
+  }
+}

@@ -1,0 +1,15 @@
+// service: example.com/services/payments
+
+// View de andamento derivada da instância do processo.
+view PaymentProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da captura", en: "Capture progress" }
+  type: process // Tipo da view: uma tela de andamento de processo.
+  // Processo cujo andamento esta view exibe.
+  process: PaymentCapture
+  // Papéis que podem abrir a view.
+  roles: [Analyst, Manager]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; next }
+}

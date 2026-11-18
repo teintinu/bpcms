@@ -1,0 +1,28 @@
+// service: example.com/services/payments
+
+// Lista tabular de cobranças.
+view Charges {
+  // Título exibido na navegação.
+  title: { pt-BR: "Cobranças", en: "Charges" }
+  type: table // Tipo da view: tabela.
+  // Documento que alimenta a tabela.
+  source: Payment
+  // Papéis que podem abrir a view.
+  roles: [Analyst, Manager]
+
+  // Colunas exibidas em cada linha.
+  columns { order; amount; method; status; capturedAt }
+  // Filtros disponíveis no topo da tabela.
+  filters { status; period; method }
+  pagination: 50 // Tamanho da página da tabela.
+
+  // Ações disponíveis sobre as linhas.
+  actions {
+    // Abre o detalhe do pagamento selecionado.
+    open -> PaymentDetail
+    // Cria uma cobrança chamando a ação do documento.
+    charge -> Payment.create(order, amount, method)
+    // Solicita o estorno de uma cobrança.
+    refund -> Payment.refund(refundAmount)
+  }
+}

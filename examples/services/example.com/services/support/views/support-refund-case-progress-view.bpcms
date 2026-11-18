@@ -1,0 +1,16 @@
+// service: example.com/services/support
+
+// View de andamento derivada da instância do processo.
+view RefundCaseProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da devolução", en: "Refund case progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: RefundCase
+  // Papéis que podem abrir a view.
+  roles: [SupportAgent, Manager, Customer]
+
+  // Seções fixas exibidas na tela de andamento, incluindo marcos.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

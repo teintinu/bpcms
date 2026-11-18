@@ -1,0 +1,15 @@
+// service: example.com/services/laboratory
+
+// Mensagem que pede a recoleta de uma amostra rejeitada.
+message RecollectionRequest {
+  // Título exibido na interface.
+  title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
+  about: Sample // Documento ao qual a mensagem se refere.
+  // Dados levados pela mensagem.
+  payload {
+    // Código da amostra a recoletar.
+    code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
+    // Instante em que a recoleta foi solicitada.
+    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+  }
+}

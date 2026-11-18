@@ -1,0 +1,16 @@
+// service: example.com/services/laboratory
+
+// View de inbox com a fila de coleta por papel.
+view CollectionQueue {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fila de coleta", en: "Collection queue" }
+  // Tipo da view: caixa de entrada de trabalho.
+  type: inbox
+  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a fila.
+  scope: roles // Restringe a fila ao escopo das roles do usuário.
+  groupBy: role // Agrupa os itens da fila por papel.
+  // Mostra apenas itens das roles do usuário atual.
+  filter { role in currentUser.roles }
+  // Colunas exibidas em cada item da fila.
+  columns { title; subject; role; dueAt; priority }
+}

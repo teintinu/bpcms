@@ -1,0 +1,15 @@
+// service: example.com/services/laboratory
+
+// View de andamento derivada da instância do processo.
+view LabExamProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento do exame", en: "Exam progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: LabExam
+  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a view.
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

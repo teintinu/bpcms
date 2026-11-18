@@ -304,34 +304,3 @@ shape SampleStatus {
   }
   format: plain // Exibição sem máscara.
 }
-
-// View de busca de amostras em formato de tabela.
-view SampleSearch {
-  // Título exibido na navegação.
-  title: { pt-BR: "Busca de amostras", en: "Sample search" }
-  // Tipo da view: tabela de registros.
-  type: table
-  // Documento que alimenta a tabela.
-  source: Sample
-  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a busca.
-
-  // Colunas exibidas na tabela.
-  columns { code; kind; patient; status; collectedAt }
-  // Filtros disponíveis na busca.
-  filters { status; kind; laboratory }
-  pagination: 50 // Itens por página.
-}
-
-// Mensagem que pede a recoleta de uma amostra rejeitada.
-message RecollectionRequest {
-  // Título exibido na interface.
-  title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
-  about: Sample // Documento ao qual a mensagem se refere.
-  // Dados levados pela mensagem.
-  payload {
-    // Código da amostra a recoletar.
-    code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
-    // Instante em que a recoleta foi solicitada.
-    requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
-  }
-}

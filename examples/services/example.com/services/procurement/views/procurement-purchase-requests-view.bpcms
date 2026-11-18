@@ -1,0 +1,26 @@
+// service: example.com/services/procurement
+
+// View de listagem das solicitações de compra.
+view PurchaseRequests {
+  // Título exibido na navegação.
+  title: { pt-BR: "Solicitações de compra", en: "Purchase requests" }
+  // Tipo da view: tabela.
+  type: table
+  // Documento que alimenta a tabela.
+  source: PurchaseRequest
+  // Papéis que podem abrir a view.
+  roles: [Requester, Buyer, Approver, ProcurementManager]
+
+  // Colunas exibidas na tabela.
+  columns { number; requester; supplier; amount; status; neededBy }
+  // Filtros disponíveis na tabela.
+  filters { status; requester; supplier }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis na listagem.
+  actions {
+    // Abre o detalhe da solicitação selecionada.
+    open -> PurchaseRequestDetail
+  }
+}

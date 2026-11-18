@@ -1,0 +1,28 @@
+// service: example.com/services/hr
+
+// Tabela de consulta dos colaboradores.
+view EmployeesTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Colaboradores", en: "Employees" }
+  // Tipo da view: tabela de documentos.
+  type: table
+  // Documento exibido na tabela.
+  source: Employee
+  // Papéis que podem abrir a tabela.
+  roles: [PeopleOps, HiringManager, ITAdmin]
+
+  // Colunas exibidas na tabela.
+  columns { number; person; position; department; status; startedAt }
+  // Filtros disponíveis na tabela.
+  filters { status; department; period }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis sobre as linhas da tabela.
+  actions {
+    // Abre o detalhe do colaborador.
+    open -> EmployeeDetail
+    // Inicia o desligamento, pedindo motivo e último dia.
+    startOffboarding -> Employee.startOffboarding(reason, lastDay)
+  }
+}

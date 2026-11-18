@@ -1,0 +1,32 @@
+// service: example.com/services/checkout
+
+// Tabela com todas as sessões de finalização.
+view Sessions {
+  // Título exibido na navegação.
+  title: { pt-BR: "Sessões de finalização", en: "Checkout sessions" }
+  // Tipo da view: tabela de registros.
+  type: table
+  // Documento exibido nas linhas da tabela.
+  source: CheckoutSession
+  // Papéis que podem abrir a tabela.
+  roles: [SupportAgent, Customer]
+
+  // Colunas exibidas na tabela.
+  columns { customer; total; status; createdAt }
+  // Filtros oferecidos ao usuário.
+  filters { status; period; customer }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis na tabela.
+  actions {
+    // Abre o detalhe da sessão selecionada.
+    open -> SessionDetail
+    // Cria uma nova sessão de finalização.
+    startCheckout -> CheckoutSession.create(customer, total)
+    // Valida o carrinho da sessão.
+    validate -> CheckoutSession.validateCart
+    // Abandona a sessão informando o motivo.
+    abandon -> CheckoutSession.abandon(reason)
+  }
+}

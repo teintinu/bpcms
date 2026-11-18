@@ -138,15 +138,3 @@ form CancelContract {
     cancel { calls: Contract.cancel(cancellationReason) } // Cancela o contrato com o motivo.
   }
 }
-
-// View de andamento derivada da instância do processo.
-view ContractSignatureProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da assinatura", en: "Contract signature progress" }
-  type: process // Tipo da view: uma tela de andamento de processo.
-  process: ContractSignature // Processo cujo andamento esta view exibe.
-  roles: [ContractManager, LegalCounsel] // Papéis que podem abrir a view.
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}

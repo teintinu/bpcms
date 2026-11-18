@@ -105,18 +105,3 @@ form RiskReview {
     reject { calls: FraudCheck.reject(reason) }
   }
 }
-
-// View de andamento derivada da instância do processo.
-view FraudProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da análise", en: "Fraud review progress" }
-  // Tipo da view: tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: FraudReview
-  // Papéis que podem abrir a view.
-  roles: [RiskAnalyst, RiskManager]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}

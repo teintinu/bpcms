@@ -249,18 +249,3 @@ form BlockSupplier {
     block { calls: Supplier.block(blockedReason) }
   }
 }
-
-// View de andamento do processo de habilitação.
-view SupplierOnboardingProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da habilitação de fornecedor", en: "Supplier onboarding progress" }
-  // Tipo da view: andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: SupplierOnboarding
-  // Papéis que podem abrir a view.
-  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}

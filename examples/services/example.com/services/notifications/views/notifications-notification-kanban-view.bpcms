@@ -1,0 +1,26 @@
+// service: example.com/services/notifications
+
+// View kanban das notificações agrupadas por situação.
+view NotificationKanban {
+  // Rótulo da view exibido na navegação.
+  title: { pt-BR: "Notificações por situação", en: "Notifications by status" }
+  // Tipo kanban: quadro com colunas por agrupamento.
+  type: kanban
+  // Documento que alimenta o quadro.
+  source: Notification
+  // Papéis que podem abrir a view.
+  roles: [SuccessAgent, SuccessManager]
+
+  // Agrupa os cartões pela situação da notificação.
+  groupBy: status
+  // Colunas exibidas em cada coluna do quadro.
+  columns { recipient; channel; sentAt }
+  // Campos exibidos no cartão.
+  card { recipient; channel; status; sentAt }
+
+  // Ações disponíveis nos cartões.
+  actions {
+    // Abre o detalhe da notificação selecionada.
+    open -> NotificationDetail
+  }
+}

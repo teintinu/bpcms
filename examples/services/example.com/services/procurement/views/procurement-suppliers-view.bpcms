@@ -1,0 +1,26 @@
+// service: example.com/services/procurement
+
+// View de listagem dos fornecedores.
+view Suppliers {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fornecedores", en: "Suppliers" }
+  // Tipo da view: tabela.
+  type: table
+  // Documento que alimenta a tabela.
+  source: Supplier
+  // Papéis que podem abrir a view.
+  roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager]
+
+  // Colunas exibidas na tabela.
+  columns { legalName; tradeName; category; risk; status }
+  // Filtros disponíveis na tabela.
+  filters { status; category; risk }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis na listagem.
+  actions {
+    // Abre o detalhe do fornecedor selecionado.
+    open -> SupplierDetail
+  }
+}

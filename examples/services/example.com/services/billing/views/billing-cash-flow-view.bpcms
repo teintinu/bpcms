@@ -1,0 +1,30 @@
+// service: example.com/services/billing
+
+// Relatório consolidado de entradas e saídas de caixa.
+view CashFlow {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
+  type: report // Tipo do artefato: relatório.
+  // Documentos usados como fonte dos dados.
+  sources: [Invoice, Payment, Bill]
+  // Papéis autorizados a abrir o relatório.
+  roles: [FinanceManager]
+
+  // Filtros disponíveis na tela.
+  filters { period; store }
+
+  // Métricas calculadas a partir das fontes.
+  metrics {
+    // Soma dos pagamentos capturados no período.
+    inflow: sum(Payment.amount) where status == Captured
+    // Soma das contas pagas no período.
+    outflow: sum(Bill.amount) where status == Paid
+    // Saldo líquido entre entradas e saídas.
+    balance: inflow - outflow
+  }
+
+  // Unidade monetária de cada métrica.
+  units { inflow: BRL; outflow: BRL; balance: BRL }
+  freshness: 1h // Tempo máximo antes de recomputar os dados.
+  export: [pdf, csv] // Formatos disponíveis para exportação.
+}

@@ -1,0 +1,30 @@
+// service: example.com/services/inventory
+
+// Tabela paginada de itens de estoque.
+view StockTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Itens de estoque", en: "Stock items" }
+  // Tipo da view: tabela de registros.
+  type: table
+  // Documento exibido na tabela.
+  source: StockItem
+  // Papéis autorizados a abrir a tabela.
+  roles: [WarehouseOperator, StockManager]
+
+  // Colunas exibidas na tabela.
+  columns { product; warehouse; available; reserved; reorderPoint; status }
+  // Filtros disponíveis na tabela.
+  filters { warehouse; status; available }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis em cada linha da tabela.
+  actions {
+    // Abre o detalhe do item selecionado.
+    open -> StockDetail
+    // Ajusta o saldo do item direto da tabela.
+    adjust -> StockItem.adjust(quantity, reason)
+    // Bloqueia o item direto da tabela.
+    block -> StockItem.block(reason)
+  }
+}

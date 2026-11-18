@@ -1,0 +1,20 @@
+// service: example.com/services/identity
+
+// View de tabela que lista as contas de um cidadão.
+view CitizenAccounts {
+  // Título exibido na navegação e na tela.
+  title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
+  // Tipo da view: tabela consultável.
+  type: table
+  // Documento que alimenta a tabela.
+  source: Consumer
+  // Papéis que podem abrir a view.
+  roles: [Clerk, Manager]
+
+  // Colunas exibidas na tabela.
+  columns { nickname; email; citizen; status }
+  // Filtros disponíveis para refinar a consulta.
+  filters { citizen; status }
+  // Itens por página da tabela.
+  pagination: 50
+}

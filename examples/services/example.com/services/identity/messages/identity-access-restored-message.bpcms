@@ -1,0 +1,16 @@
+// service: example.com/services/identity
+
+// Mensagem de acesso restaurado enviada ao usuário ao fim da recuperação.
+message AccessRestored {
+  // Título exibido no construtor e no histórico.
+  title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+  // Documento sobre o qual a mensagem fala.
+  about: User
+  // Dados levados no payload da mensagem.
+  payload {
+    // Nome do usuário notificado.
+    name: string { title: { pt-BR: "Nome", en: "Name" } }
+    // Correio eletrônico do usuário notificado.
+    email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" } }
+  }
+}

@@ -1,0 +1,16 @@
+// service: example.com/services/fraud-checkout
+
+// View de detalhe de uma verificação antifraude.
+view FraudDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe da verificação", en: "Fraud check detail" }
+  // Tipo da view: detalhe de documento.
+  type: detail
+  // Documento exibido pela view.
+  document: FraudCheck
+  // Papéis que podem abrir a view.
+  roles: [RiskAnalyst, RiskManager]
+
+  // Seções fixas exibidas no detalhe.
+  sections { summary; decision; timeline }
+}

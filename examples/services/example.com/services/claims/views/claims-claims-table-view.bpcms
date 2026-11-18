@@ -1,0 +1,30 @@
+// service: example.com/services/claims
+
+// Tabela operacional que lista os sinistros para triagem e análise.
+view ClaimsTable {
+  // Título exibido na navegação.
+  title: { pt-BR: "Sinistros", en: "Claims" }
+  // Tipo da view: tabela.
+  type: table
+  // Documento exibido pela view.
+  source: Claim
+  // Papéis que podem abrir a tabela.
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager]
+
+  // Colunas exibidas em cada linha.
+  columns { number; claimant; type; amount; status; openedAt }
+  // Filtros disponíveis para recortar a lista.
+  filters { status; type; period; coverage }
+  // Quantidade de linhas carregadas por página.
+  pagination: 50
+
+  // Ações disparadas a partir da tabela.
+  actions {
+    // Abre o detalhe do sinistro selecionado.
+    open -> ClaimDetail
+    // Executa a triagem com os parâmetros do formulário.
+    triage -> Claim.triage(coveredNow, claimType, assignedAdjuster)
+    // Executa a recusa com o motivo informado.
+    reject -> Claim.reject(reason)
+  }
+}

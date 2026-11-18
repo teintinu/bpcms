@@ -1,0 +1,25 @@
+// service: example.com/services/shipping
+
+// Quadro kanban da expedição por situação.
+view DispatchBoard {
+  // Título exibido na navegação.
+  title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
+  // Tipo da view: quadro kanban.
+  type: kanban
+  // Documento exibido nas colunas do quadro.
+  source: Shipment
+  // Papéis que podem abrir a view.
+  roles: [Packer, Dispatcher, Manager]
+
+  // Agrupa os cartões pela situação da remessa.
+  groupBy: status
+  // Campos exibidos em cada cartão.
+  card { order; tracking; frete }
+  // Oculta remessas canceladas do quadro.
+  filter { status != Cancelled }
+  // Ações disponíveis nos cartões.
+  actions {
+    // Abre o detalhe da remessa selecionada.
+    open -> ShipmentDetail
+  }
+}

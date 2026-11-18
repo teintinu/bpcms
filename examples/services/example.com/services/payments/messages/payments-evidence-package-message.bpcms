@@ -1,0 +1,19 @@
+// service: example.com/services/payments
+
+// Mensagem que empacota as evidências enviadas à bandeira.
+message EvidencePackage {
+  // Título exibido no builder e na trilha.
+  title: { pt-BR: "Pacote de evidências", en: "Evidence package" }
+  // Documento ao qual a mensagem se refere.
+  about: Chargeback
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Instante em que as evidências foram enviadas.
+    submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+    // Resumo textual das evidências.
+    note: string { title: { pt-BR: "Resumo", en: "Summary" } }
+    // Documento comprobatório anexado.
+    evidence: EvidenceDocument { title: { pt-BR: "Documento", en: "Document" } }
+  }
+}

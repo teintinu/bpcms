@@ -511,7 +511,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `capabilities { gui }` na View apenas se a tela inteira exigir GUI por outro motivo
 - [ ] Shapes de áudio/imagem/vídeo declaram `capabilities { gui }`
 
-**Exemplos:** V.1–V.6; arquivos de contexto e `<service>-views.bpcms` (compartilhadas).
+**Exemplos:** V.1–V.6; arquivos em `views/` (uma view por arquivo, incluindo `report`/`dashboard`).
 
 **Foco da revisão:**
 
@@ -1299,3 +1299,35 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 **Em aberto:** `key`/`search`; CMMN; runtime durável; semântica de `parallel`; `job` com semântica própria; `report` como `view`; form/view multi-documento; permissões; versionamento; `reintroduce` em processo-código; validações/erros.
 
 **Consolidação pendente:** atualizar os exemplos de Process de `DSL_EXAMPLES.md` (P.1–P.24) e `BRAINSTORM.md`; ajustar §7.4/§30 para views/role e novos artefatos (`manual`, `send`/`receive`, `cancel on`); implementar o `check` (`E_PROCESS_START`, `E_CASE_KEY`, `E_BLOCK_DECLARATION`, `E_VAR_SCOPE`, `E_END_ORDER`, `E_CATCH_UNKNOWN` etc.).
+
+## View e Message como contexto principal — 2026-11-18 (aprovada por solicitação direta do usuário)
+
+**Pedido:** elevar `view` e `message` a contexto principal, para que cada uma tenha arquivo próprio e fique organizada em pastas, como `document` e `process`.
+
+**Por que:** view e message têm identidade e contrato próprios — nome referenciável por outros artefatos e serviços, `roles`, fontes (`document`/`source`/`sources`/`process:`) e `payload`/`about`. Manter no arquivo do documento/processo misturava três contextos no mesmo arquivo e deixava o documento dominado por telas e mensagens.
+
+**Decisão aplicada:**
+- Contextos principais: `application`, `service`, `document`, `process`, `view`, `message`.
+- Caminhos:
+  - view: `examples/services/<fullpath service>/views/<service>-<nome>-view.bpcms`
+  - message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.bpcms`
+- `views/` e `messages/` são pastas organizacionais, não namespaces: a view continua `InvoiceTable`, não `views.InvoiceTable`.
+- Cada view e cada message é o primeiro e único principal do seu arquivo.
+- `-views.bpcms` e `-messages.bpcms` não existem; view/message nunca vão para arquivo compartilhado.
+- O vínculo fica no contrato (`document`/`source`/`sources`/`process:`, `about`), não no arquivo do dono.
+- `report` é `view type: report` e fica em `views/`.
+
+**Regra do compilador (§30.3):**
+- `E_FILE_PRINCIPAL` inclui `view`/`message`; `E_FILE_PRINCIPAL_FIRST` continua valendo.
+- `E_FILE_PATH`: view fora de `views/` ou message fora de `messages/` é erro.
+- `E_FILE_SHARED`: arquivo compartilhado não declara `view`/`message`.
+- `E_FILE_SHARED_TYPE`: exemplo atualizado (`view` em `-shapes.bpcms`, já que `-views.bpcms` não existe).
+
+**Resultado da migração:**
+- 134 views + 24 messages → 158 arquivos novos, um artefato por arquivo.
+- 19 `-views.bpcms` removidos (17 com views e 2 que restaram só com comentário de arquivo).
+- 62 arquivos de documento/processo perderam views/messages e mantiveram shapes/forms/policies/decisions/integrations.
+- 741 blocos de artefato antes e depois, sem alteração de conteúdo; nenhuma view/message restante fora de `views/`/`messages/`.
+- `DSL_EXAMPLES.md` não mudou: ele é syntax-only e não referencia a organização em arquivos.
+
+**Arquivos afetados:** `DSL_REFERENCE.md` (§3, §21, §26, §30), `AGENTS.md`, `BRAINSTORM.md` (D-050, D-052, B-60, B-62), `REVIEW_CHECKLIST.md`, `examples/**`.

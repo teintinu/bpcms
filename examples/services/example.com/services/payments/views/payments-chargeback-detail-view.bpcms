@@ -1,0 +1,20 @@
+// service: example.com/services/payments
+
+// Tela de detalhe de uma contestação.
+view ChargebackDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe da contestação", en: "Chargeback detail" }
+  type: detail // Tipo da view: detalhe de documento.
+  // Documento exibido na tela.
+  document: Chargeback
+  // Papéis que podem abrir a view.
+  roles: [Analyst, Manager]
+
+  // Seções exibidas na tela de detalhe.
+  sections { summary; evidence; timeline }
+  // Ações disponíveis na tela de detalhe.
+  actions {
+    // Abre o andamento do processo de contestação.
+    progress -> ChargebackProgress
+  }
+}

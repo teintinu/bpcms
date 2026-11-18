@@ -1,0 +1,33 @@
+// service: example.com/services/credit
+
+// View de painel operacional de crédito.
+view CreditDashboard {
+  // Título exibido na navegação do painel.
+  title: { pt-BR: "Painel de crédito", en: "Credit dashboard" }
+  // Tipo dashboard: painel com atualização contínua.
+  type: dashboard
+  // Documentos que alimentam os indicadores do painel.
+  sources: [CreditApplication, CreditLimit]
+  // Papéis autorizados a abrir o painel.
+  roles: [CreditAnalyst, CreditManager]
+  // Modo live: os números são atualizados em tempo real.
+  mode: live
+
+  // Filtros disponíveis: situação da proposta e período.
+  filters { status; period }
+  // Indicadores calculados sobre os documentos de origem.
+  metrics {
+    // Propostas já enviadas para análise.
+    submitted: count(CreditApplication) where status == Submitted
+    // Propostas aprovadas.
+    approved: count(CreditApplication) where status == Approved
+    // Limites de crédito ativos.
+    activeLimits: count(CreditLimit) where status == Active
+    // Valor médio dos limites de crédito.
+    averageLimit: avg(CreditLimit.amount)
+  }
+  // Unidade de exibição do indicador de limite médio: reais.
+  units { averageLimit: BRL }
+  // Recalcula os indicadores a cada cinco minutos.
+  freshness: 5m
+}

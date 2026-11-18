@@ -1,0 +1,25 @@
+// service: example.com/services/orders
+
+// View de detalhe que mostra um pedido e permite operá-lo.
+view OrderDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
+  // Tipo da view: detalhe.
+  type: detail
+  // Documento exibido no detalhe.
+  document: Order
+  // Papéis que podem abrir a view.
+  roles: [Clerk, Manager]
+
+  // Seções fixas exibidas no detalhe.
+  sections { summary; items; timeline }
+  // Ações disponíveis no detalhe.
+  actions {
+    // Abre a view de andamento do processo.
+    progress -> OrderProgress
+    // Cancela o pedido informando o motivo.
+    cancel -> Order.cancel(reason)
+    // Reabre o pedido cancelado.
+    reopen -> Order.reopen
+  }
+}

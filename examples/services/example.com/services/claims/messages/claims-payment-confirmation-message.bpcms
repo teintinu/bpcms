@@ -1,0 +1,15 @@
+// service: example.com/services/claims
+
+// Mensagem que confirma ao processo o pagamento realizado.
+message PaymentConfirmation {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Confirmação de pagamento", en: "Payment confirmation" }
+  // Documento ao qual a mensagem se refere.
+  about: Claim
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Referência bancária do pagamento.
+    reference: string { title: { pt-BR: "Referência bancária", en: "Bank reference" } }
+  }
+}

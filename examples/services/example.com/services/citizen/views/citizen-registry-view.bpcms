@@ -1,0 +1,20 @@
+// service: example.com/services/citizen
+
+// View de consulta tabular dos cidadãos cadastrados.
+view Registry {
+  // Título exibido na navegação.
+  title: { pt-BR: "Busca de cidadãos", en: "Citizen search" }
+  // Tipo da view: tabela de consulta.
+  type: table
+  // Documento consultado pela view.
+  source: Citizen
+  // Papéis que podem abrir a view.
+  roles: [Clerk, Manager, Auditor]
+
+  // Colunas exibidas na tabela.
+  columns { avatar; displayName; kind; country; status }
+  // Filtros disponíveis na tabela.
+  filters { kind; country; status }
+  // Tamanho da página da tabela.
+  pagination: 50
+}

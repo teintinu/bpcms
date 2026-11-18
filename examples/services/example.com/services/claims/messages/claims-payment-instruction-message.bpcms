@@ -1,0 +1,17 @@
+// service: example.com/services/claims
+
+// Mensagem que instrui o pagamento da liquidação ao setor financeiro.
+message PaymentInstruction {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Instrução de pagamento", en: "Payment instruction" }
+  // Documento ao qual a mensagem se refere.
+  about: Claim
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Número da liquidação a pagar.
+    settlementNumber: string { title: { pt-BR: "Liquidação", en: "Settlement" } }
+    // Valor a ser pago.
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+  }
+}

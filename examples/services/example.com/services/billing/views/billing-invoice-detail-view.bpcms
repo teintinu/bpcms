@@ -1,0 +1,24 @@
+// service: example.com/services/billing
+
+// Tela de detalhe de uma nota fiscal.
+view InvoiceDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe da nota", en: "Invoice detail" }
+  // Tipo do artefato: detalhe.
+  type: detail
+  // Documento exibido no detalhe.
+  document: Invoice
+  // Papéis autorizados a abrir o detalhe.
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  // Seções exibidas na tela de detalhe.
+  sections { summary; items; customer; timeline }
+
+  // Ações disponíveis no detalhe.
+  actions {
+    // Registra o pagamento da nota.
+    pay -> Invoice.pay(paidAt)
+    // Cancela a nota solicitando o motivo.
+    cancel -> Invoice.cancel(reason)
+  }
+}

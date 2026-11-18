@@ -152,18 +152,3 @@ shape ContractVersionStatus {
     ordinal: 30 // Posição do estado na linha do tempo.
   }
 }
-
-// Lista tabular das versões de contrato.
-view ContractVersions {
-  // Título exibido na navegação.
-  title: { pt-BR: "Versões do contrato", en: "Contract versions" }
-  type: table // Tipo do artefato: tabela.
-  source: ContractVersion // Documento que alimenta a lista.
-  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
-
-  // Colunas exibidas em cada linha.
-  columns { contract; versionNumber; status; summary; approvedAt }
-  // Filtros oferecidos na barra da lista.
-  filters { status; contract }
-  pagination: 50 // Quantidade de linhas por página.
-}

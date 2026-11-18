@@ -174,24 +174,3 @@ shape RFQStatus {
     ordinal: 30
   }
 }
-
-// View em kanban das cotações em aberto.
-view QuotationsBoard {
-  // Título exibido na navegação.
-  title: { pt-BR: "Cotações em aberto", en: "Open quotations" }
-  // Tipo da view: kanban.
-  type: kanban
-  // Documento que alimenta o quadro.
-  source: RFQ
-  // Papéis que podem abrir a view.
-  roles: [Buyer, ProcurementManager]
-
-  // Agrupa os cartões pela situação da cotação.
-  groupBy: status
-  // Colunas exibidas em cada cartão.
-  columns { number; dueAt; quotedAmount }
-  // Campos mostrados no cartão compacto.
-  card { number; dueAt; status }
-  // Filtra o quadro para esconder cotações já adjudicadas.
-  filter { status != Awarded }
-}

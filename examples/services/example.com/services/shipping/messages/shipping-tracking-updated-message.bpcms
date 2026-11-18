@@ -1,0 +1,19 @@
+// service: example.com/services/shipping
+
+// Mensagem que notifica uma atualização de rastreio.
+message TrackingUpdated {
+  // Título exibido no histórico e nas integrações.
+  title: { pt-BR: "Rastreio atualizado", en: "Tracking updated" }
+  // Documento ao qual a mensagem se refere.
+  about: Shipment
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Tipo do evento de rastreio recebido.
+    kind: TrackingKind { title: { pt-BR: "Tipo de evento", en: "Event kind" } }
+    // Data/hora em que o evento aconteceu.
+    at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
+    // Nome de quem recebeu a remessa no evento.
+    receivedBy: string { title: { pt-BR: "Recebido por", en: "Received by" } }
+  }
+}

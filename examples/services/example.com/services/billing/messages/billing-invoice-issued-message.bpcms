@@ -1,0 +1,19 @@
+// service: example.com/services/billing
+
+// Mensagem emitida quando uma nota é emitida.
+message InvoiceIssued {
+  // Título exibido na interface.
+  title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+  // Documento ao qual a mensagem se refere.
+  about: Invoice
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Número da nota emitida.
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    // Total da nota emitida.
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    // Data de emissão da nota.
+    issuedAt: DateTime { title: { pt-BR: "Emitida em", en: "Issued at" } }
+  }
+}

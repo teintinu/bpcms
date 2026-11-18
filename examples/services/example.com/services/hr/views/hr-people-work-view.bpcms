@@ -1,0 +1,18 @@
+// service: example.com/services/hr
+
+// Caixa de tarefas de pessoas do usuário.
+view PeopleWork {
+  // Título exibido na navegação.
+  title: { pt-BR: "Minhas tarefas de pessoas", en: "My people work" }
+  // Tipo da view: caixa de entrada de tarefas.
+  type: inbox
+  // Papéis que podem abrir a caixa de tarefas.
+  roles: [PeopleOps, ITAdmin, HiringManager]
+  // Restringe a exibição às tarefas atribuídas ao usuário.
+  scope: mine
+  // Agrupa as tarefas por processo.
+  groupBy: process
+
+  // Colunas exibidas na lista de tarefas.
+  columns { title; subject; dueAt; priority }
+}

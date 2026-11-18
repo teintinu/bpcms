@@ -1,0 +1,17 @@
+// service: example.com/services/shipping
+
+// Mensagem que confirma a coleta da remessa.
+message PickupConfirmed {
+  // Título exibido no histórico e nas integrações.
+  title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+  // Documento ao qual a mensagem se refere.
+  about: Shipment
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Data/hora em que a remessa foi coletada.
+    pickedUpOn: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+    // Código de rastreio da remessa coletada.
+    tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
+  }
+}

@@ -196,28 +196,3 @@ shape AccessSystem {
     ordinal: 50
   }
 }
-
-// Tabela de consulta das concessões de acesso.
-view AccessGrantsTable {
-  // Título exibido na navegação.
-  title: { pt-BR: "Acessos", en: "Access grants" }
-  // Tipo da view: tabela de documentos.
-  type: table
-  // Documento exibido na tabela.
-  source: AccessGrant
-  // Papéis que podem abrir a tabela.
-  roles: [ITAdmin, PeopleOps]
-
-  // Colunas exibidas na tabela.
-  columns { employee; system; profile; status; requestedAt }
-  // Filtros disponíveis na tabela.
-  filters { status; system }
-
-  // Ações disponíveis sobre as linhas da tabela.
-  actions {
-    // Provisiona o acesso da linha selecionada.
-    provision -> AccessGrant.provision
-    // Revoga o acesso da linha, pedindo o motivo.
-    revoke -> AccessGrant.revoke(reason)
-  }
-}

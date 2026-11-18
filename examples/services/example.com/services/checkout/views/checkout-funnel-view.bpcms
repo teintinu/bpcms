@@ -1,0 +1,35 @@
+// service: example.com/services/checkout
+
+// Relatório de funil: acompanha o avanço das sessões por etapa.
+view Funnel {
+  // Título exibido na navegação.
+  title: { pt-BR: "Funil de finalização", en: "Checkout funnel" }
+  // Tipo da view: relatório agregado.
+  type: report
+  // Documentos usados como fonte dos dados.
+  sources: [CheckoutSession]
+  // Papéis que podem abrir o relatório.
+  roles: [SupportAgent]
+
+  // Filtros oferecidos ao usuário.
+  filters { period; status }
+  // Métricas calculadas sobre as sessões.
+  metrics {
+    // Total de sessões iniciadas.
+    started: count(CheckoutSession)
+    // Sessões que passaram do rascunho.
+    validated: count(CheckoutSession) where status != Draft
+    // Sessões confirmadas.
+    paid: count(CheckoutSession) where status == Confirmed
+    // Sessões abandonadas.
+    abandoned: count(CheckoutSession) where status == Abandoned
+    // Receita somada das sessões confirmadas.
+    revenue: sum(CheckoutSession.total) where status == Confirmed
+  }
+  // Unidade usada pela métrica de receita.
+  units { revenue: BRL }
+  // Idade máxima dos dados antes de recarregar.
+  freshness: 10m
+  // Formatos de exportação permitidos.
+  export: [pdf, csv]
+}

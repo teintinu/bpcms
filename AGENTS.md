@@ -47,7 +47,7 @@ Não aplique mudanças “óbvias” por conta própria. Reverter também é mud
 `BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
 
 - A raiz de um serviço é a pasta que contém `<service>-service.bpcms`.
-- `documents/` e `processes/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.bpcms` continua `Invoice`, não `documents.Invoice`.
+- `documents/`, `processes/`, `views/` e `messages/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.bpcms` continua `Invoice`, não `documents.Invoice`.
 - `icons/` é um **contêiner de ícones**: as subpastas dentro dele são namespaces de ícone; `icons` não entra na referência. Ex.: `icons/status/draft.svg` -> `status.draft`.
 - As demais subpastas seguem a regra de namespace: segmentos em camelCase, referências por ponto.
 - Nomes de arquivos e pastas de artefato: **kebab-case**; o full path da URI preserva os segmentos da URI (ex.: `example.com`).
@@ -61,6 +61,8 @@ examples/services/example.com/services/billing/
   billing-service.bpcms
   documents/billing-invoice-document.bpcms      -> Invoice (sem prefixo documents.)
   processes/billing-invoice-issuance-process.bpcms
+  views/billing-invoice-table-view.bpcms        -> InvoiceTable (sem prefixo views.)
+  messages/billing-invoice-issued-message.bpcms -> InvoiceIssued (sem prefixo messages.)
   billing-shapes.bpcms
   billing-organograms.bpcms
   billing-icons.bpcms
@@ -69,21 +71,24 @@ examples/services/example.com/services/billing/
 
 ## Organização dos arquivos em `examples/`
 
-`BPCMS_WORKSPACE = examples/` nesta fase. O fonte é organizado por **contexto principal**, não por tipo de artefato. São contextos principais: `application`, `service`, `document` e `process`. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
+`BPCMS_WORKSPACE = examples/` nesta fase. O fonte é organizado por **contexto principal**, não por tipo de artefato. São contextos principais: `application`, `service`, `document`, `process`, `view` e `message`. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
 
 - Todo contexto principal tem seu próprio arquivo, com **exatamente um** principal, e ele é o **primeiro artefato** do arquivo.
 - Aplicação: `examples/applications/<fullpath app>/<app>-application.bpcms`.
 - Serviço: `examples/services/<fullpath service>/<service>-service.bpcms`.
 - Documento: `examples/services/<fullpath service>/documents/<service>-<nome>-document.bpcms`.
 - Processo: `examples/services/<fullpath service>/processes/<service>-<nome>-process.bpcms`.
+- View: `examples/services/<fullpath service>/views/<service>-<nome>-view.bpcms`.
+- Message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.bpcms`.
 - Compartilhado: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms`.
 - SVG: `examples/services/<fullpath service>/icons/<namespace>/<icon>.svg`.
 - `-icons.bpcms` (não-SVG): `examples/services/<fullpath service>/<service>-icons.bpcms`.
 - `<fullpath>` é a URI sem protocolo; `<app>`/`<service>` é o último segmento da URI, igual ao slug da pasta.
 - O `<nome>` do arquivo é equivalente ao nome do artefato principal (em app/service, ao slug da URI).
-- Compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém exatamente um organogram e as roles, com o organogram primeiro. Arquivo compartilhado não declara principal. Ex.: `std-shapes.bpcms`.
+- Compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém exatamente um organogram e as roles, com o organogram primeiro. Arquivo compartilhado não declara principal. Ex.: `std-shapes.bpcms`.
+- `view` e `message` **não** vão para arquivo compartilhado: são contextos principais e têm arquivo próprio em `views/` e `messages/`.
 - Referência entre arquivos é permitida: `InvoiceNumber` pode ficar em `billing-invoice-document.bpcms` e ser usado por mensagens/processos de outros contextos.
-- `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
+- `*-documents.bpcms`, `*-processes.bpcms`, `*-views.bpcms`, `*-messages.bpcms` e `*-reports.bpcms` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
 - Roles ficam em `<service>-organograms.bpcms`, depois do organogram; não crie `<service>-roles.bpcms`. Parameters ficam em `<service>-parameters.bpcms`; secrets em `<service>-secrets.bpcms`.
 - `bpcms.org/std` segue a regra de service: `examples/services/bpcms.org/std/std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
 - Compilador: `E_FILE_NAME`, `E_FILE_PRINCIPAL`, `E_FILE_PRINCIPAL_FIRST`, `E_FILE_SHARED`, `E_FILE_SHARED_TYPE`, `E_FILE_ORGANOGRAM_FIRST`, `E_FILE_PATH` e `E_FILE_ICON_PATH`.

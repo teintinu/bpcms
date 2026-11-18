@@ -1,0 +1,26 @@
+// service: example.com/services/catalog
+
+// View de detalhe de um produto.
+view ProductDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do produto", en: "Product detail" }
+  // Tipo da view: página de detalhe.
+  type: detail
+  // Documento exibido no detalhe.
+  document: Product
+  // Papéis autorizados a abrir a view.
+  roles: [Curator, Publisher]
+
+  // Seções exibidas na página de detalhe.
+  sections { summary; pricing; media }
+
+  // Ações disponíveis no detalhe.
+  actions {
+    // Envia o produto para revisão.
+    submit -> Product.submitForReview
+    // Publica o produto.
+    publish -> Product.publish
+    // Arquiva o produto.
+    archive -> Product.archive
+  }
+}

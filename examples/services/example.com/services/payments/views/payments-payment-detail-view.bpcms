@@ -1,0 +1,20 @@
+// service: example.com/services/payments
+
+// Tela de detalhe de um pagamento.
+view PaymentDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
+  type: detail // Tipo da view: detalhe de documento.
+  // Documento exibido na tela.
+  document: Payment
+  // Papéis que podem abrir a view.
+  roles: [Analyst, Manager]
+
+  // Seções exibidas na tela de detalhe.
+  sections { summary; refunds; timeline }
+  // Ações disponíveis na tela de detalhe.
+  actions {
+    // Abre o andamento do processo de captura.
+    progress -> PaymentProgress
+  }
+}

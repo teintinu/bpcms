@@ -1,0 +1,25 @@
+// service: example.com/services/support
+
+// Tela de detalhe de um chamado.
+view TicketDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do chamado", en: "Ticket detail" }
+  // Tipo da view: tela de detalhe de documento.
+  type: detail
+  // Documento exibido na tela.
+  document: Ticket
+  // Papéis que podem abrir o detalhe.
+  roles: [SupportAgent, Manager]
+
+  // Seções fixas exibidas na tela.
+  sections { summary; timeline }
+  // Campos calculados exibidos na tela.
+  computed { breached; remaining }
+  // Ações oferecidas na tela de detalhe.
+  actions {
+    // Resolve o chamado.
+    resolve -> Ticket.resolve
+    // Escala o chamado pedindo a justificativa.
+    escalate -> Ticket.escalate(justification)
+  }
+}

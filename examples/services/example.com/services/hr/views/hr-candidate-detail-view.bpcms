@@ -1,0 +1,30 @@
+// service: example.com/services/hr
+
+// Tela de detalhe de um candidato.
+view CandidateDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do candidato", en: "Candidate detail" }
+  // Tipo da view: detalhe de documento.
+  type: detail
+  // Documento exibido no detalhe.
+  document: Candidate
+  // Papéis que podem abrir o detalhe.
+  roles: [Recruiter, HiringManager, Candidate]
+
+  // Seções exibidas na tela de detalhe.
+  sections { summary; interviews; timeline }
+
+  // Ações disponíveis na tela de detalhe.
+  actions {
+    // Coloca o candidato em triagem.
+    screen -> Candidate.screen
+    // Agenda a entrevista do candidato.
+    scheduleInterview -> Candidate.scheduleInterview
+    // Envia a proposta ao candidato.
+    extendOffer -> Candidate.extendOffer
+    // Contrata o candidato.
+    hire -> Candidate.hire
+    // Recusa o candidato, pedindo o motivo.
+    reject -> Candidate.reject(reason)
+  }
+}

@@ -1,0 +1,28 @@
+// service: example.com/services/claims
+
+// Tela de detalhe que reúne dados, seções e ações do sinistro.
+view ClaimDetail {
+  // Título exibido na navegação.
+  title: { pt-BR: "Detalhe do sinistro", en: "Claim detail" }
+  // Tipo da view: detalhe de documento.
+  type: detail
+  // Documento exibido pela view.
+  document: Claim
+  // Papéis que podem abrir o detalhe.
+  roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager, Policyholder]
+
+  // Seções exibidas na tela de detalhe.
+  sections { summary; coverage; evidence; settlement; timeline }
+
+  // Ações disponíveis no detalhe do sinistro.
+  actions {
+    // Inicia a análise do sinistro.
+    startReview -> Claim.startReview
+    // Aprova o sinistro com o valor informado.
+    approve -> Claim.approve(approvedTotal)
+    // Recusa o sinistro com o motivo informado.
+    reject -> Claim.reject(reason)
+    // Abre o andamento do processo do sinistro.
+    open -> ClaimProgress
+  }
+}

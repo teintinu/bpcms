@@ -1,0 +1,15 @@
+// service: example.com/services/laboratory
+
+// View de andamento derivada da instância do processo.
+view RecollectionProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da recoleta", en: "Recollection progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: SampleRecollection
+  roles: [Collector, Analyst, LabManager] // Papéis que podem abrir a view.
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; next }
+}

@@ -1,0 +1,17 @@
+// service: example.com/services/payments
+
+// Mensagem com o resultado da contestação devolvido pela bandeira.
+message ChargebackResult {
+  // Título exibido no builder e na trilha.
+  title: { pt-BR: "Resultado da contestação", en: "Chargeback result" }
+  // Documento ao qual a mensagem se refere.
+  about: Chargeback
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Indica se a decisão favoreceu o lojista.
+    favorable: boolean { title: { pt-BR: "Favorável", en: "Favorable" } }
+    // Instante da decisão da bandeira.
+    decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
+  }
+}

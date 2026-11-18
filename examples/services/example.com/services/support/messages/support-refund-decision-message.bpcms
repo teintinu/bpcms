@@ -1,0 +1,16 @@
+// service: example.com/services/support
+
+// Mensagem com a decisão tomada sobre a devolução.
+message RefundDecision {
+  // Título exibido no catálogo de mensagens.
+  title: { pt-BR: "Decisão da devolução", en: "Refund decision" }
+  // Documento ao qual a mensagem se refere.
+  about: ReturnRequest
+  // Dados levados pela mensagem.
+  payload {
+    // Parecer final da análise de elegibilidade.
+    verdict: RefundVerdict { title: { pt-BR: "Parecer", en: "Verdict" } }
+    // Valor decidido para reembolso.
+    amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+  }
+}

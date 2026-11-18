@@ -1,0 +1,29 @@
+// service: example.com/services/shipping
+
+// Painel ao vivo com o pulso das entregas.
+view DeliveryPulse {
+  // Título exibido na navegação.
+  title: { pt-BR: "Pulso das entregas", en: "Delivery pulse" }
+  // Tipo da view: painel de indicadores.
+  type: dashboard
+  // Documentos usados como fonte dos dados.
+  sources: [Shipment]
+  // Papéis que podem abrir a view.
+  roles: [Manager]
+  // Atualização em tempo real dos indicadores.
+  mode: live
+
+  // Filtros disponíveis no painel.
+  filters { status; carrierName }
+  // Métricas calculadas sobre as remessas.
+  metrics {
+    // Remessas em rota de entrega.
+    outForDelivery: count(Shipment) where status == OutForDelivery
+    // Remessas com tentativa de entrega falha.
+    failedAttempts: count(Shipment) where status == AttemptFailed
+    // Remessas devolvidas ao remetente.
+    returned: count(Shipment) where status == Returned
+  }
+  // Considera os dados atualizados por cinco minutos.
+  freshness: 5m
+}

@@ -1,0 +1,26 @@
+// service: example.com/services/catalog
+
+// View kanban com produtos agrupados por situação.
+view ProductKanban {
+  // Título exibido na navegação.
+  title: { pt-BR: "Produtos por situação", en: "Products by status" }
+  // Tipo da view: quadro kanban.
+  type: kanban
+  // Documento exibido nos cartões.
+  source: Product
+  // Papéis autorizados a abrir a view.
+  roles: [Curator, Publisher]
+
+  // Campos usados para formar as colunas do quadro.
+  groupBy: status
+  // Colunas exibidas nos cartões.
+  columns { sku; name; price }
+  // Conteúdo resumido de cada cartão.
+  card { sku; name; price; status }
+
+  // Ações disponíveis no quadro.
+  actions {
+    // Abre o detalhe do produto do cartão.
+    open -> ProductDetail
+  }
+}

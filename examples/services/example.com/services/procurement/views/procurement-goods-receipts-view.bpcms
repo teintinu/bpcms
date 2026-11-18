@@ -1,0 +1,26 @@
+// service: example.com/services/procurement
+
+// View de listagem dos recebimentos.
+view GoodsReceipts {
+  // Título exibido na navegação.
+  title: { pt-BR: "Recebimentos", en: "Goods receipts" }
+  // Tipo da view: tabela.
+  type: table
+  // Documento que alimenta a tabela.
+  source: GoodsReceipt
+  // Papéis que podem abrir a view.
+  roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
+
+  // Colunas exibidas na tabela.
+  columns { number; order; expectedWeight; receivedWeight; status; receivedAt }
+  // Filtros disponíveis na tabela.
+  filters { status; order }
+  // Quantidade de linhas por página.
+  pagination: 50
+
+  // Ações disponíveis na listagem.
+  actions {
+    // Abre o detalhe do recebimento selecionado.
+    open -> GoodsReceiptDetail
+  }
+}

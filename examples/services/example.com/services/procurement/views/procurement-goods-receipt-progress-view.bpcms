@@ -1,0 +1,16 @@
+// service: example.com/services/procurement
+
+// View de andamento do processo de recebimento.
+view GoodsReceiptProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento do recebimento", en: "Goods receipt progress" }
+  // Tipo da view: andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: GoodsReceipt
+  // Papéis que podem abrir a view.
+  roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
+
+  // Seções fixas exibidas na tela de andamento.
+  sections { current; participants; history; deadlines; documents; milestones; next }
+}

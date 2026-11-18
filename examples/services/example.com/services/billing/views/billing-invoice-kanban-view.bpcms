@@ -1,0 +1,26 @@
+// service: example.com/services/billing
+
+// Quadro kanban das notas agrupadas por situação.
+view InvoiceKanban {
+  // Título exibido na navegação.
+  title: { pt-BR: "Notas por situação", en: "Invoices by status" }
+  // Tipo do artefato: kanban.
+  type: kanban
+  // Documento exibido no quadro.
+  source: Invoice
+  // Papéis autorizados a abrir o quadro.
+  roles: [Clerk, CollectionAgent, FinanceManager]
+
+  // Agrupa os cartões pela situação da nota.
+  groupBy: status
+  // Colunas exibidas em cada cartão.
+  columns { number; customer; total; dueAt }
+  // Conteúdo resumido do cartão.
+  card { number; customer; total; dueAt }
+
+  // Ações disponíveis no quadro.
+  actions {
+    // Abre o detalhe da nota selecionada.
+    open -> InvoiceDetail
+  }
+}

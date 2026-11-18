@@ -208,18 +208,3 @@ form ManagerCheckin {
     recordNote { calls: Employee.recordCheckinNote(note); stay }
   }
 }
-
-// View de andamento derivada da instância do processo.
-view OnboardingProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento da integração", en: "Onboarding progress" }
-  // Tipo da view: uma tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: Onboarding
-  // Papéis que podem abrir a view.
-  roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
-}

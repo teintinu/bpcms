@@ -1,0 +1,35 @@
+// service: example.com/services/catalog
+
+// View de relatório com indicadores de saúde do catálogo.
+view ProductHealth {
+  // Título exibido na navegação.
+  title: { pt-BR: "Saúde do catálogo", en: "Catalog health" }
+  // Tipo da view: relatório agregado.
+  type: report
+  // Documentos consultados como fonte dos indicadores.
+  sources: [Product, Category]
+  // Papéis autorizados a abrir a view.
+  roles: [Publisher]
+
+  // Filtros disponíveis na tela do relatório.
+  filters { category; status }
+
+  // Métricas calculadas sobre os documentos de origem.
+  metrics {
+    // Quantidade de produtos publicados.
+    published: count(Product) where status == Published
+    // Quantidade de produtos em rascunho.
+    drafts: count(Product) where status == Draft
+    // Preço médio dos produtos.
+    avgPrice: avg(Product.price)
+    // Soma dos pesos dos produtos.
+    totalWeight: sum(Product.weight)
+  }
+
+  // Unidades de medida usadas na exibição das métricas.
+  units { avgPrice: BRL; totalWeight: kg }
+  // Frescor máximo aceitável dos dados antes de recálculo.
+  freshness: 15m
+  // Formatos de exportação disponíveis para o relatório.
+  export: [csv]
+}

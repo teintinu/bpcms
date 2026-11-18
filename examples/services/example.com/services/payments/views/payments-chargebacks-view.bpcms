@@ -1,0 +1,22 @@
+// service: example.com/services/payments
+
+// Lista tabular de contestações.
+view Chargebacks {
+  // Título exibido na navegação.
+  title: { pt-BR: "Contestações", en: "Chargebacks" }
+  type: table // Tipo da view: tabela.
+  // Documento que alimenta a tabela.
+  source: Chargeback
+  // Papéis que podem abrir a view.
+  roles: [Analyst, Manager]
+
+  // Colunas exibidas em cada linha.
+  columns { payment; amount; status; dueAt }
+  // Filtros disponíveis no topo da tabela.
+  filters { status; period }
+  // Ações disponíveis sobre as linhas.
+  actions {
+    // Abre o detalhe da contestação selecionada.
+    open -> ChargebackDetail
+  }
+}

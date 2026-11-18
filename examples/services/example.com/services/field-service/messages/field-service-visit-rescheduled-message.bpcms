@@ -1,0 +1,17 @@
+// service: example.com/services/field-service
+
+// Mensagem emitida quando uma visita é reagendada.
+message VisitRescheduled {
+  // Título exibido na mensagem e na caixa de entrada.
+  title: { pt-BR: "Visita reagendada", en: "Visit rescheduled" }
+  // Documento sobre o qual a mensagem fala.
+  about: Visit
+
+  // Dados carregados pela mensagem.
+  payload {
+    // Início da nova janela combinada.
+    windowStart: DateTime { title: { pt-BR: "Nova janela de", en: "New window from" } }
+    // Fim da nova janela combinada.
+    windowEnd: DateTime { title: { pt-BR: "Nova janela até", en: "New window to" } }
+  }
+}

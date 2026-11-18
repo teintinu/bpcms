@@ -1,0 +1,29 @@
+// service: example.com/services/catalog
+
+// Dashboard de controle do catálogo para gerentes.
+view PublishingControl {
+  // Título exibido na navegação.
+  title: { pt-BR: "Controle do catálogo", en: "Catalog control" }
+  // Tipo da view: painel de indicadores.
+  type: dashboard
+  // Documentos consultados como fonte dos indicadores.
+  sources: [Product]
+  // Papéis autorizados a abrir a view.
+  roles: [Publisher]
+  // Modo de atualização: em tempo real.
+  mode: live
+
+  // Filtros disponíveis no painel.
+  filters { category }
+
+  // Métricas calculadas sobre os produtos.
+  metrics {
+    // Quantidade de produtos em revisão.
+    inReview: count(Product) where status == InReview
+    // Quantidade de produtos rejeitados.
+    rejected: count(Product) where status == Rejected
+  }
+
+  // Frescor máximo aceitável dos dados antes de recálculo.
+  freshness: 15m
+}

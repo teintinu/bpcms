@@ -1,0 +1,19 @@
+// service: example.com/services/billing
+
+// Mensagem de lembrete de pagamento de uma nota.
+message PaymentReminder {
+  // Título exibido na interface.
+  title: { pt-BR: "Lembrete de pagamento", en: "Payment reminder" }
+  // Documento ao qual a mensagem se refere.
+  about: Invoice
+
+  // Dados transportados pela mensagem.
+  payload {
+    // Número da nota a pagar.
+    number: InvoiceNumber { title: { pt-BR: "Número", en: "Number" } }
+    // Total a pagar.
+    total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+    // Data de vencimento da nota.
+    dueAt: DateTime { title: { pt-BR: "Vencimento", en: "Due at" } }
+  }
+}

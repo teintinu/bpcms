@@ -1,0 +1,20 @@
+// service: example.com/services/inventory
+
+// Fila de contagens pendentes para operadores e gestores.
+view CountInbox {
+  // Título exibido na navegação.
+  title: { pt-BR: "Fila de contagens", en: "Count queue" }
+  // Tipo da view: caixa de entrada de tarefas.
+  type: inbox
+  // Papéis que enxergam esta fila.
+  roles: [WarehouseOperator, StockManager]
+
+  // Escopo da fila: apenas tarefas atribuídas aos papéis do usuário.
+  scope: roles
+  // Filtro que restringe as tarefas aos papéis do usuário atual.
+  filter { role in currentUser.roles }
+  // Agrupa os cartões pelo processo de origem.
+  groupBy: process
+  // Colunas exibidas em cada item da fila.
+  columns { title; subject; role; dueAt; priority }
+}

@@ -186,18 +186,3 @@ manual Unavailable {
   // Modo de atribuição: puxada pelo usuário da fila.
   assign: pull
 }
-
-// View de andamento derivada da instância do processo de entrada.
-view OrderProgress {
-  // Título exibido na navegação.
-  title: { pt-BR: "Andamento do pedido", en: "Order progress" }
-  // Tipo da view: uma tela de andamento de processo.
-  type: process
-  // Processo cujo andamento esta view exibe.
-  process: OrderIntake
-  // Papéis que podem abrir a view.
-  roles: [Clerk, Manager, Customer]
-
-  // Seções fixas exibidas na tela de andamento.
-  sections { current; participants; history; deadlines; documents; milestones; next }
-}
