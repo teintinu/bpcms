@@ -1,9 +1,14 @@
 // service: example.com/services/laboratory
 
+// Documento com escopo por instância que representa um laboratório.
 scopable document Laboratory {
+  // Título exibido na interface.
   title: { pt-BR: "Laboratório", en: "Laboratory" }
+  // Campos que compõem o laboratório.
   fields {
+    // Código identificador do laboratório; único e consultável.
     code: string { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    // Nome legível do laboratório, consultável por busca.
     name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
   }
 }

@@ -1,11 +1,18 @@
+// Declara o serviço de faturamento no caminho canônico do workspace.
 service "example.com/services/billing" {
+  // Título legível do serviço exibido no construtor.
   title: { pt-BR: "Faturamento", en: "Billing" }
-  version: 1.0.0
-  owner: "Billing"
+  version: 1.0.0 // Versão do serviço usada em release e comparação.
+  owner: "Billing" // Área responsável pela manutenção do serviço.
+  // Dependências externas referenciadas por este serviço.
   imports {
+    // Importa medidas e constantes padrão do construtor sob o alias std.
     service "bpcms.org/std" as std
+    // Importa o serviço de pedidos para referenciar Order.
     service "example.com/services/orders" as Orders
+    // Importa o serviço de pagamentos para referenciar Payment.
     service "example.com/services/payments" as Payments
+    // Importa o serviço de identidade para referenciar User.
     service "example.com/services/identity" as Identity
   }
 }

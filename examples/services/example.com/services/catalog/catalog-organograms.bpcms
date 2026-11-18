@@ -1,30 +1,46 @@
 // service: example.com/services/catalog
 
+// Declara o organograma de merchandising do serviço.
 organogram Merchandising {
+  // Título exibido no builder.
   title: { pt-BR: "Organograma de merchandising", en: "Merchandising organogram" }
 
+  // Estrutura hierárquica de subordinação entre as roles.
   hierarchy {
+    // Publisher é o superior imediato de Curator.
     Publisher > Curator
   }
 
+  // Declara explicitamente que Publisher gerencia Curator.
   Publisher manages [Curator]
 
+  // Regra de quatro olhos para operações sensíveis.
   fourEyes {
+    // A publicação de produto exige aprovação de um Publisher.
     product.publish requires Publisher
   }
 
+  // Segregação de funções entre etapas do fluxo de publicação.
   segregation {
+    // Quem submete para revisão não pode ser quem publica.
     product.submitForReview != product.publish
   }
 }
 
+// Role de editor do catálogo.
 role Curator {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Editor de catálogo", en: "Catalog editor" }
+  // Permissões de edição, envio para revisão e leitura do catálogo.
   permissions: [product.edit, product.submitForReview, catalog.view]
 }
 
+// Role de gerente do catálogo, com poder de publicação.
 role Publisher {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Gerente de catálogo", en: "Catalog manager" }
+  // Herda todas as permissões de Curator.
   inherits: Curator
+  // Permissões exclusivas de publicação, rejeição e relatórios.
   permissions: [product.publish, product.reject, report.view]
 }

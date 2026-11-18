@@ -1,117 +1,169 @@
 // service: example.com/services/contracts
 
+// Documento que registra cada versão revisada de um contrato.
 document ContractVersion {
+  // Título exibido na interface.
   title: { pt-BR: "Versão do contrato", en: "Contract version" }
-  version: 1
-  owner: "Contracts"
-  sync: read
+  version: 1 // Versão do artefato Document; diff e release comparam.
+  owner: "Contracts" // Área responsável pelo documento.
+  sync: read // Expõe os dados em modo somente leitura a outros serviços.
 
+  // Campos que compõem a versão.
   fields {
+    // Contrato ao qual esta versão pertence.
     contract: Contract {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Contrato", en: "Contract" }
-      lookup
+      lookup // Permite localizar versões pelo contrato.
     }
+    // Número sequencial da versão dentro do contrato.
     versionNumber: std.Count {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Número da versão", en: "Version number" }
-      required
+      required // Exige preenchimento.
     }
+    // Situação atual da versão, governada pela forma ContractVersionStatus.
     status: ContractVersionStatus {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
-      lookup
+      lookup // Permite filtrar versões pela situação.
     }
+    // Resumo legível das mudanças desta versão.
     summary: string {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Resumo das mudanças", en: "Change summary" }
-      maxLength: 500
+      maxLength: 500 // Limite de tamanho do resumo.
     }
+    // Instante em que a versão foi aprovada.
     approvedAt: DateTime {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Aprovada em", en: "Approved at" }
     }
+    // Instante em que a versão foi substituída por outra.
     supersededAt: DateTime {
+      // Rótulo exibido no formulário.
       title: { pt-BR: "Substituída em", en: "Superseded at" }
     }
   }
 
 
+  // Ações de negócio que mudam a situação da versão.
   actions {
+    // Aprova a versão, carimbando a data de aprovação.
     approve() {
+      // Rótulo do botão da ação.
       title: { pt-BR: "Aprovar versão", en: "Approve version" }
-      roles: [LegalCounsel]
-      to: status.Approved
+      roles: [LegalCounsel] // Somente o jurídico aprova versões.
+      to: status.Approved // Move a versão para Aprovada.
+      // Efeitos colaterais aplicados à versão na transição.
       {
-        approvedAt = now()
+        approvedAt = now() // Registra o instante da aprovação.
       }
     }
 
+    // Substitui a versão por uma mais nova, carimbando a data.
     supersede() {
+      // Rótulo do botão da ação.
       title: { pt-BR: "Substituir versão", en: "Supersede version" }
-      roles: [ContractManager]
-      to: status.Superseded
+      roles: [ContractManager] // Somente o gestor substitui versões.
+      to: status.Superseded // Move a versão para Substituída.
+      // Efeitos colaterais aplicados à versão na transição.
       {
-        supersededAt = now()
+        supersededAt = now() // Registra o instante da substituição.
       }
     }
   }
 
+  // Índices que aceleram as consultas por contrato e situação.
   indexes {
+    // Faixa ordenada por contrato e número da versão.
     byContract: [contract.id, versionNumber] range
+    // Hash para localizar versões pela situação.
     byStatus: [status] hash
   }
 
+  // Validação: o número da versão precisa ser positivo.
   rule versionNumber > 0 {
+    // Mensagem de erro exibida em português.
     pt-BR: "O número da versão precisa ser positivo"
+    // Mensagem de erro exibida em inglês.
     en: "Version number must be positive"
   }
 }
 
+// Máquina de estados que governa o ciclo de vida de uma versão.
 shape ContractVersionStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da versão do contrato", en: "Contract version status" }
-  base: state
-  initial: Draft
+  base: state // Forma de estado: valores representam fases com transições.
+  initial: Draft // Situação inicial de toda versão nova.
+  // Estado de elaboração: versão ainda não aprovada.
   value Draft {
+    // Título exibido no seletor de estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
-    icon: Draft
-    ordinal: 10
+    icon: Draft // Ícone usado para o estado.
+    ordinal: 10 // Posição do estado na linha do tempo.
 
+    // Transição para Aprovada, disparada na aprovação jurídica.
     transition Approved {
+      // Título exibido no histórico.
       title: { pt-BR: "Versão aprovada", en: "Version approved" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data em que a versão foi aprovada.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
       }
     }
 
+    // Transição para Substituída quando uma versão nova assume.
     transition Superseded {
+      // Título exibido no histórico.
       title: { pt-BR: "Versão substituída", en: "Version superseded" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data em que a versão foi substituída.
         supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
       }
     }
   }
+  // Estado aprovado: versão validada pelo jurídico.
   value Approved {
+    // Título exibido no seletor de estado.
     title: { pt-BR: "Aprovada", en: "Approved" }
-    icon: Approved
-    ordinal: 20
+    icon: Approved // Ícone usado para o estado.
+    ordinal: 20 // Posição do estado na linha do tempo.
 
+    // Transição para Substituída quando uma versão mais nova entra em vigor.
     transition Superseded {
+      // Título exibido no histórico.
       title: { pt-BR: "Versão substituída", en: "Version superseded" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data em que a versão foi substituída.
         supersededAt: DateTime { title: { pt-BR: "Substituída em", en: "Superseded at" } }
       }
     }
   }
+  // Estado final: versão que já foi trocada por outra.
   value Superseded {
+    // Título exibido no seletor de estado.
     title: { pt-BR: "Substituída", en: "Superseded" }
-    icon: Superseded
-    ordinal: 30
+    icon: Superseded // Ícone usado para o estado.
+    ordinal: 30 // Posição do estado na linha do tempo.
   }
 }
 
+// Lista tabular das versões de contrato.
 view ContractVersions {
+  // Título exibido na navegação.
   title: { pt-BR: "Versões do contrato", en: "Contract versions" }
-  type: table
-  source: ContractVersion
-  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+  type: table // Tipo do artefato: tabela.
+  source: ContractVersion // Documento que alimenta a lista.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis autorizados.
 
+  // Colunas exibidas em cada linha.
   columns { contract; versionNumber; status; summary; approvedAt }
+  // Filtros oferecidos na barra da lista.
   filters { status; contract }
-  pagination: 50
+  pagination: 50 // Quantidade de linhas por página.
 }

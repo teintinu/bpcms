@@ -1,11 +1,18 @@
 // service: example.com/services/claims
+// Declara o serviço Claims: identidade, versão e dependências do domínio de sinistros.
 service "example.com/services/claims" {
+  // Título exibido no builder e no catálogo de serviços.
   title: { pt-BR: "Sinistros", en: "Claims" }
+  // Versão do artefato Service; releases e diffs comparam este valor.
   version: 1.0.0
+  // Área de negócio responsável pela manutenção do serviço.
   owner: "Claims"
 
+  // Dependências de outros serviços usadas pelos artefatos deste serviço.
   imports {
+    // Importa medidas e constantes padrão (std.Money etc.) sob o alias std.
     service "bpcms.org/std" as std
+    // Importa o serviço de identidade para referenciar Identity.User.
     service "example.com/services/identity" as Identity
   }
 }

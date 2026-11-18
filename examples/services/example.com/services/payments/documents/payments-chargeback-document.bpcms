@@ -1,240 +1,375 @@
 // service: example.com/services/payments
 
+// Documento que representa uma contestação de pagamento aberta pela bandeira.
 document Chargeback {
+  // Título exibido na interface.
   title: { pt-BR: "Contestação", en: "Chargeback" }
-  version: 1
-  owner: "Payments"
-  sync: live
+  version: 1 // Versão do artefato Document; entra no diff e no release.
+  owner: "Payments" // Área responsável pelo documento.
+  sync: live // Sincronização em tempo real entre instâncias.
 
+  // Campos que compõem a contestação.
   fields {
+    // Pagamento contestado; consultável.
     payment: Payment {
+      // Título exibido no formulário.
       title: { pt-BR: "Pagamento", en: "Payment" }
-      lookup
+      lookup // Permite localizar a cobrança pelo pagamento contestado.
     }
+    // Valor contestado em reais; consultável.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    // Motivo informado pela bandeira ao abrir a contestação.
     disputeReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da contestação", en: "Dispute reason" }
-      maxLength: 500
+      maxLength: 500 // Limita o motivo a quinhentos caracteres.
     }
+    // Situação atual da contestação; consultável.
     status: ChargebackStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Prazo-limite para responder à bandeira; consultável.
     dueAt: DateTime { title: { pt-BR: "Prazo de resposta", en: "Response due" }, lookup }
+    // Instante em que a contestação foi aberta.
     openedAt: DateTime { title: { pt-BR: "Aberta em", en: "Opened at" } }
+    // Instante em que a contestação foi decidida.
     decidedOn: DateTime { title: { pt-BR: "Decidida em", en: "Decided on" } }
+    // Indica se a decisão da bandeira foi favorável ao lojista.
     networkFavorable: boolean {
+      // Título exibido no formulário.
       title: { pt-BR: "Decisão favorável", en: "Favorable decision" }
     }
+    // Resumo textual das evidências reunidas.
     evidenceNotes: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Evidências", en: "Evidence" }
-      maxLength: 2000
+      maxLength: 2000 // Limita as evidências a dois mil caracteres.
     }
+    // Documento comprobatório anexado.
     evidence: EvidenceDocument {
+      // Título exibido no formulário.
       title: { pt-BR: "Documento de evidência", en: "Evidence document" }
     }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Busca as contestações de um pagamento por hash.
     byPayment: [payment.id] hash
+    // Ordena as contestações por situação e prazo.
     byDue: [status, dueAt] range
   }
 
 
+  // Ações que alteram a contestação e disparam transições de situação.
   actions {
+    // Abre a contestação com motivo e prazo de resposta.
     open(chargebackReason: string, dueAt: DateTime) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Abrir contestação", en: "Open chargeback" }
+      // Papéis autorizados a abrir contestações.
       roles: [PaymentEngine]
       {
+        // Persiste o motivo informado pela bandeira.
         disputeReason = chargebackReason
+        // Carimba o instante de abertura.
         openedAt = now()
-        emit Opened
+        emit Opened // Emite o evento de contestação aberta.
       }
     }
 
+    // Envia as evidências de defesa à bandeira.
     submitEvidence(evidenceNote: string, evidenceFile: EvidenceDocument) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Enviar evidências", en: "Submit evidence" }
+      // Papéis autorizados a enviar evidências.
       roles: [Analyst]
 
+      // Move a situação para Em análise.
       to: status.UnderReview
 
+      // Regra de negócio: exige justificativa mínima nas evidências.
       rule evidenceNote.length >= 20 {
+        // Mensagem da regra em português.
         pt-BR: "Descreva as evidências com pelo menos 20 caracteres"
+        // Mensagem da regra em inglês.
         en: "Describe the evidence with at least 20 characters"
       }
       {
+        // Persiste o resumo das evidências.
         evidenceNotes = evidenceNote
+        // Anexa o documento comprobatório.
         evidence = evidenceFile
       }
     }
 
+    // Acrescenta uma anotação interna às evidências.
     annotateEvidence(note: string) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Anotar evidências", en: "Annotate evidence" }
+      // Papéis autorizados a anotar.
       roles: [Analyst]
       {
+        // Persiste a anotação no resumo de evidências.
         evidenceNotes = note
       }
     }
 
+    // Registra a decisão recebida da bandeira.
     registerDecision(favorable: boolean, decidedAt: DateTime) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Registrar decisão da bandeira", en: "Record network decision" }
+      // Papéis autorizados a registrar a decisão.
       roles: [PaymentEngine]
       {
+        // Guarda se a decisão foi favorável.
         networkFavorable = favorable
+        // Carimba o instante da decisão.
         decidedOn = decidedAt
       }
     }
 
+    // Marca a contestação como ganha.
     win() {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Marcar vitória", en: "Mark as won" }
+      // Papéis autorizados a marcar vitória.
       roles: [Manager, PaymentEngine]
 
+      // Move a situação para Ganha.
       to: status.Won
+      // Payload do evento de vitória emitido pela transição.
       emits { decidedAt: decidedOn }
     }
 
+    // Marca a contestação como perdida.
     lose() {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Marcar perda", en: "Mark as lost" }
+      // Papéis autorizados a marcar perda.
       roles: [Manager, PaymentEngine]
 
+      // Move a situação para Perdida.
       to: status.Lost
+      // Payload do evento de perda emitido pela transição.
       emits { decidedAt: decidedOn }
     }
 
+    // Aceita a contestação, encerrando-a como perdida.
     concede() {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      // Papéis autorizados a aceitar a contestação.
       roles: [Manager]
 
+      // Move a situação para Perdida.
       to: status.Lost
+      // Payload do evento de perda emitido pela transição.
       emits { decidedAt: decidedOn }
       {
+        // Carimba o instante da decisão.
         decidedOn = now()
       }
     }
   }
 
+  // Regra de negócio: contestação perdida exige data de decisão.
   rule status == Lost implies decidedOn != null {
+    // Mensagem da regra em português.
     pt-BR: "Informe a decisão da bandeira"
+    // Mensagem da regra em inglês.
     en: "Enter the network decision"
   }
 }
 
+// Máquina de estados da situação da contestação.
 shape ChargebackStatus {
+  // Título exibido no builder.
   title: { pt-BR: "Situação da contestação", en: "Chargeback status" }
-  base: state
+  base: state // Forma de estado: valores com transições.
+  // Estado inicial e transição que o cria.
   initial: Open with transition Opened {
+    // Título da transição exibido na trilha.
     title: { pt-BR: "Contestação aberta", en: "Chargeback opened" }
+    // Dados que acompanham a transição inicial.
     payload {
+      // Valor contestado no payload.
       amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+      // Prazo de resposta no payload.
       dueAt: DateTime { title: { pt-BR: "Prazo", en: "Due" } }
     }
   }
 
+  // Estado de contestação recém-aberta.
   value Open {
+    // Título exibido na interface.
     title: { pt-BR: "Aberta", en: "Open" }
+    // Ícone associado ao estado.
     icon: Open
-    ordinal: 10
+    ordinal: 10 // Ordem de exibição entre os estados.
 
+    // Transição para Em análise, disparada pelo envio de evidências.
     transition UnderReview {
+      // Nome do evento que dispara a transição.
       event: EvidenceSubmitted
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Evidências enviadas", en: "Evidence submitted" }
+      // Dados que acompanham a transição.
       payload {
+        // Resumo das evidências enviadas.
         evidenceNote: string { title: { pt-BR: "Resumo", en: "Summary" } }
       }
     }
 
+    // Transição para Perdida.
     transition Lost {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      // Dados que acompanham a transição.
       payload {
+        // Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
 
+    // Transição adicional para Perdida, quando a decisão chega antes das evidências.
     transition Lost {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      // Dados que acompanham a transição.
       payload {
+        // Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
   }
+  // Estado de contestação em análise pela bandeira.
   value UnderReview {
+    // Título exibido na interface.
     title: { pt-BR: "Em análise", en: "Under review" }
+    // Ícone associado ao estado.
     icon: UnderReview
-    ordinal: 20
+    ordinal: 20 // Ordem de exibição entre os estados.
 
+    // Transição para Ganha.
     transition Won {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+      // Dados que acompanham a transição.
       payload {
+        // Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
 
+    // Transição para Perdida.
     transition Lost {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+      // Dados que acompanham a transição.
       payload {
+        // Instante da decisão.
         decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
       }
     }
   }
+  // Estado final de contestação ganha.
   value Won {
+    // Título exibido na interface.
     title: { pt-BR: "Ganha", en: "Won" }
+    // Ícone associado ao estado.
     icon: Won
-    ordinal: 30
+    ordinal: 30 // Ordem de exibição entre os estados.
   }
+  // Estado final de contestação perdida.
   value Lost {
+    // Título exibido na interface.
     title: { pt-BR: "Perdida", en: "Lost" }
+    // Ícone associado ao estado.
     icon: Lost
-    ordinal: 40
+    ordinal: 40 // Ordem de exibição entre os estados.
   }
 
-  format: plain
+  format: plain // Formato simples de exibição da situação.
 }
 
+// Forma de anexo usada como documento comprobatório.
 shape EvidenceDocument {
+  // Título exibido no builder.
   title: { pt-BR: "Documento de evidência", en: "Evidence document" }
-  base: attachment
+  base: attachment // Forma de anexo de arquivo.
+  // Tipos de arquivo aceitos: PDF e imagens.
   mime: [application/pdf, image/*]
 }
 
+// Lista tabular de contestações.
 view Chargebacks {
+  // Título exibido na navegação.
   title: { pt-BR: "Contestações", en: "Chargebacks" }
-  type: table
+  type: table // Tipo da view: tabela.
+  // Documento que alimenta a tabela.
   source: Chargeback
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Colunas exibidas em cada linha.
   columns { payment; amount; status; dueAt }
+  // Filtros disponíveis no topo da tabela.
   filters { status; period }
+  // Ações disponíveis sobre as linhas.
   actions {
+    // Abre o detalhe da contestação selecionada.
     open -> ChargebackDetail
   }
 }
 
+// Tela de detalhe de uma contestação.
 view ChargebackDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da contestação", en: "Chargeback detail" }
-  type: detail
+  type: detail // Tipo da view: detalhe de documento.
+  // Documento exibido na tela.
   document: Chargeback
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; evidence; timeline }
+  // Ações disponíveis na tela de detalhe.
   actions {
+    // Abre o andamento do processo de contestação.
     progress -> ChargebackProgress
   }
 }
 
+// Mensagem que empacota as evidências enviadas à bandeira.
 message EvidencePackage {
+  // Título exibido no builder e na trilha.
   title: { pt-BR: "Pacote de evidências", en: "Evidence package" }
+  // Documento ao qual a mensagem se refere.
   about: Chargeback
 
+  // Dados transportados pela mensagem.
   payload {
+    // Instante em que as evidências foram enviadas.
     submittedAt: DateTime { title: { pt-BR: "Enviado em", en: "Submitted at" } }
+    // Resumo textual das evidências.
     note: string { title: { pt-BR: "Resumo", en: "Summary" } }
+    // Documento comprobatório anexado.
     evidence: EvidenceDocument { title: { pt-BR: "Documento", en: "Document" } }
   }
 }
 
+// Mensagem com o resultado da contestação devolvido pela bandeira.
 message ChargebackResult {
+  // Título exibido no builder e na trilha.
   title: { pt-BR: "Resultado da contestação", en: "Chargeback result" }
+  // Documento ao qual a mensagem se refere.
   about: Chargeback
 
+  // Dados transportados pela mensagem.
   payload {
+    // Indica se a decisão favoreceu o lojista.
     favorable: boolean { title: { pt-BR: "Favorável", en: "Favorable" } }
+    // Instante da decisão da bandeira.
     decidedAt: DateTime { title: { pt-BR: "Decidida em", en: "Decided at" } }
   }
 }

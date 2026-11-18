@@ -1,12 +1,18 @@
 // service: example.com/services/notifications
 
+// Caixa de entrada operacional das notificações a tratar.
 view NotificationInbox {
+  // Rótulo da view exibido na navegação.
   title: { pt-BR: "Fila de notificações", en: "Notification queue" }
+  // Tipo inbox: fila de trabalho distribuída por papel.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
-  scope: lanes
-  filter { lane in currentUser.lanes }
-  groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  scope: roles // Escopo da fila definido pelos papéis do usuário.
+  // Filtro: mostra só itens dos papéis do usuário atual.
+  filter { role in currentUser.roles }
+  groupBy: process // Agrupa a fila por processo.
+  // Colunas exibidas em cada grupo da fila.
+  columns { title; subject; role; dueAt; priority }
 }

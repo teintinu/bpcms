@@ -1,12 +1,22 @@
+// Raiz do serviço de Atendimento; a URI é a identidade do serviço no workspace.
 service "example.com/services/support" {
+  // Título exibido no builder e na navegação.
   title: { pt-BR: "Atendimento", en: "Support" }
+  // Versão do serviço, comparada em release e no lock.
   version: 1.0.0
+  // Área responsável pelo serviço, usada em governança.
   owner: "Support"
+  // Dependências externas trazidas para o escopo por alias.
   imports {
+    // Medidas e constantes padrão do construtor (dinheiro, duração, contagem).
     service "bpcms.org/std" as std
+    // Pedidos do cliente, usados nos campos Order dos documentos.
     service "example.com/services/orders" as Orders
+    // Pagamentos, usados para executar o reembolso da devolução.
     service "example.com/services/payments" as Payments
+    // Remessas, usadas para conferir a devolução recebida.
     service "example.com/services/shipping" as Shipping
+    // Identidade, origem dos usuários que abrem chamados e assumem filas.
     service "example.com/services/identity" as Identity
   }
 }

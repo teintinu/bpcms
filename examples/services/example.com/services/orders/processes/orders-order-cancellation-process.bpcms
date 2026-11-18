@@ -1,87 +1,122 @@
 // service: example.com/services/orders
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process OrderCancellation for Order {
+// Declara o processo de cancelamento; o argumento é o pedido-sujeito da instância.
+process OrderCancellation(order: Order) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Cancelar o pedido com motivo, liberar a reserva e reverter se falhar"
-  owner: "Orders"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Cancelar o pedido com motivo, liberar a reserva e reverter se falhar"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  pool Company {
-    internal
-    lane Management { role: Manager }
+  // Gatilho: inicia uma instância quando o pedido emite CancellationRequested.
+  on [Order.CancellationRequested]
+  // Chave de identidade, correlação e dedup da instância.
+  key: order // o caso é o próprio pedido
+
+  // Bloco externo: captura o timeout da análise de cancelamento.
+  try {
+    // Abre o form para o gerente aprovar ou recusar o cancelamento.
+    CancellationReview.show({ order })
+  } catch (Timeout) { // captura o timeout da análise
+    // O prazo da análise esgotou: reabre o pedido (compensação) e não cancela.
+    Order.reopen()
+    // Encerra o caso no desfecho Rejected.
+    return Rejected
   }
 
-  start Requested { event: Order.CancellationRequested }
-
-  task Review {
-    lane: Management
-    form: CancellationReview
-    sla: 1d
-    priority: 70
-    assign: pull
-    on timer 2d -> Undo
+  // Sem aprovação registrada no documento, o caso termina sem cancelar.
+  if (order.status != CancellationApproved) {
+    // Retorna o desfecho em que o pedido segue ativo.
+    return Rejected
   }
 
-  task CancelOrder {
-    lane: System
-    action: Order.cancel
-    with { reason: order.cancellationReason }
-    sla: 1m
+  // Aplica o cancelamento no pedido usando o motivo informado na análise.
+  Order.cancel({ reason: order.cancellationReason })
+
+  // Bloco que tenta liberar a reserva de estoque após o cancelamento.
+  try {
+    // Chama o serviço de estoque para liberar a reserva do pedido.
+    Inventory.Reservation.release()
+  } catch (ReservationLocked) { // captura a reserva ainda bloqueada
+    // Compensação explícita do cancelamento já aplicado.
+    Order.reopen()
+    // Retorna o desfecho de não cancelado.
+    return Rejected
   }
 
-  task ReleaseStock {
-    lane: System
-    action: Reservation.release
-    sla: 5m
-    on error ReservationLocked -> Undo
-  }
+  // Encerra no desfecho de sucesso do cancelamento.
+  return Cancelled
 
-  task UndoCancel {
-    lane: System
-    action: Order.reopen
-    compensates: CancelOrder
-    sla: 1m
-  }
-
-  rollback Undo
-
+  // Declara o desfecho de sucesso do caso.
   end Cancelled {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
+  // Declara o desfecho de não cancelamento.
   end Rejected {
+    // Título exibido no histórico.
     title: { pt-BR: "Não cancelado", en: "Not cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Requested -> Review
-  Review.approve -> CancelOrder
-  Review.reject -> Rejected
-  CancelOrder -> ReleaseStock
-  ReleaseStock -> Cancelled
-  Undo -> Rejected
 }
 
-form CancellationReview {
-  title: { pt-BR: "Analisar cancelamento", en: "Review cancellation" }
-  document: Order
+// Erro de negócio: a reserva de estoque está bloqueada.
+error ReservationLocked {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Reserva de estoque bloqueada", en: "Stock reservation locked" }
+}
 
+// Form de decisão do gerente sobre o cancelamento.
+form CancellationReview {
+  // Título exibido na inbox e na tarefa.
+  title: { pt-BR: "Analisar cancelamento", en: "Review cancellation" }
+  // Documento que a tarefa manipula.
+  document: Order
+  // Papéis que podem executar a tarefa.
+  roles: [Manager]
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 2d
+  // Prioridade da tarefa na fila.
+  priority: 70
+  // Modo de atribuição: puxada pelo usuário da fila.
+  assign: pull
+
+  // Campos do pedido visíveis na tarefa.
   fields {
+    // Cliente do pedido.
     customer
+    // Total do pedido.
     total
+    // Situação atual do pedido.
     status
+    // Motivo registrado na solicitação de cancelamento.
     cancellationReason
   }
 
+  // Ações disponíveis na tarefa.
   actions {
+    // Aprova o cancelamento e leva o pedido a CancellationApproved.
     approve {
+      // Título do botão exibido na tarefa.
       title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
+      // Chama a action do documento que aprova o cancelamento.
       calls: Order.approveCancellation
     }
+    // Recusa o cancelamento e devolve o pedido para Placed.
     reject {
+      // Título do botão exibido na tarefa.
       title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      // Chama a action do documento que recusa o cancelamento.
       calls: Order.rejectCancellation
     }
   }

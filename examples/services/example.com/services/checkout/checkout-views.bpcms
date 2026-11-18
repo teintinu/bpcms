@@ -1,10 +1,17 @@
 // service: example.com/services/checkout
 
+// View de inbox com as finalizações do próprio usuário.
 view MyCheckouts {
+  // Título exibido na navegação.
   title: { pt-BR: "Minhas finalizações", en: "My checkouts" }
+  // Tipo da view: lista de tarefas de entrada.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [Customer, SupportAgent]
+  // Mostra apenas os itens do próprio usuário.
   scope: mine
+  // Agrupa os itens pelo processo de origem.
   groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  // Colunas exibidas na lista.
+  columns { title; subject; dueAt; priority }
 }

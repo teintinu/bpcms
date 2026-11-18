@@ -1,94 +1,158 @@
 // service: example.com/services/hr
 
+// Documento que registra o pedido de equipamento de um colaborador.
 document EquipmentOrder {
+  // Título exibido na interface.
   title: { pt-BR: "Pedido de equipamento", en: "Equipment order" }
+  // Versão do artefato usada em diff e release.
   version: 1
+  // Área responsável pelo documento.
   owner: "People"
+  // Sincronização em tempo real entre instâncias e telas.
   sync: live
 
+  // Campos que compõem o pedido de equipamento.
   fields {
+    // Colaborador que receberá o equipamento; consultável.
     employee: Employee { title: { pt-BR: "Colaborador", en: "Employee" }, lookup }
+    // Tipo de equipamento pedido; consultável.
     kind: EquipmentKind { title: { pt-BR: "Equipamento", en: "Equipment" }, lookup }
+    // Fornecedor do equipamento.
     vendor: string { title: { pt-BR: "Fornecedor", en: "Vendor" }, maxLength: 120 }
+    // Número de série do equipamento entregue; consultável.
     serial: string { title: { pt-BR: "Número de série", en: "Serial number" }, lookup, maxLength: 60 }
+    // Situação atual do pedido; consultável.
     status: EquipmentOrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data e hora do pedido; preenchida pelo sistema.
     orderedAt: DateTime { title: { pt-BR: "Pedido em", en: "Ordered at" }, readonly }
+    // Data e hora da entrega; preenchida pelo sistema.
     deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" }, readonly }
+    // Data e hora da devolução; preenchida pelo sistema.
     returnedAt: DateTime { title: { pt-BR: "Devolvido em", en: "Returned at" }, readonly }
   }
 
+  // Índices que aceleram as consultas do documento.
   indexes {
+    // Índice hash por colaborador.
     byEmployee: [employee.id] hash
+    // Índice ordenado por situação e data do pedido.
     byStatus: [status, orderedAt] range
   }
 
 
+  // Ações que alteram o pedido de equipamento.
   actions {
+    // Registra a entrega do equipamento com o número de série.
     deliver(serialNumber: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar entrega", en: "Register delivery" }
+      // Papéis autorizados a executar a ação.
       roles: [ITAdmin]
+      // Transição de situação disparada pela ação.
       to: status.Delivered
+      // Payload do evento emitido pela transição.
       emits { serial: serialNumber }
+      // Efeito da ação: grava série e data de entrega.
       { serial = serialNumber; deliveredAt = now() }
     }
 
+    // Registra a devolução do equipamento.
     returnItem() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar devolução", en: "Register return" }
+      // Papéis autorizados a executar a ação.
       roles: [ITAdmin]
+      // Transição de situação disparada pela ação.
       to: status.Returned
+      // Payload do evento emitido pela transição.
       emits { at: now() }
+      // Efeito da ação: grava a data de devolução.
       { returnedAt = now() }
     }
   }
 }
 
+// Máquina de estados da situação do pedido de equipamento.
 shape EquipmentOrderStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do equipamento", en: "Equipment order status" }
+  // Base de estado: valores com ciclo de vida e transições.
   base: state
+  // Situação inicial de um pedido recém-criado.
   initial: Ordered
 
+  // Situação de equipamento pedido.
   value Ordered {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Pedido", en: "Ordered" }
+    // Ícone associado ao valor.
     icon: status.ordered
+    // Ordem de exibição do valor.
     ordinal: 10
 
+    // Transição para equipamento entregue.
     transition Delivered {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Equipamento entregue", en: "Equipment delivered" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Número de série do equipamento entregue.
         serial: string { title: { pt-BR: "Número de série", en: "Serial number" } }
       }
     }
   }
+  // Situação de equipamento entregue.
   value Delivered {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Entregue", en: "Delivered" }
+    // Ícone associado ao valor.
     icon: status.delivered
+    // Ordem de exibição do valor.
     ordinal: 20
 
+    // Transição para equipamento devolvido.
     transition Returned {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Equipamento devolvido", en: "Equipment returned" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora da devolução.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
+  // Situação final de equipamento devolvido.
   value Returned {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Devolvido", en: "Returned" }
+    // Ícone associado ao valor.
     icon: status.returned
+    // Ordem de exibição do valor.
     ordinal: 30
   }
 }
 
+// Tabela de consulta dos pedidos de equipamento.
 view EquipmentOrdersTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Equipamentos", en: "Equipment orders" }
+  // Tipo da view: tabela de documentos.
   type: table
+  // Documento exibido na tabela.
   source: EquipmentOrder
+  // Papéis que podem abrir a tabela.
   roles: [ITAdmin, PeopleOps]
 
+  // Colunas exibidas na tabela.
   columns { employee; kind; vendor; serial; status }
+  // Filtros disponíveis na tabela.
   filters { status; kind }
 
+  // Ações disponíveis sobre as linhas da tabela.
   actions {
+    // Registra a entrega do equipamento da linha, pedindo o número de série.
     deliver -> EquipmentOrder.deliver(serialNumber)
+    // Registra a devolução do equipamento da linha.
     returnItem -> EquipmentOrder.returnItem
   }
 }

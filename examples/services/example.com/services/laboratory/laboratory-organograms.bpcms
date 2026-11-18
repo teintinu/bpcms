@@ -1,73 +1,113 @@
 // service: example.com/services/laboratory
 
+// Organograma que estrutura papéis e hierarquia do laboratório.
 organogram Laboratory {
+  // Título exibido no builder e na revisão.
   title: { pt-BR: "Organograma do laboratório", en: "Laboratory organogram" }
-  scopes: [Laboratory]
+  scopes: [Laboratory] // Escopos em que as roles deste organograma valem.
 
+  // Hierarquia de subordinação entre as roles.
   hierarchy {
+    // Cadeia principal: gestor, patologista, analista e coletador.
     LabManager > Pathologist > Analyst > Collector
+    // O gestor também responde pela ligação com laboratórios de apoio.
     LabManager > SupportLiaison
+    // O gestor também responde pelo equipamento analisador.
     LabManager > AnalyzerDevice
   }
 
+  // O gestor administra as roles operacionais abaixo dele.
   LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
+  // Delega ao patologista após sete dias de ausência do gestor.
   LabManager delegates to Pathologist when absent for 7d
 
+  // Regras de segregação de funções.
   segregation {
+    // Quem executa o exame não pode liberar o resultado.
     exam.perform != exam.release
   }
 
+  // Assinatura exigida nas decisões do organograma.
   signature {
+    // Papel que assina as liberações.
     Pathologist
   }
 }
 
+// Papel responsável pela coleta das amostras.
 role Collector {
+  // Título exibido na interface.
   title: { pt-BR: "Coletador", en: "Collector" }
-  scopes: [Laboratory]
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  // Permissões concedidas ao coletador.
   permissions: [
+    // Coleta de amostra para hemograma.
     sample.collect.hemogram,
+    // Coleta de amostra para glicemia.
     sample.collect.glucose,
+    // Consulta de amostras.
     sample.view,
+    // Execução de exame de hemograma.
     exam.perform.hemogram
   ]
 }
 
+// Papel do equipamento analisador automatizado.
 role AnalyzerDevice {
+  // Título exibido na interface.
   title: { pt-BR: "Equipamento analisador", en: "Analyzer device" }
-  scopes: [Laboratory]
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  // Capacidades técnicas do equipamento.
   capabilities { equipment, laboratory-protocol }
+  // Permissão de execução do hemograma.
   permissions: [exam.perform.hemogram]
 }
 
+// Papel do analista que processa as amostras.
 role Analyst {
+  // Título exibido na interface.
   title: { pt-BR: "Analista", en: "Analyst" }
-  scopes: [Laboratory]
-  inherits: Collector
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  inherits: Collector // Herda as permissões do coletador.
+  // Permissões adicionais do analista.
   permissions: [
+    // Coleta de amostra para cultura.
     sample.collect.culture,
+    // Coleta de amostra para hemoglobina glicada.
     sample.collect.hba1c,
+    // Execução de exame de cultura.
     exam.perform.culture,
+    // Execução de exame de hemoglobina glicada.
     exam.perform.hba1c,
+    // Registro de resultados.
     result.enter
   ]
 }
 
+// Papel do patologista que revisa e libera resultados.
 role Pathologist {
+  // Título exibido na interface.
   title: { pt-BR: "Patologista", en: "Pathologist" }
-  scopes: [Laboratory]
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  // Permissões de revisão e liberação.
   permissions: [exam.review, exam.release, result.release]
 }
 
+// Papel de ligação com os laboratórios de apoio.
 role SupportLiaison {
+  // Título exibido na interface.
   title: { pt-BR: "Ligação com apoio", en: "Support liaison" }
-  scopes: [Laboratory]
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  // Permissões de recebimento e encaminhamento.
   permissions: [sample.receive, support.refer]
 }
 
+// Papel do gestor do laboratório.
 role LabManager {
+  // Título exibido na interface.
   title: { pt-BR: "Gerente do laboratório", en: "Laboratory manager" }
-  scopes: [Laboratory]
-  inherits: Pathologist
+  scopes: [Laboratory] // Escopos em que a role é válida.
+  inherits: Pathologist // Herda as permissões do patologista.
+  // Permissões administrativas e de encaminhamento.
   permissions: [lab.manage, support.refer]
 }

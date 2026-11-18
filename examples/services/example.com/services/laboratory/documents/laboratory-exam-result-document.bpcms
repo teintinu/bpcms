@@ -1,129 +1,190 @@
 // service: example.com/services/laboratory
 
+// Documento que representa o resultado de um exame laboratorial.
 document ExamResult {
+  // Título exibido na interface.
   title: { pt-BR: "Resultado de exame", en: "Exam result" }
-  version: 1
-  owner: "Laboratory"
-  sync: live
+  version: 1 // Versão do artefato Document.
+  owner: "Laboratory" // Dono de negócio do documento.
+  sync: live // Sincronização em tempo real entre cliente e servidor.
+  // Campos que compõem o resultado.
   fields {
+    // Laboratório responsável pelo resultado.
     laboratory: Laboratory {
+      // Título exibido no formulário.
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
+    // Pedido de exame de origem; consultável.
     examOrder: ExamOrder {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Exam order" }
+      // Permite localizar resultados pelo pedido.
       lookup
     }
+    // Amostra analisada; consultável.
     sample: Sample {
+      // Título exibido no formulário.
       title: { pt-BR: "Amostra", en: "Sample" }
+      // Permite localizar resultados pela amostra.
       lookup
     }
-    value: string { title: { pt-BR: "Valor", en: "Value" } }
-    unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
+    value: string { title: { pt-BR: "Valor", en: "Value" } } // Valor medido na análise.
+    unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // Unidade de medida do valor.
+    // Marca se o resultado é crítico.
     critical: boolean { title: { pt-BR: "Resultado crítico", en: "Critical result" } }
+    // Situação do resultado; consultável para filtros.
     status: ExamResultStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Instante em que o resultado foi validado.
     validatedAt: DateTime { title: { pt-BR: "Validado em", en: "Validated at" } }
+    // Instante em que o resultado foi assinado.
     signedAt: DateTime { title: { pt-BR: "Assinado em", en: "Signed at" } }
+    // Instante em que o resultado foi liberado.
     releasedAt: DateTime { title: { pt-BR: "Liberado em", en: "Released at" } }
   }
 
+  // Índices secundários para consulta.
   indexes {
+    // Índice por pedido de exame, consultado por igualdade.
     byOrder: [examOrder.id] hash
+    // Índice por situação e data de liberação, consultado por faixa.
     byStatus: [status, releasedAt] range
   }
 
 
+  // Ações que movimentam o resultado.
   actions {
+    // Action que registra a leitura do analisador no resultado.
     record(order: ExamOrder, sampleRef: Sample, measured: string, measUnit: string, isCritical: boolean){
+      // Título exibido na interface.
       title: { pt-BR: "Registrar leitura", en: "Record reading" }
-      roles: [Analyst]
-      returns: ExamResult
+      roles: [Analyst] // Papéis autorizados a registrar a leitura.
+      returns: ExamResult // Devolve o resultado criado ao chamador.
+      // Corpo da action: grava os dados medidos.
       {
+        // Vincula o resultado ao pedido de exame.
         examOrder = order
+        // Vincula o resultado à amostra analisada.
         sample = sampleRef
+        // Grava o valor medido.
         value = measured
+        // Grava a unidade de medida.
         unit = measUnit
+        // Grava a marca de resultado crítico.
         critical = isCritical
       }
     }
 
+    // Action que valida o resultado.
     validate(){
+      // Título exibido na interface.
       title: { pt-BR: "Validar", en: "Validate" }
-      roles: [Analyst]
-      to: status.Validated
+      roles: [Analyst] // Papéis autorizados a validar.
+      to: status.Validated // Transição para o estado Validated.
+      // Corpo da action: grava a data de validação.
       {
+        // Registra o instante da validação.
         validatedAt = now()
       }
     }
 
+    // Action que assina o resultado.
     sign(){
+      // Título exibido na interface.
       title: { pt-BR: "Assinar", en: "Sign" }
-      roles: [Pathologist]
-      to: status.Signed
+      roles: [Pathologist] // Papéis autorizados a assinar.
+      to: status.Signed // Transição para o estado Signed.
+      // Corpo da action: grava a data de assinatura.
       {
+        // Registra o instante da assinatura.
         signedAt = now()
       }
     }
 
+    // Action que libera o resultado ao solicitante.
     release(){
+      // Título exibido na interface.
       title: { pt-BR: "Liberar", en: "Release" }
-      roles: [Pathologist]
-      to: status.Released
+      roles: [Pathologist] // Papéis autorizados a liberar.
+      to: status.Released // Transição para o estado Released.
+      // Corpo da action: grava a data de liberação.
       {
+        // Registra o instante da liberação.
         releasedAt = now()
       }
     }
   }
 
+  // Exige data de liberação quando o resultado está Released.
   rule status == Released implies releasedAt != null {
-    pt-BR: "Informe a data de liberação"
-    en: "Enter the release date"
+    pt-BR: "Informe a data de liberação" // Mensagem do erro em português.
+    en: "Enter the release date" // Mensagem do erro em inglês.
 
   }
 
+  // Assinatura exigida para liberar o resultado.
   signature {
+    // Papel que assina a liberação.
     release: Pathologist
   }
 }
 
+// Shape de estado que acompanha o ciclo de vida do resultado.
 shape ExamResultStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do resultado", en: "Exam result status" }
-  base: state
+  base: state // Tipo base: máquina de estados.
+  // Estado inicial do resultado.
   initial: Draft
+  // Estado "registrado".
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Registrado", en: "Recorded" }
-    icon: Draft
-    ordinal: 10
+    icon: Draft // Ícone associado ao estado.
+    ordinal: 10 // Ordem de exibição do estado.
 
+    // Transição para o estado Validated.
     transition Validated {
+      // Título exibido no histórico.
       title: { pt-BR: "Resultado validado", en: "Result validated" }
     }
   }
+  // Estado "validado".
   value Validated {
+    // Título exibido na interface.
     title: { pt-BR: "Validado", en: "Validated" }
-    icon: Validated
-    ordinal: 20
+    icon: Validated // Ícone associado ao estado.
+    ordinal: 20 // Ordem de exibição do estado.
 
+    // Transição para o estado Signed.
     transition Signed {
+      // Título exibido no histórico.
       title: { pt-BR: "Resultado assinado", en: "Result signed" }
     }
   }
+  // Estado "assinado".
   value Signed {
+    // Título exibido na interface.
     title: { pt-BR: "Assinado", en: "Signed" }
-    icon: Signed
-    ordinal: 30
+    icon: Signed // Ícone associado ao estado.
+    ordinal: 30 // Ordem de exibição do estado.
 
+    // Transição para o estado Released.
     transition Released {
+      // Título exibido no histórico.
       title: { pt-BR: "Resultado liberado", en: "Result released" }
+      // Dados levados pela transição.
       payload {
-        value: string { title: { pt-BR: "Valor", en: "Value" } }
-        unit: string { title: { pt-BR: "Unidade", en: "Unit" } }
+        value: string { title: { pt-BR: "Valor", en: "Value" } } // Valor liberado do resultado.
+        unit: string { title: { pt-BR: "Unidade", en: "Unit" } } // Unidade de medida do valor liberado.
       }
     }
   }
+  // Estado "liberado".
   value Released {
+    // Título exibido na interface.
     title: { pt-BR: "Liberado", en: "Released" }
-    icon: Released
-    ordinal: 40
+    icon: Released // Ícone associado ao estado.
+    ordinal: 40 // Ordem de exibição do estado.
   }
-  format: plain
+  format: plain // Exibição sem máscara.
 }

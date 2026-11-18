@@ -1271,3 +1271,31 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 **Pendências:**
 - [ ] Implementar `E_FILE_NAME`/`E_FILE_PATH`/`E_FILE_PRINCIPAL`/`E_FILE_PRINCIPAL_FIRST`/`E_FILE_SHARED`/`E_FILE_SHARED_TYPE`/`E_FILE_ORGANOGRAM_FIRST`/`E_FILE_ICON_PATH` no `check` real (a DSL ainda não tem parser executável).
 - [ ] Revisar os casos de artefato sem dono único que ficaram em arquivo compartilhado (`Email`/`Phone` em Citizen, `TrackingEvent` em Shipping, `SupportLabGateway` em Laboratory, `ScaleDevice` em Shipping).
+
+## Process — revisão e migração — 2026-11-17 (executada por solicitação direta)
+
+**Pedido:** revisar o Process como código TS-like, assíncrono implícito, com variáveis duráveis da instância (referências a documentos), sem `for`, sem pool/lane e sem artefato `task`; forms/manuais/mensagens como artefatos separados, chamados pelo processo (ex.: `PaymentRetry.show({ session })`).
+
+**Decisões aplicadas:**
+- A seção 4 do `DSL_REFERENCE.md` foi reescrita; não há versão paralela. O workspace `examples/` é a referência executável.
+- `for` removido; o processo é `process <Nome>(args)` com gatilho (`on`, `by`, `schedule`+`fanOut`, `message`, `called`) e `key` para correlação.
+- Pool/lane removidos; `roles` no form/manual definem quem executa. Views de inbox usam `role`/`roles`.
+- `task` removido; o processo chama operação (`action`, `call`, `compute`, `decision`) direto ou form/view/manual/job/process (`show`/`run`).
+- Sintaxe TS-like: `let`/`const`, `try/catch`, `loop`/`forEach`, `if`, `return`, objeto de argumentos.
+- **Variáveis somente no topo do processo**; nenhuma declaração dentro de `try`/`catch`/`if`/`loop`/`parallel`/`forEach`.
+- **Ends ao final do processo**; fluxos terminam com `return <End>`.
+- `owner` e `timezone` removidos dos processos: dono é metadado do serviço; fuso é do tenant/scheduler.
+- Assíncrono implícito; `parallel`, `wait`, `send`/`receive`, `run` e `cancel on` fazem parte da sintaxe.
+- Variáveis duráveis por instância; documentos entram por referência.
+- Decisão humana é lida no **estado do documento** após o form, não em `returns`.
+- `timeout` é prazo duro; `sla` é alvo brando.
+- Processo é a autoridade de escrita; roles do form controlam a execução humana.
+- `milestone` e `discretionary` (CMMN) ficaram adiados.
+
+**Escopo:** 35 processos de `examples/` migrados; `DSL_REFERENCE.md` §4 reescrita. `DSL_EXAMPLES.md` e `BRAINSTORM.md` ainda precisam de uma passada de consistência.
+
+**Arquivos:** `DSL_REFERENCE.md`, `DSL_EXAMPLES.md` (aviso/Process), `examples/**`, `REVIEW_CHECKLIST.md`.
+
+**Em aberto:** `key`/`search`; CMMN; runtime durável; semântica de `parallel`; `job` com semântica própria; `report` como `view`; form/view multi-documento; permissões; versionamento; `reintroduce` em processo-código; validações/erros.
+
+**Consolidação pendente:** atualizar os exemplos de Process de `DSL_EXAMPLES.md` (P.1–P.24) e `BRAINSTORM.md`; ajustar §7.4/§30 para views/role e novos artefatos (`manual`, `send`/`receive`, `cancel on`); implementar o `check` (`E_PROCESS_START`, `E_CASE_KEY`, `E_BLOCK_DECLARATION`, `E_VAR_SCOPE`, `E_END_ORDER`, `E_CATCH_UNKNOWN` etc.).

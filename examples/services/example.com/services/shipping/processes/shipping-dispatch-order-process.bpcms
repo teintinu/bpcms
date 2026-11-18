@@ -1,253 +1,360 @@
 // service: example.com/services/shipping
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process DispatchOrder for Shipment {
+// Processo que separa, embala, pesa, cota e despacha a remessa.
+process DispatchOrder(shipment: Shipment) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Separar, embalar, pesar, cotar o frete e despachar com etiqueta"
-  owner: "Shipping"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Separar, embalar, pesar, cotar o frete e despachar com etiqueta"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 1d
 
-  pool Company {
-    internal
-    lane Warehouse { role: Packer }
-    lane Dispatch { role: Dispatcher }
-    lane Management { role: Manager }
+  // Gatilho: inicia um caso quando a remessa é criada.
+  on [Shipment.Created]
+  // Chave de identidade, correlação e dedup da instância.
+  key: shipment
+
+  // Frete cotado; começa nulo até a cotação ou o informe manual.
+  let freight: std.Money | null = null
+  // Código de rastreio emitido; começa nulo até a etiqueta.
+  let tracking: TrackingCode | null = null
+
+  // Bloco que tenta executar a separação no prazo.
+  try {
+    // Abre a tarefa manual de separação dos itens.
+    Pick.show({ shipment })
+  } catch (Timeout) {
+    // Separação atrasada: escala a tarefa para o gerente.
+    Escalate.show({ shipment })
   }
 
-  pool Carrier {
-    external
-  }
+  // Abre o formulário de embalagem da remessa.
+  Packing.show({ shipment })
 
-  variables {
-    freight: std.Money
-    tracking: TrackingCode
-  }
+  // Abre a tarefa manual de pesagem na balança.
+  Weigh.show({ shipment })
 
-  start Created { event: Shipment.Created }
-
-  task Pick {
-    lane: Warehouse
-    manual: "Separar os itens do pedido no armazém"
-    sla: 2h
-    priority: 60
-    assign: pull
-    on timer 4h -> Escalate
-  }
-
-  task Escalate {
-    lane: Management
-    manual: "Priorizar a separação com o supervisor"
-    sla: 1h
-  }
-
-  task Pack {
-    lane: Warehouse
-    form: Packing
-    sla: 1h
-    assign: pull
-  }
-
-  task Weigh {
-    lane: Warehouse
-    manual: "Conferir o peso da remessa na balança do posto"
-    sla: 15m
-  }
-
-  gateway WeightLimit {
-    if shipment.pesoBruto <= MaxWeight -> QuoteFreight
-    else -> Split
-  }
-
-  task Split {
-    lane: Management
-    form: SplitShipment
-    sla: 4h
-    assign: pull
-  }
-
-  task QuoteFreight {
-    lane: System
-    call: Carrier.quote
-    with {
-      shipment
-      carrier: "CarrierX"
+  // Só cota o frete quando o peso está dentro do limite permitido.
+  if (shipment.pesoBruto <= MaxWeight) {
+    // Bloco que tenta cotar o frete com a transportadora.
+    try {
+      // Cota o frete da remessa com a CarrierX e guarda o valor.
+      freight = Carrier.quote({ shipment, carrier: "CarrierX" })
+    } catch (CarrierUnavailable) {
+      // O próprio form aplica o frete manual no documento.
+      FreightOverride.show({ shipment })
     }
-    gives: freight
-    sla: 2m
-    on error CarrierUnavailable -> ManualQuote
-  }
+  } else {
+    // Acima do limite de peso: abre o formulário para dividir a remessa.
+    SplitShipment.show({ shipment })
 
-  task ManualQuote {
-    lane: Management
-    form: FreightOverride
-    sla: 2h
-    assign: pull
-  }
-
-  task RecordFreight {
-    lane: System
-    action: Shipment.applyFreight
-    with {
-      carrier: "CarrierX"
-      amount: freight
+    // Se a remessa foi cancelada na divisão, encerra no desfecho Cancelled.
+    if (shipment.status == Cancelled) {
+      // Encerra o caso no desfecho Cancelled.
+      return Cancelled
     }
-    sla: 1m
+
+    // Encerra o caso no desfecho de remessa dividida.
+    return SplitDone
   }
 
-  task CreateLabel {
-    lane: System
-    call: Carrier.createLabel
-    with {
-      shipment
-      carrier: "CarrierX"
+  // Aplica o frete cotado quando a cotação produziu valor.
+  if (freight != null) {
+    // Persiste transportadora e frete no documento.
+    Shipment.applyFreight({ carrier: "CarrierX", amount: freight })
+  }
+
+  // Laço de emissão de etiqueta, limitado a três tentativas.
+  loop LabelAttempt max 3 {
+    // Bloco que tenta emitir a etiqueta com a transportadora.
+    try {
+      // Emite a etiqueta e guarda o código de rastreio.
+      tracking = Carrier.createLabel({ shipment, carrier: "CarrierX" })
+      // Etiqueta emitida: sai do laço de tentativas.
+      break
+    } catch (LabelRejected) {
+      // Etiqueta recusada: reabre o formulário de frete manual.
+      FreightOverride.show({ shipment })
     }
-    gives: tracking
-    sla: 2m
-    on error LabelRejected -> ManualQuote
   }
 
-  task RecordDispatch {
-    lane: System
-    action: Shipment.dispatch
-    with { trackingCode: tracking }
-    sla: 1m
+  // Sem etiqueta após as tentativas, cancela a remessa.
+  if (tracking == null) {
+    // Cancela a remessa com o motivo da falha de etiqueta.
+    Shipment.cancel({ reason: "Etiqueta rejeitada após as tentativas de emissão" })
+    // Encerra o caso no desfecho Cancelled.
+    return Cancelled
   }
 
-  task RequestPickup {
-    lane: System
-    sends: PickupRequest
-    partner: Carrier
-    with { shipment }
-    sla: 5m
+  // Despacha a remessa com o código de rastreio emitido.
+  Shipment.dispatch({ trackingCode: tracking })
+
+  // Envia a solicitação de coleta à transportadora.
+  send PickupRequest {
+    // Correlaciona a mensagem com a remessa do caso.
+    key: shipment
+    // Dados enviados: data/hora da solicitação.
+    with { requestedAt: now() }
   }
 
-  task ConfirmPickup {
-    lane: System
-    receives: PickupConfirmed
-    partner: Carrier
-    apply: Shipment.confirmPickup
-    sla: 2d
-    on timer 2d -> ManualPickup
+  // Bloco que aguarda a confirmação da coleta.
+  try {
+    // Aguarda PickupConfirmed para a remessa, com prazo de dois dias.
+    receive PickupConfirmed {
+      // Correlaciona o evento com a remessa do caso.
+      key: shipment
+      // Tempo máximo de espera pela confirmação.
+      timeout: 2d
+      // Aplica a confirmação na action do documento.
+      apply: Shipment.confirmPickup
+    }
+  } catch (Timeout) {
+    // Sem confirmação no prazo: abre o formulário de confirmação manual.
+    PickupConfirmation.show({ shipment })
   }
 
-  task ManualPickup {
-    lane: Dispatch
-    form: PickupConfirmation
-    sla: 1d
-    assign: pull
-  }
+  // Dispara o processo de acompanhamento da entrega para a remessa.
+  DeliveryTracking.run({ shipment })
 
-  task Track {
-    lane: System
-    runs: DeliveryTracking
-    with { shipment }
-    sla: 30d
-  }
+  // Encerra o caso no desfecho de sucesso do despacho.
+  return Dispatched
 
+  // Declara o desfecho de sucesso do despacho.
   end Dispatched {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Despachada", en: "Dispatched" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de remessa dividida.
   end SplitDone {
+    // Título exibido no histórico.
     title: { pt-BR: "Dividida", en: "Split" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de cancelamento do caso.
   end Cancelled {
+    // Título exibido no histórico.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Created -> Pick
-  Pick -> Pack
-  Escalate -> Pack
-  Pack.confirm -> Weigh
-  Weigh -> WeightLimit
-  WeightLimit -> QuoteFreight
-  WeightLimit -> Split
-  Split.split -> SplitDone
-  Split.cancel -> Cancelled
-  QuoteFreight -> RecordFreight
-  ManualQuote.apply -> RecordFreight
-  RecordFreight -> CreateLabel
-  CreateLabel -> RecordDispatch
-  RecordDispatch -> RequestPickup
-  RequestPickup -> ConfirmPickup
-  ConfirmPickup -> Track
-  ManualPickup.confirm -> Track
-  Track -> Dispatched
 }
 
-form Packing {
-  title: { pt-BR: "Embalar remessa", en: "Pack shipment" }
-  document: Shipment
+// Erro de negócio: transportadora indisponível.
+error CarrierUnavailable {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Transportadora indisponível", en: "Carrier unavailable" }
+}
 
+// Erro de negócio: etiqueta recusada pela transportadora.
+error LabelRejected {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Etiqueta rejeitada pela transportadora", en: "Label rejected by carrier" }
+}
+
+// Tarefa manual de separação dos itens no armazém.
+manual Pick {
+  // Título exibido na caixa de entrada.
+  title: { pt-BR: "Separar itens", en: "Pick items" }
+  // Documento-sujeito da tarefa.
+  document: Shipment
+  // Papéis que podem executar a tarefa.
+  roles: [Packer]
+  // Orientação exibida ao executor.
+  instructions: "Separar os itens do pedido no armazém"
+  // Prazo para conclusão antes do timeout.
+  timeout: 4h
+  // Prioridade na fila de trabalho.
+  priority: 60
+  // Distribuição por retirada manual da fila.
+  assign: pull
+}
+
+// Tarefa manual de escalação da separação atrasada.
+manual Escalate {
+  // Título exibido na caixa de entrada.
+  title: { pt-BR: "Escalar separação", en: "Escalate picking" }
+  // Documento-sujeito da tarefa.
+  document: Shipment
+  // Papéis que podem executar a tarefa.
+  roles: [Manager]
+  // Orientação exibida ao executor.
+  instructions: "Priorizar a separação com o supervisor"
+  // Prazo para conclusão antes do timeout.
+  timeout: 1h
+  // Prioridade na fila de trabalho.
+  priority: 70
+  // Distribuição por retirada manual da fila.
+  assign: pull
+}
+
+// Tarefa manual de pesagem da remessa na balança do posto.
+manual Weigh {
+  // Título exibido na caixa de entrada.
+  title: { pt-BR: "Pesar remessa", en: "Weigh shipment" }
+  // Documento-sujeito da tarefa.
+  document: Shipment
+  // Papéis que podem executar a tarefa.
+  roles: [Packer]
+  // Orientação exibida ao executor.
+  instructions: "Conferir o peso da remessa na balança do posto"
+  // Prazo para conclusão antes do timeout.
+  timeout: 15m
+  // Prioridade na fila de trabalho.
+  priority: 50
+  // Distribuição por retirada manual da fila.
+  assign: pull
+}
+
+// Formulário de embalagem da remessa.
+form Packing {
+  // Título exibido na caixa de entrada e no formulário.
+  title: { pt-BR: "Embalar remessa", en: "Pack shipment" }
+  // Documento-sujeito alterado pelo formulário.
+  document: Shipment
+  // Papéis que podem executar o formulário.
+  roles: [Packer]
+  // Prazo para conclusão antes do timeout do caso.
+  timeout: 1h
+  // Prioridade na fila de trabalho.
+  priority: 50
+  // Distribuição por retirada manual da fila.
+  assign: pull
+
+  // Campos exibidos no formulário.
   fields {
+    // Pedido relacionado à remessa, exibido como referência.
     order
+    // Itens que serão embalados na remessa.
     items
+    // Peso bruto conferido na pesagem.
     pesoBruto
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Ação que confirma a embalagem da remessa.
     confirm {
+      // Título do botão de ação.
       title: { pt-BR: "Confirmar embalagem", en: "Confirm packing" }
+      // Chama a action de embalagem do documento.
       calls: Shipment.pack
     }
   }
 }
 
+// Formulário para dividir a remessa acima do limite de peso.
 form SplitShipment {
+  // Título exibido na caixa de entrada e no formulário.
   title: { pt-BR: "Dividir remessa", en: "Split shipment" }
+  // Documento-sujeito alterado pelo formulário.
   document: Shipment
+  // Papéis que podem executar o formulário.
+  roles: [Manager]
+  // Prazo para conclusão antes do timeout do caso.
+  timeout: 4h
+  // Prioridade na fila de trabalho.
+  priority: 60
+  // Distribuição por retirada manual da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Pedido relacionado à remessa, exibido como referência.
     order
+    // Itens que serão redistribuídos na divisão.
     items
+    // Peso bruto que motivou a divisão.
     pesoBruto
+    // Motivo da divisão, com limite de quinhentos caracteres.
     reason: string {
+      // Título do campo no formulário.
       title: { pt-BR: "Motivo", en: "Reason" }
+      // Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Ação que divide a remessa em duas.
     split {
+      // Título do botão de ação.
       title: { pt-BR: "Dividir", en: "Split" }
+      // Chama a action de divisão do documento.
       calls: Shipment.split
     }
+    // Ação que cancela a remessa em vez de dividi-la.
     cancel {
+      // Título do botão de ação.
       title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+      // Chama a action de cancelamento com o motivo informado.
       calls: Shipment.cancel(reason)
     }
   }
 }
 
+// Formulário para confirmar manualmente a coleta da remessa.
 form PickupConfirmation {
+  // Título exibido na caixa de entrada e no formulário.
   title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+  // Documento-sujeito alterado pelo formulário.
   document: Shipment
+  // Papéis que podem executar o formulário.
+  roles: [Dispatcher]
+  // Prazo para conclusão antes do timeout do caso.
+  timeout: 1d
+  // Prioridade na fila de trabalho.
+  priority: 60
+  // Distribuição por retirada manual da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Pedido relacionado à remessa, exibido como referência.
     order
+    // Código de rastreio da remessa, exibido como referência.
     tracking
+    // Data/hora em que a remessa foi coletada.
     pickedUpOn: DateTime {
+      // Título do campo no formulário.
       title: { pt-BR: "Coletada em", en: "Picked up at" }
+      // Torna o campo obrigatório.
       required
     }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Ação que confirma a coleta na data informada.
     confirm {
+      // Título do botão de ação.
       title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+      // Chama a action de confirmação de coleta do documento.
       calls: Shipment.confirmPickup(pickedUpOn)
     }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view DispatchProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento do despacho", en: "Dispatch progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: DispatchOrder
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
 }

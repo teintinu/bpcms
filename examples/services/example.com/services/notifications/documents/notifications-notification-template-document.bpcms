@@ -1,77 +1,122 @@
 // service: example.com/services/notifications
 
+// Modelo reutilizável de notificação, identificado por chave, canal e idioma.
 document NotificationTemplate {
+  // Rótulo do documento exibido no construtor.
   title: { pt-BR: "Modelo de notificação", en: "Notification template" }
-  version: 1
-  owner: "Notifications"
-  sync: read
+  version: 1 // Versão do artefato Documento.
+  owner: "Notifications" // Área dona do documento.
+  sync: read // Modo de sincronização somente leitura do documento.
+  // Campos que compõem o modelo.
   fields {
+    // Identificador lógico do modelo, usado na busca.
     key: string {
+      // Rótulo do campo.
       title: { pt-BR: "Chave", en: "Key" }
-      maxLength: 80
+      maxLength: 80 // Tamanho máximo da chave.
+      // Expõe o campo para busca e consulta.
       lookup
+      // Exige preenchimento no cadastro.
       required
     }
+    // Canal de entrega a que o modelo se aplica.
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    // Assunto do modelo, limitado a 160 caracteres e pesquisável.
     subject: string { title: { pt-BR: "Assunto", en: "Subject" }, maxLength: 160, lookup }
+    // Corpo com o conteúdo a renderizar no envio.
     body: string { title: { pt-BR: "Conteúdo", en: "Body" } }
+    // Idioma do modelo, pesquisável para seleção de variante.
     locale: LocaleTag { title: { pt-BR: "Idioma", en: "Locale" }, lookup }
   }
 
+  // Índices de consulta e unicidade.
   indexes {
+    // Um único modelo por combinação de chave, canal e idioma.
     uniqueKey: [key, channel, locale] unique
   }
 
+  // Carga inicial de modelos prontos no ambiente.
   seed {
+    // Modelo de boas-vindas por e-mail em português.
     Welcome {
+      // Chave usada para localizar o modelo.
       key: "welcome"
+      // Canal de entrega do modelo.
       channel: Email
+      // Assunto exibido ao destinatário.
       subject: "Bem-vindo"
+      // Corpo da mensagem de boas-vindas.
       body: "Sua conta foi criada"
+      // Idioma do modelo semeado.
       locale: PtBr
     }
   }
 
+  // Ações que alteram o modelo.
   actions {
+    // Cria um novo modelo para a chave, o canal e o idioma informados.
     create(key: string, channel: Channel, locale: LocaleTag){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Criar modelo", en: "Create template" }
+      // Só o gerente pode criar modelos.
       roles: [SuccessManager]
     }
+    // Atualiza assunto e corpo de um modelo existente.
     update(subject: string, body: string){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Atualizar", en: "Update" }
+      // Só o gerente pode atualizar modelos.
       roles: [SuccessManager]
     }
   }
 }
 
+// Forma de classificação com os idiomas suportados pelos modelos.
 shape LocaleTag {
+  // Rótulo da forma exibido no construtor.
   title: { pt-BR: "Idioma", en: "Locale" }
-  base: classification
+  base: classification // Base classificação: conjunto fechado de valores.
+  // Idioma português do Brasil.
   value PtBr {
+    // Rótulo do valor.
     title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
+    // Ícone do serviço de notificações.
     icon: LocalePtBr
-    ordinal: 10
+    ordinal: 10 // Posição do valor na ordenação.
   }
+  // Idioma inglês dos EUA.
   value EnUs {
+    // Rótulo do valor.
     title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
+    // Ícone do serviço de notificações.
     icon: LocaleEnUs
-    ordinal: 20
+    ordinal: 20 // Posição do valor na ordenação.
   }
-  format: plain
+  format: plain // Renderização em texto simples.
 }
 
+// Form de edição do conteúdo de um modelo de notificação.
 form TemplateEditor {
+  // Rótulo exibido na inbox e no histórico.
   title: { pt-BR: "Editor de modelo", en: "Template editor" }
+  // Documento-sujeito do form.
   document: NotificationTemplate
 
+  // Campos editáveis no form.
   fields {
+    // Chave do modelo.
     key
+    // Canal do modelo.
     channel
+    // Assunto do modelo.
     subject
+    // Corpo do modelo.
     body
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Salva assunto e corpo e mantém o usuário no form.
     save { calls: NotificationTemplate.update(subject, body); stay }
   }
 }

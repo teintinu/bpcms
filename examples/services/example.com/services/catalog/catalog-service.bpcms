@@ -1,19 +1,35 @@
+// service: example.com/services/catalog
+
+// Declara o serviço Catálogo, dono dos artefatos de produtos e categorias.
 service "example.com/services/catalog" {
+  // Nome exibido no builder e na navegação, por idioma.
   title: { pt-BR: "Catálogo", en: "Catalog" }
+  // Versão semântica do artefato serviço, usada em release e diff.
   version: 1.0.0
+  // Área de negócio responsável pela manutenção do serviço.
   owner: "Catalog"
+  // Dependências externas usadas por este serviço.
   imports {
+    // Importa o pseudo-serviço de medidas/constantes padrão do construtor.
     service "bpcms.org/std" as std
   }
 
+  // Reabre o shape std.Currency para acrescentar valores de moeda locais.
   reintroduce std.Currency {
+    // Valor de moeda Real brasileiro acrescentado ao Currency.
     value BRL {
+        // Rótulo do valor exibido na interface.
         title: { pt-BR: "Real", en: "Brazilian real" }
+        // Símbolo de prefixo da moeda por idioma.
         prefix: {
+          // Prefixo usado em português.
           pt-BR: "R$"
+          // Prefixo usado em inglês.
           en: "BRL"
         }
+        // Ícone associado à moeda no seletor.
         icon: Brl
+        // Ordem de exibição do valor na lista.
         ordinal: 10
     }
   }

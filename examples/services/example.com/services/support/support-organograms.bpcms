@@ -1,41 +1,70 @@
 // service: example.com/services/support
 
+// Organograma do serviço; deve ser o primeiro artefato do arquivo.
 organogram Support {
+  // Título exibido no builder.
   title: { pt-BR: "Organograma de suporte", en: "Support organogram" }
+  // Estrutura hierárquica entre os papéis.
   hierarchy {
+    // O gerente fica acima do agente de suporte.
     Manager > SupportAgent
   }
+  // Declara explicitamente que o gerente coordena os agentes.
   Manager manages [SupportAgent]
 }
 
+// Papel com poder de decisão sobre chamados e devoluções.
 role Manager {
+  // Título exibido nas telas e nos filtros.
   title: { pt-BR: "Gerente de suporte", en: "Support manager" }
+  // Permissões concedidas ao papel.
   permissions: [
+    // Consultar o chamado.
     ticket.view,
+    // Distribuir o chamado para um agente.
     ticket.assign,
+    // Escalonar o chamado.
     ticket.escalate,
+    // Encerrar o chamado.
     ticket.close,
+    // Aprovar a devolução.
     return.approve,
+    // Rejeitar a devolução.
     return.reject,
+    // Cancelar a devolução.
     return.cancel,
+    // Efetivar o reembolso.
     return.refund,
+    // Consultar relatórios de atendimento.
     report.view
   ]
 }
 
+// Papel operacional que atende e resolve chamados.
 role SupportAgent {
+  // Título exibido nas telas e nos filtros.
   title: { pt-BR: "Agente de suporte", en: "Support agent" }
+  // Permissões concedidas ao papel.
   permissions: [
+    // Consultar o chamado.
     ticket.view,
+    // Comentar o chamado.
     ticket.comment,
+    // Assumir o chamado.
     ticket.assign,
+    // Resolver o chamado.
     ticket.resolve,
+    // Conferir a devolução.
     return.review,
+    // Registrar o recebimento da devolução.
     return.receive
   ]
 }
 
+// Papel do cliente, restrito aos próprios registros.
 role Customer {
+  // Título exibido nas telas.
   title: { pt-BR: "Cliente", en: "Customer" }
+  // Permissões apenas sobre os próprios chamados e devoluções.
   permissions: [ticket.viewOwn, ticket.commentOwn, return.requestOwn]
 }

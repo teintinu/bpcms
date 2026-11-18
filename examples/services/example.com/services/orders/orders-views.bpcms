@@ -1,10 +1,17 @@
 // service: example.com/services/orders
 
+// View de inbox que mostra as tarefas de pedido atribuídas ao atendente.
 view SalesInbox {
+  // Título exibido na navegação.
   title: { pt-BR: "Minha fila de pedidos", en: "My order queue" }
+  // Tipo da view: fila de trabalho.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [Clerk]
+  // Escopo da fila: apenas itens do próprio usuário.
   scope: mine
+  // Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  // Colunas exibidas na lista.
+  columns { title; subject; role; dueAt; priority }
 }

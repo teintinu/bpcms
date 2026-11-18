@@ -1,33 +1,51 @@
 // service: example.com/services/laboratory
 
+// Documento que representa um laboratório de apoio terceirizado.
 document SupportLab {
+  // Título exibido na interface.
   title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
-  version: 1
-  owner: "Laboratory"
-  sync: live
+  version: 1 // Versão do artefato Document.
+  owner: "Laboratory" // Dono de negócio do documento.
+  sync: live // Sincronização em tempo real entre cliente e servidor.
+  // Campos que compõem o laboratório de apoio.
   fields {
+    // Nome do laboratório de apoio; consultável e obrigatório.
     name: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Nome", en: "Name" }
+      // Permite localizar o laboratório pelo nome.
       lookup
+      // Torna o nome obrigatório no preenchimento.
       required
     }
+    // Número de acreditação do laboratório de apoio.
     accreditation: string { title: { pt-BR: "Acreditação", en: "Accreditation" } }
+    // Indica se o laboratório está ativo; começa ativo.
     active: boolean { title: { pt-BR: "Ativo", en: "Active" }, default: true }
   }
 
+  // Ações que alteram o cadastro do laboratório de apoio.
   actions {
+    // Action que reativa o laboratório de apoio.
     activate(){
+      // Título exibido na interface.
       title: { pt-BR: "Ativar", en: "Activate" }
-      roles: [LabManager]
+      roles: [LabManager] // Papéis autorizados a ativar.
+      // Corpo da action: marca o laboratório como ativo.
       {
+        // Liga o indicador de laboratório ativo.
         active = true
       }
     }
 
+    // Action que desativa o laboratório de apoio.
     deactivate(){
+      // Título exibido na interface.
       title: { pt-BR: "Desativar", en: "Deactivate" }
-      roles: [LabManager]
+      roles: [LabManager] // Papéis autorizados a desativar.
+      // Corpo da action: marca o laboratório como inativo.
       {
+        // Desliga o indicador de laboratório ativo.
         active = false
       }
     }

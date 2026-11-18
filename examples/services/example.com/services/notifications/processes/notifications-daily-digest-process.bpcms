@@ -1,95 +1,110 @@
 // service: example.com/services/notifications
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process DailyDigest for Notification {
+// Processo agendado que envia o resumo diário das notificações na fila.
+process DailyDigest(notification: Notification) {
+  // Rótulo do processo no builder, na inbox e no histórico.
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
-  version: 1
-  goal: "Enviar o resumo diário somente para quem deu opt-in"
-  owner: "Customer Success"
-  timezone: America/Fortaleza
-
-  pool Company {
-    internal
-    lane Support { role: SuccessAgent }
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio do processo, usado na revisão.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Enviar o resumo diário somente para quem deu opt-in"
   }
 
-  pool Customer {
-    external
-  }
+  schedule: "0 7 * * *" // Cria as instâncias todos os dias às 7h (cron).
+  fanOut: Notification where status == Queued // Uma instância por notificação na fila.
+  key: notification // Chave de identidade, correlação e dedup da instância.
 
-  start Daily {
-    schedule: "0 7 * * *"
-    select: notification.status == Queued
-  }
-
-  gateway Consent {
-    if notification.consent -> Digest
-    else -> Suppress
-  }
-
-  task Digest {
-    lane: System
-    sends: DigestSummary
-    partner: Customer
-    with {
-      recipient: notification.recipient
-      channel: notification.channel
+  // Só envia o resumo quando o destinatário deu consentimento.
+  if (notification.consent) {
+    // Envia a mensagem de resumo com os dados da notificação.
+    send DigestSummary {
+      // Chave de correlação da mensagem com a instância.
+      key: notification
+      // Dados que preenchem o payload da mensagem.
+      with {
+        // Destinatário do resumo.
+        recipient: notification.recipient
+        // Canal usado no envio.
+        channel: notification.channel
+      }
     }
-    sla: 1h
+
+    // Registra o envio do resumo na notificação.
+    Notification.sendDigest()
+    // Encerra a instância no desfecho de sucesso.
+    return Sent
   }
 
-  task Record {
-    lane: System
-    action: Notification.sendDigest
-    sla: 5m
-  }
+  // Sem consentimento: abre o form para o agente revisar o opt-out.
+  OptOutReview.show({ notification })
+  // Encerra a instância no desfecho de supressão.
+  return Suppressed
 
-  task Suppress {
-    lane: Support
-    form: OptOutReview
-    sla: 1d
-    assign: pull
-  }
-
+  // Desfecho de sucesso do caso.
   end Sent {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Resumo enviado", en: "Digest sent" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Desfecho de cancelamento do caso.
   end Suppressed {
+    // Título exibido no histórico.
     title: { pt-BR: "Envio suprimido", en: "Delivery suppressed" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Daily -> Consent
-  Digest -> Record
-  Record -> Sent
-  Suppress.suppress -> Suppressed
 }
 
+// Form de revisão aberto quando o envio é barrado por falta de consentimento.
 form OptOutReview {
+  // Rótulo exibido na inbox e no histórico.
   title: { pt-BR: "Revisar opt-out", en: "Review opt-out" }
+  // Documento-sujeito do form.
   document: Notification
+  // Papéis que podem atender o form.
+  roles: [SuccessAgent]
+  timeout: 1d // Prazo de atendimento do form.
+  priority: 50 // Prioridade na fila (maior valor primeiro).
+  assign: pull // Distribuição por pull: o agente puxa o caso da fila.
 
+  // Campos exibidos no form.
   fields {
+    // Destinatário da notificação.
     recipient
+    // Canal da notificação.
     channel
+    // Campo texto para justificar a supressão.
     reason: string {
+      // Rótulo do campo.
       title: { pt-BR: "Motivo da supressão", en: "Suppression reason" }
-      maxLength: 500
+      maxLength: 500 // Limite de 500 caracteres para a justificativa.
+      // Torna o motivo obrigatório no atendimento.
       required
     }
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Suprime a notificação repassando o motivo ao documento.
     suppress { calls: Notification.suppress(reason) }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view DigestProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento do resumo", en: "Digest progress" }
+  // Tipo da view: tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: DailyDigest
+  // Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

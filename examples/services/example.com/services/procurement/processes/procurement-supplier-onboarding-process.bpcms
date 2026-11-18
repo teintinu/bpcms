@@ -1,183 +1,266 @@
 // service: example.com/services/procurement
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process SupplierOnboarding for Supplier {
+// Declara o processo de habilitação; o argumento é o fornecedor-sujeito.
+process SupplierOnboarding(supplier: Supplier) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Habilitação de fornecedor", en: "Supplier onboarding" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Habilitar fornecedor com cadastro no portal, documentos verificados e contas a pagar prontas"
-  owner: "Procurement"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Habilitar fornecedor com cadastro no portal, documentos verificados e contas a pagar prontas"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 10d
 
-  pool Company {
-    internal
-    lane Compliance { role: ComplianceAnalyst }
-    lane Approval { role: Approver }
-    lane Management { role: ProcurementManager }
-    lane Finance { role: PayablesClerk }
-  }
+  // Restringe a instância às tarefas da role comprador.
+  by: [Buyer]
 
-  pool Supplier {
-    external
-    lane Portal { role: SupplierUser }
-  }
-
-  start Intake { by: [Buyer] }
-
-  task Invite {
-    lane: System
-    sends: SupplierInvite
-    partner: Supplier
+  // Convida o fornecedor a preencher o cadastro no portal.
+  send SupplierInvite {
+    // Chave de correlação da mensagem com o fornecedor.
+    key: supplier
+    // Dados preenchidos na mensagem.
     with {
+      // Instante em que o convite é enviado.
       invitedAt: now()
+      // Prazo de sete dias para o convite expirar.
       expiresAt: now() + 7d
     }
   }
 
-  task Register {
-    lane: Portal
-    form: SupplierRegistration
-    sla: 5d
-    on timer 7d -> Abandon
+  // Bloco externo: captura o timeout do cadastro no portal.
+  try {
+    // Abre o form de cadastro para o usuário do fornecedor.
+    SupplierRegistration.show({ supplier })
+  } catch (Timeout) {
+    // O prazo do cadastro no portal esgotou: bloqueia a habilitação.
+    BlockSupplier.show({ supplier })
+    // Encerra no desfecho de bloqueio.
+    return Blocked
   }
 
-  task Verify {
-    lane: Compliance
-    form: DocumentVerification
-    sla: 2d
-    assign: pull
+  // Abre o form de verificação documental para a conformidade.
+  DocumentVerification.show({ supplier })
+
+  // Se a verificação bloqueou o fornecedor...
+  if (supplier.status == Blocked) {
+    // ...encerra no desfecho de bloqueio.
+    return Blocked
   }
 
-  task Approve {
-    lane: Approval
-    form: ComplianceApproval
-    sla: 2d
-    assign: pull
-    on timer 3d -> Escalate
+  // Bloco interno: tenta abrir a aprovação de conformidade.
+  try {
+    // Abre o form de aprovação do fornecedor.
+    ComplianceApproval.show({ supplier })
+  } catch (Timeout) {
+    // Escalada da aprovação para a gestão de compras.
+    ComplianceApproval.show({ supplier })
   }
 
-  task Escalate {
-    lane: Management
-    form: ComplianceApproval
-    sla: 2d
+  // Se a aprovação bloqueou o fornecedor...
+  if (supplier.status == Blocked) {
+    // ...encerra no desfecho de bloqueio.
+    return Blocked
   }
 
-  task Payables {
-    lane: Finance
-    form: PayablesSetup
-    sla: 1d
-    assign: pull
-  }
+  // Abre a configuração de contas a pagar para o fornecedor habilitado.
+  PayablesSetup.show({ supplier })
+  // Encerra no desfecho de sucesso.
+  return Onboarded
 
-  task Abandon {
-    lane: Compliance
-    form: BlockSupplier
-    sla: 1d
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Onboarded {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Fornecedor habilitado", en: "Supplier onboarded" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de falha do caso.
   end Blocked {
+    // Título exibido no histórico.
     title: { pt-BR: "Habilitação bloqueada", en: "Onboarding blocked" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Intake -> Invite
-  Invite -> Register
-  Register.submit -> Verify
-  Verify.verified -> Approve
-  Verify.rejected -> Blocked
-  Approve.approved -> Payables
-  Approve.rejected -> Blocked
-  Escalate.approved -> Payables
-  Escalate.rejected -> Blocked
-  Payables.enable -> Onboarded
-  Abandon.block -> Blocked
 }
 
+// Form de cadastro do fornecedor no portal.
 form SupplierRegistration {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
+  // Documento manipulado pelo form.
   document: Supplier
+  // Papéis que podem atender a tarefa.
+  roles: [SupplierUser]
+  // Prazo para responder; estourar dispara Timeout e bloqueia a habilitação.
+  timeout: 7d
+  // Prioridade da tarefa na inbox.
+  priority: 70
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Razão social, obrigatória no cadastro.
     legalName { required }
+    // Nome fantasia, opcional no cadastro.
     tradeName
+    // Correio eletrônico, obrigatório no cadastro.
     email { required }
+    // Telefone, opcional no cadastro.
     phone
+    // Categoria de atuação, obrigatória no cadastro.
     category { required }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Envia o cadastro com todos os dados informados pelo fornecedor.
     submit { calls: Supplier.submitRegistration(legalName, tradeName, email, phone, category) }
   }
 }
 
+// Form de verificação documental e classificação de risco.
 form DocumentVerification {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Verificação documental", en: "Document verification" }
+  // Documento manipulado pelo form.
   document: Supplier
+  // Papéis que podem atender a tarefa.
+  roles: [ComplianceAnalyst]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 2d
+  // Prioridade da tarefa na inbox.
+  priority: 50
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Nível de risco atribuído ao fornecedor.
     risk
+    // Motivo do bloqueio, quando a verificação reprova o fornecedor.
     blockedReason
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Marca a documentação como verificada.
     verified { calls: Supplier.verifyDocuments }
+    // Classifica o risco e mantém a tarefa aberta para revisão.
     classify { calls: Supplier.classifyRisk(risk); stay }
+    // Bloqueia o fornecedor com o motivo informado.
     rejected { calls: Supplier.block(blockedReason) }
   }
 }
 
+// Form de aprovação final de conformidade do fornecedor.
 form ComplianceApproval {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Aprovação de fornecedor", en: "Supplier approval" }
+  // Documento manipulado pelo form.
   document: Supplier
+  // Papéis que podem atender a tarefa.
+  roles: [Approver, ProcurementManager]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 3d
+  // Prioridade da tarefa na inbox.
+  priority: 50
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Razão social, somente leitura.
     legalName { readonly }
+    // Nível de risco, somente leitura.
     risk { readonly }
+    // Motivo do bloqueio, quando a aprovação reprova o fornecedor.
     blockedReason
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Aprova o fornecedor chamando a ação do documento.
     approved { calls: Supplier.approve }
+    // Bloqueia o fornecedor com o motivo informado.
     rejected { calls: Supplier.block(blockedReason) }
   }
 }
 
+// Form de configuração de contas a pagar do fornecedor.
 form PayablesSetup {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Configuração de contas a pagar", en: "Payables setup" }
+  // Documento manipulado pelo form.
   document: Supplier
+  // Papéis que podem atender a tarefa.
+  roles: [PayablesClerk]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 1d
+  // Prioridade da tarefa na inbox.
+  priority: 50
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Razão social, somente leitura.
     legalName { readonly }
+    // Condição de pagamento acordada com o fornecedor.
     paymentTerms
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Habilita o fornecedor em contas a pagar com a condição informada.
     enable { calls: Supplier.enablePayables(paymentTerms) }
   }
 }
 
+// Form usado para bloquear a habilitação do fornecedor.
 form BlockSupplier {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+  // Documento manipulado pelo form.
   document: Supplier
+  // Papéis que podem atender a tarefa.
+  roles: [ComplianceAnalyst]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 1d
+  // Prioridade da tarefa na inbox.
+  priority: 60
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Motivo do bloqueio, obrigatório para registrar a decisão.
     blockedReason
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Bloqueia o fornecedor com o motivo informado.
     block { calls: Supplier.block(blockedReason) }
   }
 }
 
+// View de andamento do processo de habilitação.
 view SupplierOnboardingProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da habilitação de fornecedor", en: "Supplier onboarding progress" }
+  // Tipo da view: andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: SupplierOnboarding
+  // Papéis que podem abrir a view.
   roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

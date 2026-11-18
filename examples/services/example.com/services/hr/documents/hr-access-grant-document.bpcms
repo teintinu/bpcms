@@ -1,132 +1,223 @@
 // service: example.com/services/hr
 
+// Documento que registra a concessão de acesso de um colaborador a um sistema.
 document AccessGrant {
+  // Título exibido na interface.
   title: { pt-BR: "Concessão de acesso", en: "Access grant" }
+  // Versão do artefato usada em diff e release.
   version: 1
+  // Área responsável pelo documento.
   owner: "People"
+  // Sincronização em tempo real entre instâncias e telas.
   sync: live
 
+  // Campos que compõem a concessão de acesso.
   fields {
+    // Colaborador que recebe o acesso; consultável.
     employee: Employee { title: { pt-BR: "Colaborador", en: "Employee" }, lookup }
+    // Sistema ao qual o acesso se refere; consultável.
     system: AccessSystem { title: { pt-BR: "Sistema", en: "System" }, lookup }
+    // Perfil de permissões concedido no sistema.
     profile: string { title: { pt-BR: "Perfil", en: "Profile" }, maxLength: 60 }
+    // Situação atual do acesso; consultável.
     status: AccessGrantStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data e hora da solicitação; preenchida pelo sistema.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" }, readonly }
+    // Usuário que solicitou o acesso.
     requestedBy: Identity.User { title: { pt-BR: "Solicitado por", en: "Requested by" } }
+    // Data e hora do provisionamento; preenchida pelo sistema.
     provisionedAt: DateTime { title: { pt-BR: "Provisionado em", en: "Provisioned at" }, readonly }
+    // Data e hora da revogação; preenchida pelo sistema.
     revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" }, readonly }
+    // Motivo informado na revogação do acesso.
     revokeReason: string { title: { pt-BR: "Motivo da revogação", en: "Revocation reason" }, maxLength: 500 }
   }
 
+  // Índices que aceleram as consultas do documento.
   indexes {
+    // Índice hash por colaborador.
     byEmployee: [employee.id] hash
+    // Índice ordenado por situação e data de solicitação.
     byStatus: [status, requestedAt] range
   }
 
 
+  // Ações que alteram a concessão de acesso.
   actions {
+    // Marca o acesso como provisionado no sistema.
     provision() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Provisionar acesso", en: "Provision access" }
+      // Papéis autorizados a executar a ação.
       roles: [ITAdmin]
+      // Transição de situação disparada pela ação.
       to: status.Provisioned
+      // Payload do evento emitido pela transição.
       emits { at: now() }
+      // Efeito da ação: grava a data de provisionamento.
       { provisionedAt = now() }
     }
 
+    // Revoga o acesso, registrando o motivo.
     revoke(reason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Revogar acesso", en: "Revoke access" }
+      // Papéis autorizados a executar a ação.
       roles: [ITAdmin, PeopleOps]
+      // Transição de situação disparada pela ação.
       to: status.Revoked
+      // Efeito da ação: grava data e motivo da revogação.
       { revokedAt = now(); revokeReason = reason }
     }
   }
 }
 
+// Máquina de estados da situação da concessão de acesso.
 shape AccessGrantStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do acesso", en: "Access grant status" }
+  // Base de estado: valores com ciclo de vida e transições.
   base: state
+  // Situação inicial de uma concessão recém-criada.
   initial: Requested
 
+  // Situação de acesso solicitado.
   value Requested {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Solicitado", en: "Requested" }
+    // Ícone associado ao valor.
     icon: status.requested
+    // Ordem de exibição do valor.
     ordinal: 10
 
+    // Transição para acesso provisionado.
     transition Provisioned {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Acesso provisionado", en: "Access provisioned" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora do provisionamento.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para acesso revogado antes do provisionamento.
     transition Revoked {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da revogação.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação de acesso já provisionado.
   value Provisioned {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Provisionado", en: "Provisioned" }
+    // Ícone associado ao valor.
     icon: status.provisioned
+    // Ordem de exibição do valor.
     ordinal: 20
 
+    // Transição para acesso revogado.
     transition Revoked {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Acesso revogado", en: "Access revoked" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da revogação.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação final de acesso revogado.
   value Revoked {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Revogado", en: "Revoked" }
+    // Ícone associado ao valor.
     icon: status.revoked
+    // Ordem de exibição do valor.
     ordinal: 30
   }
 }
 
+// Classificação dos sistemas que podem receber concessão de acesso.
 shape AccessSystem {
+  // Título exibido na interface.
   title: { pt-BR: "Sistema de acesso", en: "Access system" }
+  // Base de classificação: valores estáticos, sem ciclo de vida.
   base: classification
 
+  // Valor para o e-mail corporativo.
   value Email {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "E-mail corporativo", en: "Corporate email" }
+    // Ícone associado ao valor.
     icon: access.email
+    // Ordem de exibição do valor.
     ordinal: 10
   }
+  // Valor para o ERP.
   value ERP {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "ERP", en: "ERP" }
+    // Ícone associado ao valor.
     icon: access.erp
+    // Ordem de exibição do valor.
     ordinal: 20
   }
+  // Valor para a VPN.
   value VPN {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "VPN", en: "VPN" }
+    // Ícone associado ao valor.
     icon: access.vpn
+    // Ordem de exibição do valor.
     ordinal: 30
   }
+  // Valor para o crachá de acesso físico.
   value Badge {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Crachá", en: "Badge" }
+    // Ícone associado ao valor.
     icon: access.badge
+    // Ordem de exibição do valor.
     ordinal: 40
   }
+  // Valor para a folha de pagamento.
   value Payroll {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Folha de pagamento", en: "Payroll" }
+    // Ícone associado ao valor.
     icon: access.payroll
+    // Ordem de exibição do valor.
     ordinal: 50
   }
 }
 
+// Tabela de consulta das concessões de acesso.
 view AccessGrantsTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Acessos", en: "Access grants" }
+  // Tipo da view: tabela de documentos.
   type: table
+  // Documento exibido na tabela.
   source: AccessGrant
+  // Papéis que podem abrir a tabela.
   roles: [ITAdmin, PeopleOps]
 
+  // Colunas exibidas na tabela.
   columns { employee; system; profile; status; requestedAt }
+  // Filtros disponíveis na tabela.
   filters { status; system }
 
+  // Ações disponíveis sobre as linhas da tabela.
   actions {
+    // Provisiona o acesso da linha selecionada.
     provision -> AccessGrant.provision
+    // Revoga o acesso da linha, pedindo o motivo.
     revoke -> AccessGrant.revoke(reason)
   }
 }

@@ -1,80 +1,136 @@
 // service: example.com/services/claims
 
+// Documento que descreve a cobertura de apólice associada a um sinistro.
 document Coverage {
+  // Título exibido na interface.
   title: { pt-BR: "Cobertura", en: "Coverage" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Claims"
 
+  // Campos que compõem a cobertura.
   fields {
+    // Número único da apólice de origem.
     policyNumber: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Apólice", en: "Policy number" }
+      // Permite localizar a cobertura pela apólice.
       lookup
+      // Impede apólices duplicadas.
       unique
+      // Limita o número a vinte e quatro caracteres.
       maxLength: 24
     }
+    // Nome do produto de seguro contratado.
     product: string { title: { pt-BR: "Produto", en: "Product" }, lookup, maxLength: 60 }
+    // Início da vigência da cobertura.
     validFrom: DateTime { title: { pt-BR: "Vigente de", en: "Valid from" } }
+    // Fim da vigência da cobertura.
     validTo: DateTime { title: { pt-BR: "Vigente até", en: "Valid to" } }
+    // Valor máximo de indenização da apólice.
     limitAmount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Limite de indenização", en: "Coverage limit" }
+      // Moeda do limite de indenização.
       currency: BRL
+      // Torna o limite obrigatório no preenchimento.
       required
     }
+    // Franquia que o segurado assume em cada sinistro.
     deductible: std.Money { title: { pt-BR: "Franquia", en: "Deductible" }, currency: BRL }
+    // Situação atual da cobertura no fluxo de estados.
     status: CoverageStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data em que a cobertura expirou, definida pelo sistema.
     expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" }, readonly }
   }
 
+  // Índices que aceleram consultas frequentes sobre coberturas.
   indexes {
+    // Busca exata pelo número da apólice.
     byPolicy: [policyNumber] unique
+    // Consultas por situação ordenadas pela validade.
     byStatus: [status, validTo] range
   }
 
 
+  // Comandos de negócio que alteram a cobertura.
   actions {
+    // Encerra a cobertura e marca o instante da expiração.
     expire() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Expirar cobertura", en: "Expire coverage" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Move a cobertura para a situação Expired.
       to: status.Expired
+      // Registra a data/hora da expiração.
       { expiredAt = now() }
     }
 
+    // Renova a cobertura estendendo a validade.
     renew(newValidTo: DateTime) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Renovar cobertura", en: "Renew coverage" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Move a cobertura para a situação Active.
       to: status.Active
+      // Publica a nova validade no evento de transição.
       emits { validTo: newValidTo }
+      // Persiste a nova data de validade.
       { validTo = newValidTo }
     }
   }
 }
 
+// Shape de estado que modela o ciclo de vida da cobertura.
 shape CoverageStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da cobertura", en: "Coverage status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial é Active.
   initial: Active
 
+  // Estado em que a cobertura está vigente.
   value Active {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Vigente", en: "Active" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.active
+    // Ordem de exibição no fluxo de estados.
     ordinal: 10
 
+    // Transição para Expired quando a vigência termina.
     transition Expired {
+      // Título exibido no histórico.
       title: { pt-BR: "Cobertura expirada", en: "Coverage expired" }
+      // Dados transportados pelo evento de expiração.
       payload {
+        // Instante em que a cobertura expirou.
         expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" } }
       }
     }
   }
+  // Estado em que a cobertura não está mais vigente.
   value Expired {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Expirada", en: "Expired" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.expired
+    // Ordem de exibição no fluxo de estados.
     ordinal: 20
 
+    // Transição para Active, nomeada Renewed.
     transition Active {
+      // Nome do evento publicado na renovação.
       event: Renewed
+      // Título exibido no histórico.
       title: { pt-BR: "Cobertura renovada", en: "Coverage renewed" }
+      // Dados transportados pelo evento de renovação.
       payload {
+        // Nova data de vigência da cobertura.
         validTo: DateTime { title: { pt-BR: "Nova vigência", en: "New validity" } }
       }
     }

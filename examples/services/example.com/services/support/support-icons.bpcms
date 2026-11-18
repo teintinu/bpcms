@@ -1,85 +1,127 @@
 // service: example.com/services/support
 
+// Ícone do estado inicial do chamado.
 icon Open {
+  // Rótulo do ícone no builder e nas telas.
   title: { pt-BR: "Aberta", en: "Open" }
 }
 
+// Ícone do estado de atendimento em curso.
 icon InProgress {
+  // Rótulo do ícone.
   title: { pt-BR: "Em andamento", en: "In progress" }
 }
 
+// Ícone do estado de espera por terceiros.
 icon Waiting {
+  // Rótulo do ícone.
   title: { pt-BR: "Aguardando", en: "Waiting" }
 }
 
+// Ícone do estado de chamado resolvido.
 icon Resolved {
+  // Rótulo do ícone.
   title: { pt-BR: "Resolvido", en: "Resolved" }
 }
 
+// Ícone do estado terminal de chamado fechado.
 icon Closed {
+  // Rótulo do ícone.
   title: { pt-BR: "Fechado", en: "Closed" }
 }
 
+// Ícone do estado inicial da devolução.
 icon Requested {
+  // Rótulo do ícone.
   title: { pt-BR: "Solicitado", en: "Requested" }
 }
 
+// Ícone do estado de devolução aprovada.
 icon Approved {
+  // Rótulo do ícone.
   title: { pt-BR: "Aprovado", en: "Approved" }
 }
 
+// Ícone do estado de devolução rejeitada.
 icon Rejected {
+  // Rótulo do ícone.
   title: { pt-BR: "Rejeitado", en: "Rejected" }
 }
 
+// Ícone do estado de devolução recebida fisicamente.
 icon Received {
+  // Rótulo do ícone.
   title: { pt-BR: "Recebida", en: "Received" }
 }
 
+// Ícone do estado de devolução já reembolsada.
 icon Refunded {
+  // Rótulo do ícone.
   title: { pt-BR: "Reembolsado", en: "Refunded" }
 }
 
+// Ícone do estado de devolução cancelada.
 icon Cancelled {
+  // Rótulo do ícone.
   title: { pt-BR: "Cancelado", en: "Cancelled" }
 }
 
+// Ícone da prioridade mais alta do chamado.
 icon P1 {
+  // Rótulo do ícone.
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
 }
 
+// Ícone da segunda prioridade do chamado.
 icon P2 {
+  // Rótulo do ícone.
   title: { pt-BR: "Prioridade 2", en: "Priority 2" }
 }
 
+// Ícone da prioridade padrão do chamado.
 icon P3 {
+  // Rótulo do ícone.
   title: { pt-BR: "Prioridade 3", en: "Priority 3" }
 }
 
+// Ícone da prioridade mais baixa do chamado.
 icon P4 {
+  // Rótulo do ícone.
   title: { pt-BR: "Prioridade 4", en: "Priority 4" }
 }
 
+// Ícone da categoria de problema técnico.
 icon Technical {
+  // Rótulo do ícone.
   title: { pt-BR: "Técnico", en: "Technical" }
 }
 
+// Ícone da categoria de cobrança.
 icon Billing {
+  // Rótulo do ícone.
   title: { pt-BR: "Cobrança", en: "Billing" }
 }
 
+// Ícone da categoria geral, usada como padrão.
 icon General {
+  // Rótulo do ícone.
   title: { pt-BR: "Geral", en: "General" }
 }
 
+// Ícone do parecer de devolução elegível.
 icon Eligible {
+  // Rótulo do ícone.
   title: { pt-BR: "Elegível", en: "Eligible" }
 }
 
+// Ícone do parecer que exige aprovação de gerente.
 icon ApprovalRequired {
+  // Rótulo do ícone.
   title: { pt-BR: "Exige aprovação", en: "Approval required" }
 }
 
+// Ícone do parecer de devolução não elegível.
 icon NotEligible {
+  // Rótulo do ícone.
   title: { pt-BR: "Não elegível", en: "Not eligible" }
 }

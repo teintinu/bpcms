@@ -1,11 +1,19 @@
 // service: example.com/services/identity
 
+// View de inbox que organiza os casos de recuperação de acesso por papel.
 view RecoveryQueue {
+  // Título exibido na navegação e na tela da fila.
   title: { pt-BR: "Fila de recuperação de acesso", en: "Account recovery queue" }
+  // Tipo da view: caixa de entrada de trabalho.
   type: inbox
+  // Papéis que podem abrir a fila.
   roles: [Clerk, Manager]
-  scope: lanes
-  groupBy: lane
-  filter { lane in currentUser.lanes }
-  columns { title; subject; lane; dueAt; priority }
+  // Escopo dos itens: restrito aos papéis do usuário.
+  scope: roles
+  // Agrupa os itens da fila pelo papel do usuário.
+  groupBy: role
+  // Filtro da consulta: só itens de papéis que o usuário possui.
+  filter { role in currentUser.roles }
+  // Colunas exibidas em cada linha da fila.
+  columns { title; subject; role; dueAt; priority }
 }

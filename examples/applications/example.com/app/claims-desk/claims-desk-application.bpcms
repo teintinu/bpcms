@@ -1,41 +1,51 @@
 // application: Mesa de Sinistros (claims + field-service + payments)
+// Declara a aplicação da URI example.com/app/claims-desk e abre sua composição.
 application "example.com/app/claims-desk" {
-  source: registry
-  version: 1.0.0
+  source: registry // Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
+  version: 1.0.0 // Versão semver inicial publicada da app.
+  // Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
-    pt-BR: "Mesa de Sinistros"
-    en-US: "Claims Desk"
+    pt-BR: "Mesa de Sinistros" // Título em português (idioma default).
+    en-US: "Claims Desk" // Título em inglês americano.
   }
 
+  // Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity
-    "example.com/services/claims" as Claims
-    "example.com/services/field-service" as FieldService
-    "example.com/services/payments" as Payments
+    "example.com/services/identity" as Identity // Identidade e autenticação dos usuários.
+    "example.com/services/claims" as Claims // Abertura e análise de sinistros.
+    "example.com/services/field-service" as FieldService // Vistorias e atendimento em campo.
+    "example.com/services/payments" as Payments // Pagamentos de indenizações.
   }
 
+  // Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
   roles {
-    Clerk
-    Adjuster
-    FraudAnalyst
-    FinanceAnalyst
-    Manager
-    Policyholder
-    Dispatcher
-    FieldTechnician
-    Supervisor
-    Customer
+    Clerk // Atendente: registra e triagem os sinistros.
+    Adjuster // Regulador: analisa e decide a indenização.
+    FraudAnalyst // Analista antifraude: investiga indícios de fraude.
+    FinanceAnalyst // Analista financeiro: acompanha os pagamentos.
+    Manager // Gerente: responde pela operação da mesa.
+    Policyholder // Segurado: acompanha o próprio sinistro.
+    Dispatcher // Despachante: distribui as vistorias em campo.
+    FieldTechnician // Técnico de campo: executa a vistoria.
+    Supervisor // Supervisor: coordena campo e despacho.
+    Customer // Cliente: acompanha o atendimento.
+    // Manager é superior a Adjuster, que é superior a Clerk.
     Manager > Adjuster > Clerk
+    // Manager é superior a FraudAnalyst.
     Manager > FraudAnalyst
+    // Supervisor é superior a FieldTechnician.
     Supervisor > FieldTechnician
+    // Supervisor é superior a Dispatcher.
     Supervisor > Dispatcher
   }
 
-  theme: Claims
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
+  theme: Claims // Tema visual fornecido pelo construtor (não é artefato de serviço).
+  locales: [pt-BR, en-US] // Idiomas da app; o primeiro (pt-BR) é o default.
+  environments: [dev, qa, prod] // Ambientes declarados para esta aplicação.
 
+  // Bloco de inicialização da app; só configura, não contém regra de negócio.
   main {
+    // Faz o boot antecipado do serviço de identidade (não declara dependência).
     start ["example.com/services/identity"]
   }
 }

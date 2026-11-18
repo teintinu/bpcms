@@ -1,191 +1,320 @@
 // service: example.com/services/hr
 
+// Documento que representa um candidato em processo seletivo.
 document Candidate {
+  // Título exibido na interface.
   title: { pt-BR: "Candidato", en: "Candidate" }
+  // Versão do artefato usada em diff e release.
   version: 1
+  // Área responsável pelo documento.
   owner: "People"
+  // Sincronização em tempo real entre instâncias e telas.
   sync: live
+  // Prazo de retenção dos dados do candidato.
   retention: 2y
 
+  // Campos que compõem o candidato.
   fields {
+    // Nome do candidato; consultável.
     name: string { title: { pt-BR: "Nome", en: "Name" }, lookup, maxLength: 120 }
+    // E-mail do candidato; dado pessoal sensível.
     email: string { title: { pt-BR: "E-mail", en: "Email" }, sensitive, maxLength: 160 }
+    // Vaga à qual o candidato se inscreveu; consultável.
     position: string { title: { pt-BR: "Vaga", en: "Position" }, lookup, maxLength: 120 }
+    // Área da vaga; consultável.
     department: Department { title: { pt-BR: "Área", en: "Department" }, lookup }
+    // Situação atual do candidato no processo; consultável.
     status: CandidateStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Origem da inscrição do candidato.
     source: string { title: { pt-BR: "Origem", en: "Source" }, maxLength: 60 }
+    // Data e hora da inscrição; preenchida pelo sistema.
     appliedAt: DateTime { title: { pt-BR: "Inscrito em", en: "Applied at" }, readonly }
+    // Motivo informado na recusa do candidato.
     rejectReason: string { title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }, maxLength: 500 }
   }
 
+  // Índices que aceleram as consultas do documento.
   indexes {
+    // Índice ordenado por situação e data de inscrição.
     byStatus: [status, appliedAt] range
+    // Índice hash por vaga.
     byPosition: [position] hash
   }
 
 
+  // Ações que movimentam o candidato no processo seletivo.
   actions {
+    // Coloca o candidato em triagem.
     screen() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Triar candidato", en: "Screen candidate" }
+      // Papéis autorizados a executar a ação.
       roles: [Recruiter]
+      // Transição de situação disparada pela ação.
       to: status.Screening
+      // Payload do evento emitido pela transição.
       emits { at: now() }
     }
 
+    // Agenda a entrevista do candidato.
     scheduleInterview() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Agendar entrevista", en: "Schedule interview" }
+      // Papéis autorizados a executar a ação.
       roles: [Recruiter]
+      // Transição de situação disparada pela ação.
       to: status.Interview
+      // Payload do evento emitido pela transição.
       emits { at: now() }
     }
 
+    // Envia a proposta ao candidato.
     extendOffer() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Enviar proposta", en: "Extend offer" }
+      // Papéis autorizados a executar a ação.
       roles: [HiringManager, Recruiter]
+      // Transição de situação disparada pela ação.
       to: status.Offer
+      // Payload do evento emitido pela transição.
       emits { at: now() }
     }
 
+    // Contrata o candidato.
     hire() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Contratar", en: "Hire" }
+      // Papéis autorizados a executar a ação.
       roles: [HiringManager]
+      // Transição de situação disparada pela ação.
       to: status.Hired
+      // Payload do evento emitido pela transição.
       emits { at: now() }
     }
 
+    // Recusa o candidato, registrando o motivo.
     reject(reason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Recusar candidato", en: "Reject candidate" }
+      // Papéis autorizados a executar a ação.
       roles: [Recruiter, HiringManager]
+      // Transição de situação disparada pela ação.
       to: status.Rejected
+      // Efeito da ação: grava o motivo da recusa.
       { rejectReason = reason }
     }
   }
 }
 
+// Máquina de estados da situação do candidato.
 shape CandidateStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do candidato", en: "Candidate status" }
+  // Base de estado: valores com ciclo de vida e transições.
   base: state
+  // Situação inicial de um candidato recém-inscrito.
   initial: Applied
 
+  // Situação de candidato inscrito.
   value Applied {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Inscrito", en: "Applied" }
+    // Ícone associado ao valor.
     icon: status.applied
+    // Ordem de exibição do valor.
     ordinal: 10
 
+    // Transição para candidato triado.
     transition Screening {
+      // Evento que dispara a transição.
       event: Screened
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato triado", en: "Candidate screened" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora da triagem.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para candidato recusado.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação de candidato em triagem.
   value Screening {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Em triagem", en: "Screening" }
+    // Ícone associado ao valor.
     icon: status.screening
+    // Ordem de exibição do valor.
     ordinal: 20
 
+    // Transição para entrevista agendada.
     transition Interview {
+      // Evento que dispara a transição.
       event: InterviewScheduled
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Entrevista agendada", en: "Interview scheduled" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora do agendamento.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para candidato recusado.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação de candidato em entrevista.
   value Interview {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Em entrevista", en: "Interview" }
+    // Ícone associado ao valor.
     icon: status.interview
+    // Ordem de exibição do valor.
     ordinal: 30
 
+    // Transição para proposta enviada.
     transition Offer {
+      // Evento que dispara a transição.
       event: OfferExtended
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Proposta enviada", en: "Offer extended" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora do envio da proposta.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para candidato recusado.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação de candidato com proposta em aberto.
   value Offer {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Com proposta", en: "Offer" }
+    // Ícone associado ao valor.
     icon: status.offer
+    // Ordem de exibição do valor.
     ordinal: 40
 
+    // Transição para candidato contratado.
     transition Hired {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato contratado", en: "Candidate hired" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Data e hora da contratação.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para candidato recusado.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Candidato recusado", en: "Candidate rejected" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação final de candidato contratado.
   value Hired {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Contratado", en: "Hired" }
+    // Ícone associado ao valor.
     icon: status.hired
+    // Ordem de exibição do valor.
     ordinal: 50
   }
+  // Situação final de candidato recusado.
   value Rejected {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Recusado", en: "Rejected" }
+    // Ícone associado ao valor.
     icon: status.rejected
+    // Ordem de exibição do valor.
     ordinal: 60
   }
 }
 
+// Quadro kanban dos candidatos por situação.
 view CandidatesKanban {
+  // Título exibido na navegação.
   title: { pt-BR: "Quadro de candidatos", en: "Candidates board" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento exibido no quadro.
   source: Candidate
+  // Papéis que podem abrir o quadro.
   roles: [Recruiter, HiringManager]
+  // Agrupa os cartões pela situação do candidato.
   groupBy: status
 
+  // Colunas exibidas em cada cartão.
   columns { name; position; department }
+  // Dados resumidos no cartão do kanban.
   card { name; position; appliedAt }
 
+  // Ações disponíveis no quadro.
   actions {
+    // Abre o detalhe do candidato.
     open -> CandidateDetail
   }
 }
 
+// Tela de detalhe de um candidato.
 view CandidateDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do candidato", en: "Candidate detail" }
+  // Tipo da view: detalhe de documento.
   type: detail
+  // Documento exibido no detalhe.
   document: Candidate
+  // Papéis que podem abrir o detalhe.
   roles: [Recruiter, HiringManager, Candidate]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; interviews; timeline }
 
+  // Ações disponíveis na tela de detalhe.
   actions {
+    // Coloca o candidato em triagem.
     screen -> Candidate.screen
+    // Agenda a entrevista do candidato.
     scheduleInterview -> Candidate.scheduleInterview
+    // Envia a proposta ao candidato.
     extendOffer -> Candidate.extendOffer
+    // Contrata o candidato.
     hire -> Candidate.hire
+    // Recusa o candidato, pedindo o motivo.
     reject -> Candidate.reject(reason)
   }
 }

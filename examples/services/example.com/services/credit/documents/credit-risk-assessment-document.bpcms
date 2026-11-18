@@ -1,27 +1,44 @@
 // service: example.com/services/credit
 
+// Documento computado que materializa o resultado da avaliação de risco.
 document RiskAssessment {
+  // Título exibido na interface e nos relatórios.
   title: { pt-BR: "Avaliação de risco", en: "Risk assessment" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Credit"
+  // Deriva os dados da proposta; não é editado manualmente.
   computed from CreditApplication
+  // Recalcula a avaliação no máximo a cada dez minutos.
   freshness: 10m
+  // Campos expostos como leitura para outros artefatos.
   exposes: [score, band, calculatedAt]
 
+  // Campos que compõem a avaliação de risco.
   fields {
+    // Proposta de crédito que originou a avaliação.
     application: CreditApplication {
+      // Título exibido no formulário e nas consultas.
       title: { pt-BR: "Proposta", en: "Application" }
+      // Permite localizar avaliações pela proposta.
       lookup
     }
+    // Score de risco apurado para a proposta.
     score: std.Count {
+      // Título exibido no formulário e nas consultas.
       title: { pt-BR: "Score", en: "Score" }
     }
+    // Faixa de risco correspondente ao score.
     band: RiskBand {
+      // Título exibido no formulário e nas consultas.
       title: { pt-BR: "Faixa", en: "Band" }
     }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Índice hash para localizar a avaliação pela proposta.
     byApplication: [application.id] hash
   }
 }

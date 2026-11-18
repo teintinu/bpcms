@@ -1,11 +1,19 @@
 // service: example.com/services/support
 
+// View de caixa de entrada que organiza os chamados por papel.
 view TicketQueue {
+  // Título exibido na navegação.
   title: { pt-BR: "Fila de atendimento", en: "Ticket queue" }
+  // Tipo da view: inbox de trabalho por papel.
   type: inbox
+  // Papéis que podem abrir a fila.
   roles: [SupportAgent, Manager]
-  scope: lanes
-  groupBy: lane
-  filter { lane in currentUser.lanes }
-  columns { title; subject; lane; dueAt; priority }
+  // Escopo por papel: cada usuário vê a fila que lhe cabe.
+  scope: roles
+  // Agrupa os itens pela role do usuário na fila.
+  groupBy: role
+  // Mostra apenas linhas das roles do usuário atual.
+  filter { role in currentUser.roles }
+  // Colunas exibidas na lista.
+  columns { title; subject; role; dueAt; priority }
 }

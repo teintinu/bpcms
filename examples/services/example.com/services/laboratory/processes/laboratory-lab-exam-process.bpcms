@@ -1,247 +1,258 @@
 // service: example.com/services/laboratory
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process LabExam for ExamOrder {
+// Declara o processo de exame; o argumento é o pedido-sujeito da instância.
+process LabExam(examOrder: ExamOrder) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Exame laboratorial", en: "Laboratory exam" }
-  version: 1
-  goal: "Coletar, analisar, validar, assinar e liberar o resultado no prazo"
-  owner: "Laboratory"
-  timezone: America/Fortaleza
-  sla: 8h
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Coletar, analisar, validar, assinar e liberar o resultado no prazo"
+  }
+  sla: 8h // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Laboratory {
-    internal
+  // Gatilho: inicia uma instância quando o pedido emite Requested.
+  on [ExamOrder.Requested]
+  key: examOrder // Chave de identidade, correlação e dedup da instância.
 
-    lane Collection {
-      role: Collector
+  // Variável durável da instância: leitura do analisador.
+  let reading: ExamReading
+  // Variável durável da instância: resultado gerado.
+  let result: ExamResult
+
+  // Laço de tentativas de coleta, limitado a duas iterações.
+  loop CollectionAttempt max 2 {
+    // Bloco interno: tenta abrir o form de coleta.
+    try {
+      // Abre o form de coleta para o pedido em pauta.
+      SampleCollection.show({ examOrder })
+      // Sai do laço quando o form conclui a coleta.
+      break
+    } catch (Timeout) {
+      // Coleta estourou o prazo: aciona o form manual de escalonamento.
+      EscalateCollection.show({ examOrder })
     }
+  }
 
-    lane Analysis {
-      role: Analyst
+  // Move o pedido para o estado de processamento.
+  ExamOrder.process()
+
+  // Consulta o analisador e guarda a leitura obtida.
+  reading = Analyzer.readResult({ order: examOrder })
+
+  // Só notifica quando a leitura foi marcada como crítica.
+  if (reading.critical) {
+    // Envia o alerta de resultado crítico.
+    send CriticalResultAlert {
+      key: examOrder // Correlaciona o alerta ao pedido de exame.
+      // Dados levados pelo alerta.
+      with {
+        exam: examOrder.exam // Exame que gerou o alerta.
+        value: reading.value // Valor medido que disparou o alerta.
+      }
     }
-
-    lane Pathology {
-      role: Pathologist
-    }
-
-    lane Management {
-      role: LabManager
-    }
   }
 
-  pool Requester {
-    external
-  }
+  // Registra a leitura do analisador como resultado do exame.
+  result = ExamResult.record({
+    // Pedido de exame de origem.
+    order: examOrder,
+    // Amostra analisada, herdada do pedido.
+    sampleRef: examOrder.sample,
+    // Valor medido na análise.
+    measured: reading.value,
+    // Unidade de medida da leitura.
+    measUnit: reading.unit,
+    isCritical: reading.critical // Marca de resultado crítico obtida do analisador.
+  })
 
-  variables {
-    reading: ExamReading
-    result: ExamResult
-  }
+  // Abre o form de validação do resultado.
+  ResultValidation.show({ result })
+  // Abre o form de assinatura do resultado.
+  ResultSignature.show({ result })
 
-  start Requested {
-    event: ExamOrder.Requested
-  }
+  // Libera o resultado já validado e assinado.
+  ExamResult.release({ result })
+  // Registra o resultado no pedido, concluindo a etapa de análise.
+  ExamOrder.result()
 
-  task Collect {
-    lane: Collection
-    form: SampleCollection
-    sla: 2h
-    priority: 50
-    assign: pull
-    on timer 4h -> Escalate
-  }
-
-  task StartAnalysis {
-    lane: System
-    action: ExamOrder.process
-  }
-
-  task ReadAnalyzer {
-    lane: System
-    call: Analyzer.readResult
-    with { order: examOrder }
-    gives: reading
-    sla: 30m
-  }
-
-  gateway Critical {
-    if reading.critical -> AlertCritical
-    else -> RecordResult
-  }
-
-  task AlertCritical {
-    lane: System
-    sends: CriticalResultAlert
-    partner: Requester
+  // Notifica a liberação do resultado.
+  send ResultReleased {
+    key: examOrder // Correlaciona a notificação ao pedido de exame.
+    // Dados levados pela notificação.
     with {
-      exam: examOrder.exam
-      value: reading.value
+      exam: examOrder.exam // Exame cujo resultado foi liberado.
+      sample: examOrder.sample // Amostra associada ao resultado.
     }
   }
 
-  task RecordResult {
-    lane: System
-    action: ExamResult.record
-    with {
-      order: examOrder
-      sampleRef: examOrder.sample
-      measured: reading.value
-      measUnit: reading.unit
-      isCritical: reading.critical
-    }
-    gives: result
+  // Cancela a instância se o pedido for cancelado durante a execução.
+  cancel on ExamOrder.Cancelled {
+    // Encerra o processo no desfecho de cancelamento.
+    return Cancelled
   }
 
-  task Validate {
-    lane: Analysis
-    form: ResultValidation
-    with { result }
-    sla: 4h
-    assign: pull
-  }
+  // Encerra no desfecho de sucesso após a liberação.
+  return Released
 
-  task Sign {
-    lane: Pathology
-    form: ResultSignature
-    with { result }
-    sla: 8h
-    assign: pull
-  }
-
-  task Release {
-    lane: System
-    action: ExamResult.release
-    with { result }
-  }
-
-  task MarkResulted {
-    lane: System
-    action: ExamOrder.result
-  }
-
-  task TellRequester {
-    lane: System
-    sends: ResultReleased
-    partner: Requester
-    with {
-      exam: examOrder.exam
-      sample: examOrder.sample
-    }
-  }
-
-  task Escalate {
-    lane: Management
-    manual: "Repactuar o prazo da coleta com o responsável"
-    sla: 2h
-  }
-
-  rollback Stop
-
+  // Declara o desfecho de sucesso do caso.
   end Released {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Resultado liberado", en: "Result released" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de cancelamento do caso.
   end Cancelled {
+    // Título exibido no histórico.
     title: { pt-BR: "Exame cancelado", en: "Exam cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Requested -> Collect
-  Collect.collect -> StartAnalysis
-  StartAnalysis -> ReadAnalyzer
-  ReadAnalyzer -> Critical
-  Critical -> AlertCritical
-  Critical -> RecordResult
-  AlertCritical -> RecordResult
-  RecordResult -> Validate
-  Validate.validate -> Sign
-  Sign.sign -> Release
-  Release -> MarkResulted
-  MarkResulted -> TellRequester
-  TellRequester -> Released
-  Escalate -> Collect
-  Stop -> Cancelled
-
-  cancel on ExamOrder.Cancelled -> Stop
 }
 
+// Shape que transporta a leitura bruta do analisador.
 shape ExamReading {
+  // Título exibido na interface.
   title: { pt-BR: "Leitura do analisador", en: "Analyzer reading" }
+  // Campos que compõem a leitura.
   fields {
-    value: string
-    unit: string
-    critical: boolean
-    readAt: DateTime
+    value: string // Valor medido pelo analisador.
+    unit: string // Unidade de medida da leitura.
+    critical: boolean // Marca se a leitura é crítica.
+    readAt: DateTime // Instante em que a leitura foi feita.
   }
 }
 
+// Form de coleta da amostra do pedido.
 form SampleCollection {
+  // Título exibido na inbox do form.
   title: { pt-BR: "Coleta da amostra", en: "Sample collection" }
-  document: ExamOrder
+  document: ExamOrder // Documento manipulado pelo form.
+  roles: [Collector] // Papéis que podem executar o form.
+  timeout: 4h // Prazo para conclusão antes de estourar timeout.
+  priority: 50 // Prioridade de exibição na inbox.
+  assign: pull // Distribuição por puxada manual pelo executor.
 
+  // Campos exibidos no formulário.
   fields {
+    // Amostra coletada.
     sample
+    // Exame solicitado.
     exam
+    // Laboratório responsável.
     laboratory
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Conclui a coleta chamando a action do documento.
     collect { calls: ExamOrder.collect }
   }
 }
 
+// Form de validação do resultado.
 form ResultValidation {
+  // Título exibido na inbox do form.
   title: { pt-BR: "Validação do resultado", en: "Result validation" }
-  document: ExamResult
+  document: ExamResult // Documento manipulado pelo form.
+  roles: [Analyst] // Papéis que podem executar o form.
+  timeout: 4h // Prazo para conclusão antes de estourar timeout.
+  assign: pull // Distribuição por puxada manual pelo executor.
 
+  // Campos exibidos no formulário.
   fields {
+    // Valor medido.
     value
+    // Unidade de medida.
     unit
+    // Marca de resultado crítico.
     critical
+    // Pedido de exame de origem.
     examOrder
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Valida o resultado chamando a action do documento.
     validate { calls: ExamResult.validate }
   }
 }
 
+// Form de assinatura do resultado.
 form ResultSignature {
+  // Título exibido na inbox do form.
   title: { pt-BR: "Assinatura do resultado", en: "Result signature" }
-  document: ExamResult
+  document: ExamResult // Documento manipulado pelo form.
+  roles: [Pathologist] // Papéis que podem executar o form.
+  timeout: 8h // Prazo para conclusão antes de estourar timeout.
+  assign: pull // Distribuição por puxada manual pelo executor.
 
+  // Campos exibidos no formulário.
   fields {
+    // Valor medido.
     value
+    // Unidade de medida.
     unit
+    // Marca de resultado crítico.
     critical
+    // Pedido de exame de origem.
     examOrder
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Assina o resultado chamando a action do documento.
     sign { calls: ExamResult.sign }
   }
 }
 
-view LabExamProgress {
-  title: { pt-BR: "Andamento do exame", en: "Exam progress" }
-  type: process
-  process: LabExam
-  roles: [Collector, Analyst, Pathologist, LabManager]
+// Form manual de escalonamento quando a coleta atrasa.
+manual EscalateCollection {
+  // Título exibido na inbox do form.
+  title: { pt-BR: "Escalonar a coleta", en: "Escalate collection" }
+  document: ExamOrder // Documento manipulado pelo form.
+  roles: [LabManager] // Papéis que podem executar o form.
+  instructions: "Repactuar o prazo da coleta com o responsável" // Orientação exibida ao executor.
+  timeout: 2h // Prazo para conclusão antes de estourar timeout.
+  assign: pull // Distribuição por puxada manual pelo executor.
+}
 
+// View de andamento derivada da instância do processo.
+view LabExamProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento do exame", en: "Exam progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: LabExam
+  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a view.
+
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }
 
+// Integração com os analisadores laboratoriais.
 integration Analyzer {
-  protocol: mqtt
-  topic: "analyzers/+/reading"
+  protocol: mqtt // Protocolo de mensageria usado na integração.
+  topic: "analyzers/+/reading" // Tópico MQTT das leituras, com curinga por equipamento.
+  // Capacidades exigidas do equipamento.
   capabilities { equipment }
-  timeout: 30s
+  timeout: 30s // Prazo máximo de espera por uma leitura.
+  // Requisitos de qualidade do equipamento.
   quality {
+    // Leitura considerada obsoleta após cinco minutos.
     staleAfter: 5m
+    // Calibração mensal exigida do equipamento.
     calibrate: monthly
   }
 
+  // Operações expostas pela integração.
   operations {
+    // Lê o resultado do analisador para o pedido de exame.
     readResult(order: ExamOrder): ExamReading
   }
 }

@@ -1,89 +1,146 @@
 // service: example.com/services/inventory
-
+// Documento que registra a reserva de quantidade de um produto.
 document Reservation {
+  // Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Reserva", en: "Reservation" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pelo documento.
   owner: "Inventory"
+  // Sincronização em tempo real entre as instâncias do documento.
   sync: live
 
+  // Campos persistidos na reserva.
   fields {
+    // Produto cuja quantidade está sendo reservada.
     product: Product {
+      // Título exibido no formulário e nas colunas.
       title: { pt-BR: "Produto", en: "Product" }
+      // Permite buscar e filtrar pelo produto relacionado.
       lookup
     }
+    // Quantidade reservada do produto.
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    // Referência do pedido externo que originou a reserva.
     externalRef: string { title: { pt-BR: "Referência externa", en: "External reference" } }
+    // Situação da reserva no shape ReservationStatus.
     status: ReservationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data e hora em que a reserva deixa de valer.
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 
+  // Índices que aceleram as consultas mais frequentes.
   indexes {
+    // Busca exata da reserva pela referência externa.
     byExternal: [externalRef] hash
+    // Consulta das reservas vencidas por situação e validade.
     byExpiry: [status, expiresAt] range
   }
 
 
+  // Ações que alteram a reserva.
   actions {
+    // Cria a reserva a partir do produto, quantidade e referência externa.
     request(product: Product, quantity: std.Count, externalRef: string){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Reservar", en: "Reserve" }
+      // Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
     }
 
+    // Libera a reserva antes do consumo.
     release(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Liberar", en: "Release" }
+      // Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
 
+      // Transição automática para a situação Released.
       to: status.Released
+      // Payload emitido na transição, transportando a data de liberação.
       emits { releasedAt: now() }
     }
 
+    // Expira a reserva quando o prazo vence.
     expire(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Expirar", en: "Expire" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
 
+      // Transição automática para a situação Expired.
       to: status.Expired
+      // Payload emitido na transição, transportando a data de expiração.
       emits { expiredAt: now() }
     }
   }
 
+  // A quantidade reservada deve ser positiva.
   rule quantity > 0 {
+    // Mensagem de validação em português.
     pt-BR: "A quantidade deve ser maior que zero"
+    // Mensagem de validação em inglês.
     en: "Quantity must be greater than zero"
   }
 }
 
+// Shape de estado que modela o ciclo de vida da reserva.
 shape ReservationStatus {
+  // Título exibido no builder e nos filtros.
   title: { pt-BR: "Situação da reserva", en: "Reservation status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial da reserva recém-criada.
   initial: Active
+  // Estado em que a reserva está ativa e ainda válida.
   value Active {
+    // Título exibido na interface.
     title: { pt-BR: "Ativo", en: "Active" }
+    // Ícone associado ao estado.
     icon: Active
+    // Ordem de exibição do estado no fluxo.
     ordinal: 10
 
+    // Transição para Released quando a reserva é liberada.
     transition Released {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Reserva liberada", en: "Reservation released" }
+      // Dados carregados pela transição de liberação.
       payload {
+        // Instante em que a reserva foi liberada.
         releasedAt: DateTime { title: { pt-BR: "Liberada em", en: "Released at" } }
       }
     }
 
+    // Transição para Expired quando o prazo da reserva vence.
     transition Expired {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Reserva expirada", en: "Reservation expired" }
+      // Dados carregados pela transição de expiração.
       payload {
+        // Instante em que a reserva expirou.
         expiredAt: DateTime { title: { pt-BR: "Expirada em", en: "Expired at" } }
       }
     }
   }
+  // Estado final de reserva liberada.
   value Released {
+    // Título exibido na interface.
     title: { pt-BR: "Liberada", en: "Released" }
+    // Ícone associado ao estado.
     icon: Released
+    // Ordem de exibição do estado no fluxo.
     ordinal: 20
   }
+  // Estado final de reserva expirada.
   value Expired {
+    // Título exibido na interface.
     title: { pt-BR: "Expirada", en: "Expired" }
+    // Ícone associado ao estado.
     icon: Expired
+    // Ordem de exibição do estado no fluxo.
     ordinal: 30
   }
+  // Formato de apresentação do shape.
   format: plain
 }

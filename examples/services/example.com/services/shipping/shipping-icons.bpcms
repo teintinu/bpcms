@@ -1,45 +1,67 @@
 // service: example.com/services/shipping
 
+// Ícone do estado de rascunho da remessa.
 icon Draft {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
+// Ícone do estado de remessa embalada.
 icon Packed {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Embalada", en: "Packed" }
 }
 
+// Ícone do estado de remessa despachada.
 icon Dispatched {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Despachada", en: "Dispatched" }
 }
 
+// Ícone do estado de remessa em rota de entrega.
 icon OutForDelivery {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
 }
 
+// Ícone do estado de tentativa de entrega falha.
 icon AttemptFailed {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
 }
 
+// Ícone do estado de remessa entregue.
 icon Delivered {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Entregue", en: "Delivered" }
 }
 
+// Ícone do estado de remessa devolvida.
 icon Returned {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Devolvida", en: "Returned" }
 }
 
+// Ícone do estado de remessa dividida.
 icon Split {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Dividida", en: "Split" }
 }
 
+// Ícone do estado de remessa cancelada.
 icon Cancelled {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Cancelada", en: "Cancelled" }
 }
 
+// Ícone do evento de rastreio em trânsito.
 icon InTransit {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Em trânsito", en: "In transit" }
 }
 
+// Ícone do evento de entrega concluída.
 icon Completed {
+  // Título exibido no seletor de ícones.
   title: { pt-BR: "Entrega concluída", en: "Delivery completed" }
 }

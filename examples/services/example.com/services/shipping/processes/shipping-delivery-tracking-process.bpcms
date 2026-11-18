@@ -1,134 +1,186 @@
 // service: example.com/services/shipping
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process DeliveryTracking for Shipment {
+// Processo que acompanha a entrega e trata tentativas falhas.
+process DeliveryTracking(shipment: Shipment) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Acompanhamento da entrega", en: "Delivery tracking" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Acompanhar a entrega, tratar tentativa falha e reentregar"
-  owner: "Shipping"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Acompanhar a entrega, tratar tentativa falha e reentregar"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 30d
 
-  pool Company {
-    internal
-    lane Operations { role: Dispatcher }
+  // Indica que o processo é chamado por outro processo, sem gatilho próprio.
+  called
+
+  // Flag durável que registra se a espera por rastreio expirou.
+  let timedOut = false
+
+  // Laço de ciclos de rastreio, limitado a dez iterações.
+  loop TrackingCycle max 10 {
+    // Bloco que tenta aguardar um evento de rastreio.
+    try {
+      // Aguarda TrackingUpdated para a remessa, com prazo de três dias.
+      receive TrackingUpdated {
+        // Correlaciona o evento com a remessa do caso.
+        key: shipment
+        // Tempo máximo de espera pelo evento.
+        timeout: 3d
+        // Aplica o evento na action de rastreio do documento.
+        apply: Shipment.applyTracking
+      }
+      // Evento recebido: a espera não expirou.
+      timedOut = false
+    } catch (Timeout) {
+      // Sem evento no prazo: abre a tarefa de cobrança do rastreio.
+      Chase.show({ shipment })
+      // Marca que a espera expirou.
+      timedOut = true
+    }
+
+    // Só interpreta o rastreio quando um evento foi recebido.
+    if (!timedOut) {
+      // Último evento indica que a entrega foi concluída.
+      if (shipment.lastTrackingKind == Completed) {
+        // Confirma a entrega no documento.
+        Shipment.markDelivered()
+        // Encerra o caso no desfecho Delivered.
+        return Delivered
+      // Último evento indica que a tentativa de entrega falhou.
+      } else if (shipment.lastTrackingKind == AttemptFailed) {
+        // Registra a tentativa falha e incrementa o contador.
+        Shipment.markAttemptFailed({ reason: "Tentativa de entrega frustrada pelo parceiro" })
+
+        // Abre o formulário para reagendar ou devolver a remessa.
+        DeliveryRetry.show({ shipment })
+
+        // Se a remessa foi devolvida, encerra no desfecho Returned.
+        if (shipment.status == Returned) {
+          // Encerra o caso no desfecho Returned.
+          return Returned
+        }
+
+        // Aguarda até a data/hora agendada para a próxima tentativa.
+        wait until shipment.nextAttemptAt
+      }
+    }
   }
 
-  pool Carrier {
-    external
+  // Cancelamento da remessa interrompe o acompanhamento.
+  cancel on Shipment.Cancelled {
+    // Encerra o caso no desfecho Stopped.
+    return Stopped
   }
 
+  // Encerra o caso no desfecho Stopped quando o laço termina sem entrega.
+  return Stopped
 
-  start Begin { called }
-
-  task AwaitTracking {
-    lane: System
-    receives: TrackingUpdated
-    partner: Carrier
-    apply: Shipment.applyTracking
-    sla: 3d
-    on timer 3d -> Chase
-  }
-
-  gateway Outcome {
-    if shipment.lastTrackingKind == Completed -> Confirm
-    if shipment.lastTrackingKind == AttemptFailed -> FlagFailure
-    else -> AwaitTracking
-  }
-
-  task Confirm {
-    lane: System
-    action: Shipment.markDelivered
-    sla: 1m
-  }
-
-  task FlagFailure {
-    lane: System
-    action: Shipment.markAttemptFailed
-    with { reason: "Tentativa de entrega frustrada pelo parceiro" }
-    sla: 1m
-  }
-
-  task Retry {
-    lane: Operations
-    form: DeliveryRetry
-    sla: 4h
-    priority: 70
-    assign: pull
-  }
-
-  task Chase {
-    lane: Operations
-    manual: "Ligar para a transportadora e pedir posição do rastreio"
-    sla: 1d
-  }
-
-  wait NextAttempt {
-    until: shipment.nextAttemptAt
-  }
-
-  milestone HandedOver {
-    title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
-    on: Shipment.PickedUp
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Delivered {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Entregue", en: "Delivered" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de cancelamento do caso.
   end Returned {
+    // Título exibido no histórico.
     title: { pt-BR: "Devolvida", en: "Returned" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
+  // Declara o desfecho de encerramento sem entrega.
   end Stopped {
+    // Título exibido no histórico.
     title: { pt-BR: "Encerrada", en: "Stopped" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  cancel on Shipment.Cancelled -> Stopped
-
-  AwaitTracking -> Outcome
-  Outcome -> Confirm
-  Outcome -> FlagFailure
-  Outcome -> AwaitTracking
-  Confirm -> Delivered
-  FlagFailure -> Retry
-  Retry.confirm -> NextAttempt
-  Retry.sendBack -> Returned
-  NextAttempt -> AwaitTracking
-  Chase -> AwaitTracking
-  Begin -> AwaitTracking
 }
 
-form DeliveryRetry {
-  title: { pt-BR: "Reagendar entrega", en: "Reschedule delivery" }
+// Tarefa manual para cobrar a posição do rastreio da transportadora.
+manual Chase {
+  // Título exibido na caixa de entrada.
+  title: { pt-BR: "Cobrar posição do rastreio", en: "Chase tracking status" }
+  // Documento-sujeito da tarefa.
   document: Shipment
+  // Papéis que podem executar a tarefa.
+  roles: [Dispatcher]
+  // Orientação exibida ao executor.
+  instructions: "Ligar para a transportadora e pedir posição do rastreio"
+  // Prazo para conclusão antes do timeout.
+  timeout: 1d
+  // Prioridade na fila de trabalho.
+  priority: 60
+  // Distribuição por retirada manual da fila.
+  assign: pull
+}
 
+// Formulário para reagendar a entrega ou devolver a remessa.
+form DeliveryRetry {
+  // Título exibido na caixa de entrada e no formulário.
+  title: { pt-BR: "Reagendar entrega", en: "Reschedule delivery" }
+  // Documento-sujeito alterado pelo formulário.
+  document: Shipment
+  // Papéis que podem executar o formulário.
+  roles: [Dispatcher]
+  // Prazo para conclusão antes do timeout do caso.
+  timeout: 4h
+  // Prioridade na fila de trabalho.
+  priority: 70
+  // Distribuição por retirada manual da fila.
+  assign: pull
+
+  // Campos exibidos no formulário.
   fields {
+    // Pedido relacionado à remessa, exibido como referência.
     order
+    // Código de rastreio da remessa, exibido como referência.
     tracking
+    // Data/hora proposta para a nova tentativa de entrega.
     attemptOn: DateTime {
+      // Título do campo no formulário.
       title: { pt-BR: "Nova tentativa", en: "New attempt" }
+      // Torna o campo obrigatório.
       required
     }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Ação que agenda a reentrega na data escolhida.
     confirm {
+      // Título do botão de ação.
       title: { pt-BR: "Agendar reentrega", en: "Schedule retry" }
+      // Chama a action do documento com a data informada.
       calls: Shipment.scheduleRetry(attemptOn)
     }
+    // Ação que devolve a remessa ao remetente.
     sendBack {
+      // Título do botão de ação.
       title: { pt-BR: "Devolver ao remetente", en: "Return to sender" }
+      // Chama a action de devolução do documento.
       calls: Shipment.returnToSender
     }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view DeliveryProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da entrega", en: "Delivery progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: DeliveryTracking
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

@@ -1,95 +1,142 @@
 // service: example.com/services/claims
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process ClaimFraudReview for Claim {
+// Processo chamado que reavalia e decide a suspeita de fraude de um sinistro.
+process ClaimFraudReview(claim: Claim) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Análise de fraude do sinistro", en: "Claim fraud review" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Confirmar ou descartar a fraude com evidências registradas e prazo"
-  owner: "Claims"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Confirmar ou descartar a fraude com evidências registradas e prazo"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 7d
 
-  on breach -> Escalate
+  // Processo chamado por outro processo, sem gatilho próprio.
+  called
 
-  pool Company {
-    internal
-    lane Fraud { role: FraudAnalyst }
-    lane Management { role: Manager }
+  // Primeira rodada: solicita a reavaliação das evidências pelo analista.
+  try {
+    // Abre o formulário de reavaliação para o sinistro.
+    FraudReassessment.show({ claim })
+  } catch (Timeout) { // prazo da reavaliação esgotado
+    // Sem reavaliação no prazo, escala a análise ao gerente.
+    EscalateFraudReview.show({ claim })
   }
 
-  start Begin { called }
-
-  task ReviewEvidence {
-    lane: Fraud
-    form: FraudReassessment
-    sla: 1d
-    assign: pull
-    on timer 2d -> Escalate
+  // Segunda rodada: coleta o parecer final de fraude.
+  try {
+    // Abre o formulário de decisão para o analista.
+    FraudDecision.show({ claim })
+  } catch (Timeout) { // prazo do parecer esgotado
+    // Sem parecer no prazo, escala e reabre a decisão.
+    EscalateFraudReview.show({ claim })
+    // Reapresenta o formulário de decisão após o escalonamento.
+    FraudDecision.show({ claim })
   }
 
-  task Decide {
-    lane: Fraud
-    form: FraudDecision
-    sla: 1d
-    assign: pull
+  // Se a análise registrou fraude, encerra no desfecho de falha.
+  if (claim.fraudConfirmed) {
+    // Retorna o desfecho FraudConfirmed.
+    return FraudConfirmed
   }
 
-  task RequestPoliceReport {
-    lane: Fraud
-    manual: "Solicitar o boletim de ocorrência e anexar ao caso"
-    discretionary
-    when: claim.amount > 50000 BRL
-  }
+  // Sem confirmação de fraude, retorna o desfecho de sucesso.
+  return Cleared
 
-  task Escalate {
-    lane: Management
-    manual: "Revisar a evidência com o analista e definir o parecer"
-    sla: 1d
-  }
-
+  // Desfecho que indica fraude confirmada.
   end FraudConfirmed {
+    // Título exibido no histórico.
     title: { pt-BR: "Fraude confirmada", en: "Fraud confirmed" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
 
+  // Desfecho que indica fraude descartada.
   end Cleared {
+    // Título exibido no histórico.
     title: { pt-BR: "Fraude descartada", en: "Cleared" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
-
-  ReviewEvidence.record -> Decide
-  Escalate -> Decide
-  Decide.confirm -> FraudConfirmed
-  Decide.clear -> Cleared
-  Begin -> ReviewEvidence
 }
 
+// Formulário que reavalia as evidências de fraude do sinistro.
 form FraudReassessment {
+  // Título exibido na inbox.
   title: { pt-BR: "Reavaliação de fraude", en: "Fraud reassessment" }
+  // Documento manipulado pelo formulário.
   document: Claim
+  // Papéis que recebem a tarefa.
+  roles: [FraudAnalyst]
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 2d
+  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Tipo da evidência a registrar, obrigatório.
     evidenceKind: EvidenceKind {
+      // Título exibido no formulário.
       title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+      // Torna o campo obrigatório no preenchimento.
       required
     }
+    // Resumo das evidências, reaproveitando o campo do documento.
     evidenceSummary
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Registra a evidência e conclui a reavaliação.
     record { calls: Claim.recordEvidence(evidenceKind, evidenceSummary) }
   }
 }
 
+// Formulário que registra o parecer final sobre a fraude.
 form FraudDecision {
+  // Título exibido na inbox.
   title: { pt-BR: "Parecer de fraude", en: "Fraud decision" }
+  // Documento manipulado pelo formulário.
   document: Claim
+  // Papéis que recebem a tarefa.
+  roles: [FraudAnalyst]
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 1d
+  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Nota textual da análise, reaproveitando o campo do documento.
     fraudNote
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Confirma a fraude com a nota informada.
     confirm { calls: Claim.confirmFraud(fraudNote) }
+    // Descarta a fraude com a nota informada.
     clear { calls: Claim.clearFraud(fraudNote) }
   }
+}
+
+// Tarefa manual de escalonamento quando os prazos de análise estouram.
+manual EscalateFraudReview {
+  // Título exibido na inbox.
+  title: { pt-BR: "Escalonar a análise de fraude", en: "Escalate fraud review" }
+  // Documento manipulado pela tarefa.
+  document: Claim
+  // Papéis que recebem a tarefa.
+  roles: [Manager]
+  // Orientações exibidas ao responsável pela tarefa.
+  instructions: "Revisar a evidência com o analista e definir o parecer"
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 1d
+  // Tarefa puxada pelo próprio usuário a partir da inbox.
+  assign: pull
 }

@@ -1,110 +1,135 @@
 // service: example.com/services/procurement
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process GoodsReceipt for GoodsReceipt {
+// Declara o processo de recebimento; o argumento é o documento-sujeito.
+process GoodsReceipt(goodsReceipt: GoodsReceipt) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
-  owner: "Procurement"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  pool Company {
-    internal
-    lane Receiving { role: ReceivingClerk }
-    lane Quality { role: QualityInspector }
-  }
+  // Restringe a instância às tarefas da role recebedor.
+  by: [ReceivingClerk]
 
-  pool Supplier {
-    external
-  }
+  // Abre o form de recebimento para o recebedor registrar a chegada.
+  ReceiveGoods.show({ goodsReceipt })
+  // Reserva o estoque assim que a mercadoria é recebida.
+  GoodsReceipt.reserveStock()
+  // Abre o form de inspeção para a qualidade conferir o recebimento.
+  InspectGoods.show({ goodsReceipt })
 
-  start Intake { by: [ReceivingClerk] }
-
-  task Receive {
-    lane: Receiving
-    form: ReceiveGoods
-    sla: 2h
-    assign: pull
-  }
-
-  task Reserve {
-    lane: System
-    action: GoodsReceipt.reserveStock
-  }
-
-  task Inspect {
-    lane: Quality
-    form: InspectGoods
-    sla: 4h
-    assign: pull
-    priority: 60
-  }
-
-  task Notify {
-    lane: System
-    sends: DivergenceNotice
-    partner: Supplier
-    with {
-      reason: goodsReceipt.divergenceReason
-      expectedWeight: goodsReceipt.expectedWeight
-      receivedWeight: goodsReceipt.receivedWeight
+  // Se a inspeção registrou divergência...
+  if (goodsReceipt.status == Divergent) {
+    // ...envia o aviso de divergência ao destinatário correto.
+    send DivergenceNotice {
+      // Chave de correlação da mensagem com o recebimento.
+      key: goodsReceipt
+      // Dados preenchidos na mensagem.
+      with {
+        // Motivo da divergência apontado na inspeção.
+        reason: goodsReceipt.divergenceReason
+        // Peso esperado conforme o pedido.
+        expectedWeight: goodsReceipt.expectedWeight
+        // Peso efetivamente recebido.
+        receivedWeight: goodsReceipt.receivedWeight
+      }
     }
+
+    // Compensação explícita da reserva feita antes da inspeção.
+    GoodsReceipt.releaseStock()
+    // Encerra no desfecho de falha.
+    return Divergent
   }
 
-  task Release {
-    lane: System
-    action: GoodsReceipt.releaseStock
-    compensates: Reserve
-  }
+  // Sem divergência, encerra no desfecho de sucesso.
+  return Accepted
 
-  rollback Undo
-
+  // Declara o desfecho de sucesso do caso.
   end Accepted {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Recebido", en: "Accepted" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de falha do caso.
   end Divergent {
+    // Título exibido no histórico.
     title: { pt-BR: "Divergente", en: "Divergent" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Intake -> Receive
-  Receive.receive -> Reserve
-  Reserve -> Inspect
-  Inspect.accept -> Accepted
-  Inspect.diverge -> Notify
-  Notify -> Undo
-  Undo -> Divergent
 }
 
+// Form de recebimento da mercadoria.
 form ReceiveGoods {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Receber mercadoria", en: "Receive goods" }
+  // Documento manipulado pelo form.
   document: GoodsReceipt
+  // Papéis que podem atender a tarefa.
+  roles: [ReceivingClerk]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 2h
+  // Prioridade da tarefa na inbox.
+  priority: 50
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Pedido de compra, somente leitura.
     order { readonly }
+    // Peso esperado, somente leitura.
     expectedWeight { readonly }
+    // Peso recebido, somente leitura, pois vem da balança.
     receivedWeight { readonly }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Registra o recebimento chamando a ação do documento.
     receive { calls: GoodsReceipt.receive }
   }
 }
 
+// Form de inspeção da mercadoria recebida.
 form InspectGoods {
+  // Título exibido na tarefa e no formulário.
   title: { pt-BR: "Inspecionar recebimento", en: "Inspect goods receipt" }
+  // Documento manipulado pelo form.
   document: GoodsReceipt
+  // Papéis que podem atender a tarefa.
+  roles: [QualityInspector]
+  // Prazo para responder; estourar dispara Timeout.
+  timeout: 4h
+  // Prioridade da tarefa na inbox.
+  priority: 60
+  // Modo de atribuição: o usuário puxa a tarefa.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Peso esperado, somente leitura.
     expectedWeight { readonly }
+    // Peso recebido, somente leitura.
     receivedWeight { readonly }
+    // Motivo da divergência, preenchido quando há recusa.
     divergenceReason
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Aceita o recebimento chamando a ação do documento.
     accept { calls: GoodsReceipt.accept }
+    // Registra a divergência com o motivo informado.
     diverge { calls: GoodsReceipt.markDivergent(divergenceReason) }
   }
 }

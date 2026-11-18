@@ -1,41 +1,61 @@
 // service: example.com/services/notifications
 
+// Ícone do canal de e-mail.
 icon Email {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Correio eletrônico", en: "Email" }
 }
 
+// Ícone do canal de WhatsApp.
 icon WhatsApp {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "WhatsApp", en: "WhatsApp" }
 }
 
+// Ícone do canal dentro do aplicativo.
 icon InApp {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "No aplicativo", en: "In-app" }
 }
 
+// Ícone da situação "na fila".
 icon Queued {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Na fila", en: "Queued" }
 }
 
+// Ícone da situação "enviada".
 icon Sent {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Enviada", en: "Sent" }
 }
 
+// Ícone da situação "falhou".
 icon Failed {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Falhou", en: "Failed" }
 }
 
+// Ícone da situação "lida".
 icon Read {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Lida", en: "Read" }
 }
 
+// Ícone da situação "suprimida".
 icon Suppressed {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Suprimida", en: "Suppressed" }
 }
 
+// Ícone do idioma português do Brasil.
 icon LocalePtBr {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Português (Brasil)", en: "Portuguese (Brazil)" }
 }
 
+// Ícone do idioma inglês dos EUA.
 icon LocaleEnUs {
+  // Rótulo exibido no seletor de ícones.
   title: { pt-BR: "Inglês (EUA)", en: "English (US)" }
 }

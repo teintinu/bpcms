@@ -1,29 +1,47 @@
 // service: example.com/services/notifications
 
+// Integração de saída de e-mail por SMTP.
 integration Email {
+  // Protocolo de transporte usado pelo conector.
   protocol: smtp
+  // Host do servidor SMTP, resolvido da variável de ambiente.
   host: env.SMTP_HOST
+  // Forma de autenticação do conector.
   auth: password
+  // Remetente padrão injetado nos e-mails enviados.
   from: "no-reply@lojadojoao.com"
 
+  // Operações expostas pela integração.
   operations {
+    // Envia um modelo renderizado e devolve o identificador da mensagem.
     send(template: NotificationTemplate, to: Citizen.Email, data: Map): MessageId
   }
+  // Limites de uso e resiliência do conector.
   limits {
+    // Teto de 100 chamadas por minuto.
     rate: 100/min
+    // Repetição exponencial por até 5 tentativas.
     retry: exponential(5)
   }
 }
 
+// Integração de saída de WhatsApp por webhook.
 integration WhatsApp {
+  // Protocolo de chamada usado pelo conector.
   protocol: webhook
+  // URL base do provedor, resolvida da variável de ambiente.
   baseUrl: env.WHATSAPP_URL
+  // Autenticação por token (credencial WhatsAppToken).
   auth: token
 
+  // Operações expostas pela integração.
   operations {
+    // Envia um modelo aprovado para um telefone e devolve o identificador da mensagem.
     sendTemplate(to: Citizen.Phone, template: NotificationTemplate, data: Map): MessageId
   }
+  // Webhooks de retorno do provedor para o serviço.
   webhooks {
+    // Mapeia a situação da mensagem para a situação da notificação.
     message.status -> Notification.status
   }
 }

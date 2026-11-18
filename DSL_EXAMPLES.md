@@ -2,9 +2,9 @@
 
 *Sintaxe ilustrativa v0.2 (Process + Document).* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
 
-A aplicação é orientada a **Process** (trabalho) e **Document** (estado). O processo orquestra quem faz o quê; o documento guarda o dado durável; o **Form** é o contrato da tarefa humana; a **View** é tela de leitura; a **Message** é contrato entre participantes. `job` e `report` deixaram de ser artefatos (agendamento é `start`; relatório é `view type: report`), e o ciclo de vida do documento vive nas actions (`from:`/`to:`/`emits:`).
+A aplicação é orientada a **Process** (trabalho) e **Document** (estado). O processo orquestra quem faz o quê; o documento guarda o dado durável; o **Form** é o contrato da tarefa humana; a **View** é tela de leitura; a **Message** é contrato entre participantes. `job` e `report` não são artefatos (agendamento é `schedule`; relatório é `view type: report`), e o ciclo de vida do documento vive no `transition` do `value` e no `to:` da action.
 
-Este documento cobre o catálogo de artefatos com **186 exemplos** (e 3 usos de serviços essenciais), sendo **24 processos** — o teste de aceitação do modelo. Alguns exemplos compartilham o mesmo domínio de propósito (composição e reuso); outros mudam de domínio para testar generalidade.
+Este documento cobre o catálogo de artefatos. Os **35 processos completos** — o teste de aceitação do modelo — estão em [`examples/`](examples/); os recortes de Process abaixo mostram a sintaxe. Alguns exemplos compartilham o mesmo domínio de propósito (composição e reuso); outros mudam de domínio para testar generalidade.
 
 ## Como ler
 
@@ -32,29 +32,22 @@ Este documento cobre o catálogo de artefatos com **186 exemplos** (e 3 usos de 
 | Índice | `byStatus: [status, createdAt] range` | `unique`, `range`, `search`, `hash` |
 | Regra | `total == subtotal + tax` | expressão segura, sem código arbitrário |
 | Configuração | `env.ERP_URL`, `secret.STRIPE_KEY` | ambiente e segredo são resolvidos na promoção |
-| Processo | `start`, `task`, `gateway`, `fork`/`join`, `end` | grafo de arestas explícitas; BPMN é uma visão |
-| Task | `task Review { lane: Sales; form: OrderReview }` | o tipo é inferido do contrato; não existe `type:` |
-| Executor | `lane:` (ou `System`) | toda task tem lane; pool define interno/portal/parceiro/sistema |
-| Subpasso | `runs: DeliveryTracking` | sempre outra instância de processo |
-| Agendamento | `start { schedule: "0 2 1 * *" }` | não existe `job` |
+| Processo | `process Nome(args)` + gatilho + `key` | código estruturado; sem arestas |
+| Task | `Form.show({…})`, `Manual.show({…})`, `Processo.run({…})` | o tipo é inferido do contrato; não existe `type:` |
+| Executor | `roles: [Role]` no form/manual | sem lane/pool; roles controlam a task humana |
+| Subpasso | `Processo.run({…})` | sempre outra instância de processo |
+| Agendamento | `schedule` + `fanOut` | uma instância por documento |
 | Relatório | `view type: report` | agregação é projeção; documento derivado é estado |
 | Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
 | Versão | `version: semver("1.2.3")` / `tag("v1.2.3")` / `commit("9f3a1c")` | `1.4.0` é açúcar para `semver("1.4.0")` |
 | Release | `"<uri>"@1.2.3` | URI + seletor de versão |
 | Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
 | Evento | `transition Paid { title; payload }` no `value` | evento do workflow definido no workflow; `initial ... with transition X` é o evento de criação; `events { }` só para evento sem transição |
-| Permissão | `roles: [Manager]` na action | autoridade é do documento; lane é execução |
+| Permissão | `roles: [Manager]` na action; `roles` no form | autoridade do documento + execução da task |
 
 ## Cobertura
 
-| Grupo | Tipos | Exemplos |
-| :--- | :--- | :--- |
-| **Núcleo** | Application, Service, Process, Form, Message, Document, Shape, View, Role/Organogram | 85 |
-| **Descoberta** | Evidence, Conversation, Decision, Assumption | 24 |
-| **Plataforma** | Environment, Parameter, Builder, Theme, Locale, Widget custom, Release/Version, Icon | 48 |
-| **Operação** | Integration, Report/Dashboard, Event, Schedule, Policy/Rule | 29 |
-| **Total** | catálogo de artefatos | **186** |
-| **Avulsos** | usos de serviços essenciais (location, timezone, regionalization, units) | 3 |
+O catálogo cobre Application, Service, Form, Message, Document, Shape, View, Role/Organogram, Evidência/Conversação/Decisão, plataforma e operação. Os 35 processos completos estão em [`examples/`](examples/).
 
 ---
 
@@ -440,18 +433,13 @@ service "example.com/services/fraud-checkout" {
     }
   }
 
-  reintroduce Checkout.Checkout {
-    task FraudCheck {
-      lane: System
-      action: CheckoutSession.checkFraud
-    }
+  // A composição do passo FraudCheck no processo Checkout fica adiada:
+  // o processo é código e não há insert/task (DSL_REFERENCE.md §4.12).
 
-    insert FraudCheck before AuthorizePayment
-  }
 }
 ```
 
-*Valida: o ciclo de vida e o processo são editados via `reintroduce`; `insert` insere estados/tasks sem substituir o todo.*
+*Valida: o ciclo de vida e a action são editados via `reintroduce`; a composição de passo em processo-código fica adiada.*
 
 ## Lock file do app
 
@@ -484,1509 +472,275 @@ lock:
 
 ## Process
 
-Os 24 processos abaixo são o teste de aceitação do modelo Process + Document. Cada um exercita construções reais: pools e lanes (interna, portal, parceiro, sistema), forms, decisões, paralelismo, mensagens, subprocessos, prazos, exceções, compensação, cancelamento e desfechos nomeados.
+O processo é **código TS-like**: execução sequencial e implícita, concorrência com `parallel`, variáveis declaradas no topo e tarefas chamadas como funções. Os **35 processos completos** estão em [`examples/`](examples/); os recortes abaixo mostram a sintaxe.
 
 Convenções:
 
-- `task` sempre tem `lane`; automação usa `lane: System`;
-- o tipo da task é inferido do contrato (`form`, `manual`, `action`, `call`, `decision`, `sends`, `receives`, `runs`) — não existe `type:`;
-- arestas são explícitas e a ordem de declaração não é semântica;
-- `end` é nomeado e classificado (`outcome: success | failure | cancelled`);
-- o documento só muda por `action`; a variável do processo é contexto.
+- `process Nome(args)` + um gatilho (`on`, `by`, `schedule` + `fanOut`, `message`, `called`) + `key`;
+- sem `pool`/`lane`/`task`; `roles` no form/manual definem quem executa;
+- operações diretas (`Doc.action`, `Integracao.op`, `Decision.evaluate`) e tasks (`Form.show`, `Manual.show`, `Processo.run`);
+- sem arestas: `if`/`else if`, `parallel`, `loop`, `wait`, `try/catch` e `return`;
+- `end` no fim do processo, com `outcome: success | cancelled | failure`;
+- o documento só muda por `action`; decisão humana é lida no estado do documento.
 
-### P.1 Aprovação de compra com alçada (procurement)
-
-```bpcms
-process PurchaseApproval for PurchaseRequest {
-  title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
-  version: 1
-  goal: "Comprar com alçada e rastro, sem travar o pedido simples"
-  sla: 5d
-
-  pool Company {
-    internal
-    lane Procurement { role: Buyer }
-    lane Management { role: Manager }
-    lane Direction { role: Director }
-  }
-
-  variables { tier: ApproverTier; purchaseOrder: PurchaseOrder }
-
-  start Submitted { event: PurchaseRequest.Submitted }
-  start Manual { by: [Buyer, Manager] }
-  on breach -> Escalate
-
-  task Review { lane: Procurement; form: PurchaseReview; sla: 1d; on breach -> Remind }
-
-  task Decide {
-    lane: System
-    decision: ApprovalLimit
-    with { amount: purchaseRequest.amount; supplier: purchaseRequest.supplier }
-    gives: tier
-  }
-
-  gateway Tier {
-    if tier == Auto -> AutoApprove
-    if tier == Manager -> ManagerReview
-    else -> DirectorReview
-  }
-
-  task AutoApprove { lane: System; action: PurchaseRequest.approve; with { purchaseRequest } }
-  task ManagerReview { lane: Management; form: ApprovalDecision; sla: 2d; assign: named(purchaseRequest.requester.manager) }
-  task DirectorReview { lane: Direction; form: ApprovalDecision; sla: 2d }
-  task Remind { lane: System; action: PurchaseRequest.remindApprover; with { purchaseRequest } }
-  task Escalate { lane: System; action: PurchaseRequest.escalate; with { purchaseRequest } }
-  task CreateOrder { lane: System; action: PurchaseOrder.create; with { purchaseRequest }; gives: purchaseOrder }
-
-  Submitted -> Review
-  Manual -> Review
-  Review -> Decide
-  Decide -> Tier
-  AutoApprove -> CreateOrder
-  ManagerReview.approved -> CreateOrder
-  ManagerReview.rejected -> Rejected
-  DirectorReview.approved -> CreateOrder
-  DirectorReview.rejected -> Rejected
-  Remind -> Review
-  Escalate -> DirectorReview
-  CreateOrder -> Approved
-
-  end Approved { title: { pt-BR: "Aprovada", en: "Approved" }; outcome: success }
-  end Rejected { title: { pt-BR: "Rejeitada", en: "Rejected" }; outcome: failure }
-}
-```
-
-*Valida: dois starts, DMN com alçada, gateway por valor, breach do caso e da task, arestas por desfecho de form, desfechos nomeados.*
-
-### P.2 Onboarding de fornecedor com portal externo (procurement)
+### P.1 Checkout com retentativa do cliente (checkout)
 
 ```bpcms
-process SupplierOnboarding for Supplier {
-  title: { pt-BR: "Cadastro de fornecedor", en: "Supplier onboarding" }
-  version: 1
-  goal: "Cadastrar fornecedor com documento verificado e contrato assinado"
-  sla: 10d
-
-  pool Company {
-    internal
-    lane Procurement { role: Buyer }
-    lane Compliance { role: ComplianceAnalyst }
-  }
-  pool Supplier {
-    external
-    lane SupplierPortal { role: SupplierUser }
-  }
-  pool Bureau {
-    external
-  }
-
-  variables { profile: CompanyProfile; contract: Contract }
-
-  start Nominated { by: [Buyer, ComplianceAnalyst] }
-
-  task SubmitRegistration {
-    lane: SupplierPortal
-    form: SupplierRegistration
-    sla: 5d
-    on breach -> CancelOnboarding
-  }
-
-  task VerifyCompany {
-    lane: System
-    call: Bureau.verifyCompany
-    with { supplier }
-    gives: profile
-  }
-
-  gateway Profile {
-    if profile.status == ok -> ComplianceReview
-    else -> RequestFix
-  }
-
-  task RequestFix { lane: System; sends: RegistrationFixRequest; partner: Supplier; with { supplier; profile } }
-  task ComplianceReview { lane: Compliance; form: ComplianceApproval; sla: 2d }
-  task Register { lane: System; action: Supplier.approve; with { supplier; profile } }
-  task OpenContract { lane: System; action: Contract.open; with { supplier }; gives: contract }
-  task SignContract { lane: SupplierPortal; form: ContractSignature; sla: 5d }
-  task Activate { lane: System; sends: SupplierActivated; partner: Supplier; with { supplier } }
-  task CancelOnboarding { lane: System; action: Supplier.reject; with { supplier } }
-
-  Nominated -> SubmitRegistration
-  SubmitRegistration -> VerifyCompany
-  VerifyCompany -> Profile
-  RequestFix -> SubmitRegistration
-  ComplianceReview.approved -> Register
-  ComplianceReview.rejected -> CancelOnboarding
-  Register -> OpenContract
-  OpenContract -> SignContract
-  SignContract.signed -> Activate
-  SignContract.declined -> CancelOnboarding
-  Activate -> Active
-  CancelOnboarding -> Rejected
-
-  end Active { title: { pt-BR: "Fornecedor ativo", en: "Supplier active" }; outcome: success }
-  end Rejected { title: { pt-BR: "Cadastro recusado", en: "Registration rejected" }; outcome: failure }
-}
-```
-
-*Valida: pool externo com portal (form preenchido fora), parceiro caixa-preta (Bureau), mensagens com partner, laço de correção, assinatura de contrato.*
-
-### P.3 Recebimento de mercadoria com divergência (procurement)
-
-```bpcms
-process GoodsReceipt for GoodsReceipt {
-  title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
-  version: 1
-  goal: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
-  sla: 1d
-
-  pool Company {
-    internal
-    lane Dock { role: Receiver }
-    lane Quality { role: QualityInspector }
-  }
-
-  variables { reading: WeightReading; accepted: boolean }
-
-  start Arrived { event: GoodsReceipt.Arrived }
-
-  task CheckIn { lane: Dock; form: ReceivingForm; sla: 2h }
-  task Weigh { lane: System; call: Scale.read; with { receipt }; gives: reading }
-
-  task Decide {
-    lane: System
-    decision: ReceiptDiscrepancy
-    with { expected: receipt.expectedWeight; measured: reading.weight }
-    gives: accepted
-  }
-
-  gateway Discrepancy {
-    if accepted -> Accept
-    else -> Inspect
-  }
-
-  task Accept { lane: System; action: GoodsReceipt.accept; with { receipt; weight: reading.weight } }
-  task Inspect { lane: Quality; form: DivergenceInspection; sla: 4h }
-  task Quarantine { lane: System; action: GoodsReceipt.quarantine; with { receipt } }
-  task ReverseReceipt { lane: System; action: GoodsReceipt.reverse; with { receipt }; compensates: Accept }
-  rollback Undo
-
-  Arrived -> CheckIn
-  CheckIn -> Weigh
-  Weigh -> Decide
-  Decide -> Discrepancy
-  Inspect.accepted -> Accept
-  Inspect.divergent -> Quarantine
-  Accept -> Accepted
-  Quarantine -> Undo
-  Undo -> Divergent
-
-  end Accepted { title: { pt-BR: "Recebido", en: "Accepted" }; outcome: success }
-  end Divergent { title: { pt-BR: "Divergente", en: "Divergent" }; outcome: failure }
-}
-```
-
-*Valida: leitura de dispositivo como task, decisão por tolerância, form de inspeção, compensação declarada e rollback.*
-
-### P.4 Entrada de pedido (orders)
-
-```bpcms
-process OrderIntake for Order {
-  title: { pt-BR: "Entrada de pedido", en: "Order intake" }
-  version: 1
-  goal: "Confirmar o pedido com estoque reservado e prazo prometido"
-  sla: 1d
-
-  pool Company {
-    internal
-    lane Sales { role: Clerk }
-    lane Management { role: Manager }
-  }
-
-  variables { reservation: Reservation }
-
-  start Placed { event: Order.Placed }
-  start Manual { by: [Clerk] }
-
-  task Review {
-    lane: Sales
-    form: OrderReview
-    sla: 4h
-    on breach -> ManagerReview
-    on error OrderInvalid -> Reject
-  }
-
-  task Reserve {
-    lane: System
-    action: Stock.reserve
-    with { order }
-    gives: reservation
-    sla: 2m
-    on error StockUnavailable -> Backorder
-  }
-
-  task Confirm { lane: System; action: Order.confirm; with { order; reservation } }
-  task Backorder { lane: Management; form: BackorderDecision; sla: 1d }
-  task Reject { lane: System; action: Order.reject; with { order } }
-  task ManagerReview { lane: Management; form: OrderReview; sla: 2h }
-
-  Placed -> Review
-  Manual -> Review
-  Review.approved -> Reserve
-  Review.rejected -> Reject
-  Review.held -> ManagerReview
-  ManagerReview.approved -> Reserve
-  ManagerReview.rejected -> Reject
-  Reserve -> Confirm
-  Backorder.partial -> Confirm
-  Backorder.cancel -> Reject
-  Confirm -> Confirmed
-  Reject -> Rejected
-
-  end Confirmed { title: { pt-BR: "Confirmado", en: "Confirmed" }; outcome: success }
-  end Rejected { title: { pt-BR: "Recusado", en: "Rejected" }; outcome: failure }
-}
-```
-
-*Valida: evento de início + início manual, form com três desfechos, erro de serviço com desvio, prazo com escalonamento, action encadeada.*
-
-### P.5 Cancelamento de pedido com compensação (orders)
-
-```bpcms
-process OrderCancellation for Order {
-  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
-  version: 1
-  goal: "Cancelar com motivo, devolvendo reserva e pagamento"
-  sla: 2d
-
-  pool Company {
-    internal
-    lane Support { role: SupportAgent }
-  }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
-
-  variables { eligible: boolean }
-
-  start Requested { by: [SupportAgent, Manager] }
-
-  task Review { lane: Support; form: CancellationReview; sla: 8h }
-
-  task Decide {
-    lane: System
-    decision: CancellationEligibility
-    with { order; reason: review.reason }
-    gives: eligible
-  }
-
-  gateway Eligible {
-    if eligible -> ReleaseStock
-    else -> AskCustomer
-  }
-
-  task ReleaseStock { lane: System; action: Stock.release; with { order }; compensates: Order.confirm }
-  task Refund { lane: System; action: Payment.refund; with { order; amount: order.total }; compensates: Order.confirm }
-  task CancelOrder { lane: System; action: Order.cancel; with { order; reason: review.reason } }
-  task AskCustomer { lane: Client; form: CancellationOptions; sla: 2d }
-  rollback Undo
-
-  Requested -> Review
-  Review -> Decide
-  Decide -> Eligible
-  AskCustomer.keep -> ReleaseStock
-  AskCustomer.acceptfee -> ReleaseStock
-  ReleaseStock -> Refund
-  Refund -> CancelOrder
-  CancelOrder -> Cancelled
-  Refund -> Undo
-  Undo -> Failed
-
-  end Cancelled { title: { pt-BR: "Cancelado", en: "Cancelled" }; outcome: success }
-  end Failed { title: { pt-BR: "Falha no cancelamento", en: "Cancellation failed" }; outcome: failure }
-}
-```
-
-*Valida: decisão de elegibilidade, task no portal do cliente, compensação em ordem reversa, desvio de erro para rollback.*
-
-### P.6 Despacho com paralelismo e coleta pelo parceiro (shipping)
-
-```bpcms
-process DispatchOrder for Order {
-  title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
-  version: 1
-  goal: "Separar, embalar e despachar com frete e rastreio conhecidos"
-  sla: 2d
-
-  pool Company {
-    internal
-    lane Warehouse { role: Packer }
-    lane Dispatch { role: Dispatcher }
-    lane Management { role: Manager }
-  }
-  pool Carrier {
-    external
-  }
-
-  variables { shipment: Shipment; quote: FreightQuote }
-
-  start Approved { event: Order.Approved }
-
-  fork Prepare
-  join Prepared
-
-  task Pick { lane: Warehouse; form: PickItems; sla: 2h }
-  task Reserve { lane: System; action: Stock.reserve; with { order } }
-  task Pack { lane: Warehouse; form: PackShipment; sla: 2h }
-  task OpenShipment { lane: System; action: Shipment.open; with { order }; gives: shipment }
-  task Quote { lane: System; call: Carrier.quote; with { shipment }; gives: quote; sla: 5m; on error CarrierUnavailable -> ManualQuote }
-
-  gateway Weight {
-    if shipment.grossWeight <= carrier.maxWeight -> PrintLabel
-    else -> Split
-  }
-
-  task Split { lane: Management; form: SplitShipment }
-  task PrintLabel { lane: System; call: Carrier.label; with { shipment; quote } }
-  task RequestPickup { lane: System; sends: PickupRequest; partner: Carrier; with { shipment } }
-
-  task AwaitPickup {
-    lane: System
-    receives: PickupConfirmed
-    partner: Carrier
-    apply: Shipment.applyPickup
-    sla: 1d
-    on timer 1d -> ManualPickup
-  }
-
-  task Close { lane: System; action: Order.dispatch; with { order; shipment } }
-  task ManualQuote { lane: Management; form: FreightManualQuote; sla: 4h }
-  task ManualPickup { lane: Dispatch; form: PickupConfirmation; sla: 4h }
-
-  Approved -> Prepare
-  Prepare -> Pick
-  Prepare -> Reserve
-  Pick -> Prepared
-  Reserve -> Prepared
-  Prepared -> Pack
-  Pack -> OpenShipment
-  OpenShipment -> Quote
-  Quote -> Weight
-  Split -> PrintLabel
-  PrintLabel -> RequestPickup
-  RequestPickup -> AwaitPickup
-  AwaitPickup -> Close
-  ManualQuote -> PrintLabel
-  ManualPickup -> Close
-  Close -> Dispatched
-
-  end Dispatched { title: { pt-BR: "Despachado", en: "Dispatched" }; outcome: success }
-}
-```
-
-*Valida: fork/join, gateway por peso, mensagem enviada e recebida com apply, timeouts com desvio, erro de integração.*
-
-### P.7 Rastreamento da entrega como processo filho (shipping)
-
-```bpcms
-process DeliveryTracking for Shipment {
-  title: { pt-BR: "Rastreamento da entrega", en: "Delivery tracking" }
-  version: 1
-  goal: "Acompanhar a entrega até confirmar ou devolver"
-  sla: 30d
-
-  pool Company {
-    internal
-    lane Dispatch { role: Dispatcher }
-    lane CustomerService { role: SupportAgent }
-  }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
-  pool Carrier {
-    external
-  }
-
-  start Begin { called }
-
-  task AwaitUpdate {
-    lane: System
-    receives: TrackingUpdated
-    partner: Carrier
-    apply: Shipment.applyTracking
-    with { shipment }
-    sla: 5d
-    on timer 5d keep -> RemindCarrier
-    on timer 10d -> Investigate
-  }
-
-  gateway Status {
-    if shipment.status == Delivered -> Confirm
-    if shipment.status == Failed -> Retry
-    else -> AwaitUpdate
-  }
-
-  task RemindCarrier { lane: System; sends: TrackingReminder; partner: Carrier; with { shipment } }
-  task Retry { lane: CustomerService; form: RescheduleDelivery; sla: 2d }
-  task Confirm { lane: System; action: Shipment.confirmDelivery; with { shipment } }
-  task Investigate { lane: Dispatch; form: DeliveryInvestigation; sla: 2d }
-  task Return { lane: System; action: Shipment.returnToSender; with { shipment } }
-
-  milestone Delivered {
-    title: { pt-BR: "Entrega confirmada", en: "Delivered" }
-    on: Shipment.Delivered
-  }
-
-  cancel on Shipment.Cancelled -> Return
-
-  Dispatched -> AwaitUpdate
-  AwaitUpdate -> Status
-  Retry.scheduled -> AwaitUpdate
-  Retry.undeliverable -> Return
-  Confirm -> Delivered
-  Investigate.found -> AwaitUpdate
-  Investigate.lost -> Return
-  Return -> Returned
-
-  end Delivered { title: { pt-BR: "Entregue", en: "Delivered" }; outcome: success }
-  end Returned { title: { pt-BR: "Devolvido", en: "Returned" }; outcome: failure }
-  Begin -> AwaitUpdate
-}
-```
-
-*Valida: processo filho com passo próprio, recebimento contínuo de mensagem, laço com saída, milestone por evento, cancelamento a qualquer momento.*
-
-### P.8 Cotação de frete com múltiplas transportadoras (shipping)
-
-```bpcms
-process FreightQuote for Shipment {
-  title: { pt-BR: "Cotação de frete", en: "Freight quote" }
-  version: 1
-  goal: "Escolher transportadora com preço e prazo conhecidos"
-  sla: 4h
-
-  pool Company {
-    internal
-    lane Dispatch { role: Dispatcher }
-    lane Management { role: Manager }
-  }
-  pool Carriers {
-    external
-  }
-
-  variables { quotes: FreightQuote[]; chosen: FreightQuote }
-
-  start Requested { by: [Dispatcher] }
-
-  task Collect {
-    lane: System
-    call: FreightBroker.quoteAll
-    with { shipment; carriers }
-    gives: quotes
-    sla: 15m
-    on error BrokerUnavailable -> ManualQuote
-  }
-
-  task Select { lane: System; decision: CarrierSelection; with { quotes }; gives: chosen }
-  task Book { lane: System; call: Carrier.book; with { shipment; quote: chosen }; sla: 10m; on error SlotUnavailable -> ManualQuote }
-  task ManualQuote { lane: Management; form: FreightManualQuote; sla: 2h }
-
-  Requested -> Collect
-  Collect -> Select
-  Select -> Book
-  Book -> Booked
-  ManualQuote.chosen -> Book
-  ManualQuote.abort -> Aborted
-
-  end Booked { title: { pt-BR: "Frete contratado", en: "Freight booked" }; outcome: success }
-  end Aborted { title: { pt-BR: "Sem frete", en: "No freight" }; outcome: failure }
-}
-```
-
-*Valida: integração de agregação, decisão sobre coleção, timeout com desvio, retorno manual ao fluxo.*
-### P.9 Checkout com retentativa do cliente (checkout)
-
-```bpcms
-process Checkout for CheckoutSession {
+process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
-  goal: "Cotar frete, autorizar pagamento e confirmar o pedido"
-  sla: 1h
-
-  pool Company {
-    internal
-    lane Store { role: Clerk }
+  goal: {
+    pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
   }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
-  pool Payments {
-    external
-  }
-
-  start Validated { event: CheckoutSession.Validated }
-
-  task QuoteShipping { lane: System; action: CheckoutSession.quoteShipping; with { session }; sla: 2m }
-  task Authorize { lane: System; action: CheckoutSession.authorizePayment; with { session }; sla: 2m; on error GatewayDown -> RetryPayment }
-
-  gateway Authorized {
-    if session.paymentAuthorized -> ConfirmOrder
-    else -> RetryPayment
-  }
-
-  task RetryPayment {
-    lane: Client
-    form: PaymentRetry
-    sla: 30m
-    on breach -> Abandon
-  }
-
-  task ConfirmOrder { lane: System; action: CheckoutSession.confirmOrder; with { session } }
-  task Abandon { lane: System; action: CheckoutSession.abandon; with { session } }
-
-  Validated -> QuoteShipping
-  QuoteShipping -> Authorize
-  Authorize -> Authorized
-  RetryPayment.retry -> Authorize
-  RetryPayment.giveup -> Abandon
-  ConfirmOrder -> Confirmed
-  Abandon -> Abandoned
-
-  end Confirmed { title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }; outcome: success }
-  end Abandoned { title: { pt-BR: "Compra abandonada", en: "Checkout abandoned" }; outcome: cancelled }
-}
-```
-
-*Valida: fluxo quase todo automático, task humana no portal do cliente, laço de retentativa, timeout como abandono.*
-
-### P.10 Captura de pagamento com estorno (payments)
-
-```bpcms
-process PaymentCapture for Payment {
-  title: { pt-BR: "Captura de pagamento", en: "Payment capture" }
-  version: 1
-  goal: "Autorizar e capturar o pagamento, estornando em caso de falha"
-  sla: 1h
-
-  pool Company {
-    internal
-    lane Finance { role: FinanceAnalyst }
-  }
-  pool Gateway {
-    external
-  }
-
-  variables { authorization: Authorization }
-
-  start Requested { event: Payment.Requested }
-
-  task Authorize {
-    lane: System
-    call: Gateway.authorize
-    with { payment }
-    gives: authorization
-    sla: 30s
-    on error Declined -> Declined
-  }
-
-  task Capture {
-    lane: System
-    call: Gateway.capture
-    with { payment; authorization }
-    sla: 30s
-    on error CaptureFailed -> Undo
-  }
-
-  task Reverse {
-    lane: System
-    call: Gateway.refund
-    with { payment; authorization }
-    compensates: Capture
-  }
-
-  rollback Undo
-
-  Requested -> Authorize
-  Authorize -> Capture
-  Capture -> Captured
-  Capture -> Undo
-  Undo -> Failed
-
-  end Captured { title: { pt-BR: "Capturado", en: "Captured" }; outcome: success }
-  end Declined { title: { pt-BR: "Recusado", en: "Declined" }; outcome: failure }
-  end Failed { title: { pt-BR: "Falha na captura", en: "Capture failed" }; outcome: failure }
-}
-```
-
-*Valida: integração pura, compensação acionada por rollback, desfechos de negócio distintos.*
-
-### P.11 Disputa de chargeback com a bandeira (payments)
-
-```bpcms
-process ChargebackDispute for Chargeback {
-  title: { pt-BR: "Disputa de chargeback", en: "Chargeback dispute" }
-  version: 1
-  goal: "Responder a disputa no prazo com evidência"
-  sla: 30d
-
-  pool Company {
-    internal
-    lane Finance { role: FinanceAnalyst }
-    lane Management { role: Manager }
-  }
-  pool Network {
-    external
-  }
-
-  start Opened { event: Chargeback.Opened }
-
-  task GatherEvidence { lane: Finance; form: ChargebackEvidence; sla: 7d; on breach -> Escalate }
-  task Submit { lane: System; sends: ChargebackEvidence; partner: Network; with { chargeback } }
-
-  task AwaitDecision {
-    lane: System
-    receives: ChargebackDecided
-    partner: Network
-    apply: Chargeback.applyDecision
-    with { chargeback }
-    sla: 21d
-    on timer 21d -> Escalate
-  }
-
-  gateway Outcome {
-    if chargeback.status == won -> Close
-    else -> AcceptLoss
-  }
-
-  task Close { lane: System; action: Chargeback.close; with { chargeback } }
-  task AcceptLoss { lane: System; action: Chargeback.acceptLoss; with { chargeback } }
-  task Escalate { lane: Management; form: ChargebackEscalation; sla: 2d }
-
-  Opened -> GatherEvidence
-  GatherEvidence -> Submit
-  Submit -> AwaitDecision
-  AwaitDecision -> Outcome
-  Escalate.submitted -> Submit
-  Escalate.writeoff -> AcceptLoss
-  Close -> Won
-  AcceptLoss -> Lost
-
-  end Won { title: { pt-BR: "Disputa ganha", en: "Dispute won" }; outcome: success }
-  end Lost { title: { pt-BR: "Disputa perdida", en: "Dispute lost" }; outcome: failure }
-}
-```
-
-*Valida: prazo legal com dois timers, mensagem enviada e recebida com apply, escalonamento humano, desfechos.*
-
-### P.12 Emissão de nota fiscal (billing)
-
-```bpcms
-process InvoiceIssuance for Invoice {
-  title: { pt-BR: "Emissão de nota fiscal", en: "Invoice issuance" }
-  version: 1
-  goal: "Emitir a nota conferida e entregar ao cliente"
   sla: 1d
 
-  pool Company {
-    internal
-    lane Billing { role: BillingClerk }
-    lane Management { role: Manager }
+  on [CheckoutSession.CartValidated]
+  key: session
+
+  let offer: FreightOffer | null = null
+  let authorized = false
+  let authorization: string
+
+  try {
+    try {
+      offer = FreightGateway.quote({ session })
+    } catch (Unavailable) {
+      FreightReview.show({ session })
+    }
+
+    if (offer != null) {
+      CheckoutSession.quoteShipping({
+        freightAmount: offer.freight,
+        days: offer.days
+      })
+    }
+
+    loop PaymentAttempt max 3 {
+      try {
+        authorization = PaymentGateway.authorize({
+          total: session.total,
+          method: session.paymentMethod
+        })
+
+        CheckoutSession.authorizePayment({ authorization })
+        authorized = true
+        break
+      } catch (Declined) {
+        PaymentRetry.show({ session })
+
+        if (session.status == Abandoned) {
+          return Abandoned
+        }
+      }
+    }
+
+    if (!authorized) {
+      CheckoutSession.abandon({ reason: "Tentativas de pagamento esgotadas" })
+      return Expired
+    }
+
+    CheckoutSession.confirmOrder()
+    return Confirmed
+  } catch (Timeout) {
+    CheckoutSession.abandon({ reason: "Prazo de finalização esgotado sem conclusão" })
+    return Expired
   }
-  pool Customer {
-    external
+
+  end Confirmed {
+    title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
+    outcome: success
   }
-
-  variables { invoice: Invoice }
-
-  start Requested { by: [BillingClerk, Manager] }
-  start FromOrder { event: Order.Invoiced }
-
-  on breach -> Escalate
-
-  task Prepare { lane: System; action: Invoice.prepare; with { order }; gives: invoice }
-  task Review { lane: Billing; form: InvoiceReview; sla: 4h }
-
-  gateway Reviewed {
-    if review.approved -> Issue
-    else -> Cancel
+  end Abandoned {
+    title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+    outcome: cancelled
   }
-
-  task Issue { lane: System; action: Invoice.issue; with { invoice } }
-  task Send { lane: System; sends: InvoiceIssued; partner: Customer; with { invoice } }
-  task Cancel { lane: Management; form: InvoiceCancellation; sla: 4h }
-  task Escalate { lane: Management; form: InvoiceEscalation; sla: 2h }
-
-  Requested -> Prepare
-  FromOrder -> Prepare
-  Prepare -> Review
-  Review -> Reviewed
-  Issue -> Send
-  Send -> Issued
-  Cancel -> Cancelled
-  Escalate.proceed -> Issue
-  Escalate.abort -> Cancel
-
-  end Issued { title: { pt-BR: "Nota emitida", en: "Invoice issued" }; outcome: success }
-  end Cancelled { title: { pt-BR: "Nota cancelada", en: "Invoice cancelled" }; outcome: cancelled }
+  end Expired {
+    title: { pt-BR: "Expirada", en: "Expired" }
+    outcome: failure
+  }
 }
 ```
 
-*Valida: dois starts (manual e por evento de outro documento), mensagem ao cliente, aprovação e cancelamento.*
-
-### P.13 Cobrança de faturas vencidas (billing)
-
 ```bpcms
-process Dunning for Invoice {
-  title: { pt-BR: "Cobrança de faturas", en: "Invoice dunning" }
-  version: 1
-  goal: "Cobrar sem desgastar o cliente e escalar quando necessário"
-  sla: 45d
+form PaymentRetry {
+  title: { pt-BR: "Repetir pagamento", en: "Retry payment" }
+  document: CheckoutSession
+  roles: [Customer]
+  timeout: 1d
+  priority: 80
 
-  pool Company {
-    internal
-    lane Collections { role: CollectionsAgent }
-    lane Management { role: Manager }
-  }
-  pool Customer {
-    external
-  }
-
-  start Daily {
-    schedule: "0 6 * * *"
-    select: invoice.status == Overdue and invoice.daysOverdue >= 1
+  fields {
+    customer { readonly }
+    total { readonly }
+    method: PaymentMethod { required }
+    reason: string { maxLength: 500 }
   }
 
-  task Remind { lane: System; sends: PaymentReminder; partner: Customer; with { invoice } }
-  wait Grace { for: 7d }
-
-  gateway Late {
-    if invoice.daysOverdue > 30 -> Escalate
-    else -> Remind
+  actions {
+    retry { calls: CheckoutSession.retryPayment(method) }
+    cancel { calls: CheckoutSession.abandon(reason) }
   }
-
-  task Escalate { lane: Collections; form: CollectionCall; sla: 2d }
-  task WriteOff { lane: Management; form: WriteOffApproval; sla: 3d }
-
-  cancel on Invoice.Paid -> Settled
-
-  Daily -> Remind
-  Remind -> Grace
-  Grace -> Late
-  Escalate.promised -> Remind
-  Escalate.unreachable -> WriteOff
-  WriteOff -> WrittenOff
-
-  end Settled { title: { pt-BR: "Fatura paga", en: "Invoice paid" }; outcome: success }
-  end WrittenOff { title: { pt-BR: "Perda reconhecida", en: "Written off" }; outcome: failure }
 }
 ```
 
-*Valida: start agendado com fan-out por sujeito, espera por tempo, laço com saída, cancelamento por evento externo.*
+*Valida: variáveis duráveis no topo, operações diretas, task humana com roles/timeout, retry com `loop max`, desvio por erro e decisão pelo estado do documento.*
 
-### P.14 Fechamento mensal (billing)
-
-```bpcms
-process MonthClose for FiscalPeriod {
-  title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  version: 1
-  goal: "Fechar o período com números conferidos"
-  owner: "Controladoria"
-  sla: 6h
-
-  pool Company {
-    internal
-    lane Controllership { role: Controller }
-  }
-
-  start Monthly {
-    schedule: "0 2 1 * *"
-    select: fiscalPeriod.status == Open
-  }
-
-  task PostEntries { lane: System; action: Ledger.postPeriod; with { fiscalPeriod }; on error Unbalanced -> Fix }
-  task Reconcile { lane: System; action: Ledger.reconcile; with { fiscalPeriod }; on error Unbalanced -> Fix }
-  task Review { lane: Controllership; form: MonthCloseReview; sla: 4h }
-  task Fix { lane: Controllership; form: ReconciliationFix; sla: 1d }
-  task Close { lane: System; action: FiscalPeriod.close; with { fiscalPeriod } }
-
-  Monthly -> PostEntries
-  PostEntries -> Reconcile
-  Reconcile -> Review
-  Review.approved -> Close
-  Review.rejected -> Fix
-  Fix -> Reconcile
-  Close -> Closed
-
-  end Closed { title: { pt-BR: "Período fechado", en: "Period closed" }; outcome: success }
-  end Failed { title: { pt-BR: "Fechamento falhou", en: "Close failed" }; outcome: failure }
-}
-```
-
-*Valida: rotina agendada como processo, tarefa de revisão humana, erro de sistema com correção, desfecho nomeado.*
-
-### P.15 Reposição de estoque (inventory)
+### P.2 Aprovação de compra com alçada (procurement)
 
 ```bpcms
-process StockReplenishment for StockItem {
-  title: { pt-BR: "Reposição de estoque", en: "Stock replenishment" }
+process PurchaseApproval(purchaseRequest: PurchaseRequest) {
+  title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
   version: 1
-  goal: "Repor o que está abaixo do ponto de pedido sem excesso"
-  sla: 2d
-
-  pool Company {
-    internal
-    lane Planning { role: Planner }
-    lane Management { role: Manager }
-  }
-
-  variables { decision: ReplenishmentDecision }
-
-  start Daily {
-    schedule: "0 7 * * *"
-    select: stockItem.available < stockItem.reorderPoint
-  }
-
-  task Decide {
-    lane: System
-    decision: ReplenishmentOrder
-    with { available: stockItem.available; reorderPoint: stockItem.reorderPoint; leadTime: stockItem.leadTime }
-    gives: decision
-  }
-
-  gateway Action {
-    if decision.action == order -> CreateRequest
-    if decision.action == transfer -> Transfer
-    else -> Defer
-  }
-
-  task CreateRequest {
-    lane: System
-    action: PurchaseRequest.create
-    with { stockItem; quantity: decision.quantity }
-    gives: purchaseRequest
-  }
-
-  task SubmitRequest { lane: System; action: PurchaseRequest.submit; with { purchaseRequest } }
-  task Transfer { lane: Planning; form: StockTransfer; sla: 1d }
-  task Defer { lane: System; action: StockItem.deferReplenishment; with { stockItem; until: decision.until } }
-
-  Daily -> Decide
-  Decide -> Action
-  CreateRequest -> SubmitRequest
-  SubmitRequest -> Requested
-  Transfer -> Replenished
-  Defer -> Deferred
-
-  end Requested { title: { pt-BR: "Compra solicitada", en: "Purchase requested" }; outcome: success }
-  end Replenished { title: { pt-BR: "Transferido", en: "Transferred" }; outcome: success }
-  end Deferred { title: { pt-BR: "Adiado", en: "Deferred" }; outcome: success }
-}
-```
-
-*Valida: decisão por faixa, `runs:` como subprocesso de outro serviço, três saídas de negócio.*
-
-### P.16 Inventário cíclico com recontagem (inventory)
-
-```bpcms
-process CycleCount for CycleCount {
-  title: { pt-BR: "Inventário cíclico", en: "Cycle count" }
-  version: 1
-  goal: "Contar, explicar divergência e ajustar o estoque"
-  sla: 3d
-
-  pool Company {
-    internal
-    lane Warehouse { role: Counter }
-    lane Management { role: Manager }
-  }
-
-  variables { divergent: boolean }
-
-  start Scheduled { event: CycleCount.Scheduled }
-
-  task Count {
-    lane: Warehouse
-    form: CountSheet
-    foreach { over: cycleCount.locations; as: location; mode: parallel }
-    sla: 2h
-  }
-
-  task Compare {
-    lane: System
-    decision: CountVariance
-    with { expected: cycleCount.expectedTotal; counted: cycleCount.countedTotal }
-    gives: divergent
-  }
-
-  gateway Variance {
-    if divergent -> Recount
-    else -> Approve
-  }
-
-  task Recount { lane: Warehouse; form: RecountSheet; sla: 4h }
-
-  task Adjust { lane: System; action: StockItem.adjust; with { cycleCount } }
-  task Approve { lane: Management; form: CountApproval; sla: 1d }
-
-  Scheduled -> Count
-  Count -> Compare
-  Compare -> Variance
-  Recount.recounted -> Compare
-  Recount.giveup -> Approve
-  Approve.approved -> Adjust
-  Approve.rejected -> Rejected
-  Adjust -> Adjusted
-
-  end Adjusted { title: { pt-BR: "Estoque ajustado", en: "Stock adjusted" }; outcome: success }
-  end Rejected { title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }; outcome: failure }
-}
-```
-
-*Valida: multi-instância paralela, decisão de tolerância, task discricionária com condição, laço de recontagem.*
-### P.17 Triagem de chamado com SLA (support)
-
-```bpcms
-process TicketTriage for Ticket {
-  title: { pt-BR: "Triagem de chamado", en: "Ticket triage" }
-  version: 1
-  goal: "Classificar, resolver e comunicar dentro do prazo"
-  sla: 3d
-
-  pool Company {
-    internal
-    lane ServiceDesk { role: SupportAgent }
-    lane Engineering { role: Engineer }
-    lane Management { role: Manager }
-  }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
-
-  variables { queue: TicketQueue }
-
-  start Opened { event: Ticket.Opened }
-
-  task Classify {
-    lane: System
-    decision: TicketRouting
-    with { subject: ticket.subject; tier: ticket.customerTier }
-    gives: queue
-  }
-
-  gateway Route {
-    if queue == serviceDesk -> FirstContact
-    if queue == engineering -> Diagnose
-    else -> BillingQueue
-  }
-
-  task FirstContact { lane: ServiceDesk; form: TicketTriageForm; sla: 2h; on breach -> Escalate }
-  task BillingQueue { lane: ServiceDesk; form: TicketTriageForm; sla: 4h; on breach -> Escalate }
-  task Diagnose { lane: Engineering; form: TicketDiagnosis; sla: 8h; on breach -> Escalate }
-
-  fork Respond
-  join Responded
-
-  task Fix { lane: Engineering; form: FixRecord; sla: 1d }
-  task UpdateCustomer { lane: ServiceDesk; form: CustomerUpdate; sla: 4h }
-
-  task Confirm { lane: Client; form: ResolutionConfirm; sla: 2d }
-  task Escalate { lane: Management; form: TicketEscalation; sla: 1h }
-  task Close { lane: System; action: Ticket.close; with { ticket } }
-
-  Opened -> Classify
-  Classify -> Route
-  FirstContact -> Respond
-  BillingQueue -> Respond
-  Diagnose -> Respond
-  Respond -> Fix
-  Respond -> UpdateCustomer
-  Fix -> Responded
-  UpdateCustomer -> Responded
-  Responded -> Confirm
-  Confirm.resolved -> Close
-  Confirm.reopened -> FirstContact
-  Escalate.resolved -> Close
-  Close -> Resolved
-
-  end Resolved { title: { pt-BR: "Resolvido", en: "Resolved" }; outcome: success }
-  end Escalated { title: { pt-BR: "Escalado", en: "Escalated" }; outcome: failure }
-}
-```
-
-*Valida: roteamento por decisão, SLA por fila com escalonamento, trabalho paralelo (correção + comunicação), confirmação no portal.*
-
-### P.18 Reembolso com alçada e confirmação (support)
-
-```bpcms
-process RefundCase for ReturnRequest {
-  title: { pt-BR: "Caso de reembolso", en: "Refund case" }
-  version: 1
-  goal: "Reembolsar quando elegível, com aprovação e rastro"
   sla: 5d
 
-  pool Company {
-    internal
-    lane Support { role: SupportAgent }
-    lane Finance { role: Manager }
-  }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
+  on [PurchaseRequest.Submitted]
+  key: purchaseRequest
 
-  variables { eligible: boolean }
+  let tier: ApproverTier
 
-  start Requested { event: ReturnRequest.Requested }
+  tier = ApprovalLimit.evaluate({
+    amount: purchaseRequest.amount,
+    supplier: purchaseRequest.supplier
+  })
 
-  task Review { lane: Support; form: ReturnReview; sla: 8h }
-
-  task Eligibility {
-    lane: System
-    decision: RefundEligibility
-    with { amount: returnRequest.amount; tier: returnRequest.customer.tier }
-    gives: eligible
+  if (tier == Auto) {
+    purchaseRequest.approve()
+    return Approved
   }
 
-  gateway Eligible {
-    if eligible -> Approve
-    else -> Reject
+  ApprovalDecision.show({ purchaseRequest })
+
+  if (purchaseRequest.status == Approved) {
+    return Approved
   }
 
-  task Approve { lane: Finance; form: RefundApproval; sla: 1d }
-  task Refund { lane: System; action: Payment.refund; with { returnRequest } }
-  task NotifyDone { lane: System; sends: RefundConfirmed; partner: Customer; with { returnRequest } }
-  task Reject { lane: Support; form: RefundRejection; sla: 4h }
+  return Rejected
 
-  milestone Refunded {
-    title: { pt-BR: "Reembolso efetuado", en: "Refund completed" }
-    on: Payment.Refunded
+  end Approved {
+    title: { pt-BR: "Compra aprovada", en: "Purchase approved" }
+    outcome: success
   }
-
-  cancel on ReturnRequest.Cancelled -> Cancelled
-
-  Requested -> Review
-  Review -> Eligibility
-  Eligibility -> Eligible
-  Approve.approved -> Refund
-  Approve.rejected -> Reject
-  Refund -> NotifyDone
-  NotifyDone -> Refunded
-  Reject -> Rejected
-
-  end Refunded { title: { pt-BR: "Reembolsado", en: "Refunded" }; outcome: success }
-  end Rejected { title: { pt-BR: "Não elegível", en: "Not eligible" }; outcome: failure }
-  end Cancelled { title: { pt-BR: "Cancelado pelo cliente", en: "Cancelled by customer" }; outcome: cancelled }
+  end Rejected {
+    title: { pt-BR: "Compra rejeitada", en: "Purchase rejected" }
+    outcome: failure
+  }
 }
 ```
-
-*Valida: decisão de elegibilidade, alçada por lane, mensagem ao cliente, milestone, cancelamento com desfecho próprio.*
-
-### P.19 Exame laboratorial com assinatura (laboratory)
 
 ```bpcms
-process LabExam for LabExam {
-  title: { pt-BR: "Exame laboratorial", en: "Laboratory exam" }
-  version: 1
-  goal: "Liberar laudo confiável no prazo"
-  sla: 8h
-
-  pool Company {
-    internal
-    lane Reception { role: Collector }
-    lane Analysis { role: Analyst }
-    lane Pathology { role: Pathologist }
+decision ApprovalLimit {
+  title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
+  returns: ApproverTier
+  inputs {
+    amount: std.Money
+    supplier: Supplier
   }
-  pool Clinic {
-    external
+  cases {
+    amount <= 5000 BRL -> Auto
+    amount <= 50000 BRL and supplier.risk == Low -> Manager
+    else -> Director
   }
-
-  variables { result: ExamResult }
-
-  start Collected { event: LabExam.Collected }
-
-  task Receive { lane: Reception; form: SampleReception; sla: 1h }
-
-  task Analyze {
-    lane: System
-    call: LabAnalyzer.run
-    with { labExam }
-    gives: result
-    sla: 2h
-    on error AnalyzerOffline -> ManualAnalyze
-  }
-
-  task ManualAnalyze { lane: Analysis; form: ManualResultEntry; sla: 4h }
-
-  task Validate {
-    lane: Analysis
-    form: ResultValidation
-    sla: 4h
-    on breach -> Escalate
-  }
-
-  gateway Critical {
-    if labExam.critical -> NotifyDoctor
-    else -> Sign
-  }
-
-  task NotifyDoctor { lane: System; sends: CriticalResult; partner: Clinic; with { labExam; result } }
-  task Sign { lane: Pathology; form: ReportSignature; sla: 2h }
-  task Release { lane: System; action: LabExam.release; with { labExam; signature: sign.signature } }
-  task Escalate { lane: Pathology; form: LabEscalation; sla: 1h }
-
-  Collected -> Receive
-  Receive -> Analyze
-  Analyze -> Validate
-  ManualAnalyze -> Validate
-  Validate -> Critical
-  NotifyDoctor -> Sign
-  Sign -> Release
-  Release -> Released
-  Escalate.released -> Release
-  Escalate.rejected -> Rejected
-
-  end Released { title: { pt-BR: "Laudo liberado", en: "Report released" }; outcome: success }
-  end Rejected { title: { pt-BR: "Exame rejeitado", en: "Exam rejected" }; outcome: failure }
 }
 ```
 
-*Valida: dispositivo com fallback manual, caminho crítico por decisão, assinatura como task, prazo com escalonamento.*
+*Valida: decisão DMN pura chamada como operação, `if/else` sobre o resultado, form com múltiplas ações e desfecho lido no documento.*
 
-### P.20 Onboarding de colaborador (hr)
+### P.3 Despacho com paralelismo e coleta (shipping)
 
 ```bpcms
-process EmployeeOnboarding for Employee {
-  title: { pt-BR: "Onboarding de colaborador", en: "Employee onboarding" }
+process DispatchOrder(shipment: Shipment) {
+  title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
   version: 1
-  goal: "Novo colaborador produtivo no primeiro dia"
-  sla: 15d
+  sla: 1d
 
-  pool Company {
-    internal
-    lane People { role: HR }
-    lane IT { role: ITAnalyst }
-    lane Management { role: Manager }
-  }
-  pool NewHire {
-    external
-    lane CandidatePortal { role: Candidate }
+  on [Shipment.Created]
+  key: shipment
+
+  let tracking: TrackingCode
+
+  parallel {
+    branch Pick { Pick.show({ shipment }) }
+    branch Pack { Packing.show({ shipment }) }
   }
 
-  start Hired { event: Candidate.Hired }
-  cancel on Candidate.Withdrawn -> Cancel
+  shipment.applyFreight({
+    carrier: "CarrierX",
+    amount: shipment.freightAmount
+  })
 
-  fork Start
-  join Ready
+  tracking = Carrier.createLabel({ shipment, carrier: "CarrierX" })
+  Shipment.dispatch({ trackingCode: tracking })
 
-  task SubmitDocuments { lane: CandidatePortal; form: NewHireDocuments; sla: 5d }
-  task CreateAccounts { lane: IT; form: AccountRequest; sla: 2d }
-  task OrderEquipment { lane: IT; form: EquipmentRequest; sla: 3d }
-  task Provision { lane: System; runs: AccessProvisioning; with { employee } }
-  task Checkin { lane: Management; form: FirstDayCheckin; sla: 1d }
-  task Welcome { lane: People; manual: "Receber o colaborador e apresentar o time"; sla: 2h }
-  task Activate { lane: System; action: Employee.activate; with { employee } }
-  task Cancel { lane: System; action: Employee.cancelOnboarding; with { employee } }
-
-  task OrderSwag {
-    lane: People
-    form: SwagRequest
-    discretionary
-    when: employee.level == senior
+  send PickupRequest {
+    key: shipment
+    with { requestedAt: now() }
   }
 
-  Hired -> Start
-  Start -> SubmitDocuments
-  Start -> CreateAccounts
-  Start -> OrderEquipment
-  SubmitDocuments -> Ready
-  CreateAccounts -> Ready
-  OrderEquipment -> Ready
-  Ready -> Provision
-  Provision -> Checkin
-  Checkin -> Welcome
-  Welcome -> Activate
-  Activate -> Active
-  Cancel -> Cancelled
+  try {
+    receive PickupConfirmed {
+      key: shipment
+      timeout: 2d
+      apply: Shipment.confirmPickup
+    }
+  } catch (Timeout) {
+    ManualPickup.show({ shipment })
+  }
 
-  end Active { title: { pt-BR: "Colaborador ativo", en: "Employee active" }; outcome: success }
-  end Cancelled { title: { pt-BR: "Onboarding cancelado", en: "Onboarding cancelled" }; outcome: cancelled }
+  DeliveryTracking.run({ shipment })
+  return Dispatched
+
+  end Dispatched {
+    title: { pt-BR: "Despachado", en: "Dispatched" }
+    outcome: success
+  }
 }
 ```
 
-*Valida: paralelismo humano, portal do candidato, subprocesso de provisionamento, task manual, cancelamento.*
+*Valida: `parallel`, `send`/`receive` com `key` e `apply`, timeout com desvio manual, subprocesso com `run` e ends nomeados.*
 
-### P.21 Sinistro com score de fraude (claims)
+### P.4 Cancelamento com compensação (orders)
 
 ```bpcms
-process ClaimSettlement for Claim {
-  title: { pt-BR: "Liquidação de sinistro", en: "Claim settlement" }
+process OrderCancellation(order: Order) {
+  title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
   version: 1
-  goal: "Decidir cobertura e pagar com rastro"
-  sla: 30d
+  sla: 1d
 
-  pool Company {
-    internal
-    lane Adjusters { role: Adjuster }
-    lane Supervision { role: Supervisor }
-  }
-  pool Bank {
-    external
-  }
+  on [Order.CancellationRequested]
+  key: order
 
-  variables { risk: RiskLevel; covered: boolean; settlement: Settlement }
+  CancellationReview.show({ order })
 
-  start Opened { event: Claim.Opened }
-
-  task Register { lane: Adjusters; form: ClaimRegistration; sla: 4h }
-
-  task Score {
-    lane: System
-    decision: FraudRisk
-    with { claim }
-    gives: risk
+  if (order.status != CancellationApproved) {
+    return Rejected
   }
 
-  gateway Suspicious {
-    if risk == High -> FraudReview
-    else -> Coverage
+  try {
+    Inventory.Reservation.release()
+    Order.cancel({ reason: "Cancelamento aprovado" })
+  } catch (ReleaseFailed) {
+    Order.reopen()
+    return Rejected
   }
 
-  task FraudReview { lane: Supervision; form: FraudReviewForm; sla: 2d; on breach -> Reject }
+  return Cancelled
 
-  task Coverage {
-    lane: System
-    decision: CoverageEligibility
-    with { claim; policy: claim.policy }
-    gives: covered
+  end Cancelled {
+    title: { pt-BR: "Cancelado", en: "Cancelled" }
+    outcome: success
   }
-
-  gateway Eligible {
-    if covered -> Approve
-    else -> Reject
+  end Rejected {
+    title: { pt-BR: "Cancelamento recusado", en: "Cancellation rejected" }
+    outcome: failure
   }
-
-  task Approve { lane: Supervision; form: SettlementApproval; sla: 1d }
-  task Pay { lane: System; action: Settlement.pay; with { settlement }; on error BankDown -> RetryPay }
-  task RetryPay { lane: System; action: Settlement.pay; with { settlement }; sla: 1h }
-  task Reject { lane: Adjusters; form: ClaimRejection; sla: 4h }
-
-  Opened -> Register
-  Register -> Score
-  Score -> Suspicious
-  FraudReview.cleared -> Coverage
-  FraudReview.confirmed -> Reject
-  Coverage -> Eligible
-  Approve.approved -> Pay
-  Approve.rejected -> Reject
-  Pay -> Settled
-  RetryPay -> Settled
-  Reject -> Rejected
-
-  end Settled { title: { pt-BR: "Sinistro liquidado", en: "Claim settled" }; outcome: success }
-  end Rejected { title: { pt-BR: "Sinistro negado", en: "Claim rejected" }; outcome: failure }
 }
 ```
 
-*Valida: dois níveis de decisão, revisão de fraude com prazo, pagamento com recuperação de falha.*
+*Valida: ação em outro serviço (`Inventory.Reservation`), compensação explícita no `catch` e `return` para ends nomeados.*
 
-### P.22 Visita técnica em campo (field-service)
-
-```bpcms
-process ServiceVisit for Visit {
-  title: { pt-BR: "Visita técnica", en: "Field service visit" }
-  version: 1
-  goal: "Atender no local, registrar prova e concluir"
-  sla: 2d
-
-  pool Company {
-    internal
-    lane Coordination { role: Coordinator }
-    lane Field { role: Technician }
-  }
-  pool Customer {
-    external
-    lane Client { role: Customer }
-  }
-
-  start Scheduled { event: Visit.Scheduled }
-  cancel on Visit.Cancelled -> Cancel
-
-  task Dispatch { lane: Coordination; form: VisitDispatch; sla: 1h }
-  task Travel { lane: Field; manual: "Deslocamento até o cliente"; sla: 2h }
-  task CheckIn { lane: Field; form: VisitCheckIn; sla: 30m; on error OutOfRange -> Reschedule }
-
-  task Perform {
-    lane: Field
-    form: VisitReport
-    sla: 3h
-    on error CustomerAbsent -> Reschedule
-  }
-
-  task Accept { lane: Client; form: VisitAcceptance; sla: 2d }
-  task Complete { lane: System; action: Visit.complete; with { visit; report } }
-  task Reschedule { lane: Coordination; form: VisitReschedule; sla: 2h }
-  task Cancel { lane: System; action: Visit.cancel; with { visit } }
-
-  Scheduled -> Dispatch
-  Dispatch -> Travel
-  Travel -> CheckIn
-  CheckIn -> Perform
-  Perform -> Accept
-  Accept.accepted -> Complete
-  Accept.disputed -> Reschedule
-  Reschedule.scheduled -> Dispatch
-  Reschedule.abandoned -> Cancel
-  Complete -> Completed
-  Cancel -> Cancelled
-
-  end Completed { title: { pt-BR: "Visita concluída", en: "Visit completed" }; outcome: success }
-  end Cancelled { title: { pt-BR: "Visita cancelada", en: "Visit cancelled" }; outcome: cancelled }
-}
-```
-
-*Valida: task manual, validação de localização com desvio, aceite no portal do cliente, reagendamento.*
-
-### P.23 Análise de crédito com alçada (credit)
-
-```bpcms
-process CreditApplicationFlow for CreditApplication {
-  title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
-  version: 1
-  goal: "Conceder limite com risco calculado e decisão rastreável"
-  sla: 5d
-
-  pool Company {
-    internal
-    lane Analysis { role: CreditAnalyst }
-    lane Management { role: Manager }
-  }
-  pool Bureau {
-    external
-  }
-
-  variables { score: CreditScore; report: CompanyReport }
-
-  start Submitted { event: CreditApplication.Submitted }
-
-  task Score { lane: System; decision: CreditScoring; with { application }; gives: score }
-
-  task CheckBureau {
-    lane: System
-    call: Bureau.checkCompany
-    with { customer: application.customer }
-    gives: report
-    sla: 1m
-    on error BureauDown -> ManualReview
-  }
-
-  gateway Risk {
-    if score.tier == Auto -> SetLimit
-    if score.tier == review -> ManualReview
-    else -> Reject
-  }
-
-  task ManualReview { lane: Analysis; form: CreditReview; sla: 2d; on breach -> Escalate }
-  task Approve { lane: Management; form: CreditApproval; sla: 1d }
-  task SetLimit { lane: System; action: CreditLimit.set; with { application; amount: score.limit } }
-  task Reject { lane: Analysis; form: CreditRejection; sla: 4h }
-  task Escalate { lane: Management; form: CreditEscalation; sla: 1d }
-
-  Submitted -> Score
-  Score -> CheckBureau
-  CheckBureau -> Risk
-  ManualReview.recommend -> Approve
-  ManualReview.decline -> Reject
-  Approve.approved -> SetLimit
-  Approve.rejected -> Reject
-  Escalate.decided -> Approve
-  SetLimit -> Approved
-  Reject -> Rejected
-
-  end Approved { title: { pt-BR: "Crédito aprovado", en: "Credit approved" }; outcome: success }
-  end Rejected { title: { pt-BR: "Crédito negado", en: "Credit rejected" }; outcome: failure }
-}
-```
-
-*Valida: integração de bureau com fallback, três faixas de decisão, dupla aprovação, escalonamento.*
-
-### P.24 Renovação de contrato (contracts)
-
-```bpcms
-process ContractRenewal for Contract {
-  title: { pt-BR: "Renovação de contrato", en: "Contract renewal" }
-  version: 1
-  goal: "Renovar antes do vencimento com contraproposta tratada"
-  sla: 60d
-
-  pool Company {
-    internal
-    lane Accounts { role: AccountManager }
-    lane Legal { role: LegalAnalyst }
-  }
-  pool Counterparty {
-    external
-    lane Portal { role: SupplierUser }
-  }
-
-  start Expiring {
-    schedule: "0 8 * * *"
-    select: contract.status == Active and contract.endsAt <= today() + 60d
-  }
-
-  task Propose { lane: Accounts; form: RenewalProposal; sla: 5d }
-
-  task SendProposal {
-    lane: System
-    sends: RenewalProposalSent
-    partner: Counterparty
-    with { contract; proposal: contract.proposal }
-  }
-
-  task AwaitCounter {
-    lane: System
-    receives: RenewalCounterOffer
-    partner: Counterparty
-    apply: Contract.applyCounterOffer
-    with { contract }
-    sla: 10d
-    on timer 10d -> Escalate
-  }
-
-  gateway Agreed {
-    if contract.counterAccepted -> LegalReview
-    else -> Escalate
-  }
-
-  task LegalReview { lane: Legal; form: ContractLegalReview; sla: 3d }
-  task Sign { lane: Portal; form: ContractSignature; sla: 5d }
-  task Renew { lane: System; action: Contract.renew; with { contract } }
-  task Escalate { lane: Accounts; form: RenewalEscalation; sla: 2d }
-
-  Expiring -> Propose
-  Propose -> SendProposal
-  SendProposal -> AwaitCounter
-  AwaitCounter -> Agreed
-  LegalReview.approved -> Sign
-  LegalReview.rejected -> Escalate
-  Sign.signed -> Renew
-  Sign.declined -> Escalate
-  Escalate.renegotiate -> Propose
-  Escalate.letlapse -> Lapsed
-  Renew -> Renewed
-
-  end Renewed { title: { pt-BR: "Contrato renovado", en: "Contract renewed" }; outcome: success }
-  end Lapsed { title: { pt-BR: "Contrato vencido", en: "Contract lapsed" }; outcome: failure }
-}
-```
-
-*Valida: fan-out agendado por sujeito, mensagem com contraproposta, assinatura no portal, loop de renegociação.*
 ## Form
 
-O form é o **contrato da tarefa humana**: o que a pessoa vê, o que ela pode fazer e qual ação de documento cada botão executa. A tela é do builder; o form não tem `roles`, não escreve campo direto e não tem ciclo de vida.
+O form é o **contrato da tarefa humana**: o que a pessoa vê, o que ela pode fazer e qual ação de documento cada botão executa. A tela é do builder; o form declara `roles`, `timeout`, `priority` e `assign`, não escreve campo direto e não tem ciclo de vida.
 
 ### F.1 Aprovação com três desfechos e rascunho
 
@@ -1994,6 +748,9 @@ O form é o **contrato da tarefa humana**: o que a pessoa vê, o que ela pode fa
 form PurchaseReview {
   title: { pt-BR: "Revisar compra", en: "Review purchase" }
   document: PurchaseRequest
+  roles: [Buyer]
+  timeout: 1d
+  assign: pull
 
   fields {
     requester
@@ -2078,7 +835,7 @@ form SupplierRegistration {
 }
 ```
 
-*Valida: o mesmo form serve a uma lane externa (portal); campo sensível declarado no form e no documento; anexos.*
+*Valida: o mesmo form serve a um papel externo (portal); campo sensível declarado no form e no documento; anexos.*
 
 ### F.4 Form de campo com assinatura e prova
 
@@ -2223,25 +980,18 @@ form ApprovalDecision {
 ```
 
 ```bpcms
-task ManagerReview {
-  lane: Management
-  form: ApprovalDecision
-  assign: named(purchaseRequest.requester.manager)
-  sla: 2d
-}
-
-task DirectorReview {
-  lane: Direction
-  form: ApprovalDecision
-  sla: 2d
+process PurchaseApproval(purchaseRequest: PurchaseRequest) {
+  // ...
+  ApprovalDecision.show({ purchaseRequest })
+  // ...
 }
 ```
 
-*Valida: um form reutilizado por duas tasks de lanes diferentes; o roteamento é do processo (`Task.approved -> ...`), não do form.*
+*Valida: o form declara `roles` e o processo o chama com `Form.show`; não há task/lane.*
 
 ## Message
 
-Mensagem é contrato entre participantes: tem `about` (o documento que correlaciona), `payload` tipado e título. O participante é declarado na task (`partner:`), porque é a task que sabe com quem fala.
+Mensagem é contrato entre participantes: tem `about` (o documento que correlaciona), `payload` tipado e título. O envio é `send`; o recebimento é `receive`; o canal/parceiro é configuração de runtime/integração (não há `partner`).
 
 ### M.1 Envio de solicitação
 
@@ -2255,15 +1005,13 @@ message PickupRequest {
   }
 }
 
-task RequestPickup {
-  lane: System
-  sends: PickupRequest
-  partner: Carrier
+send PickupRequest {
+  key: shipment
   with { requestedAt: now(); window: shipment.pickupWindow }
 }
 ```
 
-*Valida: mensagem com correlação por documento e envio por task de sistema.*
+*Valida: mensagem com correlação por documento e envio por `send`.*
 
 ### M.2 Recebimento com aplicação no documento
 
@@ -2277,14 +1025,14 @@ message PickupConfirmed {
   }
 }
 
-task AwaitPickup {
-  lane: System
-  receives: PickupConfirmed
-  partner: Carrier
-  apply: Shipment.applyPickup
-  with { shipment }
-  sla: 1d
-  on timer 1d -> ManualPickup
+try {
+  receive PickupConfirmed {
+    key: shipment
+    timeout: 1d
+    apply: Shipment.applyPickup
+  }
+} catch (Timeout) {
+  ManualPickup.show({ shipment })
 }
 ```
 
@@ -2303,18 +1051,16 @@ message TrackingUpdated {
   }
 }
 
-task AwaitTracking {
-  lane: System
-  receives: TrackingUpdated
-  partner: Carrier
-  apply: Shipment.applyTracking
-  with { shipment }
-  sla: 5d
-  on timer 5d keep -> RemindCarrier
+loop Tracking max 5 {
+  receive TrackingUpdated {
+    key: shipment
+    timeout: 5d
+    apply: Shipment.applyTracking
+  }
 }
 ```
 
-*Valida: mensagem recorrente no mesmo passo; aplicação idempotente no documento; lembrete não interruptivo.*
+*Valida: recebimento recorrente dentro de `loop`; aplicação idempotente no documento.*
 
 ### M.4 Mensagem que inicia processo
 
@@ -2328,24 +1074,21 @@ message PaymentConfirmed {
   }
 }
 
-process OrderPacking for Order {
+process OrderPacking(order: Order) {
   title: { pt-BR: "Separação do pedido", en: "Order packing" }
   version: 1
 
-  pool Company {
-    internal
-    lane Warehouse { role: Packer }
+  message: PaymentConfirmed
+  key: order
+
+  PackShipment.show({ order })
+  Order.readyToShip()
+  return Packed
+
+  end Packed {
+    title: { pt-BR: "Pronto para envio", en: "Ready to ship" }
+    outcome: success
   }
-
-  start Paid { message: PaymentConfirmed }
-  task Pack { lane: Warehouse; form: PackShipment; sla: 4h }
-  task Ready { lane: System; action: Order.readyToShip; with { order } }
-
-  Paid -> Pack
-  Pack -> Ready
-  Ready -> Packed
-
-  end Packed { title: { pt-BR: "Pronto para envio", en: "Ready to ship" }; outcome: success }
 }
 ```
 
@@ -3998,11 +2741,11 @@ view MyWork {
   scope: mine
   groupBy: process
 
-  columns { title; subject; lane; dueAt; priority }
+  columns { title; subject; role; dueAt; priority }
 }
 ```
 
-*Valida: inbox como projeção de tarefas (não de documentos), `scope: mine` para o que está atribuído ou pegável, agrupamento por processo e colunas derivadas do passo, da lane e do prazo.*
+*Valida: inbox como projeção de tarefas (não de documentos), `scope: mine` para o que está atribuído ou pegável, agrupamento por processo e colunas derivadas do passo, da role e do prazo.*
 
 ### V.7 Andamento do processo de pedido
 
@@ -4622,7 +3365,7 @@ conversation IncidentWarRoom {
 
 ## Decision
 
-Decisão é uma **tabela DMN pura** (4.17 / 11): `returns` tipado (normalmente uma `classification`), `inputs` tipados e `cases` com `else` obrigatório. Quem usa é a task (`decision:` + `with` + `gives:`); o caminho é escolhido por `gateway`. Decisão não escreve documento, não chama integração e não emite evento. Não existe `appliesTo`, `when` nem `default`: o `else` cobre o resto.
+Decisão é uma **tabela DMN pura** (4.17 / 11): `returns` tipado (normalmente uma `classification`), `inputs` tipados e `cases` com `else` obrigatório. O processo consome com `Decision.evaluate({...})` e roteia com `if/else`. Decisão não escreve documento, não chama integração e não emite evento. Não existe `appliesTo`, `when` nem `default`: o `else` cobre o resto.
 
 ### N.1 Alçada de compra
 
@@ -4667,21 +3410,21 @@ decision ApprovalLimit {
   owner: "Financeiro"
 }
 
-task DecideApproval {
-  lane: System
-  decision: ApprovalLimit
-  with { amount: purchaseRequest.amount; supplier: purchaseRequest.supplier }
-  gives: tier
-}
+tier = ApprovalLimit.evaluate({
+  amount: purchaseRequest.amount,
+  supplier: purchaseRequest.supplier
+})
 
-gateway Tier {
-  if tier == Auto -> AutoApprove
-  if tier == Manager -> ManagerReview
-  else -> DirectorReview
+if (tier == Auto) {
+  purchaseRequest.approve()
+} else if (tier == Manager) {
+  ManagerReview.show({ purchaseRequest })
+} else {
+  DirectorReview.show({ purchaseRequest })
 }
 ```
 
-*Valida: `returns` como `classification` (valores `auto`/`manager`/`director` com `icon` e `ordinal`), `inputs` tipados, `else` obrigatório, `source` e `owner` (1.2), a task que consome a decisão (`decision:` + `with` + `gives:`) e o `gateway` roteando pelo valor retornado.*
+*Valida: `returns` como `classification` (valores `auto`/`manager`/`director` com `icon` e `ordinal`), `inputs` tipados, `else` obrigatório, `source`/`owner`, e o processo consumindo a decisão com `evaluate` + `if/else`.*
 
 ### N.2 Elegibilidade de reembolso
 
@@ -6230,25 +4973,21 @@ example.com/services/billing#Invoice.Paid
 ```
 
 ```bpcms
-process PaymentReconciliation for Payment {
+process PaymentReconciliation(payment: Payment) {
   title: { pt-BR: "Conciliação de pagamento", en: "Payment reconciliation" }
   version: 1
 
-  pool Company {
-    internal
-    lane Finance { role: FinanceAnalyst }
+  on [Billing.Invoice.Paid]
+  key: payment
+
+  PaymentMatch.show({ payment })
+  Payment.reconcile()
+  return Reconciled
+
+  end Reconciled {
+    title: { pt-BR: "Conciliado", en: "Reconciled" }
+    outcome: success
   }
-
-  start Paid { event: Billing.Invoice.Paid }
-
-  task Match { lane: Finance; form: PaymentMatch; sla: 4h }
-  task Close { lane: System; action: Payment.reconcile; with { payment } }
-
-  Paid -> Match
-  Match -> Close
-  Close -> Reconciled
-
-  end Reconciled { title: { pt-BR: "Conciliado", en: "Reconciled" }; outcome: success }
 }
 ```
 
@@ -6275,28 +5014,25 @@ events {
 ### E.5 Evento que inicia processo
 
 ```bpcms
-process Packing for Order {
+process Packing(order: Order) {
   title: { pt-BR: "Separação", en: "Packing" }
   version: 1
 
-  pool Company {
-    internal
-    lane Warehouse { role: Packer }
+  on [Order.Placed]
+  key: order
+
+  PickItems.show({ order })
+  Order.readyToShip()
+  return Packed
+
+  end Packed {
+    title: { pt-BR: "Pronto", en: "Ready" }
+    outcome: success
   }
-
-  start Placed { event: Order.Placed }
-  task Pick { lane: Warehouse; form: PickItems; sla: 2h }
-  task Ready { lane: System; action: Order.readyToShip; with { order } }
-
-  Placed -> Pick
-  Pick -> Ready
-  Ready -> Packed
-
-  end Packed { title: { pt-BR: "Pronto", en: "Ready" }; outcome: success }
 }
 ```
 
-*Valida: o mesmo evento que fecha uma action abre um processo; correlação pelo sujeito (`for Order`).*
+*Valida: o mesmo evento que fecha uma action abre um processo; correlação pela `key` (`order`).*
 
 ### E.6 O mesmo evento a partir de origens diferentes
 
@@ -6372,172 +5108,164 @@ document Invoice {
 
 ## Schedule
 
-**Agendamento é um start, não um artefato.** O cron é do processo; o scheduler, o retry e a DLQ são runtime. Rotina em lote é **fan-out por sujeito**: `for` + `select` inicia uma instância por documento selecionado.
+**Agendamento é um gatilho, não um artefato.** O cron é do processo; scheduler, retry e DLQ são runtime. Rotina em lote é **fan-out por documento**: `schedule` + `fanOut` inicia uma instância por documento selecionado.
 
 ### S.1 Fechamento mensal por período
 
 ```bpcms
-process MonthClose for FiscalPeriod {
+process MonthClose(fiscalPeriod: FiscalPeriod) {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
   version: 1
-  owner: "Controladoria"
   sla: 6h
 
-  pool Company {
-    internal
-    lane Controllership { role: Controller }
+  schedule: "0 2 1 * *"
+  fanOut: FiscalPeriod where status == Open
+  key: fiscalPeriod
+
+  Ledger.postPeriod({ fiscalPeriod })
+  MonthCloseReview.show({ fiscalPeriod })
+
+  if (fiscalPeriod.status == Rejected) {
+    ReconciliationFix.show({ fiscalPeriod })
+    Ledger.postPeriod({ fiscalPeriod })
   }
 
-  start Monthly {
-    schedule: "0 2 1 * *"
-    select: fiscalPeriod.status == Open
+  if (fiscalPeriod.status == Open) {
+    FiscalPeriod.close({ fiscalPeriod })
+    return Closed
   }
 
-  task PostEntries { lane: System; action: Ledger.postPeriod; with { fiscalPeriod }; on error Unbalanced -> Fix }
-  task Review { lane: Controllership; form: MonthCloseReview; sla: 4h }
-  task Fix { lane: Controllership; form: ReconciliationFix; sla: 1d }
-  task Close { lane: System; action: FiscalPeriod.close; with { fiscalPeriod } }
+  return Failed
 
-  Monthly -> PostEntries
-  PostEntries -> Review
-  Review.approved -> Close
-  Review.rejected -> Fix
-  Fix -> PostEntries
-  Close -> Closed
-
-  end Closed { title: { pt-BR: "Fechado", en: "Closed" }; outcome: success }
-  end Failed { title: { pt-BR: "Falhou", en: "Failed" }; outcome: failure }
+  end Closed {
+    title: { pt-BR: "Fechado", en: "Closed" }
+    outcome: success
+  }
+  end Failed {
+    title: { pt-BR: "Falhou", en: "Failed" }
+    outcome: failure
+  }
 }
 ```
 
-*Valida: cron diário/mensal, seleção de sujeitos (uma instância por período aberto), tarefa de sistema com erro e revisão humana.*
+*Valida: cron mensal, uma instância por período aberto (`fanOut`), operação de sistema com decisão por estado e desfechos nomeados.*
 
 ### S.2 Cobrança com fan-out e espera
 
 ```bpcms
-process Dunning for Invoice {
+process Dunning(invoice: Invoice) {
   title: { pt-BR: "Cobrança", en: "Dunning" }
   version: 1
   sla: 45d
 
-  pool Company {
-    internal
-    lane Collections { role: CollectionsAgent }
-  }
-  pool Customer {
-    external
-  }
+  schedule: "0 6 * * *"
+  fanOut: Invoice where status == Overdue and daysOverdue >= 1
+  key: invoice
 
-  start Daily {
-    schedule: "0 6 * * *"
-    select: invoice.status == Overdue and invoice.daysOverdue >= 1
+  send PaymentReminder {
+    key: invoice
+    with { number: invoice.number; total: invoice.total; dueAt: invoice.dueAt }
   }
 
-  task Remind { lane: System; sends: PaymentReminder; partner: Customer; with { invoice } }
-  wait Grace { for: 7d }
+  wait 7d
 
-  gateway Late {
-    if invoice.daysOverdue > 30 -> Escalate
-    else -> Remind
+  if (invoice.daysOverdue > 30) {
+    CollectionCall.show({ invoice })
+  } else {
+    send PaymentReminder {
+      key: invoice
+      with { number: invoice.number; total: invoice.total; dueAt: invoice.dueAt }
+    }
   }
 
-  task Escalate { lane: Collections; form: CollectionCall; sla: 2d }
-  cancel on Invoice.Paid -> Settled
+  cancel on Invoice.Paid {
+    return Settled
+  }
 
-  Daily -> Remind
-  Remind -> Grace
-  Grace -> Late
-  Late -> Escalate
-  Late -> Remind
-  Escalate.promised -> Remind
-  Escalate.writeoff -> WrittenOff
+  return WrittenOff
 
-  end Settled { title: { pt-BR: "Pago", en: "Paid" }; outcome: success }
-  end WrittenOff { title: { pt-BR: "Perda", en: "Written off" }; outcome: failure }
+  end Settled {
+    title: { pt-BR: "Pago", en: "Paid" }
+    outcome: success
+  }
+  end WrittenOff {
+    title: { pt-BR: "Perda", en: "Written off" }
+    outcome: failure
+  }
 }
 ```
 
-*Valida: fan-out por fatura vencida, espera de 7 dias, laço com saída e cancelamento pelo pagamento.*
+*Valida: fan-out por fatura vencida, `send`, espera de 7 dias, decisão por `if` e `cancel on`.*
 
 ### S.3 Reposição disparada por ponto de pedido
 
 ```bpcms
-process Replenishment for StockItem {
+process Replenishment(stockItem: StockItem) {
   title: { pt-BR: "Reposição", en: "Replenishment" }
   version: 1
   sla: 2d
 
-  pool Company {
-    internal
-    lane Planning { role: Planner }
+  schedule: "0 7 * * *"
+  fanOut: StockItem where available < reorderPoint
+  key: stockItem
+
+  let decision: ReplenishmentDecision
+
+  decision = ReplenishmentOrder.evaluate({
+    available: stockItem.available,
+    reorderPoint: stockItem.reorderPoint
+  })
+
+  if (decision.action == order) {
+    PurchaseRequest.create({
+      stockItem: stockItem,
+      quantity: decision.quantity
+    })
+    return Requested
   }
 
-  variables { decision: ReplenishmentDecision }
+  StockItem.deferReplenishment({ stockItem })
+  return Deferred
 
-  start Daily {
-    schedule: "0 7 * * *"
-    select: stockItem.available < stockItem.reorderPoint
+  end Requested {
+    title: { pt-BR: "Solicitado", en: "Requested" }
+    outcome: success
   }
-
-  task Decide {
-    lane: System
-    decision: ReplenishmentOrder
-    with { available: stockItem.available; reorderPoint: stockItem.reorderPoint }
-    gives: decision
+  end Deferred {
+    title: { pt-BR: "Adiado", en: "Deferred" }
+    outcome: success
   }
-
-  gateway Action {
-    if decision.action == order -> CreateRequest
-    else -> Defer
-  }
-
-  task CreateRequest { lane: System; action: PurchaseRequest.create; with { stockItem; quantity: decision.quantity } }
-  task Defer { lane: System; action: StockItem.deferReplenishment; with { stockItem } }
-
-  Daily -> Decide
-  Decide -> Action
-  CreateRequest -> Requested
-  Defer -> Deferred
-
-  end Requested { title: { pt-BR: "Solicitado", en: "Requested" }; outcome: success }
-  end Deferred { title: { pt-BR: "Adiado", en: "Deferred" }; outcome: success }
 }
 ```
 
-*Valida: decisão antes de criar a requisição; duas saídas de negócio; sem `batch`.*
+*Valida: decisão antes de criar a requisição, duas saídas de negócio e `fanOut` por ponto de pedido.*
 
 ### S.4 Rotina sem sujeito (digest)
 
 ```bpcms
-process DailyDigest {
+process DailyDigest() {
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
   version: 1
-  owner: "Operações"
 
-  pool Company {
-    internal
-    lane Operations { role: Operator }
+  schedule: "0 7 * * *"
+
+  Digest.build()
+  send DailyDigestReady {
+    key: notification
   }
-  pool Team {
-    external
+  ReviewDigest.show({ notification })
+
+  return Sent
+
+  end Sent {
+    title: { pt-BR: "Enviado", en: "Sent" }
+    outcome: success
   }
-
-  start Daily { schedule: "0 7 * * *" }
-
-  task Build { lane: System; action: Digest.build }
-  task Send { lane: System; sends: DailyDigestReady; partner: Team }
-  task Review { lane: Operations; manual: "Conferir o resumo antes de divulgar"; sla: 1h }
-
-  Daily -> Build
-  Build -> Send
-  Send -> Review
-  Review -> Sent
-
-  end Sent { title: { pt-BR: "Enviado", en: "Sent" }; outcome: success }
 }
 ```
 
-*Valida: processo agendado sem sujeito (sem `for`), com tarefa manual de conferência; não há documento de relatório.*
+*Valida: processo agendado sem sujeito, com `send` e task manual de conferência; não há documento de relatório.*
+
 ## Policy / Rule
 
 ### P.1 Quatro-olhos em pagamento
@@ -6711,69 +5439,59 @@ paid  { title: {...}; icon: status.paid }
 
 # O que validar nestes exemplos
 
-As perguntas abaixo são **decisões de sintaxe e de modelagem** que os exemplos ajudam a testar. A v0.2 respondeu às antigas (tipo de task, form × view, job, report, workflow em task, reads/writes); restam as seguintes.
+Perguntas de sintaxe/modelagem que os exemplos ajudam a testar:
 
 | # | Pergunta | Exemplos para olhar |
 | :--- | :--- | :--- |
-| 1 | `for <Documento>` (sujeito) deve ser obrigatório para todo processo visível? | P.1, P.13, P.24 |
-| 2 | `runs:` como único mecanismo de subpasso visível é suficiente, ou falta um agrupamento local para escopo de erro/compensação? | P.6, P.20, P.15 |
-| 3 | "Erro aborta a instância e compensa" é aceitável, ou precisamos de boundary local a um escopo? | P.3, P.5, P.10 |
-| 4 | `fork`/`join` explícitos são mais legíveis que gateway paralelo? | P.6, P.17, P.20 |
-| 5 | Form nomeado (sempre artefato) é melhor que form inline na task? | F.1–F.8 |
-| 6 | `lane` obrigatória em toda task: verbosidade aceitável? | todos os P |
-| 7 | `sla` deve ser erro (não aviso) para task humana? | P.5, P.9, P.22 |
-| 8 | `select:` no start agendado cobre rotinas em lote, sem `batch`/`cursor`? | P.13, P.14, P.15, P.24 |
-| 9 | `decision` com uma saída e primeiro-que-casa é suficiente para DMN? | P.1, P.23, N.1–N.6 |
-| 10 | `message` com `about` (documento) cobre colaboração e coreografia? | M.1–M.4, P.7, P.11 |
-| 11 | Form sem `roles` (autoridade na lane + action + campo) está claro? | F.3, F.8, P.18 |
-| 12 | `outcome` nos `end` é suficiente para KPIs de desfecho? | P.5, P.13, P.18 |
-| 13 | `foreach` sem agregação declarada é suficiente? | P.16, P.20 |
-| 14 | `cancel on` cobre "cancelar a qualquer momento" sem event sub-process? | P.7, P.13, P.18, P.20 |
-| 15 | `on timer ... keep` limitado a task lateral (sem aresta) é suficiente para lembretes? | P.7 |
-| 16 | `assign: named(expr)` cobre atribuição dirigida sem `assignment`? | P.1, P.8 |
-| 17 | Títulos herdados (task ← form/action; campo ← documento) reduzem ruído sem perder i18n? | F.1, F.8, P.19 |
-| 18 | O analista consegue revisar um processo sem ler o form/documento? | P.6, P.17, P.21 |
-| 19 | Falta algum artefato para representar seu domínio? | todos |
-| 20 | O que ainda parece "código demais" para o dono do processo? | todos |
+| 1 | `key` cobre identidade, correlação e dedup sem `for`? | P.1–P.4, S.1–S.4 |
+| 2 | `roles` no form/manual é suficiente para execução, sem pool/lane? | F.1–F.8, P.1–P.4 |
+| 3 | Variáveis só no topo e `loop`/`forEach` cobrem os fluxos reais? | P.1, P.3, S.3 |
+| 4 | `parallel` + `catch` cobrem fork/join e falha de ramo? | P.3, S.1 |
+| 5 | `send`/`receive` com `key`/`apply` cobrem mensagens e timeout? | M.1–M.4, P.3 |
+| 6 | Decisão humana lida no estado do documento é suficiente? | P.2, F.1, F.8 |
+| 7 | `timeout` duro + `sla` brando substitui `on timer`/`on breach`? | F.1, S.2 |
+| 8 | `cancel on` cobre cancelamento a qualquer momento? | S.2, exemplos de shipping/support |
+| 9 | `end` no fim + `return` cobre desfechos e KPIs? | todos os P |
+| 10 | O que ainda parece "código demais" para o dono do processo? | todos |
 
 ## Padrões que os exemplos já sugerem
 
 * **Processo = trabalho; documento = estado.** A tela de andamento mostra os dois no mesmo lugar.
-* **Tipo de task é o contrato**, não uma etiqueta: `form`, `manual`, `action`, `call`, `decision`, `sends`, `receives`, `runs`.
-* **Quem executa é lane**; pool diz se é interno, portal externo, parceiro caixa-preta ou sistema.
-* **Subpasso é processo**: `runs:` cria outra instância, com tela, histórico e dono próprios.
+* **Operação × task**: `action`/`call`/`compute`/`decision` são chamadas diretas; `form`/`view`/`manual`/`job`/`process` são tasks com artefato.
+* **Quem executa é `roles`** no form/manual; não há pool/lane.
+* **Subpasso é processo**: `Processo.run` cria outra instância, com tela, histórico e dono próprios.
 * **Form é contrato de escrita/desfecho**; View é leitura; relatório é View.
-* **Agendamento é start**; rotina em lote é fan-out por sujeito com `select`.
+* **Agendamento é gatilho**: `schedule` + `fanOut`; uma instância por documento.
 * **Transição é da action**; o grafo de estados é derivado; só action muda estado.
-* **Erro é falha de tentativa**: cancela, compensa e desvia; retry é da integração/ação.
-* **Mensagem é contrato** com correlação por documento; o participante é declarado na task.
+* **Erro é falha de tentativa**: `try/catch` desvia e compensa; retry é da integração/ação.
+* **Mensagem é contrato** com correlação por documento (`about`); `send`/`receive` usam `key`.
 * **Desfecho é nó nomeado e classificado**; é a dimensão de KPI do processo.
 * **Derivação em vez de declaração**: reads/writes, títulos herdados, grafo de estados, data objects.
 
 ## Golden examples sugeridos
 
-Se for validar só alguns, comece por estes oito — eles cobrem as decisões mais estruturais:
+Os 35 processos completos estão em [`examples/`](examples/). Comece por:
 
-1. **P.1 PurchaseApproval** — sujeito, alçada DMN, gateway, breach, desfechos.
-2. **P.6 DispatchOrder** — pools interno/externo, fork/join, mensagem enviada e recebida, timeouts.
-3. **P.7 DeliveryTracking** — processo filho, recebimento recorrente, laço com saída, milestone, cancel on.
-4. **P.13 Dunning** — start agendado com fan-out, wait, laço, cancelamento por evento.
-5. **P.18 RefundCase** — decisão, alçada, mensagem, milestone, três desfechos.
-6. **F.1 + F.8** — form com três desfechos + form reutilizado por duas tasks.
-7. **D.2 Invoice** — agregado, estado, eventos, ações com from/to/emits.
-8. **V.7 OrderProgress** — tela de andamento com seções fixas.
+1. **Checkout** — variáveis duráveis, `try/catch`, `loop` com retry, form humano, ends.
+2. **PurchaseApproval** — decisão DMN, `if/else`, form com múltiplas ações.
+3. **DispatchOrder** — `parallel`, `send`/`receive`, timeout, subprocesso.
+4. **OrderCancellation** — ação em outro serviço e compensação explícita.
+5. **ClaimSettlement** — decisão, subprocesso, mensagem e compensação.
+6. **MonthClose** — `schedule` + `fanOut`, espera e estado.
+7. **DailyDigest** — rotina agendada, `send` e manual.
+8. **OrderProgress** — tela de andamento com seções fixas.
 
 ## Checklist de validação
 
 - [ ] A sintaxe parece legível para um analista, não só para um dev
-- [ ] Toda task tem lane e um contrato; não há task "faz-tudo"
-- [ ] Todo processo tem start e ends nomeados; todo caminho chega a um end
+- [ ] Todo passo tem operação/task e executor (`roles` ou processo)
+- [ ] Todo processo tem um gatilho e ends nomeados; todo caminho chega a um end
+- [ ] Variáveis estão no topo; não há declaração dentro de bloco
 - [ ] O form não redeclara tipo/título do documento
 - [ ] O documento não duplica estado no processo
-- [ ] Agendamento aparece como start, não como artefato
+- [ ] Agendamento aparece como `schedule`/`fanOut`, não como artefato
 - [ ] Relatório aparece como View, não como documento
-- [ ] Mensagens têm `about` e participante declarado na task
+- [ ] Mensagens têm `about` e `key`
 - [ ] Desfechos permitem calcular KPIs (ciclo, atraso, caminho, motivo)
-- [ ] Falta algum artefato para representar seu domínio
 
-> Se algo aqui parecer "código demais" para o dono do processo, o problema é de sintaxe/experiência — não do conceito. O próximo passo é escolher 3–5 exemplos como **golden examples** e usá-los como teste de aceitação da DSL no SPECS.
+> Se algo aqui parecer "código demais" para o dono do processo, o problema é de sintaxe/experiência — não do conceito.

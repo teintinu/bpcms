@@ -1,0 +1,111 @@
+// service: example.com/services/checkout
+
+// Formulário de retentativa: aparece quando o pagamento é recusado.
+form PaymentRetry {
+  // Título exibido na inbox e na tarefa.
+  title: { pt-BR: "Repetir pagamento", en: "Retry payment" }
+  // Documento que o formulário edita; é a sessão do processo.
+  document: CheckoutSession
+  // Papéis que podem preencher o formulário.
+  roles: [Customer]
+  // Prazo para preencher antes de o formulário expirar.
+  timeout: 1d
+  // Prioridade da tarefa na inbox (maior aparece primeiro).
+  priority: 80
+
+  // Campos apresentados ao cliente.
+  fields {
+    // Cliente dono da sessão, exibido sem edição.
+    customer { readonly }
+    // Total do pedido, exibido sem edição.
+    total { readonly }
+
+    // Forma de pagamento nova; campo obrigatório só ao tentar de novo.
+    method: PaymentMethod {
+      // Título que explica a obrigatoriedade ao repetir a tentativa.
+      title: { pt-BR: "Nova forma de pagamento (obrigatória ao tentar novamente)", en: "New payment method (required to retry)" }
+    }
+
+    // Motivo do abandono; obrigatório apenas para desistir da compra.
+    reason: string {
+      // Título que explica quando o motivo é exigido.
+      title: { pt-BR: "Motivo do abandono (obrigatório ao desistir)", en: "Abandonment reason (required to give up)" }
+      // Limita o motivo a quinhentos caracteres.
+      maxLength: 500
+    }
+  }
+
+  // Ações que o cliente pode disparar neste formulário.
+  actions {
+    // Retenta o pagamento com a forma escolhida.
+    retry {
+      // Título do botão na tela.
+      title: { pt-BR: "Tentar novamente", en: "Try again" }
+      // Executa a action do documento passando a forma informada.
+      calls: CheckoutSession.retryPayment(method)
+    }
+
+    // Desiste da compra informando o motivo.
+    cancel {
+      // Título do botão na tela.
+      title: { pt-BR: "Desistir da compra", en: "Give up" }
+      // Executa a action de abandono passando o motivo informado.
+      calls: CheckoutSession.abandon(reason)
+    }
+  }
+}
+
+// Formulário de contingência: o suporte informa o frete quando a cotação falha.
+form FreightReview {
+  // Título exibido na inbox e na tarefa.
+  title: { pt-BR: "Informar frete manual", en: "Enter freight manually" }
+  // Documento que o formulário edita; é a sessão do processo.
+  document: CheckoutSession
+  // Papéis que podem preencher o formulário.
+  roles: [SupportAgent]
+  // Prazo para preencher antes de o formulário expirar.
+  timeout: 1d
+  // Tarefa é puxada: fica disponível para o agente assumir, sem atribuição fixa.
+  assign: pull
+
+  // Campos apresentados ao agente.
+  fields {
+    // Cliente dono da sessão, exibido sem edição.
+    customer { readonly }
+    // Total do pedido, exibido sem edição.
+    total { readonly }
+
+    // Frete negociado manualmente; obrigatório no preenchimento.
+    freightAmount: std.Money {
+      // Título exibido no formulário.
+      title: { pt-BR: "Frete negociado", en: "Negotiated freight" }
+      // Moeda do valor informado.
+      currency: BRL
+      // Torna o campo obrigatório no preenchimento.
+      required
+    }
+
+    // Prazo de entrega negociado; obrigatório no preenchimento.
+    days: std.Count {
+      // Título exibido no formulário.
+      title: { pt-BR: "Prazo em dias", en: "Days" }
+      // Menor prazo aceito, em dias.
+      min: 1
+      // Maior prazo aceito, em dias.
+      max: 90
+      // Torna o campo obrigatório no preenchimento.
+      required
+    }
+  }
+
+  // Ações que o agente pode disparar neste formulário.
+  actions {
+    // Aplica o frete manual à sessão.
+    apply {
+      // Título do botão na tela.
+      title: { pt-BR: "Aplicar frete", en: "Apply freight" }
+      // Executa a action de cotação com os valores informados.
+      calls: CheckoutSession.quoteShipping(freightAmount, days)
+    }
+  }
+}

@@ -1,124 +1,155 @@
 // service: example.com/services/identity
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process AccountRecovery for User {
+// Declara o processo de recuperação de acesso; o argumento é o documento-sujeito da instância.
+process AccountRecovery(user: User) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Recuperação de acesso", en: "Account recovery" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Verificar a identidade, aprovar a recuperação e desbloquear o acesso"
-  owner: "Platform Identity"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Verificar a identidade, aprovar a recuperação e desbloquear o acesso"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 3d
 
-  pool Company {
-    internal
+  // Papéis que participam do caso.
+  by: [Clerk, Manager]
 
-    lane Support {
-      role: Clerk
-    }
-
-    lane Management {
-      role: Manager
-    }
+  // Bloco que captura o timeout da verificação de identidade.
+  try {
+    // Abre o form de verificação de identidade para o usuário.
+    IdentityVerification.show({ user })
+  } catch (Timeout) {
+    // on timer da verificação: escala e segue para a aprovação
+    // Prazo estourado: abre a tarefa manual de escalonamento do caso.
+    EscalateRecovery.show({ user })
   }
 
-  pool Customer {
-    external
+  // Verificação concluída: abre o form de aprovação da recuperação.
+  RecoveryApproval.show({ user })
 
-    lane Portal {
-      role: Customer
-    }
-  }
+  // Aprovação dada: desbloqueia o acesso, levando o status a Active.
+  User.unlock()
 
-  start Requested {
-    by: [Clerk, Manager]
-  }
-
-  task Verify {
-    lane: Support
-    form: IdentityVerification
-    sla: 1d
-    priority: 50
-    assign: pull
-    on timer 2d -> Escalate
-  }
-
-  task Approve {
-    lane: Management
-    form: RecoveryApproval
-    sla: 1d
-    assign: pull
-  }
-
-  task Unlock {
-    lane: System
-    action: User.unlock
-  }
-
-  task NotifyCustomer {
-    lane: System
-    sends: AccessRestored
-    partner: Customer
+  // Envia a mensagem de acesso restaurado ao usuário.
+  send AccessRestored {
+    // Chave de identidade/correlação da mensagem.
+    key: user
+    // Dados levados no payload da mensagem.
     with {
+      // Nome do usuário usado na mensagem.
       name: user.name
+      // Correio eletrônico usado na mensagem.
       email: user.email
     }
   }
 
-  task Escalate {
-    lane: Management
-    manual: "Falar com o solicitante e revisar a verificação"
-    sla: 4h
-  }
+  // Encerra o caso no desfecho de sucesso.
+  return Restored
 
+  // Declara o desfecho de sucesso do caso.
   end Restored {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
-
-  Requested -> Verify
-  Verify.confirm -> Approve
-  Approve.approve -> Unlock
-  Unlock -> NotifyCustomer
-  NotifyCustomer -> Restored
-  Escalate -> Approve
 }
 
+// Form de verificação de identidade do solicitante.
 form IdentityVerification {
+  // Título exibido na inbox e no formulário.
   title: { pt-BR: "Verificação de identidade", en: "Identity verification" }
+  // Documento manipulado pelo form.
   document: User
+  // Papéis que podem atender o form.
+  roles: [Clerk]
+  // Prazo para conclusão; estourar dispara o erro Timeout.
+  timeout: 2d
+  // Prioridade do item na fila de trabalho.
+  priority: 50
+  // Modo de atribuição: o atendente puxa o item da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Nome da pessoa, usado na conferência da identidade.
     name
+    // Correio eletrônico da pessoa.
     email
+    // Apelido da pessoa.
     nickname
+    // Situação atual do usuário.
     status
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Confirma a identidade verificada; a action grava identityVerifiedAt.
     confirm { calls: User.confirmIdentity }
   }
 }
 
+// Form de aprovação da recuperação, restrito ao gerente.
 form RecoveryApproval {
+  // Título exibido na inbox e no formulário.
   title: { pt-BR: "Aprovação da recuperação", en: "Recovery approval" }
+  // Documento manipulado pelo form.
   document: User
+  // Papéis que podem atender o form.
+  roles: [Manager]
+  // Prazo para conclusão; estourar dispara o erro Timeout.
+  timeout: 1d
+  // Modo de atribuição: o gerente puxa o item da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Nome da pessoa.
     name
+    // Correio eletrônico da pessoa.
     email
+    // Situação atual do usuário.
     status
+    // Momento em que a identidade foi verificada.
     identityVerifiedAt
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Aprova a recuperação; a action grava recoveryApprovedAt.
     approve { calls: User.approveRecovery }
   }
 }
 
+// Tarefa manual de escalonamento quando a verificação não conclui no prazo.
+manual EscalateRecovery {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Escalar recuperação de acesso", en: "Escalate account recovery" }
+  // Documento manipulado pela tarefa.
+  document: User
+  // Papéis que podem atender a tarefa.
+  roles: [Manager]
+  // Orientações exibidas ao responsável pela tarefa.
+  instructions: "Falar com o solicitante e revisar a verificação"
+  // Prazo para conclusão da tarefa.
+  timeout: 4h
+}
+
+// View de andamento derivada da instância do processo.
 view RecoveryProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da recuperação", en: "Recovery progress" }
+  // Tipo da view: tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: AccountRecovery
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager, Customer]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }

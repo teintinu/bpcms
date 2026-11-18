@@ -1,28 +1,45 @@
 // service: example.com/services/citizen
 
+// Declara o organograma do serviço, com hierarquia, gestão e regra de quatro olhos.
 organogram Citizen {
+  // Título exibido no builder e na administração de papéis.
   title: { pt-BR: "Organograma do cidadão", en: "Citizen organogram" }
+  // Árvore de subordinação entre papéis.
   hierarchy {
+    // Manager fica acima de Clerk na hierarquia.
     Manager > Clerk
   }
+  // Relação de gestão: Manager gerencia os ocupantes de Clerk.
   Manager manages [Clerk]
+  // Política de quatro olhos aplicada a operações sensíveis.
   fourEyes {
+    // A operação citizen.merge exige aprovação de um Manager.
     citizen.merge requires Manager
   }
 }
 
+// Papel de atendente de cadastro.
 role Clerk {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Atendente de cadastro", en: "Registration clerk" }
+  // Permissões de consulta, cadastro e busca concedidas ao papel.
   permissions: [citizen.view, citizen.register, citizen.search]
 }
 
+// Papel de gestor de cadastro.
 role Manager {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Gestor de cadastro", en: "Registration manager" }
+  // Herda as permissões de Clerk.
   inherits: Clerk
+  // Permissões exclusivas do gestor: mesclar, bloquear e aprovar.
   permissions: [citizen.merge, citizen.block, citizen.approve]
 }
 
+// Papel de auditor de cadastro.
 role Auditor {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Auditor de cadastro", en: "Registration auditor" }
+  // Permissões de auditoria, leitura e acesso a relatórios.
   permissions: [citizen.audit, citizen.view, report.view]
 }

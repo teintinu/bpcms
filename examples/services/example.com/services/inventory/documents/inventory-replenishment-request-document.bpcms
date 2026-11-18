@@ -1,78 +1,126 @@
 // service: example.com/services/inventory
-
+// Documento que registra o pedido de reposição de um item de estoque.
 document ReplenishmentRequest {
+  // Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Requisição de reposição", en: "Replenishment request" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pelo documento.
   owner: "Inventory"
+  // Sincronização em tempo real entre as instâncias do documento.
   sync: live
 
+  // Campos persistidos na requisição de reposição.
   fields {
+    // Referência ao item de estoque que precisa ser reposto.
     stockItem: StockItem {
+      // Título exibido no formulário e nas colunas.
       title: { pt-BR: "Item de estoque", en: "Stock item" }
+      // Permite buscar e filtrar pelo item relacionado.
       lookup
     }
+    // Quantidade solicitada de reposição.
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" }, lookup }
+    // Situação da requisição no shape RequisitionStatus.
     status: RequisitionStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data e hora em que a requisição foi criada.
     requestedAt: DateTime { title: { pt-BR: "Solicitada em", en: "Requested at" } }
+    // Motivo informado quando a requisição é cancelada.
     cancelledReason: string { title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" } }
   }
 
+  // Índices que aceleram as consultas mais frequentes.
   indexes {
+    // Consulta por situação, ordenada pela data da solicitação.
     byStatus: [status, requestedAt] range
+    // Consulta por item, ordenada pela data da solicitação.
     byItem: [stockItem.id, requestedAt] range
   }
 
 
+  // Ações que alteram a requisição de reposição.
   actions {
+    // Cria a requisição para o item informado.
     create(stockItem: StockItem){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Criar requisição", en: "Create request" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
+      // Documento devolvido pela ação após a criação.
       returns: ReplenishmentRequest
       {
+        // Sugere repor até o ponto de reposição do item.
         quantity = stockItem.reorderPoint
+        // Grava o instante da solicitação.
         requestedAt = now()
+        // Emite o evento de solicitação com a quantidade pedida.
         emit Requested { quantity }
       }
     }
 
+    // Cancela a requisição com um motivo obrigatório.
     cancel(reason: string){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Cancelar requisição", en: "Cancel request" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
 
+      // Transição automática para a situação Cancelled.
       to: status.Cancelled
 
       {
+        // Persiste o motivo informado no cancelamento.
         cancelledReason = reason
       }
     }
   }
 }
 
+// Shape de estado que modela o ciclo de vida da requisição.
 shape RequisitionStatus {
+  // Título exibido no builder e nos filtros.
   title: { pt-BR: "Situação da requisição", en: "Requisition status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial e transição disparada pela criação da requisição.
   initial: Requested with transition Requested {
+    // Título exibido no histórico da transição.
     title: { pt-BR: "Reposição solicitada", en: "Replenishment requested" }
+    // Dados carregados pela transição de criação.
     payload {
+      // Quantidade pedida na requisição.
       quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
     }
   }
+  // Estado em que a requisição está aberta aguardando atendimento.
   value Requested {
+    // Título exibido na interface.
     title: { pt-BR: "Solicitada", en: "Requested" }
+    // Ícone associado ao estado.
     icon: Requested
+    // Ordem de exibição do estado no fluxo.
     ordinal: 10
 
+    // Transição para Cancelled quando a requisição é cancelada.
     transition Cancelled {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Requisição cancelada", en: "Request cancelled" }
+      // Dados carregados pela transição de cancelamento.
       payload {
+        // Motivo do cancelamento informado pelo gestor.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado final de requisição cancelada.
   value Cancelled {
+    // Título exibido na interface.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
+    // Ícone associado ao estado.
     icon: Cancelled
+    // Ordem de exibição do estado no fluxo.
     ordinal: 20
   }
+  // Formato de apresentação do shape.
   format: plain
 }

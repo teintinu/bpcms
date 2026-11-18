@@ -1,15 +1,25 @@
 // service: example.com/services/shipping
 
+// Parâmetro configurável da transportadora usada por padrão.
 parameter DefaultCarrier {
+  // Título exibido na configuração do parâmetro.
   title: { pt-BR: "Transportadora padrão", en: "Default carrier" }
+  // Tipo de dado aceito pelo parâmetro.
   type: string
+  // Valor inicial usado quando a aplicação não define outro.
   default: "CarrierX"
 }
 
+// Parâmetro de limite máximo de peso aceito por remessa.
 parameter MaxWeight {
+  // Título exibido na configuração do parâmetro.
   title: { pt-BR: "Peso máximo", en: "Max weight" }
+  // Tipo de medida de massa, importado do serviço std.
   type: std.Mass
+  // Peso padrão de trinta quilos.
   default: 30 kg
+  // Menor valor permitido na configuração.
   min: 1 kg
+  // Maior valor permitido na configuração.
   max: 500 kg
 }

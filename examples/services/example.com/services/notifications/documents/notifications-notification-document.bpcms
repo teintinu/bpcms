@@ -1,247 +1,392 @@
 // service: example.com/services/notifications
 
+// Documento que representa cada notificação, do enfileiramento à leitura.
 document Notification {
+  // Rótulo do documento exibido no construtor.
   title: { pt-BR: "Notificação", en: "Notification" }
-  version: 1
-  owner: "Notifications"
-  sync: live
+  version: 1 // Versão do artefato Documento.
+  owner: "Notifications" // Área dona do documento.
+  sync: live // Sincronização em tempo real entre cliente e servidor.
 
+  // Campos que compõem a notificação.
   fields {
+    // Modelo usado para renderizar a mensagem.
     template: NotificationTemplate {
+      // Rótulo do campo.
       title: { pt-BR: "Modelo", en: "Template" }
     }
+    // Destinatário do envio, pesquisável na tabela.
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" }, lookup }
+    // Canal de entrega da notificação.
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" }, lookup }
+    // Situação atual no ciclo de vida.
     status: NotificationStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Registra se o destinatário consentiu com o envio.
     consent: boolean { title: { pt-BR: "Consentimento", en: "Consent" } }
+    // Instante em que a notificação foi enviada.
     sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
+    // Instante em que a notificação foi lida.
     readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
+    // Mensagem de erro da última tentativa de envio.
     error: string { title: { pt-BR: "Erro", en: "Error" } }
+    // Motivo registrado quando o envio é suprimido.
     suppressionReason: string { title: { pt-BR: "Motivo da supressão", en: "Suppression reason" } }
   }
 
+  // Índices de consulta por situação e por destinatário.
   indexes {
+    // Consulta por situação, ordenada pela data de envio.
     byStatus: [status, sentAt] range
+    // Consulta por destinatário, ordenada pela data de envio.
     byRecipient: [recipient, sentAt] range
   }
 
 
+  // Ações que mudam a situação da notificação.
   actions {
+    // Marca a notificação como enviada.
     send(){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Enviar", en: "Send" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição para a situação Sent.
       to: status.Sent
 
+      // Efeitos aplicados na transição.
       {
+        // Carimba a data/hora atual do envio.
         sentAt = now()
       }
     }
 
+    // Registra falha de entrega com o motivo informado.
     fail(reason: string){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Registrar falha", en: "Record failure" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição para a situação Failed.
       to: status.Failed
 
+      // Efeitos aplicados na transição.
       {
+        // Guarda a mensagem de erro recebida.
         error = reason
       }
     }
 
+    // Reenfileira a notificação para uma nova tentativa de envio.
     retry(){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Repetir", en: "Retry" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição de volta para a situação Queued.
       to: status.Queued
+      // Emite o evento Retried com o instante da nova tentativa.
       emits { at: now() }
     }
 
+    // Marca a notificação como lida.
     markRead(){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Marcar como lida", en: "Mark as read" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição para a situação Read.
       to: status.Read
 
+      // Efeitos aplicados na transição.
       {
+        // Carimba a data/hora da leitura.
         readAt = now()
       }
     }
 
+    // Envia o resumo diário desta notificação.
     sendDigest(){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Enviar resumo", en: "Send digest" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição para a situação Sent.
       to: status.Sent
 
+      // Efeitos aplicados na transição.
       {
+        // Carimba a data/hora do envio do resumo.
         sentAt = now()
       }
     }
 
+    // Suprime o envio e registra o motivo informado.
     suppress(reason: string){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Suprimir", en: "Suppress" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
 
+      // Transição para a situação Suppressed.
       to: status.Suppressed
 
+      // Validação: exige motivo com ao menos 5 caracteres.
       rule reason.length >= 5 {
+        // Mensagem de erro exibida em português.
         pt-BR: "Informe o motivo da supressão"
+        // Mensagem de erro exibida em inglês.
         en: "Enter the suppression reason"
       }
 
+      // Efeitos aplicados na transição.
       {
+        // Guarda o motivo informado pelo agente.
         suppressionReason = reason
       }
     }
 
+    // Action de repetição em lote das falhas de envio.
     retryFailed(){
+      // Rótulo da action no construtor.
       title: { pt-BR: "Repetir falhas", en: "Retry failed" }
+      // Quem pode executar a action.
       roles: [SuccessAgent]
     }
   }
 
+  // Invariante: notificação enviada precisa ter data de envio.
   rule status == Sent implies sentAt != null {
+    // Mensagem de erro exibida em português.
     pt-BR: "Informe a data de envio"
+    // Mensagem de erro exibida em inglês.
     en: "Enter the sent date"
   }
 }
 
+// Forma de estado do ciclo de vida da notificação.
 shape NotificationStatus {
+  // Rótulo da forma exibido no construtor.
   title: { pt-BR: "Situação da notificação", en: "Notification status" }
-  base: state
-  initial: Queued
+  base: state // Base estado: máquina de estados com transições.
+  initial: Queued // Situação inicial de toda notificação criada.
+  // Situação "na fila", aguardando envio.
   value Queued {
+    // Rótulo do valor.
     title: { pt-BR: "Na fila", en: "Queued" }
+    // Ícone do serviço de notificações.
     icon: Queued
-    ordinal: 10
+    ordinal: 10 // Posição do valor na ordenação.
 
+    // Transição para Sent, disparada pelo envio.
     transition Sent {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Notificação enviada", en: "Notification sent" }
+      // Dados carregados na transição.
       payload {
+        // Instante do envio carregado pela transição.
         sentAt: DateTime { title: { pt-BR: "Enviada em", en: "Sent at" } }
       }
     }
 
+    // Transição para Failed, disparada por falha de entrega.
     transition Failed {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Falha no envio", en: "Delivery failed" }
+      // Dados carregados na transição.
       payload {
+        // Mensagem de erro carregada pela transição.
         error: string { title: { pt-BR: "Erro", en: "Error" } }
       }
     }
 
+    // Transição para Sent disparada pelo evento Digested.
     transition Sent {
+      // Evento nomeado que dispara esta transição.
       event: Digested
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Resumo enviado", en: "Digest sent" }
+      // Dados carregados na transição.
       payload {
+        // Instante do envio carregado pela transição.
         sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
       }
     }
 
+    // Transição para Suppressed, disparada pela supressão.
     transition Suppressed {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Notificação suprimida", en: "Notification suppressed" }
+      // Dados carregados na transição.
       payload {
+        // Motivo da supressão carregado pela transição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Situação "enviada".
   value Sent {
+    // Rótulo do valor.
     title: { pt-BR: "Enviada", en: "Sent" }
+    // Ícone do serviço de notificações.
     icon: Sent
-    ordinal: 20
+    ordinal: 20 // Posição do valor na ordenação.
 
+    // Transição para Read, disparada pela leitura.
     transition Read {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Notificação lida", en: "Notification read" }
+      // Dados carregados na transição.
       payload {
+        // Instante da leitura carregado pela transição.
         readAt: DateTime { title: { pt-BR: "Lida em", en: "Read at" } }
       }
     }
   }
+  // Situação "falhou".
   value Failed {
+    // Rótulo do valor.
     title: { pt-BR: "Falhou", en: "Failed" }
+    // Ícone do serviço de notificações.
     icon: Failed
-    ordinal: 30
+    ordinal: 30 // Posição do valor na ordenação.
 
+    // Transição para Queued disparada pelo evento Retried.
     transition Queued {
+      // Evento nomeado que dispara esta transição.
       event: Retried
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Envio repetido", en: "Delivery retried" }
+      // Dados carregados na transição.
       payload {
+        // Instante da nova tentativa carregado pela transição.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
   }
+  // Situação "lida".
   value Read {
+    // Rótulo do valor.
     title: { pt-BR: "Lida", en: "Read" }
+    // Ícone do serviço de notificações.
     icon: Read
-    ordinal: 40
+    ordinal: 40 // Posição do valor na ordenação.
   }
+  // Situação "suprimida".
   value Suppressed {
+    // Rótulo do valor.
     title: { pt-BR: "Suprimida", en: "Suppressed" }
+    // Ícone do serviço de notificações.
     icon: Suppressed
-    ordinal: 50
+    ordinal: 50 // Posição do valor na ordenação.
   }
-  format: plain
+  format: plain // Renderização em texto simples.
 }
 
+// View tabular com todas as notificações.
 view NotificationTable {
+  // Rótulo da view exibido na navegação.
   title: { pt-BR: "Notificações", en: "Notifications" }
+  // Tipo tabela: listagem paginada de registros.
   type: table
+  // Documento que alimenta a tabela.
   source: Notification
+  // Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
+  // Colunas exibidas em cada linha.
   columns { recipient; channel; status; sentAt; error }
+  // Filtros disponíveis na barra da tabela.
   filters { status; channel; period }
-  pagination: 50
+  pagination: 50 // Tamanho da página da tabela.
 
+  // Ações disponíveis nos itens da tabela.
   actions {
+    // Abre o detalhe da notificação selecionada.
     open -> NotificationDetail
   }
 }
 
+// View de detalhe de uma notificação.
 view NotificationDetail {
+  // Rótulo da view exibido na navegação.
   title: { pt-BR: "Detalhe da notificação", en: "Notification detail" }
+  // Tipo detalhe: tela de um único registro.
   type: detail
+  // Documento exibido na tela.
   document: Notification
+  // Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
+  // Seções fixas exibidas na tela.
   sections { summary; delivery; timeline }
 
+  // Ações expostas como botões na tela.
   actions {
+    // Envia a notificação a partir do detalhe.
     send -> Notification.send
+    // Repete o envio a partir do detalhe.
     retry -> Notification.retry
+    // Suprime a notificação informando o motivo.
     suppress -> Notification.suppress(reason)
   }
 }
 
+// View kanban das notificações agrupadas por situação.
 view NotificationKanban {
+  // Rótulo da view exibido na navegação.
   title: { pt-BR: "Notificações por situação", en: "Notifications by status" }
+  // Tipo kanban: quadro com colunas por agrupamento.
   type: kanban
+  // Documento que alimenta o quadro.
   source: Notification
+  // Papéis que podem abrir a view.
   roles: [SuccessAgent, SuccessManager]
 
+  // Agrupa os cartões pela situação da notificação.
   groupBy: status
+  // Colunas exibidas em cada coluna do quadro.
   columns { recipient; channel; sentAt }
+  // Campos exibidos no cartão.
   card { recipient; channel; status; sentAt }
 
+  // Ações disponíveis nos cartões.
   actions {
+    // Abre o detalhe da notificação selecionada.
     open -> NotificationDetail
   }
 }
 
+// Mensagem de resumo diário enviada pelo processo DailyDigest.
 message DigestSummary {
+  // Rótulo da mensagem exibido no construtor.
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
+  // Documento ao qual a mensagem se refere.
   about: Notification
 
+  // Dados carregados no envio da mensagem.
   payload {
+    // Destinatário do resumo.
     recipient: string { title: { pt-BR: "Destinatário", en: "Recipient" } }
+    // Canal de entrega do resumo.
     channel: Channel { title: { pt-BR: "Canal", en: "Channel" } }
   }
 }
 
+// Política que impede o envio sem consentimento do destinatário.
 policy NotificationConsent {
+  // Action protegida pela política.
   appliesTo: Notification.send
+  // Condição exigida para permitir o envio.
   rule: consent == true
+  // Bloqueia a execução quando a regra não é satisfeita.
   severity: block
+  // Mensagem exibida ao usuário bloqueado.
   message: "Destinatário sem consentimento para este canal"
+  // Registra a decisão na trilha de auditoria.
   audit: true
 }

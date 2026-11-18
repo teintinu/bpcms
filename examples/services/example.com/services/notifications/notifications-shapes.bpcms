@@ -1,22 +1,33 @@
 // service: example.com/services/notifications
 
+// Forma de classificação com os canais de entrega disponíveis.
 shape Channel {
+  // Rótulo da forma exibido no construtor.
   title: { pt-BR: "Canal", en: "Channel" }
-  base: classification
+  base: classification // Base classificação: conjunto fechado de valores.
+  // Canal de correio eletrônico.
   value Email {
+    // Rótulo do valor.
     title: { pt-BR: "Correio eletrônico", en: "Email" }
+    // Ícone do contêiner de ícones do construtor (namespace channels).
     icon: channels.email
-    ordinal: 10
+    ordinal: 10 // Posição do valor na ordenação.
   }
+  // Canal de WhatsApp.
   value Whatsapp {
+    // Rótulo do valor.
     title: { pt-BR: "WhatsApp", en: "WhatsApp" }
+    // Ícone do serviço de notificações.
     icon: WhatsApp
-    ordinal: 20
+    ordinal: 20 // Posição do valor na ordenação.
   }
+  // Canal dentro do próprio aplicativo.
   value InApp {
+    // Rótulo do valor.
     title: { pt-BR: "No aplicativo", en: "In-app" }
+    // Ícone do serviço de notificações.
     icon: InApp
-    ordinal: 30
+    ordinal: 30 // Posição do valor na ordenação.
   }
-  format: plain
+  format: plain // Renderização em texto simples.
 }

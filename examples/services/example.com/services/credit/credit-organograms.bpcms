@@ -1,25 +1,38 @@
 // service: example.com/services/credit
 
+// Declara o organograma que estrutura os papéis do serviço de crédito.
 organogram RiskDesk {
+  // Título exibido na visualização do organograma.
   title: { pt-BR: "Organograma de crédito", en: "Credit organogram" }
 
+  // Define a hierarquia de subordinação entre os papéis.
   hierarchy {
+    // O gerente de crédito está acima do analista de crédito.
     CreditManager > CreditAnalyst
   }
 
+  // Declara que o gerente gerencia, diretamente, o analista de crédito.
   CreditManager manages [CreditAnalyst]
 
+  // Segregação de funções: impede que a mesma pessoa execute as duas actions.
   segregation {
+    // Quem envia a proposta não pode aprová-la.
     creditApplication.submit != creditApplication.approve
   }
 }
 
+// Papel do analista: analisa propostas e registra risco.
 role CreditAnalyst {
+  // Título exibido na atribuição de tarefas e no histórico.
   title: { pt-BR: "Analista de crédito", en: "Credit analyst" }
+  // Permissões: ver, analisar e decidir sobre propostas de crédito.
   permissions: [credit.view, credit.review, credit.decide]
 }
 
+// Papel do gerente: decide, define limites e consulta relatórios.
 role CreditManager {
+  // Título exibido na atribuição de tarefas e no histórico.
   title: { pt-BR: "Gerente de crédito", en: "Credit manager" }
+  // Permissões: ver, decidir, definir limite e acessar relatórios.
   permissions: [credit.view, credit.decide, credit.limit, report.view]
 }

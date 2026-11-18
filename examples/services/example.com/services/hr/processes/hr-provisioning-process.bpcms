@@ -1,84 +1,131 @@
 // service: example.com/services/hr
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process Provisioning for Employee {
+// Processo que provisiona e-mail e sistemas e confirma o acesso da pessoa.
+process Provisioning(employee: Employee) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Provisionamento de acessos", en: "Access provisioning" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Entregar e-mail e sistemas funcionando para a pessoa contratada"
-  owner: "IT"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Entregar e-mail e sistemas funcionando para a pessoa contratada"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 3d
+  // Prazo máximo do caso antes do timeout.
+  timeout: 3d
 
-  on breach -> Escalate
+  // Processo chamado por outro processo, sem gatilho próprio.
+  called
 
-  pool Company {
-    internal
-    lane IT { role: ITAdmin }
+  // Bloco externo: captura timeout do caso e de qualquer form.
+  try {
+    // Provisiona a caixa de e-mail corporativo.
+    Employee.provisionMailbox()
+
+    // Bloco interno: tenta provisionar os sistemas de trabalho.
+    try {
+      // Provisiona os sistemas do colaborador.
+      Employee.provisionSystems()
+    } catch (Timeout) {
+      // Se o provisionamento estourar o prazo, escala para o TI.
+      EscalateProvisioning.show({ employee })
+    }
+
+    // Bloco interno: pede a confirmação de acesso da pessoa.
+    try {
+      // Exibe o form de confirmação para a nova contratação.
+      AccessConfirmation.show({ employee })
+    } catch (Timeout) {
+      // Sem confirmação no prazo, escala o caso para o TI.
+      EscalateProvisioning.show({ employee })
+      // Reabre a confirmação para nova tentativa.
+      AccessConfirmation.show({ employee })
+    }
+  } catch (Timeout) {
+    // Timeout do caso: escala o provisionamento para o TI.
+    EscalateProvisioning.show({ employee })
+    // Reabre a confirmação de acesso.
+    AccessConfirmation.show({ employee })
   }
 
-  pool NewHire {
-    external
-    lane Portal { role: NewHire }
+  // Se a pessoa confirmou os acessos...
+  if (employee.accessConfirmed) {
+    // ...encerra no desfecho Ready.
+    return Ready
   }
 
-  start Begin { called }
+  // Sem confirmação, encerra no desfecho Blocked.
+  return Blocked
 
-  task ProvisionMailbox {
-    lane: System
-    action: Employee.provisionMailbox
-    sla: 2h
-  }
-
-  task ProvisionSystems {
-    lane: System
-    action: Employee.provisionSystems
-    sla: 4h
-    on timer 4h -> Escalate
-  }
-
-  task ConfirmAccess {
-    lane: Portal
-    form: AccessConfirmation
-    sla: 1d
-    on timer 2d -> Escalate
-  }
-
-  task Escalate {
-    lane: IT
-    manual: "Reprovisionar o acesso com a pessoa e registrar o problema"
-    sla: 4h
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Ready {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Acessos prontos", en: "Access ready" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de falha do caso.
   end Blocked {
+    // Título exibido no histórico.
     title: { pt-BR: "Acesso bloqueado", en: "Access blocked" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  ProvisionMailbox -> ProvisionSystems
-  ProvisionSystems -> ConfirmAccess
-  ConfirmAccess.confirm -> Ready
-  ConfirmAccess.report -> Blocked
-  Escalate -> ConfirmAccess
-  Begin -> ProvisionMailbox
 }
 
-form AccessConfirmation {
-  title: { pt-BR: "Confirmação de acesso", en: "Access confirmation" }
+// Tarefa manual de escalação do provisionamento.
+manual EscalateProvisioning {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Escalar provisionamento", en: "Escalate provisioning" }
+  // Documento-sujeito da tarefa.
   document: Employee
+  // Papéis que podem assumir a tarefa.
+  roles: [ITAdmin]
+  // Orientação exibida para quem executa a tarefa.
+  instructions: "Reprovisionar o acesso com a pessoa e registrar o problema"
+  // Prazo para conclusão da tarefa.
+  timeout: 4h
+  // Prioridade da tarefa na fila.
+  priority: 70
+  // Distribuição da tarefa por puxada (pull).
+  assign: pull
+}
 
+// Form de confirmação de acesso preenchido pela nova contratação.
+form AccessConfirmation {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Confirmação de acesso", en: "Access confirmation" }
+  // Documento-sujeito do form.
+  document: Employee
+  // Papéis que podem preencher o form.
+  roles: [NewHire]
+  // Prazo para preenchimento antes do timeout.
+  timeout: 2d
+  // Prioridade do form na fila.
+  priority: 50
+  // Distribuição do form por puxada (pull).
+  assign: pull
+
+  // Campos exibidos no form.
   fields {
+    // Observação livre digitada pela pessoa.
     note: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
+      // Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Confirma que os acessos funcionam.
     confirm { calls: Employee.confirmAccess }
+    // Relata um problema de acesso, enviando a observação.
     report { calls: Employee.reportAccessIssue(note) }
   }
 }

@@ -1,63 +1,66 @@
 // service: example.com/services/billing
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process InvoiceIssuance for Invoice {
+// Processo que emite a nota fiscal a partir de um pedido.
+process InvoiceIssuance(invoice: Invoice) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Emissão de nota", en: "Invoice issuance" }
-  version: 1
-  goal: "Emitir a nota a partir do pedido, com imposto aplicado e envio ao cliente"
-  owner: "Faturamento"
-  timezone: America/Fortaleza
-
-  pool Customer {
-    external
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Emitir a nota a partir do pedido, com imposto aplicado e envio ao cliente"
   }
 
-  start Requested {
-    event: Invoice.Requested
-  }
+  // Gatilho: inicia uma instância quando a nota é solicitada.
+  on [Invoice.Requested]
+  key: invoice // Chave de identidade, correlação e dedup da instância.
 
-  task Derive {
-    lane: System
-    action: Invoice.deriveFromOrder
-    sla: 5m
-  }
+  // Deriva os dados da nota a partir do pedido de origem.
+  Invoice.deriveFromOrder()
+  // Aplica o imposto correspondente ao regime tributário.
+  Invoice.applyTax()
+  // Emite a nota e registra a data de emissão.
+  Invoice.issue()
 
-  task ApplyTax {
-    lane: System
-    action: Invoice.applyTax
-    sla: 5m
-  }
+  // Envia a mensagem de nota emitida ao cliente.
+  InvoiceIssued.send(
+    // Correlaciona a mensagem com a nota.
+    key: invoice
+    // Preenche os dados da mensagem a partir da nota.
+    with {
+      // Número da nota emitida.
+      number: invoice.number
+      // Total da nota emitida.
+      total: invoice.total
+      // Data de emissão da nota.
+      issuedAt: invoice.issuedAt
+    }
+  )
 
-  task Issue {
-    lane: System
-    action: Invoice.issue
-    sla: 5m
-  }
+  // Encerra no desfecho de sucesso.
+  return Issued
 
-  task Send {
-    lane: System
-    sends: InvoiceIssued
-    partner: Customer
-    with { invoice }
-    sla: 10m
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Issued {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Nota emitida", en: "Invoice issued" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
-
-  Requested -> Derive
-  Derive -> ApplyTax
-  ApplyTax -> Issue
-  Issue -> Send
-  Send -> Issued
 }
 
+// View de andamento derivada da instância do processo.
 view InvoiceProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da emissão", en: "Invoice issuance progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: InvoiceIssuance
+  // Papéis que podem abrir a view.
   roles: [Clerk, FinanceManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

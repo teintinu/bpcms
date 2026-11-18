@@ -1,9 +1,18 @@
+// service: example.com/services/procurement
+
+// Declara o serviço de Compras, raiz dos artefatos deste contexto de negócio.
 service "example.com/services/procurement" {
+  // Título exibido no builder e na navegação do serviço.
   title: { pt-BR: "Compras", en: "Procurement" }
+  // Versão do serviço usada em release e diff.
   version: 1.0.0
+  // Área responsável pela manutenção do serviço.
   owner: "Procurement"
+  // Dependências externas referenciadas pelos artefatos do serviço.
   imports {
+    // Importa as medidas e constantes padrão do construtor (Money, Mass, Count).
     service "bpcms.org/std" as std
+    // Importa o serviço de identidade, dono do tipo User usado nos solicitantes.
     service "example.com/services/identity" as Identity
   }
 }

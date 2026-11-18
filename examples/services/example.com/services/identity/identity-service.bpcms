@@ -1,9 +1,16 @@
+// Declara o serviço de negócio Identidade, dono de usuários, sessões, consumidores e recuperação de acesso.
 service "example.com/services/identity" {
+  // Título exibido no construtor e na navegação.
   title: { pt-BR: "Identidade", en: "Identity" }
+  // Versão do artefato Service; diff e release comparam.
   version: 1.0.0
+  // Time/área responsável pelo serviço.
   owner: "Platform Identity"
+  // Dependências externas usadas pelos artefatos deste serviço.
   imports {
+    // Importa as medidas e constantes padrão do construtor sob o alias std.
     service "bpcms.org/std" as std
+    // Importa o serviço Citizen, dono do tipo de cidadão vinculado ao consumidor.
     service "example.com/services/citizen" as Citizen
   }
 }

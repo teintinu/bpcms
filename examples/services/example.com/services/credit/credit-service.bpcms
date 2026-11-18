@@ -1,9 +1,16 @@
+// Declara o serviço de crédito pelo caminho completo da URI no workspace.
 service "example.com/services/credit" {
+  // Título exibido no catálogo e nos seletores de serviço.
   title: { pt-BR: "Crédito", en: "Credit" }
+  // Versão semântica do serviço; releases e diffs comparam este valor.
   version: 1.0.0
+  // Área de negócio responsável pela manutenção do serviço.
   owner: "Credit"
+  // Serviços externos consumidos, cada um com um alias de referência.
   imports {
+    // Importa medidas e constantes padrão do construtor sob o alias std.
     service "bpcms.org/std" as std
+    // Importa identidade de usuários sob o alias Identity (Identity.User).
     service "example.com/services/identity" as Identity
   }
 }

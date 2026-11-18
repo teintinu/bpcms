@@ -1,77 +1,115 @@
 // service: example.com/services/laboratory
 
+// Ícone da origem "paciente".
 icon Patient {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Paciente", en: "Patient" }
 }
 
+// Ícone da origem "laboratório de apoio".
 icon Support {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Apoio", en: "Support" }
 }
 
+// Ícone da origem "controle".
 icon Control {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Controle", en: "Control" }
 }
 
+// Ícone do estado "solicitado".
 icon Requested {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Solicitado", en: "Requested" }
 }
 
+// Ícone do estado "coletada".
 icon Collected {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Coletada", en: "Collected" }
 }
 
+// Ícone do estado "recebida".
 icon Received {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Recebida", en: "Received" }
 }
 
+// Ícone do estado "em processamento".
 icon Processing {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Em processamento", en: "Processing" }
 }
 
+// Ícone do estado "resultada".
 icon Resulted {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Resultada", en: "Resulted" }
 }
 
+// Ícone do estado "encaminhada".
 icon Referred {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Encaminhada", en: "Referred" }
 }
 
+// Ícone do estado "rejeitada".
 icon Rejected {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Rejeitada", en: "Rejected" }
 }
 
+// Ícone do estado "cancelada".
 icon Cancelled {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Cancelada", en: "Cancelled" }
 }
 
+// Ícone do estado "registrado".
 icon Draft {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Registrado", en: "Recorded" }
 }
 
+// Ícone do estado "validado".
 icon Validated {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Validado", en: "Validated" }
 }
 
+// Ícone do estado "assinado".
 icon Signed {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Assinado", en: "Signed" }
 }
 
+// Ícone do estado "liberado".
 icon Released {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Liberado", en: "Released" }
 }
 
+// Ícone do exame "hemograma".
 icon Hemogram {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Hemograma", en: "Complete blood count" }
 }
 
+// Ícone do exame "glicemia".
 icon Glucose {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Glicemia", en: "Glucose" }
 }
 
+// Ícone do exame "cultura".
 icon Culture {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Cultura", en: "Culture" }
 }
 
+// Ícone do exame "hemoglobina glicada".
 icon Hba1c {
+  // Título exibido junto ao ícone.
   title: { pt-BR: "Hemoglobina glicada", en: "HbA1c" }
 }

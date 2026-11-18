@@ -1,114 +1,152 @@
 // service: example.com/services/contracts
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process ContractSignature for Contract {
+// Processo que coleta a assinatura do fornecedor e ativa o contrato.
+process ContractSignature(contract: Contract) {
+  // Título exibido no construtor, na inbox e no histórico.
   title: { pt-BR: "Assinatura de contrato", en: "Contract signature" }
-  version: 1
-  goal: "Coletar a assinatura do fornecedor no prazo e ativar o contrato"
-  owner: "Contracts"
-  timezone: America/Fortaleza
-  sla: 10d
-
-  on breach -> Expire
-
-  pool Company {
-    internal
-    lane Legal { role: LegalCounsel }
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Coletar a assinatura do fornecedor no prazo e ativar o contrato"
   }
+  sla: 10d // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Supplier {
-    external
-  }
+  // Gatilho: inicia uma instância quando o contrato emite Submitted.
+  on [Contract.Submitted]
+  // Chave de identidade, correlação e dedup da instância.
+  key: contract // o caso é o próprio contrato
 
-  start Submitted { event: Contract.Submitted }
-
-  task LegalReview {
-    lane: Legal
-    form: LegalReview
-    sla: 2d
-    assign: pull
-    on timer 3d -> Expire
-  }
-
-  task SendForSignature {
-    lane: System
-    sends: SignatureRequest
-    partner: Supplier
-    with {
-      contractNumber: contract.number
-      expiresAt: contract.endsAt
+  // Bloco externo: captura timeout do caso e de qualquer form.
+  try {
+    // Bloco interno: conduz a revisão jurídica do contrato.
+    try {
+      // Abre o form de revisão para o jurídico decidir sobre o contrato.
+      LegalReview.show({ contract })
+    } catch (Timeout) {
+      // Revisão vencida: abre o form de cancelamento...
+      CancelContract.show({ contract })
+      // ...e encerra o processo sem assinatura.
+      return Declined
     }
+
+    // Se o contrato já foi encerrado durante a revisão...
+    if (contract.status == Terminated) {
+      // ...encerra o processo no desfecho Declined.
+      return Declined
+    }
+
+    // Envia ao fornecedor a solicitação de assinatura.
+    send SignatureRequest {
+      // Correlaciona a mensagem à instância pelo contrato.
+      key: contract
+      // Preenche o payload da mensagem com dados do contrato.
+      with {
+        // Número do contrato levado na mensagem.
+        contractNumber: contract.number
+        // Data-limite para o fornecedor assinar.
+        expiresAt: contract.endsAt
+      }
+    }
+
+    // Aguarda a confirmação da assinatura com prazo de cinco dias.
+    try {
+      // Recebe a mensagem de assinatura confirmada.
+      receive SignatureConfirmed {
+        // Correlaciona a resposta à instância pelo contrato.
+        key: contract
+        // Tempo máximo de espera pela resposta.
+        timeout: 5d
+        // Aplica a ação de assinatura no contrato ao receber.
+        apply: Contract.sign
+      }
+    } catch (Timeout) {
+      // Sem resposta no prazo: abre o form de cancelamento...
+      CancelContract.show({ contract })
+      // ...e encerra no desfecho Declined.
+      return Declined
+    }
+
+    // Assinatura confirmada: encerra no desfecho de sucesso.
+    return Signed
+  } catch (Timeout) {
+    // on breach do caso: expira a assinatura
+    // Abre o form para registrar o cancelamento do contrato.
+    CancelContract.show({ contract })
+    // Encerra o processo sem assinatura.
+    return Declined
   }
 
-  task AwaitSignature {
-    lane: System
-    receives: SignatureConfirmed
-    partner: Supplier
-    apply: Contract.sign
-    with { contract }
-    sla: 5d
-    on timer 5d -> Expire
-  }
-
-  task Expire {
-    lane: Legal
-    form: CancelContract
-    sla: 2d
-    assign: pull
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Signed {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Contrato assinado", en: "Contract signed" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de assinatura não concluída.
   end Declined {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Assinatura não concluída", en: "Signature not completed" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Submitted -> LegalReview
-  LegalReview.approve -> SendForSignature
-  LegalReview.reject -> Declined
-  SendForSignature -> AwaitSignature
-  AwaitSignature -> Signed
-  Expire.cancel -> Declined
 }
 
+// Form de revisão jurídica: aprova ou cancela o contrato.
 form LegalReview {
+  // Título exibido na tarefa do formulário.
   title: { pt-BR: "Revisão jurídica do contrato", en: "Contract legal review" }
-  document: Contract
+  document: Contract // Documento editado pelo formulário.
+  roles: [LegalCounsel] // Papel que recebe a tarefa.
+  timeout: 3d // Prazo para concluir o formulário.
+  assign: pull // Atribuição por retirada (pull) na inbox.
 
+  // Campos exibidos no formulário.
   fields {
-    number { readonly }
-    endsAt { readonly }
-    cancellationReason
+    number { readonly } // Número do contrato, apenas para leitura.
+    endsAt { readonly } // Término do contrato, apenas para leitura.
+    cancellationReason // Motivo do cancelamento, editável.
   }
 
+  // Botões de decisão do formulário.
   actions {
-    approve { calls: Contract.clearLegal }
-    reject { calls: Contract.cancel(cancellationReason) }
+    approve { calls: Contract.clearLegal } // Aprova, marcando a liberação jurídica.
+    reject { calls: Contract.cancel(cancellationReason) } // Rejeita, cancelando com o motivo.
   }
 }
 
+// Form de cancelamento do contrato durante a assinatura.
 form CancelContract {
+  // Título exibido na tarefa do formulário.
   title: { pt-BR: "Cancelar contrato", en: "Cancel contract" }
-  document: Contract
+  document: Contract // Documento editado pelo formulário.
+  roles: [LegalCounsel] // Papel que recebe a tarefa.
+  timeout: 2d // Prazo para concluir o formulário.
+  assign: pull // Atribuição por retirada (pull) na inbox.
 
+  // Campos exibidos no formulário.
   fields {
-    number { readonly }
-    cancellationReason
+    number { readonly } // Número do contrato, apenas para leitura.
+    cancellationReason // Motivo do cancelamento, editável.
   }
 
+  // Botões de decisão do formulário.
   actions {
-    cancel { calls: Contract.cancel(cancellationReason) }
+    cancel { calls: Contract.cancel(cancellationReason) } // Cancela o contrato com o motivo.
   }
 }
 
+// View de andamento derivada da instância do processo.
 view ContractSignatureProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da assinatura", en: "Contract signature progress" }
-  type: process
-  process: ContractSignature
-  roles: [ContractManager, LegalCounsel]
+  type: process // Tipo da view: uma tela de andamento de processo.
+  process: ContractSignature // Processo cujo andamento esta view exibe.
+  roles: [ContractManager, LegalCounsel] // Papéis que podem abrir a view.
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

@@ -1,34 +1,54 @@
 // service: example.com/services/shipping
 
+// Organograma da área de logística, que define cargos e subordinação.
 organogram Logistics {
+  // Título exibido no builder e na tela de organização.
   title: { pt-BR: "Organograma de logística", en: "Logistics organogram" }
 
+  // Estrutura de subordinação entre os cargos.
   hierarchy {
+    // Cadeia de comando: gerente, despachante e embalador.
     Manager > Dispatcher > Packer
   }
 
+  // O gerente responde pelo despachante.
   Manager manages [Dispatcher]
+  // O despachante responde pelo embalador.
   Dispatcher manages [Packer]
 }
 
+// Papel operacional de embalar e consultar remessas.
 role Packer {
+  // Título do papel exibido na interface.
   title: { pt-BR: "Embalador", en: "Packer" }
+  // Permissões de embalar e visualizar remessas.
   permissions: [shipment.pack, shipment.view]
 }
 
+// Papel de despachar, rastrear e reagendar remessas.
 role Dispatcher {
+  // Título do papel exibido na interface.
   title: { pt-BR: "Despachante", en: "Dispatcher" }
+  // Herda as permissões do papel de embalador.
   inherits: Packer
+  // Permissões de despacho, rastreio e reentrega.
   permissions: [shipment.dispatch, shipment.track, shipment.retry]
 }
 
+// Papel de gestão da logística.
 role Manager {
+  // Título do papel exibido na interface.
   title: { pt-BR: "Gerente de logística", en: "Logistics manager" }
+  // Herda as permissões do despachante.
   inherits: Dispatcher
+  // Permissões de cancelar, dividir e ver relatórios.
   permissions: [shipment.cancel, shipment.split, report.view]
 }
 
+// Papel de sistema usado pelas automações de expedição.
 role ShipmentEngine {
+  // Título do papel exibido na interface.
   title: { pt-BR: "Motor de expedição", en: "Shipment engine" }
+  // Permissões de captura e confirmação de entrega.
   permissions: [shipment.capture, shipment.deliver]
 }

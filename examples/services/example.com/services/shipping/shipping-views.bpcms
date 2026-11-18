@@ -1,10 +1,17 @@
 // service: example.com/services/shipping
 
+// View de caixa de entrada com as tarefas de expedição do usuário.
 view LogisticsInbox {
+  // Título exibido na navegação.
   title: { pt-BR: "Minha fila de expedição", en: "My dispatch queue" }
+  // Tipo da view: caixa de entrada de trabalho.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher]
+  // Restringe a lista às tarefas atribuídas ao usuário.
   scope: mine
+  // Agrupa as tarefas pelo processo de origem.
   groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  // Colunas exibidas em cada linha da fila.
+  columns { title; subject; dueAt; priority }
 }

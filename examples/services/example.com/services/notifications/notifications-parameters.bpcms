@@ -1,7 +1,11 @@
 // service: example.com/services/notifications
 
+// Parâmetro global do serviço: remetente padrão dos e-mails enviados.
 parameter FromEmail {
+  // Rótulo bilíngue exibido no construtor e na configuração.
   title: { pt-BR: "Remetente", en: "From email" }
+  // Tipo e-mail reaproveitado do serviço Citizen.
   type: Citizen.Email
+  // Endereço usado quando nenhum remetente é informado no envio.
   default: "no-reply@lojadojoao.com"
 }

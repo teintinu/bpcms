@@ -1,132 +1,203 @@
 // service: example.com/services/orders
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process OrderIntake for Order {
+// Declara o processo de entrada; o argumento é o pedido-sujeito da instância.
+process OrderIntake(order: Order) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Entrada de pedido", en: "Order intake" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Levar o rascunho à confirmação e reservar o estoque"
-  owner: "Orders"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Levar o rascunho à confirmação e reservar o estoque"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  pool Company {
-    internal
-    lane Sales { role: Clerk }
+  // Gatilho: inicia uma instância quando o pedido emite Drafted.
+  on [Order.Drafted]
+  // Chave de identidade, correlação e dedup da instância.
+  key: order // o caso é o próprio pedido
+
+  // Variável durável que percorre cada item do pedido.
+  let item: OrderItem
+
+  // Bloco externo: captura o timeout da revisão do rascunho.
+  try {
+    // Abre o form para o atendente revisar e confirmar o rascunho.
+    DraftReview.show({ order })
+  } catch (Timeout) { // captura o timeout da revisão
+    // O prazo da revisão esgotou: expira o rascunho cancelando o pedido.
+    Order.cancel({ reason: "Rascunho expirado sem confirmação do cliente" })
+    // Encerra o caso no desfecho Expired.
+    return Expired
   }
 
-  start Drafted { event: Order.Drafted }
-
-  task ReviewDraft {
-    lane: Sales
-    form: DraftReview
-    sla: 4h
-    priority: 50
-    assign: pull
-    on timer 2d -> ExpireDraft
+  // Se o pedido já foi cancelado durante a revisão, o caso termina.
+  if (order.status == Cancelled) {
+    // Retorna o desfecho de cancelamento.
+    return Cancelled
   }
 
-  task ReserveStock {
-    lane: System
-    action: Reservation.request
-    foreach { over: order.items; as: item; mode: parallel }
-    with {
-      product: item.product
-      quantity: item.quantity
-      externalRef: order.id
+  // Bloco que tenta reservar o estoque de todos os itens.
+  try {
+    // Reserva em paralelo um item por vez, acelerando pedidos com vários itens.
+    parallel each item in order.items {
+      // Chama o estoque pedindo a reserva do item.
+      Inventory.Reservation.request({
+        // Produto a reservar.
+        product: item.product,
+        // Quantidade solicitada do produto.
+        quantity: item.quantity,
+        // Referência externa que correlaciona a reserva ao pedido.
+        externalRef: order.id
+      })
     }
-    sla: 5m
-    on error StockOut -> Unavailable
+  } catch (StockOut) { // captura a falta de estoque
+    // Sem estoque suficiente: avisa o cliente e encerra o caso.
+    Unavailable.show({ order })
+    // Retorna o desfecho de falta de estoque.
+    return OutOfStock
   }
 
-  task ConfirmReservation {
-    lane: System
-    action: Order.confirmReservation
-    sla: 1m
-  }
+  // Confirma no documento que todos os itens foram reservados.
+  Order.confirmReservation()
+  // Encerra no desfecho de sucesso da reserva.
+  return Reserved
 
-  task ExpireDraft {
-    lane: System
-    action: Order.cancel
-    with { reason: "Rascunho expirado sem confirmação do cliente" }
-    sla: 1m
-  }
-
-  task Unavailable {
-    lane: Sales
-    manual: "Avisar o cliente da falta de estoque e sugerir substitutos"
-    sla: 2h
-  }
-
-  milestone Placed {
-    title: { pt-BR: "Pedido confirmado", en: "Order placed" }
-    on: Order.Placed
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Reserved {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Reservado", en: "Reserved" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de cancelamento do caso.
   end Cancelled {
+    // Título exibido no histórico.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
+  // Declara o desfecho de falta de estoque.
   end OutOfStock {
+    // Título exibido no histórico.
     title: { pt-BR: "Sem estoque", en: "Out of stock" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
+  // Declara o desfecho de expiração do prazo.
   end Expired {
+    // Título exibido no histórico.
     title: { pt-BR: "Expirado", en: "Expired" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Drafted -> ReviewDraft
-  ReviewDraft.confirm -> ReserveStock
-  ReviewDraft.cancel -> Cancelled
-  ReserveStock -> ConfirmReservation
-  ConfirmReservation -> Reserved
-  Unavailable -> OutOfStock
-  ExpireDraft -> Expired
 }
 
-form DraftReview {
-  title: { pt-BR: "Revisar rascunho do pedido", en: "Review order draft" }
-  document: Order
+// Erro de negócio: estoque insuficiente para reservar os itens.
+error StockOut {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Estoque insuficiente", en: "Out of stock" }
+}
 
+// Form de revisão do rascunho antes de confirmar o pedido.
+form DraftReview {
+  // Título exibido na inbox e na tarefa.
+  title: { pt-BR: "Revisar rascunho do pedido", en: "Review order draft" }
+  // Documento que a tarefa manipula.
+  document: Order
+  // Papéis que podem executar a tarefa.
+  roles: [Clerk]
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 2d
+  // Prioridade da tarefa na fila.
+  priority: 50
+  // Modo de atribuição: puxada pelo usuário da fila.
+  assign: pull
+
+  // Campos do pedido e entradas livres exibidos na tarefa.
   fields {
+    // Cliente do pedido.
     customer
+    // Itens do pedido.
     items
+    // Total do pedido.
     total
+    // Motivo do cancelamento, caso o atendente cancele.
     reason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      // Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
+    // Observação livre digitada pelo atendente.
     note: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
+      // Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis na tarefa.
   actions {
+    // Confirma o pedido e o leva à situação Placed.
     confirm {
+      // Título do botão exibido na tarefa.
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      // Chama a action do documento que realiza o pedido.
       calls: Order.place
     }
+    // Cancela o pedido com o motivo informado.
     cancel {
+      // Título do botão exibido na tarefa.
       title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      // Chama a action do documento passando o motivo preenchido.
       calls: Order.cancel(reason)
     }
+    // Salva a observação sem sair da tarefa.
     save {
+      // Título do botão exibido na tarefa.
       title: { pt-BR: "Salvar observação", en: "Save note" }
+      // Chama a action do documento que grava a observação.
       calls: Order.annotate(note)
+      // Mantém a tarefa aberta após salvar.
       stay
     }
   }
 }
 
+// Tarefa manual para avisar o cliente sobre a falta de estoque.
+manual Unavailable {
+  // Título exibido na inbox e na tarefa.
+  title: { pt-BR: "Avisar cliente da falta de estoque", en: "Notify customer of stock outage" }
+  // Documento que a tarefa manipula.
+  document: Order
+  // Papéis que podem executar a tarefa.
+  roles: [Clerk]
+  // Instruções mostradas ao executor da tarefa.
+  instructions: "Avisar o cliente da falta de estoque e sugerir substitutos"
+  // Prazo máximo para conclusão da tarefa.
+  timeout: 2h
+  // Prioridade da tarefa na fila.
+  priority: 50
+  // Modo de atribuição: puxada pelo usuário da fila.
+  assign: pull
+}
+
+// View de andamento derivada da instância do processo de entrada.
 view OrderProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento do pedido", en: "Order progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: OrderIntake
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager, Customer]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

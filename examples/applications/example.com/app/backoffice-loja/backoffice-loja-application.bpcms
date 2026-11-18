@@ -1,35 +1,45 @@
+// application: Administração da Loja (backoffice de loja)
+// Declara a aplicação da URI example.com/app/backoffice-loja e abre sua composição.
 application "example.com/app/backoffice-loja" {
-  source: registry
-  version: 1.2.0
+  source: registry // Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
+  version: 1.2.0 // Versão semver publicada da app; o lock fixa as versões dos serviços.
+  // Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
-    pt-BR: "Administração da Loja"
-    en-US: "Store Backoffice"
+    pt-BR: "Administração da Loja" // Título em português (idioma default).
+    en-US: "Store Backoffice" // Título em inglês americano.
   }
 
+  // Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity
-    "example.com/services/orders" as Orders
-    "example.com/services/inventory" as Inventory
-    "example.com/services/billing" as Billing
-    "example.com/services/support" as Support
-    "example.com/services/notifications" as Notifications
+    "example.com/services/identity" as Identity // Identidade e autenticação dos usuários.
+    "example.com/services/orders" as Orders // Pedidos de venda administrados pela loja.
+    "example.com/services/inventory" as Inventory // Estoque e disponibilidade de produtos.
+    "example.com/services/billing" as Billing // Faturamento e cobrança.
+    "example.com/services/support" as Support // Atendimento e ocorrências de suporte.
+    "example.com/services/notifications" as Notifications // Avisos e notificações aos usuários.
   }
+  // Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
   roles {
-    Clerk
-    Manager
-    SupportAgent
-    Admin
-    Dispatcher
-    Driver
+    Clerk // Balconista: opera a loja no dia a dia.
+    Manager // Gerente: responde pela operação da loja.
+    SupportAgent // Agente de suporte: atende clientes e ocorrências.
+    Admin // Administrador: acesso amplo à configuração.
+    Dispatcher // Despachante: organiza as entregas.
+    Driver // Motorista: executa as entregas.
+    // Admin é superior a Manager, que por sua vez é superior a Clerk.
     Admin > Manager > Clerk
+    // Manager é superior a SupportAgent.
     Manager > SupportAgent
+    // Manager é superior a Dispatcher, que é superior a Driver.
     Manager > Dispatcher > Driver
   }
-  theme: Backoffice
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
+  theme: Backoffice // Tema visual fornecido pelo construtor (não é artefato de serviço).
+  locales: [pt-BR, en-US] // Idiomas da app; o primeiro (pt-BR) é o default.
+  environments: [dev, qa, prod] // Ambientes em que a aplicação é promovida.
 
+  // Bloco de inicialização da app; só configura, não contém regra de negócio.
   main {
+    // Inicializa o Parameter TaxRegime do serviço Billing com o Simples Nacional.
     set Billing.TaxRegime = "SIMPLES"
   }
 }

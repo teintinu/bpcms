@@ -1,133 +1,167 @@
 // service: example.com/services/payments
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process PaymentCapture for Payment {
+// Declara o processo de captura; o argumento é o pagamento-sujeito da instância.
+process PaymentCapture(payment: Payment) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Captura do pagamento", en: "Payment capture" }
-  version: 1
-  goal: "Autorizar, capturar e estornar o valor quando a captura não puder ser registrada"
-  owner: "Payments"
-  timezone: America/Fortaleza
-  sla: 1d
-
-  pool Company {
-    internal
-    lane Finance { role: Analyst }
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Autorizar, capturar e estornar o valor quando a captura não puder ser registrada"
   }
+  sla: 1d // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Acquirer {
-    external
-  }
+  // Gatilho: inicia uma instância quando o documento emite Created.
+  on [Payment.Created]
+  // Chave de identidade, correlação e dedup da instância.
+  key: payment
 
-  variables {
-    authorization: string
-    receipt: string
-  }
+  // Variável durável: código de autorização devolvido pelo gateway.
+  let authorization: string
+  // Variável durável: comprovante devolvido na captura.
+  let receipt: string
 
-  start Created { event: Payment.Created }
-
-  task Authorize {
-    lane: System
-    call: PaymentGateway.authorize
-    with {
-      order: payment.order
+  // Bloco que captura timeout do caso e de qualquer form.
+  try {
+    // Chama o gateway e guarda o código de autorização.
+    authorization = PaymentGateway.authorize({
+      // Pedido cujo valor será autorizado.
+      order: payment.order,
+      // Valor a autorizar.
       amount: payment.amount
+    })
+
+    // Registra a autorização no documento, disparando a transição.
+    Payment.authorize({ authorization })
+  } catch (Declined) {
+    // Autorização recusada: registra a falha no pagamento.
+    Payment.fail({ failureReason: "Autorização recusada pelo adquirente" })
+    return Failed // Encerra o processo no desfecho de falha.
+  }
+
+  // Laço de tentativas de captura, limitado a três iterações.
+  loop CaptureAttempt max 3 {
+    // Bloco interno de tentativa de captura.
+    try {
+      // Chama o gateway e guarda o comprovante retornado.
+      receipt = PaymentGateway.capture({ payment })
+
+      // Registra a captura no documento, disparando a transição.
+      Payment.capture({ receipt })
+      return Captured // Encerra no desfecho de sucesso.
+    } catch (CaptureDeclined) {
+      // Captura recusada: tenta novamente via tarefa manual.
+      try {
+        // Abre a tarefa manual para o analista repetir a captura.
+        Retry.show({ payment })
+      } catch (Timeout) {
+        // Compensação: nada foi capturado; registra a falha do pagamento.
+        Payment.fail({ failureReason: "Autorização recusada pelo adquirente" })
+        return Failed // Encerra o processo no desfecho de falha.
+      }
+    } catch (ReceiptRejected) {
+      // Compensação explícita: estorna o valor e registra a falha.
+      Payment.refund({ refundAmount: payment.amount })
+      // Registra a falha após o estorno.
+      Payment.fail({ failureReason: "Autorização recusada pelo adquirente" })
+      return Failed // Encerra o processo no desfecho de falha.
     }
-    gives: authorization
-    sla: 2m
-    on error Declined -> FailPayment
   }
 
-  task RecordAuthorization {
-    lane: System
-    action: Payment.authorize
-    with { authorization }
-    sla: 1m
-  }
+  // Esgotou as tentativas de captura: registra a falha e encerra.
+  Payment.fail({ failureReason: "Autorização recusada pelo adquirente" })
+  return Failed // Retorna o desfecho de falha.
 
-  task Capture {
-    lane: System
-    call: PaymentGateway.capture
-    with { payment }
-    gives: receipt
-    sla: 2m
-    on error CaptureDeclined -> Retry
-  }
-
-  task RecordCapture {
-    lane: System
-    action: Payment.capture
-    with { receipt }
-    sla: 1m
-    on error ReceiptRejected -> Undo
-  }
-
-  task Retry {
-    lane: Finance
-    manual: "Contatar o adquirente e repetir a captura no portal"
-    sla: 4h
-    on timer 8h -> Undo
-  }
-
-  task RefundCapture {
-    lane: System
-    action: Payment.refund
-    with { refundAmount: payment.amount }
-    compensates: Capture
-    sla: 5m
-  }
-
-  task FailPayment {
-    lane: System
-    action: Payment.fail
-    with { failureReason: "Autorização recusada pelo adquirente" }
-    sla: 1m
-  }
-
-  rollback Undo
-
+  // Declara o desfecho de sucesso do caso.
   end Captured {
+    // Título exibido no histórico.
     title: { pt-BR: "Capturado", en: "Captured" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de falha do caso.
   end Failed {
+    // Título exibido no histórico.
     title: { pt-BR: "Não capturado", en: "Not captured" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Created -> Authorize
-  Authorize -> RecordAuthorization
-  RecordAuthorization -> Capture
-  Capture -> RecordCapture
-  RecordCapture -> Captured
-  Retry -> Capture
-  Undo -> FailPayment
-  FailPayment -> Failed
 }
 
+// Erro de negócio: autorização recusada pelo adquirente.
+error Declined {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Pagamento recusado", en: "Payment declined" }
+}
+
+// Erro de negócio: captura recusada pelo adquirente.
+error CaptureDeclined {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Captura recusada", en: "Capture declined" }
+}
+
+// Erro de negócio: comprovante recusado pelo adquirente.
+error ReceiptRejected {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Comprovante rejeitado", en: "Receipt rejected" }
+}
+
+// Tarefa manual para o analista repetir a captura no portal do adquirente.
+manual Retry {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Repetir captura", en: "Retry capture" }
+  // Documento ao qual a tarefa se refere.
+  document: Payment
+  // Papéis que podem assumir a tarefa.
+  roles: [Analyst]
+  // Orientação exibida ao executor da tarefa.
+  instructions: "Contatar o adquirente e repetir a captura no portal"
+  timeout: 8h // Prazo para conclusão da tarefa.
+  priority: 80 // Prioridade da tarefa na fila.
+  assign: pull // Distribuição da tarefa por retirada voluntária.
+}
+
+// View de andamento derivada da instância do processo.
 view PaymentProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da captura", en: "Capture progress" }
-  type: process
+  type: process // Tipo da view: uma tela de andamento de processo.
+  // Processo cujo andamento esta view exibe.
   process: PaymentCapture
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }
 
+// Integração REST com o gateway de pagamentos.
 integration PaymentGateway {
-  protocol: rest
-  baseUrl: env.PAYMENT_URL
-  auth: api-key
-  timeout: 15s
-  idempotency: header "Idempotency-Key"
+  protocol: rest // Protocolo usado na integração.
+  baseUrl: env.PAYMENT_URL // URL base lida da variável de ambiente do gateway.
+  auth: api-key // Autenticação por chave de API.
+  timeout: 15s // Tempo máximo de cada chamada.
+  idempotency: header "Idempotency-Key" // Chave de idempotência enviada no cabeçalho.
 
+  // Operações expostas pela integração.
   operations {
+    // Autoriza um valor de um pedido e devolve o código de autorização.
     authorize(order: Order, amount: std.Money): string
+    // Captura um pagamento e devolve o comprovante.
     capture(payment: Payment): string
+    // Estorna o valor de um pagamento e devolve o identificador.
     refund(payment: Payment, amount: std.Money): string
   }
 
+  // Eventos externos que atualizam os documentos.
   webhooks {
+    // Captura confirmada atualiza o pagamento.
     payment.succeeded -> Payment.Captured
+    // Falha no pagamento atualiza o pagamento.
     payment.failed -> Payment.Failed
+    // Contestação aberta atualiza a contestação.
     chargeback.opened -> Chargeback.Opened
   }
 }

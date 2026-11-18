@@ -1,151 +1,256 @@
 // service: example.com/services/claims
 
+// Documento que representa a liquidação financeira de um sinistro aprovado.
 document Settlement {
+  // Título exibido na interface.
   title: { pt-BR: "Liquidação", en: "Settlement" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Claims"
+  // Sincronização em tempo real entre os clientes conectados.
   sync: live
 
+  // Campos que compõem a liquidação.
   fields {
+    // Número único da liquidação, usado como identificador legível.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Permite localizar a liquidação pelo número.
       lookup
+      // Impede números duplicados.
       unique
+      // Limita o número a vinte e quatro caracteres.
       maxLength: 24
     }
+    // Sinistro que originou a liquidação.
     claim: Claim { title: { pt-BR: "Sinistro", en: "Claim" }, lookup }
+    // Valor a ser liquidado, em reais.
     amount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Valor", en: "Amount" }
+      // Moeda do valor liquidado.
       currency: BRL
+      // Permite localizar pelo valor.
       lookup
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Forma de pagamento escolhida para a liquidação.
     method: PaymentMethod { title: { pt-BR: "Forma de pagamento", en: "Payment method" }, lookup }
+    // Situação atual da liquidação no fluxo de estados.
     status: SettlementStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data da aprovação da liquidação.
     approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" }, readonly }
+    // Data do pagamento da liquidação.
     paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" }, readonly }
+    // Data do estorno da liquidação.
     reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" }, readonly }
+    // Observação livre sobre a liquidação.
     note: string { title: { pt-BR: "Observação", en: "Note" }, maxLength: 500 }
   }
 
+  // Índices que aceleram consultas frequentes sobre liquidações.
   indexes {
+    // Busca exata pelo número da liquidação.
     byNumber: [number] unique
+    // Consultas por situação ordenadas pela aprovação.
     byStatus: [status, approvedAt] range
   }
 
 
+  // Comandos de negócio que alteram a liquidação.
   actions {
+    // Aprova a liquidação para pagamento.
     approve() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aprovar liquidação", en: "Approve settlement" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceAnalyst, Manager]
+      // Move a liquidação para a situação Approved.
       to: status.Approved
+      // Registra a data/hora da aprovação.
       { approvedAt = now() }
     }
 
+    // Registra o pagamento efetivo da liquidação.
     pay() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Pagar liquidação", en: "Pay settlement" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceAnalyst]
+      // Move a liquidação para a situação Paid.
       to: status.Paid
+      // Registra a data/hora do pagamento.
       { paidAt = now() }
     }
 
+    // Estorna a liquidação com o motivo informado.
     reverse(reason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Estornar liquidação", en: "Reverse settlement" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
+      // Move a liquidação de volta para a situação Pending.
       to: status.Pending
+      // Registra o instante do estorno e o motivo.
       { reversedAt = now(); note = reason }
     }
   }
 }
 
+// Shape de estado que modela o ciclo de vida da liquidação.
 shape SettlementStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da liquidação", en: "Settlement status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial é Pending.
   initial: Pending
 
+  // Estado em que a liquidação aguarda aprovação.
   value Pending {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Pendente", en: "Pending" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.pending
+    // Ordem de exibição no fluxo de estados.
     ordinal: 10
 
+    // Transição para Approved após a aprovação financeira.
     transition Approved {
+      // Título exibido no histórico.
       title: { pt-BR: "Liquidação aprovada", en: "Settlement approved" }
+      // Dados transportados pelo evento de aprovação.
       payload {
+        // Instante em que a liquidação foi aprovada.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
       }
     }
   }
+  // Estado em que a liquidação foi aprovada e aguarda pagamento.
   value Approved {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.approved
+    // Ordem de exibição no fluxo de estados.
     ordinal: 20
 
+    // Transição para Paid após a confirmação do pagamento.
     transition Paid {
+      // Título exibido no histórico.
       title: { pt-BR: "Liquidação paga", en: "Settlement paid" }
+      // Dados transportados pelo evento de pagamento.
       payload {
+        // Instante em que o pagamento ocorreu.
         paidAt: DateTime { title: { pt-BR: "Paga em", en: "Paid at" } }
       }
     }
 
+    // Transição de volta para Pending, nomeada Reversed.
     transition Pending {
+      // Nome do evento publicado no estorno.
       event: Reversed
+      // Título exibido no histórico.
       title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      // Dados transportados pelo evento de estorno.
       payload {
+        // Instante em que o estorno ocorreu.
         reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        // Motivo informado para o estorno.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado em que a liquidação foi paga.
   value Paid {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Paga", en: "Paid" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.paid
+    // Ordem de exibição no fluxo de estados.
     ordinal: 30
 
+    // Transição de volta para Pending, nomeada Reversed.
     transition Pending {
+      // Nome do evento publicado no estorno.
       event: Reversed
+      // Título exibido no histórico.
       title: { pt-BR: "Liquidação estornada", en: "Settlement reversed" }
+      // Dados transportados pelo evento de estorno.
       payload {
+        // Instante em que o estorno ocorreu.
         reversedAt: DateTime { title: { pt-BR: "Estornada em", en: "Reversed at" } }
+        // Motivo informado para o estorno.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
 }
 
+// Classificação que define as formas de pagamento aceitas.
 shape PaymentMethod {
+  // Título exibido na interface.
   title: { pt-BR: "Forma de pagamento", en: "Payment method" }
+  // Base do shape: classificação fechada de valores.
   base: classification
 
+  // Pagamento por transferência bancária.
   value BankTransfer {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Transferência bancária", en: "Bank transfer" }
+    // Ícone exibido junto ao valor.
     icon: payment.transfer
+    // Ordem de exibição na lista de valores.
     ordinal: 10
   }
+  // Pagamento instantâneo por Pix.
   value Pix {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Pix", en: "Pix" }
+    // Ícone exibido junto ao valor.
     icon: payment.pix
+    // Ordem de exibição na lista de valores.
     ordinal: 20
   }
+  // Pagamento por cheque.
   value Check {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Cheque", en: "Check" }
+    // Ícone exibido junto ao valor.
     icon: payment.check
+    // Ordem de exibição na lista de valores.
     ordinal: 30
   }
 }
 
+// Tabela operacional que lista as liquidações para acompanhamento financeiro.
 view SettlementsTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Liquidações", en: "Settlements" }
+  // Tipo da view: tabela.
   type: table
+  // Documento exibido pela view.
   source: Settlement
+  // Papéis que podem abrir a tabela.
   roles: [FinanceAnalyst, Manager]
 
+  // Colunas exibidas em cada linha.
   columns { number; amount; method; status; approvedAt; paidAt }
+  // Filtros disponíveis para recortar a lista.
   filters { status; method; period }
+  // Quantidade de linhas carregadas por página.
   pagination: 50
 
+  // Ações disparadas a partir da tabela.
   actions {
+    // Aprova a liquidação selecionada.
     approve -> Settlement.approve
+    // Paga a liquidação selecionada.
     pay -> Settlement.pay
+    // Estorna a liquidação com o motivo informado.
     reverse -> Settlement.reverse(reason)
   }
 }

@@ -1,57 +1,86 @@
 // service: example.com/services/inventory
+// Catálogo de ícones do serviço, usados por shapes, views e listas.
 
+// Ícone do item de estoque disponível para uso e reserva.
 icon Available {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Disponível", en: "Available" }
 }
 
+// Ícone do item com quantidade reservada para pedidos.
 icon Reserved {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Reservado", en: "Reserved" }
 }
 
+// Ícone do item bloqueado para movimentações.
 icon Blocked {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Bloqueado", en: "Blocked" }
 }
 
+// Ícone da reserva ativa e ainda válida.
 icon Active {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Ativo", en: "Active" }
 }
 
+// Ícone da reserva liberada antes do consumo.
 icon Released {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Liberada", en: "Released" }
 }
 
+// Ícone da reserva expirada por prazo.
 icon Expired {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Expirada", en: "Expired" }
 }
 
+// Ícone da contagem aberta e ainda não registrada.
 icon Open {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Aberta", en: "Open" }
 }
 
+// Ícone da contagem já registrada pelo operador.
 icon Counted {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Contada", en: "Counted" }
 }
 
+// Ícone da contagem aprovada pela gestão.
 icon Approved {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Aprovada", en: "Approved" }
 }
 
+// Ícone da contagem rejeitada pela gestão.
 icon Rejected {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Rejeitada", en: "Rejected" }
 }
 
+// Ícone da requisição de reposição pendente.
 icon Requested {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Solicitada", en: "Requested" }
 }
 
+// Ícone da requisição de reposição cancelada.
 icon Cancelled {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Cancelada", en: "Cancelled" }
 }
 
+// Ícone da decisão de repor o item de estoque.
 icon Reorder {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Repor", en: "Reorder" }
 }
 
+// Ícone da decisão de que o estoque é suficiente.
 icon Ok {
+  // Rótulo exibido no builder e nas telas.
   title: { pt-BR: "Suficiente", en: "Sufficient" }
 }

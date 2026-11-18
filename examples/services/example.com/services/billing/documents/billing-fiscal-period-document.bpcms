@@ -1,105 +1,171 @@
 // service: example.com/services/billing
 
+// Documento que representa o período fiscal mensal de uma loja.
 document FiscalPeriod {
+  // Título exibido na interface.
   title: { pt-BR: "Período fiscal", en: "Fiscal period" }
-  version: 1
+  version: 1 // Versão do documento usada em release e comparação.
+  // Área responsável pelo documento.
   owner: "Billing"
-  sync: live
+  sync: live // Sincronização em tempo real entre as partes.
 
+  // Campos que compõem o período fiscal.
   fields {
+    // Loja à qual o período pertence; obrigatória.
     store: Store {
+      // Título exibido no formulário.
       title: { pt-BR: "Loja", en: "Store" }
+      // Torna a loja obrigatória no preenchimento.
       required
     }
+    // Mês de competência do período; consultável e obrigatório.
     month: YearMonth {
+      // Título exibido no formulário.
       title: { pt-BR: "Mês", en: "Month" }
+      // Permite localizar o período pelo mês.
       lookup
+      // Torna o mês obrigatório no preenchimento.
       required
     }
+    // Situação atual no ciclo de vida do período; consultável.
     status: FiscalPeriodStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar o período pela situação.
       lookup
     }
+    // Quantidade de notas do período.
     invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    // Receita total do período em reais; consultável.
     revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
+    // Imposto total do período em reais.
     tax: std.Money { title: { pt-BR: "Imposto", en: "Tax" }, currency: BRL }
+    // Data em que o período foi fechado.
     closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
+    // Motivo registrado quando o fechamento falha.
     failureReason: string { title: { pt-BR: "Motivo da falha", en: "Failure reason" } }
   }
 
+  // Índices que aceleram as consultas mais frequentes.
   indexes {
+    // Garante um único período por loja e mês.
     byPeriod: [store.id, month] unique
+    // Indexa situação e mês para listar períodos por estado.
     byStatus: [status, month] range
   }
 
 
+  // Ações que alteram o estado do período fiscal.
   actions {
+    // Consolida os números do período antes do fechamento.
     consolidate(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Consolidar período", en: "Consolidate period" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceManager]
     }
 
+    // Fecha o período consolidado.
     close(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Fechar período", en: "Close period" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
+      // Transição para o estado fechado.
       to: status.Closed
 
+      // Efeitos colaterais aplicados ao documento.
       {
+        // Grava a data de fechamento.
         closedAt = now()
       }
     }
 
+    // Registra uma falha no fechamento com o motivo informado.
     fail(reason: string){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar falha", en: "Record failure" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceManager]
 
+      // Transição para o estado de falha.
       to: status.Failed
 
+      // Exige um motivo com pelo menos cinco caracteres.
       rule reason.length >= 5 {
+        // Mensagem de validação em português.
         pt-BR: "Informe o motivo da falha"
+        // Mensagem de validação em inglês.
         en: "Enter the failure reason"
       }
 
+      // Efeitos colaterais aplicados ao documento.
       {
+        // Persiste o motivo da falha.
         failureReason = reason
       }
     }
   }
 }
 
+// Shape de estado que modela o ciclo de vida do período fiscal.
 shape FiscalPeriodStatus {
+  // Título exibido no construtor.
   title: { pt-BR: "Situação do período fiscal", en: "Fiscal period status" }
+  // Deriva de uma máquina de estados.
   base: state
+  // Estado inicial de todo período.
   initial: Open
+  // Estado em que o período está aberto para consolidação.
   value Open {
+    // Rótulo do estado.
     title: { pt-BR: "Aberto", en: "Open" }
+    // Ícone associado ao estado.
     icon: Open
+    // Ordem de exibição do estado.
     ordinal: 10
 
+    // Transição permitida de aberto para fechado.
     transition Closed {
+      // Título da transição no histórico.
       title: { pt-BR: "Período fechado", en: "Period closed" }
+      // Dados carregados junto com a transição.
       payload {
+        // Data de fechamento do período.
         closedAt: DateTime { title: { pt-BR: "Fechado em", en: "Closed at" } }
       }
     }
 
+    // Transição permitida de aberto para falha.
     transition Failed {
+      // Título da transição no histórico.
       title: { pt-BR: "Fechamento falhou", en: "Period close failed" }
+      // Dados carregados junto com a transição.
       payload {
+        // Motivo da falha no fechamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado em que o período foi fechado.
   value Closed {
+    // Rótulo do estado.
     title: { pt-BR: "Fechado", en: "Closed" }
+    // Ícone associado ao estado.
     icon: Closed
+    // Ordem de exibição do estado.
     ordinal: 20
   }
+  // Estado em que o fechamento falhou.
   value Failed {
+    // Rótulo do estado.
     title: { pt-BR: "Falhou", en: "Failed" }
+    // Ícone associado ao estado.
     icon: Failed
+    // Ordem de exibição do estado.
     ordinal: 30
   }
+  // Formatação textual simples, sem máscara.
   format: plain
 }

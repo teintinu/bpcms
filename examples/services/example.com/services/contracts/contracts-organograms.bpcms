@@ -1,31 +1,48 @@
 // service: example.com/services/contracts
 
+// Organograma do serviço: define hierarquia, gestão e quem tem poder de assinatura.
 organogram Agreements {
+  // Título exibido na tela do organograma.
   title: { pt-BR: "Organograma de contratos", en: "Contracts organogram" }
 
+  // Relações de subordinação desenhadas na árvore do organograma.
   hierarchy {
+    // O gestor de contratos está acima do analista.
     ContractManager > ContractAnalyst
+    // O gestor de contratos está acima do advogado.
     ContractManager > LegalCounsel
   }
 
+  // O gestor administra e distribui trabalho para os dois papéis abaixo dele.
   ContractManager manages [ContractAnalyst, LegalCounsel]
 
+  // Papéis com poder de assinatura no organograma.
   signature {
+    // O advogado é o assinante autorizado.
     LegalCounsel
   }
 }
 
+// Papel que aprova, encerra e acompanha contratos.
 role ContractManager {
+  // Título exibido na atribuição de tarefas e na inbox.
   title: { pt-BR: "Gestor de contratos", en: "Contract manager" }
+  // Permissões concedidas ao papel sobre contratos e relatórios.
   permissions: [contract.view, contract.approve, contract.terminate, report.view]
 }
 
+// Papel que prepara e renova contratos.
 role ContractAnalyst {
+  // Título exibido na atribuição de tarefas e na inbox.
   title: { pt-BR: "Analista de contratos", en: "Contract analyst" }
+  // Permissões de consulta, preparação e renovação.
   permissions: [contract.view, contract.prepare, contract.renew]
 }
 
+// Papel jurídico que revisa e assina contratos.
 role LegalCounsel {
+  // Título exibido na atribuição de tarefas e na inbox.
   title: { pt-BR: "Advogado", en: "Legal counsel" }
+  // Permissões de consulta, revisão e assinatura.
   permissions: [contract.view, contract.review, contract.sign]
 }

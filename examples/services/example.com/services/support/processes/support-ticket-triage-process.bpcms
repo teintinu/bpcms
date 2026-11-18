@@ -1,236 +1,290 @@
 // service: example.com/services/support
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process TicketTriage for Ticket {
+// Declara o processo TicketTriage; o chamado é o documento-sujeito da instância.
+process TicketTriage(ticket: Ticket) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Triagem do chamado", en: "Ticket triage" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Classificar, encaminhar e responder o chamado dentro do prazo"
-  owner: "Support"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Classificar, encaminhar e responder o chamado dentro do prazo"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 8h
 
-  pool Company {
-    internal
+  // Gatilho: inicia uma instância quando o chamado emite Opened.
+  on [Ticket.Opened]
+  // Chave de identidade, correlação e dedup da instância.
+  key: ticket
 
-    lane Support {
-      role: SupportAgent
+  // Variável durável da instância: fila de destino calculada na triagem.
+  let queue: TicketCategory
+  // Flag durável que registra se a triagem já foi tratada.
+  let handled = false
+
+  // Laço de tentativas de triagem, limitado a duas iterações.
+  loop TriageAttempt max 2 {
+    // Reinicia a flag a cada tentativa.
+    handled = false
+
+    // Bloco que captura timeout do form de triagem.
+    try {
+      // Abre o form de triagem para o agente classificar o chamado.
+      TicketIntake.show({ ticket })
+    } catch (Timeout) {
+      // Sem resposta no prazo: marca como tratado e escala para o gerente.
+      handled = true
+      // Abre o form de escalonamento.
+      TicketEscalation.show({ ticket })
     }
 
-    lane Management {
-      role: Manager
+    // Se o chamado já saiu de Aberto, a triagem terminou.
+    if (ticket.status != Open) {
+      // Sai do laço de tentativas.
+      break
     }
-  }
 
-  pool Customer {
-    external
-
-    lane Client {
-      role: Customer
-    }
-  }
-
-  pool BackOffice {
-    external
-  }
-
-  variables {
-    queue: TicketCategory
-  }
-
-  start Opened {
-    event: Ticket.Opened
-  }
-
-  task Triage {
-    lane: Support
-    form: TicketIntake
-    sla: 4h
-    priority: 50
-    assign: pull
-    on breach -> Escalate
-    on timer 1d -> Escalate
-  }
-
-  task Route {
-    lane: System
-    decision: TicketRouting
-    with {
-      category: ticket.category
-      priority: ticket.priority
-    }
-    gives: queue
-  }
-
-  gateway Destination {
-    if queue == Technical -> Technical
-    if queue == Billing -> Billing
-    else -> General
-  }
-
-  task Technical {
-    lane: Support
-    form: TicketResolution
-    sla: 1d
-    assign: pull
-    on breach -> Escalate
-  }
-
-  task Billing {
-    lane: Management
-    form: TicketResolution
-    sla: 1d
-    assign: pull
-  }
-
-  task General {
-    lane: Support
-    form: TicketResolution
-    sla: 2d
-    assign: pull
-  }
-
-  fork Notify
-  join Notified
-
-  task TellCustomer {
-    lane: System
-    sends: TicketAcknowledged
-    partner: Customer
-    with {
-      subject: ticket.subject
-      priority: ticket.priority
+    // Se a tentativa não foi tratada, escala o chamado.
+    if (!handled) {
+      // Abre o form de escalonamento para o gerente.
+      TicketEscalation.show({ ticket })
     }
   }
 
-  task TellBackOffice {
-    lane: System
-    sends: TicketUpdate
-    partner: BackOffice
-    with {
-      subject: ticket.subject
-      queue
+  // Calcula a fila de destino a partir de categoria e prioridade.
+  queue = TicketRouting.evaluate({
+    // Categoria informada na triagem.
+    category: ticket.category,
+    // Prioridade informada na triagem.
+    priority: ticket.priority
+  })
+
+  // Technical, Billing e General usam o mesmo form nesta versão; a fila segue no documento.
+  TicketResolution.show({ ticket })
+
+  // Se o form não deixou o chamado Resolvido, insiste no escalonamento.
+  if (ticket.status != Resolved) {
+    // Escala para o gerente antes de tentar resolver de novo.
+    TicketEscalation.show({ ticket })
+    // Reabre o form de resolução para concluir o atendimento.
+    TicketResolution.show({ ticket })
+  }
+
+  // Fecha o chamado ao final do atendimento.
+  Ticket.close()
+
+  // Dispara as duas comunicações em paralelo.
+  parallel {
+    // Ramo que avisa o cliente.
+    branch TellCustomer {
+      // Envia a confirmação de recebimento do chamado.
+      send TicketAcknowledged {
+        // Correlaciona a mensagem com o chamado.
+        key: ticket
+        // Preenche o payload da mensagem.
+        with {
+          // Assunto do chamado.
+          subject: ticket.subject
+          // Prioridade do chamado.
+          priority: ticket.priority
+        }
+      }
+    }
+
+    // Ramo que avisa o back office.
+    branch TellBackOffice {
+      // Envia a atualização do chamado para a fila.
+      send TicketUpdate {
+        // Correlaciona a mensagem com o chamado.
+        key: ticket
+        // Preenche o payload da mensagem.
+        with {
+          // Assunto do chamado.
+          subject: ticket.subject
+          // Fila calculada pelo roteamento.
+          queue: queue
+        }
+      }
     }
   }
 
-  task Close {
-    lane: System
-    action: Ticket.close
-  }
+  // Encerra no desfecho de sucesso.
+  return Done
 
-  task Escalate {
-    lane: Management
-    form: TicketEscalation
-    sla: 4h
-    assign: pull
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Done {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Chamado encerrado", en: "Ticket closed" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
-
-  Opened -> Triage
-  Triage.claim -> Route
-  Route -> Destination
-  Destination -> Technical
-  Destination -> Billing
-  Destination -> General
-  Technical.resolve -> Close
-  Billing.resolve -> Close
-  General.resolve -> Close
-  Close -> Notify
-  Notify -> TellCustomer
-  Notify -> TellBackOffice
-  TellCustomer -> Notified
-  TellBackOffice -> Notified
-  Notified -> Done
-  Escalate.escalate -> Triage
-
-  on breach -> Escalate
 }
 
+// Form de triagem inicial do chamado.
 form TicketIntake {
+  // Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Triagem do chamado", en: "Ticket intake" }
+  // Documento manipulado pelo form.
   document: Ticket
+  // Papéis que podem preencher o form.
+  roles: [SupportAgent]
+  // Prazo para o preenchimento; expira em Timeout.
+  timeout: 1d
+  // Prioridade de distribuição na fila de trabalho.
+  priority: 50
+  // Distribuição por retirada: o agente assume o item.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Assunto do chamado.
     subject
+    // Descrição do problema.
     description
+    // Prioridade escolhida na triagem.
     priority
+    // Categoria escolhida na triagem.
     category
+    // Pedido relacionado ao chamado.
     order
+    // Cliente que abriu o chamado.
     customer
+    // Justificativa digitada ao escalonar pelo form.
     justification: string {
+      // Título exibido no campo.
       title: { pt-BR: "Motivo do escalonamento", en: "Escalation reason" }
+      // Limita o texto a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações oferecidas no form.
   actions {
+    // Assume o chamado chamando a ação do documento.
     claim { calls: Ticket.claim }
+    // Escala o chamado com a justificativa e permanece no form.
     escalate { calls: Ticket.escalate(justification); stay }
   }
 }
 
+// Form de resolução do chamado.
 form TicketResolution {
+  // Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Resolução do chamado", en: "Ticket resolution" }
+  // Documento manipulado pelo form.
   document: Ticket
+  // Agentes e gerentes podem preencher o form.
+  roles: [SupportAgent, Manager]
+  // Prazo para o preenchimento; expira em Timeout.
+  timeout: 2d
+  // Distribuição por retirada: o agente assume o item.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Assunto do chamado.
     subject
+    // Descrição do problema.
     description
+    // Responsável pelo atendimento.
     assignee
+    // Justificativa digitada ao colocar em espera ou escalonar.
     justification: string {
+      // Título exibido no campo.
       title: { pt-BR: "Motivo da espera ou do escalonamento", en: "Hold or escalation reason" }
+      // Limita o texto a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações oferecidas no form.
   actions {
+    // Resolve o chamado chamando a ação do documento.
     resolve { calls: Ticket.resolve }
+    // Coloca em espera e permanece no form.
     hold { calls: Ticket.hold; stay }
+    // Escala com a justificativa e permanece no form.
     escalate { calls: Ticket.escalate(justification); stay }
   }
 }
 
+// Form de escalonamento para o gerente.
 form TicketEscalation {
+  // Título exibido na inbox e no cabeçalho do form.
   title: { pt-BR: "Escalonamento do chamado", en: "Ticket escalation" }
+  // Documento manipulado pelo form.
   document: Ticket
+  // Apenas gerentes preenchem o form.
+  roles: [Manager]
+  // Prazo curto de atendimento do escalonamento.
+  timeout: 4h
+  // Distribuição por retirada: o gerente assume o item.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Assunto do chamado.
     subject
+    // Prioridade do chamado.
     priority
+    // Justificativa do escalonamento.
     justification: string {
+      // Título exibido no campo.
       title: { pt-BR: "Motivo do escalonamento", en: "Escalation reason" }
+      // Limita o texto a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações oferecidas no form.
   actions {
+    // Escala o chamado chamando a ação do documento.
     escalate { calls: Ticket.escalate(justification) }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view TicketTriageProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da triagem", en: "Ticket triage progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: TicketTriage
+  // Papéis que podem abrir a view.
   roles: [SupportAgent, Manager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }
 
+// Decisão que calcula a fila de destino do chamado.
 decision TicketRouting {
+  // Título exibido no builder e nos logs de decisão.
   title: { pt-BR: "Roteamento do chamado", en: "Ticket routing" }
+  // Tipo devolvido pela decisão: a categoria/fila calculada.
   returns: TicketCategory
+  // Entradas exigidas para avaliar a decisão.
   inputs {
+    // Categoria do chamado.
     category: TicketCategory
+    // Prioridade do chamado.
     priority: TicketPriority
   }
+  // Regras avaliadas em ordem até o primeiro caso verdadeiro.
   cases {
+    // Cobrança sempre vai para a fila de Cobrança.
     category == Billing -> Billing
+    // Problema técnico de prioridade máxima vai para Técnico.
     category == Technical and priority == P1 -> Technical
+    // Qualquer outro caso cai na fila Geral.
     else -> General
   }
+  // Origem normativa da regra de negócio.
   source: "Política de atendimento v1"
+  // Área dona da decisão.
   owner: Support
 }

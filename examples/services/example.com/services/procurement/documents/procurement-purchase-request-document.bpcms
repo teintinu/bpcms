@@ -1,206 +1,342 @@
 // service: example.com/services/procurement
 
+// Documento que representa uma solicitação de compra.
 document PurchaseRequest {
+  // Título exibido na interface.
   title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pela manutenção do artefato.
   owner: "Procurement"
+  // Modo de sincronização do documento: leitura.
   sync: read
 
+  // Campos que compõem a solicitação de compra.
   fields {
+    // Número identificador da solicitação; único e consultável.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Limita o número a quarenta caracteres.
       maxLength: 40
+      // Impede duas solicitações com o mesmo número.
       unique
+      // Permite localizar a solicitação pelo número.
       lookup
     }
+    // Usuário que abriu a solicitação; vem do serviço de identidade.
     requester: Identity.User {
+      // Título exibido no formulário.
       title: { pt-BR: "Solicitante", en: "Requester" }
+      // Permite localizar a solicitação pelo solicitante.
       lookup
     }
+    // Fornecedor escolhido para a compra.
     supplier: Supplier {
+      // Título exibido no formulário.
       title: { pt-BR: "Fornecedor", en: "Supplier" }
+      // Permite localizar a solicitação pelo fornecedor.
       lookup
     }
+    // Valor total da solicitação, em moeda forte.
     amount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Valor", en: "Amount" }
+      // Moeda do valor solicitado.
       currency: BRL
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Justificativa de negócio para a compra.
     justification: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Justificativa", en: "Justification" }
+      // Limita a justificativa a quinhentos caracteres.
       maxLength: 500
+      // Torna a justificativa obrigatória no preenchimento.
       required
     }
+    // Data limite em que a compra é necessária.
     neededBy: Date {
+      // Título exibido no formulário.
       title: { pt-BR: "Necessário até", en: "Needed by" }
     }
+    // Centro de custo que absorve a despesa.
     costCenter: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Centro de custo", en: "Cost center" }
+      // Limita o centro de custo a sessenta caracteres.
       maxLength: 60
     }
+    // Situação atual da solicitação no ciclo de vida.
     status: PurchaseRequestStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar a solicitação pela situação.
       lookup
     }
+    // Data e hora em que a solicitação foi enviada.
     submittedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Enviada em", en: "Submitted at" }
     }
+    // Data e hora em que a solicitação foi aprovada.
     approvedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Aprovada em", en: "Approved at" }
     }
+    // Data e hora em que a solicitação foi rejeitada.
     rejectedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Rejeitada em", en: "Rejected at" }
     }
+    // Motivo que levou à rejeição da solicitação.
     rejectionReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
+    // Data e hora em que o pedido de compra foi emitido.
     orderedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido emitido em", en: "Ordered at" }
     }
+    // Pedido de compra gerado a partir desta solicitação.
     purchaseOrder: PurchaseOrder {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido de compra", en: "Purchase order" }
     }
   }
 
 
+  // Ações que conduzem a solicitação pelo fluxo de aprovação e compra.
   actions {
+    // Envia a solicitação para aprovação e a move para Submitted.
     submit() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Enviar solicitação", en: "Submit request" }
+      // Papéis autorizados a enviar a solicitação.
       roles: [Requester]
+      // Transição disparada ao enviar.
       to: status.Submitted
       {
+        // Registra o instante do envio.
         submittedAt = now()
       }
     }
 
+    // Aprova a solicitação e a move para Approved.
     approve() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aprovar solicitação", en: "Approve request" }
+      // Papéis autorizados a aprovar a solicitação.
       roles: [Approver, ProcurementManager]
+      // Transição disparada ao aprovar.
       to: status.Approved
       {
+        // Registra o instante da aprovação.
         approvedAt = now()
       }
     }
 
+    // Rejeita a solicitação informando o motivo.
     reject(rejectionReason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Rejeitar solicitação", en: "Reject request" }
+      // Papéis autorizados a rejeitar a solicitação.
       roles: [Approver, ProcurementManager]
+      // Transição disparada ao rejeitar.
       to: status.Rejected
+      // Emite o evento com o motivo da rejeição.
       emits { reason: rejectionReason }
       {
+        // Registra o instante da rejeição.
         rejectedAt = now()
       }
     }
 
+    // Emite o pedido de compra e move a solicitação para Ordered.
     order(purchaseOrder: PurchaseOrder) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Emitir pedido de compra", en: "Issue purchase order" }
+      // Papéis autorizados a emitir o pedido.
       roles: [Buyer]
+      // Transição disparada ao emitir o pedido.
       to: status.Ordered
       {
+        // Registra o instante da emissão do pedido.
         orderedAt = now()
       }
     }
   }
 
+  // Índices de consulta mantidos para o documento.
   indexes {
+    // Índice único pelo número, evitando duplicidade.
     byNumber: [number] unique
+    // Índice de faixa por situação e envio, para listagens ordenadas.
     byStatus: [status, submittedAt] range
+    // Índice hash pelo fornecedor, para busca direta.
     bySupplier: [supplier.id] hash
   }
 
+  // Regra que exige valor positivo na solicitação.
   rule amount > 0 BRL {
+    // Mensagem da regra em português.
     pt-BR: "A solicitação precisa ter valor positivo"
+    // Mensagem da regra em inglês.
     en: "The request must have a positive amount"
   }
 
+  // Regras de segregação de funções da solicitação.
   segregation {
+    // Quem envia não pode ser quem aprova.
     submit != approve
   }
 }
 
+// Forma do ciclo de vida da solicitação de compra.
 shape PurchaseRequestStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da solicitação de compra", en: "Purchase request status" }
+  // Base da forma: máquina de estados.
   base: state
+  // Estado inicial de toda solicitação criada.
   initial: Draft
+  // Estado de rascunho, antes do envio.
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado.
     icon: Draft
+    // Ordem de exibição do estado.
     ordinal: 10
 
+    // Transição para solicitação enviada.
     transition Submitted {
+      // Título exibido no histórico.
       title: { pt-BR: "Solicitação enviada", en: "Purchase request submitted" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do envio.
         submittedAt: DateTime { title: { pt-BR: "Enviada em", en: "Submitted at" } }
+        // Valor solicitado no envio.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
+  // Estado de solicitação enviada, aguardando decisão.
   value Submitted {
+    // Título exibido na interface.
     title: { pt-BR: "Enviada", en: "Submitted" }
+    // Ícone associado ao estado.
     icon: Submitted
+    // Ordem de exibição do estado.
     ordinal: 20
 
+    // Transição para solicitação aprovada.
     transition Approved {
+      // Título exibido no histórico.
       title: { pt-BR: "Solicitação aprovada", en: "Purchase request approved" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora da aprovação.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+        // Valor aprovado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
 
+    // Transição para solicitação rejeitada.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Solicitação rejeitada", en: "Purchase request rejected" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora da rejeição.
         rejectedAt: DateTime { title: { pt-BR: "Rejeitada em", en: "Rejected at" } }
+        // Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de solicitação aprovada, pronta para virar pedido.
   value Approved {
+    // Título exibido na interface.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Ícone associado ao estado.
     icon: Approved
+    // Ordem de exibição do estado.
     ordinal: 30
 
+    // Transição para pedido de compra emitido.
     transition Ordered {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido de compra emitido", en: "Purchase order issued" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora da emissão do pedido.
         orderedAt: DateTime { title: { pt-BR: "Emitido em", en: "Issued at" } }
       }
     }
   }
+  // Estado de solicitação rejeitada.
   value Rejected {
+    // Título exibido na interface.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
+    // Ícone associado ao estado.
     icon: Rejected
+    // Ordem de exibição do estado.
     ordinal: 40
   }
+  // Estado de solicitação com pedido emitido.
   value Ordered {
+    // Título exibido na interface.
     title: { pt-BR: "Pedido emitido", en: "Ordered" }
+    // Ícone associado ao estado.
     icon: Ordered
+    // Ordem de exibição do estado.
     ordinal: 50
   }
 }
 
+// View de listagem das solicitações de compra.
 view PurchaseRequests {
+  // Título exibido na navegação.
   title: { pt-BR: "Solicitações de compra", en: "Purchase requests" }
+  // Tipo da view: tabela.
   type: table
+  // Documento que alimenta a tabela.
   source: PurchaseRequest
+  // Papéis que podem abrir a view.
   roles: [Requester, Buyer, Approver, ProcurementManager]
 
+  // Colunas exibidas na tabela.
   columns { number; requester; supplier; amount; status; neededBy }
+  // Filtros disponíveis na tabela.
   filters { status; requester; supplier }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na listagem.
   actions {
+    // Abre o detalhe da solicitação selecionada.
     open -> PurchaseRequestDetail
   }
 }
 
+// View de detalhe de uma solicitação de compra.
 view PurchaseRequestDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da solicitação", en: "Purchase request detail" }
+  // Tipo da view: detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: PurchaseRequest
+  // Papéis que podem abrir a view.
   roles: [Requester, Buyer, Approver, ProcurementManager]
 
+  // Seções exibidas na tela.
   sections { summary; timeline }
 }

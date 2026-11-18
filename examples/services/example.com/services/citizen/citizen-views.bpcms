@@ -1,11 +1,19 @@
 // service: example.com/services/citizen
 
+// View de fila de duplicados para tratamento de cadastros repetidos.
 view Duplicates {
+  // Título exibido na navegação.
   title: { pt-BR: "Fila de duplicados", en: "Duplicate queue" }
+  // Tipo da view: caixa de entrada de trabalho.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager, Auditor]
-  scope: lanes
-  groupBy: lane
-  filter { lane in currentUser.lanes }
-  columns { title; subject; lane; dueAt; priority }
+  // Escopo por papel: cada usuário vê os itens do seu papel.
+  scope: roles
+  // Agrupa os itens da fila pelo papel do usuário.
+  groupBy: role
+  // Filtro: só exibe itens dos papéis do usuário atual.
+  filter { role in currentUser.roles }
+  // Colunas exibidas na lista.
+  columns { title; subject; role; dueAt; priority }
 }

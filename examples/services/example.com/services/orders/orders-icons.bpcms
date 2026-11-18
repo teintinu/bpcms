@@ -1,29 +1,43 @@
 // service: example.com/services/orders
 
+// Ícone do estado Rascunho.
 icon Draft {
+  // Título exibido na interface.
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
+// Ícone do estado Realizado.
 icon Placed {
+  // Título exibido na interface.
   title: { pt-BR: "Realizado", en: "Placed" }
 }
 
+// Ícone do estado Reservado.
 icon Reserved {
+  // Título exibido na interface.
   title: { pt-BR: "Reservado", en: "Reserved" }
 }
 
+// Ícone do estado Cancelamento solicitado.
 icon CancellationRequested {
+  // Título exibido na interface.
   title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
 }
 
+// Ícone do estado Cancelamento aprovado.
 icon CancellationApproved {
+  // Título exibido na interface.
   title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
 }
 
+// Ícone do estado Cancelado.
 icon Cancelled {
+  // Título exibido na interface.
   title: { pt-BR: "Cancelado", en: "Cancelled" }
 }
 
+// Ícone do estado Atendido.
 icon Fulfilled {
+  // Título exibido na interface.
   title: { pt-BR: "Atendido", en: "Fulfilled" }
 }

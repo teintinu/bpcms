@@ -1,65 +1,81 @@
 // service: example.com/services/payments
 
+// Ícone do estado pendente de pagamento.
 icon Pending {
-  title: { pt-BR: "Pendente", en: "Pending" }
+  title: { pt-BR: "Pendente", en: "Pending" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado autorizado de pagamento.
 icon Authorized {
-  title: { pt-BR: "Autorizado", en: "Authorized" }
+  title: { pt-BR: "Autorizado", en: "Authorized" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado capturado de pagamento.
 icon Captured {
-  title: { pt-BR: "Capturado", en: "Captured" }
+  title: { pt-BR: "Capturado", en: "Captured" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado de falha de pagamento.
 icon Failed {
-  title: { pt-BR: "Falhou", en: "Failed" }
+  title: { pt-BR: "Falhou", en: "Failed" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado reembolsado de pagamento.
 icon Refunded {
-  title: { pt-BR: "Reembolsado", en: "Refunded" }
+  title: { pt-BR: "Reembolsado", en: "Refunded" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado solicitado de reembolso.
 icon Requested {
-  title: { pt-BR: "Solicitado", en: "Requested" }
+  title: { pt-BR: "Solicitado", en: "Requested" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado aprovado de reembolso.
 icon Approved {
-  title: { pt-BR: "Aprovado", en: "Approved" }
+  title: { pt-BR: "Aprovado", en: "Approved" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado concluído de reembolso.
 icon Completed {
-  title: { pt-BR: "Concluído", en: "Completed" }
+  title: { pt-BR: "Concluído", en: "Completed" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado rejeitado de reembolso.
 icon Rejected {
-  title: { pt-BR: "Rejeitado", en: "Rejected" }
+  title: { pt-BR: "Rejeitado", en: "Rejected" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado aberto de contestação.
 icon Open {
-  title: { pt-BR: "Aberta", en: "Open" }
+  title: { pt-BR: "Aberta", en: "Open" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado em análise de contestação.
 icon UnderReview {
-  title: { pt-BR: "Em análise", en: "Under review" }
+  title: { pt-BR: "Em análise", en: "Under review" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado ganho de contestação.
 icon Won {
-  title: { pt-BR: "Ganha", en: "Won" }
+  title: { pt-BR: "Ganha", en: "Won" } // Título exibido junto ao ícone.
 }
 
+// Ícone do estado perdido de contestação.
 icon Lost {
-  title: { pt-BR: "Perdida", en: "Lost" }
+  title: { pt-BR: "Perdida", en: "Lost" } // Título exibido junto ao ícone.
 }
 
+// Ícone do método de pagamento por cartão de crédito.
 icon CreditCard {
-  title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+  title: { pt-BR: "Cartão de crédito", en: "Credit card" } // Título exibido junto ao ícone.
 }
 
+// Ícone do método de pagamento Pix.
 icon Pix {
-  title: { pt-BR: "Pix", en: "Pix" }
+  title: { pt-BR: "Pix", en: "Pix" } // Título exibido junto ao ícone.
 }
 
+// Ícone do método de pagamento por boleto.
 icon Boleto {
-  title: { pt-BR: "Boleto", en: "Boleto" }
+  title: { pt-BR: "Boleto", en: "Boleto" } // Título exibido junto ao ícone.
 }

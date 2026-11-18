@@ -1,0 +1,41 @@
+// service: example.com/services/checkout
+
+// Integração com o gateway de frete, usada para cotar a entrega.
+integration FreightGateway {
+  // Protocolo de transporte da integração.
+  protocol: rest
+  // URL base lida da variável de ambiente FREIGHT_URL.
+  baseUrl: env.FREIGHT_URL
+  // Autenticação por chave de API.
+  auth: api-key
+  // Tempo máximo de espera por resposta.
+  timeout: 10s
+  // Envia cabeçalho de idempotência para evitar cotação duplicada.
+  idempotency: header "Idempotency-Key"
+
+  // Operações expostas pela integração.
+  operations {
+    // Cota o frete de uma sessão e devolve a oferta.
+    quote(session: CheckoutSession): FreightOffer
+  }
+}
+
+// Integração com o gateway de pagamento, usada para autorizar a compra.
+integration PaymentGateway {
+  // Protocolo de transporte da integração.
+  protocol: rest
+  // URL base lida da variável de ambiente PAYMENT_URL.
+  baseUrl: env.PAYMENT_URL
+  // Autenticação via OAuth2.
+  auth: oauth2
+  // Tempo máximo de espera por resposta.
+  timeout: 15s
+  // Envia cabeçalho de idempotência para não autorizar duas vezes.
+  idempotency: header "Idempotency-Key"
+
+  // Operações expostas pela integração.
+  operations {
+    // Autoriza o total na forma de pagamento e devolve o código.
+    authorize(total: std.Money, method: PaymentMethod): string
+  }
+}

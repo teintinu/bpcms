@@ -1,21 +1,31 @@
 // service: example.com/services/identity
 
+// Ícone do estado ativo, usado pelo shape UserStatus.
 icon Active {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Ativo", en: "Active" }
 }
 
+// Ícone do estado suspenso, usado pelo shape UserStatus.
 icon Suspended {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Suspenso", en: "Suspended" }
 }
 
+// Ícone do estado desativado, usado pelo shape UserStatus.
 icon Disabled {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Desativado", en: "Disabled" }
 }
 
+// Ícone do estado encerrado, usado pelo shape SessionStatus.
 icon Ended {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Encerrada", en: "Ended" }
 }
 
+// Ícone do estado expirado, usado pelo shape SessionStatus.
 icon Expired {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Expirada", en: "Expired" }
 }

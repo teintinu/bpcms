@@ -1,29 +1,51 @@
 // service: example.com/services/hr
+// Views compartilhadas do serviço de RH.
 
+// Painel de indicadores de pessoas.
 view PeopleDashboard {
+  // Título exibido na navegação.
   title: { pt-BR: "Painel de pessoas", en: "People dashboard" }
+  // Tipo da view: painel de indicadores.
   type: dashboard
+  // Documentos que alimentam os indicadores.
   sources: [Employee, Candidate, AccessGrant]
+  // Papéis que podem abrir o painel.
   roles: [PeopleOps, HiringManager]
+  // Atualização contínua dos dados exibidos.
   mode: live
 
+  // Filtros disponíveis no painel.
   filters { department; status; period }
+  // Indicadores calculados sobre os documentos.
   metrics {
+    // Colaboradores com situação ativa.
     headcount: count(Employee) where Employee.status == Active
+    // Colaboradores em integração.
     onboarding: count(Employee) where Employee.status == Onboarding
+    // Colaboradores em desligamento.
     offboarding: count(Employee) where Employee.status == Offboarding
+    // Candidatos ainda em processo, nem contratados nem recusados.
     openCandidates: count(Candidate) where Candidate.status != Hired and Candidate.status != Rejected
+    // Acessos solicitados e ainda não provisionados.
     pendingAccess: count(AccessGrant) where AccessGrant.status == Requested
   }
+  // Defasagem máxima aceita para os dados do painel.
   freshness: 15m
 }
 
+// Caixa de tarefas de pessoas do usuário.
 view PeopleWork {
+  // Título exibido na navegação.
   title: { pt-BR: "Minhas tarefas de pessoas", en: "My people work" }
+  // Tipo da view: caixa de entrada de tarefas.
   type: inbox
+  // Papéis que podem abrir a caixa de tarefas.
   roles: [PeopleOps, ITAdmin, HiringManager]
+  // Restringe a exibição às tarefas atribuídas ao usuário.
   scope: mine
+  // Agrupa as tarefas por processo.
   groupBy: process
 
-  columns { title; subject; lane; dueAt; priority }
+  // Colunas exibidas na lista de tarefas.
+  columns { title; subject; dueAt; priority }
 }

@@ -1,17 +1,25 @@
 // service: example.com/services/fraud-checkout
 
+// Ícone do estado pendente da verificação.
 icon Pending {
+  // Título exibido no builder.
   title: { pt-BR: "Pendente", en: "Pending" }
 }
 
+// Ícone do estado avaliada da verificação.
 icon Evaluated {
+  // Título exibido no builder.
   title: { pt-BR: "Avaliada", en: "Evaluated" }
 }
 
+// Ícone do estado aprovada da verificação.
 icon Approved {
+  // Título exibido no builder.
   title: { pt-BR: "Aprovada", en: "Approved" }
 }
 
+// Ícone do estado rejeitada da verificação.
 icon Rejected {
+  // Título exibido no builder.
   title: { pt-BR: "Rejeitada", en: "Rejected" }
 }

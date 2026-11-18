@@ -1,416 +1,696 @@
 // service: example.com/services/orders
 
+// Documento agregado que representa o pedido e concentra o ciclo de vida da compra.
 document Order {
+  // Título legível exibido na interface.
   title: { pt-BR: "Pedido", en: "Order" }
+  // Versão do artefato; diff e release comparam este número.
   version: 2
+  // Área responsável pelo documento.
   owner: "Orders"
+  // Modo de sincronização em tempo real entre cliente e servidor.
   sync: live
 
+  // Campos que compõem o pedido.
   fields {
+    // Cliente dono do pedido, referenciando o User do serviço de identidade.
     customer: User {
+      // Título exibido no formulário.
       title: { pt-BR: "Cliente", en: "Customer" }
+      // Permite localizar pedidos pelo cliente.
       lookup
     }
+    // Itens do pedido; cada linha é um OrderItem com produto e quantidade.
     items: OrderItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    // Soma dos totais dos itens, calculada pelo servidor.
     subtotal: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Subtotal", en: "Subtotal" }
+      // Moeda do valor em reais.
       currency: BRL
+      // Fórmula que agrega o total de cada item.
       computed: items.sum(total)
     }
+    // Desconto aplicado sobre o subtotal.
     discount: std.Money { title: { pt-BR: "Desconto", en: "Discount" }, currency: BRL }
+    // Total a pagar, derivado do subtotal menos o desconto.
     total: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
+      // Permite localizar e filtrar pedidos pelo total.
       lookup
+      // Moeda do valor em reais.
       currency: BRL
+      // Fórmula que calcula o total líquido.
       computed: subtotal - discount
     }
+    // Situação atual do pedido dentro do shape OrderStatus.
     status: OrderStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data em que o pedido foi realizado.
     placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
+    // Data em que os itens foram reservados no estoque.
     reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
+    // Data em que o pedido foi cancelado.
     cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+    // Data em que o pedido cancelado foi reaberto.
     reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
+    // Data em que o pedido foi atendido.
     fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
+    // Motivo textual registrado no cancelamento.
     cancellationReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      // Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
+    // Observações livres do atendente sobre o pedido.
     notes: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Observações", en: "Notes" }
+      // Limita as observações a mil caracteres.
       maxLength: 1000
     }
+    // Data de criação do registro.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" }, lookup }
   }
 
+  // Índices que aceleram consultas frequentes sobre os pedidos.
   indexes {
+    // Índice por cliente e data para listar o histórico em faixa.
     byCustomer: [customer.id, createdAt] range
+    // Índice por situação e data para funis e filas em faixa.
     byStatus: [status, createdAt] range
   }
 
 
+  // Ações que mudam o estado do pedido e disparam eventos do processo.
   actions {
+    // Cria o pedido com cliente e desconto, marcando data e emitindo Drafted.
     create(customer: User, discount: std.Percentage) {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Criar pedido", en: "Create order" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Corpo executado na criação.
       {
+        // Registra o instante de criação.
         createdAt = now()
+        // Emite o evento que inicia o processo de entrada.
         emit Drafted
       }
     }
 
+    // Adiciona um item ao pedido validando a quantidade.
     addItem(product: Product, quantity: std.Count) {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Adicionar item", en: "Add item" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Regra que rejeita quantidades não positivas.
       rule quantity > 0 {
+        // Mensagem da regra em português.
         pt-BR: "A quantidade deve ser maior que zero"
+        // Mensagem da regra em inglês.
         en: "Quantity must be greater than zero"
       }
     }
 
+    // Grava uma anotação livre nas observações do pedido.
     annotate(note: string) {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Anotar", en: "Annotate" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Corpo executado ao anotar.
       {
+        // Substitui as observações pelo texto informado.
         notes = note
       }
     }
 
+    // Realiza o pedido, exigindo ao menos um item e registrando a data.
     place() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Realizar pedido", en: "Place order" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
 
+      // Transição para a situação Placed.
       to: status.Placed
 
+      // Regra que exige pelo menos um item no pedido.
       rule items.length > 0 {
+        // Mensagem da regra em português.
         pt-BR: "Adicione ao menos um item"
+        // Mensagem da regra em inglês.
         en: "Add at least one item"
       }
+      // Corpo executado na realização.
       {
+        // Registra o instante em que o pedido foi realizado.
         placedAt = now()
       }
     }
 
+    // Confirma a reserva de estoque, avançando a situação do pedido.
     confirmReservation() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Confirmar reserva", en: "Confirm reservation" }
+      // Papéis autorizados a executar a ação.
       roles: [OrderEngine]
 
+      // Transição para a situação Reserved.
       to: status.Reserved
+      // Corpo executado ao confirmar a reserva.
       {
+        // Registra o instante em que a reserva foi confirmada.
         reservedAt = now()
       }
     }
 
+    // Abre a solicitação de cancelamento com o motivo informado.
     requestCancellation(reason: string) {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Solicitar cancelamento", en: "Request cancellation" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk, Manager]
 
+      // Transição para a situação CancellationRequested.
       to: status.CancellationRequested
 
+      // Regra que exige um motivo com pelo menos dez caracteres.
       rule reason.length >= 10 {
+        // Mensagem da regra em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        // Mensagem da regra em inglês.
         en: "Enter a reason with at least 10 characters"
       }
+      // Corpo executado ao abrir a solicitação.
       {
+        // Guarda o motivo para a análise do gerente.
         cancellationReason = reason
       }
     }
 
+    // Aprova o cancelamento já solicitado.
     approveCancellation() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Aprovar cancelamento", en: "Approve cancellation" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
 
+      // Transição para a situação CancellationApproved.
       to: status.CancellationApproved
     }
 
+    // Recusa o cancelamento e devolve o pedido para Placed.
     rejectCancellation() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Recusar cancelamento", en: "Reject cancellation" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
 
+      // Transição de volta para a situação Placed.
       to: status.Placed
     }
 
+    // Cancela o pedido com o motivo e registra a data do cancelamento.
     cancel(reason: string) {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Cancelar", en: "Cancel" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk, Manager, OrderEngine]
 
+      // Transição para a situação Cancelled.
       to: status.Cancelled
 
+      // Regra que exige um motivo com pelo menos dez caracteres.
       rule reason.length >= 10 {
+        // Mensagem da regra em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        // Mensagem da regra em inglês.
         en: "Enter a reason with at least 10 characters"
       }
+      // Corpo executado no cancelamento.
       {
+        // Guarda o motivo do cancelamento no documento.
         cancellationReason = reason
+        // Registra o instante do cancelamento.
         cancelledAt = now()
       }
     }
 
+    // Reabre um pedido cancelado, devolvendo-o para Placed.
     reopen() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Reabrir", en: "Reopen" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager, OrderEngine]
 
+      // Transição de volta para a situação Placed.
       to: status.Placed
+      // Corpo executado ao reabrir.
       {
+        // Registra o instante em que o pedido foi reaberto.
         reopenedAt = now()
       }
     }
 
+    // Marca o pedido como atendido após a entrega.
     fulfill() {
+      // Título exibido no botão da interface.
       title: { pt-BR: "Atender", en: "Fulfill" }
+      // Papéis autorizados a executar a ação.
       roles: [OrderEngine]
 
+      // Transição para a situação Fulfilled.
       to: status.Fulfilled
+      // Corpo executado ao atender.
       {
+        // Registra o instante em que o pedido foi atendido.
         fulfilledAt = now()
       }
     }
   }
 
+  // Invariante: todo pedido realizado precisa ter a data de realização.
   rule status == Placed implies placedAt != null {
+    // Mensagem da regra em português.
     pt-BR: "Informe a data do pedido"
+    // Mensagem da regra em inglês.
     en: "Enter the order date"
   }
+  // Invariante que limita o pedido a cinquenta itens.
   rule items.count <= 50 {
+    // Mensagem da regra em português.
     pt-BR: "O pedido excede o limite de 50 itens"
+    // Mensagem da regra em inglês.
     en: "Order exceeds the 50 item limit"
   }
 }
 
+// Forma que descreve uma linha de item do pedido.
 shape OrderItem {
+  // Título exibido na interface.
   title: { pt-BR: "Item de pedido", en: "Order item" }
 
+  // Campos que compõem o item.
   fields {
+    // Produto comprado, referenciando o catálogo.
     product: Product {
+      // Título exibido no formulário.
       title: { pt-BR: "Produto", en: "Product" }
+      // Permite localizar itens pelo produto.
       lookup
     }
+    // Quantidade comprada do produto.
     quantity: std.Count {
+      // Título exibido no formulário.
       title: { pt-BR: "Quantidade", en: "Quantity" }
+      // Permite localizar itens pela quantidade.
       lookup
+      // Mínimo de uma unidade por item.
       min: 1
+      // Máximo de mil unidades por item.
       max: 1000
+      // Torna a quantidade obrigatória.
       required
     }
+    // Preço unitário do produto no momento da compra.
     unitPrice: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Preço unitário", en: "Unit price" }
+      // Moeda do valor em reais.
       currency: BRL
     }
+    // Total da linha, calculado pela quantidade vezes o preço unitário.
     total: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
+      // Moeda do valor em reais.
       currency: BRL
+      // Fórmula que calcula o total do item.
       computed: quantity * unitPrice
     }
   }
 }
 
+// Forma de estado que modela a situação do pedido e suas transições.
 shape OrderStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do pedido", en: "Order status" }
+  // Base do shape: uma máquina de estados.
   base: state
+  // Estado inicial Draft e transição que o ativa ao criar o pedido.
   initial: Draft with transition Drafted {
+    // Título da transição exibido no histórico.
     title: { pt-BR: "Pedido criado", en: "Order drafted" }
+    // Dados carregados pelo evento Drafted.
     payload {
+      // Cliente do pedido recém-criado.
       customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+      // Data de criação do pedido.
       createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
     }
   }
 
+  // Estado Rascunho, primeiro valor do ciclo de vida.
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado.
     icon: Draft
+    // Ordem do estado na linha do tempo.
     ordinal: 10
 
+    // Transição que realiza o pedido.
     transition Placed {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Pedido realizado", en: "Order placed" }
+      // Dados carregados pelo evento de realização.
       payload {
+        // Cliente do pedido realizado.
         customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        // Total do pedido realizado.
         total: std.Money { title: { pt-BR: "Total", en: "Total" } }
+        // Data em que o pedido foi realizado.
         placedAt: DateTime { title: { pt-BR: "Realizado em", en: "Placed at" } }
       }
     }
 
+    // Transição que cancela o pedido diretamente do rascunho.
     transition Cancelled {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      // Dados carregados pelo evento de cancelamento.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        // Data do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
       }
     }
   }
+  // Estado Realizado, com estoque ainda não reservado.
   value Placed {
+    // Título exibido na interface.
     title: { pt-BR: "Realizado", en: "Placed" }
+    // Ícone associado ao estado.
     icon: Placed
+    // Ordem do estado na linha do tempo.
     ordinal: 20
 
+    // Transição que reserva o estoque do pedido.
     transition Reserved {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Estoque reservado", en: "Stock reserved" }
+      // Dados carregados pela confirmação da reserva.
       payload {
+        // Data em que a reserva foi feita.
         reservedAt: DateTime { title: { pt-BR: "Reservado em", en: "Reserved at" } }
       }
     }
 
+    // Transição que abre uma solicitação de cancelamento.
     transition CancellationRequested {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      // Dados carregados pela solicitação.
       payload {
+        // Motivo informado na solicitação.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado Reservado, com estoque garantido para o pedido.
   value Reserved {
+    // Título exibido na interface.
     title: { pt-BR: "Reservado", en: "Reserved" }
+    // Ícone associado ao estado.
     icon: Reserved
+    // Ordem do estado na linha do tempo.
     ordinal: 30
 
+    // Transição que abre uma solicitação de cancelamento.
     transition CancellationRequested {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+      // Dados carregados pela solicitação.
       payload {
+        // Motivo informado na solicitação.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição que atende o pedido reservado.
     transition Fulfilled {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Pedido atendido", en: "Order fulfilled" }
+      // Dados carregados pelo atendimento.
       payload {
+        // Data em que o pedido foi atendido.
         fulfilledAt: DateTime { title: { pt-BR: "Atendido em", en: "Fulfilled at" } }
       }
     }
   }
+  // Estado Cancelamento solicitado, aguardando decisão do gerente.
   value CancellationRequested {
+    // Título exibido na interface.
     title: { pt-BR: "Cancelamento solicitado", en: "Cancellation requested" }
+    // Ícone associado ao estado.
     icon: CancellationRequested
+    // Ordem do estado na linha do tempo.
     ordinal: 40
 
+    // Transição que aprova o cancelamento solicitado.
     transition CancellationApproved {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+      // Dados carregados pela aprovação.
       payload {
+        // Motivo registrado no cancelamento aprovado.
         cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição que recusa o cancelamento e devolve o pedido para Placed.
     transition Placed {
+      // Evento que dispara a devolução do pedido.
       event: CancellationRejected
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Cancelamento recusado", en: "Cancellation rejected" }
+      // Dados carregados pela recusa.
       payload {
+        // Motivo registrado na recusa do cancelamento.
         cancellationReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado Cancelamento aprovado, pronto para efetivar o cancelamento.
   value CancellationApproved {
+    // Título exibido na interface.
     title: { pt-BR: "Cancelamento aprovado", en: "Cancellation approved" }
+    // Ícone associado ao estado.
     icon: CancellationApproved
+    // Ordem do estado na linha do tempo.
     ordinal: 50
 
+    // Transição que efetiva o cancelamento do pedido.
     transition Cancelled {
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Order cancelled" }
+      // Dados carregados pelo cancelamento.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        // Data do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
       }
     }
   }
+  // Estado Cancelado, estado final do ciclo de vida.
   value Cancelled {
+    // Título exibido na interface.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
+    // Ícone associado ao estado.
     icon: Cancelled
+    // Ordem do estado na linha do tempo.
     ordinal: 60
 
+    // Transição que reabre um pedido cancelado.
     transition Placed {
+      // Evento que dispara a reabertura do pedido.
       event: Reopened
+      // Título da transição exibido no histórico.
       title: { pt-BR: "Pedido reaberto", en: "Order reopened" }
+      // Dados carregados pela reabertura.
       payload {
+        // Data em que o pedido foi reaberto.
         reopenedAt: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
       }
     }
   }
+  // Estado Atendido, encerrando o pedido com entrega concluída.
   value Fulfilled {
+    // Título exibido na interface.
     title: { pt-BR: "Atendido", en: "Fulfilled" }
+    // Ícone associado ao estado.
     icon: Fulfilled
+    // Ordem do estado na linha do tempo.
     ordinal: 70
   }
 
+  // Formato de exibição simples do estado.
   format: plain
 }
 
+// View de relatório que acompanha o funil de pedidos.
 view OrderPipeline {
+  // Título exibido na navegação.
   title: { pt-BR: "Funil de pedidos", en: "Order pipeline" }
+  // Tipo da view: relatório.
   type: report
+  // Documentos consultados pelo relatório.
   sources: [Order]
+  // Papéis que podem abrir a view.
   roles: [Manager]
 
+  // Filtros disponíveis no relatório.
   filters { period; status }
+  // Métricas calculadas sobre os pedidos.
   metrics {
+    // Conta os pedidos na situação Placed.
     placed: count(Order) where status == Placed
+    // Conta os pedidos na situação Cancelled.
     cancelled: count(Order) where status == Cancelled
+    // Soma o total dos pedidos não cancelados.
     revenue: sum(Order.total) where status != Cancelled
+    // Calcula o ticket médio dos pedidos.
     avgTicket: avg(Order.total)
   }
+  // Unidades monetárias das métricas.
   units { revenue: BRL; avgTicket: BRL }
+  // Idade máxima dos dados antes de atualizar.
   freshness: 10m
+  // Formatos de exportação disponíveis.
   export: [pdf, csv]
 }
 
+// View de painel que mostra o pulso operacional dos pedidos.
 view OrderPulse {
+  // Título exibido na navegação.
   title: { pt-BR: "Pulso dos pedidos", en: "Order pulse" }
+  // Tipo da view: painel.
   type: dashboard
+  // Documentos consultados pelo painel.
   sources: [Order]
+  // Papéis que podem abrir a view.
   roles: [Manager]
+  // Atualização em tempo real do painel.
   mode: live
 
+  // Filtros disponíveis no painel.
   filters { status }
+  // Métricas calculadas sobre os pedidos.
   metrics {
+    // Pedidos em rascunho aguardando revisão.
     awaitingReview: count(Order) where status == Draft
+    // Pedidos realizados aguardando reserva.
     awaitingReservation: count(Order) where status == Placed
+    // Pedidos aguardando decisão de cancelamento.
     awaitingDecision: count(Order) where status == CancellationRequested
   }
+  // Idade máxima dos dados antes de atualizar.
   freshness: 5m
 }
 
+// View de tabela que lista os pedidos para a operação.
 view OrderList {
+  // Título exibido na navegação.
   title: { pt-BR: "Pedidos", en: "Orders" }
+  // Tipo da view: tabela.
   type: table
+  // Documento fonte da lista.
   source: Order
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
+  // Colunas exibidas na tabela.
   columns { customer; total; status; placedAt }
+  // Filtros disponíveis na tabela.
   filters { status; period; customer }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na lista.
   actions {
+    // Abre o detalhe do pedido selecionado.
     open -> OrderDetail
+    // Cria um novo pedido a partir da lista.
     newOrder -> Order.create(customer, discount)
+    // Solicita o cancelamento do pedido selecionado.
     requestCancellation -> Order.requestCancellation(reason)
   }
 }
 
+// View de detalhe que mostra um pedido e permite operá-lo.
 view OrderDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do pedido", en: "Order detail" }
+  // Tipo da view: detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: Order
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
+  // Seções fixas exibidas no detalhe.
   sections { summary; items; timeline }
+  // Ações disponíveis no detalhe.
   actions {
+    // Abre a view de andamento do processo.
     progress -> OrderProgress
+    // Cancela o pedido informando o motivo.
     cancel -> Order.cancel(reason)
+    // Reabre o pedido cancelado.
     reopen -> Order.reopen
   }
 }
 
+// View de quadro kanban que agrupa os pedidos por situação.
 view OrderBoard {
+  // Título exibido na navegação.
   title: { pt-BR: "Quadro de pedidos", en: "Order board" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento fonte do quadro.
   source: Order
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
+  // Campo usado para formar as colunas do quadro.
   groupBy: status
+  // Campos exibidos em cada cartão.
   card { customer; total; placedAt }
+  // Filtro que esconde pedidos cancelados.
   filter { status != Cancelled }
+  // Ações disponíveis no quadro.
   actions {
+    // Abre o detalhe do pedido do cartão.
     open -> OrderDetail
   }
 }
 
+// Política que exige aprovação de gerente para desconto acima de dez por cento.
 policy OrderDiscount {
+  // Ponto de aplicação da política.
   appliesTo: Order.place
+  // Desconto acima de 10% do subtotal só passa com aprovação de gerente.
   rule: discount <= subtotal * 10% or approver.role == Manager
+  // Gravidade: bloqueia a operação até ser satisfeita.
   severity: require
+  // Mensagem exibida quando a política barra a operação.
   message: "Desconto acima de 10% exige gerente"
+  // Registra a avaliação da política na auditoria.
   audit: true
 }

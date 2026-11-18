@@ -1,325 +1,537 @@
 // service: example.com/services/checkout
 
+// Documento que representa a sessão de finalização de uma compra.
 document CheckoutSession {
+  // Título exibido na interface.
   title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+  // Versão do documento; releases e diffs comparam este valor.
   version: 2
+  // Área responsável pelo documento.
   owner: "Checkout"
+  // Mantém as telas abertas sincronizadas ao vivo com o documento.
   sync: live
 
+  // Campos que compõem a sessão.
   fields {
+    // Cliente que está finalizando a compra.
     customer: User {
+      // Título exibido no formulário.
       title: { pt-BR: "Cliente", en: "Customer" }
+      // Permite localizar sessões pelo cliente.
       lookup
     }
+    // Valor total do pedido.
     total: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Total", en: "Total" }
+      // Permite localizar sessões pelo total.
       lookup
+      // Moeda do valor total.
       currency: BRL
     }
+    // Valor do frete registrado para a sessão.
     freight: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Frete", en: "Freight" }
+      // Moeda do valor do frete.
       currency: BRL
     }
+    // Prazo de entrega acordado, em dias.
     deliveryDays: std.Count {
+      // Título exibido no formulário.
       title: { pt-BR: "Prazo de entrega", en: "Delivery days" }
+      // Menor prazo aceito, em dias.
       min: 1
+      // Maior prazo aceito, em dias.
       max: 90
     }
+    // Forma de pagamento escolhida pelo cliente.
     paymentMethod: PaymentMethod {
+      // Título exibido no formulário.
       title: { pt-BR: "Método de pagamento", en: "Payment method" }
+      // Permite localizar sessões pela forma de pagamento.
       lookup
     }
+    // Código devolvido pelo gateway ao autorizar o pagamento.
     authorizationCode: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Código de autorização", en: "Authorization code" }
+      // Limita o código a sessenta caracteres.
       maxLength: 60
     }
+    // Situação atual da sessão no ciclo de vida.
     status: CheckoutStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar sessões pela situação.
       lookup
     }
+    // Data e hora em que a sessão foi criada.
     createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" } }
+    // Data e hora em que a compra foi confirmada.
     confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
   }
 
+  // Índices que aceleram as consultas mais frequentes.
   indexes {
+    // Ordena por cliente e data de criação para listar o histórico.
     byCustomer: [customer.id, createdAt] range
+    // Ordena por situação e data para filtros operacionais.
     byStatus: [status, createdAt] range
   }
 
 
+  // Ações que alteram a sessão.
   actions {
+    // Abre uma nova sessão de finalização para o cliente.
     create(customer: User, total: std.Money) {
+      // Título exibido na interface.
       title: { pt-BR: "Abrir sessão", en: "Open session" }
+      // Papéis autorizados a abrir a sessão.
       roles: [Customer]
       {
+        // Registra o instante de criação da sessão.
         createdAt = now()
       }
     }
 
+    // Valida o carrinho antes de seguir para o frete.
     validateCart() {
+      // Título exibido na interface.
       title: { pt-BR: "Validar carrinho", en: "Validate cart" }
+      // Papéis autorizados a validar o carrinho.
       roles: [Customer]
 
+      // Move a sessão para o estado Validated.
       to: status.Validated
 
+      // Regra de negócio avaliada antes da transição.
       rule total > 0 {
+        // Mensagem de erro em português.
         pt-BR: "O carrinho está vazio"
+        // Mensagem de erro em inglês.
         en: "The cart is empty"
       }
     }
 
+    // Registra o frete cotado e o prazo de entrega.
     quoteShipping(freightAmount: std.Money, days: std.Count) {
+      // Título exibido na interface.
       title: { pt-BR: "Registrar frete", en: "Record shipping" }
-      roles: [SessionEngine]
+      // Papéis autorizados a registrar o frete.
+      roles: [SessionEngine, SupportAgent]
 
+      // Move a sessão para o estado ShippingQuoted.
       to: status.ShippingQuoted
+      // Publica os valores de frete e prazo como dados da transição.
       emits { freight: freightAmount; deliveryDays: days }
 
+      // Regra de negócio: o frete não pode ser negativo.
       rule freightAmount >= 0 BRL {
+        // Mensagem de erro em português.
         pt-BR: "O frete não pode ser negativo"
+        // Mensagem de erro em inglês.
         en: "Freight cannot be negative"
       }
       {
+        // Grava o valor do frete no documento.
         freight = freightAmount
+        // Grava o prazo de entrega no documento.
         deliveryDays = days
       }
     }
 
+    // Registra o código de autorização devolvido pelo gateway.
     authorizePayment(authorization: string) {
+      // Título exibido na interface.
       title: { pt-BR: "Registrar autorização", en: "Record authorization" }
+      // Papéis autorizados a registrar a autorização.
       roles: [SessionEngine]
 
+      // Move a sessão para o estado PaymentAuthorized.
       to: status.PaymentAuthorized
+      // Publica o código de autorização como dado da transição.
       emits { authorizationCode: authorization }
 
+      // Regra de negócio: exige um código com tamanho mínimo.
       rule authorization.length >= 4 {
+        // Mensagem de erro em português.
         pt-BR: "Informe o código de autorização"
+        // Mensagem de erro em inglês.
         en: "Enter the authorization code"
       }
       {
+        // Grava o código de autorização no documento.
         authorizationCode = authorization
       }
     }
 
+    // Troca a forma de pagamento para uma nova tentativa.
     retryPayment(method: PaymentMethod) {
+      // Título exibido na interface.
       title: { pt-BR: "Trocar forma de pagamento", en: "Change payment method" }
+      // Papéis autorizados a trocar a forma de pagamento.
       roles: [Customer]
       {
+        // Atualiza a forma de pagamento escolhida.
         paymentMethod = method
       }
     }
 
+    // Abandona a compra, encerrando a sessão.
     abandon(reason: string) {
+      // Título exibido na interface.
       title: { pt-BR: "Abandonar compra", en: "Abandon purchase" }
+      // Papéis autorizados a abandonar a sessão.
       roles: [Customer, SupportAgent, SessionEngine]
 
+      // Move a sessão para o estado Abandoned.
       to: status.Abandoned
 
+      // Regra de negócio: exige um motivo suficientemente descritivo.
       rule reason.length >= 10 {
+        // Mensagem de erro em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        // Mensagem de erro em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
 
+    // Confirma a compra após a autorização do pagamento.
     confirmOrder() {
+      // Título exibido na interface.
       title: { pt-BR: "Confirmar compra", en: "Confirm purchase" }
+      // Papéis autorizados a confirmar a compra.
       roles: [SessionEngine]
 
+      // Move a sessão para o estado Confirmed.
       to: status.Confirmed
       {
+        // Registra o instante da confirmação.
         confirmedAt = now()
       }
     }
   }
 
+  // Invariante: toda sessão confirmada precisa ter data de confirmação.
   rule status == Confirmed implies confirmedAt != null {
+    // Mensagem de erro em português.
     pt-BR: "Informe a data de confirmação"
+    // Mensagem de erro em inglês.
     en: "Enter the confirmation date"
   }
 }
 
+// Forma de estado que modela o ciclo de vida da sessão.
 shape CheckoutStatus {
+  // Título exibido onde a forma aparece.
   title: { pt-BR: "Situação da finalização", en: "Checkout status" }
+  // Base "state": os valores são estados com transições.
   base: state
+  // Estado em que toda sessão começa.
   initial: Draft
 
+  // Estado inicial: carrinho ainda não validado.
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado.
     icon: Draft
+    // Ordem do estado nas listas e no funil.
     ordinal: 10
 
+    // Transição disparada quando o carrinho é validado.
     transition Validated {
+      // Evento que provoca a transição.
       event: CartValidated
+      // Título exibido na interface.
       title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+      // Dados que acompanham o evento.
       payload {
+        // Cliente que validou o carrinho.
         customer: User { title: { pt-BR: "Cliente", en: "Customer" } }
+        // Total do pedido no momento da validação.
         total: std.Money { title: { pt-BR: "Total", en: "Total" } }
       }
     }
 
+    // Transição que abandona a compra a partir do rascunho.
     transition Abandoned {
+      // Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      // Dados que acompanham o evento.
       payload {
+        // Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado com o carrinho validado, à espera do frete.
   value Validated {
+    // Título exibido na interface.
     title: { pt-BR: "Carrinho validado", en: "Cart validated" }
+    // Ícone associado ao estado.
     icon: Validated
+    // Ordem do estado nas listas e no funil.
     ordinal: 20
 
+    // Transição disparada após o registro do frete.
     transition ShippingQuoted {
+      // Título exibido na interface.
       title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+      // Dados que acompanham o evento.
       payload {
+        // Valor do frete registrado.
         freight: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
+        // Prazo de entrega registrado.
         deliveryDays: std.Count { title: { pt-BR: "Prazo", en: "Days" } }
       }
     }
 
+    // Transição que abandona a compra depois da validação.
     transition Abandoned {
+      // Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      // Dados que acompanham o evento.
       payload {
+        // Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado com o frete cotado, à espera do pagamento.
   value ShippingQuoted {
+    // Título exibido na interface.
     title: { pt-BR: "Frete cotado", en: "Shipping quoted" }
+    // Ícone associado ao estado.
     icon: ShippingQuoted
+    // Ordem do estado nas listas e no funil.
     ordinal: 30
 
+    // Transição disparada após a autorização do pagamento.
     transition PaymentAuthorized {
+      // Título exibido na interface.
       title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      // Dados que acompanham o evento.
       payload {
+        // Código devolvido pelo gateway.
         authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
       }
     }
 
+    // Transição que abandona a compra depois da cotação do frete.
     transition Abandoned {
+      // Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      // Dados que acompanham o evento.
       payload {
+        // Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado com o pagamento autorizado, à espera da confirmação.
   value PaymentAuthorized {
+    // Título exibido na interface.
     title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+    // Ícone associado ao estado.
     icon: PaymentAuthorized
+    // Ordem do estado nas listas e no funil.
     ordinal: 40
 
+    // Transição que abandona a compra mesmo após a autorização.
     transition Abandoned {
+      // Título exibido na interface.
       title: { pt-BR: "Compra abandonada", en: "Purchase abandoned" }
+      // Dados que acompanham o evento.
       payload {
+        // Motivo informado para o abandono.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição que confirma a compra.
     transition Confirmed {
+      // Título exibido na interface.
       title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
+      // Dados que acompanham o evento.
       payload {
+        // Instante em que a compra foi confirmada.
         confirmedAt: DateTime { title: { pt-BR: "Confirmada em", en: "Confirmed at" } }
       }
     }
   }
+  // Estado final de sucesso.
   value Confirmed {
+    // Título exibido na interface.
     title: { pt-BR: "Pedido confirmado", en: "Order confirmed" }
+    // Ícone associado ao estado.
     icon: Confirmed
+    // Ordem do estado nas listas e no funil.
     ordinal: 50
   }
+  // Estado final de abandono.
   value Abandoned {
+    // Título exibido na interface.
     title: { pt-BR: "Abandonada", en: "Abandoned" }
+    // Ícone associado ao estado.
     icon: Abandoned
+    // Ordem do estado nas listas e no funil.
     ordinal: 60
   }
 
+  // Formato de exibição simples, sem máscara.
   format: plain
 }
 
+// Forma de classificação com as formas de pagamento aceitas.
 shape PaymentMethod {
+  // Título exibido onde a forma aparece.
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
+  // Base "classification": valores sem transições, usados como categoria.
   base: classification
 
+  // Pagamento por cartão de crédito.
   value CreditCard {
+    // Título exibido na interface.
     title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    // Ícone associado à forma de pagamento.
     icon: CreditCard
+    // Ordem da opção nas listas.
     ordinal: 10
   }
+  // Pagamento por Pix.
   value Pix {
+    // Título exibido na interface.
     title: { pt-BR: "Pix", en: "Pix" }
+    // Ícone associado à forma de pagamento.
     icon: Pix
+    // Ordem da opção nas listas.
     ordinal: 20
   }
+  // Pagamento por boleto.
   value Boleto {
+    // Título exibido na interface.
     title: { pt-BR: "Boleto", en: "Boleto" }
+    // Ícone associado à forma de pagamento.
     icon: Boleto
+    // Ordem da opção nas listas.
     ordinal: 30
   }
 
+  // Formato de exibição simples, sem máscara.
   format: plain
 }
 
+// Relatório de funil: acompanha o avanço das sessões por etapa.
 view Funnel {
+  // Título exibido na navegação.
   title: { pt-BR: "Funil de finalização", en: "Checkout funnel" }
+  // Tipo da view: relatório agregado.
   type: report
+  // Documentos usados como fonte dos dados.
   sources: [CheckoutSession]
+  // Papéis que podem abrir o relatório.
   roles: [SupportAgent]
 
+  // Filtros oferecidos ao usuário.
   filters { period; status }
+  // Métricas calculadas sobre as sessões.
   metrics {
+    // Total de sessões iniciadas.
     started: count(CheckoutSession)
+    // Sessões que passaram do rascunho.
     validated: count(CheckoutSession) where status != Draft
+    // Sessões confirmadas.
     paid: count(CheckoutSession) where status == Confirmed
+    // Sessões abandonadas.
     abandoned: count(CheckoutSession) where status == Abandoned
+    // Receita somada das sessões confirmadas.
     revenue: sum(CheckoutSession.total) where status == Confirmed
   }
+  // Unidade usada pela métrica de receita.
   units { revenue: BRL }
+  // Idade máxima dos dados antes de recarregar.
   freshness: 10m
+  // Formatos de exportação permitidos.
   export: [pdf, csv]
 }
 
+// Painel ao vivo com o pulso operacional das sessões.
 view SessionPulse {
+  // Título exibido na navegação.
   title: { pt-BR: "Pulso das finalizações", en: "Session pulse" }
+  // Tipo da view: painel de indicadores.
   type: dashboard
+  // Documentos usados como fonte dos dados.
   sources: [CheckoutSession]
+  // Papéis que podem abrir o painel.
   roles: [SupportAgent]
+  // Atualização em tempo real enquanto o painel está aberto.
   mode: live
 
+  // Filtros oferecidos ao usuário.
   filters { status }
+  // Métricas calculadas sobre as sessões.
   metrics {
+    // Sessões aguardando pagamento.
     awaitingPayment: count(CheckoutSession) where status == PaymentAuthorized
+    // Sessões aguardando cotação de frete.
     awaitingQuote: count(CheckoutSession) where status == Validated
+    // Sessões abandonadas no dia.
     abandonedToday: count(CheckoutSession) where status == Abandoned
   }
+  // Idade máxima dos dados antes de recarregar.
   freshness: 1m
 }
 
+// Tabela com todas as sessões de finalização.
 view Sessions {
+  // Título exibido na navegação.
   title: { pt-BR: "Sessões de finalização", en: "Checkout sessions" }
+  // Tipo da view: tabela de registros.
   type: table
+  // Documento exibido nas linhas da tabela.
   source: CheckoutSession
+  // Papéis que podem abrir a tabela.
   roles: [SupportAgent, Customer]
 
+  // Colunas exibidas na tabela.
   columns { customer; total; status; createdAt }
+  // Filtros oferecidos ao usuário.
   filters { status; period; customer }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na tabela.
   actions {
+    // Abre o detalhe da sessão selecionada.
     open -> SessionDetail
+    // Cria uma nova sessão de finalização.
     startCheckout -> CheckoutSession.create(customer, total)
+    // Valida o carrinho da sessão.
     validate -> CheckoutSession.validateCart
+    // Abandona a sessão informando o motivo.
     abandon -> CheckoutSession.abandon(reason)
   }
 }
 
+// Detalhe de uma sessão de finalização.
 view SessionDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da sessão", en: "Session detail" }
+  // Tipo da view: tela de detalhe de registro.
   type: detail
+  // Documento exibido no detalhe.
   document: CheckoutSession
+  // Papéis que podem abrir o detalhe.
   roles: [SupportAgent, Customer]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; timeline }
+  // Ações disponíveis no detalhe.
   actions {
+    // Leva à view de andamento do processo.
     progress -> CheckoutProgress
   }
 }

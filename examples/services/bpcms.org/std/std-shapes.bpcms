@@ -1,2575 +1,3960 @@
+// Arquivo compartilhado de shapes do pseudo-serviço bpcms.org/std.
 // Pseudo-service bpcms.org/std: definido pelo builder, não publicado.
 // Modos: SI, imperial/US, CGS, astronômico, atômico/nuclear, química, dados e estatística.
 
+// Shape de comprimento: grandezas métricas, imperiais, náuticas e astronômicas.
 shape Length {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Comprimento", en: "Length" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada para compatibilidade e operadores entre shapes.
   dimension: length
+  // Catálogo de unidades aceitas; cada chave vira o símbolo escrito do valor.
   units {
+    // Metro: unidade-base do SI para comprimento.
     m: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "metro", other: "metros" }
-        en: { one: "meter", other: "meters" }
+        pt-BR: { one: "metro", other: "metros" } // português: singular/plural
+        en: { one: "meter", other: "meters" } // inglês: singular/plural
       }
     }
+    // Centímetro: centésimo do metro, comum em medidas domésticas.
     cm: {
+      // Fator de conversão: 1 cm vale 0,01 m.
       factor: 0.01
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "centímetro", other: "centímetros" }
-        en: { one: "centimeter", other: "centimeters" }
+        pt-BR: { one: "centímetro", other: "centímetros" } // português: singular/plural
+        en: { one: "centimeter", other: "centimeters" } // inglês: singular/plural
       }
     }
+    // Milímetro: milésimo do metro, usado em peças e tolerâncias.
     mm: {
+      // Fator de conversão: 1 mm vale 0,001 m.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milímetro", other: "milímetros" }
-        en: { one: "millimeter", other: "millimeters" }
+        pt-BR: { one: "milímetro", other: "milímetros" } // português: singular/plural
+        en: { one: "millimeter", other: "millimeters" } // inglês: singular/plural
       }
     }
+    // Micrômetro (mícron): milésimo do milímetro.
     um: {
+      // Fator de conversão: 1 µm vale 1e-6 m.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micrômetro", other: "micrômetros" }
-        en: { one: "micrometer", other: "micrometers" }
+        pt-BR: { one: "micrômetro", other: "micrômetros" } // português: singular/plural
+        en: { one: "micrometer", other: "micrometers" } // inglês: singular/plural
       }
     }
+    // Nanômetro: usado em microeletrônica e óptica.
     nm: {
+      // Fator de conversão: 1 nm vale 1e-9 m.
       factor: 1e-09
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "nanômetro", other: "nanômetros" }
-        en: { one: "nanometer", other: "nanometers" }
+        pt-BR: { one: "nanômetro", other: "nanômetros" } // português: singular/plural
+        en: { one: "nanometer", other: "nanometers" } // inglês: singular/plural
       }
     }
+    // Quilômetro: mil metros, usado em distâncias geográficas.
     km: {
+      // Fator de conversão: 1 km vale 1000 m.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilômetro", other: "quilômetros" }
-        en: { one: "kilometer", other: "kilometers" }
+        pt-BR: { one: "quilômetro", other: "quilômetros" } // português: singular/plural
+        en: { one: "kilometer", other: "kilometers" } // inglês: singular/plural
       }
     }
+    // Polegada: unidade do sistema imperial/US.
     in: {
+      // Fator de conversão: 1 in vale 0,0254 m.
       factor: 0.0254
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "polegada", other: "polegadas" }
-        en: { one: "inch", other: "inches" }
+        pt-BR: { one: "polegada", other: "polegadas" } // português: singular/plural
+        en: { one: "inch", other: "inches" } // inglês: singular/plural
       }
     }
+    // Pé: doze polegadas, usado em alturas e imóveis.
     ft: {
+      // Fator de conversão: 1 ft vale 0,3048 m.
       factor: 0.3048
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pé", other: "pés" }
-        en: { one: "foot", other: "feet" }
+        pt-BR: { one: "pé", other: "pés" } // português: singular/plural
+        en: { one: "foot", other: "feet" } // inglês: singular/plural
       }
     }
+    // Jarda: três pés, usada em tecidos e esportes.
     yd: {
+      // Fator de conversão: 1 yd vale 0,9144 m.
       factor: 0.9144
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "jarda", other: "jardas" }
-        en: { one: "yard", other: "yards" }
+        pt-BR: { one: "jarda", other: "jardas" } // português: singular/plural
+        en: { one: "yard", other: "yards" } // inglês: singular/plural
       }
     }
+    // Milha terrestre: usada em rodovias dos EUA e Reino Unido.
     mi: {
+      // Fator de conversão: 1 mi vale 1609,344 m.
       factor: 1609.344
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milha", other: "milhas" }
-        en: { one: "mile", other: "miles" }
+        pt-BR: { one: "milha", other: "milhas" } // português: singular/plural
+        en: { one: "mile", other: "miles" } // inglês: singular/plural
       }
     }
+    // Milha náutica: usada em navegação marítima e aérea.
     nmi: {
+      // Fator de conversão: 1 nmi vale exatamente 1852 m.
       factor: 1852
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milha náutica", other: "milhas náuticas" }
-        en: { one: "nautical mile", other: "nautical miles" }
+        pt-BR: { one: "milha náutica", other: "milhas náuticas" } // português: singular/plural
+        en: { one: "nautical mile", other: "nautical miles" } // inglês: singular/plural
       }
     }
+    // Unidade astronômica: distância média Terra–Sol.
     AU: {
+      // Fator em metros: 1 AU vale 149 597 870 700 m.
       factor: 149597870700
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "unidade astronômica", other: "unidades astronômicas" }
-        en: { one: "astronomical unit", other: "astronomical units" }
+        pt-BR: { one: "unidade astronômica", other: "unidades astronômicas" } // português: singular/plural
+        en: { one: "astronomical unit", other: "astronomical units" } // inglês: singular/plural
       }
     }
+    // Ano-luz: distância percorrida pela luz em um ano juliano.
     ly: {
+      // Fator em metros conforme a definição IAU.
       factor: 9460730472580800
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "ano-luz", other: "anos-luz" }
-        en: { one: "light-year", other: "light-years" }
+        pt-BR: { one: "ano-luz", other: "anos-luz" } // português: singular/plural
+        en: { one: "light-year", other: "light-years" } // inglês: singular/plural
       }
     }
+    // Parsec: distância em que 1 UA subtende 1 segundo de arco.
     pc: {
+      // Fator em metros (notação científica para não perder precisão).
       factor: 3.085677581e+16
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "parsec", other: "parsecs" }
-        en: { one: "parsec", other: "parsecs" }
+        pt-BR: { one: "parsec", other: "parsecs" } // português: singular/plural
+        en: { one: "parsec", other: "parsecs" } // inglês: singular/plural
       }
     }
+    // Angstrom: usado em cristalografia e espectroscopia.
     angstrom: {
+      // Fator em metros: 1 Å vale 1e-10 m.
       factor: 1e-10
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "angstrom", other: "angstroms" }
-        en: { one: "angstrom", other: "angstroms" }
+        pt-BR: { one: "angstrom", other: "angstroms" } // português: singular/plural
+        en: { one: "angstrom", other: "angstroms" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "10 cm").
   parse: quantity
+  // Soma valores convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar/ordenar valores de unidades diferentes.
   index: normalized
 
+  // Extrai o número bruto para cálculos externos ao shape.
   toNumber(value) {
+    // Devolve o valor sem a unidade anexada.
     return value.raw;
   }
 
+  // Serializa o valor para armazenamento, preservando a unidade escolhida.
   write(value, out) {
+    // Assume metro quando o valor não traz unidade explícita.
     const unit = value.unit ?? m;
+    // Grava o símbolo da unidade no fluxo.
     out.writeString(unit);
+    // Grava o número bruto no fluxo.
     out.writeDouble(value.raw);
   }
 
+  // Reconstrói o valor a partir do fluxo serializado.
   read(in) {
+    // Lê o símbolo da unidade gravado antes do número.
     const unit = in.readString();
+    // Lê o número bruto na mesma ordem da escrita.
     const raw = in.readDouble();
+    // Remonta o comprimento com unidade e valor lidos.
     return new Length{raw, unit};
   }
 
+  // Converte texto livre em um Length, aceitando a unidade digitada.
   parse(text, flags) {
+    // Interpreta a quantidade textual e separa número e unidade.
     const {value, unit} = parseQuantity(text, flags);
+    // Cria o Length já com a unidade detectada.
     return new Length{raw: value, unit};
   }
 
+  // Formata o valor para exibição, escolhendo a melhor unidade por padrão.
   format(value, flags) {
+    // Unidade de origem; metro quando não informada.
     const from = value.unit ?? m;
+    // Respeita a unidade pedida ou escolhe a mais legível para o número.
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    // Delega a formatação numérica ao formatador real compartilhado.
     return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 
+  // Soma dois comprimentos convertendo o direito para a unidade do esquerdo.
   operator +(left: Length, right: Length): Length {
+    // Converte o operando direito para a unidade do operando esquerdo.
     const rightInLeft = convert(right.raw, right.unit, left.unit);
+    // Soma os valores já na mesma unidade.
     return new Length{raw: left.raw + rightInLeft, unit: left.unit};
   }
 
+  // Subtrai comprimentos convertendo o direito para a unidade do esquerdo.
   operator -(left: Length, right: Length): Length {
+    // Converte o operando direito para a unidade do operando esquerdo.
     const rightInLeft = convert(right.raw, right.unit, left.unit);
+    // Subtrai os valores já na mesma unidade.
     return new Length{raw: left.raw - rightInLeft, unit: left.unit};
   }
 
+  // Multiplica dois comprimentos e produz área.
   operator *(left: Length, right: Length): Area {
+    // Converte o lado esquerdo para metros antes do produto.
     const l = convert(left.raw, left.unit, m);
+    // Converte o lado direito para metros antes do produto.
     const r = convert(right.raw, right.unit, m);
+    // Resultado em metros quadrados.
     return new Area{raw: l * r, unit: m2};
   }
 
+  // Divide comprimento por duração e produz velocidade.
   operator /(left: Length, right: Duration): Speed {
+    // Converte a distância para metros.
     const l = convert(left.raw, left.unit, m);
+    // Converte o tempo para segundos.
     const r = convert(right.raw, right.unit, s);
+    // Resultado em metros por segundo.
     return new Speed{raw: l / r, unit: m_s};
   }
 }
 
+// Shape de massa: cobre SI, imperial, pedras, quilates e massas astronômicas.
 shape Mass {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Massa", en: "Mass" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada para compatibilidade e operadores.
   dimension: mass
+  // Catálogo de unidades de massa aceitas.
   units {
+    // Grama: unidade-base da dimensão massa neste shape.
     g: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grama", other: "gramas" }
-        en: { one: "gram", other: "grams" }
+        pt-BR: { one: "grama", other: "gramas" } // português: singular/plural
+        en: { one: "gram", other: "grams" } // inglês: singular/plural
       }
     }
+    // Quilograma: unidade-base do SI para massa.
     kg: {
+      // Fator de conversão: 1 kg vale 1000 g.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilograma", other: "quilogramas" }
-        en: { one: "kilogram", other: "kilograms" }
+        pt-BR: { one: "quilograma", other: "quilogramas" } // português: singular/plural
+        en: { one: "kilogram", other: "kilograms" } // inglês: singular/plural
       }
     }
+    // Miligrama: milésimo do grama, usado em dosagens.
     mg: {
+      // Fator de conversão: 1 mg vale 0,001 g.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "miligrama", other: "miligramas" }
-        en: { one: "milligram", other: "milligrams" }
+        pt-BR: { one: "miligrama", other: "miligramas" } // português: singular/plural
+        en: { one: "milligram", other: "milligrams" } // inglês: singular/plural
       }
     }
+    // Micrograma em grafia ASCII: alternativa ao símbolo µg.
     ug: {
+      // Fator de conversão: 1 µg vale 0,000001 g.
       factor: 0.000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micrograma", other: "microgramas" }
-        en: { one: "microgram", other: "micrograms" }
+        pt-BR: { one: "micrograma", other: "microgramas" } // português: singular/plural
+        en: { one: "microgram", other: "micrograms" } // inglês: singular/plural
       }
     }
+    // Micrograma com o símbolo grego µ: mesma escala da unidade anterior.
     µg: {
+      // Fator de conversão: 1 µg vale 0,000001 g.
       factor: 0.000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micrograma", other: "microgramas" }
-        en: { one: "microgram", other: "micrograms" }
+        pt-BR: { one: "micrograma", other: "microgramas" } // português: singular/plural
+        en: { one: "microgram", other: "micrograms" } // inglês: singular/plural
       }
     }
+    // Tonelada métrica: mil quilogramas.
     t: {
+      // Fator de conversão: 1 t vale 1 000 000 g.
       factor: 1000000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "tonelada métrica", other: "toneladas métricas" }
-        en: { one: "metric ton", other: "metric tons" }
+        pt-BR: { one: "tonelada métrica", other: "toneladas métricas" } // português: singular/plural
+        en: { one: "metric ton", other: "metric tons" } // inglês: singular/plural
       }
     }
+    // Libra avoirdupois: unidade de massa do sistema imperial/US.
     lb: {
+      // Fator de conversão: 1 lb vale 453,59237 g.
       factor: 453.59237
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "libra", other: "libras" }
-        en: { one: "pound", other: "pounds" }
+        pt-BR: { one: "libra", other: "libras" } // português: singular/plural
+        en: { one: "pound", other: "pounds" } // inglês: singular/plural
       }
     }
+    // Onça avoirdupois: um dezesseis avos da libra.
     oz: {
+      // Fator de conversão: 1 oz vale 28,349523125 g.
       factor: 28.349523125
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "onça", other: "onças" }
-        en: { one: "ounce", other: "ounces" }
+        pt-BR: { one: "onça", other: "onças" } // português: singular/plural
+        en: { one: "ounce", other: "ounces" } // inglês: singular/plural
       }
     }
+    // Stone: quatorze libras, usado para peso corporal no Reino Unido.
     st: {
+      // Fator de conversão: 1 st vale 6350,29318 g.
       factor: 6350.29318
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "stone", other: "stones" }
-        en: { one: "stone", other: "stones" }
+        pt-BR: { one: "stone", other: "stones" } // português: singular/plural
+        en: { one: "stone", other: "stones" } // inglês: singular/plural
       }
     }
+    // Tonelada curta (US): duas mil libras.
     ton: {
+      // Fator de conversão: 1 ton vale 907 184,74 g.
       factor: 907184.74
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "tonelada curta", other: "toneladas curtas" }
-        en: { one: "short ton", other: "short tons" }
+        pt-BR: { one: "tonelada curta", other: "toneladas curtas" } // português: singular/plural
+        en: { one: "short ton", other: "short tons" } // inglês: singular/plural
       }
     }
+    // Quilate métrico: usado em gemas, vale 0,2 g.
     ct: {
+      // Fator de conversão: 1 ct vale 0,2 g.
       factor: 0.2
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilate", other: "quilates" }
-        en: { one: "carat", other: "carats" }
+        pt-BR: { one: "quilate", other: "quilates" } // português: singular/plural
+        en: { one: "carat", other: "carats" } // inglês: singular/plural
       }
     }
+    // Dalton: massa atômica unificada, usada em química e física.
     Da: {
+      // Fator em gramas: massa de um nuclíon em gramas.
       factor: 1.66053904e-24
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "dalton", other: "daltons" }
-        en: { one: "dalton", other: "daltons" }
+        pt-BR: { one: "dalton", other: "daltons" } // português: singular/plural
+        en: { one: "dalton", other: "daltons" } // inglês: singular/plural
       }
     }
+    // Massa solar: padrão para massas de estrelas e galáxias.
     Msun: {
+      // Fator em gramas: aproximadamente 1,988475e33 g.
       factor: 1.988475e33
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "massa solar", other: "massas solares" }
-        en: { one: "solar mass", other: "solar masses" }
+        pt-BR: { one: "massa solar", other: "massas solares" } // português: singular/plural
+        en: { one: "solar mass", other: "solar masses" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2,5 kg").
   parse: quantity
+  // Soma valores convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar e ordenar massas.
   index: normalized
 
+  // Extrai o número bruto para cálculos externos ao shape.
   toNumber(value) {
+    // Devolve o valor sem a unidade anexada.
     return value.raw;
   }
 
+  // Serializa o valor para armazenamento, preservando a unidade escolhida.
   write(value, out) {
+    // Assume grama quando o valor não traz unidade explícita.
     const unit = value.unit ?? g;
+    // Grava o símbolo da unidade no fluxo.
     out.writeString(unit);
+    // Grava o número bruto no fluxo.
     out.writeDouble(value.raw);
   }
 
+  // Reconstrói o valor a partir do fluxo serializado.
   read(in) {
+    // Lê o símbolo da unidade gravado antes do número.
     const unit = in.readString();
+    // Lê o número bruto na mesma ordem da escrita.
     const raw = in.readDouble();
+    // Remonta a massa com unidade e valor lidos.
     return new Mass{raw, unit};
   }
 
+  // Converte texto livre em um Mass, aceitando a unidade digitada.
   parse(text, flags) {
+    // Interpreta a quantidade textual em número e unidade.
     const parsed = parseQuantity(text, flags);
+    // Cria o Mass com valor e unidade reconhecidos.
     return new Mass{raw: parsed.value, unit: parsed.unit};
   }
 
+  // Formata a massa para exibição com a unidade mais legível.
   format(value, flags) {
+    // Unidade de origem; grama quando não informada.
     const from = value.unit ?? g;
+    // Respeita a unidade pedida ou escolhe a melhor para o número.
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    // Delega a formatação numérica ao formatador compartilhado.
     return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 
+  // Divide massa por volume e produz densidade.
   operator /(left: Mass, right: Volume): Density {
+    // Converte a massa para gramas.
     const m = convert(left.raw, left.unit, g);
+    // Converte o volume para metros cúbicos.
     const v = convert(right.raw, right.unit, m3);
+    // Converte gramas para quilos e resulta em kg/m³.
     return new Density{raw: m / 1000 / v, unit: kg_m3};
   }
 
+  // Multiplica massa por aceleração e produz força.
   operator *(left: Mass, right: Acceleration): Force {
+    // Converte a massa para quilogramas, unidade coerente com newton.
     const m = convert(left.raw, left.unit, g) / 1000;
+    // Converte a aceleração para metros por segundo ao quadrado.
     const a = convert(right.raw, right.unit, m_s2);
+    // Resultado em newtons.
     return new Force{raw: m * a, unit: N};
   }
 }
 
+// Shape de volume: SI, medidas culinárias e unidades imperiais de líquidos.
 shape Volume {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Volume", en: "Volume" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada para compatibilidade e operadores.
   dimension: volume
+  // Catálogo de unidades de volume aceitas.
   units {
+    // Metro cúbico: unidade-base do SI para volume.
     m3: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "metro cúbico", other: "metros cúbicos" }
-        en: { one: "cubic meter", other: "cubic meters" }
+        pt-BR: { one: "metro cúbico", other: "metros cúbicos" } // português: singular/plural
+        en: { one: "cubic meter", other: "cubic meters" } // inglês: singular/plural
       }
     }
+    // Litro: um milésimo do metro cúbico.
     L: {
+      // Fator de conversão: 1 L vale 0,001 m³.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "litro", other: "litros" }
-        en: { one: "liter", other: "liters" }
+        pt-BR: { one: "litro", other: "litros" } // português: singular/plural
+        en: { one: "liter", other: "liters" } // inglês: singular/plural
       }
     }
+    // Mililitro: milésimo do litro.
     mL: {
+      // Fator de conversão: 1 mL vale 0,000001 m³.
       factor: 0.000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "mililitro", other: "mililitros" }
-        en: { one: "milliliter", other: "milliliters" }
+        pt-BR: { one: "mililitro", other: "mililitros" } // português: singular/plural
+        en: { one: "milliliter", other: "milliliters" } // inglês: singular/plural
       }
     }
+    // Centímetro cúbico: equivalente ao mililitro.
     cm3: {
+      // Fator de conversão: 1 cm³ vale 0,000001 m³.
       factor: 0.000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "centímetro cúbico", other: "centímetros cúbicos" }
-        en: { one: "cubic centimeter", other: "cubic centimeters" }
+        pt-BR: { one: "centímetro cúbico", other: "centímetros cúbicos" } // português: singular/plural
+        en: { one: "cubic centimeter", other: "cubic centimeters" } // inglês: singular/plural
       }
     }
+    // Milímetro cúbico: milésimo do centímetro cúbico.
     mm3: {
+      // Fator de conversão: 1 mm³ vale 1e-9 m³.
       factor: 1e-09
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milímetro cúbico", other: "milímetros cúbicos" }
-        en: { one: "cubic millimeter", other: "cubic millimeters" }
+        pt-BR: { one: "milímetro cúbico", other: "milímetros cúbicos" } // português: singular/plural
+        en: { one: "cubic millimeter", other: "cubic millimeters" } // inglês: singular/plural
       }
     }
+    // Galão americano: 231 polegadas cúbicas.
     gal: {
+      // Fator de conversão: 1 gal vale 0,003785411784 m³.
       factor: 0.003785411784
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "galão", other: "galões" }
-        en: { one: "gallon", other: "gallons" }
+        pt-BR: { one: "galão", other: "galões" } // português: singular/plural
+        en: { one: "gallon", other: "gallons" } // inglês: singular/plural
       }
     }
+    // Quarto americano: um quarto do galão.
     qt: {
+      // Fator de conversão: 1 qt vale 0,000946352946 m³.
       factor: 0.000946352946
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quarto", other: "quartos" }
-        en: { one: "quart", other: "quarts" }
+        pt-BR: { one: "quarto", other: "quartos" } // português: singular/plural
+        en: { one: "quart", other: "quarts" } // inglês: singular/plural
       }
     }
+    // Pint americano: metade do quarto.
     pt: {
+      // Fator de conversão: 1 pt vale 0,000473176473 m³.
       factor: 0.000473176473
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pint", other: "pints" }
-        en: { one: "pint", other: "pints" }
+        pt-BR: { one: "pint", other: "pints" } // português: singular/plural
+        en: { one: "pint", other: "pints" } // inglês: singular/plural
       }
     }
+    // Onça líquida americana: um oitavo do pint.
     fl_oz: {
+      // Fator de conversão: 1 fl oz vale 0,0000295735295625 m³.
       factor: 0.0000295735295625
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "onça líquida", other: "onças líquidas" }
-        en: { one: "fluid ounce", other: "fluid ounces" }
+        pt-BR: { one: "onça líquida", other: "onças líquidas" } // português: singular/plural
+        en: { one: "fluid ounce", other: "fluid ounces" } // inglês: singular/plural
       }
     }
+    // Colher de sopa: medida culinária de volume.
     tbsp: {
+      // Fator de conversão: 1 tbsp vale 0,0000147867647813 m³.
       factor: 0.0000147867647813
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "colher de sopa", other: "colheres de sopa" }
-        en: { one: "tablespoon", other: "tablespoons" }
+        pt-BR: { one: "colher de sopa", other: "colheres de sopa" } // português: singular/plural
+        en: { one: "tablespoon", other: "tablespoons" } // inglês: singular/plural
       }
     }
+    // Colher de chá: um terço da colher de sopa.
     tsp: {
+      // Fator de conversão: 1 tsp vale 0,00000492892159375 m³.
       factor: 0.00000492892159375
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "colher de chá", other: "colheres de chá" }
-        en: { one: "teaspoon", other: "teaspoons" }
+        pt-BR: { one: "colher de chá", other: "colheres de chá" } // português: singular/plural
+        en: { one: "teaspoon", other: "teaspoons" } // inglês: singular/plural
       }
     }
+    // Barril de petróleo: 42 galões americanos.
     bbl: {
+      // Fator de conversão: 1 bbl vale 0,158987294928 m³.
       factor: 0.158987294928
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "barril", other: "barris" }
-        en: { one: "barrel", other: "barrels" }
+        pt-BR: { one: "barril", other: "barris" } // português: singular/plural
+        en: { one: "barrel", other: "barrels" } // inglês: singular/plural
       }
     }
+    // Alqueire (bushel): medida agrícola de grãos.
     bu: {
+      // Fator de conversão: 1 bu vale 0,03523907016688 m³.
       factor: 0.03523907016688
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "alqueire", other: "alqueires" }
-        en: { one: "bushel", other: "bushels" }
+        pt-BR: { one: "alqueire", other: "alqueires" } // português: singular/plural
+        en: { one: "bushel", other: "bushels" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 L").
   parse: quantity
+  // Soma valores convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar e ordenar volumes.
   index: normalized
 
+  // Extrai o número bruto para cálculos externos ao shape.
   toNumber(value) {
+    // Devolve o valor sem a unidade anexada.
     return value.raw;
   }
 
+  // Serializa o valor para armazenamento, preservando a unidade escolhida.
   write(value, out) {
+    // Assume metro cúbico quando o valor não traz unidade explícita.
     const unit = value.unit ?? m3;
+    // Grava o símbolo da unidade no fluxo.
     out.writeString(unit);
+    // Grava o número bruto no fluxo.
     out.writeDouble(value.raw);
   }
 
+  // Reconstrói o valor a partir do fluxo serializado.
   read(in) {
+    // Lê o símbolo da unidade gravado antes do número.
     const unit = in.readString();
+    // Lê o número bruto na mesma ordem da escrita.
     const raw = in.readDouble();
+    // Remonta o volume com unidade e valor lidos.
     return new Volume{raw, unit};
   }
 
+  // Converte texto livre em um Volume, aceitando a unidade digitada.
   parse(text, flags) {
+    // Interpreta a quantidade textual em número e unidade.
     const parsed = parseQuantity(text, flags);
+    // Cria o Volume com valor e unidade reconhecidos.
     return new Volume{raw: parsed.value, unit: parsed.unit};
   }
 
+  // Formata o volume para exibição com a unidade mais legível.
   format(value, flags) {
+    // Unidade de origem; metro cúbico quando não informada.
     const from = value.unit ?? m3;
+    // Respeita a unidade pedida ou escolhe a melhor para o número.
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    // Delega a formatação numérica ao formatador compartilhado.
     return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
+// Shape de percentual: razão exibida em pontos percentuais.
 shape Percentage {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Percentual", en: "Percentage" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Percentual é uma razão, o que permite combiná-lo com outros ratios.
   dimension: ratio
+  // Unidade única do shape: o símbolo de porcentagem.
   unit: %
+  // Texto com "%" é lido como percentual.
   parse: percent
+  // Exibição sempre no formato percentual.
   format: percent
+  // Média ponderada é a forma correta de agregar percentuais.
   aggregate: weighted-average
 
+  // Extrai o número bruto para cálculos externos ao shape.
   toNumber(value) {
+    // Devolve o valor sem a unidade anexada.
     return value.raw;
   }
 
+  // Serializa o valor para armazenamento, preservando a unidade.
   write(value, out) {
+    // Assume porcentagem quando o valor não traz unidade explícita.
     const unit = value.unit ?? %;
+    // Grava o símbolo da unidade no fluxo.
     out.writeString(unit);
+    // Grava o número bruto no fluxo.
     out.writeDouble(value.raw);
   }
 
+  // Reconstrói o valor a partir do fluxo serializado.
   read(in) {
+    // Lê o símbolo da unidade gravado antes do número.
     const unit = in.readString();
+    // Lê o número bruto na mesma ordem da escrita.
     const raw = in.readDouble();
+    // Remonta o percentual com unidade e valor lidos.
     return new Percentage{raw, unit};
   }
 
+  // Converte texto livre em um Percentage.
   parse(text, flags) {
+    // Interpreta a quantidade textual em número e unidade.
     const parsed = parseQuantity(text, flags);
+    // Cria o Percentage com valor e unidade reconhecidos.
     return new Percentage{raw: parsed.value, unit: parsed.unit};
   }
 
+  // Formata o percentual para exibição.
   format(value, flags) {
+    // Percentual não tem outra unidade; usa % quando não informada.
     const from = value.unit ?? %;
+    // Mantém o destino sempre em %, pois o shape só admite essa unidade.
     const unit = flags.unit ?? %;
+    // Delega a formatação numérica ao formatador compartilhado.
     return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
+// Shape de área: SI, medidas agrárias e unidades imperiais quadradas.
 shape Area {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Área", en: "Area" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada para compatibilidade e operadores.
   dimension: area
+  // Catálogo de unidades de área aceitas.
   units {
+    // Metro quadrado: unidade-base do SI para área.
     m2: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "metro quadrado", other: "metros quadrados" }
-        en: { one: "square meter", other: "square meters" }
+        pt-BR: { one: "metro quadrado", other: "metros quadrados" } // português: singular/plural
+        en: { one: "square meter", other: "square meters" } // inglês: singular/plural
       }
     }
+    // Centímetro quadrado: área de um quadrado de 1 cm de lado.
     cm2: {
+      // Fator de conversão: 1 cm² vale 0,0001 m².
       factor: 0.0001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "centímetro quadrado", other: "centímetros quadrados" }
-        en: { one: "square centimeter", other: "square centimeters" }
+        pt-BR: { one: "centímetro quadrado", other: "centímetros quadrados" } // português: singular/plural
+        en: { one: "square centimeter", other: "square centimeters" } // inglês: singular/plural
       }
     }
+    // Milímetro quadrado: área de um quadrado de 1 mm de lado.
     mm2: {
+      // Fator de conversão: 1 mm² vale 1e-6 m².
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milímetro quadrado", other: "milímetros quadrados" }
-        en: { one: "square millimeter", other: "square millimeters" }
+        pt-BR: { one: "milímetro quadrado", other: "milímetros quadrados" } // português: singular/plural
+        en: { one: "square millimeter", other: "square millimeters" } // inglês: singular/plural
       }
     }
+    // Quilômetro quadrado: usado em áreas territoriais.
     km2: {
+      // Fator de conversão: 1 km² vale 1 000 000 m².
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilômetro quadrado", other: "quilômetros quadrados" }
-        en: { one: "square kilometer", other: "square kilometers" }
+        pt-BR: { one: "quilômetro quadrado", other: "quilômetros quadrados" } // português: singular/plural
+        en: { one: "square kilometer", other: "square kilometers" } // inglês: singular/plural
       }
     }
+    // Hectare: dez mil metros quadrados, padrão para imóveis rurais.
     ha: {
+      // Fator de conversão: 1 ha vale 10 000 m².
       factor: 10000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "hectare", other: "hectares" }
-        en: { one: "hectare", other: "hectares" }
+        pt-BR: { one: "hectare", other: "hectares" } // português: singular/plural
+        en: { one: "hectare", other: "hectares" } // inglês: singular/plural
       }
     }
+    // Acre: medida agrária do sistema imperial/US.
     acre: {
+      // Fator de conversão: 1 acre vale 4046,8564224 m².
       factor: 4046.8564224
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "acre", other: "acres" }
-        en: { one: "acre", other: "acres" }
+        pt-BR: { one: "acre", other: "acres" } // português: singular/plural
+        en: { one: "acre", other: "acres" } // inglês: singular/plural
       }
     }
+    // Pé quadrado: padrão de área de imóveis nos EUA.
     ft2: {
+      // Fator de conversão: 1 ft² vale 0,09290304 m².
       factor: 0.09290304
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pé quadrado", other: "pés quadrados" }
-        en: { one: "square foot", other: "square feet" }
+        pt-BR: { one: "pé quadrado", other: "pés quadrados" } // português: singular/plural
+        en: { one: "square foot", other: "square feet" } // inglês: singular/plural
       }
     }
+    // Polegada quadrada: usada em seções de cabos e componentes.
     in2: {
+      // Fator de conversão: 1 in² vale 0,00064516 m².
       factor: 0.00064516
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "polegada quadrada", other: "polegadas quadradas" }
-        en: { one: "square inch", other: "square inches" }
+        pt-BR: { one: "polegada quadrada", other: "polegadas quadradas" } // português: singular/plural
+        en: { one: "square inch", other: "square inches" } // inglês: singular/plural
       }
     }
+    // Jarda quadrada: usada em tecidos e terrenos.
     yd2: {
+      // Fator de conversão: 1 yd² vale 0,83612736 m².
       factor: 0.83612736
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "jarda quadrada", other: "jardas quadradas" }
-        en: { one: "square yard", other: "square yards" }
+        pt-BR: { one: "jarda quadrada", other: "jardas quadradas" } // português: singular/plural
+        en: { one: "square yard", other: "square yards" } // inglês: singular/plural
       }
     }
+    // Milha quadrada: usada em grandes extensões territoriais.
     mi2: {
+      // Fator de conversão: 1 mi² vale 2 589 988,110336 m².
       factor: 2589988.110336
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milha quadrada", other: "milhas quadradas" }
-        en: { one: "square mile", other: "square miles" }
+        pt-BR: { one: "milha quadrada", other: "milhas quadradas" } // português: singular/plural
+        en: { one: "square mile", other: "square miles" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "120 m²").
   parse: quantity
+  // Soma valores convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar e ordenar áreas.
   index: normalized
 }
 
+// Shape de temperatura: escala kelvin como base, com conversões não lineares.
 shape Temperature {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Temperatura", en: "Temperature" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada para compatibilidade e operadores.
   dimension: temperature
+  // Catálogo de escalas de temperatura aceitas.
   units {
+    // Kelvin: unidade-base do SI para temperatura termodinâmica.
     K: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "kelvin", other: "kelvins" }
-        en: { one: "kelvin", other: "kelvins" }
+        pt-BR: { one: "kelvin", other: "kelvins" } // português: singular/plural
+        en: { one: "kelvin", other: "kelvins" } // inglês: singular/plural
       }
     }
+    // Grau Celsius: deslocado 273,15 K da escala absoluta.
     C: {
+      // Conversão linear: subtrai o ponto de congelamento da água.
       formula: K - 273.15
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grau Celsius", other: "graus Celsius" }
-        en: { one: "degree Celsius", other: "degrees Celsius" }
+        pt-BR: { one: "grau Celsius", other: "graus Celsius" } // português: singular/plural
+        en: { one: "degree Celsius", other: "degrees Celsius" } // inglês: singular/plural
       }
     }
+    // Grau Fahrenheit: escala usada principalmente nos EUA.
     F: {
+      // Conversões de ida e volta entre Fahrenheit e kelvin.
       formula: {
-        to(K) { return (K - 273.15) * 1.8 + 32; }
-        from(F) { return (F - 32) / 1.8 + 273.15; }
+        to(K) { return (K - 273.15) * 1.8 + 32; } // converte kelvin em Fahrenheit
+        from(F) { return (F - 32) / 1.8 + 273.15; } // converte Fahrenheit em kelvin
       }
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grau Fahrenheit", other: "graus Fahrenheit" }
-        en: { one: "degree Fahrenheit", other: "degrees Fahrenheit" }
+        pt-BR: { one: "grau Fahrenheit", other: "graus Fahrenheit" } // português: singular/plural
+        en: { one: "degree Fahrenheit", other: "degrees Fahrenheit" } // inglês: singular/plural
       }
     }
+    // Grau Rankine: escala absoluta com grau do tamanho do Fahrenheit.
     R: {
+      // Conversões de ida e volta entre Rankine e kelvin.
       formula: {
-        to(K) { return K * 1.8; }
-        from(R) { return R / 1.8; }
+        to(K) { return K * 1.8; } // converte kelvin em Rankine
+        from(R) { return R / 1.8; } // converte Rankine em kelvin
       }
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grau Rankine", other: "graus Rankine" }
-        en: { one: "degree Rankine", other: "degrees Rankine" }
+        pt-BR: { one: "grau Rankine", other: "graus Rankine" } // português: singular/plural
+        en: { one: "degree Rankine", other: "degrees Rankine" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "25 °C").
   parse: quantity
 }
 
+// Shape de contagem: inteiros não fracionários.
 shape Count {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Contagem", en: "Count" }
+  // Tipo inteiro impede valores fracionários em contagens.
   base: integer
+  // Dimensão própria, sem unidades físicas.
   dimension: count
+  // Contagens se acumulam por soma simples.
   aggregate: sum
 }
 
+// Shape de probabilidade: valor entre zero e um.
 shape Probability {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Probabilidade", en: "Probability" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Probabilidade é uma razão entre zero e um.
   dimension: ratio
 }
 
+// Shape de razão adimensional: proporção entre duas grandezas.
 shape Ratio {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Razão", en: "Ratio" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Razão pura, sem unidade física associada.
   dimension: ratio
 }
 
+// Shape de taxa: ocorrências por intervalo de tempo.
 shape Rate {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Taxa", en: "Rate" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão de taxa, distinta de razão por ter base temporal.
   dimension: rate
+  // Catálogo de intervalos de tempo usados como denominador.
   units {
+    // Por segundo: unidade-base da dimensão taxa.
     1_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "por segundo", other: "por segundo" }
-        en: { one: "per second", other: "per second" }
+        pt-BR: { one: "por segundo", other: "por segundo" } // português: singular/plural
+        en: { one: "per second", other: "per second" } // inglês: singular/plural
       }
     }
+    // Por minuto: um sessenta avos de ocorrência por segundo.
     1_min: {
+      // Fator de conversão: 1/min equivale a 0,01666... por segundo.
       factor: 0.016666666666666666
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "por minuto", other: "por minuto" }
-        en: { one: "per minute", other: "per minute" }
+        pt-BR: { one: "por minuto", other: "por minuto" } // português: singular/plural
+        en: { one: "per minute", other: "per minute" } // inglês: singular/plural
       }
     }
+    // Por hora: ocorrências ao longo de sessenta minutos.
     1_h: {
+      // Fator de conversão: 1/h equivale a 0,00027777... por segundo.
       factor: 0.0002777777777777778
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "por hora", other: "por hora" }
-        en: { one: "per hour", other: "per hour" }
+        pt-BR: { one: "por hora", other: "por hora" } // português: singular/plural
+        en: { one: "per hour", other: "per hour" } // inglês: singular/plural
       }
     }
+    // Por dia: ocorrências ao longo de vinte e quatro horas.
     1_d: {
+      // Fator de conversão: 1/d equivale a 1,1574e-5 por segundo.
       factor: 1.1574074074074073e-05
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "por dia", other: "por dia" }
-        en: { one: "per day", other: "per day" }
+        pt-BR: { one: "por dia", other: "por dia" } // português: singular/plural
+        en: { one: "per day", other: "per day" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "5/min").
   parse: quantity
 }
 
+// Shape de escore Z: desvio em relação à média, em desvios-padrão.
 shape ZScore {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Escore Z", en: "Z-score" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Escore Z é adimensional, por isso usa a dimensão razão.
   dimension: ratio
 }
 
+// Shape de dinheiro: valor monetário com moeda obrigatória.
 shape Money {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Dinheiro", en: "Money" }
+  // Tipo decimal evita erros de arredondamento binário em valores monetários.
   base: decimal
 
+  // Soma valores apenas quando as moedas coincidem.
   operator +(left: Money, right: Money): Money {
+    // Rejeita a soma entre moedas diferentes.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Soma os valores mantendo a moeda original.
     return new Money{raw: left.raw + right.raw, currency: left.currency};
   }
 
+  // Subtrai valores apenas quando as moedas coincidem.
   operator -(left: Money, right: Money): Money {
+    // Rejeita a subtração entre moedas diferentes.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Subtrai os valores mantendo a moeda original.
     return new Money{raw: left.raw - right.raw, currency: left.currency};
   }
 
+  // Multiplica dinheiro por um número, preservando a moeda.
   operator *(left: Money, right: number): Money {
+    // Escala o valor bruto e mantém a moeda do operando monetário.
     return new Money{raw: left.raw * right, currency: left.currency};
   }
 
+  // Multiplica um número por dinheiro (ordem inversa da operação anterior).
   operator *(left: number, right: Money): Money {
+    // Escala o valor bruto e mantém a moeda do operando monetário.
     return new Money{raw: left * right.raw, currency: right.currency};
   }
 
+  // Divide dinheiro por um número, preservando a moeda.
   operator /(left: Money, right: number): Money {
+    // Divide o valor bruto e mantém a moeda original.
     return new Money{raw: left.raw / right, currency: left.currency};
   }
 
+  // Divide dinheiro por dinheiro e devolve um número adimensional.
   operator /(left: Money, right: Money): number {
+    // Só faz sentido dividir valores na mesma moeda.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Proporção entre os dois valores.
     return left.raw / right.raw;
   }
 
+  // Compara igualdade de valores na mesma moeda.
   operator ==(left: Money, right: Money): boolean {
+    // Comparar moedas diferentes seria enganoso; falha explicitamente.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Igualdade apenas dos valores brutos.
     return left.raw == right.raw;
   }
 
+  // Compara se o valor esquerdo é menor que o direito.
   operator <(left: Money, right: Money): boolean {
+    // Ordenar moedas diferentes não é permitido.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Comparação numérica dos valores brutos.
     return left.raw < right.raw;
   }
 
+  // Compara se o valor esquerdo é maior que o direito.
   operator >(left: Money, right: Money): boolean {
+    // Ordenar moedas diferentes não é permitido.
     if (left.currency != right.currency) {
-      throw Error("E_CURRENCY_MISMATCH");
+      throw Error("E_CURRENCY_MISMATCH"); // moedas incompatíveis: falha explícita
     }
+    // Comparação numérica dos valores brutos.
     return left.raw > right.raw;
   }
 }
 
+// Shape de moeda: catálogo ISO 4217 com código numérico e casas decimais.
 shape Currency {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Moeda", en: "Currency" }
+  // Referência da classificação que originou os códigos abaixo.
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
+  // Dirham dos Emirados Árabes Unidos: código 784, 2 casas decimais.
   value AED { numeric: "784", scale: 2 }
+  // Afegani afegão: código 971, 2 casas decimais.
   value AFN { numeric: "971", scale: 2 }
+  // Lek albanês: código 008, 2 casas decimais.
   value ALL { numeric: "008", scale: 2 }
+  // Dram armênio: código 051, 2 casas decimais.
   value AMD { numeric: "051", scale: 2 }
+  // Kwanza angolano: código 973, 2 casas decimais.
   value AOA { numeric: "973", scale: 2 }
+  // Peso argentino: código 032, 2 casas decimais.
   value ARS { numeric: "032", scale: 2 }
+  // Dólar australiano: código 036, 2 casas decimais.
   value AUD { numeric: "036", scale: 2 }
+  // Florim arubano: código 533, 2 casas decimais.
   value AWG { numeric: "533", scale: 2 }
+  // Manat azerbaijano: código 944, 2 casas decimais.
   value AZN { numeric: "944", scale: 2 }
+  // Marco conversível da Bósnia e Herzegovina: código 977, 2 casas decimais.
   value BAM { numeric: "977", scale: 2 }
+  // Dólar de Barbados: código 052, 2 casas decimais.
   value BBD { numeric: "052", scale: 2 }
+  // Taka de Bangladesh: código 050, 2 casas decimais.
   value BDT { numeric: "050", scale: 2 }
+  // Dinar bareinita: código 048, 3 casas decimais (fração de 1/1000).
   value BHD { numeric: "048", scale: 3 }
+  // Franco burundinês: código 108, sem casas decimais.
   value BIF { numeric: "108", scale: 0 }
+  // Dólar bermudense: código 060, 2 casas decimais.
   value BMD { numeric: "060", scale: 2 }
+  // Dólar de Brunei: código 096, 2 casas decimais.
   value BND { numeric: "096", scale: 2 }
+  // Boliviano: código 068, 2 casas decimais.
   value BOB { numeric: "068", scale: 2 }
+  // Mvdol boliviano (fundo de investimento): código 984, 2 casas decimais.
   value BOV { numeric: "984", scale: 2 }
+  // Real brasileiro: código 986, 2 casas decimais.
   value BRL { numeric: "986", scale: 2 }
+  // Dólar bahamense: código 044, 2 casas decimais.
   value BSD { numeric: "044", scale: 2 }
+  // Ngultrum butanês: código 064, 2 casas decimais.
   value BTN { numeric: "064", scale: 2 }
+  // Pula botsuano: código 072, 2 casas decimais.
   value BWP { numeric: "072", scale: 2 }
+  // Rublo bielorrusso: código 933, 2 casas decimais.
   value BYN { numeric: "933", scale: 2 }
+  // Dólar belizenho: código 084, 2 casas decimais.
   value BZD { numeric: "084", scale: 2 }
+  // Dólar canadense: código 124, 2 casas decimais.
   value CAD { numeric: "124", scale: 2 }
+  // Franco congolês: código 976, 2 casas decimais.
   value CDF { numeric: "976", scale: 2 }
+  // Euro WIR (câmara de compensação suíça): código 947, 2 casas decimais.
   value CHE { numeric: "947", scale: 2 }
+  // Franco suíço: código 756, 2 casas decimais.
   value CHF { numeric: "756", scale: 2 }
+  // Franco WIR (câmara de compensação suíça): código 948, 2 casas decimais.
   value CHW { numeric: "948", scale: 2 }
+  // Unidade de Fomento chilena: código 990, 4 casas decimais.
   value CLF { numeric: "990", scale: 4 }
+  // Peso chileno: código 152, sem casas decimais.
   value CLP { numeric: "152", scale: 0 }
+  // Yuan renminbi chinês: código 156, 2 casas decimais.
   value CNY { numeric: "156", scale: 2 }
+  // Peso colombiano: código 170, 2 casas decimais.
   value COP { numeric: "170", scale: 2 }
+  // Unidade de Valor Real colombiana: código 970, 2 casas decimais.
   value COU { numeric: "970", scale: 2 }
+  // Colón costarriquenho: código 188, 2 casas decimais.
   value CRC { numeric: "188", scale: 2 }
+  // Peso cubano: código 192, 2 casas decimais.
   value CUP { numeric: "192", scale: 2 }
+  // Escudo cabo-verdiano: código 132, 2 casas decimais.
   value CVE { numeric: "132", scale: 2 }
+  // Coroa tcheca: código 203, 2 casas decimais.
   value CZK { numeric: "203", scale: 2 }
+  // Franco djibutiano: código 262, sem casas decimais.
   value DJF { numeric: "262", scale: 0 }
+  // Coroa dinamarquesa: código 208, 2 casas decimais.
   value DKK { numeric: "208", scale: 2 }
+  // Peso dominicano: código 214, 2 casas decimais.
   value DOP { numeric: "214", scale: 2 }
+  // Dinar argelino: código 012, 2 casas decimais.
   value DZD { numeric: "012", scale: 2 }
+  // Libra egípcia: código 818, 2 casas decimais.
   value EGP { numeric: "818", scale: 2 }
+  // Nakfa eritreia: código 232, 2 casas decimais.
   value ERN { numeric: "232", scale: 2 }
+  // Birr etíope: código 230, 2 casas decimais.
   value ETB { numeric: "230", scale: 2 }
+  // Euro: código 978, 2 casas decimais.
   value EUR { numeric: "978", scale: 2 }
+  // Dólar fijiano: código 242, 2 casas decimais.
   value FJD { numeric: "242", scale: 2 }
+  // Libra das Ilhas Malvinas: código 238, 2 casas decimais.
   value FKP { numeric: "238", scale: 2 }
+  // Libra esterlina: código 826, 2 casas decimais.
   value GBP { numeric: "826", scale: 2 }
+  // Lari georgiano: código 981, 2 casas decimais.
   value GEL { numeric: "981", scale: 2 }
+  // Cedi ganês: código 936, 2 casas decimais.
   value GHS { numeric: "936", scale: 2 }
+  // Libra de Gibraltar: código 292, 2 casas decimais.
   value GIP { numeric: "292", scale: 2 }
+  // Dalasi gambiano: código 270, 2 casas decimais.
   value GMD { numeric: "270", scale: 2 }
+  // Franco guineense: código 324, sem casas decimais.
   value GNF { numeric: "324", scale: 0 }
+  // Quetzal guatemalteco: código 320, 2 casas decimais.
   value GTQ { numeric: "320", scale: 2 }
+  // Dólar guianense: código 328, 2 casas decimais.
   value GYD { numeric: "328", scale: 2 }
+  // Dólar de Hong Kong: código 344, 2 casas decimais.
   value HKD { numeric: "344", scale: 2 }
+  // Lempira hondurenha: código 340, 2 casas decimais.
   value HNL { numeric: "340", scale: 2 }
+  // Gourde haitiano: código 332, 2 casas decimais.
   value HTG { numeric: "332", scale: 2 }
+  // Forint húngaro: código 348, 2 casas decimais.
   value HUF { numeric: "348", scale: 2 }
+  // Rupia indonésia: código 360, 2 casas decimais.
   value IDR { numeric: "360", scale: 2 }
+  // Novo shekel israelense: código 376, 2 casas decimais.
   value ILS { numeric: "376", scale: 2 }
+  // Rupia indiana: código 356, 2 casas decimais.
   value INR { numeric: "356", scale: 2 }
+  // Dinar iraquiano: código 368, 3 casas decimais.
   value IQD { numeric: "368", scale: 3 }
+  // Rial iraniano: código 364, 2 casas decimais.
   value IRR { numeric: "364", scale: 2 }
+  // Coroa islandesa: código 352, sem casas decimais.
   value ISK { numeric: "352", scale: 0 }
+  // Dólar jamaicano: código 388, 2 casas decimais.
   value JMD { numeric: "388", scale: 2 }
+  // Dinar jordaniano: código 400, 3 casas decimais.
   value JOD { numeric: "400", scale: 3 }
+  // Iene japonês: código 392, sem casas decimais.
   value JPY { numeric: "392", scale: 0 }
+  // Xelim queniano: código 404, 2 casas decimais.
   value KES { numeric: "404", scale: 2 }
+  // Som quirguiz: código 417, 2 casas decimais.
   value KGS { numeric: "417", scale: 2 }
+  // Riel cambojano: código 116, 2 casas decimais.
   value KHR { numeric: "116", scale: 2 }
+  // Franco comorense: código 174, sem casas decimais.
   value KMF { numeric: "174", scale: 0 }
+  // Won norte-coreano: código 408, 2 casas decimais.
   value KPW { numeric: "408", scale: 2 }
+  // Won sul-coreano: código 410, sem casas decimais.
   value KRW { numeric: "410", scale: 0 }
+  // Dinar kuwaitiano: código 414, 3 casas decimais.
   value KWD { numeric: "414", scale: 3 }
+  // Dólar das Ilhas Cayman: código 136, 2 casas decimais.
   value KYD { numeric: "136", scale: 2 }
+  // Tenge cazaque: código 398, 2 casas decimais.
   value KZT { numeric: "398", scale: 2 }
+  // Kip laosiano: código 418, 2 casas decimais.
   value LAK { numeric: "418", scale: 2 }
+  // Libra libanesa: código 422, 2 casas decimais.
   value LBP { numeric: "422", scale: 2 }
+  // Rupia do Sri Lanka: código 144, 2 casas decimais.
   value LKR { numeric: "144", scale: 2 }
+  // Dólar liberiano: código 430, 2 casas decimais.
   value LRD { numeric: "430", scale: 2 }
+  // Loti lesotense: código 426, 2 casas decimais.
   value LSL { numeric: "426", scale: 2 }
+  // Dinar líbio: código 434, 3 casas decimais.
   value LYD { numeric: "434", scale: 3 }
+  // Dirham marroquino: código 504, 2 casas decimais.
   value MAD { numeric: "504", scale: 2 }
+  // Leu moldavo: código 498, 2 casas decimais.
   value MDL { numeric: "498", scale: 2 }
+  // Ariary malgaxe: código 969, 2 casas decimais e subunidade de 1/5.
   value MGA { numeric: "969", scale: 2, subunitRatio: 5 }
+  // Denar macedônio: código 807, 2 casas decimais.
   value MKD { numeric: "807", scale: 2 }
+  // Kyat birmanês: código 104, 2 casas decimais.
   value MMK { numeric: "104", scale: 2 }
+  // Tugrik mongol: código 496, 2 casas decimais.
   value MNT { numeric: "496", scale: 2 }
+  // Pataca de Macau: código 446, 2 casas decimais.
   value MOP { numeric: "446", scale: 2 }
+  // Ouguiya mauritana: código 929, 2 casas decimais e subunidade de 1/5.
   value MRU { numeric: "929", scale: 2, subunitRatio: 5 }
+  // Rupia mauriciana: código 480, 2 casas decimais.
   value MUR { numeric: "480", scale: 2 }
+  // Rufiyaa maldiva: código 462, 2 casas decimais.
   value MVR { numeric: "462", scale: 2 }
+  // Kwacha malauiana: código 454, 2 casas decimais.
   value MWK { numeric: "454", scale: 2 }
+  // Peso mexicano: código 484, 2 casas decimais.
   value MXN { numeric: "484", scale: 2 }
+  // Unidade de Inversão mexicana (UDI): código 979, 2 casas decimais.
   value MXV { numeric: "979", scale: 2 }
+  // Ringgit malaio: código 458, 2 casas decimais.
   value MYR { numeric: "458", scale: 2 }
+  // Metical moçambicano: código 943, 2 casas decimais.
   value MZN { numeric: "943", scale: 2 }
+  // Dólar namibiano: código 516, 2 casas decimais.
   value NAD { numeric: "516", scale: 2 }
+  // Naira nigeriana: código 566, 2 casas decimais.
   value NGN { numeric: "566", scale: 2 }
+  // Córdoba ouro nicaraguense: código 558, 2 casas decimais.
   value NIO { numeric: "558", scale: 2 }
+  // Coroa norueguesa: código 578, 2 casas decimais.
   value NOK { numeric: "578", scale: 2 }
+  // Rupia nepalesa: código 524, 2 casas decimais.
   value NPR { numeric: "524", scale: 2 }
+  // Dólar neozelandês: código 554, 2 casas decimais.
   value NZD { numeric: "554", scale: 2 }
+  // Rial omanense: código 512, 3 casas decimais.
   value OMR { numeric: "512", scale: 3 }
+  // Balboa panamenha: código 590, 2 casas decimais.
   value PAB { numeric: "590", scale: 2 }
+  // Sol peruano: código 604, 2 casas decimais.
   value PEN { numeric: "604", scale: 2 }
+  // Kina papuásia: código 598, 2 casas decimais.
   value PGK { numeric: "598", scale: 2 }
+  // Peso filipino: código 608, 2 casas decimais.
   value PHP { numeric: "608", scale: 2 }
+  // Rupia paquistanesa: código 586, 2 casas decimais.
   value PKR { numeric: "586", scale: 2 }
+  // Zloty polonês: código 985, 2 casas decimais.
   value PLN { numeric: "985", scale: 2 }
+  // Guarani paraguaio: código 600, sem casas decimais.
   value PYG { numeric: "600", scale: 0 }
+  // Riyal catariano: código 634, 2 casas decimais.
   value QAR { numeric: "634", scale: 2 }
+  // Leu romeno: código 946, 2 casas decimais.
   value RON { numeric: "946", scale: 2 }
+  // Dinar sérvio: código 941, 2 casas decimais.
   value RSD { numeric: "941", scale: 2 }
+  // Rublo russo: código 643, 2 casas decimais.
   value RUB { numeric: "643", scale: 2 }
+  // Franco ruandês: código 646, sem casas decimais.
   value RWF { numeric: "646", scale: 0 }
+  // Riyal saudita: código 682, 2 casas decimais.
   value SAR { numeric: "682", scale: 2 }
+  // Dólar das Ilhas Salomão: código 090, 2 casas decimais.
   value SBD { numeric: "090", scale: 2 }
+  // Rupia seichelense: código 690, 2 casas decimais.
   value SCR { numeric: "690", scale: 2 }
+  // Libra sudanesa: código 938, 2 casas decimais.
   value SDG { numeric: "938", scale: 2 }
+  // Coroa sueca: código 752, 2 casas decimais.
   value SEK { numeric: "752", scale: 2 }
+  // Dólar de Singapura: código 702, 2 casas decimais.
   value SGD { numeric: "702", scale: 2 }
+  // Libra de Santa Helena: código 654, 2 casas decimais.
   value SHP { numeric: "654", scale: 2 }
+  // Leone serra-leonês: código 925, 2 casas decimais.
   value SLE { numeric: "925", scale: 2 }
+  // Xelim somali: código 706, 2 casas decimais.
   value SOS { numeric: "706", scale: 2 }
+  // Dólar surinamês: código 968, 2 casas decimais.
   value SRD { numeric: "968", scale: 2 }
+  // Libra sul-sudanesa: código 728, 2 casas decimais.
   value SSP { numeric: "728", scale: 2 }
+  // Dobra santomense: código 930, 2 casas decimais.
   value STN { numeric: "930", scale: 2 }
+  // Colón salvadorenho: código 222, 2 casas decimais.
   value SVC { numeric: "222", scale: 2 }
+  // Libra síria: código 760, 2 casas decimais.
   value SYP { numeric: "760", scale: 2 }
+  // Lilangeni suazi: código 748, 2 casas decimais.
   value SZL { numeric: "748", scale: 2 }
+  // Baht tailandês: código 764, 2 casas decimais.
   value THB { numeric: "764", scale: 2 }
+  // Somoni tadjique: código 972, 2 casas decimais.
   value TJS { numeric: "972", scale: 2 }
+  // Manat turcomeno: código 934, 2 casas decimais.
   value TMT { numeric: "934", scale: 2 }
+  // Dinar tunisiano: código 788, 3 casas decimais.
   value TND { numeric: "788", scale: 3 }
+  // Pa'anga tonganesa: código 776, 2 casas decimais.
   value TOP { numeric: "776", scale: 2 }
+  // Lira turca: código 949, 2 casas decimais.
   value TRY { numeric: "949", scale: 2 }
+  // Dólar de Trinidad e Tobago: código 780, 2 casas decimais.
   value TTD { numeric: "780", scale: 2 }
+  // Novo dólar taiwanês: código 901, 2 casas decimais.
   value TWD { numeric: "901", scale: 2 }
+  // Xelim tanzaniano: código 834, 2 casas decimais.
   value TZS { numeric: "834", scale: 2 }
+  // Hryvnia ucraniana: código 980, 2 casas decimais.
   value UAH { numeric: "980", scale: 2 }
+  // Xelim ugandense: código 800, sem casas decimais.
   value UGX { numeric: "800", scale: 0 }
+  // Dólar americano: código 840, 2 casas decimais.
   value USD { numeric: "840", scale: 2 }
+  // Dólar americano do dia seguinte (mercado financeiro): código 997, 2 casas.
   value USN { numeric: "997", scale: 2 }
+  // Peso uruguaio indexado: código 940, sem casas decimais.
   value UYI { numeric: "940", scale: 0 }
+  // Peso uruguaio: código 858, 2 casas decimais.
   value UYU { numeric: "858", scale: 2 }
+  // Unidade Previsional uruguaia: código 927, 4 casas decimais.
   value UYW { numeric: "927", scale: 4 }
+  // Som uzbeque: código 860, 2 casas decimais.
   value UZS { numeric: "860", scale: 2 }
+  // Bolívar digital venezuelano: código 926, 2 casas decimais.
   value VED { numeric: "926", scale: 2 }
+  // Bolívar soberano venezuelano: código 928, 2 casas decimais.
   value VES { numeric: "928", scale: 2 }
+  // Dong vietnamita: código 704, sem casas decimais.
   value VND { numeric: "704", scale: 0 }
+  // Vatu vanuatuense: código 548, sem casas decimais.
   value VUV { numeric: "548", scale: 0 }
+  // Tala samoana: código 882, 2 casas decimais.
   value WST { numeric: "882", scale: 2 }
+  // Dinar árabe de contabilidade: código 396, 2 casas decimais.
   value XAD { numeric: "396", scale: 2 }
+  // Franco CFA da África Central: código 950, sem casas decimais.
   value XAF { numeric: "950", scale: 0 }
+  // Prata (onça troy): código 961, sem casas decimais.
   value XAG { numeric: "961", scale: 0 }
+  // Ouro (onça troy): código 959, sem casas decimais.
   value XAU { numeric: "959", scale: 0 }
+  // Unidade composta EURCO (mercado de títulos): código 955, sem casas.
   value XBA { numeric: "955", scale: 0 }
+  // Unidade monetária europeia (EMS): código 956, sem casas decimais.
   value XBB { numeric: "956", scale: 0 }
+  // Unidade de conta do mercado europeu de títulos: código 957, sem casas.
   value XBC { numeric: "957", scale: 0 }
+  // Unidade de conta europeia (EUA-9): código 958, sem casas decimais.
   value XBD { numeric: "958", scale: 0 }
+  // Dólar do Caribe Oriental: código 951, 2 casas decimais.
   value XCD { numeric: "951", scale: 2 }
+  // Florim caribenho: código 532, 2 casas decimais.
   value XCG { numeric: "532", scale: 2 }
+  // Direito especial de saque (FMI): código 960, sem casas decimais.
   value XDR { numeric: "960", scale: 0 }
+  // Franco CFA da África Ocidental: código 952, sem casas decimais.
   value XOF { numeric: "952", scale: 0 }
+  // Paládio (onça troy): código 964, sem casas decimais.
   value XPD { numeric: "964", scale: 0 }
+  // Franco CFP (Pacífico francês): código 953, sem casas decimais.
   value XPF { numeric: "953", scale: 0 }
+  // Platina (onça troy): código 962, sem casas decimais.
   value XPT { numeric: "962", scale: 0 }
+  // Sucre (sistema monetário regional): código 994, sem casas decimais.
   value XSU { numeric: "994", scale: 0 }
+  // Código reservado para testes: código 963, sem casas decimais.
   value XTS { numeric: "963", scale: 0 }
+  // Unidade de conta do Banco Asiático de Desenvolvimento: código 965, sem casas.
   value XUA { numeric: "965", scale: 0 }
+  // Nenhuma moeda (transações sem valor monetário): código 999, sem casas.
   value XXX { numeric: "999", scale: 0 }
+  // Rial iemenita: código 886, 2 casas decimais.
   value YER { numeric: "886", scale: 2 }
+  // Rand sul-africano: código 710, 2 casas decimais.
   value ZAR { numeric: "710", scale: 2 }
+  // Kwacha zambiano: código 967, 2 casas decimais.
   value ZMW { numeric: "967", scale: 2 }
+  // Ouro do Zimbábue: código 924, 2 casas decimais.
   value ZWG { numeric: "924", scale: 2 }
+  // Encerra o bloco de valores ISO declarados acima.
   }
 
+  // Serializa a moeda como o código de três letras.
   write(value, out) {
+    // Grava o código ISO no fluxo.
     out.writeString(value);
   }
 
+  // Lê a moeda de volta do fluxo serializado.
   read(in) {
+    // A moeda foi gravada como texto; devolve o código lido.
     return in.readString();
   }
 
+  // Aceita o código digitado sem normalizar.
   parse(text, flags) {
+    // Devolve o texto recebido, que já é o código da moeda.
     return text;
   }
 
+  // Exibe a moeda como o próprio código ISO.
   format(value, flags) {
+    // Não há formatação adicional para o código da moeda.
     return value;
 }
+// Shape de duração: intervalos de tempo de nanossegundos a semanas.
 shape Duration {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Duração", en: "Duration" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em SLAs, prazos e operadores de tempo.
   dimension: duration
+  // Catálogo de unidades de tempo aceitas.
   units {
+    // Segundo: unidade-base do SI para tempo.
     s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "segundo", other: "segundos" }
-        en: { one: "second", other: "seconds" }
+        pt-BR: { one: "segundo", other: "segundos" } // português: singular/plural
+        en: { one: "second", other: "seconds" } // inglês: singular/plural
       }
     }
+    // Milissegundo: milésimo do segundo.
     ms: {
+      // Fator de conversão: 1 ms vale 0,001 s.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milissegundo", other: "milissegundos" }
-        en: { one: "millisecond", other: "milliseconds" }
+        pt-BR: { one: "milissegundo", other: "milissegundos" } // português: singular/plural
+        en: { one: "millisecond", other: "milliseconds" } // inglês: singular/plural
       }
     }
+    // Microssegundo: milionésimo do segundo.
     us: {
+      // Fator de conversão: 1 µs vale 0,000001 s.
       factor: 0.000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microssegundo", other: "microssegundos" }
-        en: { one: "microsecond", other: "microseconds" }
+        pt-BR: { one: "microssegundo", other: "microssegundos" } // português: singular/plural
+        en: { one: "microsecond", other: "microseconds" } // inglês: singular/plural
       }
     }
+    // Nanossegundo: bilionésimo do segundo, comum em latência.
     ns: {
+      // Fator de conversão: 1 ns vale 0,000000001 s.
       factor: 0.000000001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "nanossegundo", other: "nanossegundos" }
-        en: { one: "nanosecond", other: "nanoseconds" }
+        pt-BR: { one: "nanossegundo", other: "nanossegundos" } // português: singular/plural
+        en: { one: "nanosecond", other: "nanoseconds" } // inglês: singular/plural
       }
     }
+    // Minuto: sessenta segundos.
     min: {
+      // Fator de conversão: 1 min vale 60 s.
       factor: 60
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "minuto", other: "minutos" }
-        en: { one: "minute", other: "minutes" }
+        pt-BR: { one: "minuto", other: "minutos" } // português: singular/plural
+        en: { one: "minute", other: "minutes" } // inglês: singular/plural
       }
     }
+    // Hora: sessenta minutos.
     h: {
+      // Fator de conversão: 1 h vale 3600 s.
       factor: 3600
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "hora", other: "horas" }
-        en: { one: "hour", other: "hours" }
+        pt-BR: { one: "hora", other: "horas" } // português: singular/plural
+        en: { one: "hour", other: "hours" } // inglês: singular/plural
       }
     }
+    // Dia: vinte e quatro horas, base de prazos e SLAs.
     d: {
+      // Fator de conversão: 1 d vale 86 400 s.
       factor: 86400
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "dia", other: "dias" }
-        en: { one: "day", other: "days" }
+        pt-BR: { one: "dia", other: "dias" } // português: singular/plural
+        en: { one: "day", other: "days" } // inglês: singular/plural
       }
     }
+    // Semana: sete dias, usada em ciclos e prazos longos.
     week: {
+      // Fator de conversão: 1 semana vale 604 800 s.
       factor: 604800
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "semana", other: "semanas" }
-        en: { one: "week", other: "weeks" }
+        pt-BR: { one: "semana", other: "semanas" } // português: singular/plural
+        en: { one: "week", other: "weeks" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 h").
   parse: quantity
+  // Soma durações convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar e ordenar durações.
   index: normalized
 
+  // Extrai o número bruto para cálculos externos ao shape.
   toNumber(value) {
+    // Devolve o valor sem a unidade anexada.
     return value.raw;
   }
 
+  // Serializa a duração para armazenamento, preservando a unidade.
   write(value, out) {
+    // Assume segundos quando o valor não traz unidade explícita.
     const unit = value.unit ?? s;
+    // Grava o símbolo da unidade no fluxo.
     out.writeString(unit);
+    // Grava o número bruto no fluxo.
     out.writeDouble(value.raw);
   }
 
+  // Reconstrói a duração a partir do fluxo serializado.
   read(in) {
+    // Lê o símbolo da unidade gravado antes do número.
     const unit = in.readString();
+    // Lê o número bruto na mesma ordem da escrita.
     const raw = in.readDouble();
+    // Remonta a duração com unidade e valor lidos.
     return new Duration{raw, unit};
   }
 
+  // Converte texto livre em um Duration, aceitando a unidade digitada.
   parse(text, flags) {
+    // Interpreta a quantidade textual em número e unidade.
     const parsed = parseQuantity(text, flags);
+    // Cria o Duration com valor e unidade reconhecidos.
     return new Duration{raw: parsed.value, unit: parsed.unit};
   }
 
+  // Formata a duração para exibição com a unidade mais legível.
   format(value, flags) {
+    // Unidade de origem; segundos quando não informada.
     const from = value.unit ?? s;
+    // Respeita a unidade pedida ou escolhe a melhor para o número.
     const unit = flags.unit ?? bestUnit(value.raw, from, units);
+    // Delega a formatação numérica ao formatador compartilhado.
     return formatReal(value.raw, from, unit, flags.style, flags.unitStyle);
   }
 }
 
+// Shape de tamanho de dados: bytes decimais e binários.
 shape DataSize {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Tamanho de dados", en: "Data size" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão de dados, usada em limites de armazenamento e anexos.
   dimension: data
+  // Catálogo de unidades de tamanho de dados aceitas.
   units {
+    // Byte: unidade-base para tamanho de dados.
     B: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "byte", other: "bytes" }
-        en: { one: "byte", other: "bytes" }
+        pt-BR: { one: "byte", other: "bytes" } // português: singular/plural
+        en: { one: "byte", other: "bytes" } // inglês: singular/plural
       }
     }
+    // Bit: um oitavo do byte.
     bit: {
+      // Fator de conversão: 1 bit vale 0,125 B.
       factor: 0.125
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "bit", other: "bits" }
-        en: { one: "bit", other: "bits" }
+        pt-BR: { one: "bit", other: "bits" } // português: singular/plural
+        en: { one: "bit", other: "bits" } // inglês: singular/plural
       }
     }
+    // Kilobyte decimal: mil bytes, padrão de fabricantes de disco.
     KB: {
+      // Fator de conversão: 1 KB vale 1000 B.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "kilobyte", other: "kilobytes" }
-        en: { one: "kilobyte", other: "kilobytes" }
+        pt-BR: { one: "kilobyte", other: "kilobytes" } // português: singular/plural
+        en: { one: "kilobyte", other: "kilobytes" } // inglês: singular/plural
       }
     }
+    // Megabyte decimal: um milhão de bytes.
     MB: {
+      // Fator de conversão: 1 MB vale 1 000 000 B.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megabyte", other: "megabytes" }
-        en: { one: "megabyte", other: "megabytes" }
+        pt-BR: { one: "megabyte", other: "megabytes" } // português: singular/plural
+        en: { one: "megabyte", other: "megabytes" } // inglês: singular/plural
       }
     }
+    // Gigabyte decimal: um bilhão de bytes.
     GB: {
+      // Fator de conversão: 1 GB vale 1 000 000 000 B.
       factor: 1000000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gigabyte", other: "gigabytes" }
-        en: { one: "gigabyte", other: "gigabytes" }
+        pt-BR: { one: "gigabyte", other: "gigabytes" } // português: singular/plural
+        en: { one: "gigabyte", other: "gigabytes" } // inglês: singular/plural
       }
     }
+    // Terabyte decimal: um trilhão de bytes.
     TB: {
+      // Fator de conversão: 1 TB vale 1 000 000 000 000 B.
       factor: 1000000000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "terabyte", other: "terabytes" }
-        en: { one: "terabyte", other: "terabytes" }
+        pt-BR: { one: "terabyte", other: "terabytes" } // português: singular/plural
+        en: { one: "terabyte", other: "terabytes" } // inglês: singular/plural
       }
     }
+    // Kibibyte binário: 1024 bytes (base 2).
     KiB: {
+      // Fator de conversão: 1 KiB vale 1024 B.
       factor: 1024
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "kibibyte", other: "kibibytes" }
-        en: { one: "kibibyte", other: "kibibytes" }
+        pt-BR: { one: "kibibyte", other: "kibibytes" } // português: singular/plural
+        en: { one: "kibibyte", other: "kibibytes" } // inglês: singular/plural
       }
     }
+    // Mebibyte binário: 1024 kibibytes.
     MiB: {
+      // Fator de conversão: 1 MiB vale 1 048 576 B.
       factor: 1048576
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "mebibyte", other: "mebibytes" }
-        en: { one: "mebibyte", other: "mebibytes" }
+        pt-BR: { one: "mebibyte", other: "mebibytes" } // português: singular/plural
+        en: { one: "mebibyte", other: "mebibytes" } // inglês: singular/plural
       }
     }
+    // Gibibyte binário: 1024 mebibytes.
     GiB: {
+      // Fator de conversão: 1 GiB vale 1 073 741 824 B.
       factor: 1073741824
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gibibyte", other: "gibibytes" }
-        en: { one: "gibibyte", other: "gibibytes" }
+        pt-BR: { one: "gibibyte", other: "gibibytes" } // português: singular/plural
+        en: { one: "gibibyte", other: "gibibytes" } // inglês: singular/plural
       }
     }
+    // Tebibyte binário: 1024 gibibytes.
     TiB: {
+      // Fator de conversão: 1 TiB vale 1 099 511 627 776 B.
       factor: 1099511627776
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "tebibyte", other: "tebibytes" }
-        en: { one: "tebibyte", other: "tebibytes" }
+        pt-BR: { one: "tebibyte", other: "tebibytes" } // português: singular/plural
+        en: { one: "tebibyte", other: "tebibytes" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "512 MiB").
   parse: quantity
+  // Soma tamanhos convertendo antes para a mesma unidade.
   aggregate: sum
+  // Índice normalizado permite comparar e ordenar tamanhos.
   index: normalized
 }
 
+// Shape de taxa de dados: bits e bytes por segundo.
 shape DataRate {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Taxa de dados", en: "Data rate" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão de taxa de dados, usada em links e transferências.
   dimension: data-rate
+  // Catálogo de unidades de vazão de dados aceitas.
   units {
+    // Bit por segundo: unidade-base de taxa de dados.
     bps: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "bit por segundo", other: "bits por segundo" }
-        en: { one: "bit per second", other: "bits per second" }
+        pt-BR: { one: "bit por segundo", other: "bits por segundo" } // português: singular/plural
+        en: { one: "bit per second", other: "bits per second" } // inglês: singular/plural
       }
     }
+    // Kilobit por segundo: mil bits por segundo.
     kbps: {
+      // Fator de conversão: 1 kbps vale 1000 bps.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "kilobit por segundo", other: "kilobits por segundo" }
-        en: { one: "kilobit per second", other: "kilobits per second" }
+        pt-BR: { one: "kilobit por segundo", other: "kilobits por segundo" } // português: singular/plural
+        en: { one: "kilobit per second", other: "kilobits per second" } // inglês: singular/plural
       }
     }
+    // Megabit por segundo: um milhão de bits por segundo.
     Mbps: {
+      // Fator de conversão: 1 Mbps vale 1 000 000 bps.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megabit por segundo", other: "megabits por segundo" }
-        en: { one: "megabit per second", other: "megabits per second" }
+        pt-BR: { one: "megabit por segundo", other: "megabits por segundo" } // português: singular/plural
+        en: { one: "megabit per second", other: "megabits per second" } // inglês: singular/plural
       }
     }
+    // Gigabit por segundo: um bilhão de bits por segundo.
     Gbps: {
+      // Fator de conversão: 1 Gbps vale 1 000 000 000 bps.
       factor: 1000000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gigabit por segundo", other: "gigabits por segundo" }
-        en: { one: "gigabit per second", other: "gigabits per second" }
+        pt-BR: { one: "gigabit por segundo", other: "gigabits por segundo" } // português: singular/plural
+        en: { one: "gigabit per second", other: "gigabits per second" } // inglês: singular/plural
       }
     }
+    // Byte por segundo: oito bits por segundo.
     B_s: {
+      // Fator de conversão: 1 B/s vale 8 bps.
       factor: 8
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "byte por segundo", other: "bytes por segundo" }
-        en: { one: "byte per second", other: "bytes per second" }
+        pt-BR: { one: "byte por segundo", other: "bytes por segundo" } // português: singular/plural
+        en: { one: "byte per second", other: "bytes per second" } // inglês: singular/plural
       }
     }
+    // Kibibyte por segundo: 8192 bits por segundo (base 2).
     KiB_s: {
+      // Fator de conversão: 1 KiB/s vale 8192 bps.
       factor: 8192
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "kibibyte por segundo", other: "kibibytes por segundo" }
-        en: { one: "kibibyte per second", other: "kibibytes per second" }
+        pt-BR: { one: "kibibyte por segundo", other: "kibibytes por segundo" } // português: singular/plural
+        en: { one: "kibibyte per second", other: "kibibytes per second" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "10 Mbps").
   parse: quantity
+  // Índice normalizado permite comparar e ordenar taxas.
   index: normalized
 }
 
+// Shape de velocidade: SI, imperial e unidades de navegação.
 shape Speed {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Velocidade", en: "Speed" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em logística e transporte.
   dimension: speed
+  // Catálogo de unidades de velocidade aceitas.
   units {
+    // Metro por segundo: unidade-base do SI para velocidade.
     m_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "metro por segundo", other: "metros por segundo" }
-        en: { one: "meter per second", other: "meters per second" }
+        pt-BR: { one: "metro por segundo", other: "metros por segundo" } // português: singular/plural
+        en: { one: "meter per second", other: "meters per second" } // inglês: singular/plural
       }
     }
+    // Quilômetro por hora: unidade usual de trânsito no Brasil.
     km_h: {
+      // Fator de conversão: 1 km/h equivale a 0,2777... m/s.
       factor: 0.2777777777777778
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilômetro por hora", other: "quilômetros por hora" }
-        en: { one: "kilometer per hour", other: "kilometers per hour" }
+        pt-BR: { one: "quilômetro por hora", other: "quilômetros por hora" } // português: singular/plural
+        en: { one: "kilometer per hour", other: "kilometers per hour" } // inglês: singular/plural
       }
     }
+    // Milha por hora: unidade de trânsito nos EUA e Reino Unido.
     mph: {
+      // Fator de conversão: 1 mph vale 0,44704 m/s.
       factor: 0.44704
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milha por hora", other: "milhas por hora" }
-        en: { one: "mile per hour", other: "miles per hour" }
+        pt-BR: { one: "milha por hora", other: "milhas por hora" } // português: singular/plural
+        en: { one: "mile per hour", other: "miles per hour" } // inglês: singular/plural
       }
     }
+    // Nó: milha náutica por hora, padrão em navegação.
     kn: {
+      // Fator de conversão: 1 nó vale 0,514444... m/s.
       factor: 0.514444444444
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "nó", other: "nós" }
-        en: { one: "knot", other: "knots" }
+        pt-BR: { one: "nó", other: "nós" } // português: singular/plural
+        en: { one: "knot", other: "knots" } // inglês: singular/plural
       }
     }
+    // Pé por segundo: usada em engenharia e animação.
     ft_s: {
+      // Fator de conversão: 1 ft/s vale 0,3048 m/s.
       factor: 0.3048
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pé por segundo", other: "pés por segundo" }
-        en: { one: "foot per second", other: "feet per second" }
+        pt-BR: { one: "pé por segundo", other: "pés por segundo" } // português: singular/plural
+        en: { one: "foot per second", other: "feet per second" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "80 km/h").
   parse: quantity
+  // Índice normalizado permite comparar e ordenar velocidades.
   index: normalized
 }
 
+// Shape de aceleração: variação de velocidade por unidade de tempo.
 shape Acceleration {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Aceleração", en: "Acceleration" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em dinâmica e testes.
   dimension: acceleration
+  // Catálogo de unidades de aceleração aceitas.
   units {
+    // Metro por segundo ao quadrado: unidade-base do SI.
     m_s2: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "metro por segundo ao quadrado", other: "metros por segundo ao quadrado" }
-        en: { one: "meter per second squared", other: "meters per second squared" }
+        en: { one: "meter per second squared", other: "meters per second squared" } // inglês: singular/plural
       }
     }
+    // Pé por segundo ao quadrado: equivalente imperial.
     ft_s2: {
+      // Fator de conversão: 1 ft/s² vale 0,3048 m/s².
       factor: 0.3048
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pé por segundo ao quadrado", other: "pés por segundo ao quadrado" }
-        en: { one: "foot per second squared", other: "feet per second squared" }
+        pt-BR: { one: "pé por segundo ao quadrado", other: "pés por segundo ao quadrado" } // português: singular/plural
+        en: { one: "foot per second squared", other: "feet per second squared" } // inglês: singular/plural
       }
     }
+    // Aceleração padrão da gravidade: referência para forças g.
     g: {
+      // Fator de conversão: 1 g vale 9,80665 m/s².
       factor: 9.80665
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grama-força", other: "gramas-força" }
-        en: { one: "gram-force", other: "gram-force" }
+        pt-BR: { one: "grama-força", other: "gramas-força" } // português: singular/plural
+        en: { one: "gram-force", other: "gram-force" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "9,8 m/s²").
   parse: quantity
 }
 
+// Shape de força: newtons e unidades correlatas.
 shape Force {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Força", en: "Force" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em engenharia mecânica.
   dimension: force
+  // Catálogo de unidades de força aceitas.
   units {
+    // Newton: unidade-base do SI para força.
     N: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "newton", other: "newtons" }
-        en: { one: "newton", other: "newtons" }
+        pt-BR: { one: "newton", other: "newtons" } // português: singular/plural
+        en: { one: "newton", other: "newtons" } // inglês: singular/plural
       }
     }
+    // Quilonewton: mil newtons, comum em estruturas.
     kN: {
+      // Fator de conversão: 1 kN vale 1000 N.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilonewton", other: "quilonewtons" }
-        en: { one: "kilonewton", other: "kilonewtons" }
+        pt-BR: { one: "quilonewton", other: "quilonewtons" } // português: singular/plural
+        en: { one: "kilonewton", other: "kilonewtons" } // inglês: singular/plural
       }
     }
+    // Dina: unidade do sistema CGS.
     dyn: {
+      // Fator de conversão: 1 dyn vale 1e-5 N.
       factor: 1e-05
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "dina", other: "dinas" }
-        en: { one: "dyne", other: "dynes" }
+        pt-BR: { one: "dina", other: "dinas" } // português: singular/plural
+        en: { one: "dyne", other: "dynes" } // inglês: singular/plural
       }
     }
+    // Libra-força: unidade de força do sistema imperial/US.
     lbf: {
+      // Fator de conversão: 1 lbf vale 4,4482216152605 N.
       factor: 4.4482216152605
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "libra-força", other: "libras-força" }
-        en: { one: "pound-force", other: "pounds-force" }
+        pt-BR: { one: "libra-força", other: "libras-força" } // português: singular/plural
+        en: { one: "pound-force", other: "pounds-force" } // inglês: singular/plural
       }
     }
+    // Quilograma-força: peso de um quilograma sob gravidade padrão.
     kgf: {
+      // Fator de conversão: 1 kgf vale 9,80665 N.
       factor: 9.80665
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilograma-força", other: "quilogramas-força" }
-        en: { one: "kilogram-force", other: "kilograms-force" }
+        pt-BR: { one: "quilograma-força", other: "quilogramas-força" } // português: singular/plural
+        en: { one: "kilogram-force", other: "kilograms-force" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "10 kN").
   parse: quantity
 
+  // Multiplica força por deslocamento e produz energia (trabalho).
   operator *(left: Force, right: Length): Energy {
+    // Converte a força para newtons.
     const f = convert(left.raw, left.unit, N);
+    // Converte o deslocamento para metros.
     const d = convert(right.raw, right.unit, m);
+    // Resultado em joules.
     return new Energy{raw: f * d, unit: J};
   }
 }
 
+// Shape de pressão: SI, industrial, meteorológica e imperial.
 shape Pressure {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Pressão", en: "Pressure" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em fluidos, gases e clima.
   dimension: pressure
+  // Catálogo de unidades de pressão aceitas.
   units {
+    // Pascal: unidade-base do SI para pressão.
     Pa: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pascal", other: "pascals" }
-        en: { one: "pascal", other: "pascals" }
+        pt-BR: { one: "pascal", other: "pascals" } // português: singular/plural
+        en: { one: "pascal", other: "pascals" } // inglês: singular/plural
       }
     }
+    // Quilopascal: mil pascais, comum em pneus e climatização.
     kPa: {
+      // Fator de conversão: 1 kPa vale 1000 Pa.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilopascal", other: "quilopascals" }
-        en: { one: "kilopascal", other: "kilopascals" }
+        pt-BR: { one: "quilopascal", other: "quilopascals" } // português: singular/plural
+        en: { one: "kilopascal", other: "kilopascals" } // inglês: singular/plural
       }
     }
+    // Megapascal: um milhão de pascais, usado em resistência de materiais.
     MPa: {
+      // Fator de conversão: 1 MPa vale 1 000 000 Pa.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megapascal", other: "megapascals" }
-        en: { one: "megapascal", other: "megapascals" }
+        pt-BR: { one: "megapascal", other: "megapascals" } // português: singular/plural
+        en: { one: "megapascal", other: "megapascals" } // inglês: singular/plural
       }
     }
+    // Bar: cem mil pascais, usado em pressão industrial.
     bar: {
+      // Fator de conversão: 1 bar vale 100 000 Pa.
       factor: 100000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "bar", other: "bares" }
-        en: { one: "bar", other: "bars" }
+        pt-BR: { one: "bar", other: "bares" } // português: singular/plural
+        en: { one: "bar", other: "bars" } // inglês: singular/plural
       }
     }
+    // Milibar: usado em meteorologia.
     mbar: {
+      // Fator de conversão: 1 mbar vale 100 Pa.
       factor: 100
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milibar", other: "milibares" }
-        en: { one: "millibar", other: "millibars" }
+        pt-BR: { one: "milibar", other: "milibares" } // português: singular/plural
+        en: { one: "millibar", other: "millibars" } // inglês: singular/plural
       }
     }
+    // Atmosfera padrão: pressão ao nível do mar.
     atm: {
+      // Fator de conversão: 1 atm vale 101 325 Pa.
       factor: 101325
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "atmosfera", other: "atmosferas" }
-        en: { one: "atmosphere", other: "atmospheres" }
+        pt-BR: { one: "atmosfera", other: "atmosferas" } // português: singular/plural
+        en: { one: "atmosphere", other: "atmospheres" } // inglês: singular/plural
       }
     }
+    // Libra por polegada quadrada: pressão do sistema imperial/US.
     psi: {
+      // Fator de conversão: 1 psi vale 6894,757293168 Pa.
       factor: 6894.757293168
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "libra por polegada quadrada", other: "libras por polegada quadrada" }
-        en: { one: "pound per square inch", other: "pounds per square inch" }
+        en: { one: "pound per square inch", other: "pounds per square inch" } // inglês: singular/plural
       }
     }
+    // Milímetro de mercúrio: pressão arterial e vácuo.
     mmHg: {
+      // Fator de conversão: 1 mmHg vale 133,322387415 Pa.
       factor: 133.322387415
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milímetro de mercúrio", other: "milímetros de mercúrio" }
-        en: { one: "millimeter of mercury", other: "millimeters of mercury" }
+        pt-BR: { one: "milímetro de mercúrio", other: "milímetros de mercúrio" } // português: singular/plural
+        en: { one: "millimeter of mercury", other: "millimeters of mercury" } // inglês: singular/plural
       }
     }
+    // Torr: praticamente igual ao milímetro de mercúrio.
     torr: {
+      // Fator de conversão: 1 torr vale 133,322368421 Pa.
       factor: 133.322368421
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "torr", other: "torr" }
-        en: { one: "torr", other: "torr" }
+        pt-BR: { one: "torr", other: "torr" } // português: singular/plural
+        en: { one: "torr", other: "torr" } // inglês: singular/plural
       }
     }
+    // Polegada de mercúrio: pressão barométrica nos EUA.
     inHg: {
+      // Fator de conversão: 1 inHg vale 3386,389 Pa.
       factor: 3386.389
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "polegada de mercúrio", other: "polegadas de mercúrio" }
-        en: { one: "inch of mercury", other: "inches of mercury" }
+        pt-BR: { one: "polegada de mercúrio", other: "polegadas de mercúrio" } // português: singular/plural
+        en: { one: "inch of mercury", other: "inches of mercury" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 bar").
   parse: quantity
 }
 
+// Shape de energia: trabalho, calor e energia de partículas.
 shape Energy {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Energia", en: "Energy" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em consumo, física e nutrição.
   dimension: energy
+  // Catálogo de unidades de energia aceitas.
   units {
+    // Joule: unidade-base do SI para energia.
     J: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "joule", other: "joules" }
-        en: { one: "joule", other: "joules" }
+        pt-BR: { one: "joule", other: "joules" } // português: singular/plural
+        en: { one: "joule", other: "joules" } // inglês: singular/plural
       }
     }
+    // Quilojoule: mil joules, usado em rótulos de alimentos.
     kJ: {
+      // Fator de conversão: 1 kJ vale 1000 J.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilojoule", other: "quilojoules" }
-        en: { one: "kilojoule", other: "kilojoules" }
+        pt-BR: { one: "quilojoule", other: "quilojoules" } // português: singular/plural
+        en: { one: "kilojoule", other: "kilojoules" } // inglês: singular/plural
       }
     }
+    // Megajoule: um milhão de joules.
     MJ: {
+      // Fator de conversão: 1 MJ vale 1 000 000 J.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megajoule", other: "megajoules" }
-        en: { one: "megajoule", other: "megajoules" }
+        pt-BR: { one: "megajoule", other: "megajoules" } // português: singular/plural
+        en: { one: "megajoule", other: "megajoules" } // inglês: singular/plural
       }
     }
+    // Caloria: energia para elevar 1 g de água em 1 °C.
     cal: {
+      // Fator de conversão: 1 cal vale 4,184 J.
       factor: 4.184
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "caloria", other: "calorias" }
-        en: { one: "calorie", other: "calories" }
+        pt-BR: { one: "caloria", other: "calorias" } // português: singular/plural
+        en: { one: "calorie", other: "calories" } // inglês: singular/plural
       }
     }
+    // Quilocaloria: mil calorias, a "caloria" dos rótulos alimentares.
     kcal: {
+      // Fator de conversão: 1 kcal vale 4184 J.
       factor: 4184
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilocaloria", other: "quilocalorias" }
-        en: { one: "kilocalorie", other: "kilocalories" }
+        pt-BR: { one: "quilocaloria", other: "quilocalorias" } // português: singular/plural
+        en: { one: "kilocalorie", other: "kilocalories" } // inglês: singular/plural
       }
     }
+    // Watt-hora: energia de um watt durante uma hora.
     Wh: {
+      // Fator de conversão: 1 Wh vale 3600 J.
       factor: 3600
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "watt-hora", other: "watt-horas" }
-        en: { one: "watt-hour", other: "watt-hours" }
+        pt-BR: { one: "watt-hora", other: "watt-horas" } // português: singular/plural
+        en: { one: "watt-hour", other: "watt-hours" } // inglês: singular/plural
       }
     }
+    // Quilowatt-hora: unidade de consumo de energia elétrica.
     kWh: {
+      // Fator de conversão: 1 kWh vale 3 600 000 J.
       factor: 3600000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilowatt-hora", other: "quilowatt-horas" }
-        en: { one: "kilowatt-hour", other: "kilowatt-hours" }
+        pt-BR: { one: "quilowatt-hora", other: "quilowatt-horas" } // português: singular/plural
+        en: { one: "kilowatt-hour", other: "kilowatt-hours" } // inglês: singular/plural
       }
     }
+    // Elétron-volt: energia em escala atômica.
     eV: {
+      // Fator em joules conforme o valor exato da carga elementar.
       factor: 1.602176634e-19
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "elétron-volt", other: "elétron-volts" }
-        en: { one: "electronvolt", other: "electronvolts" }
+        pt-BR: { one: "elétron-volt", other: "elétron-volts" } // português: singular/plural
+        en: { one: "electronvolt", other: "electronvolts" } // inglês: singular/plural
       }
     }
+    // Quiloelétron-volt: mil elétron-volts.
     keV: {
+      // Fator em joules: 1 keV vale 1,602176634e-16 J.
       factor: 1.602176634e-16
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quiloelétron-volt", other: "quiloelétron-volts" }
-        en: { one: "kiloelectronvolt", other: "kiloelectronvolts" }
+        pt-BR: { one: "quiloelétron-volt", other: "quiloelétron-volts" } // português: singular/plural
+        en: { one: "kiloelectronvolt", other: "kiloelectronvolts" } // inglês: singular/plural
       }
     }
+    // Megaelétron-volt: um milhão de elétron-volts.
     MeV: {
+      // Fator em joules: 1 MeV vale 1,602176634e-13 J.
       factor: 1.602176634e-13
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megaelétron-volt", other: "megaelétron-volts" }
-        en: { one: "megaelectronvolt", other: "megaelectronvolts" }
+        pt-BR: { one: "megaelétron-volt", other: "megaelétron-volts" } // português: singular/plural
+        en: { one: "megaelectronvolt", other: "megaelectronvolts" } // inglês: singular/plural
       }
     }
+    // Unidade térmica britânica: usada em climatização.
     BTU: {
+      // Fator de conversão: 1 BTU vale 1055,05585262 J.
       factor: 1055.05585262
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "unidade térmica britânica", other: "unidades térmicas britânicas" }
-        en: { one: "British thermal unit", other: "British thermal units" }
+        pt-BR: { one: "unidade térmica britânica", other: "unidades térmicas britânicas" } // português: singular/plural
+        en: { one: "British thermal unit", other: "British thermal units" } // inglês: singular/plural
       }
     }
+    // Erg: unidade de energia do sistema CGS.
     erg: {
+      // Fator de conversão: 1 erg vale 1e-7 J.
       factor: 1e-07
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "erg", other: "ergs" }
-        en: { one: "erg", other: "ergs" }
+        pt-BR: { one: "erg", other: "ergs" } // português: singular/plural
+        en: { one: "erg", other: "ergs" } // inglês: singular/plural
       }
     }
+    // Pé-libra-força: trabalho de uma libra-força por um pé.
     ft_lbf: {
+      // Fator de conversão: 1 ft·lbf vale 1,3558179483314 J.
       factor: 1.3558179483314
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pé-libra-força", other: "pés-libra-força" }
-        en: { one: "foot-pound force", other: "foot-pounds force" }
+        pt-BR: { one: "pé-libra-força", other: "pés-libra-força" } // português: singular/plural
+        en: { one: "foot-pound force", other: "foot-pounds force" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "150 kJ").
   parse: quantity
+  // Soma energias convertendo antes para a mesma unidade.
   aggregate: sum
 
+  // Divide energia por duração e produz potência.
   operator /(left: Energy, right: Duration): Power {
+    // Converte a energia para joules.
     const e = convert(left.raw, left.unit, J);
+    // Converte o tempo para segundos.
     const t = convert(right.raw, right.unit, s);
+    // Resultado em watts.
     return new Power{raw: e / t, unit: W};
   }
 }
 
+// Shape de potência: taxa de energia por tempo.
 shape Power {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Potência", en: "Power" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em motores e equipamentos elétricos.
   dimension: power
+  // Catálogo de unidades de potência aceitas.
   units {
+    // Watt: unidade-base do SI para potência.
     W: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "watt", other: "watts" }
-        en: { one: "watt", other: "watts" }
+        pt-BR: { one: "watt", other: "watts" } // português: singular/plural
+        en: { one: "watt", other: "watts" } // inglês: singular/plural
       }
     }
+    // Quilowatt: mil watts.
     kW: {
+      // Fator de conversão: 1 kW vale 1000 W.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilowatt", other: "quilowatts" }
-        en: { one: "kilowatt", other: "kilowatts" }
+        pt-BR: { one: "quilowatt", other: "quilowatts" } // português: singular/plural
+        en: { one: "kilowatt", other: "kilowatts" } // inglês: singular/plural
       }
     }
+    // Megawatt: um milhão de watts.
     MW: {
+      // Fator de conversão: 1 MW vale 1 000 000 W.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megawatt", other: "megawatts" }
-        en: { one: "megawatt", other: "megawatts" }
+        pt-BR: { one: "megawatt", other: "megawatts" } // português: singular/plural
+        en: { one: "megawatt", other: "megawatts" } // inglês: singular/plural
       }
     }
+    // Cavalo-vapor: potência mecânica em veículos.
     hp: {
+      // Fator de conversão: 1 hp vale 745,6998715823 W.
       factor: 745.6998715823
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "cavalo-vapor", other: "cavalos-vapor" }
-        en: { one: "horsepower", other: "horsepower" }
+        pt-BR: { one: "cavalo-vapor", other: "cavalos-vapor" } // português: singular/plural
+        en: { one: "horsepower", other: "horsepower" } // inglês: singular/plural
       }
     }
+    // BTU por hora: potência de climatização.
     BTU_h: {
+      // Fator de conversão: 1 BTU/h vale 0,29307107017 W.
       factor: 0.29307107017
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "BTU por hora", other: "BTU por hora" }
-        en: { one: "BTU per hour", other: "BTU per hour" }
+        pt-BR: { one: "BTU por hora", other: "BTU por hora" } // português: singular/plural
+        en: { one: "BTU per hour", other: "BTU per hour" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 MW").
   parse: quantity
 }
 
+// Shape de frequência: ciclos por segundo e rotações.
 shape Frequency {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Frequência", en: "Frequency" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em sinais, áudio e motores.
   dimension: frequency
+  // Catálogo de unidades de frequência aceitas.
   units {
+    // Hertz: unidade-base do SI para frequência.
     Hz: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "hertz", other: "hertz" }
-        en: { one: "hertz", other: "hertz" }
+        pt-BR: { one: "hertz", other: "hertz" } // português: singular/plural
+        en: { one: "hertz", other: "hertz" } // inglês: singular/plural
       }
     }
+    // Quilohertz: mil hertz, faixa de áudio.
     kHz: {
+      // Fator de conversão: 1 kHz vale 1000 Hz.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilohertz", other: "quilohertz" }
-        en: { one: "kilohertz", other: "kilohertz" }
+        pt-BR: { one: "quilohertz", other: "quilohertz" } // português: singular/plural
+        en: { one: "kilohertz", other: "kilohertz" } // inglês: singular/plural
       }
     }
+    // Megahertz: um milhão de hertz, faixa de rádio e CPU.
     MHz: {
+      // Fator de conversão: 1 MHz vale 1 000 000 Hz.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megahertz", other: "megahertz" }
-        en: { one: "megahertz", other: "megahertz" }
+        pt-BR: { one: "megahertz", other: "megahertz" } // português: singular/plural
+        en: { one: "megahertz", other: "megahertz" } // inglês: singular/plural
       }
     }
+    // Gigahertz: um bilhão de hertz, faixa de micro-ondas.
     GHz: {
+      // Fator de conversão: 1 GHz vale 1 000 000 000 Hz.
       factor: 1000000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gigahertz", other: "gigahertz" }
-        en: { one: "gigahertz", other: "gigahertz" }
+        pt-BR: { one: "gigahertz", other: "gigahertz" } // português: singular/plural
+        en: { one: "gigahertz", other: "gigahertz" } // inglês: singular/plural
       }
     }
+    // Rotação por minuto: frequência de eixos e motores.
     rpm: {
+      // Fator de conversão: 1 rpm equivale a 0,01666... Hz.
       factor: 0.016666666666666666
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" }
-        en: { one: "revolution per minute", other: "revolutions per minute" }
+        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" } // português: singular/plural
+        en: { one: "revolution per minute", other: "revolutions per minute" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "60 Hz").
   parse: quantity
+  // Índice normalizado permite comparar e ordenar frequências.
   index: normalized
 }
 
+// Shape de ângulo: radianos, graus e subdivisões.
 shape Angle {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Ângulo", en: "Angle" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em geometria e navegação.
   dimension: angle
+  // Catálogo de unidades angulares aceitas.
   units {
+    // Radiano: unidade-base do SI para ângulo plano.
     rad: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "radiano", other: "radianos" }
-        en: { one: "radian", other: "radians" }
+        pt-BR: { one: "radiano", other: "radianos" } // português: singular/plural
+        en: { one: "radian", other: "radians" } // inglês: singular/plural
       }
     }
+    // Miliradiano: milésimo do radiano, usado em mira e óptica.
     mrad: {
+      // Fator de conversão: 1 mrad vale 0,001 rad.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "miliradiano", other: "miliradianos" }
-        en: { one: "milliradian", other: "milliradians" }
+        pt-BR: { one: "miliradiano", other: "miliradianos" } // português: singular/plural
+        en: { one: "milliradian", other: "milliradians" } // inglês: singular/plural
       }
     }
+    // Grau: um trezentos e sessenta avos da volta completa.
     deg: {
+      // Fator de conversão: 1° vale 0,017453292519943295 rad.
       factor: 0.017453292519943295
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grau", other: "graus" }
-        en: { one: "degree", other: "degrees" }
+        pt-BR: { one: "grau", other: "graus" } // português: singular/plural
+        en: { one: "degree", other: "degrees" } // inglês: singular/plural
       }
     }
+    // Minuto de arco: um sessenta avos do grau.
     arcmin: {
+      // Fator de conversão: 1′ vale 0,0002908882086657216 rad.
       factor: 0.0002908882086657216
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "minuto de arco", other: "minutos de arco" }
-        en: { one: "arcminute", other: "arcminutes" }
+        pt-BR: { one: "minuto de arco", other: "minutos de arco" } // português: singular/plural
+        en: { one: "arcminute", other: "arcminutes" } // inglês: singular/plural
       }
     }
+    // Segundo de arco: um sessenta avos do minuto de arco.
     arcsec: {
+      // Fator de conversão: 1″ vale 4,84813681109536e-6 rad.
       factor: 4.84813681109536e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "segundo de arco", other: "segundos de arco" }
-        en: { one: "arcsecond", other: "arcseconds" }
+        pt-BR: { one: "segundo de arco", other: "segundos de arco" } // português: singular/plural
+        en: { one: "arcsecond", other: "arcseconds" } // inglês: singular/plural
       }
     }
+    // Grado: um quatrocentos avos da volta, usado em topografia.
     grad: {
+      // Fator de conversão: 1 grado vale 0,015707963267948967 rad.
       factor: 0.015707963267948967
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grado", other: "grados" }
-        en: { one: "gradian", other: "gradians" }
+        pt-BR: { one: "grado", other: "grados" } // português: singular/plural
+        en: { one: "gradian", other: "gradians" } // inglês: singular/plural
       }
     }
+    // Volta: uma rotação completa, equivalente a 2π radianos.
     turn: {
+      // Fator de conversão: 1 volta vale 6,283185307179586 rad.
       factor: 6.283185307179586
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "volta", other: "voltas" }
-        en: { one: "turn", other: "turns" }
+        pt-BR: { one: "volta", other: "voltas" } // português: singular/plural
+        en: { one: "turn", other: "turns" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "45°").
   parse: quantity
 }
 
+// Shape de densidade: massa por volume.
 shape Density {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Densidade", en: "Density" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em materiais e fluidos.
   dimension: density
+  // Catálogo de unidades de densidade aceitas.
   units {
+    // Quilograma por metro cúbico: unidade-base do SI para densidade.
     kg_m3: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "quilograma por metro cúbico", other: "quilogramas por metro cúbico" }
-        en: { one: "kilogram per cubic meter", other: "kilograms per cubic meter" }
+        en: { one: "kilogram per cubic meter", other: "kilograms per cubic meter" } // inglês: singular/plural
       }
     }
+    // Grama por centímetro cúbico: comum em química e gemologia.
     g_cm3: {
+      // Fator de conversão: 1 g/cm³ vale 1000 kg/m³.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "grama por centímetro cúbico", other: "gramas por centímetro cúbico" }
-        en: { one: "gram per cubic centimeter", other: "grams per cubic centimeter" }
+        en: { one: "gram per cubic centimeter", other: "grams per cubic centimeter" } // inglês: singular/plural
       }
     }
+    // Libra por pé cúbico: densidade do sistema imperial/US.
     lb_ft3: {
+      // Fator de conversão: 1 lb/ft³ vale 16,01846337396 kg/m³.
       factor: 16.01846337396
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "libra por pé cúbico", other: "libras por pé cúbico" }
-        en: { one: "pound per cubic foot", other: "pounds per cubic foot" }
+        pt-BR: { one: "libra por pé cúbico", other: "libras por pé cúbico" } // português: singular/plural
+        en: { one: "pound per cubic foot", other: "pounds per cubic foot" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "1,2 kg/m³").
   parse: quantity
 }
 
+// Shape de momento linear: massa vezes velocidade.
 shape Momentum {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Momento linear", en: "Momentum" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em colisões e dinâmica.
   dimension: momentum
+  // Catálogo de unidades de momento aceitas.
   units {
+    // Quilograma metro por segundo: unidade-base coerente para momento.
     kg_m_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "quilograma metro por segundo", other: "quilogramas metro por segundo" }
-        en: { one: "kilogram meter per second", other: "kilogram meters per second" }
+        en: { one: "kilogram meter per second", other: "kilogram meters per second" } // inglês: singular/plural
       }
     }
+    // Grama centímetro por segundo: unidade do sistema CGS.
     g_cm_s: {
+      // Fator de conversão: 1 g·cm/s vale 1e-5 kg·m/s.
       factor: 1e-05
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "grama centímetro por segundo", other: "gramas centímetro por segundo" }
-        en: { one: "gram centimeter per second", other: "gram centimeters per second" }
+        en: { one: "gram centimeter per second", other: "gram centimeters per second" } // inglês: singular/plural
       }
     }
+    // Libra pé por segundo: momento no sistema imperial/US.
     lb_ft_s: {
+      // Fator de conversão: 1 lb·ft/s vale 0,138254954376 kg·m/s.
       factor: 0.138254954376
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "libra pé por segundo", other: "libras pé por segundo" }
-        en: { one: "pound foot per second", other: "pound feet per second" }
+        pt-BR: { one: "libra pé por segundo", other: "libras pé por segundo" } // português: singular/plural
+        en: { one: "pound foot per second", other: "pound feet per second" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de torque: momento de força em relação a um eixo.
 shape Torque {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Torque", en: "Torque" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em motores e parafusos.
   dimension: torque
+  // Catálogo de unidades de torque aceitas.
   units {
+    // Newton por metro: unidade-base para torque no SI.
     N_m: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "newton por metro", other: "newtons por metro" }
-        en: { one: "newton per meter", other: "newtons per meter" }
+        pt-BR: { one: "newton por metro", other: "newtons por metro" } // português: singular/plural
+        en: { one: "newton per meter", other: "newtons per meter" } // inglês: singular/plural
       }
     }
+    // Libra-força pé: torque no sistema imperial/US.
     lbf_ft: {
+      // Fator de conversão: 1 lbf·ft vale 1,3558179483314 N·m.
       factor: 1.3558179483314
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "libra-força pé", other: "libras-força pé" }
-        en: { one: "pound-force foot", other: "pound-force feet" }
+        pt-BR: { one: "libra-força pé", other: "libras-força pé" } // português: singular/plural
+        en: { one: "pound-force foot", other: "pound-force feet" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de capacidade térmica: energia por variação de temperatura.
 shape HeatCapacity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Capacidade térmica", en: "Heat capacity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em trocas de calor.
   dimension: heat-capacity
+  // Catálogo de unidades de capacidade térmica aceitas.
   units {
+    // Joule por kelvin: unidade-base coerente para capacidade térmica.
     J_K: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" }
-        en: { one: "joule per kelvin", other: "joules per kelvin" }
+        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" } // português: singular/plural
+        en: { one: "joule per kelvin", other: "joules per kelvin" } // inglês: singular/plural
       }
     }
+    // Quilojoule por kelvin: mil joules por kelvin.
     kJ_K: {
+      // Fator de conversão: 1 kJ/K vale 1000 J/K.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" }
-        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" }
+        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" } // português: singular/plural
+        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" } // inglês: singular/plural
       }
     }
+    // BTU por grau Fahrenheit: capacidade térmica no sistema imperial/US.
     BTU_F: {
+      // Fator de conversão: 1 BTU/°F vale 1899,100534716 J/K.
       factor: 1899.100534716
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "BTU por grau Fahrenheit", other: "BTU por grau Fahrenheit" }
-        en: { one: "BTU per degree Fahrenheit", other: "BTU per degree Fahrenheit" }
+        pt-BR: { one: "BTU por grau Fahrenheit", other: "BTU por grau Fahrenheit" } // português: singular/plural
+        en: { one: "BTU per degree Fahrenheit", other: "BTU per degree Fahrenheit" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de entropia: energia por temperatura.
 shape Entropy {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Entropia", en: "Entropy" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em termodinâmica.
   dimension: entropy
+  // Catálogo de unidades de entropia aceitas.
   units {
+    // Joule por kelvin: unidade-base coerente para entropia.
     J_K: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" }
-        en: { one: "joule per kelvin", other: "joules per kelvin" }
+        pt-BR: { one: "joule por kelvin", other: "joules por kelvin" } // português: singular/plural
+        en: { one: "joule per kelvin", other: "joules per kelvin" } // inglês: singular/plural
       }
     }
+    // Quilojoule por kelvin: mil joules por kelvin.
     kJ_K: {
+      // Fator de conversão: 1 kJ/K vale 1000 J/K.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" }
-        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" }
+        pt-BR: { one: "quilojoule por kelvin", other: "quilojoules por kelvin" } // português: singular/plural
+        en: { one: "kilojoule per kelvin", other: "kilojoules per kelvin" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de condutividade térmica: fluxo de calor por gradiente.
 shape ThermalConductivity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Condutividade térmica", en: "Thermal conductivity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em isolantes e materiais.
   dimension: thermal-conductivity
+  // Catálogo de unidades de condutividade térmica aceitas.
   units {
+    // Watt por metro kelvin: unidade-base coerente.
     W_mK: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "watt por metro kelvin", other: "watts por metro kelvin" }
-        en: { one: "watt per meter kelvin", other: "watts per meter kelvin" }
+        pt-BR: { one: "watt por metro kelvin", other: "watts por metro kelvin" } // português: singular/plural
+        en: { one: "watt per meter kelvin", other: "watts per meter kelvin" } // inglês: singular/plural
       }
     }
+    // BTU por hora pé grau Fahrenheit: unidade imperial/US.
     BTU_h_ft_F: {
+      // Fator de conversão: 1 BTU/(h·ft·°F) vale 1,730734666 W/(m·K).
       factor: 1.730734666
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "BTU por hora pé grau Fahrenheit", other: "BTU por hora pé grau Fahrenheit" }
+        // inglês: singular/plural
         en: { one: "BTU per hour foot degree Fahrenheit", other: "BTU per hour foot degree Fahrenheit" }
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de viscosidade dinâmica: resistência ao escoamento.
 shape DynamicViscosity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Viscosidade dinâmica", en: "Dynamic viscosity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em lubrificantes e fluidos.
   dimension: dynamic-viscosity
+  // Catálogo de unidades de viscosidade dinâmica aceitas.
   units {
+    // Pascal segundo: unidade-base coerente para viscosidade dinâmica.
     Pa_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pascal segundo", other: "pascais segundo" }
-        en: { one: "pascal second", other: "pascal seconds" }
+        pt-BR: { one: "pascal segundo", other: "pascais segundo" } // português: singular/plural
+        en: { one: "pascal second", other: "pascal seconds" } // inglês: singular/plural
       }
     }
+    // Poise: unidade CGS equivalente a 0,1 Pa·s.
     P: {
+      // Fator de conversão: 1 P vale 0,1 Pa·s.
       factor: 0.1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "poise", other: "poise" }
-        en: { one: "poise", other: "poise" }
+        pt-BR: { one: "poise", other: "poise" } // português: singular/plural
+        en: { one: "poise", other: "poise" } // inglês: singular/plural
       }
     }
+    // Centipoise: centésimo do poise, comum em água e óleos.
     cP: {
+      // Fator de conversão: 1 cP vale 0,001 Pa·s.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "centipoise", other: "centipoise" }
-        en: { one: "centipoise", other: "centipoise" }
+        pt-BR: { one: "centipoise", other: "centipoise" } // português: singular/plural
+        en: { one: "centipoise", other: "centipoise" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de viscosidade cinemática: viscosidade dinâmica por densidade.
 shape KinematicViscosity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Viscosidade cinemática", en: "Kinematic viscosity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em óleos e combustíveis.
   dimension: kinematic-viscosity
+  // Catálogo de unidades de viscosidade cinemática aceitas.
   units {
+    // Metro quadrado por segundo: unidade-base coerente.
     m2_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
+        // português: singular/plural
         pt-BR: { one: "metro quadrado por segundo", other: "metros quadrados por segundo" }
-        en: { one: "square meter per second", other: "square meters per second" }
+        en: { one: "square meter per second", other: "square meters per second" } // inglês: singular/plural
       }
     }
+    // Stokes: unidade CGS equivalente a 1e-4 m²/s.
     St: {
+      // Fator de conversão: 1 St vale 0,0001 m²/s.
       factor: 0.0001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "stokes", other: "stokes" }
-        en: { one: "stokes", other: "stokes" }
+        pt-BR: { one: "stokes", other: "stokes" } // português: singular/plural
+        en: { one: "stokes", other: "stokes" } // inglês: singular/plural
       }
     }
+    // Centistokes: centésimo do stokes, usado em óleos lubrificantes.
     cSt: {
+      // Fator de conversão: 1 cSt vale 1e-6 m²/s.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "centistokes", other: "centistokes" }
-        en: { one: "centistokes", other: "centistokes" }
+        pt-BR: { one: "centistokes", other: "centistokes" } // português: singular/plural
+        en: { one: "centistokes", other: "centistokes" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de tensão superficial: força por unidade de comprimento.
 shape SurfaceTension {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Tensão superficial", en: "Surface tension" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em líquidos e surfactantes.
   dimension: surface-tension
+  // Catálogo de unidades de tensão superficial aceitas.
   units {
+    // Newton por metro: unidade-base coerente para tensão superficial.
     N_m: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "newton por metro", other: "newtons por metro" }
-        en: { one: "newton per meter", other: "newtons per meter" }
+        pt-BR: { one: "newton por metro", other: "newtons por metro" } // português: singular/plural
+        en: { one: "newton per meter", other: "newtons per meter" } // inglês: singular/plural
       }
     }
+    // Dina por centímetro: unidade CGS equivalente a 0,001 N/m.
     dyn_cm: {
+      // Fator de conversão: 1 dyn/cm vale 0,001 N/m.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "dina por centímetro", other: "dinas por centímetro" }
-        en: { one: "dyne per centimeter", other: "dynes per centimeter" }
+        pt-BR: { one: "dina por centímetro", other: "dinas por centímetro" } // português: singular/plural
+        en: { one: "dyne per centimeter", other: "dynes per centimeter" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade.
   parse: quantity
 }
 
+// Shape de corrente elétrica: fluxo de carga por tempo.
 shape ElectricCurrent {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Corrente elétrica", en: "Electric current" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em circuitos e equipamentos.
   dimension: electric-current
+  // Catálogo de unidades de corrente elétrica aceitas.
   units {
+    // Ampère: unidade-base do SI para corrente elétrica.
     A: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "ampère", other: "ampères" }
-        en: { one: "ampere", other: "amperes" }
+        pt-BR: { one: "ampère", other: "ampères" } // português: singular/plural
+        en: { one: "ampere", other: "amperes" } // inglês: singular/plural
       }
     }
+    // Miliampère: milésimo do ampère, comum em eletrônica.
     mA: {
+      // Fator de conversão: 1 mA vale 0,001 A.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "miliampère", other: "miliampères" }
-        en: { one: "milliampere", other: "milliamperes" }
+        pt-BR: { one: "miliampère", other: "miliampères" } // português: singular/plural
+        en: { one: "milliampere", other: "milliamperes" } // inglês: singular/plural
       }
     }
+    // Microampère: milionésimo do ampère, comum em sensores.
     uA: {
+      // Fator de conversão: 1 µA vale 1e-6 A.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microampère", other: "microampères" }
-        en: { one: "microampere", other: "microamperes" }
+        pt-BR: { one: "microampère", other: "microampères" } // português: singular/plural
+        en: { one: "microampere", other: "microamperes" } // inglês: singular/plural
       }
     }
+    // Quiloampère: mil ampères, usado em instalações elétricas.
     kA: {
+      // Fator de conversão: 1 kA vale 1000 A.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quiloampère", other: "quiloampères" }
-        en: { one: "kiloampere", other: "kiloamperes" }
+        pt-BR: { one: "quiloampère", other: "quiloampères" } // português: singular/plural
+        en: { one: "kiloampere", other: "kiloamperes" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "5 A").
   parse: quantity
 
+  // Multiplica corrente por duração e produz carga elétrica.
   operator *(left: ElectricCurrent, right: Duration): ElectricCharge {
+    // Converte a corrente para ampères.
     const i = convert(left.raw, left.unit, A);
+    // Converte o tempo para segundos.
     const t = convert(right.raw, right.unit, s);
+    // Resultado em coulombs.
     return new ElectricCharge{raw: i * t, unit: C};
   }
 }
 
+// Shape de carga elétrica: quantidade de eletricidade acumulada.
 shape ElectricCharge {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Carga elétrica", en: "Electric charge" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em baterias e capacitores.
   dimension: electric-charge
+  // Catálogo de unidades de carga elétrica aceitas.
   units {
+    // Coulomb: unidade-base do SI para carga elétrica.
     C: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "coulomb", other: "coulombs" }
-        en: { one: "coulomb", other: "coulombs" }
+        pt-BR: { one: "coulomb", other: "coulombs" } // português: singular/plural
+        en: { one: "coulomb", other: "coulombs" } // inglês: singular/plural
       }
     }
+    // Milicoulomb: milésimo do coulomb.
     mC: {
+      // Fator de conversão: 1 mC vale 0,001 C.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milicoulomb", other: "milicoulombs" }
-        en: { one: "millicoulomb", other: "millicoulombs" }
+        pt-BR: { one: "milicoulomb", other: "milicoulombs" } // português: singular/plural
+        en: { one: "millicoulomb", other: "millicoulombs" } // inglês: singular/plural
       }
     }
+    // Microcoulomb: milionésimo do coulomb.
     uC: {
+      // Fator de conversão: 1 µC vale 1e-6 C.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microcoulomb", other: "microcoulombs" }
-        en: { one: "microcoulomb", other: "microcoulombs" }
+        pt-BR: { one: "microcoulomb", other: "microcoulombs" } // português: singular/plural
+        en: { one: "microcoulomb", other: "microcoulombs" } // inglês: singular/plural
       }
     }
+    // Ampère-hora: carga de um ampère durante uma hora (baterias).
     Ah: {
+      // Fator de conversão: 1 Ah vale 3600 C.
       factor: 3600
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "ampère-hora", other: "ampère-horas" }
-        en: { one: "ampere-hour", other: "ampere-hours" }
+        pt-BR: { one: "ampère-hora", other: "ampère-horas" } // português: singular/plural
+        en: { one: "ampere-hour", other: "ampere-hours" } // inglês: singular/plural
       }
     }
+    // Miliampère-hora: milésimo do ampère-hora, comum em celulares.
     mAh: {
+      // Fator de conversão: 1 mAh vale 3,6 C.
       factor: 3.6
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "miliampère-hora", other: "miliampère-horas" }
-        en: { one: "milliampere-hour", other: "milliampere-hours" }
+        pt-BR: { one: "miliampère-hora", other: "miliampère-horas" } // português: singular/plural
+        en: { one: "milliampere-hour", other: "milliampere-hours" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 Ah").
   parse: quantity
 
+  // Divide carga por duração e produz corrente elétrica.
   operator /(left: ElectricCharge, right: Duration): ElectricCurrent {
+    // Converte a carga para coulombs.
     const q = convert(left.raw, left.unit, C);
+    // Converte o tempo para segundos.
     const t = convert(right.raw, right.unit, s);
+    // Resultado em ampères.
     return new ElectricCurrent{raw: q / t, unit: A};
   }
 }
 
+// Shape de tensão elétrica: diferença de potencial.
 shape Voltage {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Tensão elétrica", en: "Voltage" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em redes e componentes.
   dimension: voltage
+  // Catálogo de unidades de tensão elétrica aceitas.
   units {
+    // Volt: unidade-base do SI para tensão elétrica.
     V: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "volt", other: "volts" }
-        en: { one: "volt", other: "volts" }
+        pt-BR: { one: "volt", other: "volts" } // português: singular/plural
+        en: { one: "volt", other: "volts" } // inglês: singular/plural
       }
     }
+    // Milivolt: milésimo do volt, comum em sinais.
     mV: {
+      // Fator de conversão: 1 mV vale 0,001 V.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milivolt", other: "milivolts" }
-        en: { one: "millivolt", other: "millivolts" }
+        pt-BR: { one: "milivolt", other: "milivolts" } // português: singular/plural
+        en: { one: "millivolt", other: "millivolts" } // inglês: singular/plural
       }
     }
+    // Quilovolt: mil volts, usado em transmissão de energia.
     kV: {
+      // Fator de conversão: 1 kV vale 1000 V.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilovolt", other: "quilovolts" }
-        en: { one: "kilovolt", other: "kilovolts" }
+        pt-BR: { one: "quilovolt", other: "quilovolts" } // português: singular/plural
+        en: { one: "kilovolt", other: "kilovolts" } // inglês: singular/plural
       }
     }
+    // Microvolt: milionésimo do volt, comum em biossinais.
     uV: {
+      // Fator de conversão: 1 µV vale 1e-6 V.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microvolt", other: "microvolts" }
-        en: { one: "microvolt", other: "microvolts" }
+        pt-BR: { one: "microvolt", other: "microvolts" } // português: singular/plural
+        en: { one: "microvolt", other: "microvolts" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "220 V").
   parse: quantity
 
+  // Multiplica tensão por corrente e produz potência.
   operator *(left: Voltage, right: ElectricCurrent): Power {
+    // Converte a tensão para volts.
     const v = convert(left.raw, left.unit, V);
+    // Converte a corrente para ampères.
     const i = convert(right.raw, right.unit, A);
+    // Resultado em watts.
     return new Power{raw: v * i, unit: W};
   }
 }
 
+// Shape de resistência elétrica: oposição à passagem de corrente.
 shape Resistance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Resistência elétrica", en: "Resistance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em componentes e circuitos.
   dimension: resistance
+  // Catálogo de unidades de resistência elétrica aceitas.
   units {
+    // Ohm: unidade-base do SI para resistência elétrica.
     ohm: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "ohm", other: "ohms" }
-        en: { one: "ohm", other: "ohms" }
+        pt-BR: { one: "ohm", other: "ohms" } // português: singular/plural
+        en: { one: "ohm", other: "ohms" } // inglês: singular/plural
       }
     }
+    // Quiloohm: mil ohms, comum em resistores.
     kohm: {
+      // Fator de conversão: 1 kΩ vale 1000 Ω.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quiloohm", other: "quiloohms" }
-        en: { one: "kiloohm", other: "kiloohms" }
+        pt-BR: { one: "quiloohm", other: "quiloohms" } // português: singular/plural
+        en: { one: "kiloohm", other: "kiloohms" } // inglês: singular/plural
       }
     }
+    // Megaohm: um milhão de ohms, usado em isolação.
     Mohm: {
+      // Fator de conversão: 1 MΩ vale 1 000 000 Ω.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megaohm", other: "megaohms" }
-        en: { one: "megaohm", other: "megaohms" }
+        pt-BR: { one: "megaohm", other: "megaohms" } // português: singular/plural
+        en: { one: "megaohm", other: "megaohms" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "10 kΩ").
   parse: quantity
 }
 
+// Shape de capacitância: carga armazenada por volt.
 shape Capacitance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Capacitância", en: "Capacitance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em capacitores e filtros.
   dimension: capacitance
+  // Catálogo de unidades de capacitância aceitas.
   units {
+    // Farad: unidade-base do SI para capacitância.
     F: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "farad", other: "farads" }
-        en: { one: "farad", other: "farads" }
+        pt-BR: { one: "farad", other: "farads" } // português: singular/plural
+        en: { one: "farad", other: "farads" } // inglês: singular/plural
       }
     }
+    // Milifarad: milésimo do farad.
     mF: {
+      // Fator de conversão: 1 mF vale 0,001 F.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milifarad", other: "milifarads" }
-        en: { one: "millifarad", other: "millifarads" }
+        pt-BR: { one: "milifarad", other: "milifarads" } // português: singular/plural
+        en: { one: "millifarad", other: "millifarads" } // inglês: singular/plural
       }
     }
+    // Microfarad: milionésimo do farad, muito comum em eletrônica.
     uF: {
+      // Fator de conversão: 1 µF vale 1e-6 F.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microfarad", other: "microfarads" }
-        en: { one: "microfarad", other: "microfarads" }
+        pt-BR: { one: "microfarad", other: "microfarads" } // português: singular/plural
+        en: { one: "microfarad", other: "microfarads" } // inglês: singular/plural
       }
     }
+    // Nanofarad: bilionésimo do farad.
     nF: {
+      // Fator de conversão: 1 nF vale 1e-9 F.
       factor: 1e-09
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "nanofarad", other: "nanofarads" }
-        en: { one: "nanofarad", other: "nanofarads" }
+        pt-BR: { one: "nanofarad", other: "nanofarads" } // português: singular/plural
+        en: { one: "nanofarad", other: "nanofarads" } // inglês: singular/plural
       }
     }
+    // Picofarad: trilionésimo do farad, usado em RF.
     pF: {
+      // Fator de conversão: 1 pF vale 1e-12 F.
       factor: 1e-12
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "picofarad", other: "picofarads" }
-        en: { one: "picofarad", other: "picofarads" }
+        pt-BR: { one: "picofarad", other: "picofarads" } // português: singular/plural
+        en: { one: "picofarad", other: "picofarads" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "100 nF").
   parse: quantity
 }
 
+// Shape de indutância: fluxo magnético por corrente.
 shape Inductance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Indutância", en: "Inductance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em bobinas e transformadores.
   dimension: inductance
+  // Catálogo de unidades de indutância aceitas.
   units {
+    // Henry: unidade-base do SI para indutância.
     H: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "henry", other: "henries" }
-        en: { one: "henry", other: "henries" }
+        pt-BR: { one: "henry", other: "henries" } // português: singular/plural
+        en: { one: "henry", other: "henries" } // inglês: singular/plural
       }
     }
+    // Milihenry: milésimo do henry.
     mH: {
+      // Fator de conversão: 1 mH vale 0,001 H.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milihenry", other: "milihenries" }
-        en: { one: "millihenry", other: "millihenries" }
+        pt-BR: { one: "milihenry", other: "milihenries" } // português: singular/plural
+        en: { one: "millihenry", other: "millihenries" } // inglês: singular/plural
       }
     }
+    // Microhenry: milionésimo do henry.
     uH: {
+      // Fator de conversão: 1 µH vale 1e-6 H.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microhenry", other: "microhenries" }
-        en: { one: "microhenry", other: "microhenries" }
+        pt-BR: { one: "microhenry", other: "microhenries" } // português: singular/plural
+        en: { one: "microhenry", other: "microhenries" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "10 mH").
   parse: quantity
 }
 
+// Shape de fluxo magnético: campo que atravessa uma superfície.
 shape MagneticFlux {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Fluxo magnético", en: "Magnetic flux" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em ímãs e transformadores.
   dimension: magnetic-flux
+  // Catálogo de unidades de fluxo magnético aceitas.
   units {
+    // Weber: unidade-base do SI para fluxo magnético.
     Wb: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "weber", other: "webers" }
-        en: { one: "weber", other: "webers" }
+        pt-BR: { one: "weber", other: "webers" } // português: singular/plural
+        en: { one: "weber", other: "webers" } // inglês: singular/plural
       }
     }
+    // Maxwell: unidade CGS equivalente a 1e-8 weber.
     Mx: {
+      // Fator de conversão: 1 Mx vale 1e-8 Wb.
       factor: 1e-08
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "maxwell", other: "maxwells" }
-        en: { one: "maxwell", other: "maxwells" }
+        pt-BR: { one: "maxwell", other: "maxwells" } // português: singular/plural
+        en: { one: "maxwell", other: "maxwells" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 Wb").
   parse: quantity
 }
 
+// Shape de densidade de fluxo magnético: campo por área.
 shape MagneticFluxDensity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Densidade de fluxo magnético", en: "Magnetic flux density" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em ímãs e ressonância magnética.
   dimension: magnetic-flux-density
+  // Catálogo de unidades de densidade de fluxo aceitas.
   units {
+    // Tesla: unidade-base do SI para densidade de fluxo magnético.
     T: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "tesla", other: "teslas" }
-        en: { one: "tesla", other: "teslas" }
+        pt-BR: { one: "tesla", other: "teslas" } // português: singular/plural
+        en: { one: "tesla", other: "teslas" } // inglês: singular/plural
       }
     }
+    // Militesla: milésimo do tesla.
     mT: {
+      // Fator de conversão: 1 mT vale 0,001 T.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "militesla", other: "militeslas" }
-        en: { one: "millitesla", other: "milliteslas" }
+        pt-BR: { one: "militesla", other: "militeslas" } // português: singular/plural
+        en: { one: "millitesla", other: "milliteslas" } // inglês: singular/plural
       }
     }
+    // Microtesla: milionésimo do tesla, usado em geomagnetismo.
     uT: {
+      // Fator de conversão: 1 µT vale 1e-6 T.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "microtesla", other: "microteslas" }
-        en: { one: "microtesla", other: "microteslas" }
+        pt-BR: { one: "microtesla", other: "microteslas" } // português: singular/plural
+        en: { one: "microtesla", other: "microteslas" } // inglês: singular/plural
       }
     }
+    // Gauss: unidade CGS equivalente a 1e-4 tesla.
     G: {
+      // Fator de conversão: 1 G vale 0,0001 T.
       factor: 0.0001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gauss", other: "gauss" }
-        en: { one: "gauss", other: "gauss" }
+        pt-BR: { one: "gauss", other: "gauss" } // português: singular/plural
+        en: { one: "gauss", other: "gauss" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "1,5 T").
   parse: quantity
 }
 
+// Shape de intensidade luminosa: luz emitida por ângulo sólido.
 shape LuminousIntensity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Intensidade luminosa", en: "Luminous intensity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em iluminação.
   dimension: luminous-intensity
+  // Catálogo de unidades de intensidade luminosa aceitas.
   units {
+    // Candela: unidade-base do SI para intensidade luminosa.
     cd: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "candela", other: "candelas" }
-        en: { one: "candela", other: "candelas" }
+        pt-BR: { one: "candela", other: "candelas" } // português: singular/plural
+        en: { one: "candela", other: "candelas" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "500 cd").
   parse: quantity
 }
 
+// Shape de fluxo luminoso: potência luminosa total emitida.
 shape LuminousFlux {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Fluxo luminoso", en: "Luminous flux" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em lâmpadas e luminárias.
   dimension: luminous-flux
+  // Catálogo de unidades de fluxo luminoso aceitas.
   units {
+    // Lúmen: unidade de fluxo luminoso no SI.
     lm: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "lúmen", other: "lúmens" }
-        en: { one: "lumen", other: "lumens" }
+        pt-BR: { one: "lúmen", other: "lúmens" } // português: singular/plural
+        en: { one: "lumen", other: "lumens" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "800 lm").
   parse: quantity
 }
 
+// Shape de iluminância: fluxo luminoso incidente por área.
 shape Illuminance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Iluminância", en: "Illuminance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em projetos de iluminação.
   dimension: illuminance
+  // Catálogo de unidades de iluminância aceitas.
   units {
+    // Lux: um lúmen por metro quadrado.
     lx: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "lux", other: "lux" }
-        en: { one: "lux", other: "lux" }
+        pt-BR: { one: "lux", other: "lux" } // português: singular/plural
+        en: { one: "lux", other: "lux" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "300 lux").
   parse: quantity
 }
 
+// Shape de luminância: intensidade luminosa por área aparente.
 shape Luminance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Luminância", en: "Luminance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em telas e superfícies.
   dimension: luminance
+  // Catálogo de unidades de luminância aceitas.
   units {
+    // Candela por metro quadrado: unidade-base coerente.
     cd_m2: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "candela por metro quadrado", other: "candelas por metro quadrado" }
-        en: { one: "candela per square meter", other: "candelas per square meter" }
+        pt-BR: { one: "candela por metro quadrado", other: "candelas por metro quadrado" } // português: singular/plural
+        en: { one: "candela per square meter", other: "candelas per square meter" } // inglês: singular/plural
       }
     }
+    // Nit: nome usual de uma candela por metro quadrado.
     nit: {
+      // Mesmo valor da unidade-base; serve como sinônimo legível.
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "nit", other: "nits" }
-        en: { one: "nit", other: "nits" }
+        pt-BR: { one: "nit", other: "nits" } // português: singular/plural
+        en: { one: "nit", other: "nits" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "400 nits").
   parse: quantity
 }
 
+// Shape de pressão sonora: amplitude da onda de pressão no ar.
 shape SoundPressure {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Pressão sonora", en: "Sound pressure" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em acústica.
   dimension: sound-pressure
+  // Catálogo de unidades de pressão sonora aceitas.
   units {
+    // Pascal: unidade-base para pressão sonora.
     Pa: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pascal", other: "pascals" }
-        en: { one: "pascal", other: "pascals" }
+        pt-BR: { one: "pascal", other: "pascals" } // português: singular/plural
+        en: { one: "pascal", other: "pascals" } // inglês: singular/plural
       }
     }
+    // Milipascal: milésimo do pascal, faixa de audição humana.
     mPa: {
+      // Fator de conversão: 1 mPa vale 0,001 Pa.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milipascal", other: "milipascais" }
-        en: { one: "millipascal", other: "millipascals" }
+        pt-BR: { one: "milipascal", other: "milipascais" } // português: singular/plural
+        en: { one: "millipascal", other: "millipascals" } // inglês: singular/plural
       }
     }
+    // Micropascal: milionésimo do pascal, limite de audibilidade.
     uPa: {
+      // Fator de conversão: 1 µPa vale 1e-6 Pa.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micropascal", other: "micropascais" }
-        en: { one: "micropascal", other: "micropascals" }
+        pt-BR: { one: "micropascal", other: "micropascais" } // português: singular/plural
+        en: { one: "micropascal", other: "micropascals" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "20 mPa").
   parse: quantity
 }
 
+// Shape de nível sonoro: pressão sonora em escala logarítmica.
 shape SoundLevel {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Nível sonoro", en: "Sound level" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em ruído e conforto acústico.
   dimension: sound-level
+  // Catálogo de unidades de nível sonoro aceitas.
   units {
+    // Decibel: unidade-base para nível sonoro.
     dB: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "decibel", other: "decibéis" }
-        en: { one: "decibel", other: "decibels" }
+        pt-BR: { one: "decibel", other: "decibéis" } // português: singular/plural
+        en: { one: "decibel", other: "decibels" } // inglês: singular/plural
       }
     }
+    // Decibel A: ponderação que aproxima a sensibilidade do ouvido humano.
     dBA: {
+      // Mesma escala do decibel; muda apenas a ponderação do sinal.
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "decibel A", other: "decibéis A" }
-        en: { one: "A-weighted decibel", other: "A-weighted decibels" }
+        pt-BR: { one: "decibel A", other: "decibéis A" } // português: singular/plural
+        en: { one: "A-weighted decibel", other: "A-weighted decibels" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "65 dBA").
   parse: quantity
 }
 
+// Shape de velocidade angular: rotação por unidade de tempo.
 shape AngularVelocity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Velocidade angular", en: "Angular velocity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em motores e robótica.
   dimension: angular-velocity
+  // Catálogo de unidades de velocidade angular aceitas.
   units {
+    // Radiano por segundo: unidade-base coerente.
     rad_s: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "radiano por segundo", other: "radianos por segundo" }
-        en: { one: "radian per second", other: "radians per second" }
+        pt-BR: { one: "radiano por segundo", other: "radianos por segundo" } // português: singular/plural
+        en: { one: "radian per second", other: "radians per second" } // inglês: singular/plural
       }
     }
+    // Grau por segundo: usada em animação e controle.
     deg_s: {
+      // Fator de conversão: 1°/s vale 0,017453292519943295 rad/s.
       factor: 0.017453292519943295
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grau por segundo", other: "graus por segundo" }
-        en: { one: "degree per second", other: "degrees per second" }
+        pt-BR: { one: "grau por segundo", other: "graus por segundo" } // português: singular/plural
+        en: { one: "degree per second", other: "degrees per second" } // inglês: singular/plural
       }
     }
+    // Rotação por minuto: frequência de giro de eixos.
     rpm: {
+      // Fator de conversão: 1 rpm vale 0,10471975511965977 rad/s.
       factor: 0.10471975511965977
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" }
-        en: { one: "revolution per minute", other: "revolutions per minute" }
+        pt-BR: { one: "rotação por minuto", other: "rotações por minuto" } // português: singular/plural
+        en: { one: "revolution per minute", other: "revolutions per minute" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "30 rpm").
   parse: quantity
 }
 
+// Shape de quantidade de substância: quantidade de matéria em mols.
 shape AmountOfSubstance {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Quantidade de substância", en: "Amount of substance" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em química e farmácia.
   dimension: amount-of-substance
+  // Catálogo de unidades de quantidade de substância aceitas.
   units {
+    // Mol: unidade-base do SI para quantidade de substância.
     mol: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "mol", other: "mols" }
-        en: { one: "mole", other: "moles" }
+        pt-BR: { one: "mol", other: "mols" } // português: singular/plural
+        en: { one: "mole", other: "moles" } // inglês: singular/plural
       }
     }
+    // Milimol: milésimo do mol.
     mmol: {
+      // Fator de conversão: 1 mmol vale 0,001 mol.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milimol", other: "milimols" }
-        en: { one: "millimole", other: "millimoles" }
+        pt-BR: { one: "milimol", other: "milimols" } // português: singular/plural
+        en: { one: "millimole", other: "millimoles" } // inglês: singular/plural
       }
     }
+    // Micromol: milionésimo do mol.
     umol: {
+      // Fator de conversão: 1 µmol vale 1e-6 mol.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micromol", other: "micromols" }
-        en: { one: "micromole", other: "micromoles" }
+        pt-BR: { one: "micromol", other: "micromols" } // português: singular/plural
+        en: { one: "micromole", other: "micromoles" } // inglês: singular/plural
       }
     }
+    // Quilomol: mil mols, usado em processos industriais.
     kmol: {
+      // Fator de conversão: 1 kmol vale 1000 mol.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilomol", other: "quilomols" }
-        en: { one: "kilomole", other: "kilomoles" }
+        pt-BR: { one: "quilomol", other: "quilomols" } // português: singular/plural
+        en: { one: "kilomole", other: "kilomoles" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "0,5 mol").
   parse: quantity
+  // Soma quantidades de matéria convertendo para a mesma unidade.
   aggregate: sum
 }
 
+// Shape de massa molar: massa por quantidade de substância.
 shape MolarMass {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Massa molar", en: "Molar mass" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em química e bioquímica.
   dimension: molar-mass
+  // Catálogo de unidades de massa molar aceitas.
   units {
+    // Grama por mol: unidade-base coerente para massa molar.
     g_mol: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "grama por mol", other: "gramas por mol" }
-        en: { one: "gram per mole", other: "grams per mole" }
+        pt-BR: { one: "grama por mol", other: "gramas por mol" } // português: singular/plural
+        en: { one: "gram per mole", other: "grams per mole" } // inglês: singular/plural
       }
     }
+    // Quilograma por mol: mil gramas por mol.
     kg_mol: {
+      // Fator de conversão: 1 kg/mol vale 1000 g/mol.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilograma por mol", other: "quilogramas por mol" }
-        en: { one: "kilogram per mole", other: "kilograms per mole" }
+        pt-BR: { one: "quilograma por mol", other: "quilogramas por mol" } // português: singular/plural
+        en: { one: "kilogram per mole", other: "kilograms per mole" } // inglês: singular/plural
       }
     }
+    // Dalton: numericamente equivalente a g/mol.
     Da: {
+      // Mesmo fator do g/mol; conveniente para proteínas.
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "dalton", other: "daltons" }
-        en: { one: "dalton", other: "daltons" }
+        pt-BR: { one: "dalton", other: "daltons" } // português: singular/plural
+        en: { one: "dalton", other: "daltons" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "18 g/mol").
   parse: quantity
 }
 
+// Shape de concentração molar: quantidade de soluto por volume.
 shape MolarConcentration {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Concentração molar", en: "Molar concentration" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em soluções e exames.
   dimension: molar-concentration
+  // Catálogo de unidades de concentração molar aceitas.
   units {
+    // Mol por litro: unidade-base coerente para concentração.
     mol_L: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "mol por litro", other: "mols por litro" }
-        en: { one: "mole per liter", other: "moles per liter" }
+        pt-BR: { one: "mol por litro", other: "mols por litro" } // português: singular/plural
+        en: { one: "mole per liter", other: "moles per liter" } // inglês: singular/plural
       }
     }
+    // Milimol por litro: milésimo do mol por litro.
     mmol_L: {
+      // Fator de conversão: 1 mmol/L vale 0,001 mol/L.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milimol por litro", other: "milimols por litro" }
-        en: { one: "millimole per liter", other: "millimoles per liter" }
+        pt-BR: { one: "milimol por litro", other: "milimols por litro" } // português: singular/plural
+        en: { one: "millimole per liter", other: "millimoles per liter" } // inglês: singular/plural
       }
     }
+    // Micromolar: micromol por litro.
     uM: {
+      // Fator de conversão: 1 µM vale 1e-6 mol/L.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "micromolar", other: "micromolar" }
-        en: { one: "micromolar", other: "micromolar" }
+        pt-BR: { one: "micromolar", other: "micromolar" } // português: singular/plural
+        en: { one: "micromolar", other: "micromolar" } // inglês: singular/plural
       }
     }
+    // Molar: mesmo que mol por litro, com nome consagrado.
     M: {
+      // Mesmo fator da unidade-base; apenas o símbolo muda.
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "molar", other: "molar" }
-        en: { one: "molar", other: "molar" }
+        pt-BR: { one: "molar", other: "molar" } // português: singular/plural
+        en: { one: "molar", other: "molar" } // inglês: singular/plural
       }
     }
+    // Milimolar: milésimo do molar.
     mM: {
+      // Fator de conversão: 1 mM vale 0,001 mol/L.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milimolar", other: "milimolar" }
-        en: { one: "millimolar", other: "millimolar" }
+        pt-BR: { one: "milimolar", other: "milimolar" } // português: singular/plural
+        en: { one: "millimolar", other: "millimolar" } // inglês: singular/plural
       }
     }
+    // Parte por milhão: razão usada para traços de soluto.
     ppm: {
+      // Aproximação: 1 ppm vale 1e-6 mol/L em soluções diluídas.
       factor: 1e-06
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "parte por milhão", other: "partes por milhão" }
-        en: { one: "part per million", other: "parts per million" }
+        pt-BR: { one: "parte por milhão", other: "partes por milhão" } // português: singular/plural
+        en: { one: "part per million", other: "parts per million" } // inglês: singular/plural
       }
     }
+    // Parte por bilhão: razão para concentrações muito baixas.
     ppb: {
+      // Aproximação: 1 ppb vale 1e-9 mol/L em soluções diluídas.
       factor: 1e-09
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "parte por bilhão", other: "partes por bilhão" }
-        en: { one: "part per billion", other: "parts per billion" }
+        pt-BR: { one: "parte por bilhão", other: "partes por bilhão" } // português: singular/plural
+        en: { one: "part per billion", other: "parts per billion" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "5 mM").
   parse: quantity
 }
 
+// Shape de molalidade: quantidade de soluto por massa de solvente.
 shape Molality {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Molalidade", en: "Molality" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em propriedades coligativas.
   dimension: molality
+  // Catálogo de unidades de molalidade aceitas.
   units {
+    // Mol por quilograma: unidade-base coerente para molalidade.
     mol_kg: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "mol por quilograma", other: "mols por quilograma" }
-        en: { one: "mole per kilogram", other: "moles per kilogram" }
+        pt-BR: { one: "mol por quilograma", other: "mols por quilograma" } // português: singular/plural
+        en: { one: "mole per kilogram", other: "moles per kilogram" } // inglês: singular/plural
       }
     }
+    // Milimol por quilograma: milésimo do mol por quilograma.
     mmol_kg: {
+      // Fator de conversão: 1 mmol/kg vale 0,001 mol/kg.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milimol por quilograma", other: "milimols por quilograma" }
-        en: { one: "millimole per kilogram", other: "millimoles per kilogram" }
+        pt-BR: { one: "milimol por quilograma", other: "milimols por quilograma" } // português: singular/plural
+        en: { one: "millimole per kilogram", other: "millimoles per kilogram" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "0,1 mol/kg").
   parse: quantity
 }
 
+// Shape de pH: acidez medida em escala logarítmica.
 shape pH {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "pH", en: "pH" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão própria do pH, sem unidades físicas derivadas.
   dimension: ph
+  // Catálogo com a única unidade do shape.
   units {
+    // pH: valor adimensional lido diretamente na escala.
     pH: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "pH", other: "pH" }
-        en: { one: "pH", other: "pH" }
+        pt-BR: { one: "pH", other: "pH" } // português: singular/plural
+        en: { one: "pH", other: "pH" } // inglês: singular/plural
       }
     }
   }
 }
 
+// Shape de atividade catalítica: conversão enzimática por tempo.
 shape CatalyticActivity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Atividade catalítica", en: "Catalytic activity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em bioquímica.
   dimension: catalytic-activity
+  // Catálogo de unidades de atividade catalítica aceitas.
   units {
+    // Katal: um mol de substrato convertido por segundo.
     kat: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "katal", other: "katals" }
-        en: { one: "katal", other: "katals" }
+        pt-BR: { one: "katal", other: "katals" } // português: singular/plural
+        en: { one: "katal", other: "katals" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 kat").
   parse: quantity
 }
 
+// Shape de radioatividade: decaimentos nucleares por tempo.
 shape Radioactivity {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Radioatividade", en: "Radioactivity" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em física nuclear e medicina.
   dimension: radioactivity
+  // Catálogo de unidades de radioatividade aceitas.
   units {
+    // Becquerel: um decaimento por segundo.
     Bq: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "becquerel", other: "becquerels" }
-        en: { one: "becquerel", other: "becquerels" }
+        pt-BR: { one: "becquerel", other: "becquerels" } // português: singular/plural
+        en: { one: "becquerel", other: "becquerels" } // inglês: singular/plural
       }
     }
+    // Quilobecquerel: mil decaimentos por segundo.
     kBq: {
+      // Fator de conversão: 1 kBq vale 1000 Bq.
       factor: 1000
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "quilobecquerel", other: "quilobecquerels" }
-        en: { one: "kilobecquerel", other: "kilobecquerels" }
+        pt-BR: { one: "quilobecquerel", other: "quilobecquerels" } // português: singular/plural
+        en: { one: "kilobecquerel", other: "kilobecquerels" } // inglês: singular/plural
       }
     }
+    // Megabecquerel: um milhão de decaimentos por segundo.
     MBq: {
+      // Fator de conversão: 1 MBq vale 1 000 000 Bq.
       factor: 1000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "megabecquerel", other: "megabecquerels" }
-        en: { one: "megabecquerel", other: "megabecquerels" }
+        pt-BR: { one: "megabecquerel", other: "megabecquerels" } // português: singular/plural
+        en: { one: "megabecquerel", other: "megabecquerels" } // inglês: singular/plural
       }
     }
+    // Curie: unidade histórica equivalente a 37 bilhões de becquerels.
     Ci: {
+      // Fator de conversão: 1 Ci vale 37 000 000 000 Bq.
       factor: 37000000000.0
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "curie", other: "curies" }
-        en: { one: "curie", other: "curies" }
+        pt-BR: { one: "curie", other: "curies" } // português: singular/plural
+        en: { one: "curie", other: "curies" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "5 MBq").
   parse: quantity
 }
 
+// Shape de dose absorvida: energia depositada por massa.
 shape AbsorbedDose {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Dose absorvida", en: "Absorbed dose" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em radioproteção.
   dimension: absorbed-dose
+  // Catálogo de unidades de dose absorvida aceitas.
   units {
+    // Gray: um joule por quilograma.
     Gy: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "gray", other: "grays" }
-        en: { one: "gray", other: "grays" }
+        pt-BR: { one: "gray", other: "grays" } // português: singular/plural
+        en: { one: "gray", other: "grays" } // inglês: singular/plural
       }
     }
+    // Miligray: milésimo do gray.
     mGy: {
+      // Fator de conversão: 1 mGy vale 0,001 Gy.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "miligray", other: "miligrays" }
-        en: { one: "milligray", other: "milligrays" }
+        pt-BR: { one: "miligray", other: "miligrays" } // português: singular/plural
+        en: { one: "milligray", other: "milligrays" } // inglês: singular/plural
       }
     }
+    // Rad: unidade histórica equivalente a 0,01 gray.
     rad: {
+      // Fator de conversão: 1 rad vale 0,01 Gy.
       factor: 0.01
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "rad", other: "rads" }
-        en: { one: "rad", other: "rads" }
+        pt-BR: { one: "rad", other: "rads" } // português: singular/plural
+        en: { one: "rad", other: "rads" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "2 mGy").
   parse: quantity
 }
 
+// Shape de dose equivalente: dose ponderada pelo efeito biológico.
 shape EquivalentDose {
+  // Rótulo do shape exibido no builder e nos formulários.
   title: { pt-BR: "Dose equivalente", en: "Equivalent dose" }
+  // Tipo do valor bruto guardado internamente pelo shape.
   base: decimal
+  // Dimensão física usada em radioproteção ocupacional.
   dimension: equivalent-dose
+  // Catálogo de unidades de dose equivalente aceitas.
   units {
+    // Sievert: unidade-base do SI para dose equivalente.
     Sv: {
+      // Fator de conversão para a unidade-base (1 = identidade).
       factor: 1
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "sievert", other: "sieverts" }
-        en: { one: "sievert", other: "sieverts" }
+        pt-BR: { one: "sievert", other: "sieverts" } // português: singular/plural
+        en: { one: "sievert", other: "sieverts" } // inglês: singular/plural
       }
     }
+    // Milisievert: milésimo do sievert.
     mSv: {
+      // Fator de conversão: 1 mSv vale 0,001 Sv.
       factor: 0.001
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "milisievert", other: "milisieverts" }
-        en: { one: "millisievert", other: "millisieverts" }
+        pt-BR: { one: "milisievert", other: "milisieverts" } // português: singular/plural
+        en: { one: "millisievert", other: "millisieverts" } // inglês: singular/plural
       }
     }
+    // Rem: unidade histórica equivalente a 0,01 sievert.
     rem: {
+      // Fator de conversão: 1 rem vale 0,01 Sv.
       factor: 0.01
+      // Nomes exibidos para a unidade em cada idioma.
       title: {
-        pt-BR: { one: "rem", other: "rems" }
-        en: { one: "rem", other: "rems" }
+        pt-BR: { one: "rem", other: "rems" } // português: singular/plural
+        en: { one: "rem", other: "rems" } // inglês: singular/plural
       }
     }
   }
+  // Leitura de texto aceita quantidade com unidade (ex.: "1 mSv").
   parse: quantity
 }

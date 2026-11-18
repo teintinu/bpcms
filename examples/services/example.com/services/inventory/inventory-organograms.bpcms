@@ -1,22 +1,35 @@
 // service: example.com/services/inventory
+// Organograma e papéis do serviço de estoque.
 
+// Organograma que estrutura a hierarquia de suprimentos.
 organogram Supply {
+  // Título exibido na administração de papéis.
   title: { pt-BR: "Organograma de suprimentos", en: "Supply organogram" }
 
+  // Bloco da hierarquia de subordinação entre os papéis.
   hierarchy {
+    // O gerente de estoque chefia o operador de armazém.
     StockManager > WarehouseOperator
   }
 
+  // Declara que StockManager gerencia formalmente WarehouseOperator.
   StockManager manages [WarehouseOperator]
 }
 
+// Papel operacional que executa contagens, ajustes e reservas no armazém.
 role WarehouseOperator {
+  // Título exibido na atribuição de papéis.
   title: { pt-BR: "Operador de armazém", en: "Warehouse operator" }
+  // Permissões operacionais concedidas a este papel.
   permissions: [stock.view, stock.count, stock.adjust, stock.reserve]
 }
 
+// Papel de gestão que aprova, repõe e bloqueia estoque.
 role StockManager {
+  // Título exibido na atribuição de papéis.
   title: { pt-BR: "Gerente de estoque", en: "Inventory manager" }
+  // Herda todas as permissões do operador de armazém.
   inherits: WarehouseOperator
+  // Permissões adicionais exclusivas da gestão.
   permissions: [stock.approve, stock.replenish, stock.block, report.view]
 }

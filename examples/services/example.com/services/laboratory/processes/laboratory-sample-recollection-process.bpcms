@@ -1,107 +1,110 @@
 // service: example.com/services/laboratory
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process SampleRecollection for Sample {
+// Declara o processo de recoleta; o argumento é a amostra-sujeito da instância.
+process SampleRecollection(sample: Sample) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Recoleta de amostra", en: "Sample recollection" }
-  version: 1
-  goal: "Recoletar a amostra rejeitada e liberá-la para análise"
-  owner: "Laboratory"
-  timezone: America/Fortaleza
-  sla: 3d
-
-  pool Laboratory {
-    internal
-
-    lane Collection {
-      role: Collector
-    }
-
-    lane Analysis {
-      role: Analyst
-    }
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    pt-BR: "Recoletar a amostra rejeitada e liberá-la para análise" // Texto do objetivo em português.
   }
+  sla: 3d // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Patient {
-    external
-  }
+  // Gatilho: inicia uma instância quando a amostra é rejeitada.
+  on [Sample.Rejected]
+  key: sample // Chave de identidade, correlação e dedup da instância.
 
-  start Rejected {
-    event: Sample.Rejected
-  }
-
-  task AskRecollection {
-    lane: System
-    sends: RecollectionRequest
-    partner: Patient
+  // Envia o pedido de recoleta ao coletador responsável.
+  send RecollectionRequest {
+    key: sample // Correlaciona a mensagem à amostra.
+    // Dados levados pela mensagem.
     with {
-      code: sample.code
+      code: sample.code // Código da amostra a recoletar.
+      // Instante em que a recoleta foi solicitada.
       requestedAt: now()
     }
   }
 
-  task Recollect {
-    lane: Collection
-    form: Recollection
-    sla: 1d
-    assign: pull
-    on timer 2d -> Escalate
+  // Laço de tentativas de recoleta, limitado a duas iterações.
+  loop RecollectionAttempt max 2 {
+    // Bloco interno: tenta abrir o form de recoleta.
+    try {
+      // Abre o form de recoleta para a amostra em pauta.
+      Recollection.show({ sample })
+      // Sai do laço quando o form conclui a recoleta.
+      break
+    } catch (Timeout) {
+      // Recoleta estourou o prazo: aciona o form manual de escalonamento.
+      EscalateRecollection.show({ sample })
+    }
   }
 
-  task Escalate {
-    lane: Collection
-    manual: "Contatar o paciente e reagendar a coleta"
-    sla: 1d
-  }
+  // Registra o recebimento da amostra recoletada.
+  Sample.receive()
+  // Inicia o processamento da amostra recoletada.
+  Sample.process()
 
-  task Receive {
-    lane: System
-    action: Sample.receive
-  }
+  // Encerra no desfecho de sucesso.
+  return Recollected
 
-  task StartAnalysis {
-    lane: System
-    action: Sample.process
-  }
-
-  task OfferHomeCollection {
-    lane: Collection
-    manual: "Agendar coleta domiciliar com o laboratório parceiro"
-    discretionary
-    when: sample.kind == Patient
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Recollected {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
-
-  Rejected -> AskRecollection
-  AskRecollection -> Recollect
-  Recollect.recollect -> Receive
-  Receive -> StartAnalysis
-  StartAnalysis -> Recollected
-  Escalate -> Recollect
 }
 
+// Form de recoleta da amostra rejeitada.
 form Recollection {
+  // Título exibido na inbox do form.
   title: { pt-BR: "Recoleta da amostra", en: "Sample recollection" }
-  document: Sample
+  document: Sample // Documento manipulado pelo form.
+  roles: [Collector] // Papéis que podem executar o form.
+  timeout: 2d // Prazo para conclusão antes de estourar timeout.
+  assign: pull // Distribuição por puxada manual pelo executor.
 
+  // Campos exibidos no formulário.
   fields {
+    // Código da amostra.
     code
+    // Origem da amostra.
     kind
+    // Paciente de quem a amostra foi coletada.
     patient
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Conclui a recoleta chamando a action do documento.
     recollect { calls: Sample.recollect }
   }
 }
 
-view RecollectionProgress {
-  title: { pt-BR: "Andamento da recoleta", en: "Recollection progress" }
-  type: process
-  process: SampleRecollection
-  roles: [Collector, Analyst, LabManager]
+// Form manual de escalonamento quando a recoleta atrasa.
+manual EscalateRecollection {
+  // Título exibido na inbox do form.
+  title: { pt-BR: "Escalonar a recoleta", en: "Escalate recollection" }
+  document: Sample // Documento manipulado pelo form.
+  roles: [Collector] // Papéis que podem executar o form.
+  instructions: "Contatar o paciente e reagendar a coleta" // Orientação exibida ao executor.
+  timeout: 1d // Prazo para conclusão antes de estourar timeout.
+  assign: pull // Distribuição por puxada manual pelo executor.
+}
 
+// View de andamento derivada da instância do processo.
+view RecollectionProgress {
+  // Título exibido na navegação.
+  title: { pt-BR: "Andamento da recoleta", en: "Recollection progress" }
+  // Tipo da view: uma tela de andamento de processo.
+  type: process
+  // Processo cujo andamento esta view exibe.
+  process: SampleRecollection
+  roles: [Collector, Analyst, LabManager] // Papéis que podem abrir a view.
+
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }

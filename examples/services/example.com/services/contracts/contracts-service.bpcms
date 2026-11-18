@@ -1,9 +1,17 @@
+// service: example.com/services/contracts
+// Serviço: declara a URI canônica, os metadados e os imports do serviço de contratos.
+
+// Abre o serviço; a string é a URI que define o namespace de todos os artefatos.
 service "example.com/services/contracts" {
+  // Título exibido no construtor e nos catálogos.
   title: { pt-BR: "Contratos", en: "Contracts" }
-  version: 1.0.0
-  owner: "Contracts"
+  version: 1.0.0 // Versão do serviço; diff e release comparam.
+  owner: "Contracts" // Área responsável pela evolução do serviço.
+  // Serviços de outros contextos consumidos por este serviço.
   imports {
+    // Pseudo-serviço do construtor com medidas e constantes padrão (std.Money etc.).
     service "bpcms.org/std" as std
+    // Serviço de compras: fornece o tipo Supplier usado pelo contrato.
     service "example.com/services/procurement" as Procurement
   }
 }

@@ -1,10 +1,15 @@
 // service: example.com/services/laboratory
+// Declara o serviço que concentra os artefatos de negócio do laboratório.
 service "example.com/services/laboratory" {
+  // Título exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Laboratório", en: "Laboratory" }
-  version: 1.0.0
-  owner: "Laboratory"
+  version: 1.0.0 // Versão do serviço comparada em diff e release.
+  owner: "Laboratory" // Dono de negócio responsável pelas decisões do serviço.
+  // Dependências de outros serviços, resolvidas por alias.
   imports {
+    // Importa o serviço Citizen como dono dos tipos de cidadão/paciente.
     service "example.com/services/citizen" as Citizen
+    // Importa o serviço Identity como dono de usuários e papéis.
     service "example.com/services/identity" as Identity
   }
 }

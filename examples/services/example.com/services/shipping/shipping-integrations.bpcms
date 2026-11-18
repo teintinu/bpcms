@@ -1,35 +1,57 @@
 // service: example.com/services/shipping
 
+// Integração REST com a transportadora para cotação, etiqueta e rastreio.
 integration Carrier {
+  // Protocolo usado na comunicação.
   protocol: rest
+  // URL base lida da variável de ambiente da aplicação.
   baseUrl: env.CARRIER_URL
+  // Autenticação OAuth2 junto à transportadora.
   auth: oauth2
+  // Tempo máximo de espera de cada chamada.
   timeout: 20s
 
+  // Operações expostas pela integração.
   operations {
+    // Cota o frete de uma remessa com a transportadora informada.
     quote(shipment: Shipment, carrier: string): std.Money
+    // Emite a etiqueta de envio e devolve o código de rastreio.
     createLabel(shipment: Shipment, carrier: string): TrackingCode
+    // Consulta os eventos de rastreio de um código.
     track(tracking: TrackingCode): TrackingEvent[]
   }
 }
 
+// Integração MQTT com a balança do posto de expedição.
 integration ScaleDevice {
+  // Declara a integração como equipamento conectado.
   capabilities { equipment }
+  // Protocolo de mensagens usado pela balança.
   protocol: mqtt
+  // Host lido da variável de ambiente da aplicação.
   host: env.SCALE_HOST
+  // Tópico assinado para receber as leituras de peso.
   topic: "scales/+/reading"
+  // Autenticação por certificado digital.
   auth: certificate
 
+  // Operações expostas pela integração.
   operations {
+    // Lê o peso atual de um dispositivo pelo identificador.
     read(deviceId: string): std.Mass
   }
 
+  // Eventos recebidos do equipamento e seu destino no documento.
   events {
+    // Cada leitura atualiza o peso bruto da remessa.
     reading -> Shipment.pesoBruto
   }
 
+  // Regras de qualidade dos dados do equipamento.
   quality {
+    // Considera a leitura desatualizada após cinco minutos.
     staleAfter: 5m
+    // Exige calibração mensal do equipamento.
     calibrate: monthly
   }
 }

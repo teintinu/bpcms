@@ -1,31 +1,48 @@
 // service: example.com/services/billing
 
+// Documento que representa o faturamento consolidado de um mês.
 document MonthlyRevenue {
+  // Título exibido na interface.
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  version: 1
+  version: 1 // Versão do documento usada em release e comparação.
+  // Área responsável pelo documento.
   owner: "Billing"
+  // Documento calculado a partir de notas e pagamentos.
   computed from Invoice, Payment
-  freshness: 1h
-  sync: read
+  freshness: 1h // Tempo máximo antes de recomputar os dados.
+  sync: read // Sincronização apenas de leitura para consumidores externos.
 
+  // Campos que compõem a receita mensal.
   fields {
+    // Mês de referência da receita; consultável.
     month: YearMonth { title: { pt-BR: "Mês", en: "Month" }, lookup }
+    // Receita total do mês em reais; consultável.
     revenue: std.Money { title: { pt-BR: "Receita", en: "Revenue" }, lookup, currency: BRL }
+    // Quantidade de notas consideradas no mês.
     invoiceCount: std.Count { title: { pt-BR: "Qtd. de notas", en: "Invoice count" } }
+    // Momento em que o consolidado foi calculado.
     calculatedAt: DateTime { title: { pt-BR: "Calculado em", en: "Calculated at" } }
   }
 
+  // Garante um único registro por mês.
   indexes { month: [month] unique }
 
+  // Ações disponíveis sobre a receita mensal.
   actions {
+    // Recomputa os valores do consolidado.
     refresh(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Atualizar", en: "Refresh" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceManager]
     }
   }
 
+  // Invariante: a receita só existe a partir de janeiro de 2026.
   rule month >= 2026-01 {
+    // Mensagem de validação em português.
     pt-BR: "Verifique os dados informados"
+    // Mensagem de validação em inglês.
     en: "Check the informed data"
   }
 }

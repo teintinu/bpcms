@@ -2,43 +2,68 @@
 
 // Consumer compartilha User: Consumer é alias do mesmo id.
 // Vários Users podem referenciar o mesmo Citizen; não há unique aqui.
+// Declara o documento Consumer, que estende User e acrescenta o vínculo com o cidadão.
 document Consumer extends User {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Consumidor", en: "Consumer" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Time/área responsável pelo documento.
   owner: "Identity"
+  // Sincronização somente de leitura com a fonte de identidade.
   sync: read
 
+  // Campos próprios do Consumer, além dos herdados de User.
   fields {
+    // Referência ao cidadão vinculado ao consumidor.
     citizen: Citizen {
+      // Título exibido para o campo.
       title: { pt-BR: "Cidadão", en: "Citizen" }
     }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Índice hash pelo id do cidadão, para achar os consumidores de um cidadão.
     byCitizen: [citizen.id] hash
   }
 
+  // Ações de escrita disponíveis no documento.
   actions {
+    // Vincula um cidadão ao consumidor.
     setCitizen(citizen: Citizen){
+      // Título exibido na ação.
       title: { pt-BR: "Vincular cidadão", en: "Link citizen" }
+      // Papéis autorizados a executar a ação.
       roles: [Admin]
     }
   }
 
+  // Invariante: ter cidadão vinculado exige o consumidor ativo.
   rule citizen != null implies status == Active {
+    // Mensagem da regra em português.
     pt-BR: "Cidadão vinculado deve estar ativo"
+    // Mensagem da regra em inglês.
     en: "Linked citizen must be active"
 
   }
 }
 
+// View de tabela que lista as contas de um cidadão.
 view CitizenAccounts {
+  // Título exibido na navegação e na tela.
   title: { pt-BR: "Usuários do cidadão", en: "Citizen accounts" }
+  // Tipo da view: tabela consultável.
   type: table
+  // Documento que alimenta a tabela.
   source: Consumer
+  // Papéis que podem abrir a view.
   roles: [Clerk, Manager]
 
+  // Colunas exibidas na tabela.
   columns { nickname; email; citizen; status }
+  // Filtros disponíveis para refinar a consulta.
   filters { citizen; status }
+  // Itens por página da tabela.
   pagination: 50
 }

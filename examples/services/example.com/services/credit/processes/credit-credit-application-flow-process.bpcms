@@ -1,196 +1,293 @@
 // service: example.com/services/credit
 
-process CreditApplicationFlow for CreditApplication {
+// Declara o processo de análise de crédito; o argumento é o documento-sujeito.
+process CreditApplicationFlow(creditApplication: CreditApplication) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Análise de crédito", en: "Credit analysis" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
-  owner: "Credit"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
+  }
+  // SLA brando do caso: alvo de lead time de dez dias, não é timer.
   sla: 10d
 
-  pool Company {
-    internal
-    lane Analysis { role: CreditAnalyst }
-    lane Management { role: CreditManager }
+  // Gatilho: inicia uma instância quando a proposta emite Submitted.
+  on [CreditApplication.Submitted]
+  // Chave de identidade, correlação e dedup da instância.
+  key: creditApplication
+
+  // Variável durável da instância: score do bureau; começa nula.
+  let bureauScore: std.Count | null = null
+  // Variável durável da instância: faixa de risco; começa nula.
+  let band: RiskBand | null = null
+
+  // Inicia a análise manual da proposta antes de consultar o bureau.
+  CreditApplication.startReview()
+
+  // Bloco de tentativa: captura falha de disponibilidade do bureau.
+  try {
+    // Chama o bureau de crédito e guarda o score retornado.
+    bureauScore = CreditBureau.score({ application: creditApplication })
+  // Tratamento do erro de bureau indisponível.
+  } catch (BureauUnavailable) {
+    // Bureau indisponível: a proposta segue direto para a análise manual.
   }
 
-  variables {
-    bureauScore: std.Count
-    band: RiskBand
-  }
-
-  start Submitted { event: CreditApplication.Submitted }
-
-  task StartReview {
-    lane: System
-    action: CreditApplication.startReview
-    sla: 1m
-  }
-
-  task CheckBureau {
-    lane: System
-    call: CreditBureau.score
-    with { application: creditApplication }
-    gives: bureauScore
-    sla: 2m
-    on error BureauUnavailable -> ManualReview
-  }
-
-  task Score {
-    lane: System
-    decision: CreditScoring
-    with {
-      bureauScore
-      requestedAmount: creditApplication.requestedAmount
+  // Só calcula a faixa de risco quando o bureau devolveu um score.
+  if (bureauScore != null) {
+    // Chama a decisão de scoring com score, valor e exposição da proposta.
+    band = CreditScoring.evaluate({
+      // Score apurado no bureau.
+      bureauScore: bureauScore,
+      // Valor solicitado na proposta.
+      requestedAmount: creditApplication.requestedAmount,
+      // Exposição de crédito já existente do proponente.
       existingExposure: creditApplication.existingExposure
-    }
-    gives: band
-  }
+    })
 
-  task RecordRisk {
-    lane: System
-    action: CreditApplication.recordRisk
-    with {
-      bureauScore
+    // Registra score e faixa de risco no documento da proposta.
+    CreditApplication.recordRisk({
+      // Score apurado que será persistido.
+      bureauScore: bureauScore,
+      // Faixa de risco apurada que será persistida.
       riskBand: band
+    })
+  }
+
+  // Sem score do bureau, abre a decisão manual do analista.
+  if (bureauScore == null) {
+    // Análise manual sem score do bureau.
+    try {
+      // Abre o form de decisão para o analista.
+      CreditDecision.show({ creditApplication })
+    // Tratamento do timeout ao aguardar a decisão do form.
+    } catch (Timeout) {
+      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      Escalate.show({ creditApplication })
+    }
+  // Ramo automático: risco baixo e valor dentro do teto de vinte mil reais.
+  } else if (band == Low and creditApplication.requestedAmount <= 20000 BRL) {
+    // Risco baixo e valor até vinte mil reais: aprova automaticamente.
+    CreditApplication.approve({
+      // Aprova exatamente o valor solicitado.
+      approvedLimit: creditApplication.requestedAmount
+    })
+  // Ramo de decisão humana: risco baixo acima do teto ou risco médio.
+  } else if (band == Low or band == Medium) {
+    // Risco baixo ou médio acima do limite automático: decisão humana.
+    try {
+      // Abre o form de decisão para o analista.
+      CreditDecision.show({ creditApplication })
+    // Tratamento do timeout ao aguardar a decisão do form.
+    } catch (Timeout) {
+      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      Escalate.show({ creditApplication })
+    }
+  // Ramo de risco alto: a decisão nunca é automática.
+  } else {
+    // Risco alto: decisão humana obrigatória.
+    try {
+      // Abre o form de decisão para o analista.
+      CreditDecision.show({ creditApplication })
+    // Tratamento do timeout ao aguardar a decisão do form.
+    } catch (Timeout) {
+      // Sem resposta no prazo, escala a decisão para a alçada gerencial.
+      Escalate.show({ creditApplication })
     }
   }
 
-  gateway Band {
-    if band == Low and creditApplication.requestedAmount <= 20000 BRL -> AutoApprove
-    if band == Low -> AnalystReview
-    if band == Medium -> AnalystReview
-    else -> ManagerReview
+  // Se a proposta terminou rejeitada, encerra o caso nesse desfecho.
+  if (creditApplication.status == Rejected) {
+    // Retorna o desfecho de falha, sem criar limite.
+    return Rejected
   }
 
-  task AutoApprove {
-    lane: System
-    action: CreditApplication.approve
-    with { approvedLimit: creditApplication.requestedAmount }
-  }
+  // Cria o limite de crédito com o valor aprovado na proposta.
+  CreditLimit.set({
+    // Proposta que origina o limite.
+    application: creditApplication,
+    // Titular do limite: o proponente da proposta.
+    holder: creditApplication.applicant,
+    // Valor do limite: o limite aprovado na análise.
+    amount: creditApplication.approvedLimit
+  })
 
-  task AnalystReview {
-    lane: Analysis
-    form: CreditDecision
-    sla: 2d
-    assign: pull
-    on timer 3d -> Escalate
-  }
+  // Encerra no desfecho de sucesso.
+  return Approved
 
-  task ManagerReview {
-    lane: Management
-    form: CreditDecision
-    sla: 2d
-    assign: pull
-    priority: 40
-    on timer 3d -> Escalate
-  }
-
-  task ManualReview {
-    lane: Analysis
-    form: CreditDecision
-    sla: 2d
-    assign: pull
-    on timer 3d -> Escalate
-  }
-
-  task Escalate {
-    lane: Management
-    form: CreditDecision
-    sla: 1d
-  }
-
-  task SetLimit {
-    lane: System
-    action: CreditLimit.set
-    with {
-      application: creditApplication
-      holder: creditApplication.applicant
-      amount: creditApplication.approvedLimit
-    }
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Approved {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de falha do caso.
   end Rejected {
+    // Título exibido no histórico.
     title: { pt-BR: "Crédito negado", en: "Credit rejected" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Submitted -> StartReview
-  StartReview -> CheckBureau
-  CheckBureau -> Score
-  Score -> RecordRisk
-  RecordRisk -> Band
-  AutoApprove -> SetLimit
-  AnalystReview.approve -> SetLimit
-  AnalystReview.reject -> Rejected
-  ManagerReview.approve -> SetLimit
-  ManagerReview.reject -> Rejected
-  ManualReview.approve -> SetLimit
-  ManualReview.reject -> Rejected
-  Escalate.approve -> SetLimit
-  Escalate.reject -> Rejected
-  SetLimit -> Approved
 }
 
-form CreditDecision {
-  title: { pt-BR: "Decisão de crédito", en: "Credit decision" }
-  document: CreditApplication
+// Erro de negócio: bureau de crédito fora do ar.
+error BureauUnavailable {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Bureau de crédito indisponível", en: "Credit bureau unavailable" }
+}
 
+// Erro reservado de prazo esgotado.
+error Timeout {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Prazo esgotado", en: "Timed out" }
+}
+
+// Form de decisão manual da proposta pelo analista.
+form CreditDecision {
+  // Título exibido na inbox e no cabeçalho do form.
+  title: { pt-BR: "Decisão de crédito", en: "Credit decision" }
+  // Documento cujos dados o form apresenta e atualiza.
+  document: CreditApplication
+  // Papéis que podem atender o form.
+  roles: [CreditAnalyst, CreditManager]
+  // Prazo de atendimento: três dias antes de escalar.
+  timeout: 3d
+  // Prioridade de exibição na fila de tarefas.
+  priority: 40
+  // Distribuição pull: o próprio atendente puxa a tarefa.
+  assign: pull
+
+  // Campos exibidos no formulário.
   fields {
+    // Proponente exibido somente para leitura.
     applicant { readonly }
+    // Valor solicitado exibido somente para leitura.
     requestedAmount { readonly }
+    // Score do bureau exibido somente para leitura.
     bureauScore { readonly }
+    // Faixa de risco exibida somente para leitura.
     riskBand { readonly }
+    // Limite aprovado informado na decisão.
     approvedLimit
+    // Motivo da rejeição informado na decisão.
     rejectionReason
   }
 
+  // Botões do formulário e as actions que eles disparam.
   actions {
+    // Aprovar chama a action approve com o limite informado.
     approve { calls: CreditApplication.approve(approvedLimit) }
+    // Rejeitar chama a action reject com o motivo informado.
     reject { calls: CreditApplication.reject(rejectionReason) }
   }
 }
 
+// Form de decisão escalada para a alçada gerencial.
+form Escalate {
+  // Título exibido na inbox e no cabeçalho do form.
+  title: { pt-BR: "Decisão de crédito — alçada gerencial", en: "Credit decision — manager approval" }
+  // Documento cujos dados o form apresenta e atualiza.
+  document: CreditApplication
+  // Papéis que podem atender o form.
+  roles: [CreditManager]
+  // Prazo de atendimento: um dia antes de expirar.
+  timeout: 1d
+  // Distribuição pull: o próprio gerente puxa a tarefa.
+  assign: pull
+
+  // Campos exibidos no formulário.
+  fields {
+    // Proponente exibido somente para leitura.
+    applicant { readonly }
+    // Valor solicitado exibido somente para leitura.
+    requestedAmount { readonly }
+    // Score do bureau exibido somente para leitura.
+    bureauScore { readonly }
+    // Faixa de risco exibida somente para leitura.
+    riskBand { readonly }
+    // Limite aprovado informado na decisão.
+    approvedLimit
+    // Motivo da rejeição informado na decisão.
+    rejectionReason
+  }
+
+  // Botões do formulário e as actions que eles disparam.
+  actions {
+    // Aprovar chama a action approve com o limite informado.
+    approve { calls: CreditApplication.approve(approvedLimit) }
+    // Rejeitar chama a action reject com o motivo informado.
+    reject { calls: CreditApplication.reject(rejectionReason) }
+  }
+}
+
+// View de andamento derivada da instância do processo.
 view CreditFlowProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da análise de crédito", en: "Credit analysis progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: CreditApplicationFlow
+  // Papéis que podem abrir a view.
   roles: [CreditAnalyst, CreditManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }
 
+// Decisão de scoring que converte score e valores em uma faixa de risco.
 decision CreditScoring {
+  // Título exibido na revisão e no painel de decisões.
   title: { pt-BR: "Faixa de risco da proposta", en: "Credit application risk band" }
+  // Tipo devolvido pela decisão.
   returns: RiskBand
+  // Entradas exigidas para avaliar a faixa de risco.
   inputs {
+    // Score apurado no bureau de crédito.
     bureauScore: std.Count
+    // Valor de crédito solicitado na proposta.
     requestedAmount: std.Money
+    // Exposição de crédito já existente do proponente.
     existingExposure: std.Money
   }
+  // Casos avaliados em ordem até o primeiro que casar.
   cases {
+    // Score alto e valores contidos nos limites da política: risco baixo.
     bureauScore >= 750 and requestedAmount <= 50000 BRL and existingExposure <= 10000 BRL -> Low
+    // Score ainda razoável: risco médio.
     bureauScore >= 550 -> Medium
+    // Qualquer outro caso: risco alto.
     else -> High
   }
+  // Documento-fonte da política de crédito aplicada.
   source: "Política de Crédito v4"
+  // Área responsável pela manutenção da decisão.
   owner: "Credit"
 }
 
+// Integração REST com o bureau externo de crédito.
 integration CreditBureau {
+  // Protocolo de comunicação da integração.
   protocol: rest
+  // URL base lida da variável de ambiente do serviço.
   baseUrl: env.CREDIT_BUREAU_URL
+  // Autenticação por chave de API.
   auth: api-key
+  // Tempo máximo de espera por chamada: cinco segundos.
   timeout: 5s
+  // Até três tentativas com espera exponencial.
   retry: exponential(3)
+  // Envia o cabeçalho de idempotência para evitar cobrança duplicada.
   idempotency: header "Idempotency-Key"
 
+  // Operações expostas pela integração.
   operations {
+    // Consulta o score do bureau para uma proposta, devolvendo um count.
     score(application: CreditApplication): std.Count
   }
 }

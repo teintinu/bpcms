@@ -1,11 +1,20 @@
+// Declara o serviço de pedidos pela URI canônica do exemplo.
 service "example.com/services/orders" {
+  // Título legível do serviço exibido no builder e na navegação.
   title: { pt-BR: "Pedidos", en: "Orders" }
+  // Versão do serviço; release e diff comparam este número.
   version: 1.1.0
+  // Área responsável pelo serviço.
   owner: "Orders"
+  // Dependências externas usadas pelos artefatos deste serviço.
   imports {
+    // Importa o pseudo-serviço de medidas e constantes padrão.
     service "bpcms.org/std" as std
+    // Importa o catálogo para referenciar Product.
     service "example.com/services/catalog" as Catalog
+    // Importa o estoque para reservar e liberar itens.
     service "example.com/services/inventory" as Inventory
+    // Importa a identidade para referenciar User.
     service "example.com/services/identity" as Identity
   }
 }

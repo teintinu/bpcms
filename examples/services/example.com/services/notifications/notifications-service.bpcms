@@ -1,8 +1,14 @@
+// service: example.com/services/notifications
+
+// Serviço de notificações: canais, modelos e histórico de envios.
 service "example.com/services/notifications" {
+  // Rótulo exibido no construtor.
   title: { pt-BR: "Notificações", en: "Notifications" }
-  version: 1.0.0
-  owner: "Customer Success"
+  version: 1.0.0 // Versão do serviço comparada pelo lock e pelo release.
+  owner: "Customer Success" // Área responsável pelo serviço.
+  // Dependências externas do serviço.
   imports {
+    // Importa o serviço Citizen com o alias Citizen (tipos de e-mail, telefone etc.).
     service "example.com/services/citizen" as Citizen
   }
 }

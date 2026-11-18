@@ -1,236 +1,395 @@
 // service: example.com/services/procurement
 
+// Documento que representa um fornecedor cadastrado no serviço.
 document Supplier {
+  // Título exibido na interface.
   title: { pt-BR: "Fornecedor", en: "Supplier" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pela manutenção do artefato.
   owner: "Procurement"
+  // Modo de sincronização do documento: leitura.
   sync: read
 
+  // Campos que compõem o fornecedor.
   fields {
+    // Razão social; única, consultável e obrigatória.
     legalName: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Razão social", en: "Legal name" }
+      // Limita a razão social a cento e sessenta caracteres.
       maxLength: 160
+      // Impede dois fornecedores com a mesma razão social.
       unique
+      // Permite localizar o fornecedor pela razão social.
       lookup
+      // Torna a razão social obrigatória no preenchimento.
       required
     }
+    // Nome fantasia do fornecedor.
     tradeName: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Nome fantasia", en: "Trade name" }
+      // Limita o nome fantasia a cento e vinte caracteres.
       maxLength: 120
     }
+    // Correio eletrônico de contato do fornecedor.
     email: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Correio eletrônico", en: "Email" }
+      // Limita o correio eletrônico a duzentos e cinquenta e quatro caracteres.
       maxLength: 254
     }
+    // Telefone de contato do fornecedor.
     phone: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Telefone", en: "Phone" }
+      // Limita o telefone a quarenta caracteres.
       maxLength: 40
     }
+    // Categoria de atuação do fornecedor.
     category: SupplierCategory {
+      // Título exibido no formulário.
       title: { pt-BR: "Categoria", en: "Category" }
+      // Permite localizar o fornecedor pela categoria.
       lookup
     }
+    // Nível de risco atribuído pela conformidade.
     risk: RiskLevel {
+      // Título exibido no formulário.
       title: { pt-BR: "Risco", en: "Risk" }
+      // Permite localizar o fornecedor pelo risco.
       lookup
     }
+    // Situação atual do fornecedor no ciclo de vida.
     status: SupplierStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar o fornecedor pela situação.
       lookup
     }
+    // Indica se a documentação do fornecedor foi verificada.
     documentsVerified: boolean {
+      // Título exibido no formulário.
       title: { pt-BR: "Documentos verificados", en: "Documents verified" }
     }
+    // Condição de pagamento acordada com o fornecedor.
     paymentTerms: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      // Limita a condição a cento e vinte caracteres.
       maxLength: 120
     }
+    // Data e hora em que o fornecedor foi aprovado.
     approvedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Aprovado em", en: "Approved at" }
     }
+    // Data e hora em que o fornecedor foi bloqueado.
     blockedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Bloqueado em", en: "Blocked at" }
     }
+    // Motivo que levou ao bloqueio do fornecedor.
     blockedReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo do bloqueio", en: "Block reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
   }
 
 
+  // Ações que movimentam e completam o cadastro do fornecedor.
   actions {
+    // Recebe o cadastro inicial enviado pelo fornecedor no portal.
     submitRegistration(legalName: string, tradeName: string, email: string, phone: string, category: SupplierCategory) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Enviar cadastro", en: "Submit registration" }
+      // Papéis autorizados a enviar o cadastro.
       roles: [SupplierUser, Buyer]
     }
 
+    // Marca a documentação do fornecedor como verificada.
     verifyDocuments() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Verificar documentos", en: "Verify documents" }
+      // Papéis autorizados a verificar documentos.
       roles: [ComplianceAnalyst]
       {
+        // Registra que a verificação documental foi concluída.
         documentsVerified = true
       }
     }
 
+    // Classifica o fornecedor em um nível de risco.
     classifyRisk(risk: RiskLevel) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Classificar risco", en: "Classify risk" }
+      // Papéis autorizados a classificar o risco.
       roles: [ComplianceAnalyst]
     }
 
+    // Aprova o fornecedor e o move para a situação Approved.
     approve() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aprovar fornecedor", en: "Approve supplier" }
+      // Papéis autorizados a aprovar o fornecedor.
       roles: [Approver, ProcurementManager]
+      // Transição disparada ao aprovar.
       to: status.Approved
       {
+        // Registra o instante da aprovação.
         approvedAt = now()
       }
     }
 
+    // Bloqueia o fornecedor informando o motivo.
     block(blockedReason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Bloquear fornecedor", en: "Block supplier" }
+      // Papéis autorizados a bloquear o fornecedor.
       roles: [ComplianceAnalyst, Approver, ProcurementManager]
+      // Transição disparada ao bloquear.
       to: status.Blocked
+      // Emite o evento com o motivo do bloqueio.
       emits { reason: blockedReason }
       {
+        // Registra o instante do bloqueio.
         blockedAt = now()
       }
     }
 
+    // Habilita o fornecedor em contas a pagar com a condição acordada.
     enablePayables(paymentTerms: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Habilitar contas a pagar", en: "Enable payables" }
+      // Papéis autorizados a habilitar o pagamento.
       roles: [PayablesClerk]
     }
   }
 
+  // Índices de consulta mantidos para o documento.
   indexes {
+    // Índice único pela razão social, evitando duplicidade.
     byLegalName: [legalName] unique
+    // Índice de faixa por situação e razão social, para listagens ordenadas.
     byStatus: [status, legalName] range
   }
 
+  // Regra que exige documentos verificados antes da aprovação.
   rule status == Approved implies documentsVerified {
+    // Mensagem da regra em português.
     pt-BR: "Verifique os documentos antes de aprovar o fornecedor"
+    // Mensagem da regra em inglês.
     en: "Verify the documents before approving the supplier"
   }
 }
 
+// Forma do ciclo de vida do fornecedor.
 shape SupplierStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do fornecedor", en: "Supplier status" }
+  // Base da forma: máquina de estados.
   base: state
+  // Estado inicial de todo fornecedor criado.
   initial: Prospect
+  // Estado de prospecto, antes de qualquer verificação.
   value Prospect {
+    // Título exibido na interface.
     title: { pt-BR: "Prospecto", en: "Prospect" }
+    // Ícone associado ao estado.
     icon: Prospect
+    // Ordem de exibição do estado.
     ordinal: 10
 
+    // Transição para fornecedor aprovado.
     transition Approved {
+      // Título exibido no histórico.
       title: { pt-BR: "Fornecedor aprovado", en: "Supplier approved" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora da aprovação.
         approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
       }
     }
 
+    // Transição para fornecedor bloqueado.
     transition Blocked {
+      // Título exibido no histórico.
       title: { pt-BR: "Fornecedor bloqueado", en: "Supplier blocked" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do bloqueio.
         blockedAt: DateTime { title: { pt-BR: "Bloqueado em", en: "Blocked at" } }
+        // Motivo do bloqueio.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de fornecedor aprovado.
   value Approved {
+    // Título exibido na interface.
     title: { pt-BR: "Aprovado", en: "Approved" }
+    // Ícone associado ao estado.
     icon: Approved
+    // Ordem de exibição do estado.
     ordinal: 20
 
+    // Transição para fornecedor bloqueado.
     transition Blocked {
+      // Título exibido no histórico.
       title: { pt-BR: "Fornecedor bloqueado", en: "Supplier blocked" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do bloqueio.
         blockedAt: DateTime { title: { pt-BR: "Bloqueado em", en: "Blocked at" } }
+        // Motivo do bloqueio.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de fornecedor bloqueado.
   value Blocked {
+    // Título exibido na interface.
     title: { pt-BR: "Bloqueado", en: "Blocked" }
+    // Ícone associado ao estado.
     icon: Blocked
+    // Ordem de exibição do estado.
     ordinal: 30
   }
 }
 
+// Forma de classificação da categoria do fornecedor.
 shape SupplierCategory {
+  // Título exibido na interface.
   title: { pt-BR: "Categoria do fornecedor", en: "Supplier category" }
+  // Base da forma: classificação.
   base: classification
+  // Categoria de fornecimento de mercadorias.
   value Goods {
+    // Título exibido na interface.
     title: { pt-BR: "Mercadorias", en: "Goods" }
+    // Ícone associado à categoria.
     icon: Goods
+    // Ordem de exibição da categoria.
     ordinal: 10
   }
+  // Categoria de prestação de serviços.
   value Services {
+    // Título exibido na interface.
     title: { pt-BR: "Serviços", en: "Services" }
+    // Ícone associado à categoria.
     icon: Services
+    // Ordem de exibição da categoria.
     ordinal: 20
   }
+  // Categoria de logística e transporte.
   value Logistics {
+    // Título exibido na interface.
     title: { pt-BR: "Logística", en: "Logistics" }
+    // Ícone associado à categoria.
     icon: Logistics
+    // Ordem de exibição da categoria.
     ordinal: 30
   }
+  // Categoria de tecnologia e software.
   value Technology {
+    // Título exibido na interface.
     title: { pt-BR: "Tecnologia", en: "Technology" }
+    // Ícone associado à categoria.
     icon: Technology
+    // Ordem de exibição da categoria.
     ordinal: 40
   }
 }
 
+// Forma de classificação do nível de risco do fornecedor.
 shape RiskLevel {
+  // Título exibido na interface.
   title: { pt-BR: "Nível de risco do fornecedor", en: "Supplier risk level" }
+  // Base da forma: classificação.
   base: classification
+  // Risco baixo.
   value Low {
+    // Título exibido na interface.
     title: { pt-BR: "Baixo", en: "Low" }
+    // Ícone associado ao nível.
     icon: Low
+    // Ordem de exibição do nível.
     ordinal: 10
   }
+  // Risco médio.
   value Medium {
+    // Título exibido na interface.
     title: { pt-BR: "Médio", en: "Medium" }
+    // Ícone associado ao nível.
     icon: Medium
+    // Ordem de exibição do nível.
     ordinal: 20
   }
+  // Risco alto.
   value High {
+    // Título exibido na interface.
     title: { pt-BR: "Alto", en: "High" }
+    // Ícone associado ao nível.
     icon: High
+    // Ordem de exibição do nível.
     ordinal: 30
   }
 }
 
+// View de listagem dos fornecedores.
 view Suppliers {
+  // Título exibido na navegação.
   title: { pt-BR: "Fornecedores", en: "Suppliers" }
+  // Tipo da view: tabela.
   type: table
+  // Documento que alimenta a tabela.
   source: Supplier
+  // Papéis que podem abrir a view.
   roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager]
 
+  // Colunas exibidas na tabela.
   columns { legalName; tradeName; category; risk; status }
+  // Filtros disponíveis na tabela.
   filters { status; category; risk }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na listagem.
   actions {
+    // Abre o detalhe do fornecedor selecionado.
     open -> SupplierDetail
   }
 }
 
+// View de detalhe de um fornecedor.
 view SupplierDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do fornecedor", en: "Supplier detail" }
+  // Tipo da view: detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: Supplier
+  // Papéis que podem abrir a view.
   roles: [Buyer, ComplianceAnalyst, Approver, ProcurementManager, PayablesClerk]
 
+  // Seções exibidas na tela.
   sections { summary; timeline }
 }
 
+// Mensagem de convite enviada ao fornecedor para o portal.
 message SupplierInvite {
+  // Título exibido na notificação.
   title: { pt-BR: "Convite ao portal do fornecedor", en: "Supplier portal invite" }
+  // Documento ao qual a mensagem se refere.
   about: Supplier
+  // Dados carregados pela mensagem.
   payload {
+    // Data e hora do convite.
     invitedAt: DateTime { title: { pt-BR: "Convidado em", en: "Invited at" } }
+    // Data e hora de expiração do convite.
     expiresAt: DateTime { title: { pt-BR: "Expira em", en: "Expires at" } }
   }
 }

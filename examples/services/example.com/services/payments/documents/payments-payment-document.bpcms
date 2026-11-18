@@ -1,255 +1,396 @@
 // service: example.com/services/payments
 
+// Documento que representa uma cobrança feita a um pedido.
 document Payment {
+  // Título exibido na interface.
   title: { pt-BR: "Pagamento", en: "Payment" }
-  version: 2
-  owner: "Payments"
-  sync: live
+  version: 2 // Versão do artefato Document; entra no diff e no release.
+  owner: "Payments" // Área responsável pelo documento.
+  sync: live // Sincronização em tempo real entre instâncias.
 
+  // Campos que compõem o pagamento.
   fields {
+    // Pedido de origem da cobrança; consultável.
     order: Order {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
-      lookup
+      lookup // Permite localizar pelo pedido.
     }
+    // Valor da cobrança em reais; consultável.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" }, lookup, currency: BRL }
+    // Forma de pagamento escolhida.
     method: PaymentMethod { title: { pt-BR: "Método", en: "Method" } }
+    // Situação atual da cobrança; consultável.
     status: PaymentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Código devolvido pelo adquirente ao autorizar.
     authorizationCode: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Código de autorização", en: "Authorization code" }
-      maxLength: 60
+      maxLength: 60 // Limita o código a sessenta caracteres.
     }
+    // Instante em que a cobrança foi autorizada.
     authorizedAt: DateTime { title: { pt-BR: "Autorizado em", en: "Authorized at" } }
+    // Instante em que a cobrança foi capturada.
     capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
+    // Texto do comprovante emitido pelo adquirente.
     acquirerReceipt: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Comprovante do adquirente", en: "Acquirer receipt" }
-      maxLength: 60
+      maxLength: 60 // Limita o comprovante a sessenta caracteres.
     }
+    // Motivo detalhado da falha, quando houver.
     failureDetail: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Detalhe da falha", en: "Failure detail" }
-      maxLength: 300
+      maxLength: 300 // Limita o detalhe a trezentos caracteres.
     }
+    // Observações internas livres.
     notes: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Observações", en: "Notes" }
-      maxLength: 1000
+      maxLength: 1000 // Limita as observações a mil caracteres.
     }
+    // Instante de criação do registro.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Busca os pagamentos de um pedido por hash.
     byOrder: [order.id] hash
+    // Ordena os pagamentos por situação e data de captura.
     byStatus: [status, capturedAt] range
   }
 
 
+  // Ações que alteram o pagamento e disparam transições de situação.
   actions {
+    // Registra uma nova cobrança a partir do pedido, valor e método.
     create(order: Order, amount: std.Money, method: PaymentMethod) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Registrar cobrança", en: "Register charge" }
+      // Papéis autorizados a registrar a cobrança.
       roles: [Analyst]
       {
+        // Carimba o instante de criação.
         createdAt = now()
-        emit Created
+        emit Created // Emite o evento de cobrança criada.
       }
     }
 
+    // Autoriza a cobrança com o código devolvido pelo gateway.
     authorize(authorization: string) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Autorizar", en: "Authorize" }
+      // Papéis autorizados a autorizar.
       roles: [PaymentEngine]
 
+      // Move a situação para Autorizado.
       to: status.Authorized
+      // Payload do evento de autorização emitido pela transição.
       emits { authorizationCode: authorization }
       {
+        // Grava o código de autorização no pagamento.
         authorizationCode = authorization
+        // Carimba o instante da autorização.
         authorizedAt = now()
       }
     }
 
+    // Captura a cobrança já autorizada.
     capture(receipt: string) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Capturar", en: "Capture" }
+      // Papéis autorizados a capturar.
       roles: [PaymentEngine]
 
+      // Move a situação para Capturado.
       to: status.Captured
       {
+        // Guarda o comprovante do adquirente.
         acquirerReceipt = receipt
+        // Carimba o instante da captura.
         capturedAt = now()
       }
     }
 
+    // Registra a falha da cobrança com um motivo.
     fail(failureReason: string) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Registrar falha", en: "Record failure" }
+      // Papéis autorizados a registrar falha.
       roles: [PaymentEngine]
 
+      // Move a situação para Falhou.
       to: status.Failed
       {
+        // Persiste o motivo da falha.
         failureDetail = failureReason
       }
     }
 
+    // Estorna o valor da cobrança.
     refund(refundAmount: std.Money) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Estornar", en: "Refund" }
+      // Papéis autorizados a estornar.
       roles: [Manager, PaymentEngine]
 
+      // Move a situação para Reembolsado.
       to: status.Refunded
+      // Payload do evento de estorno emitido pela transição.
       emits { amount: refundAmount }
 
+      // Regra de negócio: o estorno precisa ter valor positivo.
       rule refundAmount > 0 BRL {
+        // Mensagem da regra em português.
         pt-BR: "O valor do estorno deve ser maior que zero"
+        // Mensagem da regra em inglês.
         en: "Refund amount must be greater than zero"
       }
     }
 
+    // Acrescenta uma observação interna ao pagamento.
     annotate(note: string) {
+      // Título exibido no botão e na trilha.
       title: { pt-BR: "Anotar", en: "Annotate" }
+      // Papéis autorizados a anotar.
       roles: [Analyst]
       {
+        // Persiste a observação no campo de notas.
         notes = note
       }
     }
   }
 
+  // Regra de negócio: todo pagamento precisa ter valor positivo.
   rule amount > 0 {
+    // Mensagem da regra em português.
     pt-BR: "O valor deve ser maior que zero"
+    // Mensagem da regra em inglês.
     en: "Amount must be greater than zero"
   }
+  // Regra de negócio: pagamento capturado precisa ter data de captura.
   rule status == Captured implies capturedAt != null {
+    // Mensagem da regra em português.
     pt-BR: "Informe a data de captura"
+    // Mensagem da regra em inglês.
     en: "Enter the capture date"
   }
 }
 
+// Máquina de estados da situação do pagamento.
 shape PaymentStatus {
+  // Título exibido no builder.
   title: { pt-BR: "Situação do pagamento", en: "Payment status" }
-  base: state
+  base: state // Forma de estado: valores com transições.
+  // Estado inicial e transição que o cria.
   initial: Pending with transition Created {
+    // Título da transição exibido na trilha.
     title: { pt-BR: "Cobrança registrada", en: "Charge registered" }
+    // Dados que acompanham a transição inicial.
     payload {
+      // Pedido de origem no payload.
       order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+      // Valor da cobrança no payload.
       amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
     }
   }
 
+  // Estado de cobrança ainda não autorizada.
   value Pending {
+    // Título exibido na interface.
     title: { pt-BR: "Pendente", en: "Pending" }
+    // Ícone associado ao estado.
     icon: Pending
-    ordinal: 10
+    ordinal: 10 // Ordem de exibição entre os estados.
 
+    // Transição para Autorizado.
     transition Authorized {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Pagamento autorizado", en: "Payment authorized" }
+      // Dados que acompanham a transição.
       payload {
+        // Valor autorizado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        // Código de autorização recebido.
         authorizationCode: string { title: { pt-BR: "Autorização", en: "Authorization" } }
       }
     }
 
+    // Transição para Falhou.
     transition Failed {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      // Dados que acompanham a transição.
       payload {
+        // Motivo da falha.
         failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de cobrança autorizada.
   value Authorized {
+    // Título exibido na interface.
     title: { pt-BR: "Autorizado", en: "Authorized" }
+    // Ícone associado ao estado.
     icon: Authorized
-    ordinal: 20
+    ordinal: 20 // Ordem de exibição entre os estados.
 
+    // Transição para Capturado.
     transition Captured {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Pagamento capturado", en: "Payment captured" }
+      // Dados que acompanham a transição.
       payload {
+        // Valor capturado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
+        // Instante da captura.
         capturedAt: DateTime { title: { pt-BR: "Capturado em", en: "Captured at" } }
       }
     }
 
+    // Transição para Falhou.
     transition Failed {
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Pagamento falhou", en: "Payment failed" }
+      // Dados que acompanham a transição.
       payload {
+        // Motivo da falha.
         failureReason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição para Reembolsado, disparada pelo evento de estorno.
     transition Refunded {
+      // Nome do evento que dispara a transição.
       event: RefundIssued
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Estorno emitido", en: "Refund issued" }
+      // Dados que acompanham a transição.
       payload {
+        // Valor estornado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
+  // Estado de cobrança capturada.
   value Captured {
+    // Título exibido na interface.
     title: { pt-BR: "Capturado", en: "Captured" }
+    // Ícone associado ao estado.
     icon: Captured
-    ordinal: 30
+    ordinal: 30 // Ordem de exibição entre os estados.
 
+    // Transição para Reembolsado, disparada pelo evento de estorno.
     transition Refunded {
+      // Nome do evento que dispara a transição.
       event: RefundIssued
+      // Título da transição exibido na trilha.
       title: { pt-BR: "Estorno emitido", en: "Refund issued" }
+      // Dados que acompanham a transição.
       payload {
+        // Valor estornado.
         amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
       }
     }
   }
+  // Estado de cobrança que falhou.
   value Failed {
+    // Título exibido na interface.
     title: { pt-BR: "Falhou", en: "Failed" }
+    // Ícone associado ao estado.
     icon: Failed
-    ordinal: 40
+    ordinal: 40 // Ordem de exibição entre os estados.
   }
+  // Estado de cobrança reembolsada.
   value Refunded {
+    // Título exibido na interface.
     title: { pt-BR: "Reembolsado", en: "Refunded" }
+    // Ícone associado ao estado.
     icon: Refunded
-    ordinal: 50
+    ordinal: 50 // Ordem de exibição entre os estados.
   }
 
-  format: plain
+  format: plain // Formato simples de exibição da situação.
 }
 
+// Classificação das formas de pagamento aceitas.
 shape PaymentMethod {
+  // Título exibido no builder.
   title: { pt-BR: "Método de pagamento", en: "Payment method" }
-  base: classification
+  base: classification // Forma de classificação: apenas valores enumerados.
 
+  // Pagamento por cartão de crédito.
   value CreditCard {
+    // Título exibido na interface.
     title: { pt-BR: "Cartão de crédito", en: "Credit card" }
+    // Ícone associado ao valor.
     icon: CreditCard
-    ordinal: 10
+    ordinal: 10 // Ordem de exibição entre os valores.
   }
+  // Pagamento por Pix.
   value Pix {
+    // Título exibido na interface.
     title: { pt-BR: "Pix", en: "Pix" }
+    // Ícone associado ao valor.
     icon: Pix
-    ordinal: 20
+    ordinal: 20 // Ordem de exibição entre os valores.
   }
+  // Pagamento por boleto.
   value Boleto {
+    // Título exibido na interface.
     title: { pt-BR: "Boleto", en: "Boleto" }
+    // Ícone associado ao valor.
     icon: Boleto
-    ordinal: 30
+    ordinal: 30 // Ordem de exibição entre os valores.
   }
 
-  format: plain
+  format: plain // Formato simples de exibição do método.
 }
 
+// Lista tabular de cobranças.
 view Charges {
+  // Título exibido na navegação.
   title: { pt-BR: "Cobranças", en: "Charges" }
-  type: table
+  type: table // Tipo da view: tabela.
+  // Documento que alimenta a tabela.
   source: Payment
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Colunas exibidas em cada linha.
   columns { order; amount; method; status; capturedAt }
+  // Filtros disponíveis no topo da tabela.
   filters { status; period; method }
-  pagination: 50
+  pagination: 50 // Tamanho da página da tabela.
 
+  // Ações disponíveis sobre as linhas.
   actions {
+    // Abre o detalhe do pagamento selecionado.
     open -> PaymentDetail
+    // Cria uma cobrança chamando a ação do documento.
     charge -> Payment.create(order, amount, method)
+    // Solicita o estorno de uma cobrança.
     refund -> Payment.refund(refundAmount)
   }
 }
 
+// Tela de detalhe de um pagamento.
 view PaymentDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do pagamento", en: "Payment detail" }
-  type: detail
+  type: detail // Tipo da view: detalhe de documento.
+  // Documento exibido na tela.
   document: Payment
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; refunds; timeline }
+  // Ações disponíveis na tela de detalhe.
   actions {
+    // Abre o andamento do processo de captura.
     progress -> PaymentProgress
   }
 }

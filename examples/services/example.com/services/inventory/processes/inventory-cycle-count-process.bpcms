@@ -1,117 +1,173 @@
 // service: example.com/services/inventory
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
+// Processo que conduz a contagem cíclica de um item até a aprovação ou rejeição.
 
-process CycleCount for CountSheet {
+// Declara o processo CycleCount; o argumento é o documento-sujeito da instância.
+process CycleCount(countSheet: CountSheet) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Contagem cíclica", en: "Cycle count" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Contar o estoque com leitura de dispositivo, tratar divergência e aprovar"
-  owner: "Supply Chain"
-  timezone: America/Fortaleza
-
-  pool Company {
-    internal
-    lane Warehouse { role: WarehouseOperator }
-    lane Management { role: StockManager }
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Contar o estoque com leitura de dispositivo, tratar divergência e aprovar"
   }
 
-  start Created {
-    event: CountSheet.Created
+  // Gatilho: inicia uma instância quando a folha de contagem é criada.
+  on [CountSheet.Created]
+  // Chave de identidade, correlação e dedup da instância.
+  key: countSheet
+
+  // Abre o form de captura para o operador registrar a contagem.
+  CountCapture.show({ countSheet })
+  // Abre o form de aprovação para o gestor decidir sobre a contagem.
+  CountApproval.show({ countSheet })
+
+  // Se a contagem foi aprovada no atendimento...
+  if (countSheet.status == Approved) {
+    // ...encerra o processo no desfecho Approved.
+    return Approved
   }
 
-  task Capture {
-    lane: Warehouse
-    form: CountCapture
-    sla: 1d
-    assign: pull
-  }
+  // Caso contrário, encerra no desfecho de rejeição.
+  return Rejected
 
-  task Approve {
-    lane: Management
-    form: CountApproval
-    sla: 1d
-    assign: pull
-  }
-
-  // discricionária: disponível quando há divergência; concluir leva à aprovação (caminho alternativo, 4.7)
-  task Recount {
-    lane: Warehouse
-    form: RecountCapture
-    discretionary
-    when: countSheet.divergence != 0 and countSheet.status == Counted
-    assign: pull
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Approved {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Contagem aprovada", en: "Count approved" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de cancelamento do caso.
   end Rejected {
+    // Título exibido no histórico.
     title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Created -> Capture
-  Capture.submit -> Approve
-  Recount.recount -> Approve
-  Approve.approve -> Approved
-  Approve.reject -> Rejected
 }
 
+// Form de captura da contagem, preenchido pelo operador de armazém.
 form CountCapture {
+  // Título exibido na inbox e na tela do form.
   title: { pt-BR: "Conferir contagem", en: "Check count" }
+  // Documento manipulado pelo form.
   document: CountSheet
+  // Papéis que podem atender o form.
+  roles: [WarehouseOperator]
+  // Prazo para conclusão do form antes do timeout.
+  timeout: 1d
+  // Prioridade de exibição na fila de trabalho.
+  priority: 50
+  // Forma de atribuição: o operador puxa a tarefa da fila.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Item de estoque que está sendo contado.
     stockItem
+    // Quantidade esperada segundo o sistema.
     expected
+    // Quantidade informada pelo operador.
     counted
+    // Divergência calculada pelo documento.
     divergence
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Envia a contagem chamando a action do documento.
     submit { calls: CountSheet.submit }
   }
 }
 
+// Form de aprovação da contagem, preenchido pelo gestor.
 form CountApproval {
+  // Título exibido na inbox e na tela do form.
   title: { pt-BR: "Aprovar contagem", en: "Approve count" }
+  // Documento manipulado pelo form.
   document: CountSheet
+  // Papéis que podem atender o form.
+  roles: [StockManager]
+  // Prazo para conclusão do form antes do timeout.
+  timeout: 1d
+  // Prioridade de exibição na fila de trabalho.
+  priority: 60
+  // Forma de atribuição: o gestor puxa a tarefa da fila.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Item de estoque que está sendo avaliado.
     stockItem
+    // Quantidade registrada na contagem.
     counted
+    // Divergência apurada pelo documento.
     divergence
+    // Motivo opcional informado ao rejeitar.
     reason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      // Limite de caracteres do motivo.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Aprova a contagem chamando a action do documento.
     approve { calls: CountSheet.approve }
+    // Rejeita a contagem passando o motivo informado.
     reject { calls: CountSheet.reject(reason) }
   }
 }
 
+// A task discricionária de recontagem foi removida nesta versão (CMMN adiado);
+// a action CountSheet.recount continua disponível no documento.
+// Form de recontagem, para conferir o item quando há divergência.
 form RecountCapture {
+  // Título exibido na inbox e na tela do form.
   title: { pt-BR: "Recontagem", en: "Recount" }
+  // Documento manipulado pelo form.
   document: CountSheet
+  // Papéis que podem atender o form.
+  roles: [WarehouseOperator]
+  // Prazo para conclusão do form antes do timeout.
+  timeout: 1d
+  // Prioridade de exibição na fila de trabalho.
+  priority: 50
+  // Forma de atribuição: o operador puxa a tarefa da fila.
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Quantidade informada na recontagem.
     counted
+    // Divergência recalculada após a recontagem.
     divergence
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Registra a recontagem chamando a action do documento.
     recount { calls: CountSheet.recount }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view CycleCountProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da contagem", en: "Count progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: CycleCount
+  // Papéis que podem abrir a view.
   roles: [WarehouseOperator, StockManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

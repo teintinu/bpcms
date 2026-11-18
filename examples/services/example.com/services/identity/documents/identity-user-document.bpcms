@@ -1,154 +1,257 @@
 // service: example.com/services/identity
 
+// Declara o documento de usuário, base para sessões, consumidores e recuperação de acesso.
 document User {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Usuário", en: "User" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Time/área responsável pelo documento.
   owner: "Identity"
+  // Sincronização somente de leitura com a fonte de identidade.
   sync: read
+  // Campos do documento.
   fields {
+    // Nome completo da pessoa.
     name: string {
+      // Rótulos e textos de apoio do campo.
       title: {
+        // Rótulo longo em português.
         pt-BR: "Nome da pessoa"
+        // Rótulo longo em inglês.
         en: "Person name"
+        // Rótulo curto para telas estreitas.
         short: { pt-BR: "Pessoa", en: "Person" }
+        // Texto de ajuda exibido ao passar o mouse.
         tooltip: { pt-BR: "Nome completo da pessoa", en: "Full person name" }
       }
+      // Limite de caracteres do nome.
       maxLength: 120
+      // Torna o campo consultável em buscas.
       lookup
+      // Torna o preenchimento obrigatório.
       required
     }
+    // Apelido pelo qual a pessoa é tratada.
     nickname: string { title: { pt-BR: "Apelido", en: "Nickname" }, maxLength: 40, lookup }
+    // Imagem de perfil da pessoa.
     avatar: Image { title: { pt-BR: "Imagem de perfil", en: "Avatar" }, lookup }
+    // Correio eletrônico, único por usuário.
     email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" }, unique, lookup }
+    // Situação atual do usuário no shape UserStatus.
     status: UserStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Momento em que a identidade foi verificada.
     identityVerifiedAt: DateTime { title: { pt-BR: "Identidade verificada em", en: "Identity verified at" } }
+    // Momento em que a recuperação de acesso foi aprovada.
     recoveryApprovedAt: DateTime { title: { pt-BR: "Recuperação aprovada em", en: "Recovery approved at" } }
+    // Contador de tentativas de acesso, privado ao serviço.
     private loginAttempts: std.Count { title: { pt-BR: "Tentativas de acesso", en: "Login attempts" } }
+    // Momento de criação do usuário.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Índice único por correio eletrônico, impedindo duplicidade.
     email: [email] unique
+    // Índice por situação e criação, para listar usuários por estado.
     byStatus: [status, createdAt] range
   }
 
 
+  // Ações de escrita disponíveis no documento.
   actions {
+    // Cria o usuário já com o evento de criação e a data de cadastro.
     create(name: string, email: Email){
+      // Título exibido na ação.
       title: { pt-BR: "Criar usuário", en: "Create user" }
+      // Papéis autorizados a executar a ação.
       roles: [Admin]
+      // Corpo da ação: grava a criação e emite o evento com o nome.
       {
+        // Marca o instante de criação do usuário.
         createdAt = now()
+        // Emite o evento Created levando o nome no payload.
         emit Created { name }
       }
     }
 
+    // Suspende o acesso do usuário, exigindo justificativa.
     suspend(justification: string){
+      // Título exibido na ação.
       title: { pt-BR: "Suspender", en: "Suspend" }
+      // Papéis autorizados a executar a ação.
       roles: [Admin]
+      // Transição aplicada: leva o status para Suspended.
       to: status.Suspended
+      // Payload da transição: motivo da suspensão.
       emits { reason: justification }
     }
 
+    // Desativa definitivamente o acesso do usuário.
     disable(){
+      // Título exibido na ação.
       title: { pt-BR: "Desativar", en: "Disable" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
+      // Transição aplicada: leva o status para Disabled.
       to: status.Disabled
     }
 
+    // Desbloqueia o acesso do usuário, voltando ao estado ativo.
     unlock(){
+      // Título exibido na ação.
       title: { pt-BR: "Desbloquear", en: "Unlock" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
+      // Transição aplicada: leva o status para Active.
       to: status.Active
     }
 
+    // Registra a verificação de identidade do usuário.
     confirmIdentity(){
+      // Título exibido na ação.
       title: { pt-BR: "Confirmar identidade", en: "Confirm identity" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Corpo da ação: grava o instante da verificação.
       {
+        // Marca o momento em que a identidade foi confirmada.
         identityVerifiedAt = now()
       }
     }
 
+    // Registra a aprovação da recuperação de acesso.
     approveRecovery(){
+      // Título exibido na ação.
       title: { pt-BR: "Aprovar recuperação", en: "Approve recovery" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
+      // Corpo da ação: grava o instante da aprovação.
       {
+        // Marca o momento em que a recuperação foi aprovada.
         recoveryApprovedAt = now()
       }
     }
 
+    // Recalcula o risco do usuário, uso interno do serviço.
     private recalculateRisk(){
+      // Título exibido na ação.
       title: { pt-BR: "Recalcular risco", en: "Recalculate risk" }
+      // Papéis autorizados a executar a ação.
       roles: [Admin]
+      // Tipo do valor devolvido pela ação.
       returns: std.Count
     }
   }
 
+  // Invariante: a aprovação da recuperação exige a verificação de identidade antes.
   rule recoveryApprovedAt != null implies identityVerifiedAt != null {
+    // Mensagem da regra em português.
     pt-BR: "A recuperação exige a verificação de identidade antes da aprovação"
+    // Mensagem da regra em inglês.
     en: "Recovery requires identity verification before approval"
 
   }
 }
 
+// Shape de estados do ciclo de vida do usuário.
 shape UserStatus {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Situação do usuário", en: "User status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial Active, alcançado pela transição Created.
   initial: Active with transition Created {
+    // Título da transição de criação.
     title: { pt-BR: "Usuário criado", en: "User created" }
+    // Payload exigido pela transição de criação.
     payload {
+      // Nome levado na criação do usuário.
       name: string { title: { pt-BR: "Nome", en: "Name" } }
     }
   }
+  // Estado de usuário ativo.
   value Active {
+    // Título exibido para o valor.
     title: { pt-BR: "Ativo", en: "Active" }
+    // Ícone exibido junto ao valor.
     icon: Active
+    // Ordem de exibição do valor.
     ordinal: 10
 
+    // Transição de suspensão do usuário.
     transition Suspended {
+      // Título da transição.
       title: { pt-BR: "Usuário suspenso", en: "User suspended" }
+      // Payload exigido pela transição de suspensão.
       payload {
+        // Motivo da suspensão.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição de desativação do usuário.
     transition Disabled {
+      // Título da transição.
       title: { pt-BR: "Usuário desativado", en: "User disabled" }
     }
   }
+  // Estado de usuário suspenso.
   value Suspended {
+    // Título exibido para o valor.
     title: { pt-BR: "Suspenso", en: "Suspended" }
+    // Ícone exibido junto ao valor.
     icon: Suspended
+    // Ordem de exibição do valor.
     ordinal: 20
 
+    // Transição de desativação a partir da suspensão.
     transition Disabled {
+      // Título da transição.
       title: { pt-BR: "Usuário desativado", en: "User disabled" }
     }
 
+    // Transição de reativação do acesso.
     transition Active {
+      // Nome do evento que dispara a reativação.
       event: Unlocked
+      // Título da transição.
       title: { pt-BR: "Acesso liberado", en: "Access unlocked" }
     }
   }
+  // Estado de usuário desativado.
   value Disabled {
+    // Título exibido para o valor.
     title: { pt-BR: "Desativado", en: "Disabled" }
+    // Ícone exibido junto ao valor.
     icon: Disabled
+    // Ordem de exibição do valor.
     ordinal: 30
 
+    // Transição de reativação do acesso.
     transition Active {
+      // Nome do evento que dispara a reativação.
       event: Unlocked
+      // Título da transição.
       title: { pt-BR: "Acesso liberado", en: "Access unlocked" }
     }
   }
+  // Formato de apresentação do shape: texto simples.
   format: plain
 }
 
+// Mensagem de acesso restaurado enviada ao usuário ao fim da recuperação.
 message AccessRestored {
+  // Título exibido no construtor e no histórico.
   title: { pt-BR: "Acesso restaurado", en: "Access restored" }
+  // Documento sobre o qual a mensagem fala.
   about: User
+  // Dados levados no payload da mensagem.
   payload {
+    // Nome do usuário notificado.
     name: string { title: { pt-BR: "Nome", en: "Name" } }
+    // Correio eletrônico do usuário notificado.
     email: Email { title: { pt-BR: "Correio eletrônico", en: "Email" } }
   }
 }

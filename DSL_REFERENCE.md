@@ -119,14 +119,14 @@ stream.readStreamArray(): stream[]
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
 | `Shape` | campos, binds | `peso: Mass` | Tipo de dado; dono de parse/validação/formato/unidade. |
-| `Document` | variáveis, with, actions | `shipment: Shipment` | Referência a documento; o `check` valida existência, dono e tipo. |
-| `Form` | task humana | `form: OrderReview` | Contrato da tarefa (4.14). |
+| `Document` | variáveis, argumentos, actions | `shipment: Shipment` | Referência a documento; o `check` valida existência, dono e tipo. |
+| `Form` | task humana | `Form.show({ order })` | Contrato da tarefa (4.14). |
 | `View` | navegação, telas | `open -> OrderDetail` | Tela/projeção (7). |
-| `Process` | runs | `runs: DeliveryTracking` | Subprocesso (call activity). |
-| `Message` | sends/receives | `sends: PickupRequest` | Contrato entre participantes (4.15). |
-| `Role` | lane, by, roles | `lane Sales { role: Clerk }` | Referência a papel. |
-| `Event` | start, cancel on, milestone on | `event: Order.Approved` | Referência a evento de Document. |
-| `Integration` | call | `call: Carrier.quote` | Referência a operação de integração. |
+| `Process` | subprocesso | `Provisioning.run({ employee })` | Subprocesso (call activity). |
+| `Message` | send/receive | `send PickupRequest { ... }` | Contrato entre participantes (4.15). |
+| `Role` | by, roles | `roles: [Clerk]` | Referência a papel. |
+| `Event` | on, cancel on | `on [Order.Approved]` | Referência a evento de Document. |
+| `Integration` | operação | `Carrier.quote({ shipment })` | Referência a operação de integração. |
 | `T` | campos | `phone: Phone` | Sem `required` = opcional; `?` não é usado no field. |
 | `T[]` | coleções | `items: InvoiceItem[]` | Lista ordenada de `T`. |
 | `A \| B` | binds | `binds: Mass \| Length` | União de tipos aceitos pelo widget. |
@@ -528,564 +528,345 @@ service "example.com/services/fraud-checkout" {
 
 # 4. Process
 
-**Processo é trabalho; Documento é estado.** O processo orquestra quem faz o quê, em que ordem, com que prazo e com que desvio. O documento guarda o dado durável, as invariantes e o ciclo de vida. Tudo o mais — form, view, mensagem, decisão — é contrato de trabalho ou projeção.
+**Processo é trabalho; Documento é estado.** O processo orquestra quem faz o quê, em que ordem, com que prazo e com que desvio. O documento guarda o dado durável, as invariantes e o ciclo de vida. Form, view, mensagem e decisão são contratos de trabalho ou projeções.
 
 Um processo não é:
 
 - uma máquina de estados do documento (isso é o **workflow** do Document, seção 5);
 - um formulário (isso é o **Form**, seção 4.14);
 - uma tela (isso é a **View**, seção 7);
-- um agendador (agendamento é um **start**; o scheduler é runtime);
+- um agendador (agendamento é um **gatilho de start**; o scheduler é runtime);
 - um relatório (isso é uma **View type: report**).
 
-## 4.1 As duas perguntas de um processo
+## 4.1 Processo é código
 
-Todo processo responde a duas perguntas, e a DSL exige que as duas estejam explícitas:
+O processo é escrito como **código imperativo**, com sintaxe parecida com TypeScript:
 
-| Pergunta | Cláusula | Onde vive |
-| :--- | :--- | :--- |
-| **Quem executa cada passo?** | `lane:` em toda task | pool/lane do processo |
-| **O que cada passo faz?** | um contrato: form, action, call, decision, sends, receives, runs, manual | no artefato referenciado |
+- execução **sequencial e implícita**: cada passo só começa quando o anterior termina; não há `await` explícito;
+- concorrência só com `parallel`;
+- o processo recebe **documentos por argumento** e declara suas variáveis no topo;
+- não existe `for <Documento>`: o caso é definido pelos argumentos e pela `key`;
+- não existe `pool`/`lane`: quem executa um passo humano vem de `roles` no form/manual;
+- não existe artefato `task`: o processo chama operações diretas ou artefatos (`Form.show`, `Manual.show`, `Job.run`, `Processo.run`).
 
-O **tipo** da task é derivado do contrato — não existe `type:`. A tabela abaixo é total e determinística: exatamente um contrato por task.
+As duas perguntas de um processo continuam explícitas:
 
-| Contrato | Tipo da task | Executor |
-| :--- | :--- | :--- |
-| `form:` | user task (pessoa) | lane interna ou de portal |
-| `manual:` | manual task (fora do sistema) | lane interna |
-| `action:` | service task (comando de documento) | `System` |
-| `call:` | service task (operação de integração) | `System` |
-| `decision:` | business rule task (DMN) | `System` |
-| `sends:` | send task (mensagem para participante) | `System` |
-| `receives:` | receive task (espera mensagem de participante) | `System` |
-| `runs:` | subprocesso / call activity (outra instância) | `System` |
+| Pergunta | Onde vive |
+| :--- | :--- |
+| **Quem executa?** | `roles` do form/manual; operações rodam com autoridade do processo. |
+| **O que o passo faz?** | operação (`Doc.action`, `Integracao.op`, `Decision.evaluate`, `Compute.fn`) ou task (`Form.show`, `Manual.show`, `Job.run`, `Processo.run`, `Message.send/receive`). |
 
-Regras:
-
-- zero contratos = `E_TASK_CONTRACT_MISSING`; dois contratos = `E_TASK_KIND_CONFLICT`;
-- `type:` não existe em task: inferência única, sem asserção redundante;
-- o kind inferido é visível no `check --explain` e no builder (nunca é um default silencioso);
-- task humana, manual, de mensagem ou de subprocesso **sempre** declara `lane:`;
-- task automatizada declara `lane: System`, o único valor permitido.
-
-## 4.2 Cabeçalho
+## 4.2 Cabeçalho e gatilhos
 
 ```bpcms
-process OrderFulfillment for Order {
-  title: { pt-BR: "Atendimento do pedido", en: "Order fulfillment" }
+process Checkout(session: CheckoutSession) {
+  title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
-  goal: "Entregar o pedido no prazo, com frete e rastreio conhecidos"
-  owner: "Logística"
-  timezone: America/Fortaleza
-}
+  goal: {
+    pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
+  }
+  sla: 1d
+
+  on [CheckoutSession.CartValidated]
+  key: session
+
+  // declarações de variáveis (somente aqui)
+  let offer: FreightOffer | null = null
+  let authorized = false
 ```
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `process` | `process <Name> for <Document> { ... }` | Unidade de orquestração. O `for` declara o **documento-sujeito** (o caso). |
-| `title` | `title: I18n` | I18n obrigatório (1.9). |
-| `version` | `version: 1` | Versão do processo; diff e release comparam. |
-| `goal` | `goal: "..."` | Objetivo de negócio; usado na revisão e no painel do processo. |
-| `owner` | `owner: "..."` | Dono humano/time; usado em revisão, SLA e promoção. |
-| `timezone` | `timezone: America/Fortaleza` | Fuso do processo (cron, prazos exibidos). Default: fuso do tenant. |
+| `process` | `process <Name>(args)` | Unidade de orquestração; os argumentos são documentos/escalares do caso. |
+| `title` | `title: I18n` | Obrigatório. |
+| `version` | `version: N` | Versão do processo; diff e release comparam. |
+| `goal` | `goal: I18n` | Objetivo de negócio. |
+| `sla` | `sla: 1d` | Alvo brando do caso (exibição, KPI); não é timer. |
+| `timeout` | `timeout: 30d` | Prazo duro do caso; dispara `Timeout` no processo. |
+| `on` | `on [Doc.Event, ...]` | Lista de eventos que iniciam o processo. |
+| `by` | `by: [Role, ...]` | Início manual por papéis. |
+| `schedule` | `schedule: "0 6 * * *"` | Cron no fuso do tenant; o scheduler é runtime. |
+| `fanOut` | `fanOut: Invoice where status == Overdue` | Com `schedule`: uma instância por documento; o argumento é o documento. |
+| `message` | `message: Message` | Início pela mensagem; o `about` é o documento correlacionado. |
+| `called` | `called` | Processo chamado por `Processo.run`; não é gatilho de topo. |
+| `key` | `key: <expr>` | Identidade/correlação/dedup da instância. |
 
-**Processo chamado (`runs:`).** `start` de topo (evento, mensagem, agenda, manual) existe para instância criada por gatilho. Um processo chamado por `runs:` declara **exatamente um** `start Begin { called }` e nenhum gatilho de topo; é por ele que o pai entra, mesmo que o fluxo tenha laço. Se você precisa das duas formas, faça um processo de topo fino que chama o interno. Processo com `called` e gatilho de topo ao mesmo tempo = `E_PROCESS_TRIGGER_CONFLICT`.
+- Um processo tem **um** start. Para evento + manual, faça um wrapper fino.
+- `key` é obrigatória para `on`, `message` e `fanOut`.
+- O payload do evento/mensagem precisa ser atribuível aos argumentos (`E_START_PAYLOAD`).
+- `owner` e `timezone` não pertencem ao processo: dono é metadado do serviço e fuso é do tenant/scheduler.
 
-**Documento-sujeito (`for`).** Quando presente:
+## 4.3 Roles — quem executa
 
-- declara implicitamente a variável do sujeito (`Order` → `order`), que o processo não precisa redeclarar;
-- é a identidade do caso exibida na tela de andamento e nos painéis;
-- é a chave de correlação de eventos e mensagens;
-- restringe os starts: o gatilho precisa produzir o sujeito (evento do próprio sujeito, mensagem cujo `about` é o sujeito, seleção por `select`, ou início manual);
-- **sem `for`,** o processo só pode ser iniciado por `runs:` de outro processo ou por start que não produza sujeito — nesse caso todas as variáveis precisam ser `gives:` de tasks.
+Quem executa um passo humano é declarado no próprio form/manual:
 
 ```bpcms
-process CloseMonth for FiscalPeriod {
-  title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  version: 1
-  goal: "Fechar o período com números conferidos"
-  owner: "Controladoria"
+form PaymentRetry {
+  document: CheckoutSession
+  roles: [Customer]
+  timeout: 1d
+  priority: 80
 }
 ```
 
-## 4.3 Pools e lanes — quem executa
+- `roles` substitui lane/pool; a role é a autoridade de execução da task.
+- O processo executa operações de documento com autoridade de serviço; as `roles` das actions continuam valendo para chamadas diretas por view/API.
+- `timeout` é prazo duro da task; `priority` e `assign` são da fila.
+- Views de inbox usam `scope: roles`, `groupBy: role`, `filter { role in currentUser.roles }` e coluna `role`.
 
-Pool é o **participante**; lane é **quem executa** dentro dele. Toda task tem lane. A tela de andamento mostra, para cada passo, o participante, a lane, o papel e o dono atual.
+## 4.4 Variáveis
 
 ```bpcms
-pool Company {
-  internal
-  lane Sales { role: Clerk }
-  lane Warehouse { role: Packer }
-  lane Management { role: Manager }
-}
+let offer: FreightOffer | null = null
+let authorized = false
+let authorization: string
+let item: OrderItem
+```
 
-pool Customer {
-  external
-  lane Client { role: Customer }
-}
+- `let`/`const` **somente no topo do processo**, antes do código.
+- **Não declare variáveis dentro de `try`, `catch`, `if`, `loop`, `parallel` ou `forEach`.**
+- Atribuição dentro de blocos é permitida.
+- A instância é o escopo; as variáveis são **duráveis** e persistidas pelo builder.
+- Documentos entram por **referência** (`DocumentRef`); valores de shape/resultado são valores.
+- `loop` não declara contador:
 
-pool Carrier {
-  external
+```bpcms
+loop PaymentAttempt max 3 {
+  ...
+  break
 }
 ```
 
-| Natureza | Significado | Pode conter |
-| :--- | :--- | :--- |
-| `internal` | pessoa/role da empresa, executando no app | lanes com `role` |
-| `external` com lanes | pessoa de fora executando **no nosso app** (portal do cliente, do fornecedor) | lanes com `role` |
-| `external` sem lanes | participante **caixa-preta** (transportadora, banco, órgão): só troca mensagem | nada |
-| `System` | automação do próprio serviço (reservado, não se declara) | — |
-
-Regras:
-
-- `lane: <Name>` referencia uma lane declarada, ou o nome de um pool sem lanes, ou o literal reservado `System`;
-- pool externo sem lanes não recebe task: a interação é só por `sends:`/`receives:`;
-- task automatizada usa `lane: System`; task humana nunca usa;
-- duas lanes com o mesmo nome no mesmo processo = `E_LANE_DUPLICATE`;
-- `role` da lane precisa existir no serviço/app (`E_ROLE`);
-- a lane é a **autoridade de execução**; permissão de campo/ação continua no Document (5.6).
-
-**Não existe `type: external`.** "Externo" é natureza de pool, não tipo de task. Uma user task executada pelo cliente é `form:` + lane em pool externo com portal; o andamento mostra "Cliente · João" e o prazo, igual a uma task interna.
-
-## 4.4 Variáveis — contexto transitório
+- `forEach`/`parallel each` usam variável declarada no topo:
 
 ```bpcms
-variables {
-  shipment: Shipment
-  quote: FreightQuote
-  approved: boolean
-  totalApproved: std.Money
+forEach item in order.items {
+  ...
 }
 ```
 
-- tipadas por Shape ou Document; variável de Document é um `DocumentRef`;
-- a variável do sujeito (`for`) é implícita e não se redeclara;
-- a instância é o escopo: variáveis **não** são duráveis nem visíveis para outros processos;
-- **o Documento é o armazenamento durável**; variável guarda referência e decisão transitória;
-- task só altera documento por `action:`/`apply:`; task não escreve campo direto (nem no form);
-- toda variável precisa ser atribuída antes do uso em todos os caminhos (`E_DEFINITELY_ASSIGNED`);
-- atribuição vem de: sujeito, `with` de start, `gives:` de task, ou `apply:`;
-- `gives:` só aceita o retorno declarado do contrato (`E_GIVES_TYPE`).
+- Toda variável precisa ser atribuída antes do uso em todos os caminhos (`E_DEFINITELY_ASSIGNED`).
+- União/opcional é permitida (`FreightOffer | null`).
 
-## 4.5 Starts — como a instância nasce
+## 4.5 Start — como a instância nasce
 
 ```bpcms
-start Placed { event: Order.Placed }
-start Manual { by: [Clerk, Manager] }
-start Monthly {
-  schedule: "0 2 1 * *"
-  select: fiscalPeriod.status == Open
-}
-start FromCarrier { message: PickupConfirmed }
+on [Order.Placed]
+key: order
+
+by: [Clerk, Manager]
+
+schedule: "0 2 1 * *"
+fanOut: FiscalPeriod where status == Open
+key: fiscalPeriod
+
+message: PickupConfirmed
+key: shipment
+
+called
 ```
 
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `start` | `start <Name> { ... }` | Nó de início (0 entradas, 1 saída). |
-| `event` | `event: Document.Event` | Inicia quando o evento do documento-sujeito (ou de outro documento) ocorre. |
-| `message` | `message: <Message>` | Inicia quando a mensagem chega; exige `about` compatível com o sujeito. |
-| `schedule` | `schedule: "0 2 1 * *"` | Cron no fuso do processo; o scheduler é runtime. |
-| `select` | `select: <expr>` | Só com `schedule`: seleciona os sujeitos e **inicia uma instância por sujeito** (fan-out). |
-| `by` | `by: [Role, ...]` | Início manual por papéis; o usuário escolhe o sujeito. |
-| `called` | `start Begin { called }` | Entrada de processo chamado por `runs:`; não é gatilho de topo. |
-
-Regras:
-
-- exatamente um dos cinco gatilhos por `start` (`event`, `message`, `schedule`, `by`, `called`);
-- `select` só existe em `schedule` e exige `for`;
-- processo sem `start` = `E_PROCESS_NO_START`;
-- processo chamado sem `start { called }` ou com gatilho de topo = `E_PROCESS_TRIGGER_CONFLICT`;
-- processo de topo com `called` = `E_PROCESS_TRIGGER_CONFLICT`;
-- dois `start` para o mesmo evento = `E_START_DUPLICATE`;
-- `schedule` não é `job`: não há artefato de agendamento. O runtime agenda, dispara, audita e mostra a execução como qualquer instância.
-
-**Por que não existe `job`.** Um agendamento é um **gatilho de início**, não um tipo de trabalho. Modelá-lo como processo dá de graça: andamento, auditoria, retry por task, SLA, painel, cancelamento e histórico — coisas que um job isolado teria de reimplementar. Rotinas em lote usam `for` + `select` (uma instância por sujeito), não `batch`.
+- `on` aceita lista de eventos; o documento do evento entra pelo argumento correspondente.
+- `by` inicia manualmente; o usuário escolhe o documento/args.
+- `schedule` sem `fanOut` cria uma instância por disparo; com `fanOut`, uma por documento.
+- `message` correlaciona pelo `about` da mensagem.
+- `called` é a entrada de processo chamado por `Processo.run`.
+- Um start por processo (`E_PROCESS_START`); start duplicado para o mesmo evento é erro.
+- `cancel on` não é start: é handler de cancelamento (§4.8).
 
 ## 4.6 End — como a instância termina
 
 ```bpcms
-end Delivered {
-  title: { pt-BR: "Entregue", en: "Delivered" }
+return Confirmed
+
+end Confirmed {
+  title: { pt-BR: "Compra confirmada", en: "Purchase confirmed" }
   outcome: success
 }
-end Cancelled {
-  title: { pt-BR: "Cancelado", en: "Cancelled" }
-  outcome: cancelled
-}
-end Failed {
-  title: { pt-BR: "Falhou", en: "Failed" }
-  outcome: failure
-}
 ```
 
-- `end` é nó terminal: N entradas, 0 saídas;
-- `title` é obrigatório: é o desfecho mostrado no histórico, nos filtros e nos KPIs;
-- todo caminho a partir de um `start` precisa alcançar um `end` (`E_FLOW_DEAD_END`);
-- o desfecho é a dimensão de análise do processo ("quantos terminaram em `Cancelled` e por quê");
-- erro não tratado termina a instância no desfecho reservado `Failed`, depois de rodar a compensação (4.11);
-- `end on Document.Event` **não existe**: terminar é chegar a um nó, não esperar um evento.
+- `end` é declaração do desfecho, **sempre ao final do processo** (`E_END_ORDER`).
+- O fluxo termina com `return <End>`; o alvo precisa existir (`E_RETURN_UNKNOWN`).
+- `title` é obrigatório; `outcome` é `success | cancelled | failure`.
+- Todo caminho precisa terminar em `return` ou em erro tratado.
+- Erro não tratado encerra a instância em falha, depois da compensação (§4.11).
 
-## 4.7 Task
+## 4.7 Operações e tasks
+
+**Operações** são chamadas diretas:
 
 ```bpcms
-task Review {
-  lane: Sales
-  form: OrderReview
-  sla: 4h
-  assign: pull
-  on breach -> Chase
-}
-
-task Reserve {
-  lane: System
-  action: Stock.reserve
-  with { order }
-}
-
-task Freight {
-  lane: System
-  call: Carrier.quote
-  with { shipment }
-  gives: quote
-  sla: 5m
-  on error CarrierUnavailable -> ManualQuote
-}
+CheckoutSession.quoteShipping({ freightAmount: offer.freight, days: offer.days })
+authorization = PaymentGateway.authorize({ total: session.total, method: session.paymentMethod })
+queue = TicketRouting.evaluate({ category: ticket.category, priority: ticket.priority })
+score = RiskScore.compute({ application })
 ```
 
-| Cláusula | Sintaxe | Funcionamento |
+| Operação | Contrato | Executor |
 | :--- | :--- | :--- |
-| `lane` | `lane: Warehouse` | Quem executa. Obrigatória. |
-| `form` | `form: OrderReview` | Contrato humano (4.14). |
-| `manual` | `manual: "Ligar ao cliente e confirmar"` | Trabalho fora do sistema; a descrição é a instrução exibida. |
-| `action` | `action: Stock.reserve` | Comando de documento; efeito durável e evento. |
-| `call` | `call: Carrier.quote` | Operação de integração; efeito externo. |
-| `decision` | `decision: RefundEligibility` | Tabela de decisão (4.17). |
-| `sends` | `sends: PickupRequest` | Envia mensagem; exige `partner:`. |
-| `receives` | `receives: PickupConfirmed` | Espera mensagem correlacionada; exige `partner:`. |
-| `runs` | `runs: DeliveryTracking` | Inicia outro processo (subpasso); o filho declara `start Begin { called }`. |
-| `partner` | `partner: Carrier` | Participante do outro lado da mensagem. |
-| `apply` | `apply: Shipment.applyPickup` | Em `receives:`: ação executada com o payload ao receber. |
-| `with` | `with { amount: order.total }` | Liga variáveis/expressões aos parâmetros do contrato. |
-| `gives` | `gives: quote` | Atribui o retorno do contrato a uma variável. |
-| `sla` | `sla: 4h` | Prazo esperado; alimenta fila, painel, atraso e KPI. |
-| `priority` | `priority: 50` | Prioridade na fila (maior primeiro). |
-| `assign` | `assign: pull \| auto \| named(<expr>)` | Distribuição da task humana. |
-| `discretionary` | `discretionary` | Task opcional de caso (CMMN): não bloqueia o fluxo. |
-| `when` | `when: order.total > 10000 BRL` | Habilita a task discricionária. |
-| `foreach` | `foreach { over: order.items; as: item; mode: parallel }` | Multi-instância sobre coleção. |
-| `compensates` | `compensates: Charge` | Handler de compensação (sem arestas). |
-| `on error` | `on error StockOut -> Undo` | Desvio por erro; aborta a tentativa. |
-| `on timer` | `on timer 2d -> Escalate` | Prazo interruptivo; `keep` = não interruptivo. |
-| `on breach` | `on breach -> Escalate` | Reação exatamente no `sla`. |
-| `title` | `title: I18n` | Opcional: herda o título do contrato. |
+| `Doc.action({...})` | comando de documento | processo (serviço) |
+| `Integracao.op({...})` | operação de integração | processo |
+| `Decision.evaluate({...})` | tabela DMN pura | processo |
+| `Compute.fn({...})` | função pura, empacotada pelo builder | processo |
 
-**Contratos e executor.** `action`, `call`, `decision`, `sends` e `receives` rodam em `lane: System`. `form` e `manual` rodam em lane humana. `runs` é disparado pelo processo pai e executa no processo filho (o pai fica em `System` enquanto espera).
+**Tasks** são artefatos separados, chamados pelo processo:
 
-**Uma task, uma responsabilidade.** Duas ações de documento na mesma task = duas tasks. O passo visível é a task; se você quer duas coisas visíveis, são duas tasks.
+| Task | Chamada | Contrato |
+| :--- | :--- | :--- |
+| `form` | `Form.show({...})` | task humana de escrita |
+| `view` | `View.show({...})` | task humana de leitura/relatório |
+| `manual` | `Manual.show({...})` | trabalho fora do sistema |
+| `job` | `Job.run({...})` | trabalho de sistema com background/retry |
+| `process` | `Processo.run({...})` | subprocesso (outra instância) |
+| `message` | `Message.send/receive` | contrato entre participantes |
 
-**`with`.** Liga parâmetros do contrato a expressões sobre variáveis e campos:
+- O tipo é derivado do contrato; não há `type:`.
+- Uma operação/task por passo: duas ações de documento são dois passos.
+- `with`/`gives` não existem; argumentos são objeto e o retorno é atribuído a variável.
+- Form/manual declaram `roles`, `timeout`, `priority`, `assign`; `returns` só quando devolvem dado sem gravar.
+- A decisão humana é lida no **estado do documento** (`doc.status == X`) depois do `show`.
+- `send`/`receive`:
 
 ```bpcms
-task Refund {
-  lane: System
-  action: Payment.refund
-  with {
-    amount: returnRequest.refundAmount
-    payment: returnRequest.payment
-  }
-  gives: refund
+send PickupRequest {
+  key: shipment
+  with { requestedAt: now() }
+}
+
+receive PickupConfirmed {
+  key: shipment
+  timeout: 2d
+  apply: Shipment.confirmPickup
 }
 ```
 
-- a chave é o parâmetro declarado no contrato;
-- parâmetro obrigatório sem `with` e sem valor default = `E_WITH_MISSING`;
-- `with` em parâmetro inexistente = `E_WITH_UNKNOWN`;
-- expressão só usa variáveis, campos do sujeito, campos de variáveis, `Parameter` do serviço e funções declaradas (seção 25); `Secret` nunca aparece em expressão;
-- atalho `with { order }` quando o nome da variável é o do parâmetro.
+- `receive` sem `apply` devolve o payload; o parceiro/canal é configuração de runtime/integração (não há `partner`/pool).
 
-**`gives`.** O contrato declara no máximo um retorno (`returns:` na action, tipo na operação de integração, tipo da decisão). `gives:` atribui esse retorno a uma variável de tipo compatível. Subprocesso não retorna valor: dados fluem pelo documento.
-
-**Prazo.** `sla` é brando (exibição, fila, KPI, aviso). `on timer` e `on error` são duros (fluxo). `on breach` é o duro no instante do `sla`. Não se desugara um no outro: você pode ter aviso em 1d e escalonamento em 2d.
+## 4.8 Erros, prazos e cancelamento
 
 ```bpcms
-task Review {
-  lane: Management
-  form: ApprovePurchase
-  sla: 1d
-  on breach -> Remind
-  on timer 2d -> Escalate
+error Declined {
+  title: { pt-BR: "Pagamento recusado", en: "Payment declined" }
+}
+
+try {
+  authorization = PaymentGateway.authorize({ total: session.total, method: session.paymentMethod })
+} catch (Declined) {
+  PaymentRetry.show({ session })
+} catch (Timeout) {
+  CheckoutSession.abandon({ reason: "Prazo esgotado" })
+  return Expired
 }
 ```
 
-**Distribuição.** `assign:` substitui `assignment { candidates; claim; ... }`:
+| Cláusula | Funcionamento |
+| :--- | :--- |
+| `error` | Erro de negócio com nome estável e `title` I18n. |
+| `throw` | Lança erro de negócio; falha de operação chega pelo mesmo `catch`. |
+| `try`/`catch` | Desvio explícito por erro; `catch` aceita lista. |
+| `timeout` | Prazo duro de task/processo; dispara `Timeout` (reservado). |
+| `finally` | Executa sempre; usado para limpeza/compensação. |
+| `cancel on <Event> { ... }` | Cancela o trabalho ativo e executa o bloco. |
 
-- `pull` (default): qualquer um com a role da lane pega a task na inbox;
-- `auto`: o runtime escolhe um elegível (carga/menor fila);
-- `named(<expr>)`: dono definido por expressão (ex.: `order.owner`), validado por role.
+- `on error`, `on timer` e `on breach` não existem; use `try/catch` + `timeout`.
+- `sla` é alvo brando; `timeout` é o prazo duro.
+- `cancel on` é o handler de caso; pode compensar e `return` um end.
+- Um erro não tratado encerra a instância em falha, depois da compensação.
 
-Delegar, reatribuir e devolver são **intervenções de runtime**, autorizadas por role e auditadas; não são cláusulas de DSL.
-
-**Discricionária (CMMN).**
+## 4.9 Roteamento e controle
 
 ```bpcms
-task OfferExtendedWarranty {
-  lane: Sales
-  form: WarrantyOffer
-  discretionary
-  when: order.total > 5000 BRL
+if (session.total > 10000 BRL) {
+  ...
+} else if (session.total > 0) {
+  ...
+} else {
+  throw InvalidTotal
 }
-```
 
-- não tem aresta de entrada: aparece como disponível quando `when` é verdadeiro;
-- concluir a task não avança o fluxo; ela registra trabalho;
-- se tiver aresta de saída, ela vira um caminho alternativo — use com cuidado e documente;
-- `discretionary` sem `when` = `E_DISCRETIONARY_WHEN`.
-
-**Multi-instância.**
-
-```bpcms
-task InspectItem {
-  lane: Quality
-  form: InspectItemForm
-  foreach { over: shipment.items; as: item; mode: parallel }
-  sla: 30m
+parallel {
+  branch RevokeAccess { IT.revokeAccess({ employee }) }
+  branch ReturnEquipment { IT.returnEquipment({ employee }) }
 }
+
+loop PaymentAttempt max 3 { ... }
+forEach item in order.items { ... }
+
+wait 2d
+wait until invoice.dueAt
 ```
 
-- `over` precisa ser coleção (`E_FOREACH_TYPE`);
-- `as` nomeia o item no escopo da task (form/with/expressões);
-- `mode`: `sequential` (default) ou `parallel`;
-- a task só conclui quando todas as instâncias concluem; cada instância aparece na tela como "3 de 5";
-- agregação não é cláusula: o efeito de cada instância é uma `action` que grava no documento; o gateway lê o documento depois;
-- `foreach` não combina com `discretionary`, `manual` nem `receives`.
+- `if`/`else if`/`else`: condição pura, primeiro verdadeiro vence; sem `then`.
+- `parallel`: branches independentes, join implícito no fim; falha em uma branch cancela as irmãs (fail-fast).
+- `loop` exige `max`; `forEach` é sequencial; `parallel each` é concorrente.
+- `wait` por duração ou até uma expressão.
+- Gateway inclusivo/complexo/event-based não existem: use `if`, `parallel` ou `receive` + `timeout`.
 
-## 4.8 Handlers — erro, prazo e cancelamento
+## 4.10 Fluxo
 
-```bpcms
-task Charge {
-  lane: System
-  action: Payment.capture
-  with { order }
-  sla: 2m
-  on error Declined -> RetryOrCancel
-  on timer 5m keep -> WarnFinance
-}
-```
-
-| Handler | Interruptivo | Escopo | Uso |
-| :--- | :--- | :--- | :--- |
-| `on error <Name>` | sim, **aborta a tentativa inteira** | instância | falha de action/integração/decisão |
-| `on timer <dur>` | sim (default) | task | prazo duro, escalonamento |
-| `on timer <dur> keep` | não | task + task lateral | lembrete, aviso, SLA brando (o alvo não tem aresta de saída) |
-| `on breach` | sim | task | reação no instante do `sla` |
-
-**Semântica de erro (deliberada).** Erro é falha de tentativa, não desvio local: ao disparar `on error`, o runtime cancela **todo o trabalho ativo da instância**, roda a compensação das tasks concluídas (4.11) e segue o desvio. Isso evita o deadlock clássico de "um ramo do paralelo falhou e o outro ficou esperando" e é o comportamento que o negócio espera de uma saga. Recuperação local pertence à integração/ação (retry, fallback), não ao processo. Anotado como simplificação vs BPMN (boundary error é local ao escopo).
-
-**Semântica de timer.** O timer conta da **entrada** na task. `on timer` interruptivo cancela só a task; `keep` mantém a task viva e dispara uma **task lateral**: o alvo de um `keep` não tem aresta de saída, roda uma vez e é registrado no histórico (lembrete, aviso, notificação). Isso evita merge de tokens concorrentes no fluxo principal.
-
-```bpcms
-task Track {
-  lane: System
-  runs: DeliveryTracking
-  with { shipment }
-  sla: 30d
-  on timer 30d -> Escalate
-  on error TrackingLost -> Replan
-}
-```
-
-**Prazo do caso.**
-
-```bpcms
-process PurchaseApproval for PurchaseRequest {
-  sla: 5d
-
-  on breach -> Escalate
-}
-```
-
-- `sla` no cabeçalho é o prazo do caso (lead time alvo);
-- `on breach -> <Nó>` é a reação: escalonamento, aviso ou cancelamento;
-- o breach é evento auditado (não é cálculo de relatório).
-
-**Cancelamento do caso inteiro.**
-
-```bpcms
-cancel on Order.Cancelled -> Undo
-```
-
-- quando o evento ocorre, o runtime cancela todo o trabalho ativo e coloca um token no nó alvo;
-- o alvo normalmente é um `rollback` que leva a um `end Cancelled`;
-- `cancel on` é a forma de "a qualquer momento, se X acontecer, encerre assim" (substituto mínimo do event sub-process do BPMN);
-- só um `cancel on` por evento; o evento precisa existir (`E_TRIGGER_UNKNOWN_EVENT`).
-
-## 4.9 Roteamento — gateway, fork, join, wait, rollback
-
-**Gateway exclusivo (XOR).** Sempre com `else`; o primeiro `if` verdadeiro vence.
-
-```bpcms
-gateway Amount {
-  if order.total <= 5000 BRL -> AutoApprove
-  if order.total <= 50000 BRL -> ManagerReview
-  else -> DirectorReview
-}
-```
-
-- `if` só existe em gateway; não há `if` como statement no fluxo;
-- gateway sem `else` = `E_GATEWAY_NO_ELSE`; dois `else` = `E_GATEWAY_DUP_ELSE`;
-- condição é expressão pura sobre variáveis/campos (sem efeito, sem I/O);
-- `gateway` tem 1 entrada e N saídas declaradas no corpo.
-
-**Paralelismo (AND).** `fork` divide; `join` espera todos.
-
-```bpcms
-fork Prepare
-join Prepared
-
-Prepare -> Pick
-Prepare -> Reserve
-Pick -> Prepared
-Reserve -> Prepared
-```
-
-- `fork`: 1 entrada, N ≥ 2 saídas;
-- `join`: N ≥ 2 entradas, 1 saída; espera **todos** os tokens;
-- todo ramo do `fork` precisa alcançar o `join` sem passar por um `end` (`E_JOIN_DEADLOCK`);
-- `join` não pareia com um fork específico: ele espera o número de entradas; o compilador valida alcançabilidade;
-- gateway inclusivo (OR) e complexo **não existem** na v1: são ambíguos e caros de validar. Use XOR ou AND.
-
-**Espera por tempo (timer catch).**
-
-```bpcms
-wait Cooldown { for: 30d }
-wait DueDate { until: invoice.dueAt }
-```
-
-- `for`: duração a partir da entrada; `until`: data/hora calculada;
-- 1 entrada, 1 saída; sem executor (a tela mostra "aguardando até ...");
-- espera por mensagem é `receives:`, não `wait`.
-
-**Rollback (compensação).**
-
-```bpcms
-rollback Undo
-```
-
-- executa, em **ordem reversa de conclusão**, os handlers `compensates:` das tasks concluídas na instância;
-- 1 entrada, 1 saída; depois segue o fluxo normal;
-- não desfaz efeito externo sozinho: o handler é que chama a ação de estorno.
-
-## 4.10 Fluxo — arestas explícitas
-
-```bpcms
-Placed -> Review
-Review -> Pick
-Review.rejected -> Closed
-Pick -> Prepare
-```
-
-- a ordem de declaração **não** é semântica; o grafo vem só das arestas;
-- aresta comum: `<Node> -> <Node>`;
-- aresta por desfecho de task humana: `<Task>.<action> -> <Node>`;
-- toda ação de form que avança precisa de aresta; ação `stay` não tem;
-- ação de form sem aresta e sem `stay` = `E_FORM_ACTION_NO_EDGE`;
-- nó não terminal com saída ≠ 1 = `E_FLOW_ARITY` (use `fork`/`gateway`);
-- exceções à saída obrigatória: `end` (0), handler de compensação (0), task lateral de `keep` (0) e task discricionária (0 ou 1);
-- nó inexistente = `E_FLOW_UNKNOWN_NODE`; nó inalcançável = `W_FLOW_UNREACHABLE`;
-- nó sem entrada e sem ser `start`/discricionário = `E_FLOW_ORPHAN`;
-- mais de uma entrada só é legal para caminhos **alternativos** (starts, laço, desfechos); entradas que podem concorrer exigem `join` (`E_CONCURRENT_MERGE`);
-- ciclo sem saída = `E_FLOW_LOOP_NO_EXIT`.
+- A ordem do fonte é a ordem de execução; não há arestas explícitas.
+- `if`/`parallel`/`loop`/`forEach` são blocos estruturados; não há `goto`.
+- `break`/`continue` valem em `loop`/`forEach`.
+- Um `return` encerra o processo; `parallel` só termina quando todas as branches terminam (ou falham).
+- Não há `gateway`, `fork`, `join` ou arestas `A -> B`.
 
 ## 4.11 Compensação
 
 ```bpcms
-task Charge {
-  lane: System
-  action: Payment.capture
-  with { order }
-}
-
-task Refund {
-  lane: System
-  action: Payment.refund
-  with { order; payment: order.payment }
-  compensates: Charge
+try {
+  PaymentGateway.capture({ payment })
+} catch (CaptureFailed) {
+  PaymentGateway.refund({ payment, amount: payment.amount })
+  return Failed
 }
 ```
 
-- `compensates:` declara o handler de uma task concluída;
-- handler **não tem arestas**: só roda por `rollback`, em ordem reversa de conclusão;
-- handler só roda se a task alvo concluiu e ainda não foi compensada;
-- a ação do handler precisa ser idempotente (`W_COMPENSATION_IDEMPOTENT` se a integração não declarar idempotência);
-- retry não substitui compensação: retry repete; compensação desfaz;
-- handler fora do escopo da task alvo = `E_COMPENSATION_SCOPE`;
-- `runs:` concluído é compensado pelo pai com um handler explícito (ex.: `action: Shipping.cancelShipment`); a instância filha não compensa sozinha.
+- Compensação é explícita no `catch`/`finally`; não há `compensates:`/`rollback`.
+- Execute handlers em ordem reversa à conclusão.
+- O handler precisa ser idempotente; retry não substitui compensação.
+- `runs` concluído é compensado pelo pai com uma chamada explícita; a instância filha não compensa sozinha.
 
-## 4.12 Milestones e caso
+## 4.12 Adiados
 
-```bpcms
-milestone DeliveryConfirmed {
-  title: { pt-BR: "Entrega confirmada", en: "Delivery confirmed" }
-  on: Shipment.Delivered
-}
-```
-
-- milestone não é task: não tem executor, fila nem prazo;
-- representa conquista do caso, aparece na tela de andamento e libera tasks discricionárias;
-- `when` é expressão pura, avaliada quando o estado muda;
-- CMMN completo (stages, sentries, case file como metamodelo) fica fora da v1: `milestone` + `discretionary` + `when` cobrem o necessário.
-
-## 4.12.1 Indicadores derivados
-
-O modelo já carrega o necessário para os KPIs; nada é instrumentado à mão:
-
-| Indicador | De onde sai |
-| :--- | :--- |
-| lead time / cycle time | hora do `start` e do `end` nomeado por instância |
-| fila × toque por task | entrada/saída do nó + `assign`/`claim` no log |
-| retrabalho / first-pass yield | aresta de retorno (ciclo) + reentrada de nó; devolução por ação |
-| conformidade de caminho | aresta percorrida × aresta declarada; `gateway` com `if`/`else` |
-| violação de SLA | disparo de `on timer`/`on breach` (evento), não cálculo |
-| handoffs | sequência de `lane` no log (lane obrigatória) |
-| taxa de automação | kind do nó × `pool system` |
-| mix de desfecho e motivo | `end outcome` + `cancel on` + payload do evento |
+- `milestone` e `discretionary` (CMMN) ficam fora desta versão.
+- Semântica completa de `parallel` (resultado/merge, settle) será fechada com o primeiro caso real.
+- `job` com detach/agendamento próprio; hoje use `call`/`compute` com `timeout`/`retry`.
+- Coreografia/conversação como visão derivada.
 
 ## 4.13 Progresso, subpassos e a tela do processo
 
-**Regra única:** a unidade de progresso visível é a **instância de processo**. Todo subpasso com passos próprios é um `runs:` — outra instância, com sua própria tela, seu histórico e seu dono. Não existe `progress: true`, nem fases declaradas: se o passo tem fases, ele é um processo.
-
-O que a tela de andamento mostra (contrato do builder, derivado do AST):
+A unidade de progresso visível é a **instância de processo**. Todo subpasso com passos próprios é um `Processo.run` — outra instância, com sua própria tela, histórico e dono.
 
 | Seção | Conteúdo | Origem |
 | :--- | :--- | :--- |
-| identidade | sujeito, número da instância, início, prazo, desfecho | `for`, `title`, `end` |
-| passo atual | 1 cartão por passo ativo: título, participante, lane, papel, dono, prazo | `task`, `pool`, `lane`, `assign`, `sla` |
-| formulário | form embutido quando o passo é humano | `form` |
-| participantes | pools, lanes, papéis e filas | `pool`, `lane` |
-| histórico | passo, ator, hora, resultado, motivo de devolução/falha | arestas + auditoria |
-| prazos e falhas | atraso, escalonamento previsto, tentativas, erro legível | `sla`, `on timer`, `on error` |
-| subprocesso | cartão do filho: passo atual, marcos, drill-down, breadcrumb | `runs` |
-| documentos | lido/escrito por passo (ícones BPMN de data object) | derivado de `form`/`action`/`decision`/`runs` |
-| próximos passos | sucessores com o porquê e marca "previsto" | arestas + gateways |
-| marcos | conquistas do caso | `milestone` |
+| identidade | caso, número da instância, início, prazo, desfecho | args, `title`, `key`, `end` |
+| passo atual | 1 cartão por passo ativo: título, papel, dono, prazo | operação/task, `roles`, `assign`, `timeout` |
+| formulário | form/manual embutido quando o passo é humano | `Form.show`/`Manual.show` |
+| participantes | roles e filas | `roles` |
+| histórico | passo, ator, hora, resultado, motivo de devolução/falha | blocos + auditoria |
+| prazos e falhas | atraso, escalonamento previsto, tentativas, erro legível | `sla`, `timeout`, `catch` |
+| subprocesso | cartão do filho: passo atual, marcos, drill-down, breadcrumb | `Processo.run` |
+| documentos | lido/escrito por passo (ícones BPMN de data object) | derivado das operações/forms |
+| próximos passos | sucessores e condição | `if`/`parallel`/sequência |
+| marcos | conquistas do caso | adiado (CMMN) |
 
-Regras de apresentação (o builder não inventa):
-
-- com paralelismo, **N cartões** de passo atual e "aguardando 2 de 3" no `join` nomeado;
-- com `foreach`, "3 de 5", dono e prazo por item;
-- task automatizada mostra tentativa N/M, próximo retry, heartbeat e erro legível — nunca um spinner eterno;
-- todo nó mostra `title` (herdado do contrato quando não declarado);
-- documentos aparecem com ícone de leitura/escrita derivado do contrato — não se declara `reads`/`writes`.
+- Com `parallel`, N cartões de passo atual e "aguardando 2 de 3".
+- Com `forEach`/`parallel each`, "3 de 5", dono e prazo por item.
+- Task automatizada mostra tentativa N/M, próximo retry, heartbeat e erro legível.
+- Todo nó mostra `title` (herdado do contrato quando não declarado).
+- Documentos aparecem com ícone derivado do contrato; não se declara `reads`/`writes`.
 
 ## 4.14 Form — contrato da tarefa humana
 
-Form não é tela: é o **contrato de admissão e desfecho** de uma tarefa. Ele declara o que a pessoa vê, o que ela pode fazer e qual ação de documento cada botão executa. A tela é do builder; a tela de andamento embute o form quando o passo atual é humano.
+Form não é tela: é o **contrato de admissão e desfecho** de uma task humana. A tela é do builder; a tela de andamento embute o form quando o passo atual é humano.
 
 ```bpcms
 form OrderReview {
   title: { pt-BR: "Revisar pedido", en: "Review order" }
   document: Order
+  roles: [Clerk]
+  timeout: 4h
+  assign: pull
 
   fields {
     customer
@@ -1099,36 +880,36 @@ form OrderReview {
   actions {
     approve { calls: Order.approve }
     reject { calls: Order.reject(note) }
-    save { calls: Order.update; stay }
+    save { calls: Order.annotate(note); stay }
   }
 }
 ```
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `form` | `form <Name> { ... }` | Contrato de tarefa humana; referenciado por `form:`. |
+| `form` | `form <Name> { ... }` | Contrato de task humana; chamado por `Form.show`. |
 | `title` | `title: I18n` | Obrigatório. |
 | `document` | `document: Order` | Documento de contexto; define a linha da inbox e os campos herdados. |
-| `fields` | `fields { customer; note: string { ... } }` | Campos exibidos/editados. Nome simples herda tipo e `title` do Document. |
-| `actions` | `actions { approve { calls: Order.approve } }` | Botões. Cada botão executa **um** comando de documento. |
+| `roles` | `roles: [Clerk]` | Quem executa a task. |
+| `timeout` | `timeout: 4h` | Prazo duro; `Timeout` no processo. |
+| `priority`/`assign` | `priority: 50; assign: pull` | Fila e distribuição. |
+| `fields` | `fields { customer; note: string { ... } }` | Campos exibidos/editados. |
+| `actions` | `actions { approve { calls: Order.approve } }` | Botões. Cada botão executa um comando de documento. |
 | `calls` | `calls: Order.reject(note)` | Comando e argumentos (campos do form). |
 | `stay` | `save { calls: Order.update; stay }` | Botão que não avança o passo. |
-| `title` (botão) | `approve { title: I18n; ... }` | Opcional; herda o título da action. |
+| `returns` | `returns: Type` | Opcional: form que devolve dado sem gravar. |
 
-Regras:
-
-- **campo não redeclara tipo nem título**: `customer` herda de `Order.customer`; só declare `nome: Shape { title }` para campo que não existe no documento (entrada de parâmetro);
-- obrigatoriedade é monotônica: o form pode endurecer (`required`), nunca relaxar;
-- o form **não escreve campo direto**: toda escrita é um `calls:` de action; isso mantém invariantes, regras e eventos;
-- os argumentos do `calls:` são campos do form (ou literais); todo parâmetro obrigatório precisa de argumento (`E_FORM_PARAM`);
-- campo declarado e não usado por nenhum botão é `W_FORM_UNUSED_FIELD`;
-- papel/permissão vêm da lane e das roles da action — form não tem `roles`;
-- rascunho não grava no documento: o runtime guarda o rascunho da task (idempotente por `taskId`); só o botão persiste;
-- a conclusão é atômica: escrita do documento + evento + auditoria + avanço do passo no mesmo commit;
-- botão irreversível (terminal, assinatura, envio externo) exige confirmação com resumo do efeito, derivada do contrato;
-- devolver é uma ação (`calls: Order.reject(reason)`), com motivo obrigatório, contabilizada como retrabalho.
-
-**Form não é View.** Form é escrita e desfecho dentro de um passo; View é leitura e navegação. Não existe `view type: form`.
+- Campo não redeclara tipo nem título: herda do documento; só declare `nome: Shape { title }` para campo que não existe no documento.
+- Obrigatoriedade é monotônica: o form pode endurecer, nunca relaxar.
+- O form não escreve campo direto: toda escrita é `calls:` de action.
+- Argumentos do `calls:` são campos do form ou literais; todo parâmetro obrigatório precisa de argumento (`E_FORM_PARAM`).
+- Campo declarado e não usado por botão é `W_FORM_UNUSED_FIELD`; campos de contexto podem ser `readonly`.
+- Papel/permissão vêm de `roles` do form e das roles da action.
+- Rascunho não grava no documento; só o botão persiste.
+- A conclusão é atômica: escrita + evento + auditoria + avanço do passo no mesmo commit.
+- Botão irreversível exige confirmação derivada do contrato.
+- Devolver é uma action (`calls: Order.reject(reason)`), contabilizada como retrabalho.
+- **Form não é View.** Form é escrita/desfecho; View é leitura/navegação. Não existe `view type: form`.
 
 ## 4.15 Message — contrato entre participantes
 
@@ -1141,15 +922,6 @@ message PickupRequest {
     window: Duration { title: { pt-BR: "Janela" } }
   }
 }
-
-message PickupConfirmed {
-  title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
-  about: Shipment
-  payload {
-    pickupAt: DateTime { title: { pt-BR: "Coletado em" } }
-    tracking: TrackingCode { title: { pt-BR: "Rastreio" } }
-  }
-}
 ```
 
 | Cláusula | Sintaxe | Funcionamento |
@@ -1159,50 +931,22 @@ message PickupConfirmed {
 | `about` | `about: Shipment` | Documento de correlação: a mensagem pertence a um caso. |
 | `payload` | `payload { campo: Shape { title } }` | Contrato tipado do conteúdo. |
 
-Regras:
-
-- a correlação é **por documento** (`about`): o runtime entrega a mensagem à instância que tem variável daquele documento. Chave avaliada na abertura da subscrição, não reavaliada depois;
-- envio: `sends:` + `partner:`; `with { }` mapeia **campos do payload** (o documento de correlação vem do `about`);
-- recebimento: `receives:` + `partner:`; `apply:` aplica o payload por nome e `with { }` completa os parâmetros que não vêm do payload;
-- mensagem sem `about` = `E_MESSAGE_ABOUT`; `about` que não é o sujeito do processo = erro (a instância não seria correlacionável);
-- mensagem duplicada (mesmo nome) = `E_MESSAGE_DUPLICATE`; payload divergente na mesma mensagem = erro;
-- `from`/`to` não existem na mensagem: o participante é declarado na task (`partner:`), que é quem sabe com quem fala;
-- coreografia e conversação são **visões derivadas** das mensagens + partners; não são outro motor.
-
-```bpcms
-task RequestPickup {
-  lane: System
-  sends: PickupRequest
-  partner: Carrier
-  with { shipment }
-}
-
-task AwaitPickup {
-  lane: System
-  receives: PickupConfirmed
-  partner: Carrier
-  apply: Shipment.applyPickup
-  sla: 2d
-  on timer 2d -> ManualPickup
-}
-```
+- A correlação é **por documento** (`about`): o runtime entrega a mensagem à instância que tem variável daquele documento.
+- Envio: `send Message { key: doc; with { ... } }`.
+- Recebimento: `receive Message { key: doc; timeout; apply: Doc.action }`; sem `apply`, devolve o payload.
+- `key` é o documento de correlação; `with` mapeia campos do payload.
+- Mensagem sem `about` é erro (`E_MESSAGE_ABOUT`).
+- O parceiro/canal é configuração de runtime/integração; não há `partner`/pool.
 
 ## 4.16 Workflow × processo
 
-**Workflow é do Documento; processo é do trabalho.** A pergunta "podemos transformar workflow em processo, sendo cada value uma task?" tem resposta **não**, e a razão é de modelagem:
+**Workflow é do Documento; processo é do trabalho.** Um estado não tem executor, fila, prazo nem formulário; ele precisa valer fora de qualquer processo.
 
-- um estado não tem executor, fila, prazo nem formulário: ele é uma propriedade do dado;
-- transformar `Issued` em task daria um "passo" sem trabalho, e o andamento mostraria trabalho que ninguém faz;
-- o estado precisa valer **fora de qualquer processo**: uma action chamada por uma View, por uma integração ou por outro serviço também muda o estado.
-
-O que fizemos para eliminar a duplicação:
-
-- **as transições saíram do `value`** e vivem na action (`from:`/`to:`); o grafo de estados é derivado das actions (5.5);
-- **o workflow define as transições e os eventos**: `transition` no valor de origem, com `title`/`payload`/`event:`; a action só aponta `to:` e executa o comando; `events { }` fica só para eventos sem transição;
-- o processo **não duplica** o estado: a task chama a action, o documento decide se a transição é legal;
-- a tela de andamento mostra as duas coisas no mesmo lugar: **passo do processo** (trabalho) e **situação do documento** (dado).
-
-Regra dura: **só action muda estado.** Não existe `status =` em expressão, form ou task. `status` é somente leitura fora da action que o transiciona.
+- As transições vivem no `value` de origem (`transition`), com `title`/`payload`/`event:`; a action só aponta `to:` e executa o comando.
+- O processo **não duplica** o estado: chama a action, e o documento decide se a transição é legal.
+- A tela de andamento mostra as duas coisas: passo do processo (trabalho) e situação do documento (dado).
+- **Só action muda estado.** Não existe `status =` em expressão, form ou task; `status` é somente leitura fora da action que o transiciona.
+- Decisão humana é lida no estado do documento, não em retorno do form.
 
 ## 4.17 Decision — regra de negócio (DMN)
 
@@ -1222,80 +966,71 @@ decision ApprovalLimit {
 }
 ```
 
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `returns` | `returns: ApproverTier` | Um único retorno; normalmente um enum (classification). |
-| `inputs` | `inputs { amount: std.Money }` | Entradas tipadas; o `with` da task liga os valores. |
-| `cases` | `<cond> -> <value>` | Primeira condição verdadeira vence; `else` obrigatório. |
-| `title` | `title: I18n` | Obrigatório. |
-
-- decisão é **pura**: não altera documento, não chama integração, não emite evento;
-- o resultado vira variável (`gives:`) e o gateway decide o caminho;
-- toda decisão tem `else` (`E_DECISION_NO_ELSE`) e todo `case` tem valor do tipo de retorno, na grafia declarada do enum (`E_DECISION_VALUE`);
-- DMN completo (DRD executável, FEEL, BKM, múltiplas saídas) fica fora da v1: hit policy única (primeiro que casa), uma saída;
-- a tabela é documentável e exportável em DMN 1.3 pelo builder.
+- O processo executa com `queue = ApprovalLimit.evaluate({ amount, supplier })`.
+- Decisão é **pura**: não altera documento, não chama integração, não emite evento.
+- O resultado vira variável do topo e o `if` decide o caminho.
+- Toda decisão tem `else` (`E_DECISION_NO_ELSE`) e todo `case` tem valor do tipo de retorno, na grafia declarada do enum (`E_DECISION_VALUE`).
+- DMN completo (DRD executável, FEEL, BKM, múltiplas saídas) fica fora desta versão: hit policy única (primeiro que casa), uma saída.
 
 ## 4.18 Cobertura BPMN / DMN / CMMN
 
-| Conceito | v1 | Como |
+| Conceito | Suporte | Como |
 | :--- | :--- | :--- |
-| Start event (none, message, timer, schedule) | ✅ | `start { event \| message \| schedule \| by }` |
-| End event (none, nomeado) | ✅ | `end <Name>` com título |
-| User task / people task | ✅ | `form:` |
-| Manual task | ✅ | `manual: "..."` |
-| Service task (documento) | ✅ | `action:` |
-| Service task (integração) | ✅ | `call:` |
-| Send / receive task | ✅ | `sends:` / `receives:` + `partner:` |
-| Business rule task (DMN) | ✅ | `decision:` |
-| Call activity / subprocesso | ✅ | `runs:` (outra instância) |
-| Multi-instance | ✅ | `foreach { over; as; mode }` (conclusão = todas) |
-| Exclusive gateway | ✅ | `gateway { if ... else }` |
-| Parallel gateway | ✅ | `fork` / `join` |
-| Event-based gateway | ⏸️ | use `receives:` + `on timer`; "A ou B" fica para a v2 |
-| Inclusive gateway | ❌ | ambíguo e caro de validar; use XOR ou AND |
+| Start event (evento, mensagem, timer, agenda) | ✅ | `on` / `message` / `schedule` / `by` / `called` |
+| End event nomeado | ✅ | `end` + `return` |
+| User task / people task | ✅ | `Form.show` / `View.show` |
+| Manual task | ✅ | `Manual.show` |
+| Service task (documento) | ✅ | `Doc.action` |
+| Service task (integração) | ✅ | `Integracao.op` |
+| Send / receive task | ✅ | `send` / `receive` |
+| Business rule task (DMN) | ✅ | `Decision.evaluate` |
+| Call activity / subprocesso | ✅ | `Processo.run` |
+| Multi-instance | ✅ | `forEach` / `parallel each` |
+| Exclusive gateway | ✅ | `if` / `else if` / `else` |
+| Parallel gateway | ✅ | `parallel` |
+| Event-based gateway | ⏸️ | `receive` + `timeout`; "A ou B" fica para depois |
+| Inclusive gateway | ❌ | ambíguo; use `if` ou `parallel` |
 | Complex gateway | ❌ | nenhum motor de mercado implementa |
-| Boundary timer / error | ✅ | `on timer` / `on error` (aninhados na task) |
-| Boundary message / signal / escalation | ⏸️ | use `receives:` ou `cancel on` |
-| Event sub-process | 🟡 | `cancel on <Evento> -> <Nó>` (só cancelamento) |
-| Intermediate timer catch | ✅ | `wait { for \| until }` |
-| Intermediate message catch | ✅ | `receives:` |
-| Compensation | ✅ | `compensates:` + `rollback` |
-| Terminate | 🟡 | `cancel on`/erro não tratado encerram a instância |
-| Pools / lanes / message flows | ✅ | `pool`, `lane`, `sends`/`receives` + `partner` |
-| Collaboration diagram | ✅ | derivado de pools + mensagens |
-| Choreography / conversation | ⏸️ | visão derivada do mesmo contrato de mensagens (v2) |
-| CMMN (case) | 🟡 | `milestone`, `discretionary`, `when` |
-| BPMN DI (layout) | ⏸️ | passo futuro; o AST separa modelo de diagrama |
-| DMN 1.3 (tabela única) | ✅ | `decision` (exportável) |
+| Boundary timer / error | ✅ | `timeout` / `try/catch` |
+| Boundary message / signal / escalation | ⏸️ | `receive` / `cancel on` |
+| Event sub-process | 🟡 | `cancel on <Evento> { ... }` |
+| Intermediate timer catch | ✅ | `wait` |
+| Intermediate message catch | ✅ | `receive` |
+| Compensation | ✅ | `catch`/`finally` explícitos |
+| Terminate | 🟡 | erro não tratado / `cancel on` |
+| Pools / lanes / message flows | ✅ | `roles` + `send`/`receive` |
+| Collaboration diagram | ✅ | derivado de roles + mensagens |
+| Choreography / conversation | ⏸️ | visão derivada (depois) |
+| CMMN (case) | 🟡 | adiado (`milestone`/`discretionary`) |
+| BPMN DI (layout) | ⏸️ | passo futuro |
+| DMN 1.3 (tabela única) | ✅ | `decision` |
 
 ## 4.19 Validações do processo
 
 | Regra | Erro |
 | :--- | :--- |
-| task sem contrato / com dois contratos | `E_TASK_CONTRACT_MISSING` / `E_TASK_KIND_CONFLICT` |
-| task humana/manual/mensagem/subprocesso sem lane | `E_TASK_EXECUTOR_MISSING` |
-| lane inexistente ou duplicada | `E_LANE` / `E_LANE_DUPLICATE` |
-| task em pool externo caixa-preta | `E_TASK_BLACKBOX_POOL` |
-| aresta para nó inexistente | `E_FLOW_UNKNOWN_NODE` |
-| saída ≠ 1 em nó que não é fork/gateway/end | `E_FLOW_ARITY` |
-| nó sem entrada (não start/discricionário) | `E_FLOW_ORPHAN` |
-| entradas concorrentes sem `join` | `E_CONCURRENT_MERGE` |
-| caminho sem `end` | `E_FLOW_DEAD_END` |
-| nó inalcançável | `W_FLOW_UNREACHABLE` |
-| gateway sem `else` / dois `else` | `E_GATEWAY_NO_ELSE` / `E_GATEWAY_DUP_ELSE` |
-| ramo de fork que não alcança o join | `E_JOIN_DEADLOCK` |
-| ação de form sem aresta nem `stay` | `E_FORM_ACTION_NO_EDGE` |
-| parâmetro obrigatório sem `with`/campo | `E_WITH_MISSING` / `E_FORM_PARAM` |
+| mais de um start / start ausente | `E_PROCESS_START` |
+| `on`/`message`/`fanOut` sem `key` | `E_CASE_KEY` |
+| payload incompatível com args | `E_START_PAYLOAD` |
+| declaração fora do topo | `E_BLOCK_DECLARATION` |
 | variável usada sem atribuição em algum caminho | `E_DEFINITELY_ASSIGNED` |
-| `gives` incompatível com o retorno | `E_GIVES_TYPE` |
-| handler sem alvo válido / boundary duplicado | `E_BOUNDARY` |
-| compensação fora de escopo ou com arestas | `E_COMPENSATION_SCOPE` |
-| processo chamado em ciclo | `E_SUBPROCESS_CYCLE` |
-| start duplicado para o mesmo gatilho | `E_START_DUPLICATE` |
-| `select` sem `schedule`/`for` | `E_SELECT` |
-| mensagem sem `about` ou incompatível | `E_MESSAGE_ABOUT` |
+| operação/task/artefato inexistente | `E_UNKNOWN_TARGET` |
+| atribuição incompatível | `E_ASSIGN_TYPE` |
+| `catch` de erro não declarado | `E_CATCH_UNKNOWN` |
+| `loop` sem `max` | `E_LOOP_BOUND` |
+| `return` para end inexistente | `E_RETURN_UNKNOWN` |
+| `end` antes do fim do processo | `E_END_ORDER` |
+| form/manual sem `roles` | `E_ROLE` |
+| `parallel` sem branches | `E_PARALLEL_EMPTY` |
+| escrita conflitante em branches | `W_PARALLEL_WRITE` |
+| ação de form sem `calls`/`returns` | `E_FORM_ACTION` |
+| `send`/`receive` sem `key` | `E_MESSAGE_KEY` |
+| `receive` com `apply` incompatível | `E_RECEIVE_APPLY` |
+| `fanOut` sem documento/expressão | `E_FANOUT` |
+| `timeout`/`sla` inválidos | `E_DURATION` |
 
 ---
+
 # 5. Document
 
 Um **documento** é a unidade de estado durável: campos tipados por Shape, identidade, invariantes, ações, eventos, ciclo de vida e sincronização. Ele **não é** tabela, DTO, tela, evento nem relatório: ele **projeta** tabelas, APIs, caches, estado de UI, índices e relatórios. O documento é o **armazenamento definitivo dos dados do processo**: a variável do processo é contexto transitório; o dado que precisa sobreviver, ser consultado e ser auditado mora no documento.
@@ -2444,7 +2179,7 @@ Gramática mínima:
 - funções em **camelCase**: `parseReal`, `formatReal`, `bestUnit`, `toNumber`.
 - `toNumber(value)` é declarado pelo Shape; as medidas de `bpcms.org/std` já o declaram.
 
-Não há `let`, declaração de classes, funções aninhadas, async ou exceções customizadas no v1.
+No nível de expressão não há `let`, declaração de classes, funções aninhadas, async ou exceções customizadas.
 
 ### 6.4.1 `new` e instanciação
 
@@ -2971,7 +2706,7 @@ conversation PurchaseDiscovery {
 
 # 11. Decision
 
-A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primeira-condição-verdadeira e um único retorno tipado. O processo a executa com `decision:`; o gateway roteia pelo valor.
+A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primeira-condição-verdadeira e um único retorno tipado. O processo a executa com `Decision.evaluate({...})`; o `if` roteia pelo valor.
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
@@ -4047,7 +3782,7 @@ reintroduce std.Currency {
 - `prefix`/`suffix`/`infix` aceitam `string | I18n`.
 - `scale` default vem da moeda; o field pode sobrescrever.
 - Sem `prefix/suffix/infix`, regionalization decide.
-- `sformat` fica fora da v1.
+- `sformat` fica fora desta versão.
 
 `Money` usa `prefix`/`suffix`/`infix` da moeda:
 
@@ -4243,7 +3978,7 @@ examples/
 
 ## O que ainda não é cláusula
 
-* Herança múltipla ou extensão fora do mesmo serviço — **fora da v1**. `document Consumer extends User` é a extensão simples permitida (B-34/B-45).
+* Herança múltipla ou extensão fora do mesmo serviço — **fora desta versão**. `document Consumer extends User` é a extensão simples permitida (B-34/B-45).
 * `migration` — **decidido**: é um `release` do tipo `migration`, não um artefato de topo (B-35). A gramática detalhada fica no SPECS.
 * `alias`/`as` — **decidido e documentado** na seção 1.1.
 * `private` — **decidido** para membros; artefato de topo nunca é privado.

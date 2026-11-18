@@ -1,147 +1,168 @@
 // service: example.com/services/contracts
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process ContractRenewal for Contract {
+// Processo que renova contratos ativos antes do vencimento.
+process ContractRenewal(contract: Contract) {
+  // Título exibido no construtor, na inbox e no histórico.
   title: { pt-BR: "Renovação de contrato", en: "Contract renewal" }
-  version: 1
-  goal: "Renovar antes do vencimento, com proposta ao fornecedor e encerramento quando não houver acordo"
-  owner: "Contracts"
-  timezone: America/Fortaleza
-  sla: 60d
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Renovar antes do vencimento, com proposta ao fornecedor e encerramento quando não houver acordo"
+  }
+  sla: 60d // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Company {
-    internal
-    lane Renewals { role: ContractAnalyst }
-    lane Management { role: ContractManager }
+  schedule: "0 8 * * *" // Executa a varredura diariamente às 8h.
+  // Seleciona os contratos ativos que vencem nos próximos sessenta dias.
+  fanOut: Contract where status == Active and endsAt <= today() + 60d
+  // Chave de identidade, correlação e dedup da instância.
+  key: contract // o caso é o próprio contrato
+
+  // Bloco externo: captura timeout do caso e de qualquer form.
+  try {
+    // Abre o form de decisão de renovação para o gestor.
+    RenewalReview.show({ contract })
+  } catch (Timeout) {
+    // escalada: a mesma decisão é reapresentada ao gestor
+    RenewalReview.show({ contract })
   }
 
-  pool Supplier {
-    external
+  // Se o contrato foi encerrado enquanto isso...
+  if (contract.status == Terminated) {
+    // ...encerra o processo no desfecho Cancelled.
+    return Cancelled
   }
 
-  start RenewalWindow {
-    schedule: "0 8 * * *"
-    select: contract.status == Active and contract.endsAt <= today() + 60d
-  }
+  // Abre o form de termos da renovação para o analista.
+  RenewalTerms.show({ contract })
 
-  task ReviewRenewal {
-    lane: Management
-    form: RenewalReview
-    sla: 3d
-    assign: pull
-    on timer 5d -> Escalate
-  }
-
-  task PrepareTerms {
-    lane: Renewals
-    form: RenewalTerms
-    sla: 3d
-    assign: pull
-  }
-
-  task SendProposal {
-    lane: System
-    sends: RenewalRequest
-    partner: Supplier
+  // Envia ao fornecedor a proposta de renovação.
+  send RenewalRequest {
+    // Correlaciona a mensagem à instância pelo contrato.
+    key: contract
+    // Preenche o payload da mensagem com dados do contrato.
     with {
+      // Número do contrato levado na mensagem.
       contractNumber: contract.number
+      // Novo término proposto ao fornecedor.
       proposedEndsAt: contract.proposedEndsAt
+      // Data-limite para resposta à proposta.
       expiresAt: contract.endsAt
     }
   }
 
-  task AwaitAcceptance {
-    lane: System
-    receives: RenewalConfirmed
-    partner: Supplier
-    apply: Contract.confirmRenewal
-    with { contract }
-    sla: 10d
-    on timer 10d -> Expire
+  // Aguarda a confirmação da renovação com prazo de dez dias.
+  try {
+    // Recebe a mensagem de renovação confirmada.
+    receive RenewalConfirmed {
+      // Correlaciona a resposta à instância pelo contrato.
+      key: contract
+      // Tempo máximo de espera pela resposta.
+      timeout: 10d
+      // Aplica a ação de confirmação da renovação no contrato.
+      apply: Contract.confirmRenewal
+    }
+  } catch (Timeout) {
+    // Sem acordo no prazo: abre o form para encerrar o contrato...
+    TerminateContract.show({ contract })
+    // ...e encerra no desfecho Cancelled.
+    return Cancelled
   }
 
-  task Expire {
-    lane: Management
-    form: TerminateContract
-    sla: 2d
-    assign: pull
-  }
+  // Renovação confirmada: encerra no desfecho de sucesso.
+  return Renewed
 
-  task Escalate {
-    lane: Management
-    form: RenewalReview
-    sla: 2d
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Renewed {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Contrato renovado", en: "Contract renewed" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de renovação não concluída.
   end Cancelled {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Renovação cancelada", en: "Renewal cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  RenewalWindow -> ReviewRenewal
-  ReviewRenewal.renew -> PrepareTerms
-  ReviewRenewal.decline -> Cancelled
-  PrepareTerms.propose -> SendProposal
-  SendProposal -> AwaitAcceptance
-  AwaitAcceptance -> Renewed
-  Expire.terminate -> Cancelled
-  Escalate.renew -> PrepareTerms
-  Escalate.decline -> Cancelled
 }
 
+// Form de encerramento do contrato quando não há acordo de renovação.
 form TerminateContract {
+  // Título exibido na tarefa do formulário.
   title: { pt-BR: "Encerrar contrato", en: "Terminate contract" }
-  document: Contract
+  document: Contract // Documento editado pelo formulário.
+  roles: [ContractManager] // Papel que recebe a tarefa.
+  timeout: 2d // Prazo para concluir o formulário.
+  assign: pull // Atribuição por retirada (pull) na inbox.
 
+  // Campos exibidos no formulário.
   fields {
-    number { readonly }
-    terminationReason
+    number { readonly } // Número do contrato, apenas para leitura.
+    terminationReason // Motivo do encerramento, editável.
   }
 
+  // Botões de decisão do formulário.
   actions {
-    terminate { calls: Contract.terminate(terminationReason) }
+    terminate { calls: Contract.terminate(terminationReason) } // Encerra o contrato com o motivo.
   }
 }
 
+// Form em que o gestor decide renovar ou encerrar o contrato.
 form RenewalReview {
+  // Título exibido na tarefa do formulário.
   title: { pt-BR: "Decisão de renovação", en: "Renewal decision" }
-  document: Contract
+  document: Contract // Documento editado pelo formulário.
+  roles: [ContractManager] // Papel que recebe a tarefa.
+  timeout: 5d // Prazo para concluir o formulário.
+  assign: pull // Atribuição por retirada (pull) na inbox.
 
+  // Campos exibidos no formulário.
   fields {
-    endsAt { readonly }
-    amount { readonly }
-    terminationReason
+    endsAt { readonly } // Término atual, apenas para leitura.
+    amount { readonly } // Valor do contrato, apenas para leitura.
+    terminationReason // Motivo do encerramento, caso decline.
   }
 
+  // Botões de decisão do formulário.
   actions {
-    renew { calls: Contract.markExpiring }
-    decline { calls: Contract.terminate(terminationReason) }
+    renew { calls: Contract.markExpiring } // Renova, marcando o contrato a vencer.
+    decline { calls: Contract.terminate(terminationReason) } // Declina, encerrando o contrato.
   }
 }
 
+// Form em que o analista registra os termos da renovação.
 form RenewalTerms {
+  // Título exibido na tarefa do formulário.
   title: { pt-BR: "Termos da renovação", en: "Renewal terms" }
-  document: Contract
+  document: Contract // Documento editado pelo formulário.
+  roles: [ContractAnalyst] // Papel que recebe a tarefa.
+  timeout: 3d // Prazo para concluir o formulário.
+  assign: pull // Atribuição por retirada (pull) na inbox.
 
+  // Campos exibidos no formulário.
   fields {
-    endsAt { readonly }
-    proposedEndsAt
+    endsAt { readonly } // Término atual, apenas para leitura.
+    proposedEndsAt // Novo término proposto, editável.
   }
 
+  // Botões de decisão do formulário.
   actions {
-    propose { calls: Contract.proposeRenewal(proposedEndsAt) }
+    propose { calls: Contract.proposeRenewal(proposedEndsAt) } // Registra a proposta de renovação.
   }
 }
 
+// View de andamento derivada da instância do processo.
 view ContractRenewalProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da renovação", en: "Contract renewal progress" }
-  type: process
-  process: ContractRenewal
-  roles: [ContractManager, ContractAnalyst, LegalCounsel]
+  type: process // Tipo da view: uma tela de andamento de processo.
+  process: ContractRenewal // Processo cujo andamento esta view exibe.
+  roles: [ContractManager, ContractAnalyst, LegalCounsel] // Papéis que podem abrir a view.
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

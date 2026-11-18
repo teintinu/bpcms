@@ -1,25 +1,39 @@
 // service: example.com/services/checkout
 
+// Organograma do serviço: define a hierarquia entre os papéis.
 organogram Storefront {
+  // Título exibido no builder.
   title: { pt-BR: "Organograma da loja", en: "Storefront organogram" }
 
+  // Bloco que declara as relações de subordinação entre os papéis.
   hierarchy {
+    // O agente de atendimento está acima do cliente na hierarquia.
     SupportAgent > Customer
   }
 }
 
+// Papel do cliente que finaliza a compra.
 role Customer {
+  // Título exibido na interface.
   title: { pt-BR: "Cliente", en: "Customer" }
+  // Permissões para iniciar e pagar a finalização.
   permissions: [checkout.start, checkout.pay]
 }
 
+// Papel do agente de atendimento, herda as permissões do cliente.
 role SupportAgent {
+  // Título exibido na interface.
   title: { pt-BR: "Agente de atendimento", en: "Support agent" }
+  // Herda as permissões do papel Customer.
   inherits: Customer
+  // Permissões de consulta, recuperação e relatórios.
   permissions: [checkout.view, checkout.recover, report.view]
 }
 
+// Papel técnico que executa as operações automáticas do processo.
 role SessionEngine {
+  // Título exibido na interface.
   title: { pt-BR: "Motor de finalização", en: "Session engine" }
+  // Permissões para cotar, autorizar e confirmar a compra.
   permissions: [checkout.quote, checkout.authorize, checkout.confirm]
 }

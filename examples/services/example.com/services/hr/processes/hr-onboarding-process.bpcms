@@ -1,145 +1,225 @@
 // service: example.com/services/hr
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process Onboarding for Employee {
+// Processo que integra a pessoa contratada no primeiro dia.
+process Onboarding(employee: Employee) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Integração do colaborador", en: "Employee onboarding" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Colocar a pessoa produtiva no primeiro dia, com documentos, acessos e equipamento"
-  owner: "People"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Colocar a pessoa produtiva no primeiro dia, com documentos, acessos e equipamento"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 30d
+  // Prazo máximo do caso antes do timeout.
+  timeout: 30d
 
-  on breach -> Escalate
-  cancel on Employee.OnboardingCancelled -> Undo
+  // Gatilho: inicia uma instância quando o documento emite Hired.
+  on [Employee.Hired]
+  // Chave de identidade, correlação e dedup da instância.
+  key: employee
 
-  pool Company {
-    internal
-    lane People { role: PeopleOps }
-    lane IT { role: ITAdmin }
-    lane Management { role: HiringManager }
+  // Bloco que captura timeout do caso e dos forms.
+  try {
+    // Executa documentos, acessos e equipamento em paralelo.
+    parallel {
+      // Ramo de coleta dos documentos de integração.
+      branch CollectDocuments {
+        // Bloco interno: tenta exibir o form de documentos.
+        try {
+          // Exibe o form de documentos para a nova contratação.
+          OnboardingDocuments.show({ employee })
+        } catch (Timeout) {
+          // Sem envio no prazo, escala a integração para o gestor.
+          EscalateOnboarding.show({ employee })
+        }
+      }
+      // Ramo de provisionamento de acessos.
+      branch ProvisionAccess {
+        // Chama o subprocesso de provisionamento para o colaborador.
+        Provisioning.run({ employee })
+      }
+      // Ramo de pedido de equipamento.
+      branch OrderEquipment {
+        // Exibe o form de pedido de equipamento para o TI.
+        EquipmentRequest.show({ employee })
+      }
+    }
+
+    // Bloco interno: pede o check-in do gestor.
+    try {
+      // Exibe o form de check-in para o gestor contratante.
+      ManagerCheckin.show({ employee })
+    } catch (Timeout) {
+      // Sem check-in no prazo, escala a integração para o gestor.
+      EscalateOnboarding.show({ employee })
+      // Reabre o check-in para nova tentativa.
+      ManagerCheckin.show({ employee })
+    }
+
+    // Encerra no desfecho Ready.
+    return Ready
+  } catch (Timeout) {
+    // Timeout do caso: escala a integração para o gestor.
+    EscalateOnboarding.show({ employee })
+    // Reabre o check-in do gestor.
+    ManagerCheckin.show({ employee })
+
+    // Encerra mesmo assim no desfecho Ready.
+    return Ready
   }
 
-  pool NewHire {
-    external
-    lane Portal { role: NewHire }
+  // Cancelamento: se a contratação for cancelada no documento...
+  cancel on Employee.OnboardingCancelled {
+    // ...encerra no desfecho Cancelled.
+    return Cancelled
   }
 
-  start Hired { event: Employee.Hired }
-
-  fork Prepare
-
-  join Prepared
-
-  task CollectDocuments {
-    lane: Portal
-    form: OnboardingDocuments
-    sla: 3d
-    on timer 5d -> Escalate
-  }
-
-  task ProvisionAccess {
-    lane: System
-    runs: Provisioning
-    with { employee }
-    sla: 2d
-  }
-
-  task OrderEquipment {
-    lane: IT
-    form: EquipmentRequest
-    sla: 1d
-    assign: pull
-  }
-
-  task ManagerCheckin {
-    lane: Management
-    form: ManagerCheckin
-    sla: 2d
-    assign: pull
-    on breach -> Escalate
-  }
-
-  task Escalate {
-    lane: Management
-    manual: "Conversar com a pessoa e destravar o que falta para a integração"
-    sla: 1d
-  }
-
-  rollback Undo
-
+  // Declara o desfecho de sucesso do caso.
   end Ready {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Pronto para trabalhar", en: "Ready to work" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de cancelamento do caso.
   end Cancelled {
+    // Título exibido no histórico.
     title: { pt-BR: "Integração cancelada", en: "Onboarding cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Hired -> Prepare
-  Prepare -> CollectDocuments
-  Prepare -> ProvisionAccess
-  Prepare -> OrderEquipment
-  CollectDocuments.submit -> Prepared
-  ProvisionAccess -> Prepared
-  OrderEquipment.order -> Prepared
-  Prepared -> ManagerCheckin
-  ManagerCheckin.confirm -> Ready
-  Undo -> Cancelled
-  Escalate -> ManagerCheckin
 }
 
-form OnboardingDocuments {
-  title: { pt-BR: "Documentos de integração", en: "Onboarding documents" }
+// Tarefa manual de escalação da integração.
+manual EscalateOnboarding {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Escalar integração", en: "Escalate onboarding" }
+  // Documento-sujeito da tarefa.
   document: Employee
+  // Papéis que podem assumir a tarefa.
+  roles: [HiringManager]
+  // Orientação exibida para quem executa a tarefa.
+  instructions: "Conversar com a pessoa e destravar o que falta para a integração"
+  // Prazo para conclusão da tarefa.
+  timeout: 1d
+  // Prioridade da tarefa na fila.
+  priority: 70
+  // Distribuição da tarefa por puxada (pull).
+  assign: pull
+}
 
+// Form de envio dos documentos de integração.
+form OnboardingDocuments {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Documentos de integração", en: "Onboarding documents" }
+  // Documento-sujeito do form.
+  document: Employee
+  // Papéis que podem preencher o form.
+  roles: [NewHire]
+  // Prazo para preenchimento antes do timeout.
+  timeout: 5d
+  // Prioridade do form na fila.
+  priority: 40
+  // Distribuição do form por puxada (pull).
+  assign: pull
+
+  // Campos do documento exibidos no form.
   fields {
+    // Documento de identidade a ser preenchido.
     identityDocument
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Envia o documento e conclui o checklist.
     submit { calls: Employee.submitDocuments(identityDocument) }
   }
 }
 
+// Form de pedido de equipamento para a nova contratação.
 form EquipmentRequest {
+  // Título exibido na inbox e no histórico.
   title: { pt-BR: "Pedido de equipamento", en: "Equipment request" }
+  // Documento-sujeito do form.
   document: Employee
+  // Papéis que podem preencher o form.
+  roles: [ITAdmin]
+  // Prazo para preenchimento antes do timeout.
+  timeout: 1d
+  // Prioridade do form na fila.
+  priority: 50
+  // Distribuição do form por puxada (pull).
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Tipo de equipamento a ser pedido.
     kind: EquipmentKind {
+      // Título exibido no formulário.
       title: { pt-BR: "Equipamento", en: "Equipment" }
+      // Torna o tipo de equipamento obrigatório.
       required
     }
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Registra o pedido com o tipo escolhido.
     order { calls: Employee.orderEquipment(kind) }
   }
 }
 
+// Form de check-in do gestor com a nova contratação.
 form ManagerCheckin {
+  // Título exibido na inbox e no histórico.
   title: { pt-BR: "Check-in do gestor", en: "Manager check-in" }
+  // Documento-sujeito do form.
   document: Employee
+  // Papéis que podem preencher o form.
+  roles: [HiringManager]
+  // Prazo para preenchimento antes do timeout.
+  timeout: 2d
+  // Prioridade do form na fila.
+  priority: 60
+  // Distribuição do form por puxada (pull).
+  assign: pull
 
+  // Campos exibidos no form.
   fields {
+    // Observação livre digitada pelo gestor.
     note: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Observação", en: "Note" }
+      // Limita a observação a quinhentos caracteres.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis no form.
   actions {
+    // Confirma o check-in e conclui a integração.
     confirm { calls: Employee.activate }
+    // Registra a observação sem sair do form.
     recordNote { calls: Employee.recordCheckinNote(note); stay }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view OnboardingProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da integração", en: "Onboarding progress" }
+  // Tipo da view: uma tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: Onboarding
+  // Papéis que podem abrir a view.
   roles: [PeopleOps, HiringManager, ITAdmin, NewHire]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; subprocesses; documents; milestones; next }
 }

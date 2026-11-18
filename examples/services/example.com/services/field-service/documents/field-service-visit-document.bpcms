@@ -1,322 +1,546 @@
 // service: example.com/services/field-service
 
+// Documento que representa uma visita técnica executada em um site.
 document Visit {
+  // Título exibido na interface.
   title: { pt-BR: "Visita técnica", en: "Visit" }
+  // Versão do artefato; diff e release comparam.
   version: 1
+  // Responsável pela manutenção do documento.
   owner: "Field Service"
+  // Sincronização em tempo real entre os usuários da operação.
   sync: live
+  // Prazo de retenção dos registros da visita.
   retention: 5y
 
+  // Campos que compõem a visita.
   fields {
+    // Número da visita; consultável, único e curto.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Permite localizar a visita pelo número.
       lookup
+      // Impede duas visitas com o mesmo número.
       unique
+      // Limita o número a vinte e quatro caracteres.
       maxLength: 24
     }
+    // Ordem de serviço que originou a visita.
     workOrder: WorkOrder { title: { pt-BR: "Ordem de serviço", en: "Work order" }, lookup }
+    // Site em que a visita será realizada.
     site: Site { title: { pt-BR: "Site", en: "Site" }, lookup }
+    // Cliente atendido na visita.
     customer: Identity.User { title: { pt-BR: "Cliente", en: "Customer" }, lookup }
+    // Técnico designado para a visita.
     technician: Technician { title: { pt-BR: "Técnico", en: "Technician" }, lookup }
+    // Situação atual da visita no seu ciclo de vida.
     status: VisitStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Início da janela combinada com o cliente.
     windowStart: DateTime { title: { pt-BR: "Janela de", en: "Window from" }, lookup }
+    // Fim da janela combinada com o cliente.
     windowEnd: DateTime { title: { pt-BR: "Janela até", en: "Window to" } }
+    // Instante em que a visita foi despachada, preenchido pelo sistema.
     dispatchedAt: DateTime { title: { pt-BR: "Despachada em", en: "Dispatched at" }, readonly }
+    // Instante do check-in do técnico, preenchido pelo sistema.
     checkedInAt: DateTime { title: { pt-BR: "Check-in em", en: "Checked in at" }, readonly }
+    // Coordenadas capturadas no check-in por localização.
     checkInPoint: GeoPoint { title: { pt-BR: "Check-in por localização", en: "Check-in location" } }
+    // Instante da conclusão da visita, preenchido pelo sistema.
     completedAt: DateTime { title: { pt-BR: "Concluída em", en: "Completed at" }, readonly }
+    // Instante em que o cliente confirmou a janela combinada.
     windowAcknowledgedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Janela confirmada em", en: "Window acknowledged at" }
+      // Preenchido apenas pelo sistema.
       readonly
     }
+    // Desfecho registrado ao concluir a visita.
     outcome: VisitOutcome { title: { pt-BR: "Desfecho", en: "Outcome" }, lookup }
+    // Nome de quem assinou a conclusão da visita.
     signedBy: string { title: { pt-BR: "Assinado por", en: "Signed by" }, maxLength: 120 }
+    // Motivo de falha ou de cancelamento da visita.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" }, maxLength: 500 }
+    // Anotações livres feitas pelo técnico ou pelo cliente.
     notes: string { title: { pt-BR: "Anotações", en: "Notes" }, maxLength: 1000 }
+    // Quantidade de reagendamentos já sofridos pela visita.
     rescheduleCount: std.Count { title: { pt-BR: "Reagendamentos", en: "Reschedules" } }
   }
 
+  // Índices que aceleram as consultas sobre o documento.
   indexes {
+    // Busca exata pelo número, garantindo unicidade no banco.
     byNumber: [number] unique
+    // Consulta por situação e início de janela em faixa.
     byStatus: [status, windowStart] range
+    // Consulta por técnico, usando o identificador como hash.
     byTechnician: [technician.id] hash
+    // Consulta por site, usando o identificador como hash.
     bySite: [site.id] hash
   }
 
 
+  // Papéis exigidos para assinar a conclusão da visita.
   signature {
+    // A conclusão da visita exige assinatura do técnico de campo.
     complete: FieldTechnician
   }
 
+  // Ações que fazem a visita avançar no seu ciclo de vida.
   actions {
+    // Agenda a visita, definindo técnico e janela.
     schedule(assignedTechnician: Technician, windowFrom: DateTime, windowTo: DateTime) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Agendar visita", en: "Schedule visit" }
+      // Somente o despachante pode agendar.
       roles: [Dispatcher]
+      // Efeito da ação: grava técnico e janela no documento.
       {
+        // Técnico designado para a visita.
         technician = assignedTechnician
+        // Início da janela combinada.
         windowStart = windowFrom
+        // Fim da janela combinada.
         windowEnd = windowTo
       }
     }
 
+    // Reagenda a visita para uma nova janela.
     reschedule(newWindowStart: DateTime, newWindowEnd: DateTime) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Reagendar visita", en: "Reschedule visit" }
+      // Somente o despachante pode reagendar.
       roles: [Dispatcher]
+      // Volta a visita para o estado Scheduled.
       to: status.Scheduled
+      // Emite o evento com a nova janela.
       emits { windowStart: newWindowStart; windowEnd: newWindowEnd }
+      // Efeito da ação: grava a nova janela e conta o reagendamento.
       {
+        // Nova janela: início.
         windowStart = newWindowStart
+        // Nova janela: fim.
         windowEnd = newWindowEnd
+        // Incrementa o contador de reagendamentos.
         rescheduleCount = rescheduleCount + 1
       }
     }
 
+    // Despacha a visita para o técnico.
     dispatch() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Despachar visita", en: "Dispatch visit" }
+      // Somente o despachante pode despachar.
       roles: [Dispatcher]
+      // Transição para o estado Dispatched.
       to: status.Dispatched
+      // Emite o evento com o instante do despacho.
       emits { at: now() }
+      // Registra o instante do despacho no documento.
       { dispatchedAt = now() }
     }
 
+    // Registra a chegada do técnico ao site.
     checkIn(point: GeoPoint) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Check-in no site", en: "Check in on site" }
+      // Somente o técnico de campo pode fazer check-in.
       roles: [FieldTechnician]
+      // Transição para o estado OnSite.
       to: status.OnSite
+      // Emite o evento com o instante do check-in.
       emits { at: now() }
+      // Grava o instante e o local do check-in.
       { checkedInAt = now(); checkInPoint = point }
     }
 
+    // Conclui a visita com desfecho e assinatura.
     complete(visitOutcome: VisitOutcome, signedByName: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Concluir visita", en: "Complete visit" }
+      // Somente o técnico de campo pode concluir.
       roles: [FieldTechnician]
+      // Transição para o estado Completed.
       to: status.Completed
+      // Emite o evento com desfecho e assinatura.
       emits { outcome: visitOutcome; signedBy: signedByName }
+      // Efeito da ação: grava desfecho, assinatura e instante.
       {
+        // Desfecho registrado na conclusão.
         outcome = visitOutcome
+        // Nome de quem assinou a conclusão.
         signedBy = signedByName
+        // Instante da conclusão.
         completedAt = now()
       }
     }
 
+    // Registra a falha da visita.
     fail(failureReason: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Registrar falha", en: "Report failure" }
+      // Técnico ou despachante podem registrar a falha.
       roles: [FieldTechnician, Dispatcher]
+      // Transição para o estado Failed.
       to: status.Failed
+      // Emite o evento com o motivo da falha.
       emits { reason: failureReason }
+      // Guarda o motivo da falha no documento.
       { reason = failureReason }
     }
 
+    // Cancela a visita a pedido do cliente ou do despachante.
     withdraw(withdrawReason: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Cancelar visita", en: "Withdraw visit" }
+      // Cliente ou despachante podem cancelar.
       roles: [Customer, Dispatcher]
+      // Transição para o estado Failed.
       to: status.Failed
+      // Emite o evento com o motivo do cancelamento.
       emits { reason: withdrawReason }
+      // Guarda o motivo do cancelamento no documento.
       { reason = withdrawReason }
     }
 
+    // Salva uma anotação na visita.
     saveNote(note: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Salvar anotação", en: "Save note" }
+      // Somente o técnico de campo pode anotar.
       roles: [FieldTechnician]
+      // Grava a anotação no campo de notas.
       { notes = note }
     }
 
+    // Confirma a janela combinada, com anotação opcional do cliente.
     acknowledgeWindow(note: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Confirmar janela", en: "Acknowledge window" }
+      // Somente o cliente pode confirmar a janela.
       roles: [Customer]
+      // Grava o instante da confirmação e a observação do cliente.
       { windowAcknowledgedAt = now(); notes = note }
     }
   }
 }
 
+// Máquina de estados do ciclo de vida da visita.
 shape VisitStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da visita", en: "Visit status" }
+  // Base da forma: máquina de estados.
   base: state
+  // Estado em que toda visita começa.
   initial: Scheduled
 
+  // Estado de visita agendada, aguardando despacho.
   value Scheduled {
+    // Título exibido na interface.
     title: { pt-BR: "Agendada", en: "Scheduled" }
+    // Ícone exibido no status.
     icon: status.scheduled
+    // Ordem de exibição entre os estados.
     ordinal: 10
 
+    // Transição para o estado Dispatched.
     transition Dispatched {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita despachada", en: "Visit dispatched" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Instante do despacho.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
       }
     }
 
+    // Transição para o estado Failed.
     transition Failed {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita falhou", en: "Visit failed" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da falha.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição para o estado Failed quando a visita é cancelada.
     transition Failed {
+      // Nome do evento que distingue o cancelamento.
       event: Withdrawn
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita cancelada", en: "Visit withdrawn" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de visita entregue ao técnico.
   value Dispatched {
+    // Título exibido na interface.
     title: { pt-BR: "Despachada", en: "Dispatched" }
+    // Ícone exibido no status.
     icon: status.dispatched
+    // Ordem de exibição entre os estados.
     ordinal: 20
 
+    // Transição para o estado OnSite quando o técnico faz check-in.
     transition OnSite {
+      // Nome do evento emitido na entrada do estado.
       event: CheckedIn
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Check-in no site", en: "Checked in" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Instante do check-in.
         at: DateTime { title: { pt-BR: "Em", en: "At" } }
+        // Local capturado no check-in.
         point: GeoPoint { title: { pt-BR: "Local", en: "Location" } }
       }
     }
 
+    // Transição para o estado Failed.
     transition Failed {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita falhou", en: "Visit failed" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da falha.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição para o estado Failed quando a visita é cancelada.
     transition Failed {
+      // Nome do evento que distingue o cancelamento.
       event: Withdrawn
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita cancelada", en: "Visit withdrawn" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de técnico presente no site.
   value OnSite {
+    // Título exibido na interface.
     title: { pt-BR: "No local", en: "On site" }
+    // Ícone exibido no status.
     icon: status.onSite
+    // Ordem de exibição entre os estados.
     ordinal: 30
 
+    // Transição para o estado Completed.
     transition Completed {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita concluída", en: "Visit completed" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Desfecho registrado na conclusão.
         outcome: VisitOutcome { title: { pt-BR: "Desfecho", en: "Outcome" } }
+        // Nome de quem assinou a conclusão.
         signedBy: string { title: { pt-BR: "Assinado por", en: "Signed by" } }
       }
     }
 
+    // Transição para o estado Failed.
     transition Failed {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita falhou", en: "Visit failed" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo da falha.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado final de visita concluída.
   value Completed {
+    // Título exibido na interface.
     title: { pt-BR: "Concluída", en: "Completed" }
+    // Ícone exibido no status.
     icon: status.completed
+    // Ordem de exibição entre os estados.
     ordinal: 40
   }
+  // Estado de visita que falhou ou foi cancelada.
   value Failed {
+    // Título exibido na interface.
     title: { pt-BR: "Falhou", en: "Failed" }
+    // Ícone exibido no status.
     icon: status.failed
+    // Ordem de exibição entre os estados.
     ordinal: 50
 
+    // Transição de volta para Scheduled quando a visita é reagendada.
     transition Scheduled {
+      // Nome do evento emitido na entrada do estado.
       event: Rescheduled
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita reagendada", en: "Visit rescheduled" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Início da nova janela combinada.
         windowStart: DateTime { title: { pt-BR: "Nova janela de", en: "New window from" } }
+        // Fim da nova janela combinada.
         windowEnd: DateTime { title: { pt-BR: "Nova janela até", en: "New window to" } }
       }
     }
 
+    // Transição para o estado Failed quando a visita é cancelada.
     transition Failed {
+      // Nome do evento que distingue o cancelamento.
       event: Withdrawn
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Visita cancelada", en: "Visit withdrawn" }
+      // Dados carregados pelo evento da transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
 }
 
+// Classificação do desfecho de uma visita concluída.
 shape VisitOutcome {
+  // Título exibido na interface.
   title: { pt-BR: "Desfecho da visita", en: "Visit outcome" }
+  // Base da forma: classificação fechada de valores.
   base: classification
 
+  // Problema resolvido no local.
   value Fixed {
+    // Título exibido na interface.
     title: { pt-BR: "Resolvido", en: "Fixed" }
+    // Ícone exibido na classificação.
     icon: outcome.fixed
+    // Ordem de exibição entre os valores.
     ordinal: 10
   }
+  // Atendimento que depende de peças.
   value NeedsParts {
+    // Título exibido na interface.
     title: { pt-BR: "Aguardando peças", en: "Needs parts" }
+    // Ícone exibido na classificação.
     icon: outcome.needsParts
+    // Ordem de exibição entre os valores.
     ordinal: 20
   }
+  // Equipamento sem possibilidade de reparo.
   value NotRepairable {
+    // Título exibido na interface.
     title: { pt-BR: "Sem reparo", en: "Not repairable" }
+    // Ícone exibido na classificação.
     icon: outcome.notRepairable
+    // Ordem de exibição entre os valores.
     ordinal: 30
   }
+  // Cliente ausente no momento da visita.
   value CustomerAbsent {
+    // Título exibido na interface.
     title: { pt-BR: "Cliente ausente", en: "Customer absent" }
+    // Ícone exibido na classificação.
     icon: outcome.customerAbsent
+    // Ordem de exibição entre os valores.
     ordinal: 40
   }
 }
 
+// View de tabela que lista as visitas técnicas.
 view VisitsTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Visitas técnicas", en: "Visits" }
+  // Tipo da view: tabela de registros.
   type: table
+  // Documento que alimenta a tabela.
   source: Visit
+  // Papéis que podem abrir a view.
   roles: [Dispatcher, FieldTechnician, Supervisor]
 
+  // Colunas exibidas em cada linha.
   columns { number; site; technician; status; windowStart }
+  // Filtros disponíveis sobre a tabela.
   filters { status; site; technician; period }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações expostas na tabela, ligadas às ações do documento.
   actions {
+    // Abre o detalhe da visita selecionada.
     open -> VisitDetail
+    // Despacha a visita selecionada.
     dispatch -> Visit.dispatch
+    // Registra a falha com o motivo informado.
     fail -> Visit.fail(failureReason)
   }
 }
 
+// View de detalhe de uma visita.
 view VisitDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da visita", en: "Visit detail" }
+  // Tipo da view: ficha de detalhe.
   type: detail
+  // Documento exibido na ficha.
   document: Visit
+  // Papéis que podem abrir a view, incluindo o cliente.
   roles: [Dispatcher, FieldTechnician, Supervisor, Customer]
 
+  // Seções fixas exibidas na ficha.
   sections { summary; checkin; report; timeline }
 
+  // Ações expostas na ficha.
   actions {
+    // Abre o andamento do processo da visita.
     open -> VisitProgress
+    // Faz o check-in com o ponto informado.
     checkIn -> Visit.checkIn(point)
   }
 }
 
+// View de quadro kanban com as visitas por situação.
 view VisitsBoard {
+  // Título exibido na navegação.
   title: { pt-BR: "Quadro de visitas", en: "Visits board" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento que alimenta o quadro.
   source: Visit
+  // Papéis que podem abrir o quadro.
   roles: [Dispatcher, Supervisor]
+  // Agrupa os cartões pela situação da visita.
   groupBy: status
 
+  // Colunas exibidas em cada cartão.
   columns { number; site; windowStart }
+  // Campos exibidos no resumo do cartão.
   card { number; site; technician }
 
+  // Ações expostas no quadro.
   actions {
+    // Abre o detalhe da visita selecionada.
     open -> VisitDetail
   }
 }
 
+// Mensagem emitida quando uma visita é reagendada.
 message VisitRescheduled {
+  // Título exibido na mensagem e na caixa de entrada.
   title: { pt-BR: "Visita reagendada", en: "Visit rescheduled" }
+  // Documento sobre o qual a mensagem fala.
   about: Visit
 
+  // Dados carregados pela mensagem.
   payload {
+    // Início da nova janela combinada.
     windowStart: DateTime { title: { pt-BR: "Nova janela de", en: "New window from" } }
+    // Fim da nova janela combinada.
     windowEnd: DateTime { title: { pt-BR: "Nova janela até", en: "New window to" } }
   }
 }

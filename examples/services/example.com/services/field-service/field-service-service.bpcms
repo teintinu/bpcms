@@ -1,11 +1,18 @@
 // service: example.com/services/field-service
+// Declara o serviço de campo (field service) na URI do workspace.
 service "example.com/services/field-service" {
+  // Título exibido no builder e na navegação.
   title: { pt-BR: "Serviço de campo", en: "Field service" }
+  // Versão do artefato; diff e release comparam.
   version: 1.0.0
+  // Responsável pela manutenção do serviço.
   owner: "Field Service"
 
+  // Dependências externas trazidas para este serviço, sempre com alias.
   imports {
+    // Pseudo-serviço do construtor com medidas e constantes padrão (std.Count).
     service "bpcms.org/std" as std
+    // Usuários e pessoas usados nos campos de cliente e técnico.
     service "example.com/services/identity" as Identity
   }
 }

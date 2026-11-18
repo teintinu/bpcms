@@ -1,169 +1,239 @@
 // service: example.com/services/payments
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process ChargebackDispute for Chargeback {
+// Declara o processo de contestação; o argumento é a contestação-sujeito da instância.
+process ChargebackDispute(chargeback: Chargeback) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Contestação da bandeira", en: "Chargeback dispute" }
-  version: 1
-  goal: "Responder a contestação dentro do prazo, com evidências"
-  owner: "Payments"
-  timezone: America/Fortaleza
-  sla: 20d
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Responder a contestação dentro do prazo, com evidências"
+  }
+  sla: 20d // SLA brando do caso: alvo de lead time, não é timer.
 
-  pool Company {
-    internal
-    lane Finance { role: Analyst }
-    lane Management { role: Manager }
+  // Gatilho: inicia uma instância quando a contestação emite Opened.
+  on [Chargeback.Opened]
+  // Chave de identidade, correlação e dedup da instância.
+  key: chargeback
+
+  // Bloco que captura timeout do caso e de qualquer form.
+  try {
+    // Abre o form para o analista anexar as evidências de defesa.
+    ChargebackEvidence.show({ chargeback })
+  } catch (Timeout) {
+    // O prazo para reunir evidências esgotou: concede a contestação.
+    ChargebackConcession.show({ chargeback })
+    return Lost // Encerra o processo no desfecho de perda.
   }
 
-  pool Network {
-    external
+  // Se a contestação já foi perdida durante o preenchimento do form...
+  if (chargeback.status == Lost) {
+    // O analista concedeu a contestação no próprio form de evidências.
+    ChargebackConcession.show({ chargeback })
+    return Lost // Encerra o processo no desfecho de perda.
   }
 
-  start Opened { event: Chargeback.Opened }
-
-  task GatherEvidence {
-    lane: Finance
-    form: ChargebackEvidence
-    sla: 5d
-    priority: 90
-    assign: pull
-    on timer 10d -> Concede
+  // Bloco que envia o pacote de evidências e trata indisponibilidade da rede.
+  try {
+    // Envia a mensagem com as evidências reunidas.
+    send EvidencePackage {
+      // Correlaciona a mensagem com a contestação.
+      key: chargeback
+      // Preenche o payload da mensagem.
+      with {
+        // Instante do envio.
+        submittedAt: now()
+        // Resumo das evidências registradas.
+        note: chargeback.evidenceNotes
+        // Documento comprobatório anexado.
+        evidence: chargeback.evidence
+      }
+    }
+  } catch (NetworkUnavailable) {
+    // Rede da bandeira indisponível: cai para o envio manual.
+    try {
+      // Abre a tarefa manual de envio pelo portal da bandeira.
+      ManualSend.show({ chargeback })
+    } catch (Timeout) {
+      // O envio manual também expirou: concede a contestação.
+      ChargebackConcession.show({ chargeback })
+      return Lost // Encerra o processo no desfecho de perda.
+    }
   }
 
-  task SendEvidence {
-    lane: System
-    sends: EvidencePackage
-    partner: Network
-    with { chargeback }
-    sla: 1h
-    on error NetworkUnavailable -> ManualSend
+  // Bloco que aguarda o resultado da análise da bandeira.
+  try {
+    // Aguarda a mensagem de resultado correlacionada à contestação.
+    receive ChargebackResult {
+      // Correlaciona a resposta com a contestação.
+      key: chargeback
+      timeout: 30d // Prazo máximo de espera pela resposta.
+      // Aplica a decisão recebida na ação do documento.
+      apply: Chargeback.registerDecision
+    }
+  } catch (Timeout) {
+    // Sem resposta no prazo: concede a contestação.
+    ChargebackConcession.show({ chargeback })
+    return Lost // Encerra o processo no desfecho de perda.
   }
 
-  task ManualSend {
-    lane: Finance
-    manual: "Enviar as evidências pelo portal da bandeira"
-    sla: 4h
-    on timer 4h -> Concede
+  // Se a bandeira decidiu a favor do lojista...
+  if (chargeback.networkFavorable) {
+    // Marca a contestação como ganha.
+    Chargeback.win()
+    return Won // Encerra no desfecho de sucesso.
   }
 
-  task AwaitDecision {
-    lane: System
-    receives: ChargebackResult
-    partner: Network
-    apply: Chargeback.registerDecision
-    sla: 30d
-    on timer 30d -> Concede
-  }
+  // Caso contrário, marca a contestação como perdida.
+  Chargeback.lose()
+  return Lost // Encerra no desfecho de perda.
 
-  task ConfirmWin {
-    lane: System
-    action: Chargeback.win
-    sla: 1m
-  }
-
-  task ConfirmLoss {
-    lane: System
-    action: Chargeback.lose
-    sla: 1m
-  }
-
-  task Concede {
-    lane: Management
-    form: ChargebackConcession
-    sla: 1h
-    assign: pull
-  }
-
-  gateway Decision {
-    if chargeback.networkFavorable -> ConfirmWin
-    else -> ConfirmLoss
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Won {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Contestação ganha", en: "Chargeback won" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
+  // Declara o desfecho de falha do caso.
   end Lost {
+    // Título exibido no histórico.
     title: { pt-BR: "Contestação perdida", en: "Chargeback lost" }
+    // Classificação do desfecho para KPI.
     outcome: failure
   }
-
-  Opened -> GatherEvidence
-  GatherEvidence.submit -> SendEvidence
-  GatherEvidence.concede -> Concede
-  SendEvidence -> AwaitDecision
-  ManualSend -> AwaitDecision
-  AwaitDecision -> Decision
-  Decision -> ConfirmWin
-  Decision -> ConfirmLoss
-  ConfirmWin -> Won
-  ConfirmLoss -> Lost
-  Concede.accept -> Lost
 }
 
-form ChargebackEvidence {
-  title: { pt-BR: "Evidências da contestação", en: "Chargeback evidence" }
-  document: Chargeback
+// Erro de negócio: indisponibilidade da rede da bandeira.
+error NetworkUnavailable {
+  // Título do erro exibido ao usuário.
+  title: { pt-BR: "Rede da bandeira indisponível", en: "Card network unavailable" }
+}
 
+// Form de preenchimento das evidências de defesa.
+form ChargebackEvidence {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Evidências da contestação", en: "Chargeback evidence" }
+  // Documento manipulado pelo form.
+  document: Chargeback
+  // Papéis que podem preencher o form.
+  roles: [Analyst]
+  timeout: 10d // Prazo para conclusão do preenchimento.
+  priority: 90 // Prioridade do form na fila.
+  assign: pull // Distribuição do form por retirada voluntária.
+
+  // Campos exibidos no formulário.
   fields {
-    payment
-    amount
-    dueAt
+    payment // Pagamento contestado, somente leitura.
+    amount // Valor contestado, somente leitura.
+    dueAt // Prazo de resposta, somente leitura.
+    // Resumo textual das evidências.
     evidenceNote: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Resumo das evidências", en: "Evidence summary" }
-      maxLength: 2000
-      required
+      maxLength: 2000 // Limita o resumo a dois mil caracteres.
+      required // Torna o resumo obrigatório.
     }
+    // Documento comprobatório anexado.
     evidenceFile: EvidenceDocument {
+      // Título exibido no formulário.
       title: { pt-BR: "Documento comprobatório", en: "Supporting document" }
-      required
+      required // Torna o anexo obrigatório.
     }
+    // Anotação interna opcional.
     note: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Anotação interna", en: "Internal note" }
-      maxLength: 500
+      maxLength: 500 // Limita a anotação a quinhentos caracteres.
     }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Envia as evidências à bandeira.
     submit {
+      // Título exibido no botão.
       title: { pt-BR: "Enviar à bandeira", en: "Send to the network" }
+      // Chama a ação do documento que registra as evidências.
       calls: Chargeback.submitEvidence(evidenceNote, evidenceFile)
     }
+    // Aceita a contestação.
     concede {
+      // Título exibido no botão.
       title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      // Chama a ação do documento que concede a contestação.
       calls: Chargeback.concede
     }
+    // Salva a anotação sem sair do formulário.
     annotate {
+      // Título exibido no botão.
       title: { pt-BR: "Salvar anotação", en: "Save note" }
+      // Chama a ação do documento que grava a anotação.
       calls: Chargeback.annotateEvidence(note)
-      stay
+      stay // Mantém o formulário aberto após salvar.
     }
   }
 }
 
-form ChargebackConcession {
-  title: { pt-BR: "Aceitar contestação", en: "Accept chargeback" }
+// Tarefa manual para enviar as evidências pelo portal da bandeira.
+manual ManualSend {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Enviar evidências manualmente", en: "Send evidence manually" }
+  // Documento ao qual a tarefa se refere.
   document: Chargeback
+  // Papéis que podem assumir a tarefa.
+  roles: [Analyst]
+  // Orientação exibida ao executor da tarefa.
+  instructions: "Enviar as evidências pelo portal da bandeira"
+  timeout: 4h // Prazo para conclusão da tarefa.
+  priority: 80 // Prioridade da tarefa na fila.
+  assign: pull // Distribuição da tarefa por retirada voluntária.
+}
 
+// Form de aceite da contestação.
+form ChargebackConcession {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Aceitar contestação", en: "Accept chargeback" }
+  // Documento manipulado pelo form.
+  document: Chargeback
+  // Papéis que podem assumir o form.
+  roles: [Manager]
+  timeout: 1h // Prazo para conclusão do aceite.
+  priority: 90 // Prioridade do form na fila.
+  assign: pull // Distribuição do form por retirada voluntária.
+
+  // Campos exibidos no formulário.
   fields {
-    payment
-    amount
-    dueAt
-    status
+    payment // Pagamento contestado, somente leitura.
+    amount // Valor contestado, somente leitura.
+    dueAt // Prazo de resposta, somente leitura.
+    status // Situação atual da contestação.
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Aceita a contestação.
     accept {
+      // Título exibido no botão.
       title: { pt-BR: "Aceitar a contestação", en: "Accept the chargeback" }
+      // Chama a ação do documento que concede a contestação.
       calls: Chargeback.concede
     }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view ChargebackProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da contestação", en: "Chargeback progress" }
-  type: process
+  type: process // Tipo da view: uma tela de andamento de processo.
+  // Processo cujo andamento esta view exibe.
   process: ChargebackDispute
+  // Papéis que podem abrir a view.
   roles: [Analyst, Manager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; next }
 }

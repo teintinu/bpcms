@@ -1,42 +1,56 @@
 // service: example.com/services/fraud-checkout
+// Declara o serviço de finalização de compra com verificação antifraude.
 service "example.com/services/fraud-checkout" {
+  // Título exibido no builder e na navegação.
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
+  // Versão do artefato de serviço.
   version: 1.0.0
+  // Área de negócio responsável pelo serviço.
   owner: "Risk"
+  // Serviços externos usados por este serviço.
   imports {
+    // Importa a finalização de compra com o alias Checkout.
     service "example.com/services/checkout" as Checkout
   }
 
+  // Reabre o shape CheckoutStatus do checkout para acrescentar valores.
   reintroduce Checkout.CheckoutStatus {
+    // Novo valor ShippingQuoted, alcançável pela transição FraudChecked.
     value ShippingQuoted {
+      // Transição que leva ao estado de risco verificado.
       transition FraudChecked {
+        // Título exibido na timeline do documento.
         title: { pt-BR: "Risco verificado", en: "Risk checked" }
       }
     }
 
+    // Novo estado FraudChecked, de risco verificado.
     value FraudChecked {
+      // Título exibido na timeline do documento.
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
+      // Ícone do estado, definido neste serviço.
       icon: status.fraudChecked
+      // Posição do estado na ordenação do shape.
       ordinal: 25
     }
 
+    // Insere FraudChecked antes de PaymentAuthorized na ordem dos estados.
     insert FraudChecked before PaymentAuthorized
   }
 
+  // Reabre o documento CheckoutSession do checkout para acrescentar ação.
   reintroduce Checkout.CheckoutSession {
+    // Nova action de verificação de risco na sessão de checkout.
     action checkFraud() {
+      // Título exibido no botão da action.
       title: { pt-BR: "Verificar risco", en: "Check risk" }
+      // Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
+      // Estado de destino após a action.
       to: status.FraudChecked
     }
   }
 
-  reintroduce Checkout.Checkout {
-    task FraudCheck {
-      lane: System
-      action: CheckoutSession.checkFraud
-    }
-
-    insert FraudCheck before AuthorizePayment
-  }
+  // Composição do passo FraudCheck no processo Checkout fica adiada nesta versão
+  // (não há insert/task em processo-código; ver DSL_REFERENCE.md §4.12).
 }

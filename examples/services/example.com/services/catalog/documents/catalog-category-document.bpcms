@@ -1,36 +1,58 @@
 // service: example.com/services/catalog
 
+// Documento que representa uma categoria da árvore do catálogo.
 document Category {
+  // Título exibido no builder e na interface.
   title: { pt-BR: "Categoria", en: "Category" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Catalog"
+  // Modo de sincronização: consumidores recebem apenas leitura.
   sync: read
 
+  // Campos persistidos da categoria.
   fields {
+    // Nome único da categoria, obrigatório, usado também em busca.
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 120, required, lookup }
+    // Categoria superior na árvore de categorias.
     parent: Category {
+      // Título exibido no formulário.
       title: { pt-BR: "Categoria pai", en: "Parent category" }
     }
   }
 
+  // Índices que sustentam unicidade e consultas.
   indexes {
+    // Garante unicidade do nome da categoria.
     name: [name] unique
+    // Índice hash para localizar filhos pela categoria pai.
     parent: [parent.id] hash
   }
 
+  // Dados iniciais criados no primeiro provisionamento.
   seed {
+    // Categoria raiz "Geral".
     General {
+      // Nome exibido da categoria raiz.
       name: "Geral"
     }
   }
 
+  // Ações de negócio sobre a categoria.
   actions {
+    // Cadastra uma categoria, opcionalmente filha de outra.
     add(name: string, parent: Category?){
+      // Título exibido na interface.
       title: { pt-BR: "Cadastrar categoria", en: "Add category" }
+      // Papéis autorizados a cadastrar categorias.
       roles: [Curator]
     }
+    // Renomeia uma categoria existente.
     rename(name: string){
+      // Título exibido na interface.
       title: { pt-BR: "Renomear", en: "Rename" }
+      // Papéis autorizados a renomear categorias.
       roles: [Curator]
     }
   }

@@ -1,421 +1,719 @@
 // service: example.com/services/claims
 
+// Documento central de sinistros: registra o aviso, a triagem, a análise e o pagamento.
 document Claim {
+  // Título exibido na interface.
   title: { pt-BR: "Sinistro", en: "Claim" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Claims"
+  // Sincronização em tempo real entre os clientes conectados.
   sync: live
+  // Retenção legal dos registros por dez anos.
   retention: 10y
 
+  // Campos que compõem o sinistro.
   fields {
+    // Número único do sinistro, usado como identificador legível.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Permite localizar o sinistro pelo número.
       lookup
+      // Impede números duplicados.
       unique
+      // Limita o número a vinte e quatro caracteres.
       maxLength: 24
     }
+    // Segurado que abriu o sinistro, referenciando um usuário de identidade.
     claimant: Identity.User { title: { pt-BR: "Segurado", en: "Claimant" }, lookup }
+    // Cobertura de apólice associada ao sinistro.
     coverage: Coverage { title: { pt-BR: "Cobertura", en: "Coverage" }, lookup }
+    // Classificação do tipo de sinistro, com colisão como valor padrão.
     type: ClaimType {
+      // Título exibido no formulário.
       title: { pt-BR: "Tipo de sinistro", en: "Claim type" }
+      // Permite localizar por tipo.
       lookup
+      // Valor assumido quando o campo não é informado.
       default: Collision
     }
+    // Data e hora em que o incidente ocorreu; obrigatória.
     occurredAt: DateTime { title: { pt-BR: "Ocorrido em", en: "Occurred at" }, required }
+    // Descrição livre do ocorrido, tratada como dado sensível.
     description: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Descrição", en: "Description" }
+      // Restringe a leitura a papéis autorizados.
       sensitive
+      // Limita o texto a dois mil caracteres.
       maxLength: 2000
     }
+    // Valor reclamado pelo segurado, em reais.
     amount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Valor reclamado", en: "Claimed amount" }
+      // Moeda do valor reclamado.
       currency: BRL
+      // Permite localizar pelo valor.
       lookup
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Valor aprovado pelo ajustador, em reais.
     approvedAmount: std.Money { title: { pt-BR: "Valor aprovado", en: "Approved amount" }, currency: BRL }
+    // Situação atual do sinistro no fluxo de estados.
     status: ClaimStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Indica se a cobertura foi confirmada na triagem.
     covered: boolean { title: { pt-BR: "Cobertura confirmada", en: "Coverage confirmed" }, default: false }
+    // Faixa de risco de fraude atribuída na avaliação.
     fraudBand: FraudBand { title: { pt-BR: "Faixa de risco", en: "Fraud band" }, lookup }
+    // Marca a confirmação de fraude; visível apenas internamente.
     fraudConfirmed: boolean {
+      // Título exibido no formulário.
       title: { pt-BR: "Fraude confirmada", en: "Fraud confirmed" }
+      // Valor assumido quando não há confirmação.
       default: false
+      // Oculta o campo de quem não tem permissão.
       private
     }
+    // Nota textual da análise antifraude.
     fraudNote: string { title: { pt-BR: "Nota da análise", en: "Fraud note" }, maxLength: 1000 }
+    // Tipo da última evidência registrada.
     lastEvidenceKind: EvidenceKind { title: { pt-BR: "Última evidência", en: "Last evidence" } }
+    // Resumo textual das evidências coletadas.
     evidenceSummary: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Resumo das evidências", en: "Evidence summary" }
+      // Limita o resumo a mil caracteres.
       maxLength: 1000
     }
+    // Motivo que levou à recusa do sinistro.
     rejectReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da recusa", en: "Rejection reason" }
+      // Restringe a leitura a papéis autorizados.
       sensitive
+      // Limita o motivo a quinhentos caracteres.
       maxLength: 500
     }
+    // Data em que o segurado prestou a declaração do ocorrido.
     statementAt: DateTime { title: { pt-BR: "Declaração em", en: "Statement at" }, readonly }
+    // Ajustador responsável pela análise do sinistro.
     adjuster: Identity.User { title: { pt-BR: "Ajustador", en: "Adjuster" } }
+    // Data de abertura do sinistro, definida pelo sistema.
     openedAt: DateTime { title: { pt-BR: "Aberto em", en: "Opened at" }, readonly }
+    // Data da decisão final do sinistro, definida pelo sistema.
     decidedAt: DateTime { title: { pt-BR: "Decidido em", en: "Decided at" }, readonly }
+    // Data em que o pagamento foi confirmado.
     paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" }, readonly }
+    // Referência bancária do pagamento realizado.
     paymentReference: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Referência do pagamento", en: "Payment reference" }
+      // Limita a referência a quarenta caracteres.
       maxLength: 40
     }
   }
 
+  // Índices que aceleram consultas frequentes sobre sinistros.
   indexes {
+    // Busca exata pelo número do sinistro.
     byNumber: [number] unique
+    // Consultas por situação ordenadas pela abertura.
     byStatus: [status, openedAt] range
+    // Busca por cobertura associada.
     byCoverage: [coverage.id] hash
+    // Busca por segurado associado.
     byClaimant: [claimant.id] hash
   }
 
 
+  // Comandos de negócio que alteram o sinistro e emitem eventos.
   actions {
+    // Registra o aviso de sinistro e marca o momento da abertura.
     register(occurredOn: DateTime, claimedAmount: std.Money) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar aviso", en: "Register notice" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk, Policyholder]
+      // Emite Opened e grava os dados iniciais do sinistro.
       {
+        // Notifica a abertura para gatilhos de processo.
         emit Opened { occurredAt: occurredOn; amount: claimedAmount }
+        // Grava a data/hora da abertura.
         openedAt = now()
+        // Grava a data do incidente.
         occurredAt = occurredOn
+        // Grava o valor reclamado.
         amount = claimedAmount
       }
     }
 
+    // Triagem inicial: confirma cobertura, define tipo e atribui ajustador.
     triage(coveredNow: boolean, claimType: ClaimType, assignedAdjuster: Identity.User) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Triar sinistro", en: "Triage claim" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk]
+      // Move o sinistro para a situação Triaged.
       to: status.Triaged
+      // Publica cobertura e tipo no evento de transição.
       emits { covered: coveredNow; type: claimType }
+      // Persiste os dados da triagem no documento.
       {
+        // Registra a confirmação de cobertura.
         covered = coveredNow
+        // Registra o tipo informado.
         type = claimType
+        // Atribui o ajustador responsável.
         adjuster = assignedAdjuster
       }
     }
 
+    // Permite ao segurado declarar o ocorrido por escrito.
     describe(text: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Declarar o ocorrido", en: "Describe the incident" }
+      // Papéis autorizados a executar a ação.
       roles: [Policyholder]
+      // Grava a declaração e o momento em que foi prestada.
       { description = text; statementAt = now() }
     }
 
+    // Inicia a análise do sinistro pelo ajustador.
     startReview() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Iniciar análise", en: "Start review" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk, Adjuster]
+      // Move o sinistro para a situação UnderReview.
       to: status.UnderReview
+      // Publica o instante de início no evento de transição.
       emits { at: now() }
     }
 
+    // Grava a faixa de risco de fraude calculada ou revista.
     recordRisk(band: FraudBand) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar faixa de risco", en: "Record fraud band" }
+      // Papéis autorizados a executar a ação.
       roles: [FraudAnalyst]
+      // Persiste a faixa de risco no documento.
       { fraudBand = band }
     }
 
+    // Registra uma evidência coletada durante a investigação.
     recordEvidence(kind: EvidenceKind, summary: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar evidência", en: "Record evidence" }
+      // Papéis autorizados a executar a ação.
       roles: [FraudAnalyst, Adjuster]
+      // Guarda o tipo e o resumo da evidência.
       { lastEvidenceKind = kind; evidenceSummary = summary }
     }
 
+    // Confirma a existência de fraude com base na análise.
     confirmFraud(note: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Confirmar fraude", en: "Confirm fraud" }
+      // Papéis autorizados a executar a ação.
       roles: [FraudAnalyst, Manager]
+      // Marca a fraude e registra a justificativa.
       { fraudConfirmed = true; fraudNote = note }
     }
 
+    // Descarta a suspeita de fraude com base na análise.
     clearFraud(note: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Descartar fraude", en: "Clear fraud" }
+      // Papéis autorizados a executar a ação.
       roles: [FraudAnalyst, Manager]
+      // Desmarca a fraude e registra a justificativa.
       { fraudConfirmed = false; fraudNote = note }
     }
 
+    // Aprova o sinistro com o valor total a indenizar.
     approve(approvedTotal: std.Money) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aprovar sinistro", en: "Approve claim" }
+      // Papéis autorizados a executar a ação.
       roles: [Adjuster]
+      // Move o sinistro para a situação Approved.
       to: status.Approved
+      // Publica valor aprovado e instante no evento de transição.
       emits { approvedAmount: approvedTotal; at: now() }
+      // Persiste o valor aprovado e a data da decisão.
       { approvedAmount = approvedTotal; decidedAt = now() }
     }
 
+    // Recusa o sinistro com o motivo informado.
     reject(reason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Recusar sinistro", en: "Reject claim" }
+      // Papéis autorizados a executar a ação.
       roles: [Clerk, Adjuster]
+      // Move o sinistro para a situação Rejected.
       to: status.Rejected
+      // Publica o instante da recusa no evento de transição.
       emits { at: now() }
+      // Persiste o motivo e a data da decisão.
       { rejectReason = reason; decidedAt = now() }
     }
 
+    // Abre uma liquidação para o sinistro aprovado.
     openSettlement() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Abrir liquidação", en: "Open settlement" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceAnalyst]
+      // Devolve o documento Settlement criado.
       returns: Settlement
     }
 
+    // Confirma o pagamento efetuado e encerra o sinistro.
     confirmPayment(reference: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Confirmar pagamento", en: "Confirm payment" }
+      // Papéis autorizados a executar a ação.
       roles: [FinanceAnalyst]
+      // Move o sinistro para a situação Paid.
       to: status.Paid
+      // Publica o valor aprovado no evento de transição.
       emits { amount: approvedAmount }
+      // Persiste a data do pagamento e a referência bancária.
       { paidAt = now(); paymentReference = reference }
     }
 
+    // Reabre a análise de um sinistro aprovado para revisão.
     reopen() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Reabrir análise", en: "Reopen review" }
+      // Papéis autorizados a executar a ação.
       roles: [Manager]
+      // Move o sinistro de volta para a situação UnderReview.
       to: status.UnderReview
+      // Publica o instante da reabertura no evento de transição.
       emits { at: now() }
     }
   }
 }
 
+// Shape de estado que modela o ciclo de vida do sinistro.
 shape ClaimStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do sinistro", en: "Claim status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial é Opened, com a transição que cria o sinistro.
   initial: Opened with transition Opened {
+    // Título exibido no evento de abertura.
     title: { pt-BR: "Aviso de sinistro aberto", en: "Claim notice opened" }
+    // Dados transportados pelo evento de abertura.
     payload {
+      // Data do incidente informada no aviso.
       occurredAt: DateTime { title: { pt-BR: "Ocorrido em", en: "Occurred at" } }
+      // Valor reclamado no aviso.
       amount: std.Money { title: { pt-BR: "Valor reclamado", en: "Claimed amount" } }
     }
   }
 
+  // Estado em que o aviso foi registrado e aguarda triagem.
   value Opened {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Aviso aberto", en: "Opened" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.opened
+    // Ordem de exibição no fluxo de estados.
     ordinal: 10
 
+    // Transição para Triaged após a triagem do atendente.
     transition Triaged {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro triado", en: "Claim triaged" }
+      // Dados transportados pelo evento de triagem.
       payload {
+        // Cobertura confirmada na triagem.
         covered: boolean { title: { pt-BR: "Cobertura confirmada", en: "Coverage confirmed" } }
+        // Tipo atribuído ao sinistro.
         type: ClaimType { title: { pt-BR: "Tipo de sinistro", en: "Claim type" } }
       }
     }
 
+    // Transição para Rejected na recusa direta do aviso.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      // Dados transportados pelo evento de recusa.
       payload {
+        // Motivo textual da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        // Instante em que a recusa ocorreu.
         at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
       }
     }
   }
+  // Estado em que o sinistro já foi triado.
   value Triaged {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Triado", en: "Triaged" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.triaged
+    // Ordem de exibição no fluxo de estados.
     ordinal: 20
 
+    // Transição para UnderReview, nomeada ReviewStarted.
     transition UnderReview {
+      // Nome do evento publicado na transição.
       event: ReviewStarted
+      // Título exibido no histórico.
       title: { pt-BR: "Análise iniciada", en: "Review started" }
+      // Dados transportados pelo evento de início de análise.
       payload {
+        // Instante em que a análise começou.
         at: DateTime { title: { pt-BR: "Iniciada em", en: "Started at" } }
       }
     }
 
+    // Transição para Rejected na recusa após a triagem.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      // Dados transportados pelo evento de recusa.
       payload {
+        // Motivo textual da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        // Instante em que a recusa ocorreu.
         at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
       }
     }
   }
+  // Estado em que o sinistro está em análise pelo ajustador.
   value UnderReview {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Em análise", en: "Under review" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.underReview
+    // Ordem de exibição no fluxo de estados.
     ordinal: 30
 
+    // Transição para Approved após a decisão favorável.
     transition Approved {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro aprovado", en: "Claim approved" }
+      // Dados transportados pelo evento de aprovação.
       payload {
+        // Valor aprovado para indenização.
         approvedAmount: std.Money { title: { pt-BR: "Valor aprovado", en: "Approved amount" } }
+        // Instante em que a aprovação ocorreu.
         at: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
       }
     }
 
+    // Transição para Rejected após a decisão desfavorável.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro recusado", en: "Claim rejected" }
+      // Dados transportados pelo evento de recusa.
       payload {
+        // Motivo textual da recusa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+        // Instante em que a recusa ocorreu.
         at: DateTime { title: { pt-BR: "Recusado em", en: "Rejected at" } }
       }
     }
   }
+  // Estado em que o sinistro foi aprovado e aguarda pagamento.
   value Approved {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Aprovado", en: "Approved" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.approved
+    // Ordem de exibição no fluxo de estados.
     ordinal: 40
 
+    // Transição para Paid após a confirmação do pagamento.
     transition Paid {
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro pago", en: "Claim paid" }
+      // Dados transportados pelo evento de pagamento.
       payload {
+        // Instante em que o pagamento ocorreu.
         paidAt: DateTime { title: { pt-BR: "Pago em", en: "Paid at" } }
+        // Valor efetivamente pago.
         amount: std.Money { title: { pt-BR: "Valor pago", en: "Paid amount" } }
       }
     }
 
+    // Transição de volta para UnderReview, nomeada Reopened.
     transition UnderReview {
+      // Nome do evento publicado na reabertura.
       event: Reopened
+      // Título exibido no histórico.
       title: { pt-BR: "Sinistro reaberto", en: "Claim reopened" }
+      // Dados transportados pelo evento de reabertura.
       payload {
+        // Instante em que a reabertura ocorreu.
         at: DateTime { title: { pt-BR: "Reaberto em", en: "Reopened at" } }
       }
     }
   }
+  // Estado final em que o sinistro foi recusado.
   value Rejected {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Recusado", en: "Rejected" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.rejected
+    // Ordem de exibição no fluxo de estados.
     ordinal: 50
   }
+  // Estado final em que o sinistro foi pago.
   value Paid {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Pago", en: "Paid" }
+    // Ícone do estado no quadro e na linha do tempo.
     icon: status.paid
+    // Ordem de exibição no fluxo de estados.
     ordinal: 60
   }
 }
 
+// Classificação que define os tipos de sinistro aceitos.
 shape ClaimType {
+  // Título exibido na interface.
   title: { pt-BR: "Tipo de sinistro", en: "Claim type" }
+  // Base do shape: classificação fechada de valores.
   base: classification
 
+  // Sinistro por colisão de veículo.
   value Collision {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Colisão", en: "Collision" }
+    // Ícone exibido junto ao valor.
     icon: claim.collision
+    // Ordem de exibição na lista de valores.
     ordinal: 10
   }
+  // Sinistro por furto.
   value Theft {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Furto", en: "Theft" }
+    // Ícone exibido junto ao valor.
     icon: claim.theft
+    // Ordem de exibição na lista de valores.
     ordinal: 20
   }
+  // Sinistro por incêndio.
   value Fire {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Incêndio", en: "Fire" }
+    // Ícone exibido junto ao valor.
     icon: claim.fire
+    // Ordem de exibição na lista de valores.
     ordinal: 30
   }
+  // Sinistro de outra natureza não classificada.
   value Other {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Outro", en: "Other" }
+    // Ícone exibido junto ao valor.
     icon: claim.other
+    // Ordem de exibição na lista de valores.
     ordinal: 40
   }
 }
 
+// Classificação que expressa a faixa de risco de fraude do sinistro.
 shape FraudBand {
+  // Título exibido na interface.
   title: { pt-BR: "Faixa de risco de fraude", en: "Fraud risk band" }
+  // Base do shape: classificação fechada de valores.
   base: classification
 
+  // Risco baixo de fraude.
   value Low {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Baixo", en: "Low" }
+    // Ícone exibido junto ao valor.
     icon: fraud.low
+    // Ordem de exibição na lista de valores.
     ordinal: 10
   }
+  // Risco médio de fraude.
   value Medium {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Médio", en: "Medium" }
+    // Ícone exibido junto ao valor.
     icon: fraud.medium
+    // Ordem de exibição na lista de valores.
     ordinal: 20
   }
+  // Risco alto de fraude, que dispara a análise especializada.
   value High {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Alto", en: "High" }
+    // Ícone exibido junto ao valor.
     icon: fraud.high
+    // Ordem de exibição na lista de valores.
     ordinal: 30
   }
 }
 
+// Classificação que define os tipos de evidência aceitos na investigação.
 shape EvidenceKind {
+  // Título exibido na interface.
   title: { pt-BR: "Tipo de evidência", en: "Evidence kind" }
+  // Base do shape: classificação fechada de valores.
   base: classification
 
+  // Evidência do tipo documento.
   value Document {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Documento", en: "Document" }
+    // Ícone exibido junto ao valor.
     icon: evidence.document
+    // Ordem de exibição na lista de valores.
     ordinal: 10
   }
+  // Evidência do tipo fotografia.
   value Photo {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Foto", en: "Photo" }
+    // Ícone exibido junto ao valor.
     icon: evidence.photo
+    // Ordem de exibição na lista de valores.
     ordinal: 20
   }
+  // Evidência do tipo testemunha.
   value Witness {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Testemunha", en: "Witness" }
+    // Ícone exibido junto ao valor.
     icon: evidence.witness
+    // Ordem de exibição na lista de valores.
     ordinal: 30
   }
+  // Evidência do tipo laudo técnico.
   value Report {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Laudo", en: "Report" }
+    // Ícone exibido junto ao valor.
     icon: evidence.report
+    // Ordem de exibição na lista de valores.
     ordinal: 40
   }
 }
 
+// Tabela operacional que lista os sinistros para triagem e análise.
 view ClaimsTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Sinistros", en: "Claims" }
+  // Tipo da view: tabela.
   type: table
+  // Documento exibido pela view.
   source: Claim
+  // Papéis que podem abrir a tabela.
   roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager]
 
+  // Colunas exibidas em cada linha.
   columns { number; claimant; type; amount; status; openedAt }
+  // Filtros disponíveis para recortar a lista.
   filters { status; type; period; coverage }
+  // Quantidade de linhas carregadas por página.
   pagination: 50
 
+  // Ações disparadas a partir da tabela.
   actions {
+    // Abre o detalhe do sinistro selecionado.
     open -> ClaimDetail
+    // Executa a triagem com os parâmetros do formulário.
     triage -> Claim.triage(coveredNow, claimType, assignedAdjuster)
+    // Executa a recusa com o motivo informado.
     reject -> Claim.reject(reason)
   }
 }
 
+// Tela de detalhe que reúne dados, seções e ações do sinistro.
 view ClaimDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do sinistro", en: "Claim detail" }
+  // Tipo da view: detalhe de documento.
   type: detail
+  // Documento exibido pela view.
   document: Claim
+  // Papéis que podem abrir o detalhe.
   roles: [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst, Manager, Policyholder]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; coverage; evidence; settlement; timeline }
 
+  // Ações disponíveis no detalhe do sinistro.
   actions {
+    // Inicia a análise do sinistro.
     startReview -> Claim.startReview
+    // Aprova o sinistro com o valor informado.
     approve -> Claim.approve(approvedTotal)
+    // Recusa o sinistro com o motivo informado.
     reject -> Claim.reject(reason)
+    // Abre o andamento do processo do sinistro.
     open -> ClaimProgress
   }
 }
 
+// Quadro kanban que agrupa sinistros por situação para gestão visual.
 view ClaimsKanban {
+  // Título exibido na navegação.
   title: { pt-BR: "Quadro de sinistros", en: "Claims board" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento exibido pelo quadro.
   source: Claim
+  // Papéis que podem abrir o quadro.
   roles: [Clerk, Adjuster, Manager]
+  // Agrupa os cartões pela situação do sinistro.
   groupBy: status
 
+  // Colunas exibidas em cada cartão resumido.
   columns { number; amount; type }
+  // Campos exibidos no cartão do quadro.
   card { number; amount; adjuster }
+  // Filtra o quadro para os sinistros do usuário atual.
   filter { adjuster = currentUser }
 
+  // Ações disparadas a partir do quadro.
   actions {
+    // Abre o detalhe do sinistro selecionado.
     open -> ClaimDetail
   }
 }
 
+// Mensagem que instrui o pagamento da liquidação ao setor financeiro.
 message PaymentInstruction {
+  // Título exibido na inbox e no histórico.
   title: { pt-BR: "Instrução de pagamento", en: "Payment instruction" }
+  // Documento ao qual a mensagem se refere.
   about: Claim
 
+  // Dados transportados pela mensagem.
   payload {
+    // Número da liquidação a pagar.
     settlementNumber: string { title: { pt-BR: "Liquidação", en: "Settlement" } }
+    // Valor a ser pago.
     amount: std.Money { title: { pt-BR: "Valor", en: "Amount" } }
   }
 }
 
+// Mensagem que confirma ao processo o pagamento realizado.
 message PaymentConfirmation {
+  // Título exibido na inbox e no histórico.
   title: { pt-BR: "Confirmação de pagamento", en: "Payment confirmation" }
+  // Documento ao qual a mensagem se refere.
   about: Claim
 
+  // Dados transportados pela mensagem.
   payload {
+    // Referência bancária do pagamento.
     reference: string { title: { pt-BR: "Referência bancária", en: "Bank reference" } }
   }
 }

@@ -1,11 +1,15 @@
 // service: example.com/services/contracts
 
+// Caixa de entrada pessoal que reúne as tarefas de contrato de cada papel.
 view MyContractTasks {
+  // Título exibido na navegação.
   title: { pt-BR: "Minhas tarefas de contratos", en: "My contract tasks" }
-  type: inbox
+  type: inbox // Tipo do artefato: caixa de entrada de tarefas.
+  // Papéis autorizados a abrir a caixa de entrada.
   roles: [ContractManager, ContractAnalyst, LegalCounsel]
 
-  scope: mine
-  groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  scope: mine // Mostra apenas itens atribuídos ao usuário logado.
+  groupBy: process // Agrupa as tarefas pelo processo de origem.
+  // Colunas exibidas em cada linha da lista.
+  columns { title; subject; role; dueAt; priority }
 }

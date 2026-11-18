@@ -1,210 +1,348 @@
 // service: example.com/services/procurement
 
+// Documento que representa um pedido de compra emitido ao fornecedor.
 document PurchaseOrder {
+  // Título exibido na interface.
   title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pela manutenção do artefato.
   owner: "Procurement"
+  // Modo de sincronização do documento: leitura.
   sync: read
 
+  // Campos que compõem o pedido de compra.
   fields {
+    // Número identificador do pedido; único e consultável.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Limita o número a quarenta caracteres.
       maxLength: 40
+      // Impede dois pedidos com o mesmo número.
       unique
+      // Permite localizar o pedido pelo número.
       lookup
     }
+    // Fornecedor que receberá o pedido.
     supplier: Supplier {
+      // Título exibido no formulário.
       title: { pt-BR: "Fornecedor", en: "Supplier" }
+      // Permite localizar o pedido pelo fornecedor.
       lookup
     }
+    // Itens que compõem o pedido.
     items: PurchaseItem[] {
+      // Título exibido no formulário.
       title: { pt-BR: "Itens", en: "Items" }
     }
+    // Valor total do pedido, em moeda forte.
     amount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Valor total", en: "Total amount" }
+      // Moeda do valor do pedido.
       currency: BRL
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Condição de pagamento negociada com o fornecedor.
     paymentTerms: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Condição de pagamento", en: "Payment terms" }
+      // Limita a condição a cento e vinte caracteres.
       maxLength: 120
     }
+    // Situação atual do pedido no ciclo de vida.
     status: PurchaseOrderStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar o pedido pela situação.
       lookup
     }
+    // Data e hora em que o pedido foi enviado ao fornecedor.
     sentAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Enviado em", en: "Sent at" }
     }
+    // Data e hora em que o fornecedor confirmou o pedido.
     confirmedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Confirmado em", en: "Confirmed at" }
     }
+    // Data e hora em que a mercadoria foi recebida.
     receivedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Recebido em", en: "Received at" }
     }
+    // Data e hora em que o pedido foi cancelado.
     cancelledAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Cancelado em", en: "Cancelled at" }
     }
+    // Motivo que levou ao cancelamento do pedido.
     cancellationReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
   }
 
 
+  // Ações que conduzem o pedido pelo ciclo de envio, confirmação e recebimento.
   actions {
+    // Envia o pedido ao fornecedor e o move para Sent.
     send() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Enviar pedido", en: "Send order" }
+      // Papéis autorizados a enviar o pedido.
       roles: [Buyer]
+      // Transição disparada ao enviar.
       to: status.Sent
       {
+        // Registra o instante do envio.
         sentAt = now()
       }
     }
 
+    // Confirma o pedido e o move para Confirmed.
     confirm() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Confirmar pedido", en: "Confirm order" }
+      // Papéis autorizados a confirmar o pedido.
       roles: [Buyer]
+      // Transição disparada ao confirmar.
       to: status.Confirmed
       {
+        // Registra o instante da confirmação.
         confirmedAt = now()
       }
     }
 
+    // Registra o recebimento da mercadoria e move o pedido para Received.
     receive() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
+      // Papéis autorizados a registrar o recebimento.
       roles: [ReceivingClerk]
+      // Transição disparada ao receber.
       to: status.Received
       {
+        // Registra o instante do recebimento.
         receivedAt = now()
       }
     }
 
+    // Cancela o pedido informando o motivo.
     cancel(cancellationReason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Cancelar pedido", en: "Cancel order" }
+      // Papéis autorizados a cancelar o pedido.
       roles: [Buyer, ProcurementManager]
+      // Transição disparada ao cancelar.
       to: status.Cancelled
+      // Emite o evento com o motivo do cancelamento.
       emits { reason: cancellationReason }
       {
+        // Registra o instante do cancelamento.
         cancelledAt = now()
       }
     }
   }
 
+  // Índices de consulta mantidos para o documento.
   indexes {
+    // Índice único pelo número, evitando duplicidade.
     byNumber: [number] unique
+    // Índice de faixa por situação e envio, para listagens ordenadas.
     byStatus: [status, sentAt] range
+    // Índice hash pelo fornecedor, para busca direta.
     bySupplier: [supplier.id] hash
   }
 
+  // Regra que exige valor positivo no pedido.
   rule amount > 0 BRL {
+    // Mensagem da regra em português.
     pt-BR: "O pedido precisa ter valor positivo"
+    // Mensagem da regra em inglês.
     en: "The order must have a positive amount"
   }
 }
 
+// Forma do ciclo de vida do pedido de compra.
 shape PurchaseOrderStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do pedido de compra", en: "Purchase order status" }
+  // Base da forma: máquina de estados.
   base: state
+  // Estado inicial de todo pedido criado.
   initial: Draft
+  // Estado de rascunho, antes do envio ao fornecedor.
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado.
     icon: Draft
+    // Ordem de exibição do estado.
     ordinal: 10
 
+    // Transição para pedido enviado.
     transition Sent {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido enviado", en: "Purchase order sent" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do envio.
         sentAt: DateTime { title: { pt-BR: "Enviado em", en: "Sent at" } }
       }
     }
 
+    // Transição para pedido cancelado.
     transition Cancelled {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de pedido enviado ao fornecedor.
   value Sent {
+    // Título exibido na interface.
     title: { pt-BR: "Enviado", en: "Sent" }
+    // Ícone associado ao estado.
     icon: Sent
+    // Ordem de exibição do estado.
     ordinal: 20
 
+    // Transição para pedido confirmado.
     transition Confirmed {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido confirmado", en: "Purchase order confirmed" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora da confirmação.
         confirmedAt: DateTime { title: { pt-BR: "Confirmado em", en: "Confirmed at" } }
       }
     }
 
+    // Transição para pedido cancelado.
     transition Cancelled {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido cancelado", en: "Purchase order cancelled" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do cancelamento.
         cancelledAt: DateTime { title: { pt-BR: "Cancelado em", en: "Cancelled at" } }
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de pedido confirmado pelo fornecedor.
   value Confirmed {
+    // Título exibido na interface.
     title: { pt-BR: "Confirmado", en: "Confirmed" }
+    // Ícone associado ao estado.
     icon: Confirmed
+    // Ordem de exibição do estado.
     ordinal: 30
 
+    // Transição para pedido recebido.
     transition Received {
+      // Título exibido no histórico.
       title: { pt-BR: "Pedido recebido", en: "Purchase order received" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do recebimento.
         receivedAt: DateTime { title: { pt-BR: "Recebido em", en: "Received at" } }
       }
     }
   }
+  // Estado de pedido recebido.
   value Received {
+    // Título exibido na interface.
     title: { pt-BR: "Recebido", en: "Received" }
+    // Ícone associado ao estado.
     icon: Received
+    // Ordem de exibição do estado.
     ordinal: 40
   }
+  // Estado de pedido cancelado.
   value Cancelled {
+    // Título exibido na interface.
     title: { pt-BR: "Cancelado", en: "Cancelled" }
+    // Ícone associado ao estado.
     icon: Cancelled
+    // Ordem de exibição do estado.
     ordinal: 50
   }
 }
 
+// Forma que descreve uma linha de item do pedido de compra.
 shape PurchaseItem {
+  // Título exibido na interface.
   title: { pt-BR: "Item de compra", en: "Purchase item" }
+  // Campos que compõem o item.
   fields {
+    // Descrição do item comprado.
     description: string { title: { pt-BR: "Descrição", en: "Description" } }
+    // Quantidade comprada.
     quantity: std.Count { title: { pt-BR: "Quantidade", en: "Quantity" } }
+    // Preço unitário do item, em moeda forte.
     unitPrice: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Preço unitário", en: "Unit price" }
+      // Moeda do preço unitário.
       currency: BRL
     }
   }
 }
 
+// View de listagem dos pedidos de compra.
 view PurchaseOrders {
+  // Título exibido na navegação.
   title: { pt-BR: "Pedidos de compra", en: "Purchase orders" }
+  // Tipo da view: tabela.
   type: table
+  // Documento que alimenta a tabela.
   source: PurchaseOrder
+  // Papéis que podem abrir a view.
   roles: [Buyer, ProcurementManager, ReceivingClerk]
 
+  // Colunas exibidas na tabela.
   columns { number; supplier; amount; status; sentAt }
+  // Filtros disponíveis na tabela.
   filters { status; supplier }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na listagem.
   actions {
+    // Abre o detalhe do pedido selecionado.
     open -> PurchaseOrderDetail
+    // Envia o pedido direto da listagem.
     send -> PurchaseOrder.send
+    // Cancela o pedido direto da listagem, pedindo o motivo.
     cancel -> PurchaseOrder.cancel(cancellationReason)
   }
 }
 
+// View de detalhe de um pedido de compra.
 view PurchaseOrderDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do pedido de compra", en: "Purchase order detail" }
+  // Tipo da view: detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: PurchaseOrder
+  // Papéis que podem abrir a view.
   roles: [Buyer, ProcurementManager, ReceivingClerk]
 
+  // Seções exibidas na tela.
   sections { summary; items; timeline }
 }

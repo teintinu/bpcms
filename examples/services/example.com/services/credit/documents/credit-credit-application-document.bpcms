@@ -1,219 +1,368 @@
 // service: example.com/services/credit
 
+// Documento que representa a proposta de crédito de um proponente.
 document CreditApplication {
+  // Título exibido na interface e nos relatórios.
   title: { pt-BR: "Proposta de crédito", en: "Credit application" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Credit"
+  // Sincronização de leitura: consumidores leem sem escrever no documento.
   sync: read
 
+  // Campos que compõem a proposta de crédito.
   fields {
+    // Número identificador legível da proposta.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Limita o número a quarenta caracteres.
       maxLength: 40
+      // Impede duas propostas com o mesmo número.
       unique
+      // Permite localizar a proposta pelo número.
       lookup
     }
+    // Proponente que solicita o crédito; referência a um usuário.
     applicant: Identity.User {
+      // Título exibido no formulário.
       title: { pt-BR: "Proponente", en: "Applicant" }
+      // Permite localizar a proposta pelo proponente.
       lookup
     }
+    // Valor de crédito solicitado, em medida monetária padrão.
     requestedAmount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Valor solicitado", en: "Requested amount" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Renda mensal declarada pelo proponente.
     monthlyIncome: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Renda mensal", en: "Monthly income" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
     }
+    // Exposição de crédito que o proponente já possui.
     existingExposure: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Exposição atual", en: "Existing exposure" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
     }
+    // Finalidade declarada para o crédito solicitado.
     purpose: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Finalidade", en: "Purpose" }
+      // Limita o texto a duzentos e quarenta caracteres.
       maxLength: 240
     }
+    // Situação da proposta dentro do fluxo de análise.
     status: CreditApplicationStatus {
+      // Título exibido no formulário e nos filtros.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar e filtrar propostas pela situação.
       lookup
     }
+    // Score de risco devolvido pelo bureau de crédito.
     bureauScore: std.Count {
+      // Título exibido no formulário.
       title: { pt-BR: "Score do bureau", en: "Bureau score" }
     }
+    // Faixa de risco calculada a partir do score.
     riskBand: RiskBand {
+      // Título exibido no formulário e nos filtros.
       title: { pt-BR: "Faixa de risco", en: "Risk band" }
+      // Permite filtrar propostas pela faixa de risco.
       lookup
     }
+    // Limite de crédito aprovado ao final da análise.
     approvedLimit: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Limite aprovado", en: "Approved limit" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
     }
+    // Instante em que a proposta foi enviada para análise.
     submittedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Enviada em", en: "Submitted at" }
     }
+    // Instante em que a análise da proposta foi iniciada.
     reviewStartedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Análise iniciada em", en: "Review started at" }
     }
+    // Instante em que a proposta foi aprovada.
     approvedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Aprovada em", en: "Approved at" }
     }
+    // Instante em que a proposta foi rejeitada.
     rejectedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Rejeitada em", en: "Rejected at" }
     }
+    // Motivo textual informado ao rejeitar a proposta.
     rejectionReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
+    // Analista responsável pela análise da proposta.
     analyst: Identity.User {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Analista", en: "Analyst" }
     }
   }
 
 
+  // Comandos que alteram o estado da proposta e disparam transições.
   actions {
+    // Envia a proposta: qualquer interessado pode iniciar o fluxo.
     submit() {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Enviar proposta", en: "Submit application" }
+      // Acesso público: não exige papel autenticado.
       roles: public
+      // Transita a situação para Submitted.
       to: status.Submitted
+      // Corpo executado na transição.
       {
+        // Registra o instante do envio.
         submittedAt = now()
       }
     }
 
+    // Inicia a análise manual da proposta.
     startReview() {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Iniciar análise", en: "Start review" }
+      // Restringe a action ao analista de crédito.
       roles: [CreditAnalyst]
+      // Transita a situação para UnderReview.
       to: status.UnderReview
+      // Corpo executado na transição.
       {
+        // Registra o instante de início da análise.
         reviewStartedAt = now()
       }
     }
 
+    // Registra o score e a faixa de risco apurados pelo bureau.
     recordRisk(bureauScore: std.Count, riskBand: RiskBand) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Registrar risco", en: "Record risk" }
+      // Restringe a action ao analista de crédito.
       roles: [CreditAnalyst]
     }
 
+    // Aprova a proposta com o limite concedido.
     approve(approvedLimit: std.Money) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Aprovar crédito", en: "Approve credit" }
+      // Permite a aprovação ao analista e ao gerente.
       roles: [CreditAnalyst, CreditManager]
+      // Transita a situação para Approved.
       to: status.Approved
+      // Corpo executado na transição.
       {
+        // Registra o instante da aprovação.
         approvedAt = now()
       }
     }
 
+    // Rejeita a proposta informando o motivo.
     reject(rejectionReason: string) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Rejeitar crédito", en: "Reject credit" }
+      // Permite a rejeição ao analista e ao gerente.
       roles: [CreditAnalyst, CreditManager]
+      // Transita a situação para Rejected.
       to: status.Rejected
+      // Emite o evento de rejeição com o motivo informado.
       emits { reason: rejectionReason }
+      // Corpo executado na transição.
       {
+        // Registra o instante da rejeição.
         rejectedAt = now()
       }
     }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Índice único pelo número da proposta.
     byNumber: [number] unique
+    // Índice de faixa para consultar por situação e data de envio.
     byStatus: [status, submittedAt] range
+    // Índice hash pelo id do proponente.
     byApplicant: [applicant.id] hash
   }
 
+  // Invariante de negócio validada a cada gravação da proposta.
   rule requestedAmount > 0 BRL {
+    // Mensagem da regra em português.
     pt-BR: "O valor solicitado precisa ser positivo"
+    // Mensagem da regra em inglês.
     en: "Requested amount must be positive"
   }
 
+  // Segregação de funções entre as actions do documento.
   segregation {
+    // Quem envia a proposta não pode aprová-la.
     submit != approve
   }
 }
 
+// Forma de estado com as situações possíveis da proposta.
 shape CreditApplicationStatus {
+  // Título exibido onde a situação é referenciada.
   title: { pt-BR: "Situação da proposta de crédito", en: "Credit application status" }
+  // Base state: os valores são estados de uma máquina de estados.
   base: state
+  // Estado inicial de toda proposta criada.
   initial: Draft
+  // Estado de rascunho: proposta ainda não enviada.
   value Draft {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado, resolvido pelo nome Draft.
     icon: Draft
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 10
 
+    // Transição disparada pelo envio da proposta.
     transition Submitted {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Proposta enviada", en: "Credit application submitted" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante do envio transportado no evento.
         submittedAt: DateTime { title: { pt-BR: "Enviada em", en: "Submitted at" } }
+        // Valor solicitado transportado no evento.
         requestedAmount: std.Money { title: { pt-BR: "Valor solicitado", en: "Requested amount" } }
       }
     }
   }
+  // Estado de proposta enviada, aguardando análise.
   value Submitted {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Enviada", en: "Submitted" }
+    // Ícone associado ao estado, resolvido pelo nome Submitted.
     icon: Submitted
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 20
 
+    // Transição disparada pelo início da análise.
     transition UnderReview {
+      // Nome do evento que dispara a transição.
       event: ReviewStarted
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Análise iniciada", en: "Credit review started" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante de início da análise transportado no evento.
         reviewStartedAt: DateTime { title: { pt-BR: "Iniciada em", en: "Started at" } }
       }
     }
   }
+  // Estado de proposta em análise manual.
   value UnderReview {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Em análise", en: "Under review" }
+    // Ícone associado ao estado, resolvido pelo nome UnderReview.
     icon: UnderReview
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 30
 
+    // Transição disparada pela aprovação do crédito.
     transition Approved {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Crédito aprovado", en: "Credit approved" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da aprovação transportado no evento.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+        // Limite aprovado transportado no evento.
         approvedLimit: std.Money { title: { pt-BR: "Limite aprovado", en: "Approved limit" } }
       }
     }
 
+    // Transição disparada pela rejeição do crédito.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Crédito rejeitado", en: "Credit rejected" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da rejeição transportado no evento.
         rejectedAt: DateTime { title: { pt-BR: "Rejeitada em", en: "Rejected at" } }
+        // Motivo da rejeição transportado no evento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado final de proposta aprovada.
   value Approved {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Ícone associado ao estado, resolvido pelo nome Approved.
     icon: Approved
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 40
   }
+  // Estado final de proposta rejeitada.
   value Rejected {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
+    // Ícone associado ao estado, resolvido pelo nome Rejected.
     icon: Rejected
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 50
   }
 }
 
+// View de listagem das propostas de crédito.
 view CreditApplications {
+  // Título exibido na navegação.
   title: { pt-BR: "Propostas de crédito", en: "Credit applications" }
+  // Tipo table: listagem paginada em formato tabular.
   type: table
+  // Documento que fornece as linhas da tabela.
   source: CreditApplication
+  // Papéis autorizados a abrir a listagem.
   roles: [CreditAnalyst, CreditManager]
 
+  // Colunas exibidas em cada linha da tabela.
   columns { number; applicant; requestedAmount; monthlyIncome; riskBand; status; submittedAt }
+  // Filtros disponíveis na listagem.
   filters { status; riskBand; applicant }
+  // Tamanho da página: cinquenta registros por vez.
   pagination: 50
 
+  // Ações de linha disponíveis na listagem.
   actions {
+    // Abrir uma proposta navega para a view de detalhe.
     open -> CreditApplicationDetail
   }
 }
 
+// View de detalhe de uma proposta de crédito.
 view CreditApplicationDetail {
+  // Título exibido na navegação e no cabeçalho da tela.
   title: { pt-BR: "Detalhe da proposta", en: "Credit application detail" }
+  // Tipo detail: tela de detalhe de um registro.
   type: detail
+  // Documento exibido pela view.
   document: CreditApplication
+  // Papéis autorizados a abrir o detalhe.
   roles: [CreditAnalyst, CreditManager]
 
+  // Seções fixas exibidas na tela de detalhe.
   sections { summary; timeline }
 }

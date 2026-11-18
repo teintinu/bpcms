@@ -1,191 +1,315 @@
 // service: example.com/services/procurement
 
+// Documento que registra o recebimento e a conferência da mercadoria.
 document GoodsReceipt {
+  // Título exibido na interface.
   title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pela manutenção do artefato.
   owner: "Procurement"
+  // Modo de sincronização do documento: leitura.
   sync: read
 
+  // Campos que compõem o recebimento.
   fields {
+    // Número identificador do recebimento; único e consultável.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Limita o número a quarenta caracteres.
       maxLength: 40
+      // Impede dois recebimentos com o mesmo número.
       unique
+      // Permite localizar o recebimento pelo número.
       lookup
     }
+    // Pedido de compra que originou o recebimento.
     order: PurchaseOrder {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido de compra", en: "Purchase order" }
+      // Permite localizar o recebimento pelo pedido.
       lookup
     }
+    // Peso esperado da mercadoria, conforme o pedido.
     expectedWeight: std.Mass {
+      // Título exibido no formulário.
       title: { pt-BR: "Peso esperado", en: "Expected weight" }
+      // Unidade de medida do peso esperado.
       unit: kg
     }
+    // Peso aferido na balança no momento do recebimento.
     receivedWeight: std.Mass {
+      // Título exibido no formulário.
       title: { pt-BR: "Peso recebido", en: "Received weight" }
+      // Unidade de medida do peso recebido.
       unit: kg
+      // Impede edição manual: o valor vem do dispositivo.
       readonly
     }
+    // Data e hora em que a mercadoria foi recebida.
     receivedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Recebido em", en: "Received at" }
     }
+    // Data e hora em que a mercadoria foi inspecionada.
     inspectedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Inspecionado em", en: "Inspected at" }
     }
+    // Data e hora em que o estoque foi reservado.
     reservedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Reservado em", en: "Reserved at" }
     }
+    // Data e hora em que a reserva de estoque foi liberada.
     releasedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Liberado em", en: "Released at" }
     }
+    // Situação atual do recebimento no ciclo de vida.
     status: GoodsReceiptStatus {
+      // Título exibido no formulário.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar o recebimento pela situação.
       lookup
     }
+    // Motivo da divergência encontrada na conferência.
     divergenceReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da divergência", en: "Divergence reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
+    // Data e hora em que a divergência foi registrada.
     divergedAt: DateTime {
+      // Título exibido no formulário.
       title: { pt-BR: "Divergência registrada em", en: "Divergence recorded at" }
     }
+    // Depósito onde a mercadoria foi descarregada.
     warehouse: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Depósito", en: "Warehouse" }
+      // Limita o depósito a sessenta caracteres.
       maxLength: 60
     }
   }
 
+  // Integração de dispositivo: lê o peso recebido da balança scale-01.
   source: device "scale-01" for receivedWeight
 
 
+  // Ações que registram recebimento, reserva, inspeção e divergência.
   actions {
+    // Registra o recebimento e move o documento para Received.
     receive() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar recebimento", en: "Register receipt" }
+      // Papéis autorizados a registrar o recebimento.
       roles: [ReceivingClerk]
+      // Transição disparada ao receber.
       to: status.Received
       {
+        // Registra o instante do recebimento.
         receivedAt = now()
       }
     }
 
+    // Reserva o estoque da mercadoria recebida.
     reserveStock() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Reservar estoque", en: "Reserve stock" }
+      // Papéis autorizados a reservar o estoque.
       roles: [ReceivingClerk]
       {
+        // Registra o instante da reserva.
         reservedAt = now()
       }
     }
 
+    // Libera a reserva de estoque feita anteriormente.
     releaseStock() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Liberar reserva de estoque", en: "Release stock reservation" }
+      // Papéis autorizados a liberar a reserva.
       roles: [ReceivingClerk]
       {
+        // Registra o instante da liberação.
         releasedAt = now()
       }
     }
 
+    // Aceita o recebimento após a inspeção de qualidade.
     accept() {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aceitar recebimento", en: "Accept receipt" }
+      // Papéis autorizados a aceitar o recebimento.
       roles: [QualityInspector, ReceivingClerk]
       {
+        // Registra o instante da inspeção.
         inspectedAt = now()
       }
     }
 
+    // Registra a divergência e move o documento para Divergent.
     markDivergent(divergenceReason: string) {
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar divergência", en: "Record divergence" }
+      // Papéis autorizados a registrar a divergência.
       roles: [QualityInspector, ReceivingClerk]
+      // Transição disparada ao registrar a divergência.
       to: status.Divergent
+      // Emite o evento com o motivo da divergência.
       emits { reason: divergenceReason }
       {
+        // Registra o instante em que a divergência foi anotada.
         divergedAt = now()
       }
     }
   }
 
+  // Índices de consulta mantidos para o documento.
   indexes {
+    // Índice único pelo número, evitando duplicidade.
     byNumber: [number] unique
+    // Índice de faixa por situação e recebimento, para listagens ordenadas.
     byStatus: [status, receivedAt] range
+    // Índice hash pelo pedido, para busca direta.
     byOrder: [order.id] hash
   }
 }
 
+// Forma do ciclo de vida do recebimento de mercadoria.
 shape GoodsReceiptStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do recebimento", en: "Goods receipt status" }
+  // Base da forma: máquina de estados.
   base: state
+  // Estado inicial de todo recebimento criado.
   initial: Pending
+  // Estado pendente, antes do recebimento físico.
   value Pending {
+    // Título exibido na interface.
     title: { pt-BR: "Pendente", en: "Pending" }
+    // Ícone associado ao estado.
     icon: Pending
+    // Ordem de exibição do estado.
     ordinal: 10
 
+    // Transição para mercadoria recebida.
     transition Received {
+      // Título exibido no histórico.
       title: { pt-BR: "Mercadoria recebida", en: "Goods received" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora do recebimento.
         receivedAt: DateTime { title: { pt-BR: "Recebido em", en: "Received at" } }
+        // Peso aferido no recebimento.
         receivedWeight: std.Mass { title: { pt-BR: "Peso recebido", en: "Received weight" } }
       }
     }
   }
+  // Estado de mercadoria recebida.
   value Received {
+    // Título exibido na interface.
     title: { pt-BR: "Recebido", en: "Received" }
+    // Ícone associado ao estado.
     icon: Received
+    // Ordem de exibição do estado.
     ordinal: 20
 
+    // Transição para recebimento divergente.
     transition Divergent {
+      // Título exibido no histórico.
       title: { pt-BR: "Recebimento divergente", en: "Goods receipt divergent" }
+      // Dados carregados pela transição.
       payload {
+        // Data e hora em que a divergência foi registrada.
         divergedAt: DateTime { title: { pt-BR: "Registrado em", en: "Recorded at" } }
+        // Motivo da divergência.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de recebimento divergente.
   value Divergent {
+    // Título exibido na interface.
     title: { pt-BR: "Divergente", en: "Divergent" }
+    // Ícone associado ao estado.
     icon: Divergent
+    // Ordem de exibição do estado.
     ordinal: 30
   }
 }
 
+// View de listagem dos recebimentos.
 view GoodsReceipts {
+  // Título exibido na navegação.
   title: { pt-BR: "Recebimentos", en: "Goods receipts" }
+  // Tipo da view: tabela.
   type: table
+  // Documento que alimenta a tabela.
   source: GoodsReceipt
+  // Papéis que podem abrir a view.
   roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
 
+  // Colunas exibidas na tabela.
   columns { number; order; expectedWeight; receivedWeight; status; receivedAt }
+  // Filtros disponíveis na tabela.
   filters { status; order }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis na listagem.
   actions {
+    // Abre o detalhe do recebimento selecionado.
     open -> GoodsReceiptDetail
   }
 }
 
+// View de detalhe de um recebimento.
 view GoodsReceiptDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do recebimento", en: "Goods receipt detail" }
+  // Tipo da view: detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: GoodsReceipt
+  // Papéis que podem abrir a view.
   roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
 
+  // Seções exibidas na tela.
   sections { summary; timeline }
 }
 
+// View de andamento do processo de recebimento.
 view GoodsReceiptProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento do recebimento", en: "Goods receipt progress" }
+  // Tipo da view: andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: GoodsReceipt
+  // Papéis que podem abrir a view.
   roles: [ReceivingClerk, QualityInspector, Buyer, ProcurementManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }
 
+// Mensagem de aviso quando o recebimento apresenta divergência.
 message DivergenceNotice {
+  // Título exibido na notificação.
   title: { pt-BR: "Aviso de divergência no recebimento", en: "Goods receipt divergence notice" }
+  // Documento ao qual a mensagem se refere.
   about: GoodsReceipt
+  // Dados carregados pela mensagem.
   payload {
+    // Motivo da divergência.
     reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
+    // Peso esperado para conferência.
     expectedWeight: std.Mass { title: { pt-BR: "Peso esperado", en: "Expected weight" } }
+    // Peso efetivamente recebido.
     receivedWeight: std.Mass { title: { pt-BR: "Peso recebido", en: "Received weight" } }
   }
 }

@@ -1,233 +1,337 @@
 // service: example.com/services/laboratory
 
+// Documento que representa uma amostra biológica coletada.
 document Sample {
+  // Título exibido na interface.
   title: { pt-BR: "Amostra", en: "Sample" }
-  version: 1
-  owner: "Laboratory"
-  sync: live
+  version: 1 // Versão do artefato Document.
+  owner: "Laboratory" // Dono de negócio do documento.
+  sync: live // Sincronização em tempo real entre cliente e servidor.
+  // Campos que compõem a amostra.
   fields {
+    // Código da amostra; único e consultável.
     code: SampleCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
+    // Laboratório responsável pela amostra.
     laboratory: Laboratory {
+      // Título exibido no formulário.
       title: { pt-BR: "Laboratório", en: "Laboratory" }
     }
+    // Origem da amostra; consultável para filtros.
     kind: SampleKind { title: { pt-BR: "Origem", en: "Origin" }, lookup }
+    // Paciente de quem a amostra foi coletada.
     patient: Citizen {
+      // Título exibido no formulário.
       title: { pt-BR: "Paciente", en: "Patient" }
+      // Permite localizar amostras pelo paciente.
       lookup
     }
+    // Laboratório de apoio que forneceu ou recebeu a amostra.
     supportLab: SupportLab {
+      // Título exibido no formulário.
       title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
     }
+    // Lote de controle de qualidade ao qual a amostra pertence.
     controlLot: string { title: { pt-BR: "Lote de controle", en: "Control lot" } }
+    // Situação da amostra; consultável para filtros.
     status: SampleStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Instante em que a amostra foi coletada.
     collectedAt: DateTime { title: { pt-BR: "Coletada em", en: "Collected at" } }
   }
 
+  // Índices secundários para consulta.
   indexes {
+    // Índice por situação e data de coleta, consultado por faixa.
     byStatus: [status, collectedAt] range
+    // Índice por paciente, consultado por igualdade.
     byPatient: [patient.id] hash
   }
 
 
+  // Ações que movimentam a amostra.
   actions {
+    // Action que registra a coleta da amostra.
     collect(){
+      // Título exibido na interface.
       title: { pt-BR: "Coletar", en: "Collect" }
-      roles: [Collector]
+      roles: [Collector] // Papéis autorizados a coletar.
+      // Corpo da action: registra a data e emite o evento Collected.
       {
+        // Registra o instante da coleta.
         collectedAt = now()
+        // Emite o evento de amostra coletada.
         emit Collected
       }
     }
 
+    // Action que refaz a coleta de uma amostra rejeitada.
     recollect(){
+      // Título exibido na interface.
       title: { pt-BR: "Recoletar", en: "Recollect" }
-      roles: [Collector]
-      to: status.Collected
+      roles: [Collector] // Papéis autorizados a recoletar.
+      to: status.Collected // Volta a amostra para o estado Collected.
+      // Corpo da action: atualiza a data da coleta.
       {
+        // Registra o novo instante da coleta.
         collectedAt = now()
       }
     }
 
+    // Action que registra o recebimento da amostra no laboratório.
     receive(){
+      // Título exibido na interface.
       title: { pt-BR: "Receber", en: "Receive" }
-      roles: [Collector]
-      to: status.Received
+      roles: [Collector] // Papéis autorizados a receber.
+      to: status.Received // Transição para o estado Received.
     }
 
+    // Action que rejeita a amostra com justificativa.
     reject(justification: string){
+      // Título exibido na interface.
       title: { pt-BR: "Rejeitar", en: "Reject" }
-      roles: [Analyst]
-      to: status.Rejected
+      roles: [Analyst] // Papéis autorizados a rejeitar.
+      to: status.Rejected // Transição para o estado Rejected.
+      // Emite a transição levando o motivo da rejeição.
       emits { reason: justification }
+      // Exige justificativa com pelo menos dez caracteres.
       rule justification.length >= 10 {
-        pt-BR: "Informe o motivo da rejeição"
-        en: "Enter the rejection reason"
+        pt-BR: "Informe o motivo da rejeição" // Mensagem do erro em português.
+        en: "Enter the rejection reason" // Mensagem do erro em inglês.
       }
     }
 
+    // Action que inicia o processamento da amostra.
     process(){
+      // Título exibido na interface.
       title: { pt-BR: "Processar", en: "Process" }
-      roles: [Analyst]
-      to: status.Processing
+      roles: [Analyst] // Papéis autorizados a processar.
+      to: status.Processing // Transição para o estado Processing.
     }
 
+    // Action que encaminha a amostra a um laboratório de apoio.
     refer(lab: SupportLab){
+      // Título exibido na interface.
       title: { pt-BR: "Encaminhar", en: "Refer" }
-      roles: [SupportLiaison]
-      to: status.Referred
+      roles: [SupportLiaison] // Papéis autorizados a encaminhar.
+      to: status.Referred // Transição para o estado Referred.
+      // Emite a transição levando o laboratório de destino.
       emits { supportLab: lab }
     }
 
+    // Action que registra o resultado da amostra.
     result(){
+      // Título exibido na interface.
       title: { pt-BR: "Resultar", en: "Result" }
-      roles: [Analyst]
-      to: status.Resulted
+      roles: [Analyst] // Papéis autorizados a resultar.
+      to: status.Resulted // Transição para o estado Resulted.
     }
   }
 
+  // Exige paciente quando a origem da amostra é Patient.
   rule kind == Patient implies patient != null {
-    pt-BR: "Selecione o paciente"
-    en: "Select the patient"
+    pt-BR: "Selecione o paciente" // Mensagem do erro em português.
+    en: "Select the patient" // Mensagem do erro em inglês.
 
   }
+  // Exige laboratório de apoio quando a origem é Support.
   rule kind == Support implies supportLab != null {
-    pt-BR: "Selecione o laboratório de apoio"
-    en: "Select the support lab"
+    pt-BR: "Selecione o laboratório de apoio" // Mensagem do erro em português.
+    en: "Select the support lab" // Mensagem do erro em inglês.
 
   }
+  // Exige lote de controle quando a origem é Control.
   rule kind == Control implies controlLot != null {
-    pt-BR: "Informe o lote de controle"
-    en: "Enter the control lot"
+    pt-BR: "Informe o lote de controle" // Mensagem do erro em português.
+    en: "Enter the control lot" // Mensagem do erro em inglês.
 
   }
 }
 
+// Shape do código da amostra, com normalização para maiúsculas.
 shape SampleCode {
+  // Título exibido na interface.
   title: { pt-BR: "Código da amostra", en: "Sample code" }
-  base: string
-  normalize: upper-trim
-  maxLength: 40
-  format: plain
+  base: string // Tipo base: texto simples.
+  normalize: upper-trim // Normaliza removendo espaços e convertendo para maiúsculas.
+  maxLength: 40 // Limita o código a quarenta caracteres.
+  format: plain // Exibição sem máscara.
 }
 
+// Shape de classificação com a origem da amostra.
 shape SampleKind {
+  // Título exibido na interface.
   title: { pt-BR: "Origem da amostra", en: "Sample origin" }
-  base: classification
+  base: classification // Tipo base: classificação fechada.
+  // Valor de origem "paciente".
   value Patient {
+    // Título exibido na interface.
     title: { pt-BR: "Paciente", en: "Patient" }
-    icon: Patient
-    ordinal: 10
+    icon: Patient // Ícone associado ao valor.
+    ordinal: 10 // Ordem de exibição do valor.
   }
+  // Valor de origem "laboratório de apoio".
   value Support {
+    // Título exibido na interface.
     title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" }
-    icon: Support
-    ordinal: 20
+    icon: Support // Ícone associado ao valor.
+    ordinal: 20 // Ordem de exibição do valor.
   }
+  // Valor de origem "controle".
   value Control {
+    // Título exibido na interface.
     title: { pt-BR: "Controle", en: "Control" }
-    icon: Control
-    ordinal: 30
+    icon: Control // Ícone associado ao valor.
+    ordinal: 30 // Ordem de exibição do valor.
   }
-  format: plain
+  format: plain // Exibição sem máscara.
 }
 
+// Shape de estado que acompanha o ciclo de vida da amostra.
 shape SampleStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação da amostra", en: "Sample status" }
-  base: state
+  base: state // Tipo base: máquina de estados.
+  // Estado inicial Collected, criado pela transição Collected.
   initial: Collected with transition Collected {
+    // Título exibido no histórico.
     title: { pt-BR: "Amostra coletada", en: "Sample collected" }
   }
+  // Estado "coletada".
   value Collected {
+    // Título exibido na interface.
     title: { pt-BR: "Coletada", en: "Collected" }
-    icon: Collected
-    ordinal: 10
+    icon: Collected // Ícone associado ao estado.
+    ordinal: 10 // Ordem de exibição do estado.
 
+    // Transição para o estado Received.
     transition Received {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra recebida", en: "Sample received" }
     }
 
+    // Transição para o estado Rejected.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      // Dados levados pela transição.
       payload {
+        // Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado "recebida".
   value Received {
+    // Título exibido na interface.
     title: { pt-BR: "Recebida", en: "Received" }
-    icon: Received
-    ordinal: 20
+    icon: Received // Ícone associado ao estado.
+    ordinal: 20 // Ordem de exibição do estado.
 
+    // Transição para o estado Rejected.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra rejeitada", en: "Sample rejected" }
+      // Dados levados pela transição.
       payload {
+        // Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição para o estado Processing.
     transition Processing {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra em processamento", en: "Sample processing" }
     }
 
+    // Transição para o estado Referred.
     transition Referred {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra encaminhada", en: "Sample referred" }
+      // Dados levados pela transição.
       payload {
+        // Laboratório de apoio de destino.
         supportLab: SupportLab { title: { pt-BR: "Laboratório de apoio", en: "Support laboratory" } }
       }
     }
   }
+  // Estado "em processamento".
   value Processing {
+    // Título exibido na interface.
     title: { pt-BR: "Em processamento", en: "Processing" }
-    icon: Processing
-    ordinal: 30
+    icon: Processing // Ícone associado ao estado.
+    ordinal: 30 // Ordem de exibição do estado.
 
+    // Transição para o estado Resulted.
     transition Resulted {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
+  // Estado "resultada".
   value Resulted {
+    // Título exibido na interface.
     title: { pt-BR: "Resultada", en: "Resulted" }
-    icon: Resulted
-    ordinal: 40
+    icon: Resulted // Ícone associado ao estado.
+    ordinal: 40 // Ordem de exibição do estado.
   }
+  // Estado "encaminhada".
   value Referred {
+    // Título exibido na interface.
     title: { pt-BR: "Encaminhada", en: "Referred" }
-    icon: Referred
-    ordinal: 50
+    icon: Referred // Ícone associado ao estado.
+    ordinal: 50 // Ordem de exibição do estado.
 
+    // Transição para o estado Resulted.
     transition Resulted {
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra resultada", en: "Sample resulted" }
     }
   }
+  // Estado "rejeitada".
   value Rejected {
+    // Título exibido na interface.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
-    icon: Rejected
-    ordinal: 60
+    icon: Rejected // Ícone associado ao estado.
+    ordinal: 60 // Ordem de exibição do estado.
 
+    // Transição de recoleta, disparada pelo evento Recollected.
     transition Collected {
+      // Evento que dispara a transição.
       event: Recollected
+      // Título exibido no histórico.
       title: { pt-BR: "Amostra recoletada", en: "Sample recollected" }
     }
   }
-  format: plain
+  format: plain // Exibição sem máscara.
 }
 
+// View de busca de amostras em formato de tabela.
 view SampleSearch {
+  // Título exibido na navegação.
   title: { pt-BR: "Busca de amostras", en: "Sample search" }
+  // Tipo da view: tabela de registros.
   type: table
+  // Documento que alimenta a tabela.
   source: Sample
-  roles: [Collector, Analyst, Pathologist, LabManager]
+  roles: [Collector, Analyst, Pathologist, LabManager] // Papéis que podem abrir a busca.
 
+  // Colunas exibidas na tabela.
   columns { code; kind; patient; status; collectedAt }
+  // Filtros disponíveis na busca.
   filters { status; kind; laboratory }
-  pagination: 50
+  pagination: 50 // Itens por página.
 }
 
+// Mensagem que pede a recoleta de uma amostra rejeitada.
 message RecollectionRequest {
+  // Título exibido na interface.
   title: { pt-BR: "Pedido de recoleta", en: "Recollection request" }
-  about: Sample
+  about: Sample // Documento ao qual a mensagem se refere.
+  // Dados levados pela mensagem.
   payload {
+    // Código da amostra a recoletar.
     code: SampleCode { title: { pt-BR: "Código da amostra", en: "Sample code" } }
+    // Instante em que a recoleta foi solicitada.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
   }
 }

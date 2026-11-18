@@ -1,49 +1,73 @@
 // service: example.com/services/billing
 
+// Ícone que representa o estado de rascunho.
 icon Draft {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
 
+// Ícone que representa um documento emitido.
 icon Issued {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Emitida", en: "Issued" }
 }
 
+// Ícone que representa um documento pago.
 icon Paid {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Paga", en: "Paid" }
 }
 
+// Ícone que representa um documento vencido.
 icon Overdue {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Vencida", en: "Overdue" }
 }
 
+// Ícone que representa um documento cancelado.
 icon Cancelled {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Cancelada", en: "Cancelled" }
 }
 
+// Ícone que representa um documento aplicado.
 icon Applied {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Aplicada", en: "Applied" }
 }
 
+// Ícone que representa um registro aberto.
 icon Open {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Aberta", en: "Open" }
 }
 
+// Ícone que representa um registro fechado.
 icon Closed {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Fechado", en: "Closed" }
 }
 
+// Ícone que representa uma execução que falhou.
 icon Failed {
+  // Rótulo do ícone em português e inglês.
   title: { pt-BR: "Falhou", en: "Failed" }
 }
 
+// Ícone do regime tributário Simples Nacional.
 icon Simples {
+  // Rótulo exibido para o regime Simples Nacional.
   title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
 }
 
+// Ícone do regime tributário Lucro Presumido.
 icon LucroPresumido {
+  // Rótulo exibido para o regime Lucro Presumido.
   title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
 }
 
+// Ícone do regime tributário Lucro Real.
 icon LucroReal {
+  // Rótulo exibido para o regime Lucro Real.
   title: { pt-BR: "Lucro Real", en: "Actual profit" }
 }

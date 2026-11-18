@@ -1,58 +1,97 @@
 // service: example.com/services/field-service
 
+// Organograma que define a hierarquia da operação de campo.
 organogram FieldOperations {
+  // Título exibido na interface.
   title: { pt-BR: "Organograma de campo", en: "Field operations organogram" }
 
+  // Relações de subordinação entre os papéis.
   hierarchy {
+    // Supervisor acima do despachante, que acima do técnico de campo.
     Supervisor > Dispatcher > FieldTechnician
+    // O despachante também atende o cliente.
     Dispatcher > Customer
   }
 
+  // O supervisor gerencia despachantes e técnicos.
   Supervisor manages [Dispatcher, FieldTechnician]
+  // Na ausência do supervisor por três dias, o despachante assume.
   Supervisor delegates to Dispatcher when absent for 3d
 
+  // Papéis cuja assinatura vale como aprovação formal.
   signature {
+    // O técnico de campo assina a conclusão do atendimento.
     FieldTechnician
   }
 }
 
+// Papel que coordena e distribui o trabalho de campo.
 role Dispatcher {
+  // Título exibido na interface.
   title: { pt-BR: "Despachante", en: "Dispatcher" }
+  // Permissões concedidas ao papel.
   permissions: [
+    // Consultar visitas.
     visit.view,
+    // Agendar visitas.
     visit.schedule,
+    // Reagendar visitas.
     visit.reschedule,
+    // Despachar visitas.
     visit.dispatch,
+    // Consultar ordens de serviço.
     workorder.view,
+    // Atribuir ordens de serviço.
     workorder.assign,
+    // Consultar técnicos.
     technician.view
   ]
 }
 
+// Papel que executa o atendimento no local.
 role FieldTechnician {
+  // Título exibido na interface.
   title: { pt-BR: "Técnico de campo", en: "Field technician" }
+  // Permissões concedidas ao papel.
   permissions: [
+    // Consultar visitas.
     visit.view,
+    // Fazer check-in no site.
     visit.checkin,
+    // Preencher o relatório da visita.
     visit.report,
+    // Consultar ordens de serviço.
     workorder.view,
+    // Iniciar a execução da ordem.
     workorder.start
   ]
 }
 
+// Papel que supervisiona a operação e trata escalações.
 role Supervisor {
+  // Título exibido na interface.
   title: { pt-BR: "Supervisor de campo", en: "Field supervisor" }
+  // Herda todas as permissões do despachante.
   inherits: Dispatcher
+  // Permissões adicionais do supervisor.
   permissions: [
+    // Escalar o atendimento de uma visita.
     visit.escalate,
+    // Concluir ordens de serviço.
     workorder.finish,
+    // Cancelar ordens de serviço.
     workorder.cancel,
+    // Gerenciar técnicos.
     technician.manage,
+    // Consultar relatórios.
     report.view
   ]
 }
 
+// Papel do cliente que recebe o atendimento.
 role Customer {
+  // Título exibido na interface.
   title: { pt-BR: "Cliente", en: "Customer" }
+  // Permissões restritas às próprias visitas.
   permissions: [visit.viewOwn, visit.confirm, visit.withdraw]
 }

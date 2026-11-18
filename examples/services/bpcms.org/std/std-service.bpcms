@@ -1,6 +1,9 @@
 // Pseudo-service resolvido pelo construtor; não é publicado nem versionado no lock do app.
 service "bpcms.org/std" {
+  // Rótulo do pseudo-serviço exibido no builder.
   title: { pt-BR: "Biblioteca padrão BPCMS", en: "BPCMS Standard Library" }
+  // Versão das medidas e constantes padrão oferecidas pelo construtor.
   version: 1.0.0
+  // Responsável pela manutenção da biblioteca padrão.
   owner: "BPCMS"
 }

@@ -1,272 +1,459 @@
 // service: example.com/services/catalog
 
+// Documento que representa o produto do catálogo.
 document Product {
+  // Título exibido no builder e na interface.
   title: { pt-BR: "Produto", en: "Product" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Catalog"
+  // Modo de sincronização: atualização em tempo real entre instâncias.
   sync: live
+  // Campos persistidos do produto.
   fields {
+    // Código SKU do produto: único e pesquisável.
     sku: SKU { title: { pt-BR: "Código", en: "SKU" }, unique, lookup }
+    // Nome do produto: obrigatório, limitado e pesquisável.
     name: string { title: { pt-BR: "Nome", en: "Name" }, maxLength: 160, required, lookup }
+    // Categoria à qual o produto pertence.
     category: Category {
+      // Título exibido no formulário.
       title: { pt-BR: "Categoria", en: "Category" }
     }
+    // Preço em dinheiro, com duas casas decimais e moeda BRL.
     price: std.Money { title: { pt-BR: "Preço", en: "Price" }, scale: 2, currency: BRL }
+    // Peso do produto, com unidade de massa do std.
     weight: std.Mass { title: { pt-BR: "Peso", en: "Weight" } }
+    // Comprimento do produto, com unidade de comprimento do std.
     length: std.Length { title: { pt-BR: "Comprimento", en: "Length" } }
+    // Situação do produto no ciclo de vida, indexada para busca.
     status: ProductStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Imagem principal do produto.
     image: ProductImage { title: { pt-BR: "Imagem", en: "Image" } }
+    // Vídeo de apresentação do produto.
     video: ProductVideo { title: { pt-BR: "Vídeo", en: "Video" } }
+    // Áudio descritivo do produto.
     audio: ProductAudio { title: { pt-BR: "Áudio", en: "Audio" } }
+    // Manual em anexo do produto.
     manual: ProductManual { title: { pt-BR: "Manual", en: "Manual" } }
+    // Descrição rica, formatada, do produto.
     richDescription: ProductRichDescription { title: { pt-BR: "Descrição rica", en: "Rich description" } }
+    // Data e hora de criação do registro.
     createdAt: DateTime { title: { pt-BR: "Criado em", en: "Created at" } }
+    // Data e hora em que o produto foi submetido para revisão.
     submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
+    // Data e hora em que o produto foi publicado.
     publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
+    // Data e hora em que o produto foi arquivado.
     archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
   }
 
+  // Índices que sustentam unicidade, busca, filtros e ordenação.
   indexes {
+    // Garante unicidade do código SKU.
     sku: [sku] unique
+    // Índice de busca textual sobre o nome do produto.
     name: [name] search
+    // Índice por intervalo para filtrar situação e data de criação.
     byStatus: [status, createdAt] range
+    // Índice por intervalo sobre o peso normalizado.
     byWeight: [weight.normalized] range
   }
 
 
+  // Ações de negócio que alteram o ciclo de vida do produto.
   actions {
+    // Cria um novo produto com os dados mínimos.
     create(sku: SKU, name: string, price: std.Money){
+      // Título exibido na interface.
       title: { pt-BR: "Criar produto", en: "Create product" }
+      // Papéis autorizados a criar produtos.
       roles: [Curator]
     }
+    // Atualiza nome e preço de um produto existente.
     update(name: string, price: std.Money){
+      // Título exibido na interface.
       title: { pt-BR: "Atualizar", en: "Update" }
+      // Papéis autorizados a atualizar produtos.
       roles: [Curator]
     }
+    // Envia o produto para a revisão de publicação.
     submitForReview(){
+      // Título exibido na interface.
       title: { pt-BR: "Enviar para revisão", en: "Submit for review" }
+      // Papéis autorizados a enviar para revisão.
       roles: [Curator]
 
+      // Muda a situação do produto para Em revisão.
       to: status.InReview
+      // Emite o evento de transição com a data de submissão.
       emits { submittedAt: now() }
 
+      // Bloco de efeito colateral executado na transição.
       {
+        // Grava o carimbo de tempo da submissão no documento.
         submittedAt = now()
       }
     }
+    // Publica o produto no catálogo.
     publish(){
+      // Título exibido na interface.
       title: { pt-BR: "Publicar", en: "Publish" }
+      // Papéis autorizados a publicar produtos.
       roles: [Publisher]
 
+      // Muda a situação do produto para Publicado.
       to: status.Published
+      // Emite o evento de transição com a data de publicação.
       emits { publishedAt: now() }
 
+      // Bloco de efeito colateral executado na transição.
       {
+        // Grava o carimbo de tempo da publicação no documento.
         publishedAt = now()
       }
     }
+    // Rejeita o produto com um motivo obrigatório.
     reject(reason: string){
+      // Título exibido na interface.
       title: { pt-BR: "Rejeitar", en: "Reject" }
+      // Papéis autorizados a rejeitar produtos.
       roles: [Publisher]
 
+      // Muda a situação do produto para Rejeitado.
       to: status.Rejected
 
+      // Validação do motivo antes de concluir a rejeição.
       rule reason.length >= 5 {
+        // Mensagem de erro em português.
         pt-BR: "Informe o motivo da rejeição"
+        // Mensagem de erro em inglês.
         en: "Enter the rejection reason"
       }
     }
+    // Arquiva o produto, retirando-o do catálogo ativo.
     archive(){
+      // Título exibido na interface.
       title: { pt-BR: "Arquivar", en: "Archive" }
+      // Papéis autorizados a arquivar produtos.
       roles: [Publisher]
 
+      // Muda a situação do produto para Arquivado.
       to: status.Archived
+      // Emite o evento de transição com a data de arquivamento.
       emits { archivedAt: now() }
 
+      // Bloco de efeito colateral executado na transição.
       {
+        // Grava o carimbo de tempo do arquivamento no documento.
         archivedAt = now()
       }
     }
   }
 
+  // Regra de integridade: o preço precisa ser positivo.
   rule price > 0 {
+    // Mensagem de erro em português.
     pt-BR: "O preço deve ser maior que zero"
+    // Mensagem de erro em inglês.
     en: "Price must be greater than zero"
   }
+  // Regra de consistência: produto publicado precisa de preço válido.
   rule status == Published implies price > 0 {
+    // Mensagem de erro em português.
     pt-BR: "Publique apenas produtos com preço"
+    // Mensagem de erro em inglês.
     en: "Publish only products with a price"
   }
 }
 
+// Shape do código SKU, com normalização de caixa e espaços.
 shape SKU {
+  // Título exibido na interface.
   title: { pt-BR: "Código", en: "SKU" }
+  // Tipo base do shape.
   base: string
+  // Normaliza o valor para maiúsculas e remove espaços nas pontas.
   normalize: upper-trim
+  // Comprimento máximo do código.
   maxLength: 40
+  // Formato de entrada e exibição, sem máscara.
   format: plain
 }
 
+// Shape da imagem do produto.
 shape ProductImage {
+  // Título exibido na interface.
   title: { pt-BR: "Imagem do produto", en: "Product image" }
+  // Tipo base do shape.
   base: image
+  // Habilita o editor de imagem na GUI.
   capabilities { gui }
 }
 
+// Shape do vídeo do produto.
 shape ProductVideo {
+  // Título exibido na interface.
   title: { pt-BR: "Vídeo do produto", en: "Product video" }
+  // Tipo base do shape.
   base: video
+  // Habilita o editor de vídeo na GUI.
   capabilities { gui }
 }
 
+// Shape do áudio do produto.
 shape ProductAudio {
+  // Título exibido na interface.
   title: { pt-BR: "Áudio do produto", en: "Product audio" }
+  // Tipo base do shape.
   base: audio
+  // Habilita o editor de áudio na GUI.
   capabilities { gui }
 }
 
+// Shape do manual em anexo do produto.
 shape ProductManual {
+  // Título exibido na interface.
   title: { pt-BR: "Manual do produto", en: "Product manual" }
+  // Tipo base do shape.
   base: attachment
+  // Tipos MIME aceitos no anexo.
   mime: [application/pdf]
+  // Habilita a gestão de anexos.
   capabilities { attachments }
 }
 
+// Shape da descrição rica do produto.
 shape ProductRichDescription {
+  // Título exibido na interface.
   title: { pt-BR: "Descrição rica", en: "Rich description" }
+  // Tipo base do shape: texto com formatação.
   base: richtext
 }
 
+// Shape do estado do produto no ciclo de vida.
 shape ProductStatus {
+  // Título exibido na interface.
   title: { pt-BR: "Situação do produto", en: "Product status" }
+  // Tipo base do shape: máquina de estados.
   base: state
+  // Valor inicial assumido por um novo produto.
   initial: Draft
+  // Valor de situação Rascunho.
   value Draft {
+    // Título exibido na interface.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado a esta situação.
     icon: Draft
+    // Ordem de exibição da situação.
     ordinal: 10
 
+    // Transição de Rascunho para Em revisão.
     transition InReview {
+      // Nome do evento emitido por esta transição.
       event: SubmittedForReview
+      // Título exibido no histórico.
       title: { pt-BR: "Produto em revisão", en: "Product submitted for review" }
+      // Dados carregados pelo evento de transição.
       payload {
+        // Data e hora da submissão.
         submittedAt: DateTime { title: { pt-BR: "Submetido em", en: "Submitted at" } }
       }
     }
   }
+  // Valor de situação Em revisão.
   value InReview {
+    // Título exibido na interface.
     title: { pt-BR: "Em revisão", en: "In review" }
+    // Ícone associado a esta situação.
     icon: InReview
+    // Ordem de exibição da situação.
     ordinal: 20
 
+    // Transição de Em revisão para Publicado.
     transition Published {
+      // Título exibido no histórico.
       title: { pt-BR: "Produto publicado", en: "Product published" }
+      // Dados carregados pelo evento de transição.
       payload {
+        // Data e hora da publicação.
         publishedAt: DateTime { title: { pt-BR: "Publicado em", en: "Published at" } }
       }
     }
 
+    // Transição de Em revisão para Rejeitado.
     transition Rejected {
+      // Título exibido no histórico.
       title: { pt-BR: "Produto rejeitado", en: "Product rejected" }
+      // Dados carregados pelo evento de transição.
       payload {
+        // Motivo textual da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Valor de situação Publicado.
   value Published {
+    // Título exibido na interface.
     title: { pt-BR: "Publicado", en: "Published" }
+    // Ícone associado a esta situação.
     icon: Published
+    // Ordem de exibição da situação.
     ordinal: 30
 
+    // Transição de Publicado para Arquivado.
     transition Archived {
+      // Título exibido no histórico.
       title: { pt-BR: "Produto arquivado", en: "Product archived" }
+      // Dados carregados pelo evento de transição.
       payload {
+        // Data e hora do arquivamento.
         archivedAt: DateTime { title: { pt-BR: "Arquivado em", en: "Archived at" } }
       }
     }
   }
+  // Valor de situação Rejeitado, estado terminal.
   value Rejected {
+    // Título exibido na interface.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
+    // Ícone associado a esta situação.
     icon: Rejected
+    // Ordem de exibição da situação.
     ordinal: 40
   }
+  // Valor de situação Arquivado, estado terminal.
   value Archived {
+    // Título exibido na interface.
     title: { pt-BR: "Arquivado", en: "Archived" }
+    // Ícone associado a esta situação.
     icon: Archived
+    // Ordem de exibição da situação.
     ordinal: 50
   }
+  // Formato de exibição do estado, sem máscara.
   format: plain
 }
 
+// Dashboard de controle do catálogo para gerentes.
 view PublishingControl {
+  // Título exibido na navegação.
   title: { pt-BR: "Controle do catálogo", en: "Catalog control" }
+  // Tipo da view: painel de indicadores.
   type: dashboard
+  // Documentos consultados como fonte dos indicadores.
   sources: [Product]
+  // Papéis autorizados a abrir a view.
   roles: [Publisher]
+  // Modo de atualização: em tempo real.
   mode: live
 
+  // Filtros disponíveis no painel.
   filters { category }
 
+  // Métricas calculadas sobre os produtos.
   metrics {
+    // Quantidade de produtos em revisão.
     inReview: count(Product) where status == InReview
+    // Quantidade de produtos rejeitados.
     rejected: count(Product) where status == Rejected
   }
 
+  // Frescor máximo aceitável dos dados antes de recálculo.
   freshness: 15m
 }
 
+// View de tabela com a listagem de produtos.
 view ProductTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Produtos", en: "Products" }
+  // Tipo da view: tabela paginada.
   type: table
+  // Documento exibido nas linhas da tabela.
   source: Product
+  // Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
+  // Colunas exibidas em cada linha.
   columns { image; sku; name; price; weight; status; createdAt }
+  // Filtros disponíveis sobre a listagem.
   filters { status; category; period }
+  // Quantidade de itens por página.
   pagination: 50
 
+  // Ações disponíveis na tabela.
   actions {
+    // Abre o detalhe do produto selecionado.
     open -> ProductDetail
+    // Envia o produto para revisão.
     submit -> Product.submitForReview
+    // Publica o produto.
     publish -> Product.publish
+    // Arquiva o produto.
     archive -> Product.archive
   }
 }
 
+// View de detalhe de um produto.
 view ProductDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe do produto", en: "Product detail" }
+  // Tipo da view: página de detalhe.
   type: detail
+  // Documento exibido no detalhe.
   document: Product
+  // Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
+  // Seções exibidas na página de detalhe.
   sections { summary; pricing; media }
 
+  // Ações disponíveis no detalhe.
   actions {
+    // Envia o produto para revisão.
     submit -> Product.submitForReview
+    // Publica o produto.
     publish -> Product.publish
+    // Arquiva o produto.
     archive -> Product.archive
   }
 }
 
+// View kanban com produtos agrupados por situação.
 view ProductKanban {
+  // Título exibido na navegação.
   title: { pt-BR: "Produtos por situação", en: "Products by status" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento exibido nos cartões.
   source: Product
+  // Papéis autorizados a abrir a view.
   roles: [Curator, Publisher]
 
+  // Campos usados para formar as colunas do quadro.
   groupBy: status
+  // Colunas exibidas nos cartões.
   columns { sku; name; price }
+  // Conteúdo resumido de cada cartão.
   card { sku; name; price; status }
 
+  // Ações disponíveis no quadro.
   actions {
+    // Abre o detalhe do produto do cartão.
     open -> ProductDetail
   }
 }
 
+// Política que bloqueia a publicação de produto inválido.
 policy PublishApproval {
+  // Action do documento à qual a política se aplica.
   appliesTo: Product.publish
+  // Condição que precisa ser verdadeira para permitir a action.
   rule: price > 0 and status == InReview
+  // Severidade: bloqueia a execução da action.
   severity: block
+  // Mensagem exibida quando a política falha.
   message: "Produto precisa de preço e estar em rascunho para publicar"
+  // Registra a avaliação na trilha de auditoria.
   audit: true
 }

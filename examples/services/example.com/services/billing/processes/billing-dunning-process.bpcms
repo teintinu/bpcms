@@ -1,102 +1,144 @@
 // service: example.com/services/billing
+// Process: sintaxe atual (DSL_REFERENCE.md §4)
 
-process Dunning for Invoice {
+// Processo de cobrança que acompanha cada nota vencida.
+process Dunning(invoice: Invoice) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Cobrança", en: "Dunning" }
-  version: 1
-  goal: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
-  owner: "Cobrança"
-  timezone: America/Fortaleza
+  version: 1 // Versão do artefato Process; diff e release comparam.
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 30d
 
-  pool Company {
-    internal
-    lane Collections { role: CollectionAgent }
-    lane Finance { role: FinanceManager }
+  // Agenda a execução diária às seis da manhã.
+  schedule: "0 6 * * *"
+  // Cria uma instância para cada nota vencida.
+  fanOut: Invoice where status == Overdue
+  key: invoice // Chave de identidade, correlação e dedup da instância.
+
+  // Envia o lembrete de pagamento ao cliente.
+  send PaymentReminder {
+    // Correlaciona a mensagem com a nota.
+    key: invoice
+    // Preenche os dados da mensagem a partir da nota.
+    with {
+      // Número da nota.
+      number: invoice.number
+      // Total em aberto.
+      total: invoice.total
+      // Data de vencimento.
+      dueAt: invoice.dueAt
+    }
   }
 
-  pool Customer {
-    external
+  // Aguarda cinco dias antes de reavaliar a cobrança.
+  wait 5d
+
+  // Só escala a cobrança se a nota continuar vencida.
+  if (invoice.status == Overdue) {
+    // Abre a tarefa manual de negociação com o cliente.
+    Escalate.show({ invoice })
+
+    // Aguarda mais sete dias antes da próxima verificação.
+    wait 7d
+
+    // Reavalia a nota após a negociação.
+    if (invoice.status == Overdue) {
+      // Abre o formulário para cancelar a nota vencida.
+      DunningCancellation.show({ invoice })
+
+      // Encerra como cancelada se o formulário cancelou a nota.
+      if (invoice.status == Cancelled) {
+        // Retorna o desfecho de cancelamento.
+        return Cancelled
+      }
+    }
   }
 
-  start Daily {
-    schedule: "0 6 * * *"
-    select: invoice.status == Overdue
-  }
+  // Encerra como liquidada quando a nota deixou de estar vencida.
+  return Settled
 
-  task Remind {
-    lane: System
-    sends: PaymentReminder
-    partner: Customer
-    with { invoice }
-    sla: 1h
-  }
-
-  wait Grace {
-    for: 5d
-  }
-
-  gateway CheckPaid {
-    if invoice.status == Overdue -> Escalate
-    else -> Settled
-  }
-
-  task Escalate {
-    lane: Collections
-    manual: "Ligar ao cliente e negociar o pagamento"
-    sla: 2d
-    assign: pull
-  }
-
-  wait Final {
-    for: 7d
-  }
-
-  gateway StillOverdue {
-    if invoice.status == Overdue -> Cancel
-    else -> Settled
-  }
-
-  task Cancel {
-    lane: Finance
-    form: DunningCancellation
-    sla: 1d
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Settled {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Liquidada", en: "Settled" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de cancelamento do caso.
   end Cancelled {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Daily -> Remind
-  Remind -> Grace
-  Grace -> CheckPaid
-  Escalate -> Final
-  Final -> StillOverdue
-  Cancel.cancel -> Cancelled
 }
 
-form DunningCancellation {
-  title: { pt-BR: "Cancelar nota vencida", en: "Cancel overdue invoice" }
+// Tarefa manual de negociação de pagamento com o cliente.
+manual Escalate {
+  // Título exibido na inbox e no histórico.
+  title: { pt-BR: "Negociar pagamento", en: "Negotiate payment" }
+  // Documento-sujeito da tarefa.
   document: Invoice
+  // Papéis que podem atender a tarefa.
+  roles: [CollectionAgent]
+  // Orientações exibidas ao responsável.
+  instructions: {
+    // Instrução em português.
+    pt-BR: "Ligar ao cliente e negociar o pagamento"
+  }
+  // Prazo para conclusão da tarefa.
+  timeout: 2d
+  // Prioridade na fila de trabalho.
+  priority: 60
+  // Distribuição da tarefa por retirada da fila.
+  assign: pull
+}
 
+// Formulário para cancelar uma nota vencida durante a cobrança.
+form DunningCancellation {
+  // Título exibido no formulário.
+  title: { pt-BR: "Cancelar nota vencida", en: "Cancel overdue invoice" }
+  // Documento manipulado pelo formulário.
+  document: Invoice
+  // Papéis que podem preencher o formulário.
+  roles: [FinanceManager]
+  // Prazo para preenchimento e envio.
+  timeout: 1d
+  // Prioridade na fila de trabalho.
+  priority: 70
+  // Distribuição da tarefa por retirada da fila.
+  assign: pull
+
+  // Campos exibidos no formulário.
   fields {
+    // Número da nota como contexto somente leitura.
     number
+    // Cliente da nota como contexto somente leitura.
     customer
+    // Total da nota como contexto somente leitura.
     total
+    // Vencimento da nota como contexto somente leitura.
     dueAt
+    // Motivo do cancelamento informado pelo usuário.
     reason: string {
+      // Título exibido no campo.
       title: { pt-BR: "Motivo do cancelamento", en: "Cancellation reason" }
+      // Limita o motivo a quinhentos caracteres.
       maxLength: 500
+      // Torna o motivo obrigatório.
       required
     }
   }
 
+  // Ações disparadas pelo formulário.
   actions {
+    // Cancela a nota chamando a ação do documento com o motivo.
     cancel { calls: Invoice.cancel(reason) }
   }
 }

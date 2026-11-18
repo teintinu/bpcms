@@ -1,545 +1,899 @@
 // service: example.com/services/shipping
 
+// Documento que representa uma remessa física, do rascunho à entrega.
 document Shipment {
+  // Título exibido na interface.
   title: { pt-BR: "Remessa", en: "Shipment" }
+  // Versão do artefato; releases e locks comparam este valor.
   version: 2
+  // Área responsável pelo documento.
   owner: "Shipping"
+  // Sincronização em tempo real entre as telas que exibem a remessa.
   sync: live
 
+  // Campos que compõem a remessa.
   fields {
+    // Pedido de venda que originou a remessa.
     order: Order {
+      // Título exibido no formulário.
       title: { pt-BR: "Pedido", en: "Order" }
+      // Permite localizar a remessa pelo pedido.
       lookup
     }
+    // Itens que compõem a remessa.
     items: ShipmentItem[] { title: { pt-BR: "Itens", en: "Items" } }
+    // Peso bruto medido na balança, em massa.
     pesoBruto: std.Mass { title: { pt-BR: "Peso bruto", en: "Gross weight" } }
+    // Volume cúbico ocupado pela remessa.
     volume: std.Volume { title: { pt-BR: "Volume", en: "Volume" } }
+    // Nome da transportadora responsável pelo transporte.
     carrierName: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Transportadora", en: "Carrier" }
+      // Limita o nome a sessenta caracteres.
       maxLength: 60
+      // Permite localizar a remessa pela transportadora.
       lookup
     }
+    // Valor do frete cobrado pela transportadora, em reais.
     frete: std.Money { title: { pt-BR: "Frete", en: "Freight" }, lookup, currency: BRL }
+    // Código de rastreio emitido pela transportadora.
     tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" }, lookup }
+    // Situação atual da remessa no ciclo de vida.
     status: ShipmentStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Número de tentativas de entrega já realizadas.
     attempts: std.Count { title: { pt-BR: "Tentativas de entrega", en: "Delivery attempts" } }
+    // Tipo do último evento de rastreio recebido.
     lastTrackingKind: TrackingKind { title: { pt-BR: "Último evento", en: "Last event" } }
+    // Data/hora do último evento de rastreio.
     lastTrackingAt: DateTime { title: { pt-BR: "Último evento em", en: "Last event at" } }
+    // Nome de quem recebeu a remessa na entrega.
     receiverName: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Recebido por", en: "Received by" }
+      // Limita o nome a cento e vinte caracteres.
       maxLength: 120
     }
+    // Data/hora prevista para a próxima tentativa de entrega.
     nextAttemptAt: DateTime { title: { pt-BR: "Próxima tentativa", en: "Next attempt" } }
+    // Data/hora em que a remessa foi coletada.
     pickedUpAt: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+    // Data/hora em que a remessa foi embalada.
     packedAt: DateTime { title: { pt-BR: "Embalada em", en: "Packed at" } }
+    // Data/hora em que a remessa foi entregue.
     deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
+    // Data/hora em que a remessa foi devolvida ao remetente.
     returnedAt: DateTime { title: { pt-BR: "Devolvida em", en: "Returned at" } }
+    // Data/hora da última pesagem registrada pelo dispositivo.
     readAt: DateTime { title: { pt-BR: "Pesada em", en: "Weighed at" } }
+    // Data/hora de criação do registro da remessa.
     createdAt: DateTime { title: { pt-BR: "Criada em", en: "Created at" }, lookup }
   }
 
+  // Recursos habilitados: captura de documentos e unidades de medida.
   capabilities { capture, units }
+  // Origem automática do peso bruto: balança scale-01.
   source: device "scale-01" for pesoBruto
 
+  // Índices de consulta usados nas telas e relatórios.
   indexes {
+    // Busca rápida das remessas de um pedido.
     byOrder: [order.id] hash
+    // Lista por situação, ordenada pela criação.
     byStatus: [status, createdAt] range
+    // Lista por transportadora e situação.
     byCarrier: [carrierName, status] range
+    // Lista por peso normalizado.
     byWeight: [pesoBruto.normalized] range
   }
 
+  // Eventos emitidos pelo documento.
   events {
+    // Evento que solicita a cotação de frete da remessa.
     QuoteRequested {
+      // Título exibido no histórico e nas integrações.
       title: { pt-BR: "Cotação solicitada", en: "Quote requested" }
+      // Dados transportados pelo evento.
       payload {
+        // Pedido que terá o frete cotado.
         order: Order { title: { pt-BR: "Pedido", en: "Order" } }
       }
     }
+    // Evento que registra o frete cotado para a remessa.
     FreightQuoted {
+      // Título exibido no histórico e nas integrações.
       title: { pt-BR: "Frete cotado", en: "Freight quoted" }
+      // Dados transportados pelo evento.
       payload {
+        // Transportadora que cotou o frete.
         carrier: string { title: { pt-BR: "Transportadora", en: "Carrier" } }
+        // Valor do frete cotado.
         amount: std.Money { title: { pt-BR: "Frete", en: "Freight" } }
       }
     }
   }
 
+  // Ações que alteram a remessa.
   actions {
+    // Cria a remessa a partir de um pedido.
     create(order: Order) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Criar remessa", en: "Create shipment" }
+      // Papéis que podem executar a action.
       roles: [Dispatcher]
       {
+        // Registra a data/hora de criação.
         createdAt = now()
+        // Emite o evento de remessa criada.
         emit Created
       }
     }
 
+    // Adiciona um produto à remessa.
     addItem(product: Product, quantity: std.Count) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Adicionar item", en: "Add item" }
+      // Papéis que podem executar a action.
       roles: [Packer]
+      // Valida que a quantidade adicionada é positiva.
       rule quantity > 0 {
+        // Mensagem de validação em português.
         pt-BR: "A quantidade deve ser maior que zero"
+        // Mensagem de validação em inglês.
         en: "Quantity must be greater than zero"
       }
     }
 
+    // Embala a remessa e a move para o estado Packed.
     pack() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Embalar", en: "Pack" }
+      // Papéis que podem executar a action.
       roles: [Packer]
 
+      // Transição automática para o estado embalada.
       to: status.Packed
       {
+        // Registra a data/hora da embalagem.
         packedAt = now()
       }
     }
 
+    // Solicita a cotação de frete da remessa.
     requestQuote() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Solicitar cotação", en: "Request quote" }
+      // Papéis que podem executar a action.
       roles: [Dispatcher]
       {
+        // Emite o evento que inicia a cotação.
         emit QuoteRequested
       }
     }
 
+    // Aplica o frete cotado à remessa.
     applyFreight(carrier: string, amount: std.Money) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Aplicar frete", en: "Apply freight" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
 
+      // Valida que o frete não é negativo.
       rule amount >= 0 BRL {
+        // Mensagem de validação em português.
         pt-BR: "O frete não pode ser negativo"
+        // Mensagem de validação em inglês.
         en: "Freight cannot be negative"
       }
       {
+        // Guarda a transportadora que cotou o frete.
         carrierName = carrier
+        // Guarda o valor do frete cotado.
         frete = amount
+        // Emite o evento de frete cotado.
         emit FreightQuoted
       }
     }
 
+    // Divide a remessa em duas.
     split() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Dividir remessa", en: "Split shipment" }
+      // Papéis que podem executar a action.
       roles: [Manager]
 
+      // Transição automática para o estado dividida.
       to: status.Split
     }
 
+    // Despacha a remessa com o código de rastreio emitido.
     dispatch(trackingCode: TrackingCode) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Despachar", en: "Dispatch" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
 
+      // Transição automática para o estado despachada.
       to: status.Dispatched
+      // Dados do evento de transição: código de rastreio.
       emits { tracking: trackingCode }
       {
+        // Grava o código de rastreio na remessa.
         tracking = trackingCode
       }
     }
 
+    // Confirma a coleta da remessa pela transportadora.
     confirmPickup(pickedUpOn: DateTime) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Confirmar coleta", en: "Confirm pickup" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
 
+      // Transição automática para o estado em rota de entrega.
       to: status.OutForDelivery
+      // Dados do evento de transição: data/hora da coleta.
       emits { pickedUpAt: pickedUpOn }
       {
+        // Grava a data/hora da coleta na remessa.
         pickedUpAt = pickedUpOn
       }
     }
 
+    // Aplica um evento de rastreio recebido da transportadora.
     applyTracking(kind: TrackingKind, at: DateTime, receivedBy: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Aplicar evento de rastreio", en: "Apply tracking event" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
       {
+        // Grava o tipo do último evento de rastreio.
         lastTrackingKind = kind
+        // Grava a data/hora do último evento de rastreio.
         lastTrackingAt = at
+        // Grava quem recebeu a remessa no evento.
         receiverName = receivedBy
       }
     }
 
+    // Registra uma tentativa de entrega que falhou.
     markAttemptFailed(reason: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Registrar tentativa falha", en: "Record failed attempt" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
 
+      // Transição automática para o estado de tentativa falha.
       to: status.AttemptFailed
       {
+        // Incrementa o contador de tentativas de entrega.
         attempts = attempts + 1
       }
     }
 
+    // Agenda uma nova tentativa de entrega.
     scheduleRetry(attemptOn: DateTime) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Agendar reentrega", en: "Schedule retry" }
+      // Papéis que podem executar a action.
       roles: [Dispatcher]
 
+      // Transição automática para o estado em rota de entrega.
       to: status.OutForDelivery
+      // Dados do evento de transição: data/hora da nova tentativa.
       emits { nextAttemptAt: attemptOn }
       {
+        // Grava a data/hora da próxima tentativa na remessa.
         nextAttemptAt = attemptOn
       }
     }
 
+    // Confirma a entrega da remessa.
     markDelivered() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Confirmar entrega", en: "Confirm delivery" }
+      // Papéis que podem executar a action.
       roles: [ShipmentEngine]
 
+      // Transição automática para o estado entregue.
       to: status.Delivered
       {
+        // Registra a data/hora da entrega.
         deliveredAt = now()
       }
     }
 
+    // Devolve a remessa ao remetente.
     returnToSender() {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Devolver ao remetente", en: "Return to sender" }
+      // Papéis que podem executar a action.
       roles: [Dispatcher]
 
+      // Transição automática para o estado devolvida.
       to: status.Returned
       {
+        // Registra a data/hora da devolução.
         returnedAt = now()
       }
     }
 
+    // Cancela a remessa com um motivo obrigatório.
     cancel(reason: string) {
+      // Título exibido no botão e no histórico.
       title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
+      // Papéis que podem executar a action.
       roles: [Manager]
 
+      // Transição automática para o estado cancelada.
       to: status.Cancelled
 
+      // Exige um motivo com pelo menos dez caracteres.
       rule reason.length >= 10 {
+        // Mensagem de validação em português.
         pt-BR: "Informe um motivo com pelo menos 10 caracteres"
+        // Mensagem de validação em inglês.
         en: "Enter a reason with at least 10 characters"
       }
     }
   }
 
+  // Invariante: remessa despachada precisa ter rastreio.
   rule status == Dispatched implies tracking != null {
+    // Mensagem da regra em português.
     pt-BR: "Informe o rastreio após o despacho"
+    // Mensagem da regra em inglês.
     en: "Enter tracking after dispatch"
   }
+  // Invariante: o peso bruto não pode superar o limite configurado.
   rule pesoBruto <= MaxWeight {
+    // Mensagem da regra em português.
     pt-BR: "Remessa acima do limite de peso"
+    // Mensagem da regra em inglês.
     en: "Shipment above the weight limit"
   }
 }
 
+// Forma que descreve um item de uma remessa.
 shape ShipmentItem {
+  // Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Item de remessa", en: "Shipment item" }
 
+  // Campos que compõem o item.
   fields {
+    // Produto do catálogo incluído na remessa.
     product: Product {
+      // Título exibido no formulário.
       title: { pt-BR: "Produto", en: "Product" }
+      // Permite localizar o item pelo produto.
       lookup
     }
+    // Quantidade de unidades do produto.
     quantity: std.Count {
+      // Título exibido no formulário.
       title: { pt-BR: "Quantidade", en: "Quantity" }
+      // Permite localizar o item pela quantidade.
       lookup
+      // Torna a quantidade obrigatória.
       required
     }
+    // Peso unitário do produto.
     pesoUnitario: std.Mass {
+      // Título exibido no formulário.
       title: { pt-BR: "Peso unitário", en: "Unit weight" }
     }
   }
 }
 
+// Forma que modela o ciclo de vida da remessa.
 shape ShipmentStatus {
+  // Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Situação da remessa", en: "Shipment status" }
+  // Base de máquina de estados.
   base: state
+  // Estado inicial e transição disparada na criação da remessa.
   initial: Draft with transition Created {
+    // Título da transição inicial.
     title: { pt-BR: "Remessa criada", en: "Shipment created" }
+    // Dados transportados pela transição inicial.
     payload {
+      // Pedido que originou a remessa.
       order: Order { title: { pt-BR: "Pedido", en: "Order" } }
     }
   }
 
+  // Estado de rascunho, antes da embalagem.
   value Draft {
+    // Título exibido para o estado.
     title: { pt-BR: "Rascunho", en: "Draft" }
+    // Ícone associado ao estado.
     icon: Draft
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 10
 
+    // Transição de rascunho para embalada.
     transition Packed {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa embalada", en: "Shipment packed" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora em que a remessa foi embalada.
         packedAt: DateTime { title: { pt-BR: "Embalada em", en: "Packed at" } }
       }
     }
 
+    // Transição de rascunho para dividida.
     transition Split {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa dividida", en: "Shipment split" }
+      // Dados transportados pela transição.
       payload {
+        // Pedido que originou a divisão.
         order: Order { title: { pt-BR: "Pedido", en: "Order" } }
       }
     }
 
+    // Transição de rascunho para cancelada.
     transition Cancelled {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      // Dados transportados pela transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de remessa embalada.
   value Packed {
+    // Título exibido para o estado.
     title: { pt-BR: "Embalada", en: "Packed" }
+    // Ícone associado ao estado.
     icon: Packed
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 20
 
+    // Transição de embalada para dividida.
     transition Split {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa dividida", en: "Shipment split" }
+      // Dados transportados pela transição.
       payload {
+        // Pedido que originou a divisão.
         order: Order { title: { pt-BR: "Pedido", en: "Order" } }
       }
     }
 
+    // Transição de embalada para despachada.
     transition Dispatched {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
+      // Dados transportados pela transição.
       payload {
+        // Pedido que originou o despacho.
         order: Order { title: { pt-BR: "Pedido", en: "Order" } }
+        // Código de rastreio emitido no despacho.
         tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
       }
     }
 
+    // Transição de embalada para cancelada.
     transition Cancelled {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      // Dados transportados pela transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de remessa despachada.
   value Dispatched {
+    // Título exibido para o estado.
     title: { pt-BR: "Despachada", en: "Dispatched" }
+    // Ícone associado ao estado.
     icon: Dispatched
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 30
 
+    // Transição de despachada para em rota de entrega.
     transition OutForDelivery {
+      // Evento que dispara a transição de coleta.
       event: PickedUp
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa coletada", en: "Shipment picked up" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora em que a remessa foi coletada.
         pickedUpAt: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
       }
     }
 
+    // Transição de despachada para cancelada.
     transition Cancelled {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa cancelada", en: "Shipment cancelled" }
+      // Dados transportados pela transição.
       payload {
+        // Motivo do cancelamento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado de remessa em rota de entrega.
   value OutForDelivery {
+    // Título exibido para o estado.
     title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    // Ícone associado ao estado.
     icon: OutForDelivery
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 40
 
+    // Transição de em rota para tentativa falha.
     transition AttemptFailed {
+      // Título exibido no histórico.
       title: { pt-BR: "Tentativa de entrega falhou", en: "Delivery attempt failed" }
+      // Dados transportados pela transição.
       payload {
+        // Motivo da falha na tentativa.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição de em rota para entregue.
     transition Delivered {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora em que a remessa foi entregue.
         deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
       }
     }
   }
+  // Estado de tentativa de entrega falha.
   value AttemptFailed {
+    // Título exibido para o estado.
     title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    // Ícone associado ao estado.
     icon: AttemptFailed
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 50
 
+    // Transição de tentativa falha para nova tentativa em rota.
     transition OutForDelivery {
+      // Evento que dispara a reentrega agendada.
       event: RetryScheduled
+      // Título exibido no histórico.
       title: { pt-BR: "Reentrega agendada", en: "Retry scheduled" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora prevista para a nova tentativa.
         nextAttemptAt: DateTime { title: { pt-BR: "Próxima tentativa", en: "Next attempt" } }
       }
     }
 
+    // Transição de tentativa falha para entregue.
     transition Delivered {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa entregue", en: "Shipment delivered" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora em que a remessa foi entregue.
         deliveredAt: DateTime { title: { pt-BR: "Entregue em", en: "Delivered at" } }
       }
     }
 
+    // Transição de tentativa falha para devolvida.
     transition Returned {
+      // Título exibido no histórico.
       title: { pt-BR: "Remessa devolvida", en: "Shipment returned" }
+      // Dados transportados pela transição.
       payload {
+        // Data/hora em que a remessa foi devolvida.
         returnedAt: DateTime { title: { pt-BR: "Devolvida em", en: "Returned at" } }
       }
     }
   }
+  // Estado final de remessa entregue.
   value Delivered {
+    // Título exibido para o estado.
     title: { pt-BR: "Entregue", en: "Delivered" }
+    // Ícone associado ao estado.
     icon: Delivered
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 60
   }
+  // Estado final de remessa devolvida.
   value Returned {
+    // Título exibido para o estado.
     title: { pt-BR: "Devolvida", en: "Returned" }
+    // Ícone associado ao estado.
     icon: Returned
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 70
   }
+  // Estado final de remessa dividida.
   value Split {
+    // Título exibido para o estado.
     title: { pt-BR: "Dividida", en: "Split" }
+    // Ícone associado ao estado.
     icon: Split
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 80
   }
+  // Estado final de remessa cancelada.
   value Cancelled {
+    // Título exibido para o estado.
     title: { pt-BR: "Cancelada", en: "Cancelled" }
+    // Ícone associado ao estado.
     icon: Cancelled
+    // Ordem de exibição no quadro e nos filtros.
     ordinal: 90
   }
 
+  // Formato de exibição do estado, sem agrupamento.
   format: plain
 }
 
+// Forma de classificação dos tipos de evento de rastreio.
 shape TrackingKind {
+  // Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Tipo de evento de rastreio", en: "Tracking event kind" }
+  // Base de classificação, com valores fixos.
   base: classification
 
+  // Evento de remessa em trânsito.
   value InTransit {
+    // Título exibido para o valor.
     title: { pt-BR: "Em trânsito", en: "In transit" }
+    // Ícone associado ao valor.
     icon: InTransit
+    // Ordem de exibição na classificação.
     ordinal: 10
   }
+  // Evento de remessa em rota de entrega.
   value OutForDelivery {
+    // Título exibido para o valor.
     title: { pt-BR: "Em rota de entrega", en: "Out for delivery" }
+    // Ícone associado ao valor.
     icon: OutForDelivery
+    // Ordem de exibição na classificação.
     ordinal: 20
   }
+  // Evento de tentativa de entrega falha.
   value AttemptFailed {
+    // Título exibido para o valor.
     title: { pt-BR: "Tentativa falhou", en: "Attempt failed" }
+    // Ícone associado ao valor.
     icon: AttemptFailed
+    // Ordem de exibição na classificação.
     ordinal: 30
   }
+  // Evento de entrega concluída.
   value Completed {
+    // Título exibido para o valor.
     title: { pt-BR: "Entrega concluída", en: "Delivery completed" }
+    // Ícone associado ao valor.
     icon: Completed
+    // Ordem de exibição na classificação.
     ordinal: 40
   }
 
+  // Formato de exibição da classificação, sem agrupamento.
   format: plain
 }
 
+// Forma que representa o código de rastreio da transportadora.
 shape TrackingCode {
+  // Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Código de rastreio", en: "Tracking code" }
+  // Base textual do código.
   base: string
+  // Normaliza o código em maiúsculas e sem espaços nas pontas.
   normalize: upper-trim
+  // Limita o código a quarenta caracteres.
   maxLength: 40
+  // Formato de exibição do código, sem agrupamento.
   format: plain
 }
 
+// Relatório de custos de frete por período, transportadora e situação.
 view FreightCost {
+  // Título exibido na navegação.
   title: { pt-BR: "Custo de frete", en: "Freight cost" }
+  // Tipo da view: relatório agregado.
   type: report
+  // Documentos usados como fonte dos dados.
   sources: [Shipment]
+  // Papéis que podem abrir a view.
   roles: [Manager]
 
+  // Filtros disponíveis no relatório.
   filters { period; carrierName; status }
+  // Métricas calculadas sobre as remessas.
   metrics {
+    // Total de remessas no período.
     shipments: count(Shipment)
+    // Soma dos valores de frete.
     freight: sum(Shipment.frete)
+    // Peso bruto médio das remessas.
     avgWeight: avg(Shipment.pesoBruto)
+    // Remessas com tentativa de entrega falha.
     failedAttempts: count(Shipment) where status == AttemptFailed
   }
+  // Unidades usadas na exibição das métricas.
   units { freight: BRL; avgWeight: kg }
+  // Considera os dados atualizados por quinze minutos.
   freshness: 15m
+  // Formatos de exportação disponíveis.
   export: [pdf, csv]
 }
 
+// Painel ao vivo com o pulso das entregas.
 view DeliveryPulse {
+  // Título exibido na navegação.
   title: { pt-BR: "Pulso das entregas", en: "Delivery pulse" }
+  // Tipo da view: painel de indicadores.
   type: dashboard
+  // Documentos usados como fonte dos dados.
   sources: [Shipment]
+  // Papéis que podem abrir a view.
   roles: [Manager]
+  // Atualização em tempo real dos indicadores.
   mode: live
 
+  // Filtros disponíveis no painel.
   filters { status; carrierName }
+  // Métricas calculadas sobre as remessas.
   metrics {
+    // Remessas em rota de entrega.
     outForDelivery: count(Shipment) where status == OutForDelivery
+    // Remessas com tentativa de entrega falha.
     failedAttempts: count(Shipment) where status == AttemptFailed
+    // Remessas devolvidas ao remetente.
     returned: count(Shipment) where status == Returned
   }
+  // Considera os dados atualizados por cinco minutos.
   freshness: 5m
 }
 
+// Tabela de remessas com filtros e ações rápidas.
 view Shipments {
+  // Título exibido na navegação.
   title: { pt-BR: "Remessas", en: "Shipments" }
+  // Tipo da view: tabela de documentos.
   type: table
+  // Documento listado na tabela.
   source: Shipment
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
+  // Colunas exibidas na tabela.
   columns { order; carrierName; status; tracking; frete }
+  // Filtros disponíveis na tabela.
   filters { status; period; carrierName }
+  // Quantidade de linhas por página.
   pagination: 50
 
+  // Ações disponíveis nas linhas da tabela.
   actions {
+    // Abre o detalhe da remessa selecionada.
     open -> ShipmentDetail
+    // Cria uma remessa a partir do pedido.
     receive -> Shipment.create(order)
+    // Solicita a cotação de frete da remessa.
     requestQuote -> Shipment.requestQuote
   }
 }
 
+// Tela de detalhe de uma remessa.
 view ShipmentDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
+  // Tipo da view: detalhe de documento.
   type: detail
+  // Documento exibido no detalhe.
   document: Shipment
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
+  // Seções exibidas na tela de detalhe.
   sections { summary; items; timeline }
+  // Ações disponíveis na tela de detalhe.
   actions {
+    // Abre o andamento do processo de despacho.
     progress -> DispatchProgress
+    // Abre o andamento do processo de entrega.
     delivery -> DeliveryProgress
   }
 }
 
+// Quadro kanban da expedição por situação.
 view DispatchBoard {
+  // Título exibido na navegação.
   title: { pt-BR: "Quadro de expedição", en: "Dispatch board" }
+  // Tipo da view: quadro kanban.
   type: kanban
+  // Documento exibido nas colunas do quadro.
   source: Shipment
+  // Papéis que podem abrir a view.
   roles: [Packer, Dispatcher, Manager]
 
+  // Agrupa os cartões pela situação da remessa.
   groupBy: status
+  // Campos exibidos em cada cartão.
   card { order; tracking; frete }
+  // Oculta remessas canceladas do quadro.
   filter { status != Cancelled }
+  // Ações disponíveis nos cartões.
   actions {
+    // Abre o detalhe da remessa selecionada.
     open -> ShipmentDetail
   }
 }
 
+// Mensagem que solicita a coleta da remessa à transportadora.
 message PickupRequest {
+  // Título exibido no histórico e nas integrações.
   title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
+  // Documento ao qual a mensagem se refere.
   about: Shipment
 
+  // Dados transportados pela mensagem.
   payload {
+    // Data/hora em que a coleta foi solicitada.
     requestedAt: DateTime { title: { pt-BR: "Solicitado em", en: "Requested at" } }
+    // Janela de horário para a coleta.
     window: Duration { title: { pt-BR: "Janela de coleta", en: "Pickup window" } }
   }
 }
 
+// Mensagem que confirma a coleta da remessa.
 message PickupConfirmed {
+  // Título exibido no histórico e nas integrações.
   title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
+  // Documento ao qual a mensagem se refere.
   about: Shipment
 
+  // Dados transportados pela mensagem.
   payload {
+    // Data/hora em que a remessa foi coletada.
     pickedUpOn: DateTime { title: { pt-BR: "Coletada em", en: "Picked up at" } }
+    // Código de rastreio da remessa coletada.
     tracking: TrackingCode { title: { pt-BR: "Rastreio", en: "Tracking" } }
   }
 }
 
+// Mensagem que notifica uma atualização de rastreio.
 message TrackingUpdated {
+  // Título exibido no histórico e nas integrações.
   title: { pt-BR: "Rastreio atualizado", en: "Tracking updated" }
+  // Documento ao qual a mensagem se refere.
   about: Shipment
 
+  // Dados transportados pela mensagem.
   payload {
+    // Tipo do evento de rastreio recebido.
     kind: TrackingKind { title: { pt-BR: "Tipo de evento", en: "Event kind" } }
+    // Data/hora em que o evento aconteceu.
     at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
+    // Nome de quem recebeu a remessa no evento.
     receivedBy: string { title: { pt-BR: "Recebido por", en: "Received by" } }
   }
 }
 
+// Política que bloqueia o despacho de remessa acima do limite de peso.
 policy WeightLimit {
+  // Action à qual a política se aplica.
   appliesTo: Shipment.dispatch
+  // Condição que precisa ser verdadeira para permitir o despacho.
   rule: pesoBruto <= MaxWeight
+  // Severidade da política: bloqueia a operação.
   severity: block
+  // Mensagem exibida quando a política bloqueia.
   message: "Remessa acima do limite de peso"
+  // Registra a avaliação da política na auditoria.
   audit: true
 }

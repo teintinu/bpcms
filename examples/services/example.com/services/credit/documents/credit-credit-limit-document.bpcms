@@ -1,189 +1,317 @@
 // service: example.com/services/credit
 
+// Documento que representa o limite de crédito concedido a um titular.
 document CreditLimit {
+  // Título exibido na interface e nos relatórios.
   title: { pt-BR: "Limite de crédito", en: "Credit limit" }
+  // Versão do artefato Document; releases e diffs comparam.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Credit"
+  // Sincronização de leitura: consumidores leem sem escrever no documento.
   sync: read
 
+  // Campos que compõem o limite de crédito.
   fields {
+    // Número identificador legível do limite.
     number: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Número", en: "Number" }
+      // Limita o número a quarenta caracteres.
       maxLength: 40
+      // Impede dois limites com o mesmo número.
       unique
+      // Permite localizar o limite pelo número.
       lookup
     }
+    // Proposta de crédito que originou o limite.
     application: CreditApplication {
+      // Título exibido no formulário.
       title: { pt-BR: "Proposta", en: "Application" }
+      // Permite localizar o limite pela proposta.
       lookup
     }
+    // Usuário titular do limite de crédito.
     holder: Identity.User {
+      // Título exibido no formulário.
       title: { pt-BR: "Titular", en: "Holder" }
+      // Permite localizar o limite pelo titular.
       lookup
     }
+    // Valor total do limite concedido.
     amount: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Limite", en: "Limit" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
+      // Torna o valor obrigatório no preenchimento.
       required
     }
+    // Valor do limite já utilizado pelo titular.
     used: std.Money {
+      // Título exibido no formulário.
       title: { pt-BR: "Utilizado", en: "Used" }
+      // Moeda do valor: reais brasileiros.
       currency: BRL
     }
+    // Situação atual do limite no ciclo de vida.
     status: CreditLimitStatus {
+      // Título exibido no formulário e nos filtros.
       title: { pt-BR: "Situação", en: "Status" }
+      // Permite localizar e filtrar limites pela situação.
       lookup
     }
+    // Instante em que o limite entrou em vigor.
     activatedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Ativado em", en: "Activated at" }
     }
+    // Data de validade do limite concedido.
     expiresAt: Date {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Validade", en: "Expiry date" }
     }
+    // Instante em que o limite foi suspenso.
     suspendedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Suspenso em", en: "Suspended at" }
     }
+    // Motivo textual informado ao suspender o limite.
     suspendedReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da suspensão", en: "Suspension reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
+    // Instante em que o limite foi reativado.
     reinstatedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Reativado em", en: "Reinstated at" }
     }
+    // Instante em que o limite foi revogado.
     revokedAt: DateTime {
+      // Título exibido no formulário e no histórico.
       title: { pt-BR: "Revogado em", en: "Revoked at" }
     }
+    // Motivo textual informado ao revogar o limite.
     revocationReason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da revogação", en: "Revocation reason" }
+      // Limita o motivo a duzentos e oitenta caracteres.
       maxLength: 280
     }
   }
 
 
+  // Comandos que alteram o estado do limite e disparam transições.
   actions {
+    // Define ou redefine o limite de um titular a partir de uma proposta.
     set(application: CreditApplication, holder: Identity.User, amount: std.Money) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Definir limite", en: "Set limit" }
+      // Restringe a action ao gerente de crédito.
       roles: [CreditManager]
+      // Corpo executado na action.
       {
+        // Registra o instante de ativação do limite.
         activatedAt = now()
       }
     }
 
+    // Suspende temporariamente o uso do limite.
     suspend(suspendedReason: string) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Suspender limite", en: "Suspend limit" }
+      // Restringe a action ao gerente de crédito.
       roles: [CreditManager]
+      // Transita a situação para Suspended.
       to: status.Suspended
+      // Emite o evento de suspensão com o motivo informado.
       emits { reason: suspendedReason }
+      // Corpo executado na transição.
       {
+        // Registra o instante da suspensão.
         suspendedAt = now()
       }
     }
 
+    // Reativa um limite suspenso.
     reinstate() {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Reativar limite", en: "Reinstate limit" }
+      // Restringe a action ao gerente de crédito.
       roles: [CreditManager]
+      // Transita a situação de volta para Active.
       to: status.Active
+      // Corpo executado na transição.
       {
+        // Registra o instante da reativação.
         reinstatedAt = now()
       }
     }
 
+    // Revoga definitivamente o limite concedido.
     revoke(revocationReason: string) {
+      // Título do botão exibido no formulário.
       title: { pt-BR: "Revogar limite", en: "Revoke limit" }
+      // Restringe a action ao gerente de crédito.
       roles: [CreditManager]
+      // Transita a situação para Revoked.
       to: status.Revoked
+      // Emite o evento de revogação com o motivo informado.
       emits { reason: revocationReason }
+      // Corpo executado na transição.
       {
+        // Registra o instante da revogação.
         revokedAt = now()
       }
     }
   }
 
+  // Índices de consulta do documento.
   indexes {
+    // Índice único pelo número do limite.
     byNumber: [number] unique
+    // Índice hash para consultar limites pela situação.
     byStatus: [status] hash
+    // Índice hash pelo id do titular.
     byHolder: [holder.id] hash
   }
 
+  // Invariante de negócio validada a cada gravação do limite.
   rule amount > 0 BRL {
+    // Mensagem da regra em português.
     pt-BR: "O limite precisa ser positivo"
+    // Mensagem da regra em inglês.
     en: "The limit must be positive"
   }
 }
 
+// Forma de estado com as situações possíveis do limite de crédito.
 shape CreditLimitStatus {
+  // Título exibido onde a situação é referenciada.
   title: { pt-BR: "Situação do limite de crédito", en: "Credit limit status" }
+  // Base state: os valores são estados de uma máquina de estados.
   base: state
+  // Estado inicial de todo limite criado.
   initial: Active
+  // Estado ativo: limite disponível para uso.
   value Active {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Ativo", en: "Active" }
+    // Ícone associado ao estado, resolvido pelo nome Active.
     icon: Active
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 10
 
+    // Transição disparada pela suspensão do limite.
     transition Suspended {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Limite suspenso", en: "Credit limit suspended" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da suspensão transportado no evento.
         suspendedAt: DateTime { title: { pt-BR: "Suspenso em", en: "Suspended at" } }
+        // Motivo da suspensão transportado no evento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
 
+    // Transição disparada pela revogação do limite.
     transition Revoked {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Limite revogado", en: "Credit limit revoked" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da revogação transportado no evento.
         revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" } }
+        // Motivo da revogação transportado no evento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado suspenso: uso do limite temporariamente bloqueado.
   value Suspended {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Suspenso", en: "Suspended" }
+    // Ícone associado ao estado, resolvido pelo nome Suspended.
     icon: Suspended
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 20
 
+    // Transição disparada pela reativação do limite.
     transition Active {
+      // Nome do evento que dispara a transição.
       event: Reinstated
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Limite reativado", en: "Credit limit reinstated" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da reativação transportado no evento.
         reinstatedAt: DateTime { title: { pt-BR: "Reativado em", en: "Reinstated at" } }
       }
     }
 
+    // Transição disparada pela revogação de um limite suspenso.
     transition Revoked {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Limite revogado", en: "Credit limit revoked" }
+      // Dados transportados pelo evento de transição.
       payload {
+        // Instante da revogação transportado no evento.
         revokedAt: DateTime { title: { pt-BR: "Revogado em", en: "Revoked at" } }
+        // Motivo da revogação transportado no evento.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado final de limite revogado.
   value Revoked {
+    // Título exibido no formulário e nos filtros.
     title: { pt-BR: "Revogado", en: "Revoked" }
+    // Ícone associado ao estado, resolvido pelo nome Revoked.
     icon: Revoked
+    // Ordem de exibição do estado na linha do tempo.
     ordinal: 30
   }
 }
 
+// View de listagem dos limites de crédito.
 view CreditLimits {
+  // Título exibido na navegação.
   title: { pt-BR: "Limites de crédito", en: "Credit limits" }
+  // Tipo table: listagem paginada em formato tabular.
   type: table
+  // Documento que fornece as linhas da tabela.
   source: CreditLimit
+  // Papéis autorizados a abrir a listagem.
   roles: [CreditAnalyst, CreditManager]
 
+  // Colunas exibidas em cada linha da tabela.
   columns { number; holder; amount; used; status; expiresAt }
+  // Filtros disponíveis na listagem.
   filters { status; holder }
+  // Tamanho da página: cinquenta registros por vez.
   pagination: 50
 
+  // Ações de linha disponíveis na listagem.
   actions {
+    // Abrir um limite navega para a view de detalhe.
     open -> CreditLimitDetail
   }
 }
 
+// View de detalhe de um limite de crédito.
 view CreditLimitDetail {
+  // Título exibido na navegação e no cabeçalho da tela.
   title: { pt-BR: "Detalhe do limite", en: "Credit limit detail" }
+  // Tipo detail: tela de detalhe de um registro.
   type: detail
+  // Documento exibido pela view.
   document: CreditLimit
+  // Papéis autorizados a abrir o detalhe.
   roles: [CreditAnalyst, CreditManager]
 
+  // Seções fixas exibidas na tela de detalhe.
   sections { summary; timeline }
 }

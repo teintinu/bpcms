@@ -1,93 +1,122 @@
 // service: example.com/services/fraud-checkout
 
-process FraudReview for FraudCheck {
+// Declara o processo FraudReview; o documento-sujeito é o FraudCheck.
+process FraudReview(fraudCheck: FraudCheck) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Análise antifraude", en: "Fraud review" }
+  // Versão do artefato Process.
   version: 1
-  goal: "Avaliar o risco e decidir automaticamente ou por análise manual"
-  owner: "Risk"
-  timezone: America/Fortaleza
+  // Objetivo de negócio do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Avaliar o risco e decidir automaticamente ou por análise manual"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 1d
 
-  pool Company {
-    internal
-    lane Risk { role: RiskAnalyst }
+  // Gatilho: inicia o caso quando o documento emite Created.
+  on [FraudCheck.Created]
+  // Chave de identidade e correlação da instância.
+  key: fraudCheck
+
+  // Dispara a avaliação automática do risco no documento.
+  FraudCheck.evaluate()
+
+  // Score alto exige análise manual de um analista de risco.
+  if (fraudCheck.score >= 70) {
+    // Abre o form de revisão manual para o analista.
+    RiskReview.show({ fraudCheck })
+
+    // Se o analista rejeitou no form, decide pela rejeição.
+    if (fraudCheck.status == Rejected) {
+      // Encerra o processo no desfecho de rejeição.
+      return Rejected
+    }
+
+    // Sem rejeição, encerra o processo no desfecho de aprovação.
+    return Approved
   }
 
-  start Created {
-    event: FraudCheck.Created
-  }
+  // Score baixo: aprova a verificação automaticamente.
+  FraudCheck.approve()
+  // Encerra no desfecho de liberação automática.
+  return Cleared
 
-  task Assess {
-    lane: System
-    action: FraudCheck.evaluate
-    sla: 5m
-  }
-
-  gateway RiskScore {
-    if fraudCheck.score >= 70 -> ManualReview
-    else -> AutoApprove
-  }
-
-  task AutoApprove {
-    lane: System
-    action: FraudCheck.approve
-    sla: 5m
-  }
-
-  task ManualReview {
-    lane: Risk
-    form: RiskReview
-    sla: 2h
-    assign: pull
-    priority: 80
-  }
-
+  // Declara o desfecho de liberação automática.
   end Cleared {
+    // Título exibido no histórico.
     title: { pt-BR: "Liberada", en: "Cleared" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de aprovação após revisão.
   end Approved {
+    // Título exibido no histórico.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de rejeição.
   end Rejected {
+    // Título exibido no histórico.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Created -> Assess
-  Assess -> RiskScore
-  AutoApprove -> Cleared
-  ManualReview.approve -> Approved
-  ManualReview.reject -> Rejected
 }
 
+// Form de revisão manual, aberto quando o score exige análise.
 form RiskReview {
+  // Título exibido na inbox e no formulário.
   title: { pt-BR: "Revisar risco", en: "Review risk" }
+  // Documento-sujeito manipulado pelo form.
   document: FraudCheck
+  // Papéis que podem atender o form.
+  roles: [RiskAnalyst]
+  // Prazo para o analista concluir a revisão.
+  timeout: 2h
+  // Prioridade do item na fila.
+  priority: 80
+  // Distribuição por puxar: o analista assume o item da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Sessão de finalização correlacionada, exibida como referência.
     session
+    // Pontuação de risco calculada, exibida ao analista.
     score
+    // Motivo digitado pelo analista ao rejeitar.
     reason: string {
+      // Título exibido no campo.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      // Limite de caracteres aceito no campo.
       maxLength: 500
     }
   }
 
+  // Ações disponíveis no formulário.
   actions {
+    // Aprova a verificação chamando a action do documento.
     approve { calls: FraudCheck.approve }
+    // Rejeita a verificação repassando o motivo informado.
     reject { calls: FraudCheck.reject(reason) }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view FraudProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da análise", en: "Fraud review progress" }
+  // Tipo da view: tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: FraudReview
+  // Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

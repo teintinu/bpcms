@@ -1,20 +1,35 @@
 // service: example.com/services/citizen
 
+// Forma compartilhada de e-mail; reutilizável em campos de contato.
 shape Email {
+  // Título exibido no formulário.
   title: { pt-BR: "Correio eletrônico", en: "Email" }
+  // Tipo-base textual da forma.
   base: string
+  // Normaliza para minúsculas e remove espaços nas extremidades.
   normalize: lower-trim
+  // Valida o formato de e-mail.
   validate: email
+  // Limita o comprimento ao máximo de 254 caracteres.
   maxLength: 254
+  // Exibe o valor sem máscara.
   format: plain
+  // Indexa o valor de forma exata para busca.
   index: exact
 }
 
+// Forma compartilhada de telefone; reutilizável em campos de contato.
 shape Phone {
+  // Título exibido no formulário.
   title: { pt-BR: "Telefone", en: "Phone" }
+  // Tipo-base textual da forma.
   base: string
+  // Normaliza mantendo apenas dígitos.
   normalize: digits
+  // Valida o formato de telefone.
   validate: phone
+  // Limita o comprimento a 20 caracteres.
   maxLength: 20
+  // Exibe o valor com máscara de telefone internacional.
   format: masked("+## (##) #####-####")
 }

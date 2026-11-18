@@ -1,11 +1,17 @@
 // service: example.com/services/shipping
 
+// Forma reutilizável que descreve um evento de rastreio da remessa.
 shape TrackingEvent {
+  // Título exibido no builder e nas telas que usam a forma.
   title: { pt-BR: "Evento de rastreio", en: "Tracking event" }
 
+  // Campos que compõem o evento.
   fields {
+    // Momento em que o evento aconteceu.
     at: DateTime { title: { pt-BR: "Data/hora", en: "At" } }
+    // Tipo/classificação do evento de rastreio.
     kind: TrackingKind { title: { pt-BR: "Tipo", en: "Kind" } }
+    // Texto descritivo do evento, como "saiu para entrega".
     description: string { title: { pt-BR: "Descrição", en: "Description" } }
   }
 }

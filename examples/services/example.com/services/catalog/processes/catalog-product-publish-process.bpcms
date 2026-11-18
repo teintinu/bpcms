@@ -1,71 +1,107 @@
 // service: example.com/services/catalog
 
-process ProductPublish for Product {
+// Declara o processo de publicação; o argumento é o documento-sujeito da instância.
+process ProductPublish(product: Product) {
+  // Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Publicação de produto", en: "Product publish" }
+  // Versão do artefato Process; diff e release comparam.
   version: 1
-  goal: "Revisar e publicar o produto com aprovação em quatro olhos"
-  owner: "Merchandising"
-  timezone: America/Fortaleza
+  // Objetivo de negócio usado na revisão e no painel do processo.
+  goal: {
+    // Texto do objetivo em português.
+    pt-BR: "Revisar e publicar o produto com aprovação em quatro olhos"
+  }
+  // SLA brando do caso: alvo de lead time, não é timer.
   sla: 2d
 
-  pool Company {
-    internal
-    lane Merchandising { role: Publisher }
+  // Gatilho: inicia uma instância quando o produto é submetido para revisão.
+  on [Product.SubmittedForReview]
+  // Chave de identidade, correlação e dedup da instância.
+  key: product
+
+  // Abre o form de revisão para o publicador decidir.
+  ProductReview.show({ product })
+
+  // Se a revisão publicou o produto...
+  if (product.status == Published) {
+    // ...encerra no desfecho de sucesso.
+    return Published
   }
 
-  start Submitted {
-    event: Product.SubmittedForReview
-  }
+  // Caso contrário, encerra no desfecho de rejeição.
+  return Rejected
 
-  task Review {
-    lane: Merchandising
-    form: ProductReview
-    sla: 1d
-    assign: pull
-  }
-
+  // Declara o desfecho de sucesso do caso.
   end Published {
+    // Título exibido no histórico e nos filtros.
     title: { pt-BR: "Publicado", en: "Published" }
+    // Classificação do desfecho para KPI.
     outcome: success
   }
 
+  // Declara o desfecho de cancelamento do caso.
   end Rejected {
+    // Título exibido no histórico.
     title: { pt-BR: "Rejeitado", en: "Rejected" }
+    // Classificação do desfecho para KPI.
     outcome: cancelled
   }
-
-  Submitted -> Review
-  Review.approve -> Published
-  Review.reject -> Rejected
 }
 
+// Form de revisão do produto executado pelo publicador.
 form ProductReview {
+  // Título exibido ao usuário na tarefa.
   title: { pt-BR: "Revisar produto", en: "Review product" }
+  // Documento editado pelo form.
   document: Product
+  // Papéis que podem executar o form.
+  roles: [Publisher]
+  // Prazo máximo para conclusão do form.
+  timeout: 1d
+  // Modo de atribuição: o executor puxa a tarefa da fila.
+  assign: pull
 
+  // Campos exibidos no formulário.
   fields {
+    // Código SKU do produto.
     sku
+    // Nome do produto.
     name
+    // Preço do produto.
     price
+    // Categoria do produto.
     category
+    // Imagem do produto.
     image
+    // Campo textual para o motivo da rejeição.
     reason: string {
+      // Título exibido no formulário.
       title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" }
+      // Limite de caracteres aceito no motivo.
       maxLength: 500
     }
   }
 
+  // Botões de decisão disponíveis no form.
   actions {
+    // Aprova e chama a action de publicação do documento.
     approve { calls: Product.publish }
+    // Rejeita e chama a action de rejeição passando o motivo informado.
     reject { calls: Product.reject(reason) }
   }
 }
 
+// View de andamento derivada da instância do processo.
 view ProductProgress {
+  // Título exibido na navegação.
   title: { pt-BR: "Andamento da publicação", en: "Publish progress" }
+  // Tipo da view: tela de andamento de processo.
   type: process
+  // Processo cujo andamento esta view exibe.
   process: ProductPublish
+  // Papéis que podem abrir a view.
   roles: [Curator, Publisher]
 
+  // Seções fixas exibidas na tela de andamento.
   sections { current; participants; history; deadlines; documents; milestones; next }
 }

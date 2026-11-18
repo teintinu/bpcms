@@ -1,173 +1,286 @@
 // service: example.com/services/fraud-checkout
 
+// Declara o documento FraudCheck, que guarda a verificação antifraude.
 document FraudCheck {
+  // Título exibido no builder e nas views.
   title: { pt-BR: "Verificação antifraude", en: "Fraud check" }
+  // Versão do artefato Document.
   version: 1
+  // Área de negócio responsável pelo documento.
   owner: "Risk"
+  // Mantém a leitura do documento sempre atualizada.
   sync: live
 
+  // Campos persistidos no documento.
   fields {
+    // Sessão de finalização que originou a verificação.
     session: CheckoutSession {
+      // Título exibido no campo.
       title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
+      // Permite consultar e exibir a sessão relacionada.
       lookup
     }
+    // Pontuação de risco calculada para a verificação.
     score: number {
+      // Título exibido no campo.
       title: { pt-BR: "Pontuação de risco", en: "Risk score" }
+      // Valor mínimo aceito para o score.
       min: 0
+      // Valor máximo aceito para o score.
       max: 100
+      // Campo indexado para busca e filtro.
       lookup
     }
+    // Indica se a verificação foi aprovada.
     approved: boolean {
+      // Título exibido no campo.
       title: { pt-BR: "Aprovado", en: "Approved" }
     }
+    // Situação atual no shape FraudCheckStatus.
     status: FraudCheckStatus {
+      // Título exibido no campo.
       title: { pt-BR: "Situação", en: "Status" }
+      // Campo indexado para busca e filtro.
       lookup
     }
+    // Motivo informado quando a verificação é rejeitada.
     rejectionReason: string { title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" } }
+    // Data e hora em que a verificação foi avaliada.
     evaluatedAt: DateTime { title: { pt-BR: "Avaliada em", en: "Evaluated at" } }
+    // Data e hora em que a verificação foi revisada.
     reviewedAt: DateTime { title: { pt-BR: "Revisada em", en: "Reviewed at" } }
   }
 
+  // Índices para consulta eficiente.
   indexes {
+    // Índice hash pela sessão de origem.
     bySession: [session.id] hash
+    // Índice range por situação e data de avaliação.
     byStatus: [status, evaluatedAt] range
   }
 
 
+  // Ações que alteram o documento.
   actions {
+    // Cria a verificação a partir de uma sessão e de um score.
     create(session: CheckoutSession, riskScore: number){
+      // Título exibido no botão da action.
       title: { pt-BR: "Criar verificação", en: "Create check" }
+      // Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
+      // Tipo do documento devolvido pela action.
       returns: FraudCheck
+      // Corpo executado pela action.
       {
+        // Grava a pontuação recebida como score.
         score = riskScore
+        // Emite o evento Created com a sessão de origem.
         emit Created { session: session }
       }
     }
 
+    // Avalia o risco e transita a situação para Evaluated.
     evaluate(){
+      // Título exibido no botão da action.
       title: { pt-BR: "Avaliar risco", en: "Evaluate risk" }
+      // Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
 
+      // Estado de destino da transição.
       to: status.Evaluated
 
+      // Corpo executado pela action.
       {
+        // Registra a data e hora da avaliação.
         evaluatedAt = now()
       }
     }
 
+    // Aprova a verificação.
     approve(){
+      // Título exibido no botão da action.
       title: { pt-BR: "Aprovar risco", en: "Approve risk" }
+      // Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
 
+      // Estado de destino da transição.
       to: status.Approved
+      // Payload do evento emitido: data e hora da aprovação.
       emits { approvedAt: now() }
 
+      // Corpo executado pela action.
       {
+        // Marca a verificação como aprovada.
         approved = true
+        // Registra a data e hora da revisão.
         reviewedAt = now()
       }
     }
 
+    // Rejeita a verificação com um motivo.
     reject(reason: string){
+      // Título exibido no botão da action.
       title: { pt-BR: "Rejeitar risco", en: "Reject risk" }
+      // Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
 
+      // Estado de destino da transição.
       to: status.Rejected
 
+      // Exige motivo com pelo menos cinco caracteres.
       rule reason.length >= 5 {
+        // Mensagem de validação em português.
         pt-BR: "Informe o motivo da rejeição"
+        // Mensagem de validação em inglês.
         en: "Enter the rejection reason"
       }
 
+      // Corpo executado pela action.
       {
+        // Desmarca a aprovação da verificação.
         approved = false
+        // Guarda o motivo informado.
         rejectionReason = reason
+        // Registra a data e hora da revisão.
         reviewedAt = now()
       }
     }
   }
 
+  // Invariante: o score deve permanecer entre 0 e 100.
   rule score >= 0 and score <= 100 {
+    // Mensagem de validação em português.
     pt-BR: "A pontuação deve ficar entre 0 e 100"
+    // Mensagem de validação em inglês.
     en: "Score must be between 0 and 100"
   }
 }
 
+// Shape de estados por que passa a verificação antifraude.
 shape FraudCheckStatus {
+  // Título exibido no builder.
   title: { pt-BR: "Situação da verificação antifraude", en: "Fraud check status" }
+  // Tipo base do shape: máquina de estados.
   base: state
+  // Estado inicial Pending, alcançado pela transição Created.
   initial: Pending with transition Created {
+    // Título exibido na timeline do documento.
     title: { pt-BR: "Verificação criada", en: "Fraud check created" }
+    // Dados transportados pelo evento Created.
     payload {
+      // Sessão de finalização que originou a criação.
       session: CheckoutSession { title: { pt-BR: "Sessão", en: "Session" } }
     }
   }
+  // Estado Pendente, primeiro da ordenação.
   value Pending {
+    // Título exibido na timeline do documento.
     title: { pt-BR: "Pendente", en: "Pending" }
+    // Ícone associado ao estado.
     icon: Pending
+    // Posição do estado na ordenação.
     ordinal: 10
 
+    // Transição para o estado Evaluated.
     transition Evaluated {
+      // Título exibido na timeline do documento.
       title: { pt-BR: "Risco avaliado", en: "Risk evaluated" }
+      // Dados transportados pelo evento.
       payload {
+        // Pontuação de risco calculada.
         score: number { title: { pt-BR: "Pontuação", en: "Score" } }
       }
     }
   }
+  // Estado Avaliada, após a avaliação automática do risco.
   value Evaluated {
+    // Título exibido na timeline do documento.
     title: { pt-BR: "Avaliada", en: "Evaluated" }
+    // Ícone associado ao estado.
     icon: Evaluated
+    // Posição do estado na ordenação.
     ordinal: 20
 
+    // Transição para o estado Approved.
     transition Approved {
+      // Título exibido na timeline do documento.
       title: { pt-BR: "Risco aprovado", en: "Risk approved" }
+      // Dados transportados pelo evento.
       payload {
+        // Data e hora da aprovação.
         approvedAt: DateTime { title: { pt-BR: "Aprovado em", en: "Approved at" } }
       }
     }
 
+    // Transição para o estado Rejected.
     transition Rejected {
+      // Título exibido na timeline do documento.
       title: { pt-BR: "Risco rejeitado", en: "Risk rejected" }
+      // Dados transportados pelo evento.
       payload {
+        // Motivo da rejeição.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado Aprovada, após decisão favorável.
   value Approved {
+    // Título exibido na timeline do documento.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Ícone associado ao estado.
     icon: Approved
+    // Posição do estado na ordenação.
     ordinal: 30
   }
+  // Estado Rejeitada, após decisão contrária.
   value Rejected {
+    // Título exibido na timeline do documento.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
+    // Ícone associado ao estado.
     icon: Rejected
+    // Posição do estado na ordenação.
     ordinal: 40
   }
+  // Formato de exibição do shape.
   format: plain
 }
 
+// View de tabela que lista as verificações antifraude.
 view FraudTable {
+  // Título exibido na navegação.
   title: { pt-BR: "Verificações antifraude", en: "Fraud checks" }
+  // Tipo da view: tabela de documentos.
   type: table
+  // Documento consultado pela tabela.
   source: FraudCheck
+  // Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
+  // Colunas exibidas na tabela.
   columns { session; score; approved; status; evaluatedAt }
+  // Filtros disponíveis na tabela.
   filters { status; period }
+  // Quantidade de itens por página.
   pagination: 50
 
+  // Ações da tabela.
   actions {
+    // Abre o detalhe da verificação selecionada.
     open -> FraudDetail
   }
 }
 
+// View de detalhe de uma verificação antifraude.
 view FraudDetail {
+  // Título exibido na navegação.
   title: { pt-BR: "Detalhe da verificação", en: "Fraud check detail" }
+  // Tipo da view: detalhe de documento.
   type: detail
+  // Documento exibido pela view.
   document: FraudCheck
+  // Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
+  // Seções fixas exibidas no detalhe.
   sections { summary; decision; timeline }
 }

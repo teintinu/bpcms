@@ -1,12 +1,20 @@
 // service: example.com/services/fraud-checkout
 
+// Declara a caixa de entrada da fila de risco.
 view RiskInbox {
+  // Título exibido na navegação.
   title: { pt-BR: "Fila de risco", en: "Risk queue" }
+  // Tipo da view: caixa de entrada de trabalho.
   type: inbox
+  // Papéis que podem abrir a view.
   roles: [RiskAnalyst, RiskManager]
 
-  scope: lanes
-  filter { lane in currentUser.lanes }
+  // Escopo dos itens: apenas os papéis do usuário corrente.
+  scope: roles
+  // Filtro aplicado à lista de itens.
+  filter { role in currentUser.roles }
+  // Agrupa os itens por processo.
   groupBy: process
-  columns { title; subject; lane; dueAt; priority }
+  // Colunas exibidas na fila.
+  columns { title; subject; role; dueAt; priority }
 }

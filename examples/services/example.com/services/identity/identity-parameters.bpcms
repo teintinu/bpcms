@@ -1,7 +1,11 @@
 // service: example.com/services/identity
 
+// Parâmetro de duração da sessão, usado no cálculo de expiração.
 parameter SessionTtl {
+  // Título exibido no construtor e nas telas de configuração.
   title: { pt-BR: "Duração da sessão", en: "Session TTL" }
+  // Tipo do parâmetro: duração padrão do construtor.
   type: std.Duration
+  // Valor padrão de 30 minutos quando a aplicação não sobrescreve.
   default: 30m
 }

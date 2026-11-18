@@ -1,63 +1,110 @@
 // service: example.com/services/hr
+// Formas do serviço: classificação das áreas e dos tipos de equipamento.
 
+// Classificação das áreas da empresa usada em documentos e formulários.
 shape Department {
+  // Título exibido na interface.
   title: { pt-BR: "Área", en: "Department" }
+  // Base de classificação: valores estáticos, sem ciclo de vida.
   base: classification
 
+  // Valor da área de Engenharia.
   value Engineering {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Engenharia", en: "Engineering" }
+    // Ícone associado ao valor.
     icon: department.engineering
+    // Ordem de exibição do valor.
     ordinal: 10
   }
+  // Valor da área Comercial.
   value Sales {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Comercial", en: "Sales" }
+    // Ícone associado ao valor.
     icon: department.sales
+    // Ordem de exibição do valor.
     ordinal: 20
   }
+  // Valor da área de Operações.
   value Operations {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Operações", en: "Operations" }
+    // Ícone associado ao valor.
     icon: department.operations
+    // Ordem de exibição do valor.
     ordinal: 30
   }
+  // Valor da área Financeira.
   value Finance {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Financeiro", en: "Finance" }
+    // Ícone associado ao valor.
     icon: department.finance
+    // Ordem de exibição do valor.
     ordinal: 40
   }
+  // Valor da área de Pessoas.
   value People {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Pessoas", en: "People" }
+    // Ícone associado ao valor.
     icon: department.people
+    // Ordem de exibição do valor.
     ordinal: 50
   }
 }
 
+// Classificação dos tipos de equipamento entregues às pessoas.
 shape EquipmentKind {
+  // Título exibido na interface.
   title: { pt-BR: "Tipo de equipamento", en: "Equipment kind" }
+  // Base de classificação: valores estáticos, sem ciclo de vida.
   base: classification
 
+  // Valor para notebook.
   value Laptop {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Notebook", en: "Laptop" }
+    // Ícone associado ao valor.
     icon: equipment.laptop
+    // Ordem de exibição do valor.
     ordinal: 10
   }
+  // Valor para monitor.
   value Monitor {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Monitor", en: "Monitor" }
+    // Ícone associado ao valor.
     icon: equipment.monitor
+    // Ordem de exibição do valor.
     ordinal: 20
   }
+  // Valor para celular.
   value Phone {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Celular", en: "Phone" }
+    // Ícone associado ao valor.
     icon: equipment.phone
+    // Ordem de exibição do valor.
     ordinal: 30
   }
+  // Valor para fone de ouvido.
   value Headset {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Fone", en: "Headset" }
+    // Ícone associado ao valor.
     icon: equipment.headset
+    // Ordem de exibição do valor.
     ordinal: 40
   }
+  // Valor para crachá de identificação.
   value Badge {
+    // Rótulo exibido para o valor.
     title: { pt-BR: "Crachá", en: "Badge" }
+    // Ícone associado ao valor.
     icon: equipment.badge
+    // Ordem de exibição do valor.
     ordinal: 50
   }
 }

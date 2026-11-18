@@ -1,27 +1,34 @@
 // service: example.com/services/payments
 
+// Organograma que estrutura os papéis financeiros do serviço.
 organogram Treasury {
-  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" }
+  title: { pt-BR: "Organograma do financeiro", en: "Treasury organogram" } // Título exibido no builder.
 
+  // Relações de subordinação entre os papéis.
   hierarchy {
-    Manager > Analyst
+    Manager > Analyst // O gerente está acima do analista.
   }
 
-  Manager manages [Analyst]
+  Manager manages [Analyst] // Explicita que o gerente gerencia analistas.
 }
 
+// Papel operacional que registra cobranças e responde contestações.
 role Analyst {
+  // Título do papel exibido na interface.
   title: { pt-BR: "Analista financeiro", en: "Finance analyst" }
-  permissions: [payment.view, refund.request, chargeback.respond]
+  permissions: [payment.view, refund.request, chargeback.respond] // Permissões concedidas ao analista.
 }
 
+// Papel de supervisão com poderes de aprovação e decisão.
 role Manager {
-  title: { pt-BR: "Gerente financeiro", en: "Finance manager" }
-  inherits: Analyst
+  title: { pt-BR: "Gerente financeiro", en: "Finance manager" } // Título do papel exibido na interface.
+  inherits: Analyst // Herda as permissões do analista.
+  // Permissões adicionais concedidas ao gerente.
   permissions: [payment.refund, chargeback.decide, report.view]
 }
 
+// Papel técnico usado por automações e integrações.
 role PaymentEngine {
-  title: { pt-BR: "Motor de pagamentos", en: "Payment engine" }
-  permissions: [payment.capture, chargeback.receive]
+  title: { pt-BR: "Motor de pagamentos", en: "Payment engine" } // Título do papel exibido na interface.
+  permissions: [payment.capture, chargeback.receive] // Permissões de execução automática do motor.
 }

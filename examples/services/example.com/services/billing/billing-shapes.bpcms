@@ -1,29 +1,48 @@
 // service: example.com/services/billing
 
+// Shape de classificação para os regimes tributários aceitos.
 shape TaxRegimeCode {
+  // Título exibido no construtor.
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
+  // Deriva de uma classificação fechada de valores.
   base: classification
+  // Valor do Simples Nacional.
   value SIMPLES {
+    // Rótulo do regime.
     title: { pt-BR: "Simples Nacional", en: "Simples Nacional" }
+    // Ícone associado ao regime.
     icon: Simples
-    ordinal: 10
+    ordinal: 10 // Ordem de exibição do valor.
   }
+  // Valor do Lucro Presumido.
   value LUCRO_PRESUMIDO {
+    // Rótulo do regime.
     title: { pt-BR: "Lucro Presumido", en: "Presumed profit" }
+    // Ícone associado ao regime.
     icon: LucroPresumido
-    ordinal: 20
+    ordinal: 20 // Ordem de exibição do valor.
   }
+  // Valor do Lucro Real.
   value LUCRO_REAL {
+    // Rótulo do regime.
     title: { pt-BR: "Lucro Real", en: "Actual profit" }
+    // Ícone associado ao regime.
     icon: LucroReal
+    // Ordem de exibição do valor.
     ordinal: 30
   }
+  // Formatação textual simples, sem máscara.
   format: plain
 }
 
+// Shape textual que representa um ano e mês.
 shape YearMonth {
+  // Título exibido no construtor.
   title: { pt-BR: "Ano/mês", en: "Year-month" }
+  // Deriva do tipo textual nativo.
   base: string
+  // Valida o formato ano-mês.
   validate: year-month
+  // Formatação textual simples, sem máscara.
   format: plain
 }

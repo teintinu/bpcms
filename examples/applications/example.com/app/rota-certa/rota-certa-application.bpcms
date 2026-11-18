@@ -1,33 +1,43 @@
+// application: Rota Certa (pedidos, entregas e suporte)
+// Declara a aplicação da URI example.com/app/rota-certa e abre sua composição.
 application "example.com/app/rota-certa" {
-  source: registry
-  version: 1.9.2
+  source: registry // Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
+  version: 1.9.2 // Versão semver publicada da app; o lock fixa as versões dos serviços.
+  // Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
-    pt-BR: "Rota Certa"
-    en-US: "Right Route"
+    pt-BR: "Rota Certa" // Título em português (idioma default).
+    en-US: "Right Route" // Título em inglês americano.
   }
 
+  // Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity
-    "example.com/services/orders" as Orders
-    "example.com/services/shipping" as Shipping
-    "example.com/services/support" as Support
-    "example.com/services/notifications" as Notifications
+    "example.com/services/identity" as Identity // Identidade e autenticação dos usuários.
+    "example.com/services/orders" as Orders // Pedidos de venda que geram as entregas.
+    "example.com/services/shipping" as Shipping // Cotação, despacho e rastreio de entregas.
+    "example.com/services/support" as Support // Atendimento e ocorrências de suporte.
+    "example.com/services/notifications" as Notifications // Avisos e notificações aos usuários.
   }
+  // Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
   roles {
-    Dispatcher
-    Driver
-    Manager
-    Clerk
-    SupportAgent
+    Dispatcher // Despachante: organiza as entregas.
+    Driver // Motorista: executa as entregas.
+    Manager // Gerente: responde pela operação.
+    Clerk // Balconista: apoia o atendimento e os pedidos.
+    SupportAgent // Agente de suporte: atende ocorrências.
+    // Manager é superior a Dispatcher, que é superior a Driver.
     Manager > Dispatcher > Driver
+    // Manager é superior a Clerk.
     Manager > Clerk
+    // Manager é superior a SupportAgent.
     Manager > SupportAgent
   }
-  theme: Ops
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
+  theme: Ops // Tema visual fornecido pelo construtor (não é artefato de serviço).
+  locales: [pt-BR, en-US] // Idiomas da app; o primeiro (pt-BR) é o default.
+  environments: [dev, qa, prod] // Ambientes em que a aplicação é promovida.
 
+  // Bloco de inicialização da app; só configura, não contém regra de negócio.
   main {
+    // Inicializa Shipping.DefaultCarrier com a transportadora padrão CarrierX.
     set Shipping.DefaultCarrier = "CarrierX"
   }
 }

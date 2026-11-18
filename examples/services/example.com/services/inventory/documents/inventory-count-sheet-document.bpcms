@@ -1,155 +1,249 @@
 // service: example.com/services/inventory
-
+// Documento que registra a contagem física de um item de estoque.
 document CountSheet {
+  // Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Folha de contagem", en: "Count sheet" }
+  // Versão do artefato Document; diff e release comparam.
   version: 1
+  // Área responsável pelo documento.
   owner: "Inventory"
+  // Sincronização em tempo real entre as instâncias do documento.
   sync: live
 
+  // Campos persistidos na folha de contagem.
   fields {
+    // Referência ao item de estoque que está sendo contado.
     stockItem: StockItem {
+      // Título exibido no formulário e nas colunas.
       title: { pt-BR: "Item de estoque", en: "Stock item" }
+      // Permite buscar e filtrar pelo item relacionado.
       lookup
     }
+    // Quantidade esperada segundo o sistema.
     expected: std.Count { title: { pt-BR: "Esperado", en: "Expected" }, lookup }
+    // Quantidade efetivamente contada no armazém.
     counted: std.Count { title: { pt-BR: "Contado", en: "Counted" }, lookup }
+    // Diferença entre o contado e o esperado.
     divergence: std.Count {
+      // Título exibido no formulário e nas colunas.
       title: { pt-BR: "Divergência", en: "Divergence" }
+      // Permite buscar e filtrar pela divergência.
       lookup
+      // Calculado automaticamente a partir das duas contagens.
       computed: counted - expected
     }
+    // Situação da contagem no shape CountStatus.
     status: CountStatus { title: { pt-BR: "Situação", en: "Status" }, lookup }
+    // Data e hora em que a contagem foi registrada.
     countedAt: DateTime { title: { pt-BR: "Contada em", en: "Counted at" } }
+    // Data e hora de uma eventual recontagem.
     recountedAt: DateTime { title: { pt-BR: "Recontada em", en: "Recounted at" } }
+    // Data e hora da aprovação da contagem.
     approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
+    // Motivo informado quando a contagem é rejeitada.
     rejectionReason: string { title: { pt-BR: "Motivo da rejeição", en: "Rejection reason" } }
   }
 
+  // Habilita captura por dispositivo e unidades de medida.
   capabilities { capture, units }
+  // A quantidade contada vem do coletor de dados collector-01.
   source: device "collector-01" for counted
 
+  // Índices que aceleram as consultas mais frequentes.
   indexes {
+    // Consulta por item, ordenada pela data da contagem.
     byItem: [stockItem.id, countedAt] range
+    // Consulta por situação, ordenada pela data da contagem.
     byStatus: [status, countedAt] range
   }
 
 
+  // Ações que alteram a folha de contagem.
   actions {
+    // Abre uma nova folha de contagem para o item informado.
     create(stockItem: StockItem){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Abrir contagem", en: "Open count" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
+      // Documento devolvido pela ação após a criação.
       returns: CountSheet
       {
+        // Semeia a quantidade esperada com o disponível atual.
         expected = stockItem.available
+        // Emite o evento de criação, que inicia o processo de contagem.
         emit Created { stockItem: stockItem }
       }
     }
 
+    // Registra a contagem física e move a folha para Counted.
     submit(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Registrar contagem", en: "Record count" }
+      // Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
 
+      // Transição automática para a situação Counted.
       to: status.Counted
 
       {
+        // Marca o instante em que a contagem foi registrada.
         countedAt = now()
       }
     }
 
+    // Recontagem manual do item, sem mudar a situação.
     recount(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Recontar", en: "Recount" }
+      // Papéis autorizados a executar a ação.
       roles: [WarehouseOperator]
 
       {
+        // Atualiza o instante da recontagem.
         recountedAt = now()
       }
     }
 
+    // Aprova a contagem e move a folha para Approved.
     approve(){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Aprovar contagem", en: "Approve count" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
 
+      // Transição automática para a situação Approved.
       to: status.Approved
+      // Payload emitido na transição, transportando a data de aprovação.
       emits { approvedAt: now() }
 
       {
+        // Grava o instante da aprovação no documento.
         approvedAt = now()
       }
     }
 
+    // Rejeita a contagem com um motivo obrigatório.
     reject(reason: string){
+      // Título exibido no botão da ação.
       title: { pt-BR: "Rejeitar contagem", en: "Reject count" }
+      // Papéis autorizados a executar a ação.
       roles: [StockManager]
 
+      // Transição automática para a situação Rejected.
       to: status.Rejected
 
+      // Exige um motivo com pelo menos 5 caracteres.
       rule reason.length >= 5 {
+        // Mensagem de validação em português.
         pt-BR: "Informe o motivo da rejeição"
+        // Mensagem de validação em inglês.
         en: "Enter the rejection reason"
       }
 
       {
+        // Persiste o motivo informado na rejeição.
         rejectionReason = reason
       }
     }
   }
 
+  // A quantidade contada não pode ser negativa.
   rule counted >= 0 {
+    // Mensagem de validação em português.
     pt-BR: "A contagem não pode ser negativa"
+    // Mensagem de validação em inglês.
     en: "Count cannot be negative"
   }
 }
 
+// Shape de estado que modela o ciclo de vida da folha de contagem.
 shape CountStatus {
+  // Título exibido no builder e nos filtros.
   title: { pt-BR: "Situação da contagem", en: "Count status" }
+  // Base do shape: máquina de estados.
   base: state
+  // Estado inicial e transição disparada pela criação do documento.
   initial: Open with transition Created {
+    // Título exibido no histórico da transição.
     title: { pt-BR: "Contagem criada", en: "Count created" }
+    // Dados carregados pela transição de criação.
     payload {
+      // Item de estoque levado junto com o evento de criação.
       stockItem: StockItem { title: { pt-BR: "Item de estoque", en: "Stock item" } }
     }
   }
+  // Estado em que a contagem está aberta e aguardando registro.
   value Open {
+    // Título exibido na interface.
     title: { pt-BR: "Aberta", en: "Open" }
+    // Ícone associado ao estado.
     icon: Open
+    // Ordem de exibição do estado no fluxo.
     ordinal: 10
 
+    // Transição para Counted quando a contagem é registrada.
     transition Counted {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Contagem registrada", en: "Count recorded" }
+      // Dados carregados pela transição de registro.
       payload {
+        // Quantidade contada no momento do registro.
         counted: std.Count { title: { pt-BR: "Contado", en: "Counted" } }
+        // Divergência apurada no registro.
         divergence: std.Count { title: { pt-BR: "Divergência", en: "Divergence" } }
       }
     }
   }
+  // Estado em que a contagem foi registrada e aguarda decisão.
   value Counted {
+    // Título exibido na interface.
     title: { pt-BR: "Contada", en: "Counted" }
+    // Ícone associado ao estado.
     icon: Counted
+    // Ordem de exibição do estado no fluxo.
     ordinal: 20
 
+    // Transição para Approved quando a gestão aprova.
     transition Approved {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Contagem aprovada", en: "Count approved" }
+      // Dados carregados pela transição de aprovação.
       payload {
+        // Instante em que a contagem foi aprovada.
         approvedAt: DateTime { title: { pt-BR: "Aprovada em", en: "Approved at" } }
       }
     }
 
+    // Transição para Rejected quando a gestão rejeita.
     transition Rejected {
+      // Título exibido no histórico da transição.
       title: { pt-BR: "Contagem rejeitada", en: "Count rejected" }
+      // Dados carregados pela transição de rejeição.
       payload {
+        // Motivo da rejeição informado pelo gestor.
         reason: string { title: { pt-BR: "Motivo", en: "Reason" } }
       }
     }
   }
+  // Estado final de contagem aprovada.
   value Approved {
+    // Título exibido na interface.
     title: { pt-BR: "Aprovada", en: "Approved" }
+    // Ícone associado ao estado.
     icon: Approved
+    // Ordem de exibição do estado no fluxo.
     ordinal: 30
   }
+  // Estado final de contagem rejeitada.
   value Rejected {
+    // Título exibido na interface.
     title: { pt-BR: "Rejeitada", en: "Rejected" }
+    // Ícone associado ao estado.
     icon: Rejected
+    // Ordem de exibição do estado no fluxo.
     ordinal: 40
   }
+  // Formato de apresentação do shape.
   format: plain
 }

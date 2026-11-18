@@ -1,14 +1,23 @@
 // service: example.com/services/support
 
+// Prazo padrão de atendimento, configurável pela aplicação no boot.
 parameter DefaultSla {
+  // Título exibido na tela de configuração.
   title: { pt-BR: "Prazo padrão", en: "Default SLA" }
+  // Tipo duração, vindo do pseudo-serviço std.
   type: std.Duration
+  // Valor inicial de dois dias quando nada for configurado.
   default: 2d
 }
 
+// Teto de reembolso usado pela alçada e pela política de autorização.
 parameter RefundLimit {
+  // Título exibido na tela de configuração.
   title: { pt-BR: "Limite de reembolso", en: "Refund limit" }
+  // Tipo monetário com moeda explícita.
   type: std.Money
+  // Valor inicial de quinhentos reais.
   default: 500 BRL
+  // Piso aceito na configuração; impede valor negativo.
   min: 0 BRL
 }

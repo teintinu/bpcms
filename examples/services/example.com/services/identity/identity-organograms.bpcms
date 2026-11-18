@@ -1,45 +1,73 @@
 // service: example.com/services/identity
 
+// Declara o organograma de papéis da plataforma e sua hierarquia.
 organogram Platform {
+  // Título exibido no construtor e na navegação.
   title: { pt-BR: "Organograma da plataforma", en: "Platform organogram" }
+  // Relações de herança entre papéis.
   hierarchy {
+    // Admin herda de Manager, que herda de Clerk, que herda de Customer.
     Admin > Manager > Clerk > Customer
+    // Manager é superior de Dispatcher, que é superior de Driver.
     Manager > Dispatcher > Driver
   }
+  // Regras de segregação de funções (quatro olhos).
   fourEyes {
+    // Aprovar reembolso exige também o papel Manager.
     refund.approve requires Manager
   }
 }
 
+// Papel base do cliente final.
 role Customer {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Cliente", en: "Customer" }
+  // Permissões concedidas ao papel.
   permissions: [catalog.view, order.create, order.viewOwn]
 }
 
+// Papel do atendente, herda as permissões de Customer.
 role Clerk {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Atendente", en: "Clerk" }
+  // Papel de origem das permissões herdadas.
   inherits: Customer
+  // Permissões adicionais do papel.
   permissions: [order.manage, customer.view]
 }
 
+// Papel do gerente, herda as permissões de Clerk.
 role Manager {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Gerente", en: "Manager" }
+  // Papel de origem das permissões herdadas.
   inherits: Clerk
+  // Permissões adicionais do papel, incluindo aprovação de reembolso.
   permissions: [report.view, refund.approve, customer.manage]
 }
 
+// Papel do administrador, herda as permissões de Manager.
 role Admin {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Administrador", en: "Admin" }
+  // Papel de origem das permissões herdadas.
   inherits: Manager
+  // Permissões administrativas do papel.
   permissions: [user.manage, environment.manage]
 }
 
+// Papel do despachante de entregas.
 role Dispatcher {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Despachante", en: "Dispatcher" }
+  // Permissões concedidas ao papel.
   permissions: [shipment.dispatch, order.view]
 }
 
+// Papel do motorista de entregas.
 role Driver {
+  // Título exibido no construtor e nas telas.
   title: { pt-BR: "Motorista", en: "Driver" }
+  // Permissões concedidas ao papel.
   permissions: [shipment.track, shipment.deliver]
 }

@@ -1,21 +1,36 @@
 // service: example.com/services/credit
 
+// Declara a forma RiskBand: classificação ordenada das faixas de risco.
 shape RiskBand {
+  // Título exibido onde a faixa de risco é referenciada.
   title: { pt-BR: "Faixa de risco", en: "Risk band" }
+  // Base classification: os valores são categorias comparáveis por ordinal.
   base: classification
+  // Faixa de risco baixo.
   value Low {
+    // Título exibido no formulário, nos filtros e no relatório.
     title: { pt-BR: "Baixo", en: "Low" }
+    // Ícone associado à faixa, resolvido pelo nome Low.
     icon: Low
+    // Peso de ordenação: menor que as faixas seguintes.
     ordinal: 10
   }
+  // Faixa de risco médio.
   value Medium {
+    // Título exibido no formulário, nos filtros e no relatório.
     title: { pt-BR: "Médio", en: "Medium" }
+    // Ícone associado à faixa, resolvido pelo nome Medium.
     icon: Medium
+    // Peso de ordenação intermediário entre baixo e alto.
     ordinal: 20
   }
+  // Faixa de risco alto.
   value High {
+    // Título exibido no formulário, nos filtros e no relatório.
     title: { pt-BR: "Alto", en: "High" }
+    // Ícone associado à faixa, resolvido pelo nome High.
     icon: High
+    // Peso de ordenação máximo entre as faixas.
     ordinal: 30
   }
 }
