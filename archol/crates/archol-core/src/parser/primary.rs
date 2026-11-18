@@ -1,4 +1,4 @@
-//! Expressões primárias: literais, listas, objetos tipados, chamadas e tipos.
+//! Primary expressions: literals, lists, typed objects, calls and types.
 
 use crate::ast::{Expr, Member};
 use crate::parser::unquote;
@@ -70,7 +70,7 @@ impl Parser<'_> {
             Ident => {
                 self.advance();
                 let mut name = self.text(token.span).to_string();
-                // `InvoiceItem[] { ... }`: sufixo de lista em tipo.
+                // `InvoiceItem[] { ... }`: list suffix in a type.
                 if self.kind() == Slash
                     && self.peek(1) == Star
                     && matches!(self.peek(2), RBracket | Comma | RParen)
@@ -180,7 +180,7 @@ impl Parser<'_> {
                 let span = token.span;
                 self.error(
                     "E_PARSE_EXPR",
-                    format!("Expressão inesperada: {:?}", token.kind),
+                    format!("Unexpected expression: {:?}", token.kind),
                 );
                 if !self.at_eof() && self.kind() != RBrace {
                     self.advance();
@@ -193,7 +193,7 @@ impl Parser<'_> {
         }
     }
 
-    /// Membros de `{ ... }` (objeto literal ou corpo de tipo).
+    /// Members of `{ ... }` (object literal or type body).
     pub(crate) fn parse_object_members(&mut self) -> Vec<Member> {
         let mut members = Vec::new();
         if !self.enter_depth() {
@@ -210,7 +210,7 @@ impl Parser<'_> {
                 break;
             }
             if self.at_eof() {
-                self.error("E_PARSE_UNCLOSED", "Objeto não fechado".to_string());
+                self.error("E_PARSE_UNCLOSED", "Unclosed object".to_string());
                 break;
             }
             if matches!(self.kind(), Ident)
@@ -294,7 +294,7 @@ impl Parser<'_> {
         args
     }
 
-    /// Nome de tipo: `Invoice`, `std.Money`, `InvoiceItem[]`.
+    /// Type name: `Invoice`, `std.Money`, `InvoiceItem[]`.
     pub(crate) fn parse_type_ref(&mut self) -> Option<String> {
         let mut parts = vec![self.parse_type_segment()?];
         while self.kind() == Pipe {

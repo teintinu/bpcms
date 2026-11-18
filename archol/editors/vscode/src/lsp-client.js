@@ -20,7 +20,7 @@ class LspClient extends EventEmitter {
 
     this._child = null;
     this._startedCommand = null;
-    this._decoder = new MessageDecoder({ onError: (error) => this.log(`[protocolo] ${error.message}`) });
+    this._decoder = new MessageDecoder({ onError: (error) => this.log(`[protocol] ${error.message}`) });
     this._nextId = 0;
     this._pending = new Map();
     this._handlers = new Map();
@@ -47,16 +47,16 @@ class LspClient extends EventEmitter {
         this._startedCommand = candidate;
         this._stopping = false;
         this._attach(child);
-        this.log(`processo iniciado: ${candidate}`);
+        this.log(`process started: ${candidate}`);
         this.emit('started', { command: candidate });
         return candidate;
       } catch (error) {
         lastError = error;
-        this.log(`não foi possível executar ${candidate}: ${error.message}`);
+        this.log(`could not run ${candidate}: ${error.message}`);
       }
     }
     const error = new Error(
-      `Executável do servidor Archol não encontrado. Tentei: ${this.candidates.join(', ')}`,
+      `Archol server executable not found. Tried: ${this.candidates.join(', ')}`,
     );
     error.code = 'ENOENT';
     error.candidates = this.candidates.slice();
@@ -67,7 +67,7 @@ class LspClient extends EventEmitter {
   async stop() {
     const child = this._child;
     this._stopping = true;
-    this._rejectPending(new Error('Cliente LSP encerrado.'));
+    this._rejectPending(new Error('LSP client stopped.'));
     if (!child) {
       this._child = null;
       return;
@@ -75,7 +75,7 @@ class LspClient extends EventEmitter {
     try {
       child.stdin.end();
     } catch {
-      // O processo pode já ter fechado a entrada.
+      // The process may have already closed stdin.
     }
     if (child.exitCode !== null) {
       this._child = null;
@@ -84,14 +84,14 @@ class LspClient extends EventEmitter {
     try {
       child.kill();
     } catch {
-      // Ignorado: o processo pode ter encerrado entre a checagem e o kill.
+      // Ignored: the process may have exited between the check and the kill.
     }
     await new Promise((resolve) => {
       const timer = setTimeout(() => {
         try {
           child.kill('SIGKILL');
         } catch {
-          // Ignorado.
+          // Ignored.
         }
         resolve();
       }, FORCE_KILL_MS);
@@ -106,14 +106,14 @@ class LspClient extends EventEmitter {
 
   request(method, params, options = {}) {
     if (!this._child) {
-      return Promise.reject(new Error('Servidor LSP do Archol não está em execução.'));
+      return Promise.reject(new Error('Archol LSP server is not running.'));
     }
     const id = ++this._nextId;
     const timeoutMs = options.timeoutMs || this.requestTimeoutMs;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this._pending.delete(id);
-        reject(new Error(`Tempo esgotado aguardando resposta de ${method}.`));
+        reject(new Error(`Timed out waiting for a response from ${method}.`));
       }, timeoutMs);
       timer.unref?.();
       this._pending.set(id, { method, resolve, reject, timer });
@@ -134,7 +134,7 @@ class LspClient extends EventEmitter {
     try {
       this._write({ jsonrpc: '2.0', method, params });
     } catch (error) {
-      this.log(`falha ao enviar ${method}: ${error.message}`);
+      this.log(`failed to send ${method}: ${error.message}`);
     }
   }
 
@@ -142,9 +142,9 @@ class LspClient extends EventEmitter {
     if (!this._child) return;
     try {
       this._write({ jsonrpc: '2.0', id, result });
-      this.log(`← resposta do cliente (id ${id})`);
+      this.log(`← client response (id ${id})`);
     } catch (error) {
-      this.log(`falha ao responder ${id}: ${error.message}`);
+      this.log(`failed to respond ${id}: ${error.message}`);
     }
   }
 
@@ -152,9 +152,9 @@ class LspClient extends EventEmitter {
     if (!this._child) return;
     try {
       this._write({ jsonrpc: '2.0', id, error: { code, message } });
-      this.log(`← erro do cliente (id ${id}): ${message}`);
+      this.log(`← client error (id ${id}): ${message}`);
     } catch (error) {
-      this.log(`falha ao responder erro ${id}: ${error.message}`);
+      this.log(`failed to respond with error ${id}: ${error.message}`);
     }
   }
 
@@ -169,7 +169,7 @@ class LspClient extends EventEmitter {
     this.onRequest('workspace/workspaceFolders', () => null);
     this.onRequest('workspace/applyEdit', () => ({
       applied: false,
-      failureReason: 'O cliente Archol não aplica edições do servidor.',
+      failureReason: 'The Archol client does not apply server edits.',
     }));
     this.onRequest('window/showMessage', (params) => {
       this.emit('showMessage', params);
@@ -187,12 +187,12 @@ class LspClient extends EventEmitter {
     child.stderr.on('data', (chunk) => {
       const text = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
       for (const line of text.split(/\r?\n/)) {
-        if (line.trim()) this.log(`[servidor] ${line}`);
+        if (line.trim()) this.log(`[server] ${line}`);
       }
     });
     child.stderr.on('error', (error) => this.log(`[stderr] ${error.message}`));
     child.stdin.on('error', (error) => this.log(`[stdin] ${error.message}`));
-    child.on('error', (error) => this.log(`[processo] ${error.message}`));
+    child.on('error', (error) => this.log(`[process] ${error.message}`));
     child.once('exit', (code, signal) => this._handleExit(code, signal));
   }
 
@@ -200,9 +200,9 @@ class LspClient extends EventEmitter {
     const intentional = this._stopping;
     this._child = null;
     this._stopping = false;
-    const reason = signal ? `sinal ${signal}` : `código ${code}`;
-    this.log(`processo encerrado (${reason})`);
-    this._rejectPending(new Error(`Servidor LSP do Archol encerrado (${reason}).`));
+    const reason = signal ? `signal ${signal}` : `code ${code}`;
+    this.log(`process exited (${reason})`);
+    this._rejectPending(new Error(`Archol LSP server exited (${reason}).`));
     this.emit('stopped', { code, signal, intentional });
   }
 
@@ -213,7 +213,7 @@ class LspClient extends EventEmitter {
         this._handleServerRequest(message);
       } else {
         if (message.method === 'window/logMessage') {
-          this.log(`[servidor] ${message.params?.message || ''}`);
+          this.log(`[server] ${message.params?.message || ''}`);
         }
         this.emit('notification', message.method, message.params);
       }
@@ -227,8 +227,8 @@ class LspClient extends EventEmitter {
   _handleServerRequest(message) {
     const handler = this._handlers.get(message.method);
     if (!handler) {
-      this.log(`requisição do servidor não suportada: ${message.method}`);
-      this.respondError(message.id, -32601, `Método não suportado pelo cliente Archol: ${message.method}`);
+      this.log(`unsupported server request: ${message.method}`);
+      this.respondError(message.id, -32601, `Method not supported by the Archol client: ${message.method}`);
       return;
     }
     this.log(`← ${message.method} (id ${message.id})`);
@@ -236,7 +236,7 @@ class LspClient extends EventEmitter {
       .then(() => handler(message.params, message))
       .then((result) => this.respond(message.id, result === undefined ? null : result))
       .catch((error) => {
-        this.log(`erro ao tratar ${message.method}: ${error.message}`);
+        this.log(`error handling ${message.method}: ${error.message}`);
         this.respondError(message.id, -32603, error.message);
       });
   }
@@ -244,16 +244,16 @@ class LspClient extends EventEmitter {
   _handleResponse(message) {
     const pending = this._pending.get(message.id);
     if (!pending) {
-      this.log(`resposta inesperada (id ${message.id})`);
+      this.log(`unexpected response (id ${message.id})`);
       return;
     }
     this._pending.delete(message.id);
     clearTimeout(pending.timer);
     if (message.error) {
-      const error = new Error(`${pending.method}: ${message.error.message || 'erro do servidor'}`);
+      const error = new Error(`${pending.method}: ${message.error.message || 'server error'}`);
       error.code = message.error.code;
       error.data = message.error.data;
-      this.log(`← ${pending.method} (id ${message.id}) erro ${error.code}: ${message.error.message}`);
+      this.log(`← ${pending.method} (id ${message.id}) error ${error.code}: ${message.error.message}`);
       pending.reject(error);
       return;
     }
@@ -263,7 +263,7 @@ class LspClient extends EventEmitter {
 
   _write(message) {
     if (!this._child || !this._child.stdin.writable) {
-      throw new Error('Servidor LSP do Archol não está em execução.');
+      throw new Error('Archol LSP server is not running.');
     }
     this._child.stdin.write(encodeMessage(message));
   }

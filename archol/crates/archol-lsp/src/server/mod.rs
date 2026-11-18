@@ -1,4 +1,4 @@
-//! Servidor LSP: estado dos documentos, análise e handlers.
+//! LSP server: document state, analysis and handlers.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

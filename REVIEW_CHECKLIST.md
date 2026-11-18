@@ -1355,7 +1355,7 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 **Resultados:**
 - 330 arquivos reais parseados com **0 erros** e 805 artefatos; `check` no workspace: **0 erros**.
 - Índices gerados: 72 enums, 54 roles, 20 serviços.
-- 30 testes Rust verdes (`cargo test`) e 27 testes do plugin verdes (`node --test`).
+- 35 testes Rust verdes (`cargo test`) e 29 testes do plugin verdes (`node --test`).
 
 
 **Auditoria adversarial (2026-11-18):** um agente revisor testou entradas hostis e apontou seis bloqueadores, todos corrigidos:
@@ -1376,5 +1376,7 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - Definition: resolução semântica própria (`resolve.rs`) — parâmetro/`const`, campo de documento (`invoice.status` → `status: InvoiceStatus` em `Invoice`), valor de enum em comparação tipada (`invoice.status == Overdue` → `value Overdue`, não o `icon Overdue`), sujeito implícito de `fanOut`, e contexto de `icon:` para ícones.
 - `Cmd+Click`/`Ctrl+Click`/`F12` usam o mesmo provider; documentado que no macOS é `Cmd`.
 - Testes: 35 Rust (5 novos de resolução) e 29 JavaScript (2 de conversão de span); smoke do LSP cobre as definições reais do processo de cobrança.
+
+**Idioma do compilador e do plugin (2026-11-18):** por pedido direto, todo o `archol/` passou a ser escrito em **inglês** — comentários, diagnósticos, saída da CLI, hover/LSP, UI do plugin, testes, scripts e docs (`archol/README.md`, `archol/docs/*`). Ficaram de fora apenas dados de exemplo Archol com `pt-BR` e fixtures Unicode (`João`, `ação`, `ç`) usados para testar UTF-8. A regra está registrada no `AGENTS.md`.
 
 **Arquivos afetados:** `archol/**` (novo), `examples/**` (extensão e `std-shapes`), `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `AGENTS.md`, `BRAINSTORM.md` (D-050…D-053, B-60…B-63), `REVIEW_CHECKLIST.md`.

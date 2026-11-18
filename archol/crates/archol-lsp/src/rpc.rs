@@ -1,4 +1,4 @@
-//! Frames JSON-RPC 2.0 com `Content-Length` sobre stdio.
+//! JSON-RPC 2.0 frames with `Content-Length` over stdio.
 
 use std::io::{BufRead, Read, Write};
 

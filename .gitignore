@@ -13,10 +13,10 @@ node_modules/
 # Windows
 Thumbs.db
 
-# Editores / temporários
+# Editors / temporary files
 *.swp
 *~
 .idea/
 
-# Ambiente local (não versionar cargo home, se alguém apontar para cá)
+# Local environment (do not version cargo home, if anyone points it here)
 .cargo/

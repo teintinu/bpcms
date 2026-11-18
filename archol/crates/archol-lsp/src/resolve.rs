@@ -1,7 +1,7 @@
-//! Resolução de definição: variável, campo de documento, valor de enum e ícone.
+//! Definition resolution: variable, document field, enum value and icon.
 //!
-//! É semântica o suficiente para responder `invoice.status` (campo do documento
-//! `Invoice`) e `Overdue` (valor de `InvoiceStatus`, não o ícone homônimo).
+//! It is semantic enough to answer `invoice.status` (field of the `Invoice`
+//! document) and `Overdue` (value of `InvoiceStatus`, not the homonymous icon).
 
 use archol_analysis::Analysis;
 use archol_core::{Artifact, Expr, Member, Span, Stmt};
@@ -20,7 +20,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
     let service = file.service.as_deref();
     let artifact = features::artifact_at(&file.ast, offset)?;
 
-    // 0. O próprio parâmetro ou `const`/`let` -> declaração da variável.
+    // 0. The parameter or `const`/`let` itself -> variable declaration.
     if let Some(param) = artifact
         .params
         .iter()
@@ -42,7 +42,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 1. `icon: Overdue` -> artefato Icon/Overdue (não o valor de enum).
+    // 1. `icon: Overdue` -> Icon/Overdue artifact (not the enum value).
     if let Some((name, value)) = features::property_at(&file.ast, offset) {
         if name == "icon" && features::contains(value.span(), offset) {
             if let Some(target) = artifact_target(analysis, &word, service, Some("Icon")) {
@@ -51,7 +51,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 2. `invoice.status == Overdue` -> valor Overdue em InvoiceStatus.
+    // 2. `invoice.status == Overdue` -> Overdue value in InvoiceStatus.
     if let Some(Expr::Binary { left, right, .. }) = features::comparison_at(&file.ast, offset) {
         if let Some(target) = enum_literal_target(
             analysis,
@@ -65,7 +65,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 3. `const a: Regime = SIMPLES` -> valor SIMPLES declarado no enum.
+    // 3. `const a: Regime = SIMPLE` -> SIMPLE value declared in the enum.
     if let Some((name, Some(type_ref))) = features::const_at(&file.ast, offset) {
         if name != word {
             if let Some(info) = symbols.resolve_enum(type_ref, service) {
@@ -79,7 +79,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 4. `invoice.status` -> campo `status` do documento Invoice.
+    // 4. `invoice.status` -> `status` field of the Invoice document.
     if let Some(expr) = features::expr_at(&file.ast, offset) {
         if let Expr::MemberAccess { object, name, span } = expr {
             let name_start = span.end.saturating_sub(name.len());
@@ -102,7 +102,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
             if symbols.artifacts.contains_key(name.as_str()) {
                 return artifact_target(analysis, name.as_str(), service, None);
             }
-            // Uso direto de valor de enum (ex.: argumento nomeado).
+            // Direct use of an enum value (e.g. named argument).
             if let Some((info, value)) = symbols.find_value(name.as_str()) {
                 return Some(Target {
                     path: info.path.clone(),
@@ -112,7 +112,7 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 5. Fallback: artefato (documento/shape/role/icon) ou enum.
+    // 5. Fallback: artifact (document/shape/role/icon) or enum.
     artifact_target(analysis, &word, service, None)
 }
 
@@ -141,8 +141,8 @@ fn enum_literal_target(
             continue;
         }
         let ty = expr_type(analysis, artifact, variable_side).or_else(|| {
-            // `fanOut: Invoice where status == Overdue`: o sujeito implícito é
-            // o documento Invoice e `status` é um campo dele.
+            // `fanOut: Invoice where status == Overdue`: the implicit subject
+            // is the Invoice document and `status` is one of its fields.
             let name = variable_side.as_ident()?;
             let (property, value) = features::property_at(file_ast(analysis, artifact)?, offset)?;
             if property != "fanOut" {
@@ -422,14 +422,14 @@ mod tests {
             .files
             .iter()
             .find(|file| file.path.ends_with(file_suffix))
-            .expect("arquivo");
-        let base = file.source.find(needle).expect("trecho");
-        let delta = needle.find(within).expect("trecho interno");
+            .expect("file");
+        let base = file.source.find(needle).expect("snippet");
+        let delta = needle.find(within).expect("inner snippet");
         (file.path.clone(), base + delta)
     }
 
     #[test]
-    fn resolve_campo_status_do_documento() {
+    fn resolves_document_status_field() {
         let analysis = workspace();
         let (path, offset) = locate(
             &analysis,
@@ -437,7 +437,7 @@ mod tests {
             "invoice.status",
             "status",
         );
-        let target = definition(&analysis, &path, offset).expect("definição");
+        let target = definition(&analysis, &path, offset).expect("definition");
         assert!(target.path.ends_with("billing-invoice-document.archol"));
         let file = analysis
             .workspace
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_valor_overdue_nao_icone() {
+    fn resolves_overdue_value_not_icon() {
         let analysis = workspace();
         let (path, offset) = locate(
             &analysis,
@@ -458,7 +458,7 @@ mod tests {
             "Overdue)",
             "Overdue",
         );
-        let target = definition(&analysis, &path, offset).expect("definição");
+        let target = definition(&analysis, &path, offset).expect("definition");
         assert!(target.path.ends_with("billing-shapes.archol"));
         let file = analysis
             .workspace
@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_icone_no_uso_e_nao_valor_homonimo() {
+    fn resolves_icon_at_usage_not_homonymous_value() {
         let analysis = workspace();
         let (path, offset) = locate(
             &analysis,
@@ -478,7 +478,7 @@ mod tests {
             "icon: Overdue",
             "Overdue",
         );
-        let target = definition(&analysis, &path, offset).expect("definição");
+        let target = definition(&analysis, &path, offset).expect("definition");
         assert!(
             target.path.ends_with("billing-icons.archol"),
             "{}",
@@ -487,15 +487,15 @@ mod tests {
     }
 
     #[test]
-    fn resolve_icone_quando_contexto_e_icon() {
+    fn resolves_icon_when_context_is_icon() {
         let analysis = workspace();
         let (path, offset) = locate(&analysis, "billing-icons.archol", "icon Overdue", "Overdue");
-        let target = definition(&analysis, &path, offset).expect("definição");
+        let target = definition(&analysis, &path, offset).expect("definition");
         assert!(target.path.ends_with("billing-icons.archol"));
     }
 
     #[test]
-    fn resolve_parametro_do_processo() {
+    fn resolves_process_parameter() {
         let analysis = workspace();
         let (path, offset) = locate(
             &analysis,
@@ -503,7 +503,7 @@ mod tests {
             "invoice: Invoice",
             "invoice",
         );
-        let target = definition(&analysis, &path, offset).expect("definição");
+        let target = definition(&analysis, &path, offset).expect("definition");
         assert!(target.path.ends_with("billing-dunning-process.archol"));
         let file = analysis
             .workspace

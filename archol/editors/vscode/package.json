@@ -1,7 +1,7 @@
 {
   "name": "archol-vscode",
   "displayName": "Archol",
-  "description": "Suporte à linguagem Archol no VS Code: sintaxe, snippets, LSP e explorador de AST.",
+  "description": "Archol language support for VS Code: syntax, snippets, LSP and AST explorer.",
   "version": "0.1.0",
   "publisher": "archol",
   "license": "UNLICENSED",
@@ -56,22 +56,22 @@
     "commands": [
       {
         "command": "archol.showAst",
-        "title": "Abrir explorador de AST",
+        "title": "Open AST Explorer",
         "category": "Archol"
       },
       {
         "command": "archol.showLinks",
-        "title": "Mostrar links do servidor",
+        "title": "Show Server Links",
         "category": "Archol"
       },
       {
         "command": "archol.restartServer",
-        "title": "Reiniciar servidor LSP",
+        "title": "Restart LSP Server",
         "category": "Archol"
       },
       {
         "command": "archol.showOutput",
-        "title": "Mostrar saída do servidor",
+        "title": "Show Server Output",
         "category": "Archol"
       }
     ],
@@ -95,7 +95,7 @@
         "archol.server.path": {
           "type": "string",
           "default": "archol",
-          "markdownDescription": "Caminho do executável do servidor LSP do Archol. O padrão `archol` procura no `PATH`. Se não encontrar, a extensão tenta `archol/target/release/archol` e `archol/target/debug/archol` relativos à raiz do workspace."
+          "markdownDescription": "Path to the Archol LSP server executable. The default `archol` looks on `PATH`. If not found, the extension tries `archol/target/release/archol` and `archol/target/debug/archol` relative to the workspace root."
         },
         "archol.server.args": {
           "type": "array",
@@ -105,7 +105,7 @@
           "default": [
             "lsp"
           ],
-          "markdownDescription": "Argumentos passados ao executável do servidor LSP. O padrão `[\"lsp\"]` executa `archol lsp`; use `[]` se o caminho apontar para um servidor dedicado que não aceita subcomando."
+          "markdownDescription": "Arguments passed to the LSP server executable. The default `[\"lsp\"]` runs `archol lsp`; use `[]` if the path points to a dedicated server that does not accept a subcommand."
         }
       }
     }

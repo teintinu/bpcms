@@ -2,13 +2,13 @@
 
 const { browserScript } = require('./ast-view-browser');
 
-// HTML/CSS/JS inline do explorador de AST. Sem CDN e sem arquivos externos:
-// o tema acompanha as variáveis --vscode-* do editor. O script de navegador
-// mora em ast-view-browser.js apenas para manter os arquivos pequenos.
+// Inline HTML/CSS/JS for the AST explorer. No CDN and no external files:
+// the theme follows the editor's --vscode-* variables. The browser script
+// lives in ast-view-browser.js just to keep the files small.
 
 function buildAstHtml({ cspSource, nonce }) {
   return `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
@@ -78,13 +78,13 @@ function buildAstHtml({ cspSource, nonce }) {
 </head>
 <body>
 <header class="toolbar">
-  <span class="file" id="file-name" title="Arquivo da AST">Archol</span>
-  <input id="filter" type="search" placeholder="Filtrar por kind ou nome" aria-label="Filtrar nós da AST">
-  <button id="reveal" type="button" title="Posiciona o cursor no início do nó selecionado">Ir para código</button>
-  <button id="copy" type="button" title="Copia o JSON do nó selecionado (ou da AST inteira)">Copiar JSON</button>
+  <span class="file" id="file-name" title="AST file">Archol</span>
+  <input id="filter" type="search" placeholder="Filter by kind or name" aria-label="Filter AST nodes">
+  <button id="reveal" type="button" title="Places the cursor at the start of the selected node">Go to Code</button>
+  <button id="copy" type="button" title="Copies the JSON of the selected node (or the whole AST)">Copy JSON</button>
   <span id="status" role="status"></span>
 </header>
-<main id="tree" role="tree" aria-label="Árvore de AST do Archol"></main>
+<main id="tree" role="tree" aria-label="Archol AST tree"></main>
 <script nonce="${nonce}">
 ${browserScript}
 </script>

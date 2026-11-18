@@ -17,7 +17,7 @@ function describeParams(params) {
   if (uri) bits.push(shortUri(uri));
   if (params.position) bits.push(`${params.position.line}:${params.position.character}`);
   if (params.textDocument?.version !== undefined) bits.push(`v${params.textDocument.version}`);
-  if (Array.isArray(params.diagnostics)) bits.push(`${params.diagnostics.length} diagnóstico(s)`);
+  if (Array.isArray(params.diagnostics)) bits.push(`${params.diagnostics.length} diagnostic(s)`);
   return bits.length > 0 ? ` ${bits.join(' ')}` : '';
 }
 

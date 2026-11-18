@@ -1,4 +1,4 @@
-//! Handlers de hover, completion, definição, referências e folding do LSP.
+//! LSP handlers for hover, completion, definition, references and folding.
 
 use std::path::Path;
 
@@ -49,7 +49,7 @@ impl Server {
                 .resolve_enum(&artifact.name, service_ref)
                 .and_then(|info| info.values.iter().find(|v| v.name == value))
                 .and_then(|v| v.title.clone());
-            parts.push(format!("**{value}** — valor de `{}`", artifact.name));
+            parts.push(format!("**{value}** — value of `{}`", artifact.name));
             if let Some(title) = title {
                 parts.push(title);
             }
@@ -62,11 +62,11 @@ impl Server {
             let ty = param
                 .type_ref
                 .clone()
-                .unwrap_or_else(|| "inferido".to_string());
-            parts.push(format!("**{}** · parâmetro `{ty}`", param.name));
+                .unwrap_or_else(|| "inferred".to_string());
+            parts.push(format!("**{}** · parameter `{ty}`", param.name));
         } else if let Some((info, member)) = analysis.symbols.find_value(&word) {
             if !analysis.symbols.enums.iter().any(|e| e.name == word) {
-                parts.push(format!("**{}** — valor de `{}`", member.name, info.name));
+                parts.push(format!("**{}** — value of `{}`", member.name, info.name));
                 if let Some(title) = &member.title {
                     parts.push(title.clone());
                 }
@@ -85,21 +85,21 @@ impl Server {
                     })
                     .collect::<Vec<_>>()
                     .join("\n\n");
-                parts.push(format!("**shape `{word}`** · enumeração\n\n{values}"));
+                parts.push(format!("**shape `{word}`** · enum\n\n{values}"));
             } else if let Some(info) = analysis.symbols.artifacts.get(&word) {
                 if let Some(first) = info.first() {
                     let service = first
                         .service
                         .as_ref()
-                        .map(|s| format!("\n\nserviço: `{s}`"))
+                        .map(|s| format!("\n\nservice: `{s}`"))
                         .unwrap_or_default();
                     parts.push(format!("**{} `{}`**{service}", first.kind, first.name));
                 }
             } else if analysis.symbols.roles.contains(&word) {
                 parts.push(format!("**role `{word}`**"));
             } else if let Some((name, ty)) = features::const_at(&file.ast, offset) {
-                let ty = ty.unwrap_or("inferido");
-                parts.push(format!("**{name}** · variável `{ty}`"));
+                let ty = ty.unwrap_or("inferred");
+                parts.push(format!("**{name}** · variable `{ty}`"));
             }
         }
 
@@ -218,7 +218,7 @@ fn ast_link(path: &str, text: &str, span: Span) -> String {
     let args = serde_json::to_string(&json!([path_to_uri(Path::new(path)), line, character]))
         .unwrap_or_default();
     format!(
-        "[Explorar AST](command:archol.showAst?{})",
+        "[Explore AST](command:archol.showAst?{})",
         encode_component(&args)
     )
 }

@@ -1,43 +1,44 @@
-# Compilador
+# Compiler
 
 Pipeline: **lexer → parser → check → link**.
 
 ```text
-fonte .archol
+.archol source
   │
-  ├── archol_core::lex            tokens + diagnósticos léxicos
-  ├── archol_core::parse          SourceFile (AST JSON)
-  ├── archol_analysis::Symbols    artefatos, enums e papéis do workspace
+  ├── archol_core::lex            tokens + lexical diagnostics
+  ├── archol_core::parse          SourceFile (JSON AST)
+  ├── archol_analysis::Symbols    workspace artifacts, enums, and roles
   ├── archol_analysis::check      E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
-  └── archol_analysis::build_links  role → artefatos, enum → valores, refs
+  └── archol_analysis::build_links  role → artifacts, enum → values, refs
 ```
 
 ## Check
 
-O check é mais do que inferência de tipo:
+The check is more than type inference:
 
-- `const a: TaxRegimeCode = SIMPLES` confere se `SIMPLES` está entre os `value`
-  declarados no shape `TaxRegimeCode` (`E_ENUM_VALUE`).
-- O enum é resolvido **no serviço do arquivo**, com `Alias.Tipo` via
-  `imports { service "..." as Alias }`; enums homônimos em serviços diferentes
-  não se confundem (o corpus tem três `PaymentMethod`).
-- `if (regime == SIMPLES)` resolve o tipo de `regime` (parâmetro do processo,
-  `const` ou `let`) e valida o valor comparado.
-- Tipos PascalCase desconhecidos em campos (`x: Missing { ... }`) geram
+- `const a: TaxRegimeCode = SIMPLES` verifies that `SIMPLES` is among the
+  `value`s declared in the `TaxRegimeCode` shape (`E_ENUM_VALUE`).
+- The enum is resolved **in the file's service**, with `Alias.Type` via
+  `imports { service "..." as Alias }`; same-named enums in different services
+  are not confused (the corpus has three `PaymentMethod`s).
+- `if (regime == SIMPLES)` resolves the type of `regime` (a process parameter,
+  `const`, or `let`) and validates the compared value.
+- Unknown PascalCase types in fields (`x: Missing { ... }`) produce
   `E_UNKNOWN_TYPE`.
-- `roles: [Fantasma]` gera `E_UNKNOWN_ROLE` se o papel não existe.
-- `about`, `document`, `source`, `sources`, `appliesTo` e `fanOut` precisam
-  apontar para artefatos existentes (`E_UNKNOWN_REF`).
-- Parâmetros de processo também têm o tipo validado; arquivo ilegível vira
-  `E_FILE_READ` (não é descartado em silêncio).
-- O mesmo nome de artefato, no mesmo serviço e tipo, é `E_DUP_ARTIFACT`.
+- `roles: [Ghost]` produces `E_UNKNOWN_ROLE` if the role does not exist.
+- `about`, `document`, `source`, `sources`, `appliesTo`, and `fanOut` must point
+  to existing artifacts (`E_UNKNOWN_REF`).
+- Process parameters also have their type validated; an unreadable file becomes
+  `E_FILE_READ` (it is not silently discarded).
+- The same artifact name, in the same service and type, is `E_DUP_ARTIFACT`.
 
-Diagnósticos trazem código estável, mensagem e `span`. A CLI imprime
-`arquivo:linha:coluna: severidade código: mensagem`.
+Diagnostics carry a stable code, message, and `span`. The CLI prints
+`file:line:column: severity code: message`.
 
 ## Link
 
-O link indexa o que o construtor precisa e que o fonte não responde pronto:
+The link indexes what the builder needs and the source does not answer
+ready-made:
 
 ```json
 {
@@ -59,16 +60,16 @@ O link indexa o que o construtor precisa e que o fonte não responde pronto:
 }
 ```
 
-Uso: `archol links ../examples > links.json`.
+Usage: `archol links ../examples > links.json`.
 
-## Regras de projeto
+## Design rules
 
-- Sem dependências além de `serde` (JSON do AST) — fácil de portar.
-- Profundidade máxima de aninhamento (200) gera `E_PARSE_DEPTH` em vez de
-  estourar a pilha; spans nunca passam do fim do fonte.
-- Sem async: o LSP usa um laço síncrono com JSON-RPC manual.
-- Um arquivo de teste por camada (testes inline no lexer, `tests/parser.rs`,
+- No dependencies beyond `serde` (AST JSON) — easy to port.
+- Maximum nesting depth (200) produces `E_PARSE_DEPTH` instead of overflowing
+  the stack; spans never extend past the end of the source.
+- No async: the LSP uses a synchronous loop with manual JSON-RPC.
+- One test file per layer (inline tests in the lexer, `tests/parser.rs`,
   `crates/archol-analysis/tests/analysis.rs`, `tests/corpus.rs`,
   `crates/archol-cli/tests/cli.rs`).
-- O corpus real (`../examples`, 330 arquivos) precisa continuar com **zero**
-  erros de parse; o teste `corpus` falha se um arquivo novo quebrar.
+- The real corpus (`../examples`, 330 files) must continue with **zero** parse
+  errors; the `corpus` test fails if a new file breaks it.

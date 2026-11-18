@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::exit;
 
 fn main() {
-    let root = std::env::args().nth(1).expect("uso: parse_corpus <dir>");
+    let root = std::env::args().nth(1).expect("usage: parse_corpus <dir>");
     let mut files = Vec::new();
     walk(Path::new(&root), &mut files);
     files.sort();
@@ -19,7 +19,7 @@ fn main() {
         total += result.ast.items.len();
         if !errs.is_empty() {
             errors += 1;
-            println!("{}: {} erro(s)", path.display(), errs.len());
+            println!("{}: {} error(s)", path.display(), errs.len());
             let index = archol_core::LineIndex::new(&source);
             for d in errs.iter().take(3) {
                 let (line, col) = index.line_col(d.span.start);
@@ -36,7 +36,7 @@ fn main() {
         }
     }
     println!(
-        "arquivos={} artefatos={} com_erro={}",
+        "files={} artifacts={} with_errors={}",
         files.len(),
         total,
         errors

@@ -29,14 +29,14 @@ function workspaceFolderList() {
 }
 
 function announceStartError(error, candidates, showOutput) {
-  const missing = error.code === 'ENOENT' || /não encontrado|not found/i.test(error.message);
+  const missing = error.code === 'ENOENT' || /not found/i.test(error.message);
   const message = missing
-    ? `Servidor LSP do Archol não encontrado. Configure "archol.server.path" ou compile o servidor (cargo build --release) em archol/. Tentativas: ${candidates.join(', ')}`
-    : `Falha ao iniciar o servidor LSP do Archol: ${error.message}`;
-  vscode.window.showErrorMessage(message, 'Abrir configurações', 'Mostrar saída').then((action) => {
-    if (action === 'Abrir configurações') {
+    ? `Archol LSP server not found. Configure "archol.server.path" or build the server (cargo build --release) in archol/. Tried: ${candidates.join(', ')}`
+    : `Failed to start the Archol LSP server: ${error.message}`;
+  vscode.window.showErrorMessage(message, 'Open Settings', 'Show Output').then((action) => {
+    if (action === 'Open Settings') {
       vscode.commands.executeCommand('workbench.action.openSettings', 'archol.server.path');
-    } else if (action === 'Mostrar saída') {
+    } else if (action === 'Show Output') {
       showOutput();
     }
   });

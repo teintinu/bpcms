@@ -1,4 +1,4 @@
-//! CLI do Archol: check, ast, links, tokens e lsp.
+//! Archol CLI: check, ast, links, tokens and lsp.
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -24,7 +24,7 @@ fn main() {
             0
         }
         other => {
-            eprintln!("comando desconhecido: {other}");
+            eprintln!("unknown command: {other}");
             usage();
             2
         }
@@ -34,12 +34,12 @@ fn main() {
 
 fn usage() {
     eprintln!(
-        "archol <comando> [args]\n\n\
-         \x20 check [dir] [--json]   valida o workspace\n\
-         \x20 ast <arquivo> [--json] imprime o AST\n\
-         \x20 tokens <arquivo>       imprime os tokens\n\
-         \x20 links [dir] [--json]   índice invertido para o construtor\n\
-         \x20 lsp                    servidor LSP em stdio"
+        "archol <command> [args]\n\n\
+         \x20 check [dir] [--json]   validates the workspace\n\
+         \x20 ast <file> [--json]    prints the AST\n\
+         \x20 tokens <file>          prints the tokens\n\
+         \x20 links [dir] [--json]   inverted index for the builder\n\
+         \x20 lsp                    LSP server on stdio"
     );
 }
 
@@ -132,7 +132,7 @@ fn check(args: &[String]) -> i32 {
     }
     if !has_flag(args, "--json") {
         println!(
-            "{} arquivo(s), {} erro(s), {} aviso(s)",
+            "{} file(s), {} error(s), {} warning(s)",
             analysis.workspace.files.len(),
             errors,
             warnings
@@ -150,7 +150,7 @@ fn ast(args: &[String]) -> i32 {
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(error) => {
-            eprintln!("não foi possível ler {}: {error}", path.display());
+            eprintln!("could not read {}: {error}", path.display());
             return 2;
         }
     };
@@ -170,7 +170,7 @@ fn tokens(args: &[String]) -> i32 {
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(error) => {
-            eprintln!("não foi possível ler {}: {error}", path.display());
+            eprintln!("could not read {}: {error}", path.display());
             return 2;
         }
     };
@@ -226,7 +226,7 @@ fn load_files(root: &Path) -> (Vec<FileInput>, Vec<(String, String)>) {
             }),
             None => errors.push((
                 path.to_string_lossy().to_string(),
-                "arquivo ilegível ou sem UTF-8 válido".to_string(),
+                "unreadable file or invalid UTF-8".to_string(),
             )),
         }
     }

@@ -1,2 +1,2 @@
-# Ignorados específicos do workspace Rust (o restante fica no .gitignore da raiz).
+# Rust workspace-specific ignores (the rest lives in the root .gitignore).
 /target/

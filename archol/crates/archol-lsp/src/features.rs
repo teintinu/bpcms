@@ -1,4 +1,4 @@
-//! Consultas sobre o AST usadas por hover, completion, símbolos e definição.
+//! AST queries used by hover, completion, symbols and definition.
 
 use archol_core::{Artifact, Expr, Member, SourceFile, Span, Stmt};
 
@@ -33,7 +33,7 @@ pub fn contains(span: Span, offset: usize) -> bool {
     span.start <= offset && offset <= span.end
 }
 
-/// Valor de enum (`value SIMPLES { ... }`) que contém o offset.
+/// Enum value (`value SIMPLE { ... }`) containing the offset.
 pub fn enum_value_at(ast: &SourceFile, offset: usize) -> Option<(&Artifact, &str)> {
     let artifact = artifact_at(ast, offset)?;
     let mut found = None;
@@ -85,7 +85,7 @@ pub fn param_type<'a>(artifact: &'a Artifact, name: &str) -> Option<&'a str> {
         .and_then(|param| param.type_ref.as_deref())
 }
 
-/// Tipo declarado de uma variável local (parâmetro ou const/let).
+/// Declared type of a local variable (parameter or const/let).
 pub fn local_type(artifact: &Artifact, name: &str) -> Option<String> {
     if let Some(ty) = param_type(artifact, name) {
         return Some(ty.to_string());
@@ -115,7 +115,7 @@ pub fn local_type(artifact: &Artifact, name: &str) -> Option<String> {
     found
 }
 
-/// Nome da variável à esquerda de uma comparação que contém o offset.
+/// Variable name on the left of a comparison containing the offset.
 pub fn comparison_variable_at(ast: &SourceFile, offset: usize) -> Option<&Artifact> {
     let artifact = artifact_at(ast, offset)?;
     let mut found = false;
@@ -179,7 +179,7 @@ fn walk_expr<'a>(expr: &'a Expr, visit: &mut impl FnMut(&'a Member)) {
     }
 }
 
-/// Expressão mais profunda que contém o offset.
+/// Deepest expression containing the offset.
 pub fn expr_at(ast: &SourceFile, offset: usize) -> Option<&Expr> {
     let mut best: Option<&Expr> = None;
     for artifact in &ast.items {
@@ -198,7 +198,7 @@ pub fn expr_at(ast: &SourceFile, offset: usize) -> Option<&Expr> {
     best
 }
 
-/// Propriedade mais interna (`nome: valor`) que contém o offset.
+/// Innermost property (`name: value`) containing the offset.
 pub fn property_at(ast: &SourceFile, offset: usize) -> Option<(&str, &Expr)> {
     let mut best: Option<(&str, &Expr)> = None;
     for artifact in &ast.items {
@@ -217,7 +217,7 @@ pub fn property_at(ast: &SourceFile, offset: usize) -> Option<(&str, &Expr)> {
     best
 }
 
-/// Comparação (`==`, `===`, `!=`, `!==`) mais interna que contém o offset.
+/// Innermost comparison (`==`, `===`, `!=`, `!==`) containing the offset.
 pub fn comparison_at(ast: &SourceFile, offset: usize) -> Option<&Expr> {
     let mut best: Option<&Expr> = None;
     for artifact in &ast.items {
@@ -353,7 +353,7 @@ fn walk_stmt_properties<'a>(statement: &'a Stmt, visit: &mut impl FnMut(&'a str,
     }
 }
 
-/// Símbolos do documento: artefatos e seus membros de primeiro nível.
+/// Document symbols: artifacts and their first-level members.
 pub fn document_symbols(ast: &SourceFile, text: &str) -> Vec<serde_json::Value> {
     ast.items
         .iter()

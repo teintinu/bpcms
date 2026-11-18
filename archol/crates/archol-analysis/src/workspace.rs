@@ -1,4 +1,4 @@
-//! Carrega arquivos, mantém o AST e associa cada arquivo ao serviço dono.
+//! Loads files, keeps the AST and associates each file with its owning service.
 
 use std::collections::BTreeMap;
 
@@ -28,7 +28,7 @@ impl ParsedFile {
 #[derive(Default)]
 pub struct Workspace {
     pub files: Vec<ParsedFile>,
-    /// URI do serviço -> arquivos do serviço.
+    /// Service URI -> files of the service.
     pub services: BTreeMap<String, Vec<usize>>,
 }
 
@@ -120,7 +120,7 @@ fn service_roots(files: &[ParsedFile], base: Option<&str>) -> Vec<(String, Strin
     roots
 }
 
-/// Descobre a raiz de serviços a partir da raiz do workspace.
+/// Finds the services root from the workspace root.
 pub fn find_services_root(root: &std::path::Path) -> Option<std::path::PathBuf> {
     [
         root.join("services"),

@@ -75,7 +75,7 @@ class ArcholSession {
       try {
         await instance.stop();
       } catch (error) {
-        this._log(`falha ao encerrar servidor: ${error.message}`);
+        this._log(`failed to stop server: ${error.message}`);
       }
     }
   }
@@ -101,7 +101,7 @@ class ArcholSession {
         if (instance) this.sendDidOpen(document);
       })
       .catch(() => {
-        // A mensagem de erro já foi mostrada por announceStartError.
+        // The error message was already shown by announceStartError.
       });
   }
 
@@ -168,7 +168,7 @@ class ArcholSession {
     const roots = (vscode.workspace.workspaceFolders || []).map((folder) => folder.uri.fsPath);
     const { path: configured, args } = serverSettings();
     const candidates = buildServerCandidates(configured, roots);
-    this._log(`procurando servidor: ${candidates.join(' | ')}`);
+    this._log(`looking for server: ${candidates.join(' | ')}`);
 
     const instance = new LspClient({ candidates, cwd: roots[0], args, log: this._log });
     this._wireClient(instance);
@@ -177,10 +177,10 @@ class ArcholSession {
       const command = await instance.start();
       if (generation !== this._generation) {
         await instance.stop();
-        throw new Error('Inicialização cancelada por uma reinicialização.');
+        throw new Error('Initialization canceled by a restart.');
       }
       this._client = instance;
-      this._log(`servidor em execução: ${command}`);
+      this._log(`server running: ${command}`);
       const result = await instance.request('initialize', {
         processId: process.pid,
         clientInfo: { name: 'archol-vscode', version: this._extensionVersion },
@@ -190,7 +190,7 @@ class ArcholSession {
       });
       if (generation !== this._generation) {
         await instance.stop();
-        throw new Error('Inicialização cancelada por uma reinicialização.');
+        throw new Error('Initialization canceled by a restart.');
       }
       const sync = result?.capabilities?.textDocumentSync;
       this._syncKind = typeof sync === 'number' ? sync : Number(sync?.change) || 1;
@@ -200,14 +200,14 @@ class ArcholSession {
       this._setState('ready');
       const serverName = result?.serverInfo?.name || 'archol';
       const serverVersion = result?.serverInfo?.version || '';
-      this._log(`servidor pronto: ${`${serverName} ${serverVersion}`.trim()}`);
+      this._log(`server ready: ${`${serverName} ${serverVersion}`.trim()}`);
 
       for (const document of vscode.workspace.textDocuments) {
         if (isArcholDocument(document)) this.sendDidOpen(document);
       }
       const astExplorer = this._getAstExplorer();
       if (astExplorer && astExplorer.visible) {
-        astExplorer.refresh().catch((error) => this._log(`falha ao atualizar AST: ${error.message}`));
+        astExplorer.refresh().catch((error) => this._log(`failed to refresh AST: ${error.message}`));
       }
       return instance;
     } catch (error) {
@@ -217,17 +217,17 @@ class ArcholSession {
       try {
         await instance.stop();
       } catch {
-        // O processo pode já ter encerrado.
+        // The process may already have exited.
       }
       if (current) {
         this._state = 'error';
         this._setState('error');
-        this._log(`falha ao iniciar servidor: ${error.stack || error.message}`);
+        this._log(`failed to start server: ${error.stack || error.message}`);
         announceStartError(error, candidates, this._showOutput);
       } else {
-        this._log(`inicialização anterior cancelada: ${error.message}`);
+        this._log(`previous startup canceled: ${error.message}`);
       }
-      const wrapped = new Error(`Servidor LSP do Archol indisponível: ${error.message}`);
+      const wrapped = new Error(`Archol LSP server unavailable: ${error.message}`);
       wrapped.archolShown = true;
       wrapped.cause = error;
       throw wrapped;
@@ -239,7 +239,7 @@ class ArcholSession {
         try {
           applyDiagnostics(this._diagnostics, params);
         } catch (error) {
-          this._log(`diagnóstico inválido ignorado: ${error.message}`);
+          this._log(`invalid diagnostic ignored: ${error.message}`);
         }
       } else if (method === 'window/showMessage') {
         showServerMessage(params, this._log);
@@ -282,15 +282,15 @@ class ArcholSession {
         this._setState('stopped');
         return;
       }
-      const reason = info.signal ? `sinal ${info.signal}` : `código ${info.code}`;
-      this._log(`servidor encerrou inesperadamente (${reason})`);
+      const reason = info.signal ? `signal ${info.signal}` : `code ${info.code}`;
+      this._log(`server exited unexpectedly (${reason})`);
       if (!wasReady) return;
       this._state = 'error';
       this._setState('error');
       vscode.window
-        .showWarningMessage(`Servidor LSP do Archol encerrou (${reason}).`, 'Reiniciar')
+        .showWarningMessage(`Archol LSP server exited (${reason}).`, 'Restart')
         .then((action) => {
-          if (action === 'Reiniciar') vscode.commands.executeCommand('archol.restartServer');
+          if (action === 'Restart') vscode.commands.executeCommand('archol.restartServer');
         });
     });
   }

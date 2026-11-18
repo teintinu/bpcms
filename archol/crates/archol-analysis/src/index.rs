@@ -1,4 +1,4 @@
-//! Índice de símbolos: artefatos, enums, roles, imports e referências.
+//! Symbol index: artifacts, enums, roles, imports and references.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -39,12 +39,12 @@ pub struct EnumInfo {
 
 #[derive(Default)]
 pub struct Symbols {
-    /// Nome -> declarações (o mesmo nome pode existir em serviços diferentes).
+    /// Name -> declarations (the same name may exist in different services).
     pub artifacts: BTreeMap<String, Vec<ArtifactInfo>>,
-    /// Todas as enumerações; nomes podem se repetir entre serviços.
+    /// All enums; names may repeat across services.
     pub enums: Vec<EnumInfo>,
     pub roles: BTreeSet<String>,
-    /// URI do serviço -> alias do import -> URI do serviço importado.
+    /// Service URI -> import alias -> imported service URI.
     pub imports: BTreeMap<String, BTreeMap<String, String>>,
 }
 
@@ -99,7 +99,7 @@ impl Symbols {
         self.artifacts.contains_key(name) || PRIMITIVES.contains(&name)
     }
 
-    /// Resolve um tipo de enum, respeitando o serviço e os aliases de `imports`.
+    /// Resolves an enum type, honoring the service and the `imports` aliases.
     pub fn resolve_enum(&self, type_ref: &str, service: Option<&str>) -> Option<&EnumInfo> {
         let base = type_ref.trim_end_matches("[]").trim();
         if let Some((alias, local)) = base.split_once('.') {
@@ -136,7 +136,7 @@ impl Symbols {
     }
 }
 
-/// Valores de enum declarados com `value Nome { ... }`.
+/// Enum values declared with `value Name { ... }`.
 pub fn enum_values(artifact: &Artifact) -> Vec<EnumMember> {
     artifact
         .body
@@ -175,7 +175,7 @@ pub fn property<'a>(members: &'a [Member], name: &str) -> Option<&'a Expr> {
     })
 }
 
-/// Lista de identificadores: `[A, B]`, `A` ou vazio.
+/// List of identifiers: `[A, B]`, `A` or empty.
 pub fn ident_list(expr: &Expr) -> Vec<&str> {
     match expr {
         Expr::Identifier { name, .. } => vec![name.as_str()],
@@ -185,7 +185,7 @@ pub fn ident_list(expr: &Expr) -> Vec<&str> {
     }
 }
 
-/// Percorre todos os membros recursivamente (blocos, statements, objetos).
+/// Walks all members recursively (blocks, statements, objects).
 pub fn walk_members<'a>(members: &'a [Member], visit: &mut impl FnMut(&'a Member)) {
     for member in members {
         visit(member);

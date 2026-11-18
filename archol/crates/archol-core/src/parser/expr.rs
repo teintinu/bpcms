@@ -1,4 +1,4 @@
-//! Expressões e tipos.
+//! Expressions and types.
 
 use crate::ast::Expr;
 use crate::span::Span;

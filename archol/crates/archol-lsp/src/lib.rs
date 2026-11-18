@@ -1,4 +1,4 @@
-//! Servidor LSP do Archol sobre stdio (JSON-RPC próprio, sem runtime async).
+//! Archol LSP server over stdio (custom JSON-RPC, no async runtime).
 
 mod features;
 mod resolve;

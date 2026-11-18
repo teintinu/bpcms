@@ -37,10 +37,10 @@ ${browserUtils}
   function updateStatus() {
     if (statusTimer) return;
     if (state.error) {
-      statusEl.textContent = 'erro';
+      statusEl.textContent = 'error';
       return;
     }
-    statusEl.textContent = state.ast ? countNodes(state.ast) + ' nós' : '';
+    statusEl.textContent = state.ast ? countNodes(state.ast) + ' nodes' : '';
   }
 
   function setTransientStatus(text) {
@@ -70,7 +70,7 @@ ${browserUtils}
 
   function revealSpan(span, focus) {
     if (!span || !Number.isFinite(span.start)) {
-      setTransientStatus('Nó sem posição no código');
+      setTransientStatus('Node has no code position');
       return;
     }
     vscode.postMessage({
@@ -170,12 +170,12 @@ ${browserUtils}
       return;
     }
     if (!state.ast) {
-      emptyMessage(state.loading ? 'Carregando AST…' : 'Nenhuma AST recebida.');
+      emptyMessage(state.loading ? 'Loading AST…' : 'No AST received.');
       updateStatus();
       return;
     }
     if (state.filter && !matches(state.ast)) {
-      emptyMessage('Nenhum nó corresponde ao filtro "' + state.filter + '".');
+      emptyMessage('No node matches the filter "' + state.filter + '".');
       updateStatus();
       return;
     }
@@ -193,11 +193,11 @@ ${browserUtils}
   revealBtn.addEventListener('click', function () {
     const node = selectedNode();
     if (!node) {
-      setTransientStatus('Selecione um nó');
+      setTransientStatus('Select a node');
       return;
     }
     if (!node.span || !Number.isFinite(node.span.start)) {
-      setTransientStatus('Nó sem posição no código');
+      setTransientStatus('Node has no code position');
       return;
     }
     revealSpan(node.span, true);
@@ -221,7 +221,7 @@ ${browserUtils}
     if (!node) return;
     const text = JSON.stringify(node, null, 2);
     const done = function (ok) {
-      setTransientStatus(ok ? 'JSON copiado' : 'Falha ao copiar');
+      setTransientStatus(ok ? 'JSON copied' : 'Failed to copy');
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () { done(true); }, function () {
@@ -258,7 +258,7 @@ ${browserUtils}
       return;
     }
     if (message.type === 'error') {
-      state.error = String(message.message || 'Falha ao carregar a AST.');
+      state.error = String(message.message || 'Failed to load the AST.');
       state.loading = false;
       render();
     }

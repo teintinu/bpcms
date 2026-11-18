@@ -11,7 +11,7 @@ function normalizeCommandArgs(args) {
       const parsed = JSON.parse(values[0]);
       if (Array.isArray(parsed)) values = parsed;
     } catch {
-      // Mantém o argumento original.
+      // Keeps the original argument.
     }
   }
   return values;
@@ -25,7 +25,7 @@ function registerCommands(context, dependencies) {
     if (!uri) {
       const editor = vscode.window.activeTextEditor;
       if (!editor || !isArcholDocument(editor.document)) {
-        vscode.window.showInformationMessage('Abra um arquivo .archol para explorar a AST.');
+        vscode.window.showInformationMessage('Open an .archol file to explore the AST.');
         return;
       }
       uri = editor.document.uri.toString();
@@ -40,7 +40,7 @@ function registerCommands(context, dependencies) {
       });
     } catch (error) {
       if (!error.archolShown) {
-        vscode.window.showErrorMessage(`Archol: não foi possível abrir a AST: ${error.message}`);
+        vscode.window.showErrorMessage(`Archol: could not open the AST: ${error.message}`);
       }
     }
   };
@@ -55,12 +55,12 @@ function registerCommands(context, dependencies) {
     try {
       const result = await instance.request('archol/links', {});
       const content = result === undefined || result === null
-        ? 'Nenhum link retornado pelo servidor.'
+        ? 'No links returned by the server.'
         : JSON.stringify(result, null, 2);
       const document = await vscode.workspace.openTextDocument({ language: 'json', content });
       await vscode.window.showTextDocument(document, { preview: false });
     } catch (error) {
-      vscode.window.showErrorMessage(`Archol: falha ao obter links: ${error.message}`);
+      vscode.window.showErrorMessage(`Archol: failed to get links: ${error.message}`);
     }
   };
 
@@ -68,9 +68,9 @@ function registerCommands(context, dependencies) {
     await session.stop();
     try {
       await session.ensureClient();
-      vscode.window.showInformationMessage('Servidor LSP do Archol reiniciado.');
+      vscode.window.showInformationMessage('Archol LSP server restarted.');
     } catch {
-      // O startServer já mostrou o erro.
+      // startServer already showed the error.
     }
   };
 

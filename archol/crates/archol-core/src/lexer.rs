@@ -1,14 +1,14 @@
-//! Lexer manual, sem dependências externas.
+//! Hand-written lexer, with no external dependencies.
 //!
-//! Regra de ouro: todo token tem `span` exato no fonte. Comentários viram
-//! tokens (`Comment`) para que a ferramenta de tokens e o explorador de AST
-//! possam mostrá-los; o parser os ignora.
+//! Golden rule: every token has an exact `span` in the source. Comments become
+//! tokens (`Comment`) so that the token tool and the AST explorer can show
+//! them; the parser ignores them.
 
 use crate::diagnostic::Diagnostic;
 use crate::span::Span;
 use crate::token::{Keyword, Token, TokenKind};
 
-/// Resultado da tokenização.
+/// Result of tokenization.
 #[derive(Debug, Default)]
 pub struct Lexed {
     pub tokens: Vec<Token>,
@@ -62,7 +62,7 @@ impl<'a> Lexer<'a> {
                     self.pos += ch.len_utf8();
                     self.error(
                         "E_LEX_CHAR",
-                        format!("Caractere inesperado: {ch}"),
+                        format!("Unexpected character: {ch}"),
                         start,
                         self.pos,
                     );
@@ -124,7 +124,7 @@ impl<'a> Lexer<'a> {
         }
         self.error(
             "E_LEX_STRING",
-            "String não terminada".to_string(),
+            "Unterminated string".to_string(),
             start,
             self.source.len(),
         );
@@ -143,7 +143,7 @@ impl<'a> Lexer<'a> {
                 self.pos += 1;
             }
         }
-        // Sufixos de duração e unidade: 5d, 15m, 1h, 30s, 2026y.
+        // Duration and unit suffixes: 5d, 15m, 1h, 30s, 2026y.
         while matches!(self.byte_at(self.pos), Some(b'a'..=b'z' | b'A'..=b'Z')) {
             self.pos += 1;
         }
@@ -166,7 +166,7 @@ impl<'a> Lexer<'a> {
         self.push(kind, start, self.pos);
     }
 
-    /// Operadores e pontuação, do mais longo para o mais curto.
+    /// Operators and punctuation, from longest to shortest.
     fn operator(&mut self) -> bool {
         const TABLE: &[(&str, TokenKind)] = &[
             ("!==", TokenKind::StrictNotEq),
@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn lexa_artefato_minimo() {
+    fn lexes_minimal_artifact() {
         assert_eq!(
             kinds("document Invoice { }"),
             vec![
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn lexa_comentario_e_string_sem_quebrar_chaves() {
+    fn lexes_comment_and_string_without_breaking_braces() {
         let lexed = lex("// a { b\nkey: \"{x}\"");
         assert_eq!(
             lexed.tokens.iter().map(|t| t.kind).collect::<Vec<_>>(),
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn lexa_numeros_com_sufixo() {
+    fn lexes_numbers_with_suffix() {
         assert_eq!(
             kinds("5d 15m 1h 2.5 10%"),
             vec![
@@ -276,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn lexa_operadores_de_tres_caracteres() {
+    fn lexes_three_character_operators() {
         assert_eq!(
             kinds("a !== b === c && d"),
             vec![
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn reporta_string_nao_terminada() {
+    fn reports_unterminated_string() {
         let lexed = lex("x: \"abc");
         assert_eq!(lexed.diagnostics.len(), 1);
         assert_eq!(lexed.diagnostics[0].code, "E_LEX_STRING");

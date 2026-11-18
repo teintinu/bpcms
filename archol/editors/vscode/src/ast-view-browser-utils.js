@@ -1,6 +1,6 @@
 'use strict';
 
-// Funções puras do script do webview (sem referência ao estado da árvore).
+// Pure functions for the webview script (no reference to tree state).
 const browserUtils = `  function isNode(value) {
     return Boolean(value) && typeof value === 'object' && typeof value.kind === 'string';
   }

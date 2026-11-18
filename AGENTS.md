@@ -110,6 +110,7 @@ Regras:
 - O corpus `examples/` é o teste de aceitação: `cargo test -p archol-core --test corpus` precisa ficar verde; construção nova entra primeiro em um exemplo real, depois no parser.
 - Arquivos de código pequenos e legíveis, um arquivo por responsabilidade; tokens organizados por família em `archol/crates/archol-core/src/token/`.
 - Ao mudar sintaxe, mantenha `archol/docs/tokens.md`, `archol/docs/ast.md` e os testes consistentes.
+- **Idioma do compilador e do plugin: inglês.** Todo o `archol/crates`, `archol/scripts`, `archol/docs`, `archol/README.md` e `archol/editors/vscode` usam **inglês** em identificadores, comentários, mensagens de diagnóstico/CLI/LSP, UI do plugin, testes e documentação. O restante do repositório (specs de produto em português) permanece em português; dados de exemplo Archol com `pt-BR` não são traduzidos.
 
 ## Documentos vivos
 

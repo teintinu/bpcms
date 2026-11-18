@@ -1,16 +1,16 @@
-//! Teste de aceitação: todo `.archol` real do repositório precisa parsear.
+//! Acceptance test: every real `.archol` in the repository must parse.
 
 use std::path::{Path, PathBuf};
 
 #[test]
-fn exemplos_reais_parseiam_sem_erro() {
+fn real_examples_parse_without_errors() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../examples");
     if !root.exists() {
         return;
     }
     let mut files = Vec::new();
     walk(&root, &mut files);
-    assert!(files.len() >= 300, "poucos arquivos: {}", files.len());
+    assert!(files.len() >= 300, "too few files: {}", files.len());
     let mut problems = Vec::new();
     for path in &files {
         let source = std::fs::read_to_string(path).unwrap();
@@ -26,7 +26,7 @@ fn exemplos_reais_parseiam_sem_erro() {
             }
         }
     }
-    assert!(problems.is_empty(), "falhas:\n{}", problems.join("\n"));
+    assert!(problems.is_empty(), "failures:\n{}", problems.join("\n"));
 }
 
 fn walk(dir: &Path, out: &mut Vec<PathBuf>) {

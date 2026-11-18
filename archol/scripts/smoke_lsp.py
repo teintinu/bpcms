@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Smoke test do LSP do Archol: initialize, hover, completion, AST, links.
+"""Archol LSP smoke test: initialize, hover, completion, AST, links.
 
-Uso: python3 archol/scripts/smoke_lsp.py [binário]
+Usage: python3 archol/scripts/smoke_lsp.py [binary]
 
-O binário padrão é archol/target/release/archol (ou debug). O servidor é
-iniciado com o subcomando `lsp`, igual ao plugin VSCode.
+The default binary is archol/target/release/archol (or debug). The server is
+started with the `lsp` subcommand, just like the VS Code plugin.
 """
 
 import json
@@ -52,7 +52,7 @@ def request(id_, method, params):
     while True:
         message = read()
         if message is None:
-            raise SystemExit("servidor encerrou")
+            raise SystemExit("server exited")
         if message.get("id") == id_:
             return message
 

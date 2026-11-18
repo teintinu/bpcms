@@ -33,7 +33,7 @@ class AstExplorer {
 
   async show(target) {
     const uri = target?.uri;
-    if (!uri) throw new Error('Nenhum documento informado para o explorador de AST.');
+    if (!uri) throw new Error('No document provided for the AST explorer.');
     this._ensurePanel();
     this._panel.reveal(undefined, false);
     this._target = { uri, line: Number(target.line) || 0, character: Number(target.character) || 0 };
@@ -46,7 +46,7 @@ class AstExplorer {
         this._target.character,
       );
     } catch (error) {
-      this._log(`não foi possível abrir ${uri}: ${error.message}`);
+      this._log(`could not open ${uri}: ${error.message}`);
       this._selectionOffset = 0;
     }
     await this.refresh({ selectOffset: this._selectionOffset });
@@ -63,7 +63,7 @@ class AstExplorer {
     if (this._timer) clearTimeout(this._timer);
     this._timer = setTimeout(() => {
       this._timer = null;
-      this.refresh().catch((error) => this._log(`falha ao atualizar AST: ${error.message}`));
+      this.refresh().catch((error) => this._log(`failed to refresh AST: ${error.message}`));
     }, REFRESH_DEBOUNCE_MS);
   }
 
@@ -75,7 +75,7 @@ class AstExplorer {
     try {
       const ast = await this._getAst(uri);
       if (requestId !== this._requestSeq || this._disposed || !this._panel) return;
-      if (!ast) throw new Error('O servidor não retornou uma AST para este documento.');
+      if (!ast) throw new Error('The server did not return an AST for this document.');
       const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
       const explicitOffset = options.selectOffset !== undefined && options.selectOffset !== null;
       let offset = explicitOffset ? options.selectOffset : this._selectionOffset;
@@ -100,11 +100,11 @@ class AstExplorer {
       });
     } catch (error) {
       if (requestId !== this._requestSeq || this._disposed) return;
-      this._log(`falha ao carregar AST de ${uri}: ${error.message}`);
+      this._log(`failed to load AST from ${uri}: ${error.message}`);
       this._current = null;
       this._post({ type: 'error', message: error.message });
       if (!error.archolShown) {
-        this._showError(`não foi possível carregar a AST: ${error.message}`);
+        this._showError(`could not load the AST: ${error.message}`);
       }
     }
   }
@@ -113,7 +113,7 @@ class AstExplorer {
     this._requestSeq += 1;
     this._current = null;
     if (this._panel) {
-      this._post({ type: 'error', message: 'Servidor LSP do Archol não está em execução.' });
+      this._post({ type: 'error', message: 'Archol LSP server is not running.' });
     }
   }
 
@@ -157,7 +157,7 @@ class AstExplorer {
       this._panel.onDidDispose(() => this._onPanelDisposed()),
       this._panel.onDidChangeViewState((event) => {
         if (event.webviewPanel.visible && this._dirty) {
-          this.refresh().catch((error) => this._log(`falha ao atualizar AST: ${error.message}`));
+          this.refresh().catch((error) => this._log(`failed to refresh AST: ${error.message}`));
         }
       }),
     );
@@ -191,7 +191,7 @@ class AstExplorer {
       if (Array.isArray(message.path)) this._selectionPath = message.path;
       if (Number.isFinite(start)) this._selectionOffset = start;
       this._reveal(start, end, Boolean(message.focus)).catch((error) => {
-        this._log(`falha ao ir para o código: ${error.message}`);
+        this._log(`failed to go to code: ${error.message}`);
       });
     }
   }
@@ -224,7 +224,7 @@ class AstExplorer {
     const startPosition = document.positionAt(startOffset);
     const endPosition = document.positionAt(endOffset);
 
-    // Reaproveita o editor já aberto (mesma aba/coluna) em vez de abrir outro.
+    // Reuses the already open editor (same tab/column) instead of opening another.
     const existing = vscode.window.visibleTextEditors.find(
       (candidate) => candidate.document.uri.toString() === uri.toString(),
     );
@@ -242,7 +242,7 @@ class AstExplorer {
   _post(message) {
     if (!this._panel || !this._webviewReady) return;
     this._panel.webview.postMessage(message).then(undefined, (error) => {
-      this._log(`falha ao enviar mensagem para o webview: ${error.message}`);
+      this._log(`failed to send message to webview: ${error.message}`);
     });
   }
 }

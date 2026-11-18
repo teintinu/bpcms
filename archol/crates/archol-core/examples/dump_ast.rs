@@ -1,12 +1,12 @@
 use archol_core::Member;
 
 fn main() {
-    let path = std::env::args().nth(1).expect("uso: dump_ast <arquivo>");
+    let path = std::env::args().nth(1).expect("usage: dump_ast <file>");
     let source = std::fs::read_to_string(&path).unwrap();
     let result = archol_core::parse(&source, &path);
     for item in &result.ast.items {
         println!(
-            "ARTEFATO {} {} {}..{}",
+            "ARTIFACT {} {} {}..{}",
             item.artifact_kind, item.name, item.span.start, item.span.end
         );
         print_members(&item.body, 1, &source);

@@ -1,10 +1,10 @@
-// Serviço de demonstração do Archol: enum, documento, view e processo.
+// Archol demonstration service: enum, document, view, and process.
 service "example.com/services/demo" {
   title: { pt-BR: "Demonstração", en: "Demo" }
   owner: "Demo"
 }
 
-// Regime tributário aceito pela demonstração.
+// Tax regime accepted by the demonstration.
 shape TaxRegimeCode {
   title: { pt-BR: "Regime tributário", en: "Tax regime" }
   base: classification
@@ -23,7 +23,7 @@ role Clerk {
   permissions: [demo.issue]
 }
 
-// Nota de demonstração, só para explorar o AST.
+// Demonstration note, just to explore the AST.
 document DemoInvoice {
   title: { pt-BR: "Nota demo", en: "Demo invoice" }
   version: 1
@@ -42,7 +42,7 @@ document DemoInvoice {
   }
 }
 
-// Fila de emissão por regime.
+// Issuance queue by regime.
 view InvoiceQueue {
   title: { pt-BR: "Fila de notas" }
   type: inbox
@@ -51,7 +51,7 @@ view InvoiceQueue {
   columns { number; regime }
 }
 
-// Processo que valida o regime no momento da emissão.
+// Process that validates the regime at issuance time.
 process Issue(regime: TaxRegimeCode) {
   title: { pt-BR: "Emitir nota" }
   on [DemoInvoice.Created]

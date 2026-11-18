@@ -1,4 +1,4 @@
-//! Diagnósticos produzidos pelo lexer, parser, check e link.
+//! Diagnostics produced by the lexer, parser, check and link.
 
 use crate::span::Span;
 use serde::Serialize;

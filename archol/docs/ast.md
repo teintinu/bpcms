@@ -1,8 +1,8 @@
 # AST
 
-O AST é serializável em JSON, no estilo do AST do TypeScript: todo nó tem
-`kind` (nome do nó) e `span` (`start`/`end` em bytes). É a estrutura que o
-explorador de AST, o LSP e o construtor consomem.
+The AST is serializable to JSON, in the style of the TypeScript AST: every node
+has `kind` (the node name) and `span` (`start`/`end` in bytes). It is the
+structure the AST explorer, the LSP, and the builder consume.
 
 ```json
 {
@@ -28,9 +28,9 @@ explorador de AST, o LSP e o construtor consomem.
 }
 ```
 
-## Nós
+## Nodes
 
-| `kind` | Campos principais |
+| `kind` | Main fields |
 | :--- | :--- |
 | `SourceFile` | `path`, `items` |
 | `Artifact` | `artifactKind`, `name`, `params`, `body` |
@@ -43,24 +43,24 @@ explorador de AST, o LSP e o construtor consomem.
 | `Statement` | `statement` |
 
 Statements: `ExpressionStatement`, `ConstDeclaration`, `LetDeclaration`,
-`IfStatement`, `TryStatement`, `ReturnStatement`, `RawStatement` (tolerância
-para código não modelado).
+`IfStatement`, `TryStatement`, `ReturnStatement`, `RawStatement` (tolerance for
+code that is not modeled).
 
-Expressões: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
+Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 `NullLiteral`, `List`, `Object` (`typeRef`, `members`), `Call` (callee + args),
 `NamedArgument`, `MemberAccess`, `Binary`, `Unary`, `Raw`.
 
-## Compatibilidade com TypeScript
+## Compatibility with TypeScript
 
-A semântica de nós segue o TS: `PropertyAssignment` corresponde a
-`PropertyAssignment`, `Call` a `CallExpression`, `IfStatement` a
-`IfStatement`, `Object` a `ObjectLiteralExpression` (com `typeRef` quando há
-`Store { ... }`), `EnumValueDeclaration` a `EnumMember`. Campos em camelCase e
-spans em bytes mantêm a exportação trivial para TypeScript, Python, Go ou Dart.
+Node semantics follow TS: `PropertyAssignment` corresponds to
+`PropertyAssignment`, `Call` to `CallExpression`, `IfStatement` to
+`IfStatement`, `Object` to `ObjectLiteralExpression` (with `typeRef` when there
+is a `Store { ... }`), `EnumValueDeclaration` to `EnumMember`. camelCase fields
+and byte spans keep export to TypeScript, Python, Go, or Dart trivial.
 
-## Tolerância
+## Tolerance
 
-O parser sempre devolve AST, mesmo com código que não modela (ex.: métodos de
-`std`). Trechos não reconhecidos viram `RawStatement` com `span`; o check só
-acusa o que entende. Isso mantém o explore e o LSP úteis em arquivos grandes
-sem transformar o parser em um compilador de TypeScript.
+The parser always returns an AST, even for code it does not model (e.g., `std`
+methods). Unrecognized sections become `RawStatement` with a `span`; the check
+only reports what it understands. This keeps the explorer and the LSP useful in
+large files without turning the parser into a TypeScript compiler.

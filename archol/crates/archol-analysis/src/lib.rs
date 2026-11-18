@@ -1,4 +1,4 @@
-//! Check semântico e link da linguagem Archol.
+//! Semantic check and link for the Archol language.
 
 pub mod check;
 pub mod index;

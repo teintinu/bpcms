@@ -181,7 +181,7 @@ function registerLanguageFeatures(context, dependencies) {
     try {
       return await client.request(method, params);
     } catch (error) {
-      log(`falha em ${method}: ${error.message}`);
+      log(`failed in ${method}: ${error.message}`);
       return null;
     }
   };

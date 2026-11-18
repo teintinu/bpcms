@@ -1,5 +1,5 @@
-//! Check semântico: valida valores de enum, tipos, papéis, referências e
-//! duplicidade. Enum é resolvido no serviço do arquivo (incluindo `Alias.Tipo`).
+//! Semantic check: validates enum values, types, roles, references and
+//! duplicates. Enums are resolved in the file's service (including `Alias.Type`).
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -24,7 +24,7 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
                 Diagnostic::error(
                     "E_DUP_ARTIFACT",
                     format!(
-                        "{} {} duplicado no serviço (primeira declaração no offset {first})",
+                        "Duplicate {} {} in service (first declaration at offset {first})",
                         artifact.artifact_kind, artifact.name
                     ),
                     artifact.span,
@@ -137,7 +137,7 @@ fn check_statement(
                             diagnostics.push(Diagnostic::error(
                                 "E_ENUM_VALUE",
                                 format!(
-                                    "'{value_name}' não é valor de {type_ref} (valores: {})",
+                                    "'{value_name}' is not a value of {type_ref} (values: {})",
                                     enum_values_text(enum_info)
                                 ),
                                 init.span(),
@@ -194,7 +194,7 @@ fn check_value(
                 if is_upper_name(role) && !symbols.roles.contains(role) {
                     diagnostics.push(Diagnostic::error(
                         "E_UNKNOWN_ROLE",
-                        format!("Papel '{role}' não declarado no workspace"),
+                        format!("Role '{role}' not declared in the workspace"),
                         value.span(),
                     ));
                 }
@@ -249,7 +249,7 @@ fn check_type_name(
         if is_upper_name(base) && !symbols.knows(base) {
             diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_TYPE",
-                format!("Tipo '{base}' não declarado no workspace"),
+                format!("Type '{base}' not declared in the workspace"),
                 span,
             ));
         }
@@ -268,13 +268,13 @@ fn check_artifact_ref(
     if !symbols.knows(target) {
         diagnostics.push(Diagnostic::error(
             "E_UNKNOWN_REF",
-            format!("Referência '{target}' não declarada no workspace"),
+            format!("Reference '{target}' not declared in the workspace"),
             value.span(),
         ));
     }
 }
 
-/// Valida `var == VALOR` quando `var` tem tipo de enum conhecido.
+/// Validates `var == VALUE` when `var` has a known enum type.
 fn check_comparisons(
     symbols: &Symbols,
     service: Option<&str>,
@@ -295,7 +295,7 @@ fn check_comparisons(
                                 diagnostics.push(Diagnostic::error(
                                     "E_ENUM_VALUE",
                                     format!(
-                                        "'{value_name}' não é valor de {type_ref} (valores: {})",
+                                        "'{value_name}' is not a value of {type_ref} (values: {})",
                                         enum_values_text(enum_info)
                                     ),
                                     literal.span(),

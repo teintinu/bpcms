@@ -1,40 +1,41 @@
-# Testes
+# Tests
 
 ```bash
 cd archol
-cargo test                 # tudo
+cargo test                 # everything
 cargo test -p archol-core  # lexer + parser
 cargo test -p archol-analysis
 node --test editors/vscode/test
 ```
 
-## O que é coberto
+## What is covered
 
-| Teste | Garante |
+| Test | Guarantees |
 | :--- | :--- |
-| `archol-core/src/lexer.rs` (testes inline) | strings, comentários, números com sufixo, operadores de 3 caracteres, escape no EOF |
-| `archol-core/tests/parser.rs` | artefatos, enum, const/if, listas, tolerância, erro de bloco não fechado, `E_PARSE_DEPTH` |
-| `archol-analysis/tests/analysis.rs` | `E_ENUM_VALUE` em const e comparação (inclusive `Alias.Tipo`), enum homônimo por serviço, `E_UNKNOWN_ROLE`, `E_DUP_ARTIFACT`, link role→artefato |
-| `archol-core/tests/corpus.rs` | os 330 exemplos reais parseiam sem erro |
-| `archol-cli/tests/cli.rs` | exit codes, `E_FILE_READ` para UTF-8 inválido, `tokens` com `\` final, aninhamento profundo |
-| `editors/vscode/test` | framing JSON-RPC e árvore do AST |
+| `archol-core/src/lexer.rs` (inline tests) | strings, comments, numbers with a suffix, 3-character operators, escape at EOF |
+| `archol-core/tests/parser.rs` | artifacts, enum, const/if, lists, tolerance, unclosed block error, `E_PARSE_DEPTH` |
+| `archol-analysis/tests/analysis.rs` | `E_ENUM_VALUE` in const and comparison (including `Alias.Type`), same-named enum per service, `E_UNKNOWN_ROLE`, `E_DUP_ARTIFACT`, role→artifact link |
+| `archol-core/tests/corpus.rs` | the 330 real examples parse without error |
+| `archol-cli/tests/cli.rs` | exit codes, `E_FILE_READ` for invalid UTF-8, `tokens` with trailing `\`, deep nesting |
+| `archol-lsp/src/resolve.rs` (inline tests) | definition of fields (`invoice.status`), enum values vs homonymous icons, parameters |
+| `editors/vscode/test` | JSON-RPC framing, AST tree and byte-span → UTF-16 conversion |
 
-## Estado
+## Status
 
-Hoje: **30 testes Rust** (`cargo test`) e **27 testes JavaScript**
-(`node --test editors/vscode/test`); `clippy` e `fmt --check` limpos.
+Today: **35 Rust tests** (`cargo test`) and **29 JavaScript tests**
+(`node --test editors/vscode/test`); `clippy` and `fmt --check` clean.
 
 ## Corpus
 
-`tests/corpus.rs` percorre `../../../examples` a partir da crate e falha se algum
-`.archol` produzir diagnóstico de parse. É o teste de aceitação da sintaxe:
-qualquer construção nova da linguagem entra primeiro em um exemplo real e depois
-no parser, nunca o contrário.
+`tests/corpus.rs` walks `../../../examples` from the crate and fails if any
+`.archol` file produces a parse diagnostic. It is the syntax acceptance test:
+any new language construct enters a real example first and the parser afterward,
+never the reverse.
 
 ## Fixtures
 
-Fixtures pequenos e intencionalmente errados ficam em strings nos testes (não
-poluem `examples/`). Para testar o LSP manualmente, rode:
+Small, intentionally wrong fixtures live in strings inside the tests (they do
+not pollute `examples/`). To test the LSP manually, run:
 
 ```bash
 cargo run -q --bin archol -- check ../examples

@@ -1,8 +1,8 @@
-//! Palavras reservadas da linguagem Archol.
+//! Reserved words of the Archol language.
 //!
-//! Cada palavra tem um arquivo de teste em `tests/lexer.rs`, mas a tabela fica
-//! num único ponto para ser fácil auditar o que é palavra-chave e o que é
-//! identificador comum.
+//! Each word has a test file in `tests/lexer.rs`, but the table lives in a
+//! single place to make it easy to audit what is a keyword and what is a
+//! regular identifier.
 
 use serde::Serialize;
 
@@ -148,7 +148,7 @@ impl Keyword {
         }
     }
 
-    /// Palavras que iniciam um artefato de topo.
+    /// Words that start a top-level artifact.
     pub fn is_artifact(self) -> bool {
         matches!(
             self,
@@ -173,7 +173,7 @@ impl Keyword {
         )
     }
 
-    /// Nome JSON do artefato (`Document`, `Process`, ...).
+    /// JSON name of the artifact (`Document`, `Process`, ...).
     pub fn artifact_name(self) -> &'static str {
         use Keyword::*;
         match self {

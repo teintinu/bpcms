@@ -1,12 +1,13 @@
-//! Parser recursivo de Archol.
+//! Recursive Archol parser.
 //!
-//! Estratégia: navegar pelo fonte sem exigir gramática fechada. Cada membro é
-//! tentado como propriedade, bloco, valor de enum ou statement; o que não for
-//! reconhecido vira `RawStatement` com span preservado. Assim o corpus real
-//! sempre produz AST, e o check acusa apenas o que entende.
+//! Strategy: navigate the source without requiring a closed grammar. Each
+//! member is tried as a property, block, enum value or statement; anything not
+//! recognized becomes a `RawStatement` with its span preserved. That way the
+//! real corpus always yields an AST, and the check only reports what it
+//! understands.
 //!
-//! Divisão: `parser/mod.rs` (arquivo/artefato/membros), `parser/expr.rs`
-//! (expressões) e `parser/stmt.rs` (statements de processo).
+//! Split: `parser/mod.rs` (file/artifact/members), `parser/expr.rs`
+//! (expressions) and `parser/stmt.rs` (process statements).
 
 mod expr;
 mod member;
@@ -49,8 +50,8 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
     }
 }
 
-/// Profundidade máxima de aninhamento. Acima disso o parser recupera com
-/// `E_PARSE_DEPTH` em vez de estourar a pilha.
+/// Maximum nesting depth. Above this the parser recovers with `E_PARSE_DEPTH`
+/// instead of overflowing the stack.
 const MAX_DEPTH: usize = 200;
 
 pub(crate) struct Parser<'a> {
@@ -64,7 +65,7 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    // --- primitivas -----------------------------------------------------
+    // --- primitives -----------------------------------------------------
 
     pub(crate) fn cur(&self) -> &Token {
         &self.tokens[self.pos.min(self.tokens.len().saturating_sub(1))]
@@ -106,10 +107,7 @@ impl<'a> Parser<'a> {
         if self.kind() == kind {
             Some(self.advance())
         } else {
-            self.error(
-                code,
-                format!("Esperado {kind:?}, encontrado {:?}", self.kind()),
-            );
+            self.error(code, format!("Expected {kind:?}, found {:?}", self.kind()));
             None
         }
     }
@@ -130,7 +128,7 @@ impl<'a> Parser<'a> {
             .push(Diagnostic::error(code, message, span));
     }
 
-    // --- arquivo ---------------------------------------------------------
+    // --- file ------------------------------------------------------------
 
     fn parse_file(&mut self, path: String) -> SourceFile {
         let mut items = Vec::new();
@@ -148,7 +146,7 @@ impl<'a> Parser<'a> {
             if !is_artifact {
                 self.error(
                     "E_PARSE_TOP",
-                    format!("Esperado artefato de topo, encontrado {:?}", self.kind()),
+                    format!("Expected top-level artifact, found {:?}", self.kind()),
                 );
                 self.skip_top_level();
                 continue;
@@ -190,7 +188,7 @@ impl<'a> Parser<'a> {
                 self.text(token.span).to_string()
             }
             _ => {
-                self.error("E_PARSE_NAME", "Esperado nome do artefato".to_string());
+                self.error("E_PARSE_NAME", "Expected artifact name".to_string());
                 return None;
             }
         };
@@ -206,7 +204,7 @@ impl<'a> Parser<'a> {
         }
 
         if self.kind() != TokenKind::LBrace {
-            self.error("E_PARSE_BLOCK", format!("Esperado '{{' após {name}"));
+            self.error("E_PARSE_BLOCK", format!("Expected '{{' after {name}"));
             return None;
         }
         let body = self.parse_body();
@@ -224,7 +222,7 @@ impl<'a> Parser<'a> {
         let mut params = Vec::new();
         while self.kind() != TokenKind::RParen && !self.at_eof() {
             if self.kind() != TokenKind::Ident {
-                self.error("E_PARSE_PARAM", "Esperado nome de parâmetro".to_string());
+                self.error("E_PARSE_PARAM", "Expected parameter name".to_string());
                 self.skip_until(&[TokenKind::Comma, TokenKind::RParen]);
                 self.eat(TokenKind::Comma);
                 continue;
@@ -251,7 +249,7 @@ impl<'a> Parser<'a> {
         params
     }
 
-    /// Consome `{ ... }` e devolve os membros do corpo.
+    /// Consumes `{ ... }` and returns the members of the body.
     pub(crate) fn parse_body(&mut self) -> Vec<Member> {
         let mut members = Vec::new();
         if !self.enter_depth() {
@@ -259,7 +257,7 @@ impl<'a> Parser<'a> {
         }
         if !self.eat(TokenKind::LBrace) {
             self.leave_depth();
-            self.error("E_PARSE_BLOCK", "Esperado '{'".to_string());
+            self.error("E_PARSE_BLOCK", "Expected '{'".to_string());
             return members;
         }
         loop {
@@ -269,7 +267,7 @@ impl<'a> Parser<'a> {
                 break;
             }
             if self.at_eof() {
-                self.error("E_PARSE_UNCLOSED", "Bloco não fechado".to_string());
+                self.error("E_PARSE_UNCLOSED", "Unclosed block".to_string());
                 break;
             }
             let before = self.pos;
@@ -301,7 +299,7 @@ impl<'a> Parser<'a> {
                 self.depth_reported = true;
                 self.error(
                     "E_PARSE_DEPTH",
-                    "Aninhamento profundo demais; trecho tratado como não estruturado".to_string(),
+                    "Nesting too deep; snippet treated as unstructured".to_string(),
                 );
             }
             self.skip_balanced();
@@ -315,7 +313,7 @@ impl<'a> Parser<'a> {
         self.depth = self.depth.saturating_sub(1);
     }
 
-    /// Consome tokens até o `}` correspondente (ou EOF), para recuperação.
+    /// Consumes tokens up to the matching `}` (or EOF), for recovery.
     pub(crate) fn skip_balanced(&mut self) {
         let mut depth = 0i32;
         while !self.at_eof() {

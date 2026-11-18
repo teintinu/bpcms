@@ -1,13 +1,13 @@
-//! AST de Archol, serializável em JSON no estilo do AST do TypeScript.
+//! Archol AST, serializable to JSON in the style of the TypeScript AST.
 //!
-//! Todo nó tem `kind` (nome do nó, ex.: `Artifact`, `PropertyAssignment`,
-//! `Block`) e `span` (`start`/`end` em bytes). O explorador de AST e o LSP
-//! consomem exatamente esta estrutura.
+//! Every node has `kind` (node name, e.g. `Artifact`, `PropertyAssignment`,
+//! `Block`) and `span` (`start`/`end` in bytes). The AST explorer and the LSP
+//! consume exactly this structure.
 
 use crate::span::Span;
 use serde::Serialize;
 
-/// Raiz do arquivo: lista de artefatos de topo.
+/// File root: list of top-level artifacts.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceFile {
@@ -26,7 +26,7 @@ impl SourceFile {
     }
 }
 
-/// Declaração de topo: `document Invoice { ... }`.
+/// Top-level declaration: `document Invoice { ... }`.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Artifact {
@@ -57,7 +57,7 @@ impl Artifact {
     }
 }
 
-/// Parâmetro de artefato: `process MonthClose(fiscalPeriod: FiscalPeriod)`.
+/// Artifact parameter: `process MonthClose(fiscalPeriod: FiscalPeriod)`.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Param {
@@ -67,7 +67,7 @@ pub struct Param {
     pub span: Span,
 }
 
-/// Item do corpo de um artefato ou bloco.
+/// Item in the body of an artifact or block.
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind")]
 pub enum Member {
@@ -84,23 +84,23 @@ pub enum Member {
         body: Vec<Member>,
         span: Span,
     },
-    /// `value SIMPLES { ... }` dentro de um shape de classificação/workflow.
+    /// `value SIMPLE { ... }` inside a classification/workflow shape.
     EnumValueDeclaration {
         name: String,
         body: Vec<Member>,
         span: Span,
     },
-    /// `{ fiscalPeriod }` como argumento: chave sem valor explícito.
+    /// `{ fiscalPeriod }` as an argument: key without an explicit value.
     ShorthandProperty { name: String, span: Span },
-    /// Statement de processo (`if`, `try`, `return`, chamada, ...).
+    /// Process statement (`if`, `try`, `return`, call, ...).
     Statement { statement: Stmt, span: Span },
-    /// `service "example.com/services/orders" as Orders` dentro de `imports`.
+    /// `service "example.com/services/orders" as Orders` inside `imports`.
     ImportDeclaration {
         uri: String,
         alias: String,
         span: Span,
     },
-    /// Gatilho sem bloco: `on [Order.Created]`, `by Customer`.
+    /// Trigger without a block: `on [Order.Created]`, `by Customer`.
     TriggerDeclaration {
         keyword: String,
         targets: Vec<Expr>,
@@ -133,7 +133,7 @@ impl Member {
     }
 }
 
-/// Expressão (lado direito de uma propriedade ou argumento).
+/// Expression (right-hand side of a property or argument).
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind")]
 pub enum Expr {
@@ -161,14 +161,14 @@ pub enum Expr {
         elements: Vec<Expr>,
         span: Span,
     },
-    /// `{ pt-BR: "..." }` ou `Store { code: ... }` (objeto tipado).
+    /// `{ pt-BR: "..." }` or `Store { code: ... }` (typed object).
     Object {
         #[serde(rename = "typeRef")]
         type_ref: Option<String>,
         members: Vec<Member>,
         span: Span,
     },
-    /// Argumento nomeado em chamada: `send(key: invoice, ...)`.
+    /// Named argument in a call: `send(key: invoice, ...)`.
     NamedArgument {
         name: String,
         value: Box<Expr>,
@@ -197,7 +197,7 @@ pub enum Expr {
         operand: Box<Expr>,
         span: Span,
     },
-    /// Fallback tolerante para expressões que o parser não modela.
+    /// Tolerant fallback for expressions the parser does not model.
     Raw {
         text: String,
         span: Span,
@@ -231,7 +231,7 @@ impl Expr {
     }
 }
 
-/// Statement de processo (código estilo TypeScript).
+/// Process statement (TypeScript-style code).
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind")]
 pub enum Stmt {

@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Archol: check semântico e link (índices para o construtor)"
+description = "Archol: semantic check and link (indexes for the builder)"
 
 [dependencies]
 archol-core = { workspace = true }

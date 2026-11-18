@@ -30,7 +30,7 @@ fn base_files() -> Vec<(&'static str, &'static str)> {
 }
 
 #[test]
-fn const_com_valor_de_enum_invalido() {
+fn const_with_invalid_enum_value() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/processes/p.archol",
@@ -46,7 +46,7 @@ fn const_com_valor_de_enum_invalido() {
 }
 
 #[test]
-fn comparacao_com_valor_de_enum_invalido() {
+fn comparison_with_invalid_enum_value() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/processes/p.archol",
@@ -60,7 +60,7 @@ fn comparacao_com_valor_de_enum_invalido() {
 }
 
 #[test]
-fn comparacao_valida_nao_gera_erro() {
+fn valid_comparison_does_not_error() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/processes/p.archol",
@@ -79,7 +79,7 @@ fn comparacao_valida_nao_gera_erro() {
 }
 
 #[test]
-fn role_desconhecida() {
+fn unknown_role() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/views/v.archol",
@@ -93,7 +93,7 @@ fn role_desconhecida() {
 }
 
 #[test]
-fn link_inverte_role_para_artefatos() {
+fn link_inverts_role_to_artifacts() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/views/v.archol",
@@ -105,25 +105,25 @@ fn link_inverte_role_para_artefatos() {
         .roles
         .iter()
         .find(|role| role.name == "Clerk")
-        .expect("role no link");
+        .expect("role in link");
     assert!(clerk.used_by.iter().any(|usage| usage.artifact == "V"));
 }
 
 #[test]
-fn link_expoe_valores_de_enum() {
+fn link_exposes_enum_values() {
     let analysis = workspace(&base_files());
     let regime = analysis
         .links
         .enums
         .iter()
         .find(|e| e.name == "TaxRegimeCode")
-        .expect("enum no link");
+        .expect("enum in link");
     let values: Vec<_> = regime.values.iter().map(|v| v.name.as_str()).collect();
     assert_eq!(values, vec!["SIMPLES", "LUCRO_REAL"]);
 }
 
 #[test]
-fn duplicidade_no_mesmo_servico() {
+fn duplicate_in_same_service() {
     let mut files = base_files();
     files.push((
         "ws/services/example.com/services/demo/demo-shapes2.archol",
@@ -137,7 +137,7 @@ fn duplicidade_no_mesmo_servico() {
 }
 
 #[test]
-fn enum_de_outro_servico_com_alias() {
+fn enum_from_other_service_with_alias() {
     let files = vec![
         (
             "ws/services/example.com/services/alpha/alpha-service.archol",
@@ -172,7 +172,7 @@ fn enum_de_outro_servico_com_alias() {
 }
 
 #[test]
-fn enum_homonimo_nao_gera_falso_positivo() {
+fn homonymous_enum_does_not_yield_false_positive() {
     let files = vec![
         (
             "ws/services/example.com/services/a/a-service.archol",
@@ -215,7 +215,7 @@ fn enum_homonimo_nao_gera_falso_positivo() {
 }
 
 #[test]
-fn literal_na_esquerda_aponta_para_o_literal() {
+fn literal_on_left_points_to_literal() {
     let mut files = base_files();
     let source =
         "process P(regime: TaxRegimeCode) {\n  if (INVALIDO == regime) {\n    return Done\n  }\n}";
@@ -228,7 +228,7 @@ fn literal_na_esquerda_aponta_para_o_literal() {
         .diagnostics
         .iter()
         .find(|d| d.diagnostic.code == "E_ENUM_VALUE")
-        .expect("diagnóstico");
+        .expect("diagnostic");
     let expected = source.find("INVALIDO").unwrap();
     assert_eq!(diagnostic.diagnostic.span.start, expected);
 }

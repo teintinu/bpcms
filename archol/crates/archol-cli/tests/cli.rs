@@ -1,4 +1,4 @@
-//! Testes de integração da CLI: códigos de saída e robustez.
+//! CLI integration tests: exit codes and robustness.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -23,7 +23,7 @@ fn run(args: &[&str]) -> std::process::Output {
 }
 
 #[test]
-fn check_aponta_enum_invalido_e_sai_com_1() {
+fn check_reports_invalid_enum_and_exits_with_1() {
     let dir = temp_dir("enum");
     write(
         &dir.join("services/example.com/services/demo/demo-service.archol"),
@@ -44,7 +44,7 @@ fn check_aponta_enum_invalido_e_sai_com_1() {
 }
 
 #[test]
-fn tokens_com_barra_final_nao_panica() {
+fn tokens_with_trailing_backslash_does_not_panic() {
     let dir = temp_dir("escape");
     let file = dir.join("a.archol");
     write(&file, "document A { note: \"abc\\");
@@ -55,7 +55,7 @@ fn tokens_com_barra_final_nao_panica() {
 }
 
 #[test]
-fn check_reporta_utf8_invalido() {
+fn check_reports_invalid_utf8() {
     let dir = temp_dir("utf8");
     let file = dir.join("bad.archol");
     std::fs::write(&file, b"document A {\n  x: \xff\n}\n").unwrap();
@@ -66,7 +66,7 @@ fn check_reporta_utf8_invalido() {
 }
 
 #[test]
-fn aninhamento_profundo_nao_estoura_pilha() {
+fn deep_nesting_does_not_overflow_stack() {
     let dir = temp_dir("deep");
     let file = dir.join("deep.archol");
     let mut source = String::from("document D {\n");

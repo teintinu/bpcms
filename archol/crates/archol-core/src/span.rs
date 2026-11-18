@@ -1,8 +1,8 @@
-//! Posições no texto: offsets de byte e conversão para linha/coluna.
+//! Text positions: byte offsets and conversion to line/column.
 
 use serde::Serialize;
 
-/// Intervalo `[start, end)` em bytes do arquivo.
+/// `[start, end)` byte range in the file.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct Span {
     pub start: usize,
@@ -33,7 +33,7 @@ impl Span {
     }
 }
 
-/// Índice de linhas para converter offset em `(linha, coluna)`, ambos base 0.
+/// Line index to convert an offset into `(line, column)`, both 0-based.
 pub struct LineIndex {
     newlines: Vec<usize>,
 }
@@ -75,7 +75,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn converte_offsets_em_linha_e_coluna() {
+    fn converts_offsets_to_line_and_column() {
         let index = LineIndex::new("abc\nde\nf");
         assert_eq!(index.line_col(0), (0, 0));
         assert_eq!(index.line_col(2), (0, 2));

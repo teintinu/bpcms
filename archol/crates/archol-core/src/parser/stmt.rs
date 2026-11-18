@@ -1,4 +1,4 @@
-//! Statements de processo: `if`, `try/catch`, `return`, `const`/`let`.
+//! Process statements: `if`, `try/catch`, `return`, `const`/`let`.
 
 use crate::ast::{CatchClause, Member, Stmt};
 use crate::span::Span;

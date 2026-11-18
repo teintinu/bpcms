@@ -1,4 +1,4 @@
-//! Membros: propriedades, blocos, valores de enum, imports e gatilhos.
+//! Members: properties, blocks, enum values, imports and triggers.
 
 use crate::ast::Member;
 use crate::span::Span;
@@ -7,7 +7,7 @@ use crate::token::{Keyword, TokenKind};
 use super::{unquote, Parser};
 
 impl Parser<'_> {
-    // --- membros ---------------------------------------------------------
+    // --- members ---------------------------------------------------------
 
     pub(crate) fn parse_member(&mut self) -> Option<Member> {
         match self.kind() {
@@ -51,7 +51,7 @@ impl Parser<'_> {
         Some(self.parse_expression_statement())
     }
 
-    /// `nome: valor`, incluindo chaves com hífen (`pt-BR: "..."`).
+    /// `name: value`, including hyphenated keys (`pt-BR: "..."`).
     fn try_parse_property(&mut self) -> Option<Member> {
         if !matches!(self.kind(), TokenKind::Ident | TokenKind::Keyword(_)) {
             return None;
@@ -115,7 +115,7 @@ impl Parser<'_> {
             let token = self.advance();
             self.text(token.span).to_string()
         } else {
-            self.error("E_PARSE_ENUM_VALUE", "Esperado nome do valor".to_string());
+            self.error("E_PARSE_ENUM_VALUE", "Expected value name".to_string());
             String::new()
         };
         let body = self.parse_body();
@@ -190,8 +190,8 @@ impl Parser<'_> {
         }
     }
 
-    /// Cabeçalho genérico com bloco: `open(a: string) {`, `loop X max 2 {`,
-    /// `operator +(a: A, b: B): C {`, `send Mensagem {`.
+    /// Generic header with a block: `open(a: string) {`, `loop X max 2 {`,
+    /// `operator +(a: A, b: B): C {`, `send Message {`.
     pub(crate) fn try_parse_header_block(&mut self) -> Option<Member> {
         let mut depth = 0i32;
         let mut index = 0usize;
@@ -232,8 +232,8 @@ impl Parser<'_> {
         })
     }
 
-    /// Tipo do token imediatamente após o `)` que fecha o parêntese aberto
-    /// em `self.pos + 1` (usado para diferenciar chamada de assinatura).
+    /// Type of the token immediately after the `)` that closes the parenthesis
+    /// opened at `self.pos + 1` (used to tell a call from a signature).
     pub(crate) fn token_after_matching_paren(&self) -> Option<TokenKind> {
         let mut depth = 0i32;
         let mut index = 0usize;
@@ -257,7 +257,7 @@ impl Parser<'_> {
         }
     }
 
-    /// `quote(a: A, b: B): Retorno` — assinatura sem corpo.
+    /// `quote(a: A, b: B): Return` — signature without a body.
     fn signature_statement(&mut self, start: usize) -> Member {
         let line = self.line_of(start);
         while !self.at_eof()
@@ -311,7 +311,7 @@ impl Parser<'_> {
             return self.signature_statement(start);
         }
         let expression = self.parse_expr(true);
-        // Assinatura de operação sem corpo: `quote(a: A): std.Money`.
+        // Operation signature without a body: `quote(a: A): std.Money`.
         if self.kind() == TokenKind::Colon {
             self.advance();
             let _ = self.parse_type_ref();

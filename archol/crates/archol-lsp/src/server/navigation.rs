@@ -1,4 +1,4 @@
-//! Navegação do LSP: definição, referências, highlight e folding.
+//! LSP navigation: definition, references, highlight and folding.
 
 use std::path::Path;
 

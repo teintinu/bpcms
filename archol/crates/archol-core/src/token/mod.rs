@@ -1,4 +1,4 @@
-//! Léxico de Archol: `TokenKind`, `Token` e a tabela de palavras-chave.
+//! Archol lexer: `TokenKind`, `Token` and the keyword table.
 
 mod keyword;
 
@@ -7,21 +7,21 @@ pub use keyword::Keyword;
 use crate::span::Span;
 use serde::Serialize;
 
-/// Tipo de token produzido pelo lexer.
+/// Token type produced by the lexer.
 ///
-/// Os grupos seguem a organização de `docs/tokens.md`: pontuação, operadores,
-/// literais e palavras-chave. Ao adicionar um token, adicione um teste em
-/// `tests/lexer.rs` e a documentação correspondente.
+/// The groups follow the organization in `docs/tokens.md`: punctuation,
+/// operators, literals and keywords. When adding a token, add a test in
+/// `tests/lexer.rs` and the corresponding documentation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TokenKind {
-    /// `nome`, `Nome`, `pt-BR` (o hífen é separado, ver `token.lower_key`).
+    /// `name`, `Name`, `pt-BR` (the hyphen is separate, see `token.lower_key`).
     Ident,
     /// `10`, `2.5`, `5d`, `15m`.
     Number,
-    /// `"texto"`.
+    /// `"text"`.
     String,
-    /// `// comentário`.
+    /// `// comment`.
     Comment,
 
     LBrace,
@@ -76,7 +76,7 @@ impl TokenKind {
     }
 }
 
-/// Token com o intervalo que ocupa no fonte.
+/// Token with the range it occupies in the source.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub struct Token {
     pub kind: TokenKind,

@@ -1,8 +1,8 @@
 'use strict';
 
-// Utilitários puros sobre a AST devolvida por `archol/ast`.
-// A ordem dos filhos é a mesma usada pelo explorador (src/ast-view-html.js):
-// propriedades que são nós, depois arrays de nós, na ordem do objeto JSON.
+// Pure utilities over the AST returned by `archol/ast`.
+// The child order is the same one used by the explorer (src/ast-view-html.js):
+// properties that are nodes, then arrays of nodes, in JSON object order.
 
 const META_KEYS = new Set(['kind', 'span']);
 
@@ -97,8 +97,8 @@ function nodeCategory(kind) {
   return 'other';
 }
 
-// Converte uma posição LSP (linha/character zero-based, UTF-16) em offset de
-// string JavaScript. `\r` de CRLF não conta como conteúdo da linha.
+// Converts an LSP position (zero-based line/character, UTF-16) into a JavaScript
+// string offset. `\r` from CRLF does not count as line content.
 function offsetAtText(text, line, character) {
   const source = typeof text === 'string' ? text : '';
   const targetLine = Math.max(0, Math.trunc(Number(line) || 0));
@@ -114,8 +114,8 @@ function offsetAtText(text, line, character) {
   return offset + Math.min(targetCharacter, lineText.length);
 }
 
-// O AST do Archol usa spans em bytes UTF-8; o VS Code usa offsets de string
-// JavaScript (UTF-16). As duas funções abaixo fazem a ponte.
+// The Archol AST uses byte spans in UTF-8; VS Code uses JavaScript string
+// offsets (UTF-16). The two functions below bridge them.
 function byteOffsetAtText(text, line, character) {
   const source = typeof text === 'string' ? text : '';
   return Buffer.byteLength(source.slice(0, offsetAtText(source, line, character)), 'utf8');
@@ -137,7 +137,7 @@ function textOffsetAtByte(text, byteOffset) {
   return source.length;
 }
 
-// Converte um span em bytes do AST para offsets UTF-16 usados pelo VS Code.
+// Converts an AST byte span into UTF-16 offsets used by VS Code.
 function textOffsetsForByteSpan(text, startByte, endByte) {
   const start = textOffsetAtByte(text, startByte);
   const end = Math.max(start, textOffsetAtByte(text, endByte));

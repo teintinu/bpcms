@@ -1,7 +1,7 @@
 'use strict';
 
-// Framing JSON-RPC 2.0 do LSP: cabeçalhos ASCII + corpo UTF-8 medido em bytes.
-// Este módulo é puro (não importa `vscode`) e é coberto por test/protocol.test.js.
+// LSP JSON-RPC 2.0 framing: ASCII headers + UTF-8 body measured in bytes.
+// This module is pure (does not import `vscode`) and is covered by test/protocol.test.js.
 
 const CRLF = Buffer.from('\r\n\r\n', 'ascii');
 const LF = Buffer.from('\n\n', 'ascii');
@@ -72,7 +72,7 @@ class MessageDecoder {
       const headerText = this._buffer.subarray(0, found.index).toString('ascii');
       const contentLength = parseContentLength(headerText);
       if (contentLength === null) {
-        this._reportError(new Error(`Cabeçalho LSP sem Content-Length válido: ${headerText.slice(0, 80)}`));
+        this._reportError(new Error(`LSP header without a valid Content-Length: ${headerText.slice(0, 80)}`));
         this._buffer = this._buffer.subarray(found.index + found.separatorLength);
         continue;
       }
@@ -86,7 +86,7 @@ class MessageDecoder {
       try {
         messages.push(JSON.parse(bodyText));
       } catch (error) {
-        this._reportError(new Error(`Corpo LSP não é JSON válido: ${error.message}`));
+        this._reportError(new Error(`LSP body is not valid JSON: ${error.message}`));
       }
     }
     return messages;

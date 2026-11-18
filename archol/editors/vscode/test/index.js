@@ -1,7 +1,7 @@
 'use strict';
 
-// Permite executar `node --test archol/editors/vscode/test` (sem glob):
-// o Node resolve o diretório como módulo e este índice carrega os testes.
+// Allows running `node --test archol/editors/vscode/test` (without a glob):
+// Node resolves the directory as a module and this index loads the tests.
 require('./protocol.test');
 require('./ast-tree.test');
 require('./server-path.test');

@@ -8,10 +8,10 @@ const { registerLanguageFeatures } = require('./lsp-features');
 const { isArcholDocument } = require('./vscode-utils');
 
 const STATUS = {
-  stopped: { text: '$(circle-slash) Archol parado', tooltip: 'Servidor LSP parado. Clique para iniciar.' },
-  starting: { text: '$(sync~spin) Archol iniciando', tooltip: 'Iniciando o servidor LSP do Archol…' },
-  ready: { text: '$(check) Archol pronto', tooltip: 'Servidor LSP do Archol pronto. Clique para reiniciar.' },
-  error: { text: '$(error) Archol erro', tooltip: 'Falha no servidor LSP do Archol. Clique para reiniciar.' },
+  stopped: { text: '$(circle-slash) Archol stopped', tooltip: 'LSP server stopped. Click to start.' },
+  starting: { text: '$(sync~spin) Archol starting', tooltip: 'Starting the Archol LSP server…' },
+  ready: { text: '$(check) Archol ready', tooltip: 'Archol LSP server ready. Click to restart.' },
+  error: { text: '$(error) Archol error', tooltip: 'Archol LSP server failed. Click to restart.' },
 };
 
 let output = null;
@@ -78,13 +78,13 @@ function activate(context) {
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('archol.server.path')) {
-        log('configuração archol.server.path mudou; reinicie o servidor para aplicar.');
+        log('archol.server.path setting changed; restart the server to apply.');
       }
     }),
   );
 
   applyStatus('stopped');
-  log(`Extensão Archol ${extensionVersion} ativada.`);
+  log(`Archol extension ${extensionVersion} activated.`);
   for (const document of vscode.workspace.textDocuments) {
     if (isArcholDocument(document)) session.openDocument(document);
   }

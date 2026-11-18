@@ -1,7 +1,8 @@
-//! Link: índice pronto para o construtor.
+//! Link: index ready for the builder.
 //!
-//! Além do que o fonte declara, o link responde perguntas invertidas, como
-//! "quais artefatos exigem a role X" e "quais referências cada artefato faz".
+//! Beyond what the source declares, the link answers inverted questions, such
+//! as "which artifacts require role X" and "which references each artifact
+//! makes".
 
 use std::collections::{BTreeMap, BTreeSet};
 

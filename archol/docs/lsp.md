@@ -1,71 +1,71 @@
 # LSP
 
-Servidor próprio, síncrono, sobre stdio, em `crates/archol-lsp`:
+Custom synchronous server over stdio, in `crates/archol-lsp`:
 
-| Arquivo | Papel |
+| File | Role |
 | :--- | :--- |
-| `rpc.rs` | frames `Content-Length` + JSON-RPC |
-| `server.rs` | estado dos documentos, análise, handlers |
-| `features.rs` | consultas no AST (hover, símbolos, contexto) |
-| `util.rs` | URI ↔ caminho e posição LSP (UTF-16) |
+| `rpc.rs` | `Content-Length` frames + JSON-RPC |
+| `server.rs` | document state, analysis, handlers |
+| `features.rs` | AST queries (hover, symbols, context) |
+| `util.rs` | URI ↔ path and LSP position (UTF-16) |
 
 ## Capabilities
 
 - `textDocumentSync` full (didOpen/didChange/didSave/didClose)
-- `hoverProvider` — tipo, artefato, valor de enum (com títulos) e link de AST
-- `completionProvider` — valores de enum no contexto, papéis em `roles: [`, artefatos
-- `definitionProvider` — vai para a declaração do artefato
-- `referencesProvider` / `documentHighlightProvider` — ocorrências do identificador
-- `documentSymbolProvider` — artefatos e membros (hierárquico)
-- `workspaceSymbolProvider` — busca de artefatos por nome
-- `foldingRangeProvider` — artefatos, blocos e statements
+- `hoverProvider` — type, artifact, enum value (with titles), and AST link
+- `completionProvider` — context enum values, roles in `roles: [`, artifacts
+- `definitionProvider` — goes to the artifact declaration
+- `referencesProvider` / `documentHighlightProvider` — occurrences of the identifier
+- `documentSymbolProvider` — artifacts and members (hierarchical)
+- `workspaceSymbolProvider` — search artifacts by name
+- `foldingRangeProvider` — artifacts, blocks, and statements
 
 ## Hover
 
-`TaxRegimeCode` mostra a enumeração com os títulos de cada valor; `SIMPLES`
-mostra que é valor de `TaxRegimeCode`; `Invoice` mostra o tipo de artefato e o
-serviço. Todo hover termina com:
+`TaxRegimeCode` shows the enumeration with the titles of each value; `SIMPLES`
+shows that it is a value of `TaxRegimeCode`; `Invoice` shows the artifact type
+and the service. Every hover ends with:
 
 ```md
-[Explorar AST](command:archol.showAst?%5B%22file%3A...%22%2C12%2C4%5D)
+[Explore AST](command:archol.showAst?%5B%22file%3A...%22%2C12%2C4%5D)
 ```
 
-O plugin abre o painel de AST e seleciona o nó da posição.
+The plugin opens the AST panel and selects the node at that position.
 
 ## Definition
 
-Ordem de resolução (arquivo `crates/archol-lsp/src/resolve.rs`):
+Resolution order (file `crates/archol-lsp/src/resolve.rs`):
 
-1. declaração do parâmetro/`const`/`let`;
-2. `icon: X` → artefato `Icon` chamado `X`;
-3. valor de enum em comparação tipada — `invoice.status == Overdue` resolve
-   `status` como campo de `Invoice`, cujo tipo é `InvoiceStatus`, e leva ao
-   `value Overdue` (não ao ícone `Overdue`);
+1. parameter/`const`/`let` declaration;
+2. `icon: X` → `Icon` artifact named `X`;
+3. enum value in a typed comparison — `invoice.status == Overdue` resolves
+   `status` as a field of `Invoice`, whose type is `InvoiceStatus`, and goes to
+   `value Overdue` (not to the `Overdue` icon);
 4. `const a: Regime = SIMPLES` → `value SIMPLES`;
-5. acesso a campo — `invoice.status` → campo `status` no documento `Invoice`;
-6. variável/artefato/valor homônimo, respeitando o serviço.
+5. field access — `invoice.status` → field `status` in the `Invoice` document;
+6. same-named variable/artifact/value, respecting the service.
 
 ## Completion
 
-Em `const a: TaxRegimeCode = `, a extensão lista `SIMPLES`,
-`LUCRO_PRESUMIDO`, `LUCRO_REAL` com o título de cada um. Em
-`if (regime == ` a lista sai do tipo de `regime`. Em `roles: [` saem os papéis
-declarados no workspace. O enum é resolvido no serviço do arquivo e aceita
-`Alias.Tipo` vindo de `imports`; enums homônimos de serviços diferentes não se
-misturam.
+In `const a: TaxRegimeCode = `, the extension lists `SIMPLES`,
+`LUCRO_PRESUMIDO`, `LUCRO_REAL` with the title of each one. In
+`if (regime == ` the list comes from the type of `regime`. In `roles: [` it
+lists the roles declared in the workspace. The enum is resolved in the file's
+service and accepts `Alias.Type` coming from `imports`; same-named enums from
+different services are not mixed.
 
-## Requests customizados
+## Custom requests
 
-| Método | Params | Resultado |
+| Method | Params | Result |
 | :--- | :--- | :--- |
 | `archol/ast` | `{ "uri": "file:///..." }` | `{ "ast": <SourceFile> }` |
 | `archol/links` | `{}` | `{ "links": <LinkIndex> }` |
 
-## Diagnósticos
+## Diagnostics
 
-Publicados em `textDocument/publishDiagnostics` a cada open/change/save, com
-`source: "archol"` e o mesmo código da CLI (`E_ENUM_VALUE`, `E_UNKNOWN_TYPE`,
-...).
+Published on `textDocument/publishDiagnostics` on every open/change/save, with
+`source: "archol"` and the same code as the CLI (`E_ENUM_VALUE`,
+`E_UNKNOWN_TYPE`, ...).
 
 ## Smoke test
 
@@ -73,13 +73,14 @@ Publicados em `textDocument/publishDiagnostics` a cada open/change/save, com
 python3 archol/scripts/smoke_lsp.py
 ```
 
-Sobe o binário real, faz `initialize`, hover com link de AST, completion de
-enum, `archol/ast`, `archol/links` e encerra o servidor.
+Starts the real binary, runs `initialize`, hover with an AST link, enum
+completion, `archol/ast`, `archol/links`, and shuts the server down.
 
-## Limitações conhecidas
+## Known limitations
 
-- Análise do workspace inteiro a cada mudança; suficiente para 330 arquivos,
-  otimizável com cache por arquivo quando necessário.
-- Colunas em UTF-16 (padrão LSP); offsets internos são bytes.
-- Sem `semanticTokens` nesta versão inicial: a gramática TextMate cobre cores.
-- Sync é Full (`change: 1`); mudanças incrementais não são aplicadas.
+- Whole-workspace analysis on every change; enough for 330 files, optimizable
+  with per-file caching when necessary.
+- Columns in UTF-16 (LSP standard); internal offsets are bytes.
+- No `semanticTokens` in this initial version: the TextMate grammar covers
+  colors.
+- Sync is Full (`change: 1`); incremental changes are not applied.

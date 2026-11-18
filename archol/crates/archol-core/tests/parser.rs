@@ -1,13 +1,13 @@
 use archol_core::{parse, Expr, Member, Stmt, TokenKind};
 
 fn ast(source: &str) -> archol_core::SourceFile {
-    let result = parse(source, "teste.archol");
+    let result = parse(source, "test.archol");
     assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
     result.ast
 }
 
 #[test]
-fn le_artefato_com_nome_string() {
+fn reads_artifact_with_string_name() {
     let file = ast("service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n}");
     assert_eq!(file.items.len(), 1);
     assert_eq!(file.items[0].artifact_kind, "Service");
@@ -15,7 +15,7 @@ fn le_artefato_com_nome_string() {
 }
 
 #[test]
-fn le_enum_com_titulo() {
+fn reads_enum_with_title() {
     let file = ast(
         "shape TaxRegimeCode {\n  base: classification\n  value SIMPLES {\n    title: { pt-BR: \"Simples\" }\n  }\n}",
     );
@@ -26,13 +26,13 @@ fn le_enum_com_titulo() {
             Member::EnumValueDeclaration { name, body, .. } => Some((name, body)),
             _ => None,
         })
-        .expect("valor de enum");
+        .expect("enum value");
     assert_eq!(value.0, "SIMPLES");
     assert_eq!(value.1.len(), 1);
 }
 
 #[test]
-fn le_processo_com_const_e_if() {
+fn reads_process_with_const_and_if() {
     let file = ast(
         "process Check(regime: TaxRegimeCode) {\n  const a: TaxRegimeCode = SIMPLES\n  if (regime == SIMPLES) {\n    return Done\n  }\n}",
     );
@@ -46,16 +46,16 @@ fn le_processo_com_const_e_if() {
         ..
     } = &body[1]
     else {
-        panic!("esperado if");
+        panic!("expected if");
     };
     let Expr::Binary { op, .. } = condition else {
-        panic!("esperado comparação")
+        panic!("expected comparison")
     };
     assert_eq!(op, "==");
 }
 
 #[test]
-fn le_lista_e_objeto_aninhado() {
+fn reads_list_and_nested_object() {
     let file = ast(
         "document Invoice {\n  fields {\n    items: InvoiceItem[] { title: { pt-BR: \"Itens\" } }\n  }\n  roles: [Clerk, Manager]\n}",
     );
@@ -64,13 +64,13 @@ fn le_lista_e_objeto_aninhado() {
 }
 
 #[test]
-fn ignora_comentarios_no_ast() {
-    let file = ast("// comentário\ndocument A {\n  // outro\n  title: { pt-BR: \"A\" }\n}");
+fn ignores_comments_in_ast() {
+    let file = ast("// comment\ndocument A {\n  // another\n  title: { pt-BR: \"A\" }\n}");
     assert_eq!(file.items.len(), 1);
 }
 
 #[test]
-fn erro_em_bloco_nao_fechado() {
+fn error_on_unclosed_block() {
     let result = parse("document A {\n  title: { pt-BR: \"A\" }\n", "x.archol");
     assert!(result
         .diagnostics
@@ -79,7 +79,7 @@ fn erro_em_bloco_nao_fechado() {
 }
 
 #[test]
-fn tokens_de_duracao_e_percentual() {
+fn duration_and_percentage_tokens() {
     let lexed = archol_core::lex("5d 15m 30%");
     let kinds: Vec<TokenKind> = lexed
         .tokens
@@ -93,7 +93,7 @@ fn tokens_de_duracao_e_percentual() {
 }
 
 #[test]
-fn barra_invertida_no_fim_da_string_nao_panica() {
+fn trailing_backslash_in_string_does_not_panic() {
     let source = "document A { note: \"abc\\";
     let lexed = archol_core::lex(source);
     assert!(lexed
@@ -104,7 +104,7 @@ fn barra_invertida_no_fim_da_string_nao_panica() {
 }
 
 #[test]
-fn aninhamento_profundo_vira_diagnostico_e_nao_stack_overflow() {
+fn deep_nesting_becomes_diagnostic_not_stack_overflow() {
     let mut source = String::from("document D {\n");
     for _ in 0..400 {
         source.push_str("a: { ");

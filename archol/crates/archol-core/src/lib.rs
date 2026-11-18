@@ -1,7 +1,7 @@
-//! Archol: léxico, AST e parser.
+//! Archol: lexer, AST and parser.
 //!
-//! Ponto de entrada: [`parse`], que devolve AST + diagnósticos. O check e o
-//! link vivem em `archol-analysis`; o LSP e a CLI consomem esta crate.
+//! Entry point: [`parse`], which returns AST + diagnostics. The check and
+//! link live in `archol-analysis`; the LSP and the CLI consume this crate.
 
 pub mod ast;
 pub mod diagnostic;
@@ -17,5 +17,5 @@ pub use parser::{parse, ParseResult};
 pub use span::{LineIndex, Span};
 pub use token::{Keyword, Token, TokenKind};
 
-/// Extensão canônica dos arquivos da linguagem.
+/// Canonical file extension of the language.
 pub const FILE_EXTENSION: &str = "archol";

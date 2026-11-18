@@ -1,11 +1,11 @@
-//! Conversões entre URIs, caminhos e posições LSP (UTF-16).
+//! Conversions between URIs, paths and LSP positions (UTF-16).
 
 use std::path::{Path, PathBuf};
 
 pub fn uri_to_path(uri: &str) -> Option<PathBuf> {
     let rest = uri.strip_prefix("file://")?;
     let decoded = percent_decode(rest);
-    // Windows: file:///C:/... -> /C:/... (mantém como está; Path lida)
+    // Windows: file:///C:/... -> /C:/... (kept as-is; Path handles it)
     Some(PathBuf::from(decoded))
 }
 

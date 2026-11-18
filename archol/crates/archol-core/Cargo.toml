@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Archol: léxico, AST e parser da linguagem"
+description = "Archol: lexer, AST and parser for the language"
 
 [dependencies]
 serde = { workspace = true }

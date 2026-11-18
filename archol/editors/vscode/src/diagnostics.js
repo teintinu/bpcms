@@ -53,7 +53,7 @@ function showServerMessage(params, log) {
       vscode.window.showWarningMessage(message);
       break;
     case 4:
-      if (log) log(`[servidor] ${params.message}`);
+      if (log) log(`[server] ${params.message}`);
       break;
     default:
       vscode.window.showInformationMessage(message);

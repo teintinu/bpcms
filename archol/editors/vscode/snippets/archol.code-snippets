@@ -1,7 +1,7 @@
 {
-  "Documento Archol": {
+  "Archol Document": {
     "prefix": ["archol-document", "document"],
-    "description": "Documento com campos, índice e uma action.",
+    "description": "Document with fields, an index and an action.",
     "body": [
       "document ${1:Invoice} {",
       "  title: { pt-BR: \"${2:Documento}\", en: \"${3:Document}\" }",
@@ -28,9 +28,9 @@
       "}"
     ]
   },
-  "Processo Archol": {
+  "Archol Process": {
     "prefix": ["archol-process", "process"],
-    "description": "Processo com gatilho, ação, mensagem e desfecho.",
+    "description": "Process with a trigger, action, message and outcome.",
     "body": [
       "process ${1:Name}(${2:subject}: ${3:Document}) {",
       "  title: { pt-BR: \"${4:Processo}\", en: \"${5:Process}\" }",
@@ -49,9 +49,9 @@
       "}"
     ]
   },
-  "Shape de classificação": {
+  "Classification Shape": {
     "prefix": ["archol-shape-classification", "shape classification"],
-    "description": "Shape fechado em que os valores são constantes (ex.: SIMPLES).",
+    "description": "Closed shape whose values are constants (e.g. SIMPLES).",
     "body": [
       "shape ${1:TaxRegimeCode} {",
       "  title: { pt-BR: \"${2:Regime tributário}\", en: \"${3:Tax regime}\" }",
@@ -73,9 +73,9 @@
       "}"
     ]
   },
-  "View Archol": {
+  "Archol View": {
     "prefix": ["archol-view", "view"],
-    "description": "View do tipo tabela com colunas, filtros e ações.",
+    "description": "Table view with columns, filters and actions.",
     "body": [
       "view ${1:InvoiceTable} {",
       "  title: { pt-BR: \"${2:Notas fiscais}\", en: \"${3:Invoices}\" }",
