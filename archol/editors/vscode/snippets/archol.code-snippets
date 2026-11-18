@@ -1,0 +1,96 @@
+{
+  "Documento Archol": {
+    "prefix": ["archol-document", "document"],
+    "description": "Documento com campos, índice e uma action.",
+    "body": [
+      "document ${1:Invoice} {",
+      "  title: { pt-BR: \"${2:Documento}\", en: \"${3:Document}\" }",
+      "  version: 1",
+      "",
+      "  fields {",
+      "    ${4:id}: string {",
+      "      title: { pt-BR: \"Identificador\" }",
+      "      required",
+      "      lookup",
+      "    }",
+      "  }",
+      "",
+      "  indexes {",
+      "    byId: [${4:id}] unique",
+      "  }",
+      "",
+      "  actions {",
+      "    ${5:create}() {",
+      "      title: { pt-BR: \"${6:Criar}\" }",
+      "      roles: [${7:Clerk}]",
+      "    }",
+      "  }",
+      "}"
+    ]
+  },
+  "Processo Archol": {
+    "prefix": ["archol-process", "process"],
+    "description": "Processo com gatilho, ação, mensagem e desfecho.",
+    "body": [
+      "process ${1:Name}(${2:subject}: ${3:Document}) {",
+      "  title: { pt-BR: \"${4:Processo}\", en: \"${5:Process}\" }",
+      "  version: 1",
+      "  on [${3}.${6:Created}]",
+      "  key: ${2}",
+      "",
+      "  ${3}.${7:start}()",
+      "",
+      "  return ${8:Done}",
+      "",
+      "  end ${8} {",
+      "    title: { pt-BR: \"${9:Concluído}\", en: \"${10:Done}\" }",
+      "    outcome: success",
+      "  }",
+      "}"
+    ]
+  },
+  "Shape de classificação": {
+    "prefix": ["archol-shape-classification", "shape classification"],
+    "description": "Shape fechado em que os valores são constantes (ex.: SIMPLES).",
+    "body": [
+      "shape ${1:TaxRegimeCode} {",
+      "  title: { pt-BR: \"${2:Regime tributário}\", en: \"${3:Tax regime}\" }",
+      "  base: classification",
+      "",
+      "  value ${4:SIMPLES} {",
+      "    title: { pt-BR: \"${5:Simples Nacional}\" }",
+      "    icon: ${6:Simples}",
+      "    ordinal: 10",
+      "  }",
+      "",
+      "  value ${7:LUCRO_PRESUMIDO} {",
+      "    title: { pt-BR: \"${8:Lucro Presumido}\" }",
+      "    icon: ${9:LucroPresumido}",
+      "    ordinal: 20",
+      "  }",
+      "",
+      "  format: plain",
+      "}"
+    ]
+  },
+  "View Archol": {
+    "prefix": ["archol-view", "view"],
+    "description": "View do tipo tabela com colunas, filtros e ações.",
+    "body": [
+      "view ${1:InvoiceTable} {",
+      "  title: { pt-BR: \"${2:Notas fiscais}\", en: \"${3:Invoices}\" }",
+      "  type: ${4:table}",
+      "  source: ${5:Invoice}",
+      "  roles: [${6:Clerk}]",
+      "",
+      "  columns { ${7:number}; ${8:status} }",
+      "  filters { ${8:status} }",
+      "  pagination: ${9:50}",
+      "",
+      "  actions {",
+      "    open -> ${10:InvoiceDetail}",
+      "  }",
+      "}"
+    ]
+  }
+}

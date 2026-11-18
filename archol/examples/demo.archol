@@ -1,0 +1,74 @@
+// Serviço de demonstração do Archol: enum, documento, view e processo.
+service "example.com/services/demo" {
+  title: { pt-BR: "Demonstração", en: "Demo" }
+  owner: "Demo"
+}
+
+// Regime tributário aceito pela demonstração.
+shape TaxRegimeCode {
+  title: { pt-BR: "Regime tributário", en: "Tax regime" }
+  base: classification
+  value SIMPLES {
+    title: { pt-BR: "Simples Nacional" }
+    ordinal: 10
+  }
+  value LUCRO_REAL {
+    title: { pt-BR: "Lucro Real" }
+    ordinal: 20
+  }
+}
+
+role Clerk {
+  title: { pt-BR: "Atendente", en: "Clerk" }
+  permissions: [demo.issue]
+}
+
+// Nota de demonstração, só para explorar o AST.
+document DemoInvoice {
+  title: { pt-BR: "Nota demo", en: "Demo invoice" }
+  version: 1
+
+  fields {
+    number: string { title: { pt-BR: "Número" }, unique, lookup }
+    regime: TaxRegimeCode { title: { pt-BR: "Regime" }, required }
+  }
+
+  actions {
+    issue() {
+      title: { pt-BR: "Emitir" }
+      roles: [Clerk]
+      to: status.Issued
+    }
+  }
+}
+
+// Fila de emissão por regime.
+view InvoiceQueue {
+  title: { pt-BR: "Fila de notas" }
+  type: inbox
+  roles: [Clerk]
+  document: DemoInvoice
+  columns { number; regime }
+}
+
+// Processo que valida o regime no momento da emissão.
+process Issue(regime: TaxRegimeCode) {
+  title: { pt-BR: "Emitir nota" }
+  on [DemoInvoice.Created]
+  key: regime
+
+  const chosen: TaxRegimeCode = SIMPLES
+
+  if (regime == LUCRO_REAL) {
+    return Special
+  }
+
+  end Done {
+    title: { pt-BR: "Concluído" }
+    outcome: success
+  }
+  end Special {
+    title: { pt-BR: "Regime especial" }
+    outcome: success
+  }
+}

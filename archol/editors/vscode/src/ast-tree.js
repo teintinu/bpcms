@@ -1,0 +1,160 @@
+'use strict';
+
+// Utilitários puros sobre a AST devolvida por `archol/ast`.
+// A ordem dos filhos é a mesma usada pelo explorador (src/ast-view-html.js):
+// propriedades que são nós, depois arrays de nós, na ordem do objeto JSON.
+
+const META_KEYS = new Set(['kind', 'span']);
+
+function isAstNode(value) {
+  return Boolean(value) && typeof value === 'object' && typeof value.kind === 'string';
+}
+
+function getChildren(node) {
+  const children = [];
+  if (!isAstNode(node)) return children;
+  for (const key of Object.keys(node)) {
+    if (META_KEYS.has(key)) continue;
+    const value = node[key];
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (isAstNode(item)) children.push(item);
+      }
+    } else if (isAstNode(value)) {
+      children.push(value);
+    }
+  }
+  return children;
+}
+
+function nodeAtPath(root, path) {
+  let node = root;
+  if (!Array.isArray(path)) return null;
+  for (const index of path) {
+    if (!Number.isInteger(index) || index < 0) return null;
+    node = getChildren(node)[index];
+    if (!node) return null;
+  }
+  return node;
+}
+
+function walk(node, visit, path = []) {
+  if (!isAstNode(node)) return;
+  visit(node, path);
+  const children = getChildren(node);
+  for (let index = 0; index < children.length; index += 1) {
+    walk(children[index], visit, path.concat(index));
+  }
+}
+
+function findNodeAtOffset(root, offset) {
+  if (!isAstNode(root) || !Number.isFinite(offset)) return null;
+  let best = null;
+  walk(root, (node, path) => {
+    const span = node.span;
+    if (!span || !Number.isFinite(span.start) || !Number.isFinite(span.end)) return;
+    if (offset < span.start || offset > span.end) return;
+    const length = span.end - span.start;
+    if (
+      best === null
+      || path.length > best.path.length
+      || (path.length === best.path.length && length < best.length)
+    ) {
+      best = { node, path, length };
+    }
+  });
+  return best;
+}
+
+function findNodePathAtOffset(root, offset) {
+  const found = findNodeAtOffset(root, offset);
+  return found ? found.path : null;
+}
+
+function nodeSummary(node) {
+  if (!isAstNode(node)) return '';
+  const parts = [];
+  if (node.artifactKind) parts.push(String(node.artifactKind));
+  if (node.name) {
+    parts.push(String(node.name));
+  } else if (node.kind === 'SourceFile' && node.path) {
+    const segments = String(node.path).split(/[\\/]/);
+    parts.push(segments[segments.length - 1]);
+  }
+  if (parts.length === 0 && node.value !== undefined && node.value !== null && typeof node.value !== 'object') {
+    parts.push(String(node.value));
+  }
+  return parts.join(' ');
+}
+
+function nodeCategory(kind) {
+  if (/Block$|Body$|^SourceFile$/.test(kind)) return 'block';
+  if (/Declaration$|^Artifact$|^Field$|^Parameter$|^Transition$|^Value$|^Role$|^Action$|^PropertyAssignment$|^ShorthandProperty$/.test(kind)) {
+    return 'declaration';
+  }
+  if (/Statement$|^Return|^If|^Send|^Try|^Catch|^Let|^Const/.test(kind)) return 'statement';
+  if (/Expression$|Literal$|^Call|^Reference|^Binary|^Unary|^Identifier$|^MemberAccess$|^List$|^Object$|^NamedArgument$/.test(kind)) return 'expression';
+  return 'other';
+}
+
+// Converte uma posição LSP (linha/character zero-based, UTF-16) em offset de
+// string JavaScript. `\r` de CRLF não conta como conteúdo da linha.
+function offsetAtText(text, line, character) {
+  const source = typeof text === 'string' ? text : '';
+  const targetLine = Math.max(0, Math.trunc(Number(line) || 0));
+  const targetCharacter = Math.max(0, Math.trunc(Number(character) || 0));
+  const lines = source.split('\n');
+  let offset = 0;
+  for (let index = 0; index < targetLine && index < lines.length; index += 1) {
+    offset += lines[index].length + 1;
+  }
+  if (targetLine >= lines.length) return source.length;
+  let lineText = lines[targetLine];
+  if (lineText.endsWith('\r')) lineText = lineText.slice(0, -1);
+  return offset + Math.min(targetCharacter, lineText.length);
+}
+
+// O AST do Archol usa spans em bytes UTF-8; o VS Code usa offsets de string
+// JavaScript (UTF-16). As duas funções abaixo fazem a ponte.
+function byteOffsetAtText(text, line, character) {
+  const source = typeof text === 'string' ? text : '';
+  return Buffer.byteLength(source.slice(0, offsetAtText(source, line, character)), 'utf8');
+}
+
+function textOffsetAtByte(text, byteOffset) {
+  const source = typeof text === 'string' ? text : '';
+  const target = Math.max(0, Math.trunc(Number(byteOffset) || 0));
+  let bytes = 0;
+  for (let index = 0; index < source.length;) {
+    const codePoint = source.codePointAt(index);
+    const character = String.fromCodePoint(codePoint);
+    const size = Buffer.byteLength(character, 'utf8');
+    if (bytes + size > target) return index;
+    bytes += size;
+    index += character.length;
+    if (bytes === target) return index;
+  }
+  return source.length;
+}
+
+// Converte um span em bytes do AST para offsets UTF-16 usados pelo VS Code.
+function textOffsetsForByteSpan(text, startByte, endByte) {
+  const start = textOffsetAtByte(text, startByte);
+  const end = Math.max(start, textOffsetAtByte(text, endByte));
+  return [start, end];
+}
+
+module.exports = {
+  byteOffsetAtText,
+  textOffsetsForByteSpan,
+  findNodeAtOffset,
+  findNodePathAtOffset,
+  getChildren,
+  isAstNode,
+  nodeAtPath,
+  nodeCategory,
+  nodeSummary,
+  offsetAtText,
+  textOffsetAtByte,
+  walk,
+};

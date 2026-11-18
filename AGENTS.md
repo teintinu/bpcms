@@ -46,8 +46,8 @@ Não aplique mudanças “óbvias” por conta própria. Reverter também é mud
 
 `BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
 
-- A raiz de um serviço é a pasta que contém `<service>-service.bpcms`.
-- `documents/`, `processes/`, `views/` e `messages/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.bpcms` continua `Invoice`, não `documents.Invoice`.
+- A raiz de um serviço é a pasta que contém `<service>-service.archol`.
+- `documents/`, `processes/`, `views/` e `messages/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.archol` continua `Invoice`, não `documents.Invoice`.
 - `icons/` é um **contêiner de ícones**: as subpastas dentro dele são namespaces de ícone; `icons` não entra na referência. Ex.: `icons/status/draft.svg` -> `status.draft`.
 - As demais subpastas seguem a regra de namespace: segmentos em camelCase, referências por ponto.
 - Nomes de arquivos e pastas de artefato: **kebab-case**; o full path da URI preserva os segmentos da URI (ex.: `example.com`).
@@ -58,14 +58,14 @@ Exemplo:
 
 ```text
 examples/services/example.com/services/billing/
-  billing-service.bpcms
-  documents/billing-invoice-document.bpcms      -> Invoice (sem prefixo documents.)
-  processes/billing-invoice-issuance-process.bpcms
-  views/billing-invoice-table-view.bpcms        -> InvoiceTable (sem prefixo views.)
-  messages/billing-invoice-issued-message.bpcms -> InvoiceIssued (sem prefixo messages.)
-  billing-shapes.bpcms
-  billing-organograms.bpcms
-  billing-icons.bpcms
+  billing-service.archol
+  documents/billing-invoice-document.archol      -> Invoice (sem prefixo documents.)
+  processes/billing-invoice-issuance-process.archol
+  views/billing-invoice-table-view.archol        -> InvoiceTable (sem prefixo views.)
+  messages/billing-invoice-issued-message.archol -> InvoiceIssued (sem prefixo messages.)
+  billing-shapes.archol
+  billing-organograms.archol
+  billing-icons.archol
   icons/status/draft.svg                        -> status.draft
 ```
 
@@ -74,26 +74,42 @@ examples/services/example.com/services/billing/
 `BPCMS_WORKSPACE = examples/` nesta fase. O fonte é organizado por **contexto principal**, não por tipo de artefato. São contextos principais: `application`, `service`, `document`, `process`, `view` e `message`. Regra completa em [DSL_REFERENCE.md](DSL_REFERENCE.md), seção 30.
 
 - Todo contexto principal tem seu próprio arquivo, com **exatamente um** principal, e ele é o **primeiro artefato** do arquivo.
-- Aplicação: `examples/applications/<fullpath app>/<app>-application.bpcms`.
-- Serviço: `examples/services/<fullpath service>/<service>-service.bpcms`.
-- Documento: `examples/services/<fullpath service>/documents/<service>-<nome>-document.bpcms`.
-- Processo: `examples/services/<fullpath service>/processes/<service>-<nome>-process.bpcms`.
-- View: `examples/services/<fullpath service>/views/<service>-<nome>-view.bpcms`.
-- Message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.bpcms`.
-- Compartilhado: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms`.
+- Aplicação: `examples/applications/<fullpath app>/<app>-application.archol`.
+- Serviço: `examples/services/<fullpath service>/<service>-service.archol`.
+- Documento: `examples/services/<fullpath service>/documents/<service>-<nome>-document.archol`.
+- Processo: `examples/services/<fullpath service>/processes/<service>-<nome>-process.archol`.
+- View: `examples/services/<fullpath service>/views/<service>-<nome>-view.archol`.
+- Message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.archol`.
+- Compartilhado: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.archol`.
 - SVG: `examples/services/<fullpath service>/icons/<namespace>/<icon>.svg`.
-- `-icons.bpcms` (não-SVG): `examples/services/<fullpath service>/<service>-icons.bpcms`.
+- `-icons.archol` (não-SVG): `examples/services/<fullpath service>/<service>-icons.archol`.
 - `<fullpath>` é a URI sem protocolo; `<app>`/`<service>` é o último segmento da URI, igual ao slug da pasta.
 - O `<nome>` do arquivo é equivalente ao nome do artefato principal (em app/service, ao slug da URI).
-- Compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém exatamente um organogram e as roles, com o organogram primeiro. Arquivo compartilhado não declara principal. Ex.: `std-shapes.bpcms`.
+- Compartilhado: `<service>-<tipo-no-plural>.archol`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.archol`, que contém exatamente um organogram e as roles, com o organogram primeiro. Arquivo compartilhado não declara principal. Ex.: `std-shapes.archol`.
 - `view` e `message` **não** vão para arquivo compartilhado: são contextos principais e têm arquivo próprio em `views/` e `messages/`.
-- Referência entre arquivos é permitida: `InvoiceNumber` pode ficar em `billing-invoice-document.bpcms` e ser usado por mensagens/processos de outros contextos.
-- `*-documents.bpcms`, `*-processes.bpcms`, `*-views.bpcms`, `*-messages.bpcms` e `*-reports.bpcms` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
-- Roles ficam em `<service>-organograms.bpcms`, depois do organogram; não crie `<service>-roles.bpcms`. Parameters ficam em `<service>-parameters.bpcms`; secrets em `<service>-secrets.bpcms`.
-- `bpcms.org/std` segue a regra de service: `examples/services/bpcms.org/std/std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
+- Referência entre arquivos é permitida: `InvoiceNumber` pode ficar em `billing-invoice-document.archol` e ser usado por mensagens/processos de outros contextos.
+- `*-documents.archol`, `*-processes.archol`, `*-views.archol`, `*-messages.archol` e `*-reports.archol` não existem. Relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
+- Roles ficam em `<service>-organograms.archol`, depois do organogram; não crie `<service>-roles.archol`. Parameters ficam em `<service>-parameters.archol`; secrets em `<service>-secrets.archol`.
+- `bpcms.org/std` segue a regra de service: `examples/services/bpcms.org/std/std-service.archol` + `std-shapes.archol` (compartilhado).
 - Compilador: `E_FILE_NAME`, `E_FILE_PRINCIPAL`, `E_FILE_PRINCIPAL_FIRST`, `E_FILE_SHARED`, `E_FILE_SHARED_TYPE`, `E_FILE_ORGANOGRAM_FIRST`, `E_FILE_PATH` e `E_FILE_ICON_PATH`.
 - **Nomes de artefatos não repetem o serviço.** O serviço já é o escopo: `Draft`, não `BillingDraft`. O mesmo nome pode existir em serviços diferentes; não duplique dentro do mesmo tipo/serviço.
 - **PascalCase é o padrão para artefatos**, com exceções para formas internacionais consagradas. Exemplo: `pH`, não `Ph`.
+
+## Linguagem Archol e compilador
+
+A linguagem deste repositório se chama **Archol**; todo fonte usa a extensão **`.archol`**. O compilador, o LSP e o plugin VSCode ficam em [`archol/`](archol/README.md):
+
+- `archol/crates/archol-core` — tokens, lexer, AST JSON (estilo TypeScript) e parser.
+- `archol/crates/archol-analysis` — check (valores de enum, tipos, papéis, referências) e link invertido (`role -> artefatos`).
+- `archol/crates/archol-lsp` + `archol/editors/vscode` — LSP e extensão com explorador de AST.
+- `cd archol && cargo test` e `cargo run -q --bin archol -- check ../examples`.
+
+Regras:
+
+- A linguagem e o compilador estão na **versão inicial**: não crie versões, tags, releases, changelog de compatibilidade nem publique nada até uma decisão explícita.
+- O corpus `examples/` é o teste de aceitação: `cargo test -p archol-core --test corpus` precisa ficar verde; construção nova entra primeiro em um exemplo real, depois no parser.
+- Arquivos de código pequenos e legíveis, um arquivo por responsabilidade; tokens organizados por família em `archol/crates/archol-core/src/token/`.
+- Ao mudar sintaxe, mantenha `archol/docs/tokens.md`, `archol/docs/ast.md` e os testes consistentes.
 
 ## Documentos vivos
 

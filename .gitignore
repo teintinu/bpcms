@@ -1,2 +1,22 @@
-archol/target
-.cargo
+# Rust (build artifacts)
+/target/
+/archol/target/
+
+# Node.js / VS Code
+node_modules/
+*.vsix
+
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+
+# Editores / temporários
+*.swp
+*~
+.idea/
+
+# Ambiente local (não versionar cargo home, se alguém apontar para cá)
+.cargo/

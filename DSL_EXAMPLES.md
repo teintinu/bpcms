@@ -1,6 +1,6 @@
 # BPCMS — Exemplos de DSL
 
-*Sintaxe ilustrativa v0.2 (Process + Document).* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
+*Sintaxe ilustrativa do Archol (Process + Document).* Não é gramática final nem código executável. O objetivo é **validar conceitos, ergonomia e limites** antes de fechar PRD/SPECS/PLAN. A sintaxe e o funcionamento de cada cláusula estão em [DSL_REFERENCE.md](DSL_REFERENCE.md).
 
 A aplicação é orientada a **Process** (trabalho) e **Document** (estado). O processo orquestra quem faz o quê; o documento guarda o dado durável; o **Form** é o contrato da tarefa humana; a **View** é tela de leitura; a **Message** é contrato entre participantes. `job` e `report` não são artefatos (agendamento é `schedule`; relatório é `view type: report`), e o ciclo de vida do documento vive no `transition` do `value` e no `to:` da action.
 
@@ -61,7 +61,7 @@ O catálogo cobre Application, Service, Form, Message, Document, Shape, View, Ro
 
 ### A.1 Loja virtual completa
 
-```bpcms
+```archol
 application "example.com/app/loja-do-joao" {
   source: registry
   version: 1.4.0
@@ -93,7 +93,7 @@ application "example.com/app/loja-do-joao" {
 
 ### A.2 Clínica com prontuário e faturamento
 
-```bpcms
+```archol
 application "example.com/app/clinica-vida" {
   version: 2.1.0
   title: { pt-BR: "Clínica Vida" }
@@ -121,7 +121,7 @@ application "example.com/app/clinica-vida" {
 
 ### A.3 Logística com despacho e rastreio
 
-```bpcms
+```archol
 application "example.com/app/rota-certa" {
   version: 1.9.2
   title: {
@@ -147,7 +147,7 @@ application "example.com/app/rota-certa" {
 
 ### A.4 Backoffice que reusa o mesmo catálogo
 
-```bpcms
+```archol
 application "example.com/app/backoffice-loja" {
   version: 1.2.0
   title: { pt-BR: "Backoffice da Loja" }
@@ -169,7 +169,7 @@ application "example.com/app/backoffice-loja" {
 
 ### A.5 Serviço de campo
 
-```bpcms
+```archol
 application "example.com/app/campo-agil" {
   version: 1.0.0
   title: { pt-BR: "Campo Ágil" }
@@ -191,7 +191,7 @@ application "example.com/app/campo-agil" {
 
 ### A.6 Marketplace com disputas
 
-```bpcms
+```archol
 application "example.com/app/mercado-aberto" {
   version: 0.8.0
   title: {
@@ -217,7 +217,7 @@ application "example.com/app/mercado-aberto" {
 
 ### A.7 Aplicação hospedada em repositório Git
 
-```bpcms
+```archol
 application "github.com/acme/field-app" {
   source: repository
   version: commit("9f3a1c7")
@@ -240,7 +240,7 @@ application "github.com/acme/field-app" {
 
 ### A.8 Aplicação com serviço que reintroduz
 
-```bpcms
+```archol
 application "example.com/app/loja-com-antifraude" {
   version: 1.0.0
   title: { pt-BR: "Loja com Antifraude" }
@@ -265,7 +265,7 @@ application "example.com/app/loja-com-antifraude" {
 
 ### S.1 Catálogo com contrato e dependências
 
-```bpcms
+```archol
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
   version: 1.2.0
@@ -289,7 +289,7 @@ service "example.com/services/catalog" {
 
 ### S.2 Checkout como orquestrador
 
-```bpcms
+```archol
 service "example.com/services/checkout" {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 2.0.1
@@ -310,7 +310,7 @@ service "example.com/services/checkout" {
 
 ### S.3 Estoque com reservas e alerta
 
-```bpcms
+```archol
 service "example.com/services/inventory" {
   title: { pt-BR: "Estoque", en: "Inventory" }
   version: 1.5.0
@@ -328,7 +328,7 @@ service "example.com/services/inventory" {
 
 ### S.4 Faturamento com job e relatório
 
-```bpcms
+```archol
 service "example.com/services/billing" {
   title: { pt-BR: "Faturamento", en: "Billing" }
   version: 1.8.0
@@ -347,7 +347,7 @@ service "example.com/services/billing" {
 
 ### S.5 Identidade e sessão
 
-```bpcms
+```archol
 service "example.com/services/auth" {
   title: { pt-BR: "Identidade", en: "Identity" }
   version: 3.0.0
@@ -362,7 +362,7 @@ service "example.com/services/auth" {
 
 ### S.6 Notificações multicanal
 
-```bpcms
+```archol
 service "example.com/services/notifications" {
   title: { pt-BR: "Notificações", en: "Notifications" }
   version: 1.1.0
@@ -381,7 +381,7 @@ service "example.com/services/notifications" {
 
 ### S.7 Serviço hospedado em repositório Git
 
-```bpcms
+```archol
 service "gitlab.com/acme/lab-quality" {
   title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
   version: tag("v2.3.0")
@@ -399,7 +399,7 @@ service "gitlab.com/acme/lab-quality" {
 
 ### S.8 Serviço que reintroduz um passo de processo
 
-```bpcms
+```archol
 service "example.com/services/fraud-checkout" {
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
   version: 1.0.0
@@ -485,7 +485,7 @@ Convenções:
 
 ### P.1 Checkout com retentativa do cliente (checkout)
 
-```bpcms
+```archol
 process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
@@ -561,7 +561,7 @@ process Checkout(session: CheckoutSession) {
 }
 ```
 
-```bpcms
+```archol
 form PaymentRetry {
   title: { pt-BR: "Repetir pagamento", en: "Retry payment" }
   document: CheckoutSession
@@ -587,7 +587,7 @@ form PaymentRetry {
 
 ### P.2 Aprovação de compra com alçada (procurement)
 
-```bpcms
+```archol
 process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
   version: 1
@@ -627,7 +627,7 @@ process PurchaseApproval(purchaseRequest: PurchaseRequest) {
 }
 ```
 
-```bpcms
+```archol
 decision ApprovalLimit {
   title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
   returns: ApproverTier
@@ -647,7 +647,7 @@ decision ApprovalLimit {
 
 ### P.3 Despacho com paralelismo e coleta (shipping)
 
-```bpcms
+```archol
 process DispatchOrder(shipment: Shipment) {
   title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
   version: 1
@@ -700,7 +700,7 @@ process DispatchOrder(shipment: Shipment) {
 
 ### P.4 Cancelamento com compensação (orders)
 
-```bpcms
+```archol
 process OrderCancellation(order: Order) {
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
   version: 1
@@ -744,7 +744,7 @@ O form é o **contrato da tarefa humana**: o que a pessoa vê, o que ela pode fa
 
 ### F.1 Aprovação com três desfechos e rascunho
 
-```bpcms
+```archol
 form PurchaseReview {
   title: { pt-BR: "Revisar compra", en: "Review purchase" }
   document: PurchaseRequest
@@ -776,7 +776,7 @@ form PurchaseReview {
 
 ### F.2 Formulário de criação com campos novos
 
-```bpcms
+```archol
 form NewOrder {
   title: { pt-BR: "Novo pedido", en: "New order" }
   document: Order
@@ -807,7 +807,7 @@ form NewOrder {
 
 ### F.3 Form preenchido no portal do fornecedor
 
-```bpcms
+```archol
 form SupplierRegistration {
   title: { pt-BR: "Cadastro de fornecedor", en: "Supplier registration" }
   document: Supplier
@@ -839,7 +839,7 @@ form SupplierRegistration {
 
 ### F.4 Form de campo com assinatura e prova
 
-```bpcms
+```archol
 form VisitReport {
   title: { pt-BR: "Relato da visita", en: "Visit report" }
   document: Visit
@@ -874,7 +874,7 @@ form VisitReport {
 
 ### F.5 Confirmação de ação irreversível
 
-```bpcms
+```archol
 form ShipmentCancellation {
   title: { pt-BR: "Cancelar remessa", en: "Cancel shipment" }
   document: Shipment
@@ -897,7 +897,7 @@ form ShipmentCancellation {
 
 ### F.6 Rejeição com motivo obrigatório
 
-```bpcms
+```archol
 form RefundRejection {
   title: { pt-BR: "Recusar reembolso", en: "Reject refund" }
   document: ReturnRequest
@@ -925,7 +925,7 @@ form RefundRejection {
 
 ### F.7 Form com contexto de documentos relacionados
 
-```bpcms
+```archol
 form ClaimRegistration {
   title: { pt-BR: "Registro de sinistro", en: "Claim registration" }
   document: Claim
@@ -957,7 +957,7 @@ form ClaimRegistration {
 
 ### F.8 O mesmo form em duas tasks
 
-```bpcms
+```archol
 form ApprovalDecision {
   title: { pt-BR: "Decisão de aprovação", en: "Approval decision" }
   document: PurchaseRequest
@@ -979,7 +979,7 @@ form ApprovalDecision {
 }
 ```
 
-```bpcms
+```archol
 process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   // ...
   ApprovalDecision.show({ purchaseRequest })
@@ -995,7 +995,7 @@ Mensagem é contrato entre participantes: tem `about` (o documento que correlaci
 
 ### M.1 Envio de solicitação
 
-```bpcms
+```archol
 message PickupRequest {
   title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
   about: Shipment
@@ -1015,7 +1015,7 @@ send PickupRequest {
 
 ### M.2 Recebimento com aplicação no documento
 
-```bpcms
+```archol
 message PickupConfirmed {
   title: { pt-BR: "Coleta confirmada", en: "Pickup confirmed" }
   about: Shipment
@@ -1040,7 +1040,7 @@ try {
 
 ### M.3 Atualização contínua de rastreio
 
-```bpcms
+```archol
 message TrackingUpdated {
   title: { pt-BR: "Rastreio atualizado", en: "Tracking updated" }
   about: Shipment
@@ -1064,7 +1064,7 @@ loop Tracking max 5 {
 
 ### M.4 Mensagem que inicia processo
 
-```bpcms
+```archol
 message PaymentConfirmed {
   title: { pt-BR: "Pagamento confirmado", en: "Payment confirmed" }
   about: Order
@@ -1097,7 +1097,7 @@ process OrderPacking(order: Order) {
 
 ### D.1 Cliente com identidade, PII e renomeação
 
-```bpcms
+```archol
 document Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
   version: 1
@@ -1184,7 +1184,7 @@ document Customer {
 
 ### D.2 Nota fiscal como agregado com estado, itens e eventos
 
-```bpcms
+```archol
 scopable document FiscalYear {
   title: { pt-BR: "Exercício fiscal", en: "Fiscal year" }
   fields {
@@ -1419,7 +1419,7 @@ document Invoice {
 
 ### D.3 Remessa com dispositivo, unidade e frete derivado
 
-```bpcms
+```archol
 // imports { service "bpcms.org/std" as std }
 
 shape ShipmentStatus {
@@ -1598,7 +1598,7 @@ document FreightEstimate {
 
 ### D.4 Laudo com arquivo, assinatura e retenção
 
-```bpcms
+```archol
 shape LabReportStatus {
   title: { pt-BR: "Situação do laudo", en: "Lab report status" }
   base: state
@@ -1701,7 +1701,7 @@ document LabReport {
 
 ### D.5 Chamado com SLA calculado e prazo
 
-```bpcms
+```archol
 shape TicketPriority {
   title: { pt-BR: "Prioridade do chamado", en: "Ticket priority" }
   base: classification
@@ -1897,7 +1897,7 @@ document Ticket {
 
 ### D.6 Solicitação de compra com alçadas
 
-```bpcms
+```archol
 shape PurchaseRequestStatus {
   title: { pt-BR: "Situação da solicitação", en: "Purchase request status" }
   base: state
@@ -2096,7 +2096,7 @@ document PurchaseRequest {
 
 ### D.7 Contrato com versões, assinatura e renovação
 
-```bpcms
+```archol
 shape ContractStatus {
   title: { pt-BR: "Situação do contrato", en: "Contract status" }
   base: state
@@ -2370,7 +2370,7 @@ document Contract {
 
 ### D.8 Receita mensal como documento derivado
 
-```bpcms
+```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   version: 1
@@ -2420,7 +2420,7 @@ document MonthlyRevenue {
 
 ### H.1 Dinheiro com moeda e escala
 
-```bpcms
+```archol
 shape PriceTag {
   title: { pt-BR: "Etiqueta de preço", en: "Price tag" }
   fields {
@@ -2437,7 +2437,7 @@ shape PriceTag {
 
 ### H.2 Massa via std
 
-```bpcms
+```archol
 shape Package {
   title: { pt-BR: "Pacote", en: "Package" }
   fields {
@@ -2451,7 +2451,7 @@ shape Package {
 
 ### H.3 Comprimento via std
 
-```bpcms
+```archol
 shape ProductDimensions {
   title: { pt-BR: "Dimensões do produto", en: "Product dimensions" }
   fields {
@@ -2466,7 +2466,7 @@ shape ProductDimensions {
 
 ### H.4 Temperatura via std
 
-```bpcms
+```archol
 shape TemperatureReading {
   title: { pt-BR: "Leitura de temperatura", en: "Temperature reading" }
   fields {
@@ -2479,7 +2479,7 @@ shape TemperatureReading {
 
 ### H.5 Percentual via std
 
-```bpcms
+```archol
 shape DiscountPolicy {
   title: { pt-BR: "Política de desconto", en: "Discount policy" }
   fields {
@@ -2492,7 +2492,7 @@ shape DiscountPolicy {
 
 ### H.6 CPF com validação e sensibilidade
 
-```bpcms
+```archol
 shape CPF {
   title: { pt-BR: "CPF", en: "CPF" }
   base: string
@@ -2508,7 +2508,7 @@ shape CPF {
 
 ### H.7 E-mail com regra de unicidade
 
-```bpcms
+```archol
 shape Email {
   title: { pt-BR: "Correio eletrônico", en: "Email" }
   base: string
@@ -2524,7 +2524,7 @@ shape Email {
 
 ### H.8 Endereço composto
 
-```bpcms
+```archol
 shape Address {
   title: { pt-BR: "Endereço", en: "Address" }
   fields {
@@ -2555,7 +2555,7 @@ shape Address {
 
 ### H.9 Métodos com tipos explícitos e inferidos
 
-```bpcms
+```archol
 shape Distance {
   title: { pt-BR: "Distância", en: "Distance" }
   base: decimal
@@ -2617,7 +2617,7 @@ Ela define 57 Shapes de medida/ciência/estatística, com unidades SI, imperial/
 
 ### V.1 Tabela de pedidos com filtros, paginação e comandos
 
-```bpcms
+```archol
 view Orders {
   title: { pt-BR: "Pedidos", en: "Orders" }
   type: table
@@ -2639,7 +2639,7 @@ view Orders {
 
 ### V.2 Detalhe da remessa com seções, cálculo e dispositivo
 
-```bpcms
+```archol
 view ShipmentDetail {
   title: { pt-BR: "Detalhe da remessa", en: "Shipment detail" }
   type: detail
@@ -2662,7 +2662,7 @@ view ShipmentDetail {
 
 ### V.3 Relatório de vendas por região
 
-```bpcms
+```archol
 view SalesByRegion {
   title: { pt-BR: "Vendas por região", en: "Sales by region" }
   type: report
@@ -2686,7 +2686,7 @@ view SalesByRegion {
 
 ### V.4 Dashboard operacional em tempo real
 
-```bpcms
+```archol
 view OperationsControl {
   title: { pt-BR: "Controle operacional", en: "Operations control" }
   type: dashboard
@@ -2710,7 +2710,7 @@ view OperationsControl {
 
 ### V.5 Kanban de atendimento
 
-```bpcms
+```archol
 view SupportKanban {
   title: { pt-BR: "Atendimento por situação", en: "Support board by status" }
   type: kanban
@@ -2733,7 +2733,7 @@ view SupportKanban {
 
 ### V.6 Inbox de minhas tarefas
 
-```bpcms
+```archol
 view MyWork {
   title: { pt-BR: "Minhas tarefas", en: "My work" }
   type: inbox
@@ -2749,7 +2749,7 @@ view MyWork {
 
 ### V.7 Andamento do processo de pedido
 
-```bpcms
+```archol
 view OrderProgress {
   title: { pt-BR: "Andamento do pedido", en: "Order progress" }
   type: process
@@ -2773,7 +2773,7 @@ view OrderProgress {
 
 ### V.8 Calendário de visitas
 
-```bpcms
+```archol
 view VisitCalendar {
   title: { pt-BR: "Agenda de visitas", en: "Visit calendar" }
   type: calendar
@@ -2795,7 +2795,7 @@ view VisitCalendar {
 
 ### R.1 Papéis de loja
 
-```bpcms
+```archol
 role Customer {
   scopes: [Store]
   title: { pt-BR: "Cliente", en: "Customer" }
@@ -2826,7 +2826,7 @@ organogram Store {
 
 ### R.2 Papéis de clínica com quatro-olhos
 
-```bpcms
+```archol
 role Reception {
   title: { pt-BR: "Recepção", en: "Reception" }
   permissions: [patient.create, appointment.schedule]
@@ -2859,7 +2859,7 @@ organogram Clinic {
 
 ### R.3 Papéis de armazém com segregação
 
-```bpcms
+```archol
 role Picker {
   title: { pt-BR: "Separador", en: "Picker" }
   permissions: [shipment.pick]
@@ -2887,7 +2887,7 @@ organogram Warehouse {
 
 ### R.4 Papéis financeiros com four-eyes
 
-```bpcms
+```archol
 role Analyst {
   title: { pt-BR: "Analista", en: "Analyst" }
   permissions: [invoice.create, payment.request]
@@ -2913,7 +2913,7 @@ organogram Finance {
 
 ### R.5 Papéis de suporte com delegação
 
-```bpcms
+```archol
 role Agent {
   title: { pt-BR: "Agente", en: "Agent" }
   permissions: [ticket.view, ticket.comment, ticket.assign]
@@ -2941,7 +2941,7 @@ organogram Support {
 
 ### R.6 Papéis de laboratório com assinatura
 
-```bpcms
+```archol
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
   scopes: [Laboratory]
@@ -2970,7 +2970,7 @@ organogram Lab {
 
 ### R.7 Laboratório com apoio e amostras
 
-```bpcms
+```archol
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
   scopes: [Laboratory]
@@ -3035,7 +3035,7 @@ No serviço `laboratory`, `Sample.kind` distingue `patient`, `support` e `contro
 
 O `LabManager` pode atribuir `Collector`, `Analyst` e `SupportLiaison` a outras pessoas, mas nunca a si mesmo. Quem recebe a role ganha as permissões da role atribuída, não as permissões do gerente; o gerente não precisa ter as permissões da role gerenciada.
 
-```bpcms
+```archol
 // managerUser/collectorUser/regionalUser: User
 // laboratoryMain/laboratorySupport: Laboratory — referências a documentos
 assignRole(managerUser, LabManager, scopes: {
@@ -3053,7 +3053,7 @@ assignRole(regionalUser, LabManager, scopes: {
 
 ### R.8 Herança múltipla de roles
 
-```bpcms
+```archol
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
   scopes: [Laboratory]
@@ -3091,7 +3091,7 @@ organogram Laboratory {
 
 ### E.1 Formulário de compra em PDF
 
-```bpcms
+```archol
 evidence PurchaseFormPDF {
   kind: form
   file: "evidence/purchase-form.pdf"
@@ -3113,7 +3113,7 @@ evidence PurchaseFormPDF {
 
 ### E.2 DDL do ERP
 
-```bpcms
+```archol
 evidence ERP_DDL {
   kind: ddl
   file: "evidence/erp.sql"
@@ -3137,7 +3137,7 @@ evidence ERP_DDL {
 
 ### E.3 MER da clínica
 
-```bpcms
+```archol
 evidence ClinicMER {
   kind: mer
   file: "evidence/clinic-mer.pdf"
@@ -3160,7 +3160,7 @@ evidence ClinicMER {
 
 ### E.4 Protótipo no Figma
 
-```bpcms
+```archol
 evidence CheckoutFigma {
   kind: figma
   file: "https://figma.com/file/checkout-v3"
@@ -3181,7 +3181,7 @@ evidence CheckoutFigma {
 
 ### E.5 Print de sistema legado
 
-```bpcms
+```archol
 evidence LegacyOrderScreen {
   kind: screenshot
   file: "evidence/order-screen.png"
@@ -3202,7 +3202,7 @@ evidence LegacyOrderScreen {
 
 ### E.6 Rascunho à mão do despacho
 
-```bpcms
+```archol
 evidence HandDrawnDispatch {
   kind: handdrawn
   file: "evidence/dispatch-sketch.jpg"
@@ -3225,7 +3225,7 @@ evidence HandDrawnDispatch {
 
 ### C.1 Descoberta de compras
 
-```bpcms
+```archol
 conversation PurchaseDiscovery {
   process: PurchaseApproval
   goal: "Entender compras acima de R$ 5 mil"
@@ -3248,7 +3248,7 @@ conversation PurchaseDiscovery {
 
 ### C.2 Triagem clínica com dados sensíveis
 
-```bpcms
+```archol
 conversation ClinicIntake {
   process: PatientIntake
   goal: "Entender acolhimento e triagem"
@@ -3272,7 +3272,7 @@ conversation ClinicIntake {
 
 ### C.3 Expedição com operador de campo
 
-```bpcms
+```archol
 conversation LogisticsExpedition {
   process: OrderFulfillment
   goal: "Entender o despacho real, incluindo balança"
@@ -3295,7 +3295,7 @@ conversation LogisticsExpedition {
 
 ### C.4 Onboarding com RH e TI
 
-```bpcms
+```archol
 conversation OnboardingHR {
   process: EmployeeOnboarding
   goal: "Mapear onboarding até o primeiro dia"
@@ -3319,7 +3319,7 @@ conversation OnboardingHR {
 
 ### C.5 Sinistro com análise de contrato
 
-```bpcms
+```archol
 conversation ClaimsReview {
   process: InsuranceClaim
   goal: "Entender análise e decisão de cobertura"
@@ -3342,7 +3342,7 @@ conversation ClaimsReview {
 
 ### C.6 War room de incidente
 
-```bpcms
+```archol
 conversation IncidentWarRoom {
   process: IncidentManagement
   goal: "Entender triagem, escalonamento e pós-mortem"
@@ -3369,7 +3369,7 @@ Decisão é uma **tabela DMN pura** (4.17 / 11): `returns` tipado (normalmente u
 
 ### N.1 Alçada de compra
 
-```bpcms
+```archol
 shape ApproverTier {
   title: { pt-BR: "Alçada de aprovação", en: "Approver tier" }
   base: classification
@@ -3428,7 +3428,7 @@ if (tier == Auto) {
 
 ### N.2 Elegibilidade de reembolso
 
-```bpcms
+```archol
 shape RefundVerdict {
   title: { pt-BR: "Decisão de reembolso", en: "Refund verdict" }
   base: classification
@@ -3475,7 +3475,7 @@ decision RefundEligibility {
 
 ### N.3 Roteamento de chamado
 
-```bpcms
+```archol
 shape SupportQueue {
   title: { pt-BR: "Fila de atendimento", en: "Support queue" }
   base: classification
@@ -3526,7 +3526,7 @@ decision TicketRouting {
 
 ### N.4 Reposição de estoque
 
-```bpcms
+```archol
 shape ReplenishmentAction {
   title: { pt-BR: "Ação de reposição", en: "Replenishment action" }
   base: classification
@@ -3579,7 +3579,7 @@ decision ReplenishmentPolicy {
 
 ### N.5 Risco de fraude
 
-```bpcms
+```archol
 shape FraudBand {
   title: { pt-BR: "Faixa de risco", en: "Fraud band" }
   base: classification
@@ -3626,7 +3626,7 @@ decision FraudRisk {
 
 ### N.6 Scoring de crédito
 
-```bpcms
+```archol
 shape CreditGrade {
   title: { pt-BR: "Faixa de crédito", en: "Credit grade" }
   base: classification
@@ -3680,7 +3680,7 @@ decision CreditScoring {
 
 ### U.1 Frete por remessa
 
-```bpcms
+```archol
 assumption A-001 {
   statement: "Todo frete é cotado por remessa"
   impact: high
@@ -3696,7 +3696,7 @@ assumption A-001 {
 
 ### U.2 Limite único de transportadora
 
-```bpcms
+```archol
 assumption A-002 {
   statement: "Todas as transportadoras usam o mesmo limite de peso"
   impact: high
@@ -3711,7 +3711,7 @@ assumption A-002 {
 
 ### U.3 Nota fiscal preserva os dados do cliente na emissão
 
-```bpcms
+```archol
 assumption A-003 {
   statement: "A nota fiscal mantém os dados do cliente como estavam na emissão"
   impact: high
@@ -3726,7 +3726,7 @@ assumption A-003 {
 
 ### U.4 Assinatura do laudo
 
-```bpcms
+```archol
 assumption A-004 {
   statement: "O laudo só pode ser liberado com assinatura do patologista"
   impact: high
@@ -3742,7 +3742,7 @@ assumption A-004 {
 
 ### U.5 Retry de pagamento
 
-```bpcms
+```archol
 assumption A-005 {
   statement: "Falha de banco é transitória e pode ser retentada 3 vezes"
   impact: medium
@@ -3757,7 +3757,7 @@ assumption A-005 {
 
 ### U.6 Retenção de evidências
 
-```bpcms
+```archol
 assumption A-006 {
   statement: "Evidências de onboarding podem ser descartadas após 2 anos"
   impact: medium
@@ -3776,7 +3776,7 @@ assumption A-006 {
 
 ### N.1 Desenvolvimento local
 
-```bpcms
+```archol
 environment dev {
   runtime: interpreted
   build: none
@@ -3794,7 +3794,7 @@ environment dev {
 
 ### N.2 QA determinístico
 
-```bpcms
+```archol
 environment qa {
   runtime: interpreted
   build: verify
@@ -3813,7 +3813,7 @@ environment qa {
 
 ### N.3 Staging parecido com produção
 
-```bpcms
+```archol
 environment staging {
   runtime: generated
   build: reproducible
@@ -3831,7 +3831,7 @@ environment staging {
 
 ### N.4 Produção com HA e backup
 
-```bpcms
+```archol
 environment prod {
   runtime: generated
   build: reproducible
@@ -3849,7 +3849,7 @@ environment prod {
 
 ### N.5 Sandbox de demonstração
 
-```bpcms
+```archol
 environment sandbox {
   runtime: generated
   build: reproducible
@@ -3866,7 +3866,7 @@ environment sandbox {
 
 ### N.6 Recuperação de desastre
 
-```bpcms
+```archol
 environment dr {
   runtime: generated
   database: postgres { replicaOf: prod }
@@ -3887,7 +3887,7 @@ environment dr {
 
 ### PR.1 URL de configuração
 
-```bpcms
+```archol
 parameter ErpUrl {
   title: { pt-BR: "Endereço do sistema de gestão", en: "ERP URL" }
   type: string
@@ -3899,7 +3899,7 @@ parameter ErpUrl {
 
 ### PR.2 Chave secreta
 
-```bpcms
+```archol
 secret PaymentKey {
   title: { pt-BR: "Chave de pagamento", en: "Payment key" }
   type: string
@@ -3911,7 +3911,7 @@ secret PaymentKey {
 
 ### PR.3 Perfil de modelo
 
-```bpcms
+```archol
 parameter LlmModel {
   title: { pt-BR: "Modelo de linguagem", en: "LLM model" }
   type: string
@@ -3923,7 +3923,7 @@ parameter LlmModel {
 
 ### PR.4 Limite numérico
 
-```bpcms
+```archol
 parameter MaxRetries {
   title: { pt-BR: "Máximo de tentativas", en: "Max retries" }
   type: std.Count
@@ -3937,7 +3937,7 @@ parameter MaxRetries {
 
 ### PR.5 Janela de SLA
 
-```bpcms
+```archol
 parameter SupportSla {
   title: { pt-BR: "Prazo de suporte", en: "Support SLA" }
   type: std.Duration
@@ -3949,7 +3949,7 @@ parameter SupportSla {
 
 ### PR.6 Chave de API específica
 
-```bpcms
+```archol
 secret GoogleMapsKey {
   title: { pt-BR: "Chave do Google Maps", en: "Google Maps key" }
   type: string
@@ -3965,7 +3965,7 @@ secret GoogleMapsKey {
 
 ### U.1 Artefato que exige capabilities
 
-```bpcms
+```archol
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
   version: 1.0.0
@@ -3981,7 +3981,7 @@ view VisitForm {
 
 ### U.2 View formatando data e distância
 
-```bpcms
+```archol
 view VisitForm {
   type: form
   computed {
@@ -3995,7 +3995,7 @@ view VisitForm {
 
 ### U.3 Shape com unidades via std
 
-```bpcms
+```archol
 shape ParcelWeight {
   title: { pt-BR: "Peso do pacote", en: "Parcel weight" }
   fields {
@@ -4011,7 +4011,7 @@ shape ParcelWeight {
 
 ### B.1 Aplicação web
 
-```bpcms
+```archol
 builder WebApp {
   version: 1.0.0
   target: browser
@@ -4028,7 +4028,7 @@ builder WebApp {
 
 ### B.2 API em Rust
 
-```bpcms
+```archol
 builder ApiRust {
   version: 1.0.0
   target: server
@@ -4043,7 +4043,7 @@ builder ApiRust {
 
 ### B.3 Persistência Postgres
 
-```bpcms
+```archol
 builder Postgres {
   version: 1.0.0
   target: database
@@ -4058,7 +4058,7 @@ builder Postgres {
 
 ### B.4 Shell mobile
 
-```bpcms
+```archol
 builder MobileShell {
   version: 0.4.0
   target: mobile
@@ -4077,7 +4077,7 @@ builder MobileShell {
 
 ### B.5 Terminal
 
-```bpcms
+```archol
 builder Cli {
   version: 1.0.0
   target: terminal
@@ -4096,7 +4096,7 @@ builder Cli {
 
 ### B.6 Documentos e PDFs
 
-```bpcms
+```archol
 builder DocsPdf {
   version: 1.0.0
   target: document
@@ -4115,7 +4115,7 @@ builder DocsPdf {
 
 ### T.1 Tema claro padrão
 
-```bpcms
+```archol
 theme NuvulaLight {
   mode: light
   supports: [WebApp, MobileShell]
@@ -4135,7 +4135,7 @@ theme NuvulaLight {
 
 ### T.2 Tema escuro
 
-```bpcms
+```archol
 theme NuvulaDark {
   mode: dark
   supports: [WebApp, MobileShell]
@@ -4154,7 +4154,7 @@ theme NuvulaDark {
 
 ### T.3 Alto contraste
 
-```bpcms
+```archol
 theme HighContrast {
   mode: dark
   supports: [WebApp]
@@ -4173,7 +4173,7 @@ theme HighContrast {
 
 ### T.4 Marca da loja
 
-```bpcms
+```archol
 theme BrandStore {
   mode: light
   supports: [WebApp, DocsPdf]
@@ -4192,7 +4192,7 @@ theme BrandStore {
 
 ### T.5 Impressão de laudo
 
-```bpcms
+```archol
 theme PrintFriendly {
   mode: print
   supports: [DocsPdf]
@@ -4213,7 +4213,7 @@ theme PrintFriendly {
 
 ### T.6 Operação compacta
 
-```bpcms
+```archol
 theme CompactOps {
   mode: light
   supports: [WebApp, Cli]
@@ -4235,7 +4235,7 @@ theme CompactOps {
 
 ### L.1 Português do Brasil
 
-```bpcms
+```archol
 locale pt-BR {
   fallback: en-US
   currency: BRL
@@ -4253,7 +4253,7 @@ locale pt-BR {
 
 ### L.2 Inglês dos Estados Unidos
 
-```bpcms
+```archol
 locale en-US {
   currency: USD
   units: imperial
@@ -4270,7 +4270,7 @@ locale en-US {
 
 ### L.3 Espanhol
 
-```bpcms
+```archol
 locale es-ES {
   fallback: en-US
   currency: EUR
@@ -4288,7 +4288,7 @@ locale es-ES {
 
 ### L.4 Francês
 
-```bpcms
+```archol
 locale fr-FR {
   fallback: en-US
   currency: EUR
@@ -4306,7 +4306,7 @@ locale fr-FR {
 
 ### L.5 Alemão
 
-```bpcms
+```archol
 locale de-DE {
   fallback: en-US
   currency: EUR
@@ -4324,7 +4324,7 @@ locale de-DE {
 
 ### L.6 Árabe com RTL
 
-```bpcms
+```archol
 locale ar-SA {
   fallback: en-US
   currency: SAR
@@ -4344,7 +4344,7 @@ locale ar-SA {
 
 ### W.1 Assinatura
 
-```bpcms
+```archol
 widget SignaturePad {
   binds: Signature
   capabilities: [gui, attachments]
@@ -4362,7 +4362,7 @@ widget SignaturePad {
 
 ### W.2 Mapa
 
-```bpcms
+```archol
 widget MapPicker {
   binds: GeoPoint
   capabilities: [gui, location]
@@ -4378,7 +4378,7 @@ widget MapPicker {
 
 ### W.3 Leitor de código de barras
 
-```bpcms
+```archol
 widget BarcodeScanner {
   binds: Barcode
   capabilities: [gui, capture]
@@ -4395,7 +4395,7 @@ widget BarcodeScanner {
 
 ### W.4 Entrada com unidade
 
-```bpcms
+```archol
 widget UnitInput {
   binds: Mass | Length | Volume
   capabilities: [gui]
@@ -4416,7 +4416,7 @@ widget UnitInput {
 
 ### W.5 Linha do tempo
 
-```bpcms
+```archol
 widget Timeline {
   binds: Event[]
   capabilities: [gui]
@@ -4437,7 +4437,7 @@ widget Timeline {
 
 ### W.6 Upload de arquivo
 
-```bpcms
+```archol
 widget FileDropzone {
   binds: FileRef
   capabilities: [gui, attachments]
@@ -4463,7 +4463,7 @@ widget FileDropzone {
 
 ### V.1 Release de aplicação
 
-```bpcms
+```archol
 release "example.com/app/loja-do-joao"@1.4.0 {
   application: "example.com/app/loja-do-joao"
   lock: "locks/loja-do-joao/1.4.0.lock"
@@ -4478,7 +4478,7 @@ release "example.com/app/loja-do-joao"@1.4.0 {
 
 ### V.2 Versão de serviço
 
-```bpcms
+```archol
 release "example.com/services/catalog"@1.2.0 {
   service: "example.com/services/catalog"
   changes: [add Product.barcode, add Product.Updated.v2]
@@ -4493,7 +4493,7 @@ release "example.com/services/catalog"@1.2.0 {
 
 ### V.3 Hotfix
 
-```bpcms
+```archol
 release "example.com/app/loja-do-joao"@1.4.1 {
   application: "example.com/app/loja-do-joao"
   lock: "locks/loja-do-joao/1.4.1.lock"
@@ -4509,7 +4509,7 @@ release "example.com/app/loja-do-joao"@1.4.1 {
 
 ### V.4 Migração de dados
 
-```bpcms
+```archol
 release M-2026-11-01 {
   type: migration
   changes {
@@ -4529,7 +4529,7 @@ release M-2026-11-01 {
 
 ### V.5 Rollback
 
-```bpcms
+```archol
 release "example.com/app/loja-do-joao"@1.4.2 {
   type: rollback
   application: "example.com/app/loja-do-joao"
@@ -4546,7 +4546,7 @@ release "example.com/app/loja-do-joao"@1.4.2 {
 
 ### V.6 Canary
 
-```bpcms
+```archol
 release "example.com/app/loja-do-joao"@1.5.0 {
   application: "example.com/app/loja-do-joao"
   lock: "locks/loja-do-joao/1.5.0.lock"
@@ -4568,7 +4568,7 @@ release "example.com/app/loja-do-joao"@1.5.0 {
 
 ### I.1 ERP por REST
 
-```bpcms
+```archol
 integration ERP {
   protocol: rest
   baseUrl: env.ERP_URL
@@ -4592,7 +4592,7 @@ integration ERP {
 
 ### I.2 Gateway de pagamento com idempotência
 
-```bpcms
+```archol
 integration PaymentGateway {
   protocol: rest
   baseUrl: env.PAYMENT_URL
@@ -4617,7 +4617,7 @@ integration PaymentGateway {
 
 ### I.3 Transportadora
 
-```bpcms
+```archol
 integration Carrier {
   protocol: rest
   baseUrl: env.CARRIER_URL
@@ -4641,7 +4641,7 @@ integration Carrier {
 
 ### I.4 E-mail
 
-```bpcms
+```archol
 integration Email {
   protocol: smtp
   host: env.SMTP_HOST
@@ -4663,7 +4663,7 @@ integration Email {
 
 ### I.5 WhatsApp
 
-```bpcms
+```archol
 integration WhatsApp {
   protocol: webhook
   baseUrl: env.WHATSAPP_URL
@@ -4684,7 +4684,7 @@ integration WhatsApp {
 
 ### I.6 Balança
 
-```bpcms
+```archol
 integration ScaleDevice {
   protocol: mqtt
   host: env.SCALE_HOST
@@ -4715,7 +4715,7 @@ integration ScaleDevice {
 
 ### R.1 Vendas por região
 
-```bpcms
+```archol
 view SalesByRegion {
   title: { pt-BR: "Vendas por região", en: "Sales by region" }
   type: report
@@ -4738,7 +4738,7 @@ view SalesByRegion {
 
 ### R.2 Envelhecimento de estoque
 
-```bpcms
+```archol
 view InventoryAging {
   title: { pt-BR: "Envelhecimento de estoque", en: "Inventory aging" }
   type: report
@@ -4761,7 +4761,7 @@ view InventoryAging {
 
 ### R.3 Cumprimento de SLA
 
-```bpcms
+```archol
 view SlaCompliance {
   title: { pt-BR: "Cumprimento de SLA", en: "SLA compliance" }
   type: report
@@ -4784,7 +4784,7 @@ view SlaCompliance {
 
 ### R.4 Fluxo de caixa
 
-```bpcms
+```archol
 view CashFlow {
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
@@ -4807,7 +4807,7 @@ view CashFlow {
 
 ### R.5 Qualidade laboratorial
 
-```bpcms
+```archol
 view LabQuality {
   title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
   type: report
@@ -4832,7 +4832,7 @@ view LabQuality {
 
 ### R.6 Controle operacional em tempo real
 
-```bpcms
+```archol
 view OperationsControl {
   title: { pt-BR: "Controle operacional", en: "Operations control" }
   type: dashboard
@@ -4855,7 +4855,7 @@ view OperationsControl {
 
 ### R.7 Receita mensal como documento derivado (não é view)
 
-```bpcms
+```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   version: 1
@@ -4879,7 +4879,7 @@ document MonthlyRevenue {
 
 ### E.1 Evento de transição declarado no workflow
 
-```bpcms
+```archol
 shape OrderStatus {
   title: { pt-BR: "Situação do pedido", en: "Order status" }
   base: state
@@ -4934,7 +4934,7 @@ document Order {
 
 ### E.2 Evento sem transição
 
-```bpcms
+```archol
 document Store {
   title: { pt-BR: "Loja", en: "Store" }
 
@@ -4972,7 +4972,7 @@ Billing.Invoice.Paid
 example.com/services/billing#Invoice.Paid
 ```
 
-```bpcms
+```archol
 process PaymentReconciliation(payment: Payment) {
   title: { pt-BR: "Conciliação de pagamento", en: "Payment reconciliation" }
   version: 1
@@ -4995,7 +4995,7 @@ process PaymentReconciliation(payment: Payment) {
 
 ### E.4 Payload com referência a documento
 
-```bpcms
+```archol
 events {
   Dispatched {
     title: { pt-BR: "Remessa despachada", en: "Shipment dispatched" }
@@ -5013,7 +5013,7 @@ events {
 
 ### E.5 Evento que inicia processo
 
-```bpcms
+```archol
 process Packing(order: Order) {
   title: { pt-BR: "Separação", en: "Packing" }
   version: 1
@@ -5036,7 +5036,7 @@ process Packing(order: Order) {
 
 ### E.6 O mesmo evento a partir de origens diferentes
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -5112,7 +5112,7 @@ document Invoice {
 
 ### S.1 Fechamento mensal por período
 
-```bpcms
+```archol
 process MonthClose(fiscalPeriod: FiscalPeriod) {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
   version: 1
@@ -5152,7 +5152,7 @@ process MonthClose(fiscalPeriod: FiscalPeriod) {
 
 ### S.2 Cobrança com fan-out e espera
 
-```bpcms
+```archol
 process Dunning(invoice: Invoice) {
   title: { pt-BR: "Cobrança", en: "Dunning" }
   version: 1
@@ -5199,7 +5199,7 @@ process Dunning(invoice: Invoice) {
 
 ### S.3 Reposição disparada por ponto de pedido
 
-```bpcms
+```archol
 process Replenishment(stockItem: StockItem) {
   title: { pt-BR: "Reposição", en: "Replenishment" }
   version: 1
@@ -5242,7 +5242,7 @@ process Replenishment(stockItem: StockItem) {
 
 ### S.4 Rotina sem sujeito (digest)
 
-```bpcms
+```archol
 process DailyDigest() {
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
   version: 1
@@ -5270,7 +5270,7 @@ process DailyDigest() {
 
 ### P.1 Quatro-olhos em pagamento
 
-```bpcms
+```archol
 policy FourEyesPayment {
   appliesTo: Payment.release
   rule: approver != creator
@@ -5283,7 +5283,7 @@ policy FourEyesPayment {
 
 ### P.2 Limite de desconto
 
-```bpcms
+```archol
 policy DiscountLimit {
   appliesTo: Order.applyDiscount
   rule: discount <= 10% or approver.role == Manager
@@ -5296,7 +5296,7 @@ policy DiscountLimit {
 
 ### P.3 Retenção de dados
 
-```bpcms
+```archol
 policy Retention {
   appliesTo: [LabExam, Evidence]
   rule: retainFor(5y) then anonymize
@@ -5309,7 +5309,7 @@ policy Retention {
 
 ### P.4 Escalonamento de SLA
 
-```bpcms
+```archol
 policy SlaEscalation {
   appliesTo: SupportTicket
   rule: if breached then escalateTo(Lead) within 15m
@@ -5322,7 +5322,7 @@ policy SlaEscalation {
 
 ### P.5 Acesso a campo sensível
 
-```bpcms
+```archol
 policy SensitiveFieldAccess {
   appliesTo: [Patient.document, LabExam.result]
   rule: role in [Doctor, Nurse] and purpose == treatment
@@ -5335,7 +5335,7 @@ policy SensitiveFieldAccess {
 
 ### P.6 Segregação de aprovação
 
-```bpcms
+```archol
 policy ApprovalSegregation {
   appliesTo: [PurchaseOrder.approve, Payment.approve]
   rule: requester != approver and approver != payer
@@ -5352,7 +5352,7 @@ policy ApprovalSegregation {
 
 ### IC.1 Rascunho
 
-```bpcms
+```archol
 icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
@@ -5362,7 +5362,7 @@ icon Draft {
 
 ### IC.2 Paga
 
-```bpcms
+```archol
 icon Paid {
   title: { pt-BR: "Paga", en: "Paid" }
 }
@@ -5372,7 +5372,7 @@ icon Paid {
 
 ### IC.3 Vencida
 
-```bpcms
+```archol
 icon Overdue {
   title: { pt-BR: "Vencida", en: "Overdue" }
 }
@@ -5382,7 +5382,7 @@ icon Overdue {
 
 ### IC.4 E-mail
 
-```bpcms
+```archol
 icon Email {
   title: { pt-BR: "Correio eletrônico", en: "Email" }
 }
@@ -5392,7 +5392,7 @@ icon Email {
 
 ### IC.5 Prioridade
 
-```bpcms
+```archol
 icon P1 {
   title: { pt-BR: "Prioridade 1", en: "Priority 1" }
 }
@@ -5402,7 +5402,7 @@ icon P1 {
 
 ### IC.6 Moeda
 
-```bpcms
+```archol
 icon Brl {
   title: { pt-BR: "Real", en: "Brazilian real" }
 }
@@ -5412,7 +5412,7 @@ icon Brl {
 
 ## SVG file-based Icons
 
-Além dos Icons declarados em `.bpcms`, arquivos `.svg` sob `<workspace>/services/<fullpath>/icons/` viram Icons implícitos. `icons/` é contêiner: as subpastas dentro dele são namespaces de ícone, mas `icons` não entra na referência. Exemplos em `examples/services/`:
+Além dos Icons declarados em `.archol`, arquivos `.svg` sob `<workspace>/services/<fullpath>/icons/` viram Icons implícitos. `icons/` é contêiner: as subpastas dentro dele são namespaces de ícone, mas `icons` não entra na referência. Exemplos em `examples/services/`:
 
 ```text
 example.com/services/billing/icons/status/draft.svg              -> status.draft      (aria-label)

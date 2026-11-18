@@ -1,0 +1,11 @@
+[package]
+name = "archol-analysis"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Archol: check semântico e link (índices para o construtor)"
+
+[dependencies]
+archol-core = { workspace = true }
+serde = { workspace = true }

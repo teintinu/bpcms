@@ -1,6 +1,6 @@
-# BPCMS — Referência de Cláusulas da DSL
+# BPCMS — Referência da linguagem Archol
 
-*Sintaxe ilustrativa v0.2 (Process + Document).* Não é gramática final nem código executável. Esta referência cobre **todas as cláusulas usadas em [DSL_EXAMPLES.md](DSL_EXAMPLES.md)** e serve de base para o SPECS.
+*Sintaxe ilustrativa (Process + Document).* A linguagem se chama **Archol** e seus fontes usam a extensão **`.archol`**. A sintaxe ainda evolui em conjunto com o compilador em [`archol/`](archol/README.md), que já lexa, parseia, checa e linka os exemplos. Esta referência cobre **todas as cláusulas usadas em [DSL_EXAMPLES.md](DSL_EXAMPLES.md)** e serve de base para o SPECS.
 
 **O que mudou na v0.2 (resumo):** a aplicação é orientada a **Process** (trabalho) e **Document** (estado). A task não tem `type:` (o tipo é inferido do contrato), a lane é obrigatória, o fluxo é um grafo de arestas explícitas com `start`/`end` nomeados, o subpasso é sempre outro processo (`runs:`), `form` é artefato (contrato da tarefa humana) e `view` não tem `type: form`. `job` virou `start { schedule: }`; `report` virou `view type: report`; **o workflow define estados, transições e eventos** (`transition` no `value`, com `title`/`payload`/`event:`); a action só aponta o destino (`to:`) e executa o comando; `reads`/`writes`, `assignment`, `interventions`, `progress` e `type: user` deixaram de existir.
 
@@ -202,7 +202,7 @@ lock:
 
 **Extensões.** O conjunto acima é um núcleo aberto. Construtores podem declarar novas capabilities, genéricas (`llm`) ou específicas (`google-maps`, `acme.payments`). Use kebab-case e documente o contrato no construtor. Configuração/segredo da capability usa `Parameter`.
 
-```bpcms
+```archol
 builder AiRuntime {
   capabilities: [llm, oltp, sync]
 }
@@ -227,7 +227,7 @@ Alguns serviços são de plataforma e são acessados como capabilities, não imp
 | `regionalization` | `locale()`, `formatDate`, `formatTime`, `formatNumber`, `formatCurrency`, `parseDate`, `parseNumber` | `Locale` |
 | `units` | `system()`, `format(value, locale)`, `shapes()` | `regionalization` |
 
-```bpcms
+```archol
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
 }
@@ -291,11 +291,11 @@ type I18nValue = string | PluralForms;
 type I18n = { [locale: string]: I18nValue };
 ```
 
-```bpcms
+```archol
 title: { pt-BR: "Nome", en: "Name" }
 ```
 
-```bpcms
+```archol
 title: {
   pt-BR: {
     one: "metro"
@@ -317,7 +317,7 @@ title: {
 
 O mapa aceita locales (`pt-BR`, `en-US`, `en`) e duas versões alternativas **opcionais**, irmãs do mapa principal:
 
-```bpcms
+```archol
 name: string {
   title: {
     pt-BR: "Nome da pessoa"
@@ -375,9 +375,9 @@ name: string {
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
 
-**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.bpcms`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
+**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
-```bpcms
+```archol
 application "example.com/app/loja-do-joao" {
   source: registry
   version: 1.4.0
@@ -419,7 +419,7 @@ application "example.com/app/loja-do-joao" {
 
 **Funcionamento:** serviço é um **conceito de negócio**, não biblioteca/package/módulo. Não crie serviço apenas para agrupar Shapes/Icons/Themes/Locales. Ele é uma fatia vertical; todo artefato de topo é público e ele é dono dos seus documentos. O que é `private` dentro de um artefato não entra no contrato público. Importar um serviço não dá acesso de escrita aos dados dele. A URI registry resolve `/index.html` como documentação de API; repositório resolve README + código.
 
-```bpcms
+```archol
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
   version: 1.2.0
@@ -443,9 +443,9 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 **Sem `provides`.** O serviço não declara o que oferece ao construtor; `provides` é responsabilidade do construtor. O contrato de negócio continua sendo os artefatos públicos do serviço.
 
-**Sem `roles` inline.** Roles ficam no arquivo `*-organograms.bpcms`, depois do organogram; a lista inline duplicava a fonte de verdade.
+**Sem `roles` inline.** Roles ficam no arquivo `*-organograms.archol`, depois do organogram; a lista inline duplicava a fonte de verdade.
 
-**Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `examples/services/<fullpath>/<service>-service.bpcms`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process`/`view`/`message` ou arquivos compartilhados. A regra completa está na seção 30.
+**Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `examples/services/<fullpath>/<service>-service.archol`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process`/`view`/`message` ou arquivos compartilhados. A regra completa está na seção 30.
 
 **Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
 
@@ -453,7 +453,7 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 `reintroduce` altera/adiciona definições de um artefato importado. Pode modificar qualquer parte do artefato: `value`, `fields`, `title`, `icon`, `ordinal`, `permissions`, etc.
 
-```bpcms
+```archol
 reintroduce std.Currency {
   value BRL {
     title: { pt-BR: "Real", en: "Brazilian real" }
@@ -477,7 +477,7 @@ reintroduce std.Currency {
 
 Para processos, cada passo é um nó reutilizável. O `fraud-checkout` adiciona um passo sem substituir o processo inteiro:
 
-```bpcms
+```archol
 service "example.com/services/fraud-checkout" {
   imports {
     service "example.com/services/checkout" as Checkout
@@ -558,7 +558,7 @@ As duas perguntas de um processo continuam explícitas:
 
 ## 4.2 Cabeçalho e gatilhos
 
-```bpcms
+```archol
 process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   version: 1
@@ -600,7 +600,7 @@ process Checkout(session: CheckoutSession) {
 
 Quem executa um passo humano é declarado no próprio form/manual:
 
-```bpcms
+```archol
 form PaymentRetry {
   document: CheckoutSession
   roles: [Customer]
@@ -616,7 +616,7 @@ form PaymentRetry {
 
 ## 4.4 Variáveis
 
-```bpcms
+```archol
 let offer: FreightOffer | null = null
 let authorized = false
 let authorization: string
@@ -630,7 +630,7 @@ let item: OrderItem
 - Documentos entram por **referência** (`DocumentRef`); valores de shape/resultado são valores.
 - `loop` não declara contador:
 
-```bpcms
+```archol
 loop PaymentAttempt max 3 {
   ...
   break
@@ -639,7 +639,7 @@ loop PaymentAttempt max 3 {
 
 - `forEach`/`parallel each` usam variável declarada no topo:
 
-```bpcms
+```archol
 forEach item in order.items {
   ...
 }
@@ -650,7 +650,7 @@ forEach item in order.items {
 
 ## 4.5 Start — como a instância nasce
 
-```bpcms
+```archol
 on [Order.Placed]
 key: order
 
@@ -676,7 +676,7 @@ called
 
 ## 4.6 End — como a instância termina
 
-```bpcms
+```archol
 return Confirmed
 
 end Confirmed {
@@ -695,7 +695,7 @@ end Confirmed {
 
 **Operações** são chamadas diretas:
 
-```bpcms
+```archol
 CheckoutSession.quoteShipping({ freightAmount: offer.freight, days: offer.days })
 authorization = PaymentGateway.authorize({ total: session.total, method: session.paymentMethod })
 queue = TicketRouting.evaluate({ category: ticket.category, priority: ticket.priority })
@@ -727,7 +727,7 @@ score = RiskScore.compute({ application })
 - A decisão humana é lida no **estado do documento** (`doc.status == X`) depois do `show`.
 - `send`/`receive`:
 
-```bpcms
+```archol
 send PickupRequest {
   key: shipment
   with { requestedAt: now() }
@@ -744,7 +744,7 @@ receive PickupConfirmed {
 
 ## 4.8 Erros, prazos e cancelamento
 
-```bpcms
+```archol
 error Declined {
   title: { pt-BR: "Pagamento recusado", en: "Payment declined" }
 }
@@ -775,7 +775,7 @@ try {
 
 ## 4.9 Roteamento e controle
 
-```bpcms
+```archol
 if (session.total > 10000 BRL) {
   ...
 } else if (session.total > 0) {
@@ -812,7 +812,7 @@ wait until invoice.dueAt
 
 ## 4.11 Compensação
 
-```bpcms
+```archol
 try {
   PaymentGateway.capture({ payment })
 } catch (CaptureFailed) {
@@ -860,7 +860,7 @@ A unidade de progresso visível é a **instância de processo**. Todo subpasso c
 
 Form não é tela: é o **contrato de admissão e desfecho** de uma task humana. A tela é do builder; a tela de andamento embute o form quando o passo atual é humano.
 
-```bpcms
+```archol
 form OrderReview {
   title: { pt-BR: "Revisar pedido", en: "Review order" }
   document: Order
@@ -913,7 +913,7 @@ form OrderReview {
 
 ## 4.15 Message — contrato entre participantes
 
-```bpcms
+```archol
 message PickupRequest {
   title: { pt-BR: "Solicitação de coleta", en: "Pickup request" }
   about: Shipment
@@ -950,7 +950,7 @@ message PickupRequest {
 
 ## 4.17 Decision — regra de negócio (DMN)
 
-```bpcms
+```archol
 decision ApprovalLimit {
   title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
   returns: ApproverTier
@@ -1051,7 +1051,7 @@ Um **documento** é a unidade de estado durável: campos tipados por Shape, iden
 
 ## 5.1 Declaração e metadados
 
-```bpcms
+```archol
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
   version: 1
@@ -1089,7 +1089,7 @@ document Shipment {
 
 **Campo = nome + Shape + parâmetros simples.** O campo não valida, não formata e não converte: isso é do Shape. O campo só parametriza.
 
-```bpcms
+```archol
 fields {
   code: StoreCode { title: { pt-BR: "Código", en: "Code" }, unique, lookup }
   name: string { title: { pt-BR: "Nome", en: "Name" }, lookup }
@@ -1119,7 +1119,7 @@ fields {
 
 **`id` implícito.** Todo documento tem `id` interno, gerado, que não se declara. Um campo cujo tipo é um Document é um **`DocumentRef`**: carrega `id` + todos os campos `lookup` do alvo. Não existe Shape `<Name>Id` nem tipo `XxxId`. Exceção: `extends` compartilha o `id` do pai.
 
-```bpcms
+```archol
 store: Store { title: { pt-BR: "Loja", en: "Store" } }
 ```
 
@@ -1137,7 +1137,7 @@ O valor conceitual:
 
 **Número de negócio.** `id` é técnico; `number` é a chave exibida:
 
-```bpcms
+```archol
 number: InvoiceNumber {
   format: "{fiscalYear.year:yy}-{store.code:4}-{sequence:6}"
   sequence: per(Store, FiscalYear)
@@ -1153,7 +1153,7 @@ O **nascimento** do documento também é uma transição: o `initial` declara a 
 
 Isso restaura a regra: **evento de workflow é definido no workflow**. O bloco `events { }` do documento fica só para eventos **sem transição** (5.7).
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -1258,7 +1258,7 @@ Regras da transição de entrada (criação):
 
 ## 5.4 Actions — comandos que executam transições
 
-```bpcms
+```archol
 actions {
   issue() {
     title: { pt-BR: "Emitir", en: "Issue" }
@@ -1362,7 +1362,7 @@ Não existe bloco `permissions` no documento. A autoridade é composta por:
 | segregação | `segregation` do documento | atores diferentes em ações incompatíveis |
 | assinatura | `signature` do documento | papel com autoridade de assinatura |
 
-```bpcms
+```archol
 refund(amount: std.Money) {
   title: { pt-BR: "Reembolsar", en: "Refund" }
   roles: [Manager]
@@ -1399,7 +1399,7 @@ signature {
 
 ### 5.7.1 Evento de workflow
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -1452,7 +1452,7 @@ document Invoice {
 
 O nascimento do documento é uma transição de entrada, declarada no `initial` (5.3). O evento é do workflow; a action de criação o emite.
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -1500,7 +1500,7 @@ document Invoice {
 
 ### 5.7.3 Evento sem workflow
 
-```bpcms
+```archol
 document Store {
   title: { pt-BR: "Loja", en: "Store" }
 
@@ -1544,7 +1544,7 @@ document Store {
 
 ## 5.8 Índices e número
 
-```bpcms
+```archol
 indexes {
   byStore: [store.id, createdAt] range
   byStatus: [status, createdAt] range
@@ -1561,7 +1561,7 @@ indexes {
 
 **`scopable document`.** Um documento marcado é um tipo de escopo. Todo campo direto para ele **infere um escopo** no documento consumidor; não há bloco `scopes`, `parentId` nem `path`.
 
-```bpcms
+```archol
 scopable document Store {
   title: { pt-BR: "Loja", en: "Store" }
   fields {
@@ -1586,7 +1586,7 @@ document Invoice {
 
 **`extends`.** Especialização aditiva, no mesmo serviço:
 
-```bpcms
+```archol
 document Consumer extends User {
   fields {
     citizen: Citizen { title: { pt-BR: "Cidadão", en: "Citizen" } }
@@ -1600,7 +1600,7 @@ document Consumer extends User {
 
 **`seed`.** Documentos pré-criados e idempotentes:
 
-```bpcms
+```archol
 scopable document Store {
   seed {
     SP { code: "SP"; name: "São Paulo" }
@@ -1617,7 +1617,7 @@ scopable document Store {
 
 **Derivado (cálculo).** Um documento pode ser o resultado de um cálculo sobre outros documentos. Ele é **estado durável** (não é relatório): serve quando o número precisa ser consultado, versionado ou auditado depois.
 
-```bpcms
+```archol
 document CustomerScore {
   title: { pt-BR: "Score do cliente", en: "Customer score" }
   computed from Order, Payment, Ticket
@@ -1643,7 +1643,7 @@ document CustomerScore {
 
 A mesma sintaxe vale no Document, na action e no field. Condição verdadeira = permitido.
 
-```bpcms
+```archol
 rule total == subtotal + tax {
   pt-BR: "Total da nota não confere"
   en: "Invoice total does not match"
@@ -1766,7 +1766,7 @@ O registro é responsabilidade do builder. A DSL não declara `audit` no documen
 - `audio`, `image`, `video`: subtipos de apresentação de `attachment`; já implicam MIME de áudio, imagem e vídeo.
 - `mime` só é necessário no `attachment` genérico.
 
-```bpcms
+```archol
 shape ProductImage {
   title: { pt-BR: "Imagem do produto", en: "Product image" }
   base: image
@@ -1783,7 +1783,7 @@ shape ProductManual {
 
 **Métodos não usam keyword.** Um identificador seguido de `(` no corpo do Shape declara um método:
 
-```bpcms
+```archol
 toNumber(value) {
   return value.raw;
 }
@@ -1795,7 +1795,7 @@ toNumber(value) {
 
 Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório. Um Shape `classification` enumera categorias; um Shape `state` declara o ciclo de vida (valores + `initial`) e **não declara transições** — elas ficam nas actions do Document (5.3–5.5).
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -1841,7 +1841,7 @@ shape InvoiceStatus {
 
 `units` é um mapa de unidade → fator relativo à unidade base (fator `1`). Unidades não lineares usam `formula { to/from }`.
 
-```bpcms
+```archol
 shape Length {
   title: { pt-BR: "Comprimento", en: "Length" }
   base: decimal
@@ -1878,7 +1878,7 @@ shape Length {
 
 `std.Currency` é a única classificação que pode ter `value` sem `title`, `icon` e `ordinal`:
 
-```bpcms
+```archol
 shape Currency {
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
   value BRL { numeric: "986", scale: 2 }
@@ -1895,7 +1895,7 @@ shape Currency {
 
 Shape composto usa serialização JSON canônica por default:
 
-```bpcms
+```archol
 shape TrackingEvent {
   fields {
     at: DateTime
@@ -1914,7 +1914,7 @@ shape TrackingEvent {
 
 `base: classification` enumera categorias; `base: state` declara o **ciclo de vida** de um documento: valores possíveis e valor inicial. **As transições não ficam no Shape**: ficam nas actions do Document (5.3–5.5).
 
-```bpcms
+```archol
 shape OrderStatus {
   title: { pt-BR: "Situação do pedido", en: "Order status" }
   base: state
@@ -1968,7 +1968,7 @@ Regras:
 
 Unidades não lineares usam `formula`:
 
-```bpcms
+```archol
 units {
   mol_L: { factor: 1 }
   pH: {
@@ -1982,7 +1982,7 @@ units {
 
 Para fórmulas afins invertíveis, aceita-se o shorthand:
 
-```bpcms
+```archol
 C: {
   formula: K - 273.15
 }
@@ -1996,7 +1996,7 @@ C: {
 
 Arrow equivalente:
 
-```bpcms
+```archol
 formula: {
   to: (mol_L) => -log10(mol_L)
   from: (pH) => 10 ^ (-pH)
@@ -2137,7 +2137,7 @@ bestUnit(raw: number, from: Unit, units: Units): Unit
 
 ## 6.4 Expressões e métodos próprios
 
-```bpcms
+```archol
 shape Distance {
   title: { pt-BR: "Distância", en: "Distance" }
   base: decimal
@@ -2185,7 +2185,7 @@ No nível de expressão não há `let`, declaração de classes, funções aninh
 
 Classes e Shapes são instanciados com `new <Type>{...}`:
 
-```bpcms
+```archol
 const unit = in.readString();
 const raw = in.readDouble();
 return new Length{raw, unit};
@@ -2205,7 +2205,7 @@ Os argumentos **precisam existir**; o tipo pode ser explícito ou inferido.
 
 Explícito:
 
-```bpcms
+```archol
 toNumber(value: Length): number {
   return value.raw;
 }
@@ -2218,7 +2218,7 @@ write(value: Length, out: streamWriter) {
 
 Inferido:
 
-```bpcms
+```archol
 toNumber(value) {
   return value.raw;
 }
@@ -2231,7 +2231,7 @@ write(value, out) {
 
 Misto:
 
-```bpcms
+```archol
 convert(value: Length, unit) {
   return value.raw * units[value.unit ?? m].factor / units[unit].factor;
 }
@@ -2243,7 +2243,7 @@ convert(value: Length, unit) {
 
 ## 6.4.3 Operadores
 
-```bpcms
+```archol
 shape Length {
   operator +(left: Length, right: Length): Length {
     const rightInLeft = convert(right.raw, right.unit, left.unit);
@@ -2266,7 +2266,7 @@ shape Length {
 
 ## 6.5 `toNumber`
 
-```bpcms
+```archol
 shape Rating {
   title: { pt-BR: "Avaliação", en: "Rating" }
   base: decimal
@@ -2355,7 +2355,7 @@ View é **apresentação**: ela lê documentos, processos ou tarefas e não é d
 
 ## 7.2 Leitura, comando e navegação
 
-```bpcms
+```archol
 view Orders {
   title: { pt-BR: "Pedidos", en: "Orders" }
   type: table
@@ -2383,7 +2383,7 @@ view Orders {
 
 **Relatório é View.** Não existe `document type: report` nem bloco `report { }` dentro de documento. O documento é estado; a agregação é projeção.
 
-```bpcms
+```archol
 view SalesByRegion {
   title: { pt-BR: "Vendas por região", en: "Sales by region" }
   type: report
@@ -2407,7 +2407,7 @@ view SalesByRegion {
 - a tela mostra "atualizado há X" e permite recálculo;
 - quando o número precisa ser **durável** (fechamento contábil, laudo, score), ele é um **documento derivado** (5.10) — aí sim há estado, versionamento e auditoria.
 
-```bpcms
+```archol
 view OperationsControl {
   title: { pt-BR: "Controle operacional", en: "Operations control" }
   type: dashboard
@@ -2424,7 +2424,7 @@ view OperationsControl {
 
 ## 7.4 Andamento de processo
 
-```bpcms
+```archol
 view OrderProgress {
   title: { pt-BR: "Andamento do pedido", en: "Order progress" }
   type: process
@@ -2447,7 +2447,7 @@ view OrderProgress {
 
 A inbox é projeção de **tarefas**, não de documentos. Ela é gerada pelo builder; a View só configura escopo e apresentação.
 
-```bpcms
+```archol
 view MyWork {
   title: { pt-BR: "Minhas tarefas", en: "My work" }
   type: inbox
@@ -2525,9 +2525,9 @@ view TeamQueue {
 | `requires` | `fourEyes { X requires Role }` | Papel/condição exigida. |
 | `when absent` | `... when absent for 7d` | Condição e vigência da delegação. |
 
-> Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.bpcms`, com o organogram antes das roles.
+> Roles e organogram do serviço ficam no mesmo arquivo `<service>-organograms.archol`, com o organogram antes das roles.
 
-```bpcms
+```archol
 role Clerk {
   title: { pt-BR: "Atendente", en: "Clerk" }
   permissions: [invoice.view]
@@ -2563,7 +2563,7 @@ organogram Store {
 }
 ```
 
-```bpcms
+```archol
 // fiscalYearFor2026: FiscalYear — referência ao documento
 // storeForSP: Store — referência ao documento
 assignRole(user, InvoiceManager, scopes: {
@@ -2586,7 +2586,7 @@ assignRole(regionalUser, InvoiceManager, scopes: {
 - a role herdeira mantém `title`, `scopes` e `manages` próprios;
 - permissões herdadas não mudam a identidade da role.
 
-```bpcms
+```archol
 role Collector {
   title: { pt-BR: "Coletador", en: "Collector" }
   permissions: [sample.collect]
@@ -2651,7 +2651,7 @@ role Analyst {
 
 **Funcionamento:** a LLM propõe; o humano confirma. `extracted` nunca altera o modelo direto; `links` aponta para o elemento que a evidência sustenta. `hash`/`file` garantem proveniência.
 
-```bpcms
+```archol
 evidence PurchaseFormPDF {
   kind: form
   file: "evidence/purchase-form.pdf"
@@ -2687,7 +2687,7 @@ evidence PurchaseFormPDF {
 
 **Valores de `coverage`:** `confirmed`, `unknown`, `proposed` (e `em conflito`, quando houver contradição).
 
-```bpcms
+```archol
 conversation PurchaseDiscovery {
   process: PurchaseApproval
   goal: "Entender compras acima de R$ 5 mil"
@@ -2719,7 +2719,7 @@ A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primei
 | `source` | `source: "Política de Compras v3"` | Norma/política que fundamenta (auditoria). |
 | `owner` | `owner: Finance` | Dono da decisão. |
 
-```bpcms
+```archol
 decision ApprovalLimit {
   title: { pt-BR: "Alçada de aprovação", en: "Approval limit" }
   returns: ApproverTier
@@ -2737,7 +2737,7 @@ decision ApprovalLimit {
 }
 ```
 
-```bpcms
+```archol
 task DecideApproval {
   lane: System
   decision: ApprovalLimit
@@ -2773,7 +2773,7 @@ gateway Tier {
 | `links` | `links { process X.Y; decision Z }` | Elementos afetados. |
 | `evidence` | `evidence: "Tabela de Frete 2026"` | Evidência que confirma/derruba. |
 
-```bpcms
+```archol
 assumption A-001 {
   statement: "Todo frete é cotado por remessa"
   impact: high
@@ -2803,7 +2803,7 @@ assumption A-001 {
 | `min` / `max` | `min: 0, max: 10` | Constraints do Parameter, como no field. |
 | `maxLength` | `maxLength: 120` | Limite para texto, como no field. |
 
-```bpcms
+```archol
 parameter ErpUrl {
   title: { pt-BR: "Endereço do sistema de gestão", en: "ERP URL" }
   type: string
@@ -2838,7 +2838,7 @@ parameter MaxRetries {
 | `min` / `max` | `min: 0, max: 10` | Constraints do Secret. |
 | `maxLength` | `maxLength: 120` | Limite para texto. |
 
-```bpcms
+```archol
 secret PaymentKey {
   title: { pt-BR: "Chave de pagamento", en: "Payment key" }
   type: string
@@ -2856,7 +2856,7 @@ secret PaymentKey {
 
 ## 13.3 Application
 
-```bpcms
+```archol
 set Billing.TaxRegime = "SIMPLES"
 set Payments.GatewayKey = secret.GATEWAY_KEY
 ```
@@ -2890,7 +2890,7 @@ set Payments.GatewayKey = secret.GATEWAY_KEY
 | `activation` | `activation: manual` | Ativação manual (DR). |
 | `restoreFrom` | `restoreFrom: "backup/prod"` | Origem de restauração. |
 
-```bpcms
+```archol
 environment dev {
   runtime: interpreted
   build: none
@@ -2922,7 +2922,7 @@ environment dev {
 | `process` | `process: readOnly` | Processo só leitura naquele alvo. |
 | `images` | `images: unsupported` | Imagens indisponíveis. |
 
-```bpcms
+```archol
 builder WebApp {
   version: 1.0.0
   target: browser
@@ -2953,7 +2953,7 @@ builder WebApp {
 
 > Theme é asset do **construtor**, não artefato de serviço. Fontes, cores e tokens são implementação gerada; a app só referencia o ID.
 
-```bpcms
+```archol
 theme NuvulaLight {
   mode: light
   supports: [WebApp, MobileShell]
@@ -2985,7 +2985,7 @@ theme NuvulaLight {
 
 > Locale é configuração da app/construtor; não é serviço. `I18n` de títulos é independente.
 
-```bpcms
+```archol
 locale pt-BR {
   fallback: en-US
   currency: BRL
@@ -3026,7 +3026,7 @@ locale pt-BR {
 | `mime` | `mime: [application/pdf]` | Tipos aceitos. |
 | `antivirus` | `antivirus: true` | Exige varredura. |
 
-```bpcms
+```archol
 widget SignaturePad {
   binds: Signature
   capabilities: [gui, attachments]
@@ -3069,7 +3069,7 @@ widget SignaturePad {
 
 > **Migração é release, não artefato de topo.** Use `release { type: migration, changes, backfill, dryRun, rollback }`. A gramática detalhada das operações (`add`, `index`, `rename`, `drop`, `change`) fica no SPECS.
 
-```bpcms
+```archol
 release "example.com/services/catalog"@1.2.0 {
   service: "example.com/services/catalog"
   changes { add Product.barcode }
@@ -3080,7 +3080,7 @@ release "example.com/services/catalog"@1.2.0 {
 }
 ```
 
-```bpcms
+```archol
 release "example.com/app/loja-com-antifraude"@1.0.0 {
   application: "example.com/app/loja-com-antifraude"
   lock: "locks/loja-com-antifraude/1.0.0.lock"
@@ -3118,7 +3118,7 @@ release "example.com/app/loja-com-antifraude"@1.0.0 {
 | `staleAfter` | `staleAfter: 5m` | Tempo para considerar leitura vencida. |
 | `calibrate` | `calibrate: monthly` | Periodicidade de calibração. |
 
-```bpcms
+```archol
 integration ERP {
   protocol: rest
   baseUrl: env.ERP_URL
@@ -3146,7 +3146,7 @@ integration ERP {
 | número que precisa de histórico por período | documento derivado com `for` de período (ex.: `FiscalPeriod`) |
 | painel operacional em tempo real | `view type: dashboard` com `mode: live` |
 
-```bpcms
+```archol
 view CashFlow {
   title: { pt-BR: "Fluxo de caixa", en: "Cash flow" }
   type: report
@@ -3164,7 +3164,7 @@ view CashFlow {
 }
 ```
 
-```bpcms
+```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   computed from Invoice, Payment
@@ -3183,7 +3183,7 @@ Regras:
 - `metrics`/`filters`/`units`/`export` pertencem à View;
 - `computed from`/`freshness`/`exposes`/`calculatedAt` pertencem ao documento derivado;
 - a View mostra "atualizado há X" e oferece recálculo; o documento guarda o resultado e o frescor;
-- relatório é `view`: fica em `views/` (`<service>-<nome>-view.bpcms`, 30); documento calculado durável fica no arquivo do seu contexto;
+- relatório é `view`: fica em `views/` (`<service>-<nome>-view.archol`, 30); documento calculado durável fica no arquivo do seu contexto;
 - não há CRUD automático de relatório: leitura é projeção.
 
 ---
@@ -3193,7 +3193,7 @@ Regras:
 
 ## 22.1 Evento de workflow
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -3270,7 +3270,7 @@ document Invoice {
 
 O documento nasce por uma **transição de entrada**, declarada no `initial` do Shape. O evento é do workflow; a action de criação o emite.
 
-```bpcms
+```archol
 shape InvoiceStatus {
   title: { pt-BR: "Situação da nota", en: "Invoice status" }
   base: state
@@ -3318,7 +3318,7 @@ document Invoice {
 
 ## 22.3 Evento sem workflow
 
-```bpcms
+```archol
 document Store {
   title: { pt-BR: "Loja", en: "Store" }
 
@@ -3377,7 +3377,7 @@ example.com/services/billing#Invoice.Paid
 
 **Agendamento é um gatilho de início de processo, não um artefato.** Não existe `job`.
 
-```bpcms
+```archol
 process CloseMonth for FiscalPeriod {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
   version: 1
@@ -3425,7 +3425,7 @@ process CloseMonth for FiscalPeriod {
 
 **Por que.** Agendamento não é um tipo de trabalho diferente: é um gatilho. Modelá-lo como processo dá andamento, auditoria, SLA, retry por task, cancelamento e histórico de graça — e evita um segundo motor com regras próprias.
 
-`*-jobs.bpcms` não existe mais: os agendamentos viram `start { schedule: }` no arquivo `<service>-<nome>-process.bpcms` do processo (30).
+`*-jobs.archol` não existe mais: os agendamentos viram `start { schedule: }` no arquivo `<service>-<nome>-process.archol` do processo (30).
 
 ---
 # 24. Policy / Rule
@@ -3442,7 +3442,7 @@ process CloseMonth for FiscalPeriod {
 | `notification` | `notification: [Email, WhatsApp]` | Canais de aviso. |
 | `mask` | `mask: default` | Mascaramento padrão. |
 
-```bpcms
+```archol
 policy FourEyesPayment {
   appliesTo: Payment.release
   rule: approver != creator
@@ -3550,13 +3550,13 @@ policy FourEyesPayment {
 | Chamada | filho sem `start { called }`, com gatilho de topo, ou processo de topo com `called` | `E_PROCESS_TRIGGER_CONFLICT` |
 | Subprocesso | ciclo entre processos | `E_SUBPROCESS_CYCLE` |
 | View | tipo inválido, cláusula incompatível, seção desconhecida | `E_VIEW_TYPE` / `E_VIEW_CLAUSE` / `E_VIEW_SECTION` |
-| Arquivo | nome fora do padrão (app/service `<nome>-<tipo>.bpcms`; document/process/view/message `<service>-<nome>-<tipo>.bpcms`) ou `<nome>`/`<tipo>` divergente do principal | `E_FILE_NAME` |
+| Arquivo | nome fora do padrão (app/service `<nome>-<tipo>.archol`; document/process/view/message `<service>-<nome>-<tipo>.archol`) ou `<nome>`/`<tipo>` divergente do principal | `E_FILE_NAME` |
 | Arquivo | arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/`, processo fora de `processes/`, view fora de `views/` ou message fora de `messages/` | `E_FILE_PATH` |
 | Arquivo | arquivo de contexto principal (app/service/document/process/view/message) sem exatamente um principal | `E_FILE_PRINCIPAL` |
 | Arquivo | principal não é o primeiro artefato do arquivo | `E_FILE_PRINCIPAL_FIRST` |
 | Arquivo | arquivo compartilhado declara `application`, `service`, `document`, `process`, `view` ou `message` | `E_FILE_SHARED` |
-| Arquivo | arquivo compartilhado contém tipo diferente do sufixo (ex.: `view` em `-shapes.bpcms`; `parameter` em `-secrets.bpcms`; `role` fora de `-organograms.bpcms`) | `E_FILE_SHARED_TYPE` |
-| Arquivo | em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe) | `E_FILE_ORGANOGRAM_FIRST` |
+| Arquivo | arquivo compartilhado contém tipo diferente do sufixo (ex.: `view` em `-shapes.archol`; `parameter` em `-secrets.archol`; `role` fora de `-organograms.archol`) | `E_FILE_SHARED_TYPE` |
+| Arquivo | em `-organograms.archol`, o `organogram` não é o primeiro artefato (ou não existe) | `E_FILE_ORGANOGRAM_FIRST` |
 | Arquivo | SVG fora de `icons/` ou namespace de ícone divergente | `E_FILE_ICON_PATH` |
 
 **Classes de runtime:** `validation_error` (400), `conflict` (409), `forbidden` (403), `not_found` (404), `dependency_unavailable` (503), `rate_limited` (429), `internal` (500). Erros de linguagem são bloqueantes no `check`; erros de runtime seguem o modelo do BRAINSTORM (2.6.11).
@@ -3607,7 +3607,7 @@ policy FourEyesPayment {
 | `icon` | `icon <Name> { ... }` | Ícone público do serviço. |
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
 
-```bpcms
+```archol
 icon Draft {
   title: { pt-BR: "Rascunho", en: "Draft" }
 }
@@ -3623,8 +3623,8 @@ Além do `icon` declarado, qualquer arquivo `.svg` sob `<service>/icons/` vira u
 
 ```text
 examples/services/example.com/services/billing/
-  billing-service.bpcms
-  billing-icons.bpcms          <- icons declarados (não-SVG)
+  billing-service.archol
+  billing-icons.archol          <- icons declarados (não-SVG)
   icons/
     status/
       draft.svg                -> status.draft
@@ -3647,7 +3647,7 @@ examples/services/example.com/services/billing/
 - SVG fora de `<service>/icons/` é `E_FILE_ICON_PATH`.
 - O builder sanitiza o SVG; script/recursos externos não entram no contrato.
 
-```bpcms
+```archol
 shape InvoiceStatus {
   value Draft {
     title: { pt-BR: "Rascunho", en: "Draft" }
@@ -3672,7 +3672,7 @@ shape InvoiceStatus {
 
 Quem usa precisa importar:
 
-```bpcms
+```archol
 imports {
   service "bpcms.org/std" as std
 }
@@ -3680,7 +3680,7 @@ imports {
 
 O alias é obrigatório; o uso é sempre qualificado:
 
-```bpcms
+```archol
 fields {
   weight: std.Mass
   length: std.Length
@@ -3726,7 +3726,7 @@ A biblioteca cobre, no mesmo Shape, unidades de vários sistemas. `units` mapeia
 
 **`Currency`:** classificação da stdlib com URL externa ISO 4217 e `value` com `scale`, sem `title`/`icon`/`ordinal`. Para usar uma moeda, o serviço precisa reintroduzi-la.
 
-```bpcms
+```archol
 shape Currency {
   title: { pt-BR: "Moeda", en: "Currency" }
   classification: "https://www.iso.org/iso-4217-currency-codes.html"
@@ -3750,7 +3750,7 @@ shape Currency {
 
 ### 29.2.1.1 `reintroduce` e formatação de moeda
 
-```bpcms
+```archol
 reintroduce std.Currency {
   value BRL {
     title: { pt-BR: "Real", en: "Brazilian real" }
@@ -3786,7 +3786,7 @@ reintroduce std.Currency {
 
 `Money` usa `prefix`/`suffix`/`infix` da moeda:
 
-```bpcms
+```archol
 price: std.Money {
   title: { pt-BR: "Preço", en: "Price" }
   currency: BRL
@@ -3804,7 +3804,7 @@ price: std.Money {
 
 Operadores:
 
-```bpcms
+```archol
 R$ 10 + R$ 5      // R$ 15
 R$ 10 - R$ 5      // R$ 5
 R$ 10 * 2         // R$ 20
@@ -3838,8 +3838,8 @@ Regionalization {
 
 ## 29.3 Onde fica
 
-- Definição: `examples/services/bpcms.org/std/std-service.bpcms` e `examples/services/bpcms.org/std/std-shapes.bpcms`.
-- Segue a regra de service: `std-service.bpcms` é o arquivo do principal e `std-shapes.bpcms` é compartilhado (30).
+- Definição: `examples/services/bpcms.org/std/std-service.archol` e `examples/services/bpcms.org/std/std-shapes.archol`.
+- Segue a regra de service: `std-service.archol` é o arquivo do principal e `std-shapes.archol` é compartilhado (30).
 - Fica na pasta normal `examples/services/bpcms.org/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
 - Não é versionado pelo lock; a versão da std é a do construtor/DSL.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
@@ -3861,15 +3861,15 @@ A unidade de organização do fonte é o **contexto principal**, não o tipo de 
 
 | Arquivo | Caminho |
 | :--- | :--- |
-| Aplicação | `<workspace>/applications/<fullpath app>/<app>-application.bpcms` |
-| Serviço | `<workspace>/services/<fullpath service>/<service>-service.bpcms` |
-| Documento | `<workspace>/services/<fullpath service>/documents/<service>-<nome>-document.bpcms` |
-| Processo | `<workspace>/services/<fullpath service>/processes/<service>-<nome>-process.bpcms` |
-| View | `<workspace>/services/<fullpath service>/views/<service>-<nome>-view.bpcms` |
-| Message | `<workspace>/services/<fullpath service>/messages/<service>-<nome>-message.bpcms` |
-| Compartilhado | `<workspace>/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms` |
+| Aplicação | `<workspace>/applications/<fullpath app>/<app>-application.archol` |
+| Serviço | `<workspace>/services/<fullpath service>/<service>-service.archol` |
+| Documento | `<workspace>/services/<fullpath service>/documents/<service>-<nome>-document.archol` |
+| Processo | `<workspace>/services/<fullpath service>/processes/<service>-<nome>-process.archol` |
+| View | `<workspace>/services/<fullpath service>/views/<service>-<nome>-view.archol` |
+| Message | `<workspace>/services/<fullpath service>/messages/<service>-<nome>-message.archol` |
+| Compartilhado | `<workspace>/services/<fullpath service>/<service>-<tipo-no-plural>.archol` |
 | SVG | `<workspace>/services/<fullpath service>/icons/<namespace>/<icon>.svg` |
-| `-icons.bpcms` (não-SVG) | `<workspace>/services/<fullpath service>/<service>-icons.bpcms` |
+| `-icons.archol` (não-SVG) | `<workspace>/services/<fullpath service>/<service>-icons.archol` |
 
 - `<fullpath>` é a URI sem protocolo, exatamente como declarada.
 - O full path preserva os segmentos da URI; nomes de arquivos e pastas de artefato são kebab-case.
@@ -3881,14 +3881,14 @@ A unidade de organização do fonte é o **contexto principal**, não o tipo de 
 Exemplos:
 
 ```text
-examples/services/example.com/services/billing/billing-service.bpcms
-examples/services/example.com/services/billing/documents/billing-invoice-document.bpcms
-examples/services/example.com/services/billing/processes/billing-invoice-issuance-process.bpcms
-examples/services/example.com/services/billing/views/billing-invoice-table-view.bpcms
-examples/services/example.com/services/billing/messages/billing-invoice-issued-message.bpcms
-examples/services/example.com/services/billing/billing-shapes.bpcms
+examples/services/example.com/services/billing/billing-service.archol
+examples/services/example.com/services/billing/documents/billing-invoice-document.archol
+examples/services/example.com/services/billing/processes/billing-invoice-issuance-process.archol
+examples/services/example.com/services/billing/views/billing-invoice-table-view.archol
+examples/services/example.com/services/billing/messages/billing-invoice-issued-message.archol
+examples/services/example.com/services/billing/billing-shapes.archol
 examples/services/example.com/services/billing/icons/status/draft.svg
-examples/applications/example.com/app/backoffice-loja/backoffice-loja-application.bpcms
+examples/applications/example.com/app/backoffice-loja/backoffice-loja-application.archol
 ```
 
 **Regras.**
@@ -3902,9 +3902,9 @@ examples/applications/example.com/app/backoffice-loja/backoffice-loja-applicatio
   - na view e na message: o principal e, se necessário, auxiliares sem outro dono.
 - **View e message não ficam no arquivo do dono.** A view que lê `Invoice` e a message cujo `about` é `Invoice` continuam em `views/` e `messages/`; o vínculo é declarado no contrato (`document`, `source`, `sources`, `process:`, `about`), não pela posição do arquivo.
 - **Referência entre arquivos é permitida.** O fato de outro contexto usar um artefato não o torna compartilhado; o dono é definido pelo contrato. Ex.: `InvoiceNumber` fica no arquivo do `Invoice` e pode aparecer no payload de uma mensagem de cobrança.
-- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.bpcms`: `shapes`, `forms`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`. Ex.: `billing-shapes.bpcms`, `notifications-secrets.bpcms`.
+- Um artefato **sem dono único** (usado como tipo/campo por mais de um contexto) ou de **escopo do serviço** fica em `<service>-<tipo-no-plural>.archol`: `shapes`, `forms`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`. Ex.: `billing-shapes.archol`, `notifications-secrets.archol`.
 - O arquivo compartilhado **não declara** `application`, `service`, `document`, `process`, `view` ou `message` (`E_FILE_SHARED`).
-- `bpcms.org/std` é pseudo-serviço do construtor e segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.bpcms` é o arquivo do principal; `std-shapes.bpcms` é compartilhado.
+- `bpcms.org/std` é pseudo-serviço do construtor e segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.archol` é o arquivo do principal; `std-shapes.archol` é compartilhado.
 - `report` não é arquivo: relatório é `view type: report` e fica em `views/` como qualquer outra view.
 - `view` e `message` **nunca** vão para arquivo compartilhado: cada uma é contexto principal e tem arquivo próprio.
 - O caminho completo é validado: pasta fora do full path da URI, documento fora de `documents/`, processo fora de `processes/`, view fora de `views/` ou message fora de `messages/` é `E_FILE_PATH`; SVG fora de `icons/` é `E_FILE_ICON_PATH`.
@@ -3923,7 +3923,7 @@ examples/applications/example.com/app/backoffice-loja/backoffice-loja-applicatio
 
 ## 30.2 Arquivos compartilhados
 
-Artefato compartilhado — sem dono único ou de escopo do serviço — fica em `<workspace>/services/<fullpath service>/<SERVICE>-<TIPO ARTEFATO NO PLURAL>.bpcms`:
+Artefato compartilhado — sem dono único ou de escopo do serviço — fica em `<workspace>/services/<fullpath service>/<SERVICE>-<TIPO ARTEFATO NO PLURAL>.archol`:
 
 | Sufixo | Tipos aceitos |
 | :--- | :--- |
@@ -3938,51 +3938,55 @@ Artefato compartilhado — sem dono único ou de escopo do serviço — fica em 
 | `icons` | `icon` (não-SVG) |
 
 - O arquivo compartilhado tem **zero** artefatos principais.
-- Cada arquivo compartilhado contém **um único tipo de artefato**, exceto `-organograms.bpcms`, que contém exatamente um `organogram` e as `role`s. O `organogram` vem **antes** das `role`s.
-- Não misture `parameter` com `secret`, nem `shape` com `form`. Roles não têm arquivo próprio (`-roles.bpcms` não existe).
+- Cada arquivo compartilhado contém **um único tipo de artefato**, exceto `-organograms.archol`, que contém exatamente um `organogram` e as `role`s. O `organogram` vem **antes** das `role`s.
+- Não misture `parameter` com `secret`, nem `shape` com `form`. Roles não têm arquivo próprio (`-roles.archol` não existe).
 - `views` e `messages` **não são sufixos compartilhados**: view e message são contextos principais e ficam em `views/` e `messages/`.
-- SVG não entra em `-icons.bpcms`: SVG fica em `icons/` e `-icons.bpcms` é só para `icon` declarado.
-- Exemplos: `std-shapes.bpcms` só com shapes; `billing-organograms.bpcms` com o organogram primeiro e as roles depois; `notifications-parameters.bpcms` e `notifications-secrets.bpcms` separados.
+- SVG não entra em `-icons.archol`: SVG fica em `icons/` e `-icons.archol` é só para `icon` declarado.
+- Exemplos: `std-shapes.archol` só com shapes; `billing-organograms.archol` com o organogram primeiro e as roles depois; `notifications-parameters.archol` e `notifications-secrets.archol` separados.
 - `reports` não é sufixo: relatório é `view type: report` e fica em `views/`.
 
 ## 30.3 Validação
 
-O `check` percorre todos os `.bpcms` do workspace; `application` e `service` também contam como principal. Ele valida a estrutura, não a semântica da atribuição:
+O `check` percorre todos os `.archol` do workspace; `application` e `service` também contam como principal. Ele valida a estrutura, não a semântica da atribuição:
 
 - `E_FILE_NAME`: nome fora do padrão ou `<nome>`/`<tipo>` divergente do principal;
 - `E_FILE_PATH`: arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/`, processo fora de `processes/`, view fora de `views/` ou message fora de `messages/`;
 - `E_FILE_PRINCIPAL`: arquivo de contexto principal sem exatamente um principal;
 - `E_FILE_PRINCIPAL_FIRST`: principal não é o primeiro artefato do arquivo;
 - `E_FILE_SHARED`: arquivo compartilhado declara `application`, `service`, `document`, `process`, `view` ou `message`;
-- `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `view` em `-shapes.bpcms`, `parameter` em `-secrets.bpcms`, `role` fora de `-organograms.bpcms`);
-- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe);
+- `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `view` em `-shapes.archol`, `parameter` em `-secrets.archol`, `role` fora de `-organograms.archol`);
+- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.archol`, o `organogram` não é o primeiro artefato (ou não existe);
 - `E_FILE_ICON_PATH`: SVG fora de `icons/` ou namespace de ícone divergente.
 
-A escolha do dono de um auxiliar é convenção de modelagem; o check não tenta inferir dono semântico. `application`/`service` usam o slug da pasta/URI como `<nome>`; `document`/`process`/`view`/`message` usam o identificador do artefato.
+A escolha do dono de um auxiliar é convenção de modelagem; o check não tenta inferir dono semântico.
+
+`application`/`service` usam o slug da pasta/URI como `<nome>`; `document`/`process`/`view`/`message` usam o identificador do artefato.
+
+> **Estado da implementação:** o compilador em [`archol/`](archol/README.md) já executa léxico, parser, AST, check de valores de enum e link; as regras `E_FILE_*` acima continuam como especificação a implementar no `check`.
 
 **Exemplo de árvore.**
 
 ```text
 examples/
   applications/example.com/app/backoffice-loja/
-    backoffice-loja-application.bpcms
+    backoffice-loja-application.archol
   services/example.com/services/billing/
-    billing-service.bpcms
+    billing-service.archol
     documents/
-      billing-invoice-document.bpcms
-      billing-bill-document.bpcms
+      billing-invoice-document.archol
+      billing-bill-document.archol
     processes/
-      billing-invoice-issuance-process.bpcms
+      billing-invoice-issuance-process.archol
     views/
-      billing-cash-flow-view.bpcms
-      billing-invoice-table-view.bpcms
+      billing-cash-flow-view.archol
+      billing-invoice-table-view.archol
     messages/
-      billing-invoice-issued-message.bpcms
-      billing-payment-reminder-message.bpcms
-    billing-shapes.bpcms
-    billing-parameters.bpcms
-    billing-organograms.bpcms          // organogram primeiro, depois as roles
-    billing-icons.bpcms
+      billing-invoice-issued-message.archol
+      billing-payment-reminder-message.archol
+    billing-shapes.archol
+    billing-parameters.archol
+    billing-organograms.archol          // organogram primeiro, depois as roles
+    billing-icons.archol
     icons/
       status/draft.svg                  // status.draft
 ```

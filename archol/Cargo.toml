@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/archol-core",
+    "crates/archol-analysis",
+    "crates/archol-lsp",
+    "crates/archol-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+archol-core = { path = "crates/archol-core" }
+archol-analysis = { path = "crates/archol-analysis" }
+archol-lsp = { path = "crates/archol-lsp" }
+archol-cli = { path = "crates/archol-cli" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

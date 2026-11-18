@@ -1,0 +1,117 @@
+{
+  "name": "archol-vscode",
+  "displayName": "Archol",
+  "description": "Suporte à linguagem Archol no VS Code: sintaxe, snippets, LSP e explorador de AST.",
+  "version": "0.1.0",
+  "publisher": "archol",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "archol",
+    "dsl",
+    "lsp",
+    "ast"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onLanguage:archol",
+    "onCommand:archol.showAst",
+    "onCommand:archol.showLinks",
+    "onCommand:archol.restartServer",
+    "onCommand:archol.showOutput"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "archol",
+        "aliases": [
+          "Archol",
+          "archol"
+        ],
+        "extensions": [
+          ".archol"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "archol",
+        "scopeName": "source.archol",
+        "path": "./syntaxes/archol.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "archol",
+        "path": "./snippets/archol.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "archol.showAst",
+        "title": "Abrir explorador de AST",
+        "category": "Archol"
+      },
+      {
+        "command": "archol.showLinks",
+        "title": "Mostrar links do servidor",
+        "category": "Archol"
+      },
+      {
+        "command": "archol.restartServer",
+        "title": "Reiniciar servidor LSP",
+        "category": "Archol"
+      },
+      {
+        "command": "archol.showOutput",
+        "title": "Mostrar saída do servidor",
+        "category": "Archol"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "archol.showAst",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "editorLangId == archol"
+      },
+      {
+        "command": "archol.showLinks",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "editorLangId == archol"
+      }
+    ],
+    "configuration": {
+      "title": "Archol",
+      "properties": {
+        "archol.server.path": {
+          "type": "string",
+          "default": "archol",
+          "markdownDescription": "Caminho do executável do servidor LSP do Archol. O padrão `archol` procura no `PATH`. Se não encontrar, a extensão tenta `archol/target/release/archol` e `archol/target/debug/archol` relativos à raiz do workspace."
+        },
+        "archol.server.args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "lsp"
+          ],
+          "markdownDescription": "Argumentos passados ao executável do servidor LSP. O padrão `[\"lsp\"]` executa `archol lsp`; use `[]` se o caminho apontar para um servidor dedicado que não aceita subcomando."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test",
+    "check": "node -e \"const fs=require('fs');const cp=require('child_process');for(const f of fs.readdirSync('src')){if(f.endsWith('.js'))cp.execFileSync(process.execPath,['--check','src/'+f],{stdio:'inherit'});}\""
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "name": "Archol",
+  "scopeName": "source.archol",
+  "fileTypes": [
+    "archol"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#annotations"
+    },
+    {
+      "include": "#declarations"
+    },
+    {
+      "include": "#methodCalls"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#wordOperators"
+    },
+    {
+      "include": "#languageConstants"
+    },
+    {
+      "include": "#bareCalls"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#properties"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.archol",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.archol",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.archol",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.archol",
+          "match": "\\b\\d+(?:\\.\\d+)?(?:[dhmsy]|%|BRL)?(?![A-Za-z0-9_])"
+        }
+      ]
+    },
+    "annotations": {
+      "patterns": [
+        {
+          "name": "storage.type.annotation.archol",
+          "match": "@[A-Za-z_][A-Za-z0-9_.]*"
+        }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "name": "meta.declaration.archol",
+          "match": "\\b(application|service|document|process|view|form|message|shape|role|organogram|policy|decision|integration|parameter|secret|icon|value|transition|event)\\s+([A-Z][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.archol"
+            },
+            "2": {
+              "name": "entity.name.type.archol"
+            }
+          }
+        },
+        {
+          "name": "meta.declaration.archol",
+          "match": "\\b(application|service)\\s+(\"[^\"]*\")",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.archol"
+            },
+            "2": {
+              "name": "string.quoted.double.archol"
+            }
+          }
+        }
+      ]
+    },
+    "methodCalls": {
+      "patterns": [
+        {
+          "match": "\\b([A-Z][A-Za-z0-9_]*)\\.([a-z][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "support.type.archol"
+            },
+            "2": {
+              "name": "entity.name.function.archol"
+            }
+          }
+        },
+        {
+          "match": "\\b([a-z][A-Za-z0-9_]*)\\.([a-z][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "variable.other.archol"
+            },
+            "2": {
+              "name": "entity.name.function.archol"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.archol",
+          "match": "\\b(if|else|try|catch|return|let|const|send|emit|manual|set|for|while|in|is)\\b"
+        },
+        {
+          "name": "keyword.other.archol",
+          "match": "\\b(application|service|document|process|view|form|message|shape|role|organogram|policy|decision|integration|parameter|secret|icon|value|transition|event|field|action|computed|emits|end|on|by|schedule|fanOut|called|start|imports|title|version|fields|payload|sources|metrics|filters|roles|permissions|indexes|columns|sections|operations|inputs|cases|hierarchy|capabilities|quality|events|format|base|initial|source|owner|type|about|subject|kind|mode|scope|groupBy|pagination|factor|units|dimension|parse|freshness|instructions|priority|sla|goal|outcome|sync|retention|required|unique|lookup|readonly|optional|default|min|max|maxLength|currency|enum|validate|ordinal|inherits|manages|rule|appliesTo|severity|audit|protocol|baseUrl|auth|timeout|retry|idempotency|staleAfter|calibrate|to|with|key|at|from|as|per|when|where|over|using|limit|offset|order|aggregate|sum|avg|count|error|returns|appliesTo|manages)\\b"
+        }
+      ]
+    },
+    "wordOperators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.word.archol",
+          "match": "\\b(and|or|not)\\b"
+        }
+      ]
+    },
+    "bareCalls": {
+      "patterns": [
+        {
+          "name": "entity.name.function.archol",
+          "match": "\\b[a-zA-Z_][A-Za-z0-9_]*\\s*(?=\\()"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "variable.other.constant.archol",
+          "match": "\\b[A-Z][A-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.archol",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "match": "(^\\s*)([A-Za-z_][A-Za-z0-9_-]*)(?=\\s*:)",
+          "captures": {
+            "2": {
+              "name": "variable.other.property.archol"
+            }
+          }
+        },
+        {
+          "match": "([{,])[ \\t]*([A-Za-z_][A-Za-z0-9_-]*)(?=\\s*:)",
+          "captures": {
+            "1": {
+              "name": "punctuation.separator.archol"
+            },
+            "2": {
+              "name": "variable.other.property.archol"
+            }
+          }
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.archol",
+          "match": "===|!==|==|!=|<=|>=|&&|\\|\\||\\?\\?|->|=>|\\+|-|\\*|/|%|>|<|=|!|&|\\|"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.section.block.archol",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.section.brackets.archol",
+          "match": "[\\[\\]]"
+        },
+        {
+          "name": "punctuation.section.parens.archol",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.separator.archol",
+          "match": "[,;:]"
+        },
+        {
+          "name": "punctuation.special.archol",
+          "match": "[@?]"
+        },
+        {
+          "name": "punctuation.accessor.archol",
+          "match": "\\."
+        }
+      ]
+    },
+    "languageConstants": {
+      "patterns": [
+        {
+          "name": "constant.language.archol",
+          "match": "\\b(true|false|null)\\b"
+        }
+      ]
+    }
+  }
+}

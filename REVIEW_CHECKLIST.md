@@ -40,7 +40,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 ## Regra de namespaces (anotada; não aplicada)
 
-- A raiz do serviço é a pasta que contém `<service>-service.bpcms`.
+- A raiz do serviço é a pasta que contém `<service>-service.archol`.
 - **Toda subpasta é namespace para todos os tipos de artefato**, não só Icons.
 - Arquivos e pastas: **kebab-case**.
 - Referências: segmentos **camelCase** unidos por ponto.
@@ -72,7 +72,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 | # | Tipo | Depende de | Exemplos | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/**/*-icons.bpcms` | ✅ |
+| 1 | Icon | — (DSL) | IC.1–IC.6; `examples/services/**/*-icons.archol` | ✅ |
 | 2 | Shape | Icon (value) | H.1–H.9 | 🟡 |
 | 3 | Role | permissões | R.1–R.6 | ⬜ |
 | 4 | Organogram | Role | R.1–R.6 | ⬜ |
@@ -118,7 +118,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Shapes compartilhados ficam no serviço de negócio dono.
 - [ ] Application não declara artefatos.
 - [ ] `id` de document é implícito; `lookup` é tag de campo; FK é soft; extensão compartilha id.
-- [ ] Nomenclatura e caminhos: app/service `<nome>-<tipo>.bpcms`; document/process `<service>-<nome>-<tipo>.bpcms`; `BPCMS_WORKSPACE = examples/`; um principal por arquivo, primeiro artefato, nome equivalente; compartilhado com um único tipo por arquivo (exceção: `-organograms.bpcms` com organogram antes das roles) e sem principal.
+- [ ] Nomenclatura e caminhos: app/service `<nome>-<tipo>.archol`; document/process `<service>-<nome>-<tipo>.archol`; `BPCMS_WORKSPACE = examples/`; um principal por arquivo, primeiro artefato, nome equivalente; compartilhado com um único tipo por arquivo (exceção: `-organograms.archol` com organogram antes das roles) e sem principal.
 - [ ] Exemplos em `DSL_EXAMPLES.md` e em `examples/` concordam com a referência.
 - [ ] BRAINSTORM/DSL_REFERENCE/DSL_EXAMPLES atualizados juntos quando o contrato muda.
 - [ ] Nenhuma decisão de implementação (font/color/layout/resolução visual) foi revisada nesta fase.
@@ -142,7 +142,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n
 - [x] Conflito SVG × Icon declarado = erro
 
-**Exemplos:** IC.1–IC.6; icons nos `*-icons.bpcms`; **8 SVGs sob `icons/`** (status, finance/invoice, channels, stock etc.).
+**Exemplos:** IC.1–IC.6; icons nos `*-icons.archol`; **8 SVGs sob `icons/`** (status, finance/invoice, channels, stock etc.).
 
 **Foco da revisão (só DSL):**
 
@@ -171,12 +171,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 ### Regra de namespaces — perguntas abertas
 
 - [ ] A declaração continua `document Order` e o namespace vem da pasta (`domain.order`), ou a declaração precisa incluir o namespace?
-- [ ] Arquivos de tipo com múltiplos artefatos (ex.: `documents.bpcms`) podem coexistir com namespaces por subpasta?
+- [ ] Arquivos de tipo com múltiplos artefatos (ex.: `documents.archol`) podem coexistir com namespaces por subpasta?
 - [ ] Dentro do mesmo namespace, a referência pode ser curta (`order`) ou sempre completa (`domain.order`)?
 - [ ] O alias cross-service é `Checkout.domain.order` ou `checkout.domain.order`?
 - [ ] A conversão kebab → camelCase vale para nomes multiword (`order-item` → `orderItem`, `money-brl` → `moneyBrl`)?
 - [ ] O mesmo nome em namespaces diferentes é permitido sem restrição? (proposta: sim, duplicidade só no mesmo tipo/namespace)
-- [ ] Arquivos `.bpcms` em subpastas continuam com prefixo `<service>-` ou usam só o nome do artefato? Hoje a regra de arquivos exige prefixo.
+- [ ] Arquivos `.archol` em subpastas continuam com prefixo `<service>-` ou usam só o nome do artefato? Hoje a regra de arquivos exige prefixo.
 
 ### P-ICON-01 — remover `symbol`/`set` (aprovada na revisão de Icon)
 
@@ -184,7 +184,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - **Por que:** `symbol`/`set` parecem detalhes de resolução visual, não contrato de negócio da DSL.
 - **Impacto:** 75 icons, exemplos IC.1–IC.6, `DSL_REFERENCE` e `BRAINSTORM`.
 - **Alternativas:** (a) restaurar `symbol`/`set`; (b) manter apenas nome + `title`; (c) `symbol` opcional.
-- **Arquivos afetados:** `examples/services/**/*-icons.bpcms`, `examples/services/**/icons/**`, `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `BRAINSTORM.md`.
+- **Arquivos afetados:** `examples/services/**/*-icons.archol`, `examples/services/**/icons/**`, `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `BRAINSTORM.md`.
 - **Status:** ✅ aprovada retroativamente na revisão de Icon.
 
 **Decisão:** manter `symbol`/`set` fora da DSL; resolução visual fica no builder/Theme.
@@ -229,7 +229,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
 - [x] `<Document>Id` é Shape implícito de FK; não declarar
 
-**Exemplos:** H.1–H.9; shapes de contexto e `<service>-shapes.bpcms` (compartilhados), como `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
+**Exemplos:** H.1–H.9; shapes de contexto e `<service>-shapes.archol` (compartilhados), como `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
 
 **Resultado da inspeção:**
 
@@ -267,7 +267,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Decisões:** Shape base + campos; moeda em `Money`/`Currency`; `formula` block ou shorthand afim; `Currency` sem `title`/`icon`/`ordinal` e sem `toOrdinal`, stream/format/parse como código string; composto com JSON canônico e `format`/`parse` sobrescrevíveis; `sensitive`/`maxLength` default no Shape com sobrescrita no field; `default`/`private` no field; 39 Shapes de negócio + 57 std; 178 moedas ISO.
 
-**Stdlib:** definida em `examples/services/bpcms.org/std/std-service.bpcms` e `examples/services/bpcms.org/std/std-shapes.bpcms`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
+**Stdlib:** definida em `examples/services/bpcms.org/std/std-service.archol` e `examples/services/bpcms.org/std/std-shapes.archol`; import `service "bpcms.org/std" as std`; uso `std.Mass`. Migração concluída; `Money` tem `toNumber` implícito; `Currency` é classification ISO com `scale` e `reintroduce`.
 
 ## 3. Role ✅
 
@@ -300,7 +300,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages`; `manages` é sempre others-only; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; organogram e roles no mesmo `*-organograms.bpcms`, com o organogram antes das roles; Support tem `Manager` local; exemplos R.1–R.8 com títulos, hierarquia e herança múltipla.
+**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages`; `manages` é sempre others-only; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; organogram e roles no mesmo `*-organograms.archol`, com o organogram antes das roles; Support tem `Manager` local; exemplos R.1–R.8 com títulos, hierarquia e herança múltipla.
 
 ## 4. Organogram ✅
 
@@ -318,7 +318,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `manages [Role]`; um por linha
 - [x] `signature { Role }`
 - [x] `requires` dentro de `fourEyes`
-- [x] organogram antes das roles no mesmo arquivo (`*-organograms.bpcms`)
+- [x] organogram antes das roles no mesmo arquivo (`*-organograms.archol`)
 
 **Exemplos:** R.1–R.8; `identity-organograms`, `support-organograms`, `laboratory-organograms` (organogram + roles).
 
@@ -355,7 +355,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `Secret` é artefato, não Shape
 - [x] `source: config/secret` não existe
 
-**Exemplos:** PR.1–PR.6; `*-parameters.bpcms` e `*-secrets.bpcms`.
+**Exemplos:** PR.1–PR.6; `*-parameters.archol` e `*-secrets.archol`.
 
 **Foco da revisão:**
 
@@ -383,19 +383,19 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
 - [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
 - [x] Sem `provides`; contrato são os artefatos públicos
-- [x] Sem `roles` inline; organogram e roles no `*-organograms.bpcms`, organogram primeiro
+- [x] Sem `roles` inline; organogram e roles no `*-organograms.archol`, organogram primeiro
 - [x] Sem `source`; publicação/origem no Release/lock
 - [x] Sem `exports`; todo artefato de topo é público
 - [x] Serviço é conceito de negócio, não biblioteca/package/módulo
 - [x] Não criar serviço para Shapes/Icons/Themes/Locales compartilhados
 - [x] Theme/Locale são do construtor
 
-**Exemplos:** S.1–S.8; `examples/services/**/*-service.bpcms`.
+**Exemplos:** S.1–S.8; `examples/services/**/*-service.archol`.
 
 **Foco da revisão:**
 
 - [x] `imports` vazio é permitido? — sim.
-- [x] `roles` inline vs arquivo de organogram? — apenas `*-organograms.bpcms`, com organogram antes das roles.
+- [x] `roles` inline vs arquivo de organogram? — apenas `*-organograms.archol`, com organogram antes das roles.
 - [x] `capabilities` fica no artefato, não no Service; `provides` não existe.
 - [x] Serviço de negócio pode ter `Shape`/`Icon` locais? — sim, se forem do domínio.
 - [x] `reintroduce` pode alterar qualquer parte de qualquer artefato importado? — sim, aditivo; conflito é erro.
@@ -403,7 +403,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** Service sem `provides`, `roles`, `source`, `requires`, `capabilities` ou cláusula de substituição; usa `imports` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam em `*-organograms.bpcms`, não no service.
+**Decisões:** Service sem `provides`, `roles`, `source`, `requires`, `capabilities` ou cláusula de substituição; usa `imports` e `reintroduce`; capabilities ficam no artefato que as exige; `imports` vazio é válido; `capabilities` pode ser declarada em qualquer artefato e falha no build se o construtor não a oferecer; roles ficam em `*-organograms.archol`, não no service.
 
 ## 7. Document 🟡
 
@@ -452,7 +452,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `limits` em action
 - [ ] `segregation` e `signature` no documento, se aplicável
 
-**Exemplos:** D.1–D.6; `<service>-<nome>-document.bpcms`.
+**Exemplos:** D.1–D.6; `<service>-<nome>-document.archol`.
 
 **Foco da revisão:**
 
@@ -552,7 +552,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `default`
 - [ ] `owner`
 
-**Exemplos:** N.1–N.6; arquivos de contexto e `<service>-decisions.bpcms` (compartilhadas).
+**Exemplos:** N.1–N.6; arquivos de contexto e `<service>-decisions.archol` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -580,7 +580,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `notification`
 - [ ] `mask`
 
-**Exemplos:** P.1–P.6; arquivos de contexto e `<service>-policies.bpcms` (compartilhadas).
+**Exemplos:** P.1–P.6; arquivos de contexto e `<service>-policies.archol` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -615,7 +615,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `cursor`
 - [ ] `condition`
 
-**Exemplos:** J.1–J.6; `*-jobs.bpcms`.
+**Exemplos:** J.1–J.6; `*-jobs.archol`.
 
 **Foco da revisão:**
 
@@ -657,7 +657,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `cache`
 - [ ] `quality`
 
-**Exemplos:** I.1–I.6; arquivos de contexto e `<service>-integrations.bpcms` (compartilhadas).
+**Exemplos:** I.1–I.6; arquivos de contexto e `<service>-integrations.archol` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -737,7 +737,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `type: decision` / DMN
 - [ ] `message` em send/receive
 
-**Exemplos:** P.1–P.7; `<service>-<nome>-process.bpcms`.
+**Exemplos:** P.1–P.7; `<service>-<nome>-process.archol`.
 
 **Foco da revisão:**
 
@@ -872,7 +872,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `platforms`
 - [ ] `fallback`
 
-**Exemplos:** W.1–W.6; `*-widgets.bpcms` se existir.
+**Exemplos:** W.1–W.6; `*-widgets.archol` se existir.
 
 **Foco da revisão:**
 
@@ -956,7 +956,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `produces`
 - [ ] `limitations`
 
-**Exemplos:** B.1–B.6; `*-builders.bpcms` se existir.
+**Exemplos:** B.1–B.6; `*-builders.archol` se existir.
 
 **Foco da revisão:**
 
@@ -1012,7 +1012,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Sem `wire`; closure por imports
 - [ ] Lock: uma versão/serviço + IDs
 
-**Exemplos:** A.1–A.8; `applications/*/*-application.bpcms`.
+**Exemplos:** A.1–A.8; `applications/*/*-application.archol`.
 
 **Foco da revisão:**
 
@@ -1209,23 +1209,23 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - `examples/applications/`: 3 apps existentes + 2 novos (central-de-compras, claims-desk).
 - 66 forms, 21 mensagens, 131 views, 55 documentos, **213 transições de estado** (com evento declarado na aresta).
 - 165 eventos de transição saíram de `events { }` e voltaram para o `value` do estado de origem; `events { }` ficou só com eventos sem transição.
-- `*-jobs.bpcms` removidos; agendamentos viraram `start { schedule: }` nos processos.
+- `*-jobs.archol` removidos; agendamentos viraram `start { schedule: }` nos processos.
 - Validação estrutural dos 35 processos: todo nó alcançável, toda aresta com destino existente, toda task com exatamente um contrato e lane, sem beco sem saída (exceto `end`, compensação, discricionária e task lateral de `keep`).
 
 ### Pendências desta rodada
 
-- [ ] Validar com o usuário a remoção de `*-jobs.bpcms` (conteúdo migrado para processos agendados).
+- [ ] Validar com o usuário a remoção de `*-jobs.archol` (conteúdo migrado para processos agendados).
 - [ ] Revisar `reintroduce` para as novas construções (nós, arestas, `runs`, `form`).
 - [ ] Definir IDs estáveis por caminho de nomes no lock (renomear nó hoje quebra histórico).
 - [ ] Decidir se `sla` é obrigatório (erro) ou recomendado (aviso) para task humana.
-- [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.bpcms`/SVGs em `icons/`. É asset de builder, por isso ficou fora desta rodada.
+- [ ] Ícones dos 6 serviços novos (procurement, contracts, credit, claims, field-service, hr): as referências `icon:` existem nos shapes, mas faltam `*-icons.archol`/SVGs em `icons/`. É asset de builder, por isso ficou fora desta rodada.
 - [ ] Diagramas: BPMN DI, DMN, CMMN — passo futuro; AST já separa modelo de layout.
 
 ## Organização por contexto principal — 2026-11-17 (aprovada por solicitação direta do usuário)
 
 **Pedido:** revisar os nomes dos arquivos de exemplo e criar a regra da DSL: em vez de arquivos por tipo de artefato, arquivos pelo **contexto principal**; `application`, `service`, `document` e `process` são principais; cada principal tem seu próprio arquivo; ele é o primeiro artefato; o `<nome>` do arquivo é equivalente ao nome do artefato; `BPCMS_WORKSPACE = examples/`; pastas por full path da URI; `documents/` e `processes/` organizacionais; `icons/` para SVG; compartilhado com um único tipo por arquivo, exceto organogram + roles (organogram antes).
 
-**Escopo aprovado:** migrar todos os 19 serviços de negócio e validar a estrutura no `check` (`E_FILE_*`); a atribuição semântica dos auxiliares fica como convenção. `application`/`service` mantêm `<nome>-<tipo>.bpcms` (decisão do usuário); `document`/`process` usam `SERVICE-<nome>-<tipo>.bpcms`.
+**Escopo aprovado:** migrar todos os 19 serviços de negócio e validar a estrutura no `check` (`E_FILE_*`); a atribuição semântica dos auxiliares fica como convenção. `application`/`service` mantêm `<nome>-<tipo>.archol` (decisão do usuário); `document`/`process` usam `SERVICE-<nome>-<tipo>.archol`.
 
 **Decisão aplicada:**
 - `BPCMS_WORKSPACE = examples/` nesta fase; é o parâmetro de raiz do compilador/construtor.
@@ -1233,35 +1233,35 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - Todo contexto principal tem seu arquivo, com exatamente **um** principal; ele é o **primeiro artefato** do arquivo.
 - O `<nome>` do arquivo é equivalente ao nome do principal: kebab-case do identificador em `document`/`process`; slug da pasta/URI em `application`/`service`.
 - Caminhos:
-  - application: `examples/applications/<fullpath app>/<app>-application.bpcms`
-  - service: `examples/services/<fullpath service>/<service>-service.bpcms`
-  - document: `examples/services/<fullpath service>/documents/<service>-<nome>-document.bpcms`
-  - process: `examples/services/<fullpath service>/processes/<service>-<nome>-process.bpcms`
-  - shared: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.bpcms`
+  - application: `examples/applications/<fullpath app>/<app>-application.archol`
+  - service: `examples/services/<fullpath service>/<service>-service.archol`
+  - document: `examples/services/<fullpath service>/documents/<service>-<nome>-document.archol`
+  - process: `examples/services/<fullpath service>/processes/<service>-<nome>-process.archol`
+  - shared: `examples/services/<fullpath service>/<service>-<tipo-no-plural>.archol`
   - SVG: `examples/services/<fullpath service>/icons/<namespace>/<icon>.svg`
-  - non-SVG icons: `examples/services/<fullpath service>/<service>-icons.bpcms`
+  - non-SVG icons: `examples/services/<fullpath service>/<service>-icons.archol`
 - `documents/` e `processes/` são organizacionais, não namespaces; `icons/` é contêiner e não entra na referência.
-- Arquivo compartilhado: `<service>-<tipo-no-plural>.bpcms`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.bpcms`, que contém o organogram e as roles, com o organogram **antes** das roles. Declara **zero** principais.
-- `*-documents.bpcms`, `*-processes.bpcms` e `*-reports.bpcms` deixaram de existir; relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
-- `bpcms.org/std` segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.bpcms` + `std-shapes.bpcms` (compartilhado).
+- Arquivo compartilhado: `<service>-<tipo-no-plural>.archol`, com **um único tipo de artefato por arquivo** (`shapes`, `forms`, `views`, `messages`, `policies`, `decisions`, `integrations`, `parameters`, `secrets`, `organograms`, `icons`); a exceção é `-organograms.archol`, que contém o organogram e as roles, com o organogram **antes** das roles. Declara **zero** principais.
+- `*-documents.archol`, `*-processes.archol` e `*-reports.archol` deixaram de existir; relatório é `view`; agendamento é `start { schedule: }` no arquivo do processo.
+- `bpcms.org/std` segue a regra de service em `examples/services/bpcms.org/std/`: `std-service.archol` + `std-shapes.archol` (compartilhado).
 
-**Regra do compilador:** o `check` percorre todos os `.bpcms` de serviços e aplicações; `application` e `service` também são principais.
+**Regra do compilador:** o `check` percorre todos os `.archol` de serviços e aplicações; `application` e `service` também são principais.
 
 - `E_FILE_NAME`: nome fora do padrão (incluindo sufixo compartilhado fora da §30.2) ou `<nome>`/`<tipo>` divergente do principal.
 - `E_FILE_PATH`: arquivo fora da pasta esperada, full path diferente da URI, documento fora de `documents/` ou processo fora de `processes/`.
 - `E_FILE_PRINCIPAL`: arquivo de contexto principal (app/service/document/process) sem exatamente um principal.
 - `E_FILE_PRINCIPAL_FIRST`: principal não é o primeiro artefato do arquivo.
 - `E_FILE_SHARED`: arquivo compartilhado declara `application`, `service`, `document` ou `process`.
-- `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.bpcms`; `parameter` em `-secrets.bpcms`; `role` fora de `-organograms.bpcms`).
-- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.bpcms`, o `organogram` não é o primeiro artefato (ou não existe).
+- `E_FILE_SHARED_TYPE`: arquivo compartilhado contém tipo diferente do sufixo (ex.: `shape` em `-views.archol`; `parameter` em `-secrets.archol`; `role` fora de `-organograms.archol`).
+- `E_FILE_ORGANOGRAM_FIRST`: em `-organograms.archol`, o `organogram` não é o primeiro artefato (ou não existe).
 - `E_FILE_ICON_PATH`: SVG fora de `icons/` ou namespace de ícone divergente.
 
 **Critério de dono:** shape → documento/processo que o usa como tipo; form → processo da task (senão documento); view → `document`/`source`/`sources` de um documento ou `process:`; message → documento do `about`; policy → alvo do `appliesTo`; decision/integration → processo que usa; parameter/secret, role/organogram e icon → service-wide. Detalhe na §30 do `DSL_REFERENCE.md`.
 
 **Resultado da migração:**
 - 19 serviços de negócio (+ `std`) em full path (`examples/services/example.com/services/<service>/` e `examples/services/bpcms.org/std/`).
-- 197 → 183 arquivos `.bpcms` de serviço; 5 aplicações em `examples/applications/example.com/app/<app>/`.
-- 90 arquivos de contexto: 55 em `documents/` e 35 em `processes/`; 20 arquivos de service e 72 arquivos compartilhados de negócio + `std-shapes.bpcms` na raiz do serviço.
+- 197 → 183 arquivos `.archol` de serviço; 5 aplicações em `examples/applications/example.com/app/<app>/`.
+- 90 arquivos de contexto: 55 em `documents/` e 35 em `processes/`; 20 arquivos de service e 72 arquivos compartilhados de negócio + `std-shapes.archol` na raiz do serviço.
 - 682 blocos de artefato preservados exatamente; 8 SVGs movidos para `<service>/icons/<namespace>/`.
 - 19 arquivos `*-organograms` mantêm organogram + roles no mesmo arquivo, com o organogram primeiro; `notifications-parameters` separado em `-parameters` + `-secrets`; `payments-parameters` renomeado para `payments-secrets`.
 - Billing: 12 → 17 arquivos, agora em `examples/services/example.com/services/billing/` com `documents/`, `processes/` e `icons/`.
@@ -1309,11 +1309,11 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 **Decisão aplicada:**
 - Contextos principais: `application`, `service`, `document`, `process`, `view`, `message`.
 - Caminhos:
-  - view: `examples/services/<fullpath service>/views/<service>-<nome>-view.bpcms`
-  - message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.bpcms`
+  - view: `examples/services/<fullpath service>/views/<service>-<nome>-view.archol`
+  - message: `examples/services/<fullpath service>/messages/<service>-<nome>-message.archol`
 - `views/` e `messages/` são pastas organizacionais, não namespaces: a view continua `InvoiceTable`, não `views.InvoiceTable`.
 - Cada view e cada message é o primeiro e único principal do seu arquivo.
-- `-views.bpcms` e `-messages.bpcms` não existem; view/message nunca vão para arquivo compartilhado.
+- `-views.archol` e `-messages.archol` não existem; view/message nunca vão para arquivo compartilhado.
 - O vínculo fica no contrato (`document`/`source`/`sources`/`process:`, `about`), não no arquivo do dono.
 - `report` é `view type: report` e fica em `views/`.
 
@@ -1321,13 +1321,60 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - `E_FILE_PRINCIPAL` inclui `view`/`message`; `E_FILE_PRINCIPAL_FIRST` continua valendo.
 - `E_FILE_PATH`: view fora de `views/` ou message fora de `messages/` é erro.
 - `E_FILE_SHARED`: arquivo compartilhado não declara `view`/`message`.
-- `E_FILE_SHARED_TYPE`: exemplo atualizado (`view` em `-shapes.bpcms`, já que `-views.bpcms` não existe).
+- `E_FILE_SHARED_TYPE`: exemplo atualizado (`view` em `-shapes.archol`, já que `-views.archol` não existe).
 
 **Resultado da migração:**
 - 134 views + 24 messages → 158 arquivos novos, um artefato por arquivo.
-- 19 `-views.bpcms` removidos (17 com views e 2 que restaram só com comentário de arquivo).
+- 19 `-views.archol` removidos (17 com views e 2 que restaram só com comentário de arquivo).
 - 62 arquivos de documento/processo perderam views/messages e mantiveram shapes/forms/policies/decisions/integrations.
 - 741 blocos de artefato antes e depois, sem alteração de conteúdo; nenhuma view/message restante fora de `views/`/`messages/`.
 - `DSL_EXAMPLES.md` não mudou: ele é syntax-only e não referencia a organização em arquivos.
 
 **Arquivos afetados:** `DSL_REFERENCE.md` (§3, §21, §26, §30), `AGENTS.md`, `BRAINSTORM.md` (D-050, D-052, B-60, B-62), `REVIEW_CHECKLIST.md`, `examples/**`.
+
+## Linguagem Archol, compilador Rust, LSP e plugin VSCode — 2026-11-18 (executada por solicitação direta)
+
+**Pedido:** dar nome à DSL (**Archol**), trocar a extensão dos fontes para `.archol`, criar compilador com LSP em Rust, AST JSON no estilo TypeScript, check que valide valor de enum (não só tipo), link que responda perguntas invertidas (`role -> artefatos`), plugin VSCode com hover/completion/explorador de AST, tudo em `archol/`, código simples e testado. Versão inicial: sem releases, tags ou publicação.
+
+**Decisões aplicadas:**
+- Linguagem **Archol**, extensão **`.archol`**; o repositório mantém `examples/` como workspace (`BPCMS_WORKSPACE`).
+- Workspace Rust em `archol/`: `archol-core` (tokens, lexer, AST JSON, parser), `archol-analysis` (check + link), `archol-lsp` (LSP stdio) e `archol-cli` (binário `archol`).
+- Dependência única: `serde`/`serde_json`; LSP síncrono com JSON-RPC próprio (sem async/runtime) e plugin VSCode sem dependências npm.
+- AST: todo nó tem `kind` + `span` (bytes); `Artifact`, `PropertyAssignment`, `Block`, `EnumValueDeclaration`, `IfStatement`, `Call`, `Object` (`typeRef`) etc.
+- Check: `const a: TaxRegimeCode = SIMPLES` e `regime == SIMPLES` validam contra os `value` do shape; também `E_UNKNOWN_TYPE`, `E_UNKNOWN_ROLE`, `E_UNKNOWN_REF` e `E_DUP_ARTIFACT`.
+- Link: `roles[].usedBy` (role → artefatos), `enums[].values`, `artifacts[].refs` e `services[]`.
+- LSP: hover (tipo, valor de enum com títulos, link para o AST), completion de valores de enum/papéis, definição, referências, símbolos, folding e requests `archol/ast` + `archol/links`.
+- Plugin VSCode: cliente LSP mínimo, explorador de AST navegável (clique → código), status bar, comandos `archol.showAst`/`showLinks`/`restartServer`, gramática TextMate e snippets.
+- Versão inicial: `publish = false` em todas as crates, sem tags/releases/versões publicadas.
+
+**Migração e correções:**
+- 330 arquivos de `examples/` renomeados de `.bpcms` para `.archol`; referências em `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `AGENTS.md`, `BRAINSTORM.md` e `REVIEW_CHECKLIST.md` atualizadas.
+- `examples/services/bpcms.org/std/std-shapes.archol`: shape `Currency` estava com a chave de fechamento fora de ordem (fechava antes de `write`/`read`/`parse`/`format`); rebalanceado para o corpus parsear sem erro.
+- Fixture `archol/examples/demo.archol` para o explorador.
+
+**Resultados:**
+- 330 arquivos reais parseados com **0 erros** e 805 artefatos; `check` no workspace: **0 erros**.
+- Índices gerados: 72 enums, 54 roles, 20 serviços.
+- 30 testes Rust verdes (`cargo test`) e 27 testes do plugin verdes (`node --test`).
+
+
+**Auditoria adversarial (2026-11-18):** um agente revisor testou entradas hostis e apontou seis bloqueadores, todos corrigidos:
+
+- string terminando em `\` não estoura mais o span no lexer (`tokens` sai 1, não 101);
+- aninhamento profundo gera `E_PARSE_DEPTH` (limite 200) em vez de stack overflow;
+- `Alias.Tipo` resolve enum via `imports` (falso negativo corrigido);
+- enum homônimo por serviço não colide mais no índice (link mostra os 3 `PaymentMethod`);
+- comparação com literal à esquerda aponta para o literal, não para a variável;
+- `check` reporta `E_FILE_READ` para arquivo ilegível/UTF-8 inválido em vez de ignorar;
+- `check <arquivo>` e ordem de `walk` corrigidos; LSP: hover de parâmetro/valor, `definition` de valor de enum, highlight só no documento, folding sem duplicata e sync documentado como Full.
+
+Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homônimo, span do literal, CLI) e **27 JavaScript**; `clippy` e `fmt` limpos; corpus continua com 0 erros.
+
+
+**Correções de navegação (2026-11-18, 2ª rodada):**
+- Explorador de AST: clique reutiliza o editor aberto (mesma `viewColumn`) e seleciona `span.start`..`span.end`; o webview passou a enviar `start`/`end` e a extensão converte bytes UTF-8 → offsets UTF-16 antes de selecionar.
+- Definition: resolução semântica própria (`resolve.rs`) — parâmetro/`const`, campo de documento (`invoice.status` → `status: InvoiceStatus` em `Invoice`), valor de enum em comparação tipada (`invoice.status == Overdue` → `value Overdue`, não o `icon Overdue`), sujeito implícito de `fanOut`, e contexto de `icon:` para ícones.
+- `Cmd+Click`/`Ctrl+Click`/`F12` usam o mesmo provider; documentado que no macOS é `Cmd`.
+- Testes: 35 Rust (5 novos de resolução) e 29 JavaScript (2 de conversão de span); smoke do LSP cobre as definições reais do processo de cobrança.
+
+**Arquivos afetados:** `archol/**` (novo), `examples/**` (extensão e `std-shapes`), `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `AGENTS.md`, `BRAINSTORM.md` (D-050…D-053, B-60…B-63), `REVIEW_CHECKLIST.md`.
