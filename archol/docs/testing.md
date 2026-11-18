@@ -17,12 +17,16 @@ node --test editors/vscode/test
 | `archol-analysis/tests/analysis.rs` | `E_ENUM_VALUE` in const and comparison (including `Alias.Type`), same-named enum per service, `E_UNKNOWN_ROLE`, `E_DUP_ARTIFACT`, role→artifact link |
 | `archol-core/tests/corpus.rs` | the 330 real examples parse without error |
 | `archol-cli/tests/cli.rs` | exit codes, `E_FILE_READ` for invalid UTF-8, `tokens` with trailing `\`, deep nesting |
-| `archol-lsp/src/resolve.rs` (inline tests) | definition of fields (`invoice.status`), enum values vs homonymous icons, parameters |
-| `editors/vscode/test` | JSON-RPC framing, AST tree and byte-span → UTF-16 conversion |
+| `archol-analysis/tests/annotate.rs` | typed references (`Reference`/`ref`), field refs, lock ids and pruning |
+| `archol-analysis/src/ids.rs` (inline tests) | identifier-safe base64 ids, JSONL roundtrip, pruning, duplicate rejection |
+| `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
+| `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
+| `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast` |
+| `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker |
 
 ## Status
 
-Today: **35 Rust tests** (`cargo test`) and **29 JavaScript tests**
+Today: **56 Rust tests** (`cargo test`) and **40 JavaScript tests**
 (`node --test editors/vscode/test`); `clippy` and `fmt --check` clean.
 
 ## Corpus
@@ -38,6 +42,7 @@ Small, intentionally wrong fixtures live in strings inside the tests (they do
 not pollute `examples/`). To test the LSP manually, run:
 
 ```bash
-cargo run -q --bin archol -- check ../examples
+cargo run -q --bin archol -- check ../examples --app example.com/app/backoffice-loja
+cargo run -q --bin archol -- lock ../examples --app example.com/app/backoffice-loja
 python3 scripts/smoke_lsp.py
 ```

@@ -1,5 +1,6 @@
 //! Archol LSP server over stdio (custom JSON-RPC, no async runtime).
 
+mod app;
 mod features;
 mod resolve;
 mod rpc;

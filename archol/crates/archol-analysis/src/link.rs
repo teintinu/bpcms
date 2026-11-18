@@ -85,6 +85,27 @@ pub struct EnumValueLink {
     pub title: Option<String>,
 }
 
+pub fn retain_closure(index: &mut LinkIndex, closure: &crate::application::Closure) {
+    index
+        .services
+        .retain(|service| closure.services.contains(&service.uri));
+    index
+        .artifacts
+        .retain(|artifact| closure.files.contains(&artifact.path));
+    for role in &mut index.roles {
+        role.used_by
+            .retain(|usage| closure.files.contains(&usage.path));
+    }
+    index.roles.retain(|role| !role.used_by.is_empty());
+    index.enums.retain(|enum_info| {
+        enum_info
+            .service
+            .as_ref()
+            .map(|service| closure.services.contains(service))
+            .unwrap_or(false)
+    });
+}
+
 pub fn build(workspace: &Workspace, symbols: &Symbols) -> LinkIndex {
     let mut index = LinkIndex::default();
     let mut roles: BTreeMap<String, BTreeSet<Usage>> = BTreeMap::new();
@@ -165,7 +186,9 @@ fn collect_role_usages(
 ) {
     for member in members {
         match member {
-            Member::PropertyAssignment { name, value, span } => {
+            Member::PropertyAssignment {
+                name, value, span, ..
+            } => {
                 if name == "roles" {
                     let line = lines.line_col(span.start).0 as usize + 1;
                     for role in ident_list(value) {

@@ -24,6 +24,44 @@ function severityOf(value) {
   }
 }
 
+const { hasOutsideMarker } = require('./diagnostics-support');
+
+const outsideUris = new Set();
+let outsideDecoration = null;
+
+function decorationType() {
+  if (!outsideDecoration) {
+    outsideDecoration = vscode.window.createTextEditorDecorationType({
+      fontStyle: 'italic',
+      color: new vscode.ThemeColor('editorHint.foreground'),
+    });
+  }
+  return outsideDecoration;
+}
+
+function applyOutsideDecorations() {
+  const decoration = decorationType();
+  for (const editor of vscode.window.visibleTextEditors) {
+    const uri = editor.document.uri.toString();
+    if (!outsideUris.has(uri)) {
+      editor.setDecorations(decoration, []);
+      continue;
+    }
+    const lastLine = editor.document.lineAt(Math.max(0, editor.document.lineCount - 1));
+    const range = new vscode.Range(0, 0, lastLine.lineNumber, lastLine.text.length);
+    editor.setDecorations(decoration, [{ range, hoverMessage: 'Outside the current application — treated as commented out' }]);
+  }
+}
+
+function registerOutsideDecorations(context) {
+  context.subscriptions.push(
+    vscode.window.onDidChangeVisibleTextEditors(() => applyOutsideDecorations()),
+    vscode.window.onDidChangeActiveTextEditor(() => applyOutsideDecorations()),
+    { dispose: () => { outsideUris.clear(); if (outsideDecoration) outsideDecoration.dispose(); outsideDecoration = null; } },
+  );
+  applyOutsideDecorations();
+}
+
 function applyDiagnostics(collection, params) {
   if (!collection || !params || !params.uri) return;
   const list = Array.isArray(params.diagnostics) ? params.diagnostics : [];
@@ -40,6 +78,12 @@ function applyDiagnostics(collection, params) {
     return diagnostic;
   });
   collection.set(vscode.Uri.parse(params.uri), mapped);
+  if (hasOutsideMarker(list)) {
+    outsideUris.add(params.uri);
+  } else {
+    outsideUris.delete(params.uri);
+  }
+  applyOutsideDecorations();
 }
 
 function showServerMessage(params, log) {
@@ -60,4 +104,11 @@ function showServerMessage(params, log) {
   }
 }
 
-module.exports = { applyDiagnostics, severityOf, showServerMessage, toRange };
+module.exports = {
+  applyDiagnostics,
+  hasOutsideMarker,
+  registerOutsideDecorations,
+  severityOf,
+  showServerMessage,
+  toRange,
+};

@@ -4,6 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const vscode = require('vscode');
 const { buildAstHtml } = require('./ast-view-html');
+const { normalizeAstResult, usageQuickPickItem } = require('./app-support');
 const { byteOffsetAtText, findNodePathAtOffset, textOffsetsForByteSpan } = require('./ast-tree');
 
 const VIEW_TYPE = 'archol.astExplorer';
@@ -12,8 +13,11 @@ const REFRESH_DEBOUNCE_MS = 400;
 class AstExplorer {
   constructor(options) {
     this._getAst = options.getAst;
+    this._getDeclaration = options.getDeclaration;
+    this._getUsages = options.getUsages;
     this._log = options.log || (() => {});
     this._showError = options.showError || ((message) => console.error(message));
+    this._showInfo = options.showInfo || ((message) => console.info(message));
     this._panel = null;
     this._subscriptions = [];
     this._webviewReady = false;
@@ -73,8 +77,9 @@ class AstExplorer {
     const uri = this._target.uri;
     if (!this._current) this._post({ type: 'loading' });
     try {
-      const ast = await this._getAst(uri);
+      const result = normalizeAstResult(await this._getAst(uri));
       if (requestId !== this._requestSeq || this._disposed || !this._panel) return;
+      const ast = result.ast;
       if (!ast) throw new Error('The server did not return an AST for this document.');
       const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
       const explicitOffset = options.selectOffset !== undefined && options.selectOffset !== null;
@@ -88,6 +93,8 @@ class AstExplorer {
         ast,
         uri,
         fileName: path.basename(document.uri.fsPath) || 'Archol',
+        inApplication: result.inApplication,
+        commentedOut: result.commentedOut,
       };
       this._dirty = false;
       this._post({
@@ -97,6 +104,8 @@ class AstExplorer {
         fileName: this._current.fileName,
         selectedPath,
         offset: this._selectionOffset,
+        inApplication: this._current.inApplication,
+        commentedOut: this._current.commentedOut,
       });
     } catch (error) {
       if (requestId !== this._requestSeq || this._disposed) return;
@@ -193,7 +202,59 @@ class AstExplorer {
       this._reveal(start, end, Boolean(message.focus)).catch((error) => {
         this._log(`failed to go to code: ${error.message}`);
       });
+      return;
     }
+    if (message.type === 'declaration') {
+      this._goToDeclaration(message.id).catch((error) => {
+        this._reportNavigationError('declaration', error);
+      });
+      return;
+    }
+    if (message.type === 'usages') {
+      this._showUsages(message.id).catch((error) => {
+        this._reportNavigationError('usages', error);
+      });
+    }
+  }
+
+  _reportNavigationError(action, error) {
+    this._log(`failed to get ${action}: ${error.message}`);
+    this._showError(`could not get ${action}: ${error.message}`);
+  }
+
+  async _goToDeclaration(id) {
+    if (id === undefined || id === null) return;
+    const location = await this._getDeclaration(id);
+    if (!location || !location.uri || !location.range) {
+      this._showInfo('No declaration found');
+      return;
+    }
+    await this._revealLocation(location);
+  }
+
+  async _showUsages(id) {
+    if (id === undefined || id === null) return;
+    const result = await this._getUsages(id);
+    const locations = Array.isArray(result?.locations) ? result.locations : [];
+    if (locations.length === 0) {
+      this._showInfo('No usages found');
+      return;
+    }
+    const items = locations.map((location) => {
+      let rootUri = '';
+      try {
+        rootUri = vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(location.uri))?.uri.toString() || '';
+      } catch {
+        // Keeps the absolute path as the label.
+      }
+      return usageQuickPickItem(location, rootUri);
+    });
+    const picked = await vscode.window.showQuickPick(items, {
+      placeHolder: `${locations.length} usage${locations.length === 1 ? '' : 's'} — select to open`,
+      matchOnDescription: true,
+    });
+    if (!picked) return;
+    await this._revealLocation(picked.location);
   }
 
   _syncWebview() {
@@ -206,6 +267,8 @@ class AstExplorer {
         fileName: this._current.fileName,
         selectedPath: this._selectionPath,
         offset: this._selectionOffset,
+        inApplication: this._current.inApplication,
+        commentedOut: this._current.commentedOut,
       });
     } else {
       this._post({ type: 'loading' });
@@ -223,7 +286,25 @@ class AstExplorer {
     const [startOffset, endOffset] = textOffsetsForByteSpan(text, start, end);
     const startPosition = document.positionAt(startOffset);
     const endPosition = document.positionAt(endOffset);
+    await this._showAndSelect(document, startPosition, endPosition, focus);
+  }
 
+  // Selects an LSP range returned by `archol/declaration` or `archol/usages`.
+  async _revealLocation(location) {
+    const uri = vscode.Uri.parse(String(location.uri));
+    const document = await vscode.workspace.openTextDocument(uri);
+    const range = location.range || {};
+    const startLine = Math.max(0, Math.trunc(Number(range.start?.line) || 0));
+    const startCharacter = Math.max(0, Math.trunc(Number(range.start?.character) || 0));
+    const endLine = Math.max(0, Math.trunc(Number(range.end?.line) || 0));
+    const endCharacter = Math.max(0, Math.trunc(Number(range.end?.character) || 0));
+    const startPosition = new vscode.Position(startLine, startCharacter);
+    const endPosition = new vscode.Position(endLine, endCharacter);
+    await this._showAndSelect(document, startPosition, endPosition, true);
+  }
+
+  async _showAndSelect(document, startPosition, endPosition, focus) {
+    const uri = document.uri;
     // Reuses the already open editor (same tab/column) instead of opening another.
     const existing = vscode.window.visibleTextEditors.find(
       (candidate) => candidate.document.uri.toString() === uri.toString(),

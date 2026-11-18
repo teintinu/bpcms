@@ -144,38 +144,31 @@ stream.readStreamArray(): stream[]
 
 ## 1.6 Lock file e IDs
 
-O app tem **um lock file** (`bpcms.lock`), gerado e versionado. Ele fixa **uma versão por serviço** e **um ID estável para cada identificador** do app.
+O app tem **um lock file** (`bpcms.lock`), gerado e versionado ao lado do arquivo da aplicação. Ele guarda **um ID estável para cada identificador** da closure e é a única fonte de IDs do app.
 
-| Cláusula | Sintaxe | Funcionamento |
-| :--- | :--- | :--- |
-| `lock` | `lock:` (raiz do YAML) | Bloco do lock. |
-| `application` | `application: "<uri>"` | App dona do lock. |
-| `version` | `version: 1` | Versão do formato do lock. |
-| `nextId` | `nextId: 42` | Próximo ID; IDs não são reutilizados. |
-| `services` | mapa `"<uri>" -> { id, version, source, integrity }` | **Uma versão por serviço** no app. |
-| `id` | `id: 2` | ID estável do serviço/artefato. |
-| `version` (serviço) | `version: 1.2.0` | Versão escolhida para o app. |
-| `source` | `source: registry \| repository` | Origem da versão. |
-| `integrity` | `integrity: "sha256:..."` | Integridade do artefato. |
-| `artifacts` | mapa `"<fqn>" -> id` | Todos os identificadores: documentos, campos, ações, views, eventos, papéis, nós. |
+**Formato:** JSON Lines — um identificador por linha, ordenado por `path`, para facilitar merge no Git.
 
-```yaml
-lock:
-  application: "example.com/app/loja-com-antifraude"
-  version: 1
-  nextId: 48
-  services:
-    "example.com/services/checkout":
-      id: 3
-      version: 2.0.1
-      source: registry
-      integrity: "sha256:..."
-  artifacts:
-    "example.com/services/checkout#CheckoutSession": 20
-    "example.com/services/checkout#Checkout": 21
+```json
+{"id":"Xq3m9_Kd2Aa","path":"example.com/services/billing#service","kind":"service","name":"billing"}
+{"id":"Tz8n1Rf4Pq0","path":"example.com/services/billing#shape/InvoiceStatus/value/Overdue","kind":"value","name":"Overdue"}
+{"id":"Lm5p2Wd7Yt1","path":"example.com/services/billing#document/Invoice/field/status","kind":"field","name":"status"}
 ```
 
-**Regras:** o lock é a única fonte de IDs por app; o serviço **não tem lock, IDs nem versões de imports**. Os IDs são usados para **minificação de código** e **compressão da serialização**; nomes humanos permanecem no fonte. Se dois serviços exigem versões incompatíveis do mesmo serviço, o `check` falha.
+| Campo | Funcionamento |
+| :--- | :--- |
+| `id` | ID estável em base64url (`-` vira `_`), sem padding; **nunca começa por dígito**, para poder ser usado como identificador na linguagem de destino. |
+| `path` | Caminho seguro e independente de máquina: `<uri-do-serviço>#<tipo>/<Nome>[/...]`; nunca é caminho de arquivo. |
+| `kind` / `name` | Tipo e nome legíveis do identificador, para revisão do lock. |
+
+**Caminhos canônicos:** aplicação `<app-uri>#application`; serviço `<service-uri>#service`; artefato `<service-uri>#<tipo>/<Nome>`; campo `<service-uri>#document/<Documento>/field/<campo>`; valor de enum `<service-uri>#shape/<Shape>/value/<Valor>`; parâmetro `<service-uri>#process/<Processo>/param/<param>`.
+
+**Regras:**
+
+- Gerar/podar: `archol lock --app <uri-ou-arquivo>`. Identificadores removidos do fonte saem do lock; os demais mantêm o ID.
+- **Apagar o lock reinicia os IDs**; não há comando de reset separado.
+- IDs duplicados entre branches são responsabilidade de quem faz o merge; o carregador recusa duplicatas e pede para resolver.
+- O AST usa esses IDs (`id`, `ref`, `fieldRef`, `typeRefId`); listas de usos ficam no índice semântico (LSP), não no JSON, para evitar ciclos e tamanho.
+- O serviço não tem lock nem versões de imports. Versões de serviço/integridade por app ficam para a evolução do formato; esta versão inicial grava apenas identificadores.
 
 ## 1.7 Capabilities
 
@@ -373,9 +366,9 @@ name: string {
 | `main` | `main { ... }` | Bloco opcional de inicialização/configuração; sem regra de negócio. |
 | `set` | `set <Alias>.<Parameter\|Secret> = <valor\|secret.NOME>` | Inicializa/sobrescreve Parameter/Secret; segredo só como `secret.NOME`. |
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
-| `lock` | `lock: "bpcms.lock"` | Lock do app: uma versão por serviço + IDs. |
+| `lock` | `lock: "bpcms.lock"` | Lock do app: IDs estáveis dos identificadores da closure (versões por serviço em evolução). |
 
-**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure e o lock fixa **uma versão por serviço**. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
+**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure. **A compilação começa sempre pela aplicação**: `check`, `lock`, `links` e o LSP exigem uma aplicação e só carregam a closure; arquivos fora dela são inertes (o LSP os trata como comentado). O lock fixa os IDs dos identificadores da closure. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
 ```archol
 application "example.com/app/loja-do-joao" {
@@ -3050,7 +3043,7 @@ widget SignaturePad {
 | `<selector>` | `1.4.0`, `semver("...")`, `tag("...")`, `commit("...")` | Versão publicada. |
 | `application` | `application: "<uri>"` | Aplicação alvo. |
 | `service` | `service: "<uri>"` | Serviço alvo (release de serviço). |
-| `lock` | `lock: "bpcms.lock"` | Lock do app; fixa uma versão por serviço e os IDs. |
+| `lock` | `lock: "bpcms.lock"` | Lock do app; fixa os IDs estáveis (versões por serviço em evolução). |
 | `migrations` | `migrations: [M-2026-11-01]` | Migrações aplicadas. |
 | `approvals` | `approvals: [QA, Owner]` | Aprovações exigidas. |
 | `strategy` | `strategy: rolling \| immediate \| canary(10%, 30m)` | Estratégia de implantação. |

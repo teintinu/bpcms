@@ -16,6 +16,9 @@ impl Server {
         let Some((path, text)) = self.document_text(params) else {
             return Value::Null;
         };
+        if !self.in_current_application(&path) {
+            return Value::Null;
+        }
         let offset = params
             .pointer("/position/line")
             .and_then(Value::as_u64)
@@ -41,6 +44,16 @@ impl Server {
         let service = file.service.clone();
         let service_ref = service.as_deref();
         let artifact = features::artifact_at(&file.ast, offset);
+        if let Some((uri, _)) = features::service_entry_at(&file.ast, offset) {
+            let markdown = format!(
+                "**service** `{uri}`\n\n{}",
+                ast_link(&path, &text, word_span)
+            );
+            return json!({
+                "contents": { "kind": "markdown", "value": markdown },
+                "range": range(&text, word_span)
+            });
+        }
         let mut parts: Vec<String> = Vec::new();
 
         if let Some((artifact, value)) = features::enum_value_at(&file.ast, offset) {
@@ -117,6 +130,9 @@ impl Server {
         let Some((path, text)) = self.document_text(params) else {
             return json!({ "isIncomplete": false, "items": [] });
         };
+        if !self.in_current_application(&path) {
+            return json!({ "isIncomplete": false, "items": [] });
+        }
         let offset = params
             .pointer("/position/line")
             .and_then(Value::as_u64)

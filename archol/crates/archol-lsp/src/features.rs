@@ -353,6 +353,25 @@ fn walk_stmt_properties<'a>(statement: &'a Stmt, visit: &mut impl FnMut(&'a str,
     }
 }
 
+/// Application `services` entry or service `imports` entry at `offset`.
+pub fn service_entry_at(ast: &SourceFile, offset: usize) -> Option<(&str, Option<&str>)> {
+    let mut found = None;
+    for artifact in &ast.items {
+        walk(&artifact.body, &mut |member| match member {
+            Member::ServiceEntry {
+                uri, span, target, ..
+            }
+            | Member::ImportDeclaration {
+                uri, span, target, ..
+            } if contains(*span, offset) => {
+                found = Some((uri.as_str(), target.as_deref()));
+            }
+            _ => {}
+        });
+    }
+    found
+}
+
 /// Document symbols: artifacts and their first-level members.
 pub fn document_symbols(ast: &SourceFile, text: &str) -> Vec<serde_json::Value> {
     ast.items

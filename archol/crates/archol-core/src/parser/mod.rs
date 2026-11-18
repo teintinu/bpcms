@@ -239,7 +239,9 @@ impl<'a> Parser<'a> {
             params.push(Param {
                 name,
                 type_ref,
+                type_ref_id: None,
                 span: Span::new(start, end),
+                id: None,
             });
             if !self.eat(TokenKind::Comma) {
                 break;

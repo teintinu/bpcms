@@ -39,27 +39,36 @@ cargo build --release    # final binary in target/release/archol
 cargo test               # lexer, parser, check, link, and corpus tests
 ```
 
-Running `check` over the real examples must finish without errors:
+Compilation starts from an **application**. The commands below use the
+backoffice app (its closure covers 172 files and 11 services):
 
 ```bash
-cargo run -q --bin archol -- check ../examples
-cargo run -q --bin archol -- links ../examples > links.json
-cargo run -q --bin archol -- ast ../examples/services/example.com/services/billing/billing-shapes.archol
+cargo run -q --bin archol -- applications ../examples
+cargo run -q --bin archol -- check ../examples --app example.com/app/backoffice-loja
+cargo run -q --bin archol -- lock ../examples --app example.com/app/backoffice-loja
+cargo run -q --bin archol -- links ../examples --app example.com/app/backoffice-loja > links.json
+cargo run -q --bin archol -- ast ../examples/services/example.com/services/billing/billing-shapes.archol --app example.com/app/backoffice-loja
 ```
 
 ## `archol` binary
 
 ```text
-archol check [dir] [--json]    validates the workspace
-archol ast <file> [--json]     prints the AST
-archol tokens <file>           prints the tokens (lexer debugging)
-archol links [dir] [--json]    inverted index for the builder
-archol lsp                     LSP server over stdio
+archol check [dir] --app <uri|path> [--json]   compile one application closure
+archol lock [dir] --app <uri|path>             create/prune bpcms.lock (stable ids)
+archol applications [dir] [--json]             list applications in a workspace
+archol ast <file> [--app <uri|path>] [--json]  syntax AST, or annotated with ids
+archol tokens <file>                           tokens (lexer debugging)
+archol links [dir] --app <uri|path> [--json]   closure-only index for the builder
+archol lsp                                    LSP server over stdio
 ```
 
+`check` without `--app` exits with code 2 and lists the available applications.
 `check` exits with code 1 when there is an error and prints
-`file:line:column: severity code: message`. `links` produces, among other
-things, which artifacts require each `role`.
+`file:line:column: severity code: message`. `lock` writes one identifier per
+line (JSON Lines); the AST then carries stable `id`/`ref` values from the lock.
+`links` produces, among other things, which artifacts require each `role`.
+Files outside the application closure are treated as commented out (CLI and
+LSP). See [`docs/identifiers.md`](docs/identifiers.md).
 
 ## Editor
 

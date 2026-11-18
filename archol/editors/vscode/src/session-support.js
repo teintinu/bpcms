@@ -11,12 +11,19 @@ function serverSettings() {
   };
 }
 
+// URI of the application used to compile the workspace; empty when unset.
+function applicationSetting() {
+  const configured = vscode.workspace.getConfiguration('archol').get('application', '');
+  return typeof configured === 'string' ? configured.trim() : '';
+}
+
 function configurationValue(section) {
   const settings = serverSettings();
   if (!section) return {};
   if (section === 'archol.server') return settings;
+  if (section === 'archol.application') return applicationSetting();
   if (section === 'archol' || section.startsWith('archol.')) {
-    return { server: settings };
+    return { server: settings, application: applicationSetting() };
   }
   return {};
 }
@@ -42,4 +49,10 @@ function announceStartError(error, candidates, showOutput) {
   });
 }
 
-module.exports = { announceStartError, configurationValue, serverSettings, workspaceFolderList };
+module.exports = {
+  announceStartError,
+  applicationSetting,
+  configurationValue,
+  serverSettings,
+  workspaceFolderList,
+};

@@ -1,17 +1,23 @@
 'use strict';
 
 const { browserUtils } = require('./ast-view-browser-utils');
+const { browserNodeHelpersSource } = require('./app-support');
 
 const browserScript = `(function () {
   'use strict';
 ${browserUtils}
+${browserNodeHelpersSource()}
   const vscode = acquireVsCodeApi();
   const treeEl = document.getElementById('tree');
   const fileEl = document.getElementById('file-name');
   const filterEl = document.getElementById('filter');
   const revealBtn = document.getElementById('reveal');
+  const declarationBtn = document.getElementById('declaration');
+  const usagesBtn = document.getElementById('usages');
   const copyBtn = document.getElementById('copy');
   const statusEl = document.getElementById('status');
+  const selectionEl = document.getElementById('selection');
+  const bannerEl = document.getElementById('banner');
   const state = {
     ast: null,
     selectedPath: null,
@@ -19,12 +25,34 @@ ${browserUtils}
     filter: '',
     fileName: 'Archol',
     error: null,
-    loading: true
+    loading: true,
+    inApplication: true,
+    commentedOut: false
   };
   let statusTimer = null;
 
   function selectedNode() {
     return state.selectedPath ? nodeAtPath(state.selectedPath) : null;
+  }
+
+  function navigationEnabled() {
+    return state.inApplication && !state.commentedOut;
+  }
+
+  function refreshSelection() {
+    const node = selectedNode();
+    const summary = node ? referenceSummary(node) : '';
+    selectionEl.textContent = summary;
+    selectionEl.title = summary ? 'Selected node identifiers: ' + summary : '';
+    const enabled = navigationEnabled();
+    const declarationId = enabled ? declarationTargetId(node) : null;
+    const usageId = enabled ? usageTargetId(node) : null;
+    declarationBtn.disabled = declarationId === null || declarationId === undefined;
+    usagesBtn.disabled = usageId === null || usageId === undefined;
+  }
+
+  function updateBanner() {
+    bannerEl.hidden = navigationEnabled();
   }
 
   function matches(node) {
@@ -66,6 +94,7 @@ ${browserUtils}
       rows[index].classList.toggle('selected', rows[index].dataset.path === key);
       if (rows[index].dataset.path === key) rows[index].scrollIntoView({ block: 'nearest' });
     }
+    refreshSelection();
   }
 
   function revealSpan(span, focus) {
@@ -167,20 +196,24 @@ ${browserUtils}
     if (state.error) {
       emptyMessage(state.error, true);
       updateStatus();
+      refreshSelection();
       return;
     }
     if (!state.ast) {
       emptyMessage(state.loading ? 'Loading AST…' : 'No AST received.');
       updateStatus();
+      refreshSelection();
       return;
     }
     if (state.filter && !matches(state.ast)) {
       emptyMessage('No node matches the filter "' + state.filter + '".');
       updateStatus();
+      refreshSelection();
       return;
     }
     treeEl.appendChild(renderNode(state.ast, []));
     updateStatus();
+    refreshSelection();
     const selectedRow = treeEl.querySelector('.node-row.selected');
     if (selectedRow) selectedRow.scrollIntoView({ block: 'nearest' });
   }
@@ -201,6 +234,30 @@ ${browserUtils}
       return;
     }
     revealSpan(node.span, true);
+  });
+
+  declarationBtn.addEventListener('click', function () {
+    const node = selectedNode();
+    if (!navigationEnabled()) return;
+    const id = declarationTargetId(node);
+    if (id === null || id === undefined) {
+      setTransientStatus('Select a reference or declaration');
+      return;
+    }
+    setTransientStatus('Opening declaration…');
+    vscode.postMessage({ type: 'declaration', id: id });
+  });
+
+  usagesBtn.addEventListener('click', function () {
+    const node = selectedNode();
+    if (!navigationEnabled()) return;
+    const id = usageTargetId(node);
+    if (id === null || id === undefined) {
+      setTransientStatus('Select a declaration');
+      return;
+    }
+    setTransientStatus('Finding usages…');
+    vscode.postMessage({ type: 'usages', id: id });
   });
 
   function fallbackCopy(text) {
@@ -240,6 +297,8 @@ ${browserUtils}
       state.error = null;
       state.loading = false;
       state.fileName = message.fileName || 'Archol';
+      state.inApplication = message.inApplication !== false;
+      state.commentedOut = Boolean(message.commentedOut);
       state.selectedPath = Array.isArray(message.selectedPath) ? message.selectedPath : null;
       state.expanded = new Set(['']);
       if (state.ast) {
@@ -248,23 +307,32 @@ ${browserUtils}
       if (state.selectedPath) expandAncestors(state.selectedPath);
       fileEl.textContent = state.fileName;
       fileEl.title = message.uri || state.fileName;
+      updateBanner();
       render();
       return;
     }
     if (message.type === 'loading') {
       state.loading = true;
       state.error = null;
+      state.inApplication = true;
+      state.commentedOut = false;
+      updateBanner();
       render();
       return;
     }
     if (message.type === 'error') {
       state.error = String(message.message || 'Failed to load the AST.');
       state.loading = false;
+      state.inApplication = true;
+      state.commentedOut = false;
+      updateBanner();
       render();
     }
   });
 
+  updateBanner();
   updateStatus();
+  refreshSelection();
   vscode.postMessage({ type: 'ready' });
 })();`;
 

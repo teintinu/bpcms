@@ -10,6 +10,9 @@ impl Parser<'_> {
     // --- members ---------------------------------------------------------
 
     pub(crate) fn parse_member(&mut self) -> Option<Member> {
+        if self.kind() == TokenKind::String {
+            return Some(self.parse_service_entry());
+        }
         match self.kind() {
             TokenKind::Keyword(Keyword::Service) if self.peek(1) == TokenKind::String => {
                 return Some(self.parse_import())
@@ -52,6 +55,28 @@ impl Parser<'_> {
     }
 
     /// `name: value`, including hyphenated keys (`pt-BR: "..."`).
+    /// `"example.com/services/orders" as Orders` (application `services` block).
+    fn parse_service_entry(&mut self) -> Member {
+        let start = self.cur().span.start;
+        let uri_token = self.advance();
+        let uri = unquote(self.text(uri_token.span)).to_string();
+        let mut alias = String::new();
+        if self.kind() == TokenKind::Keyword(Keyword::As) {
+            self.advance();
+            if self.kind() == TokenKind::Ident {
+                let alias_token = self.advance();
+                alias = self.text(alias_token.span).to_string();
+            }
+        }
+        let span = Span::new(start, self.prev_end());
+        Member::ServiceEntry {
+            uri,
+            alias,
+            span,
+            target: None,
+        }
+    }
+
     fn try_parse_property(&mut self) -> Option<Member> {
         if !matches!(self.kind(), TokenKind::Ident | TokenKind::Keyword(_)) {
             return None;
@@ -79,6 +104,7 @@ impl Parser<'_> {
             name,
             value,
             span: Span::new(start, end),
+            id: None,
         })
     }
 
@@ -124,6 +150,7 @@ impl Parser<'_> {
             name,
             body,
             span: Span::new(start, end),
+            id: None,
         }
     }
 
@@ -161,7 +188,12 @@ impl Parser<'_> {
             }
         }
         let span = Span::new(start, self.prev_end());
-        Member::ImportDeclaration { uri, alias, span }
+        Member::ImportDeclaration {
+            uri,
+            alias,
+            span,
+            target: None,
+        }
     }
 
     fn parse_trigger_or_block(&mut self) -> Member {

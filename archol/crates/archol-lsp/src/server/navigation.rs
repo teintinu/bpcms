@@ -5,6 +5,7 @@ use std::path::Path;
 use archol_core::Span;
 use serde_json::{json, Value};
 
+use crate::app;
 use crate::features::{self, range};
 use crate::util::{offset_of, path_to_uri};
 
@@ -15,6 +16,9 @@ impl Server {
         let Some((path, text)) = self.document_text(params) else {
             return Value::Null;
         };
+        if !self.in_current_application(&path) {
+            return Value::Null;
+        }
         let offset = params
             .pointer("/position/line")
             .and_then(Value::as_u64)
@@ -26,7 +30,9 @@ impl Server {
             .map(|(line, character)| offset_of(&text, line as u32, character as u32))
             .unwrap_or(0);
         let analysis = self.analysis();
-        let Some(target) = crate::resolve::definition(analysis, &path, offset) else {
+        let target = crate::resolve::semantic_definition(analysis, &path, offset)
+            .or_else(|| crate::resolve::definition(analysis, &path, offset));
+        let Some(target) = target else {
             return Value::Null;
         };
         json!({
@@ -48,6 +54,9 @@ impl Server {
         let Some((path, text)) = self.document_text(params) else {
             return json!([]);
         };
+        if !self.in_current_application(&path) {
+            return json!([]);
+        }
         let offset = params
             .pointer("/position/line")
             .and_then(Value::as_u64)
@@ -64,6 +73,9 @@ impl Server {
         let analysis = self.analysis();
         let mut found = Vec::new();
         for file in &analysis.workspace.files {
+            if !app::in_application(analysis, &file.path) {
+                continue;
+            }
             if highlight && file.path != path {
                 continue;
             }
@@ -89,6 +101,9 @@ impl Server {
         let Some((path, text)) = self.document_text(params) else {
             return json!([]);
         };
+        if !self.in_current_application(&path) {
+            return json!([]);
+        }
         let analysis = self.analysis();
         let Some(file) = analysis
             .workspace

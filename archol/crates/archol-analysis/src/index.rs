@@ -142,7 +142,9 @@ pub fn enum_values(artifact: &Artifact) -> Vec<EnumMember> {
         .body
         .iter()
         .filter_map(|member| match member {
-            Member::EnumValueDeclaration { name, body, span } => Some(EnumMember {
+            Member::EnumValueDeclaration {
+                name, body, span, ..
+            } => Some(EnumMember {
                 name: name.clone(),
                 title: title_of(body),
                 span: (span.start, span.end),

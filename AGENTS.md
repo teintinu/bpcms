@@ -110,6 +110,9 @@ Regras:
 - O corpus `examples/` é o teste de aceitação: `cargo test -p archol-core --test corpus` precisa ficar verde; construção nova entra primeiro em um exemplo real, depois no parser.
 - Arquivos de código pequenos e legíveis, um arquivo por responsabilidade; tokens organizados por família em `archol/crates/archol-core/src/token/`.
 - Ao mudar sintaxe, mantenha `archol/docs/tokens.md`, `archol/docs/ast.md` e os testes consistentes.
+- **Compilação só a partir de uma Application.** `check`, `lock`, `links` e o LSP exigem `--app`/aplicação atual; o workspace é a closure (entry points + `imports` transitivos). Arquivo fora da closure é inerte e o LSP o trata como comentado.
+- **Identidade estável em `bpcms.lock`.** Um lock por aplicação, ao lado do `.archol` da app, em JSON Lines (um identificador por linha, ordenado por `path`). IDs base64url seguros para outra linguagem (nunca começam por dígito); `path` seguro `<uri>#<kind>/<Nome>[...]`. Gerar/podar com `archol lock --app <app>`; não editar à mão; apagar o lock reinicia os IDs.
+- **AST não carrega listas de usos.** Declarações têm `id`; referências têm `ref`/`refKind`, `fieldRef`, `typeRefId`. Usos e navegação vêm do índice semântico (`archol/declaration`, `archol/usages`), evitando ciclos e JSON grande.
 - **Idioma do compilador e do plugin: inglês.** Todo o `archol/crates`, `archol/scripts`, `archol/docs`, `archol/README.md` e `archol/editors/vscode` usam **inglês** em identificadores, comentários, mensagens de diagnóstico/CLI/LSP, UI do plugin, testes e documentação. O restante do repositório (specs de produto em português) permanece em português; dados de exemplo Archol com `pt-BR` não são traduzidos.
 
 ## Documentos vivos

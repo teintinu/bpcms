@@ -59,7 +59,13 @@ def request(id_, method, params):
 
 def main():
     assert "capabilities" in request(
-        1, "initialize", {"rootUri": "file://" + EXAMPLES, "capabilities": {}}
+        1,
+        "initialize",
+        {
+            "rootUri": "file://" + EXAMPLES,
+            "capabilities": {},
+            "initializationOptions": {"application": "example.com/app/backoffice-loja"},
+        },
     )["result"]
     send({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
@@ -93,33 +99,44 @@ def main():
     assert "TaxRegimeCode" in hover["contents"]["value"]
     assert "command:archol.showAst" in hover["contents"]["value"]
 
-    temp = os.path.join(ROOT, "tmp-completion.archol")
-    content = "process Novo {\n  const a: TaxRegimeCode = \n}\n"
-    send(
-        {
-            "jsonrpc": "2.0",
-            "method": "textDocument/didOpen",
-            "params": {
-                "textDocument": {
-                    "uri": "file://" + temp,
-                    "languageId": "archol",
-                    "version": 1,
-                    "text": content,
-                }
-            },
-        }
+    temp = os.path.join(
+        EXAMPLES,
+        "services/example.com/services/billing/tmp-smoke-completion.archol",
     )
-    items = request(
-        3,
-        "textDocument/completion",
-        {
-            "textDocument": {"uri": "file://" + temp},
-            "position": {"line": 1, "character": 26},
-        },
-    )["result"]["items"]
-    assert {"SIMPLES", "LUCRO_PRESUMIDO", "LUCRO_REAL"} <= {
-        item["label"] for item in items
-    }
+    content = "process Novo {\n  const a: TaxRegimeCode = \n}\n"
+    with open(temp, "w", encoding="utf-8") as handle:
+        handle.write(content)
+    try:
+        send(
+            {
+                "jsonrpc": "2.0",
+                "method": "textDocument/didOpen",
+                "params": {
+                    "textDocument": {
+                        "uri": "file://" + temp,
+                        "languageId": "archol",
+                        "version": 1,
+                        "text": content,
+                    }
+                },
+            }
+        )
+        items = request(
+            3,
+            "textDocument/completion",
+            {
+                "textDocument": {"uri": "file://" + temp},
+                "position": {"line": 1, "character": 26},
+            },
+        )["result"]["items"]
+        assert {"SIMPLES", "LUCRO_PRESUMIDO", "LUCRO_REAL"} <= {
+            item["label"] for item in items
+        }
+    finally:
+        try:
+            os.remove(temp)
+        except FileNotFoundError:
+            pass
 
     ast = request(4, "archol/ast", {"uri": uri})["result"]["ast"]
     assert ast["kind"] == "SourceFile" and ast["items"]

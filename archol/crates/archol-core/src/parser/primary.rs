@@ -39,6 +39,7 @@ impl Parser<'_> {
                             object: Box::new(expr),
                             name,
                             span,
+                            field_ref: None,
                         };
                     }
                 }
@@ -54,6 +55,7 @@ impl Parser<'_> {
                     let span = Span::new(expr.span().start, self.prev_end());
                     expr = Expr::Object {
                         type_ref: Some(name),
+                        type_ref_id: None,
                         members,
                         span,
                     };
@@ -161,6 +163,7 @@ impl Parser<'_> {
                 let members = self.parse_object_members();
                 Expr::Object {
                     type_ref: None,
+                    type_ref_id: None,
                     members,
                     span: Span::new(start, self.prev_end()),
                 }
@@ -265,6 +268,7 @@ impl Parser<'_> {
             name,
             value,
             span: Span::new(start, end),
+            id: None,
         })
     }
 

@@ -1,16 +1,23 @@
 # Compiler
 
-Pipeline: **lexer → parser → check → link**.
+Pipeline: **application → lexer → parser → check → link → annotate**.
 
 ```text
-.archol source
+application (.archol)
   │
-  ├── archol_core::lex            tokens + lexical diagnostics
-  ├── archol_core::parse          SourceFile (JSON AST)
-  ├── archol_analysis::Symbols    workspace artifacts, enums, and roles
-  ├── archol_analysis::check      E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
-  └── archol_analysis::build_links  role → artifacts, enum → values, refs
+  ├── archol_analysis::application  entry services + transitive imports (closure)
+  ├── archol_core::lex              tokens + lexical diagnostics
+  ├── archol_core::parse            SourceFile (JSON AST)
+  ├── archol_analysis::Symbols      closure artifacts, enums, and roles
+  ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
+  ├── archol_analysis::build_links  role → artifacts, enum → values, refs
+  └── archol_analysis::annotate     ids + typed references (bpcms.lock)
 ```
+
+**There is no compilation without an application.** `check`, `lock`, `links`
+and the LSP require one; without `--app` the CLI lists the applications and
+exits 2. Files outside the closure are inert (the LSP treats them as commented
+out).
 
 ## Check
 
@@ -34,6 +41,14 @@ The check is more than type inference:
 
 Diagnostics carry a stable code, message, and `span`. The CLI prints
 `file:line:column: severity code: message`.
+
+## Identifiers and references
+
+`archol lock --app <app>` writes `bpcms.lock` next to the application: JSON
+Lines, one identifier per line, stable base64url ids that never start with a
+digit, and a safe path (`<service-uri>#<kind>/<Name>`). References in the AST
+use those ids (`ref`, `fieldRef`, `typeRefId`), including application/import
+service aliases, so the JSON is acyclic and small. See [`identifiers.md`](identifiers.md).
 
 ## Link
 

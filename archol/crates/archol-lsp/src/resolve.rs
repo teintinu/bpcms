@@ -4,7 +4,7 @@
 //! document) and `Overdue` (value of `InvoiceStatus`, not the homonymous icon).
 
 use archol_analysis::Analysis;
-use archol_core::{Artifact, Expr, Member, Span, Stmt};
+use archol_core::{Artifact, Expr, Member, SourceFile, Span, Stmt};
 
 use crate::features;
 
@@ -42,7 +42,43 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
         }
     }
 
-    // 1. `icon: Overdue` -> Icon/Overdue artifact (not the enum value).
+    // 1. Application service alias or service import: go to the service artifact.
+    if let Some((uri, target)) = features::service_entry_at(&file.ast, offset) {
+        if let Some(info) = target.and_then(|id| analysis.semantic.as_ref()?.declarations.get(id)) {
+            return Some(Target {
+                path: info.file.clone(),
+                span: info.span,
+            });
+        }
+        if let Some(info) = analysis
+            .symbols
+            .artifacts
+            .get(uri)?
+            .iter()
+            .find(|info| info.kind == "Service")
+        {
+            return Some(Target {
+                path: info.path.clone(),
+                span: Span::new(info.span_start, info.span_end),
+            });
+        }
+    }
+
+    // 2. Annotated reference: use the semantic declaration for its lock id.
+    if let Some(Expr::Reference { target, .. }) = features::expr_at(&file.ast, offset) {
+        if let Some(info) = analysis
+            .semantic
+            .as_ref()
+            .and_then(|semantic| semantic.declarations.get(target))
+        {
+            return Some(Target {
+                path: info.file.clone(),
+                span: info.span,
+            });
+        }
+    }
+
+    // 2. `icon: Overdue` -> Icon/Overdue artifact (not the enum value).
     if let Some((name, value)) = features::property_at(&file.ast, offset) {
         if name == "icon" && features::contains(value.span(), offset) {
             if let Some(target) = artifact_target(analysis, &word, service, Some("Icon")) {
@@ -81,7 +117,10 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
 
     // 4. `invoice.status` -> `status` field of the Invoice document.
     if let Some(expr) = features::expr_at(&file.ast, offset) {
-        if let Expr::MemberAccess { object, name, span } = expr {
+        if let Expr::MemberAccess {
+            object, name, span, ..
+        } = expr
+        {
             let name_start = span.end.saturating_sub(name.len());
             if offset >= name_start {
                 if let Some(base) = expr_type(analysis, artifact, object.as_ref()) {
@@ -114,6 +153,56 @@ pub fn definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Targ
 
     // 5. Fallback: artifact (document/shape/role/icon) or enum.
     artifact_target(analysis, &word, service, None)
+}
+
+/// Last-resort definition lookup through the semantic index (`ref`,
+/// `fieldRef` and `typeRefId`). The AST-based rules above remain authoritative
+/// for fields and enum values; this covers references they do not model.
+pub fn semantic_definition(analysis: &Analysis, path: &str, offset: usize) -> Option<Target> {
+    let file = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path == path)?;
+    let id = semantic_id_at(&file.ast, offset)?;
+    let declaration = analysis.semantic.as_ref()?.declarations.get(&id)?;
+    Some(Target {
+        path: declaration.file.clone(),
+        span: declaration.span,
+    })
+}
+
+fn semantic_id_at(ast: &SourceFile, offset: usize) -> Option<String> {
+    if let Some(artifact) = features::artifact_at(ast, offset) {
+        for param in &artifact.params {
+            let Some(type_ref_id) = &param.type_ref_id else {
+                continue;
+            };
+            // `Param.span` covers `name: Type`; only the type tail refers to
+            // the declared artifact (the name itself is the parameter).
+            let type_len = param
+                .type_ref
+                .as_ref()
+                .map(|type_ref| type_ref.len())
+                .unwrap_or(0);
+            let type_start = param.span.end.saturating_sub(type_len);
+            if offset >= type_start && offset <= param.span.end {
+                return Some(type_ref_id.clone());
+            }
+        }
+    }
+    match features::expr_at(ast, offset)? {
+        Expr::Reference { target, .. } => Some(target.clone()),
+        Expr::MemberAccess {
+            field_ref: Some(id),
+            ..
+        } => Some(id.clone()),
+        Expr::Object {
+            type_ref_id: Some(id),
+            ..
+        } => Some(id.clone()),
+        _ => None,
+    }
 }
 
 fn enum_literal_target(
@@ -151,8 +240,12 @@ fn enum_literal_target(
             let Expr::Binary { left, .. } = value else {
                 return None;
             };
-            let subject = left.as_ident()?;
-            field_type(analysis, subject, name)
+            let subject = match left.as_ref() {
+                Expr::Identifier { name, .. } => name.clone(),
+                Expr::Reference { name, .. } => name.clone(),
+                _ => return None,
+            };
+            field_type_in(analysis, &subject, name, service)
         })?;
         let info = symbols.resolve_enum(&ty, service)?;
         let value = info.values.iter().find(|value| value.name == word)?;
@@ -296,7 +389,16 @@ fn split_qualified(
 }
 
 fn field_type(analysis: &Analysis, type_name: &str, field: &str) -> Option<String> {
-    let file = find_artifact_file(analysis, type_name, None)?;
+    field_type_in(analysis, type_name, field, None)
+}
+
+fn field_type_in(
+    analysis: &Analysis,
+    type_name: &str,
+    field: &str,
+    service: Option<&str>,
+) -> Option<String> {
+    let file = find_artifact_file(analysis, type_name, service)?;
     let artifact = file
         .ast
         .items

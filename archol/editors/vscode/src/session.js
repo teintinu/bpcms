@@ -4,7 +4,14 @@ const vscode = require('vscode');
 const { LspClient } = require('./lsp-client');
 const { buildServerCandidates } = require('./server-path');
 const { applyDiagnostics, showServerMessage } = require('./diagnostics');
-const { announceStartError, configurationValue, serverSettings, workspaceFolderList } = require('./session-support');
+const {
+  announceStartError,
+  applicationSetting,
+  configurationValue,
+  serverSettings,
+  workspaceFolderList,
+} = require('./session-support');
+const { normalizeAstResult } = require('./app-support');
 const { LANGUAGE_ID, isArcholDocument } = require('./vscode-utils');
 const CLIENT_CAPABILITIES = {
   textDocument: {
@@ -37,6 +44,8 @@ class ArcholSession {
     this._state = 'stopped';
     this._generation = 0;
     this._syncKind = 1;
+    this._applicationInFlight = null;
+    this._appliedApplication = null;
   }
 
   get state() {
@@ -65,6 +74,8 @@ class ArcholSession {
     const instance = this._client;
     this._client = null;
     this._serverReady = false;
+    this._applicationInFlight = null;
+    this._appliedApplication = null;
     this._openedUris.clear();
     this._diagnostics.clear();
     this._setState('stopped');
@@ -155,7 +166,49 @@ class ArcholSession {
   async fetchAst(uri) {
     const instance = await this.ensureClient();
     const result = await instance.request('archol/ast', { uri });
-    return result?.ast || null;
+    return normalizeAstResult(result);
+  }
+
+  async fetchDeclaration(id) {
+    const instance = await this.ensureClient();
+    return instance.request('archol/declaration', { id });
+  }
+
+  async fetchUsages(id) {
+    const instance = await this.ensureClient();
+    return instance.request('archol/usages', { id });
+  }
+
+  // Sets the application on the running server. Repeated calls for the same
+  // URI share the in-flight request, so the command and the settings listener
+  // do not duplicate it.
+  setApplication(uri) {
+    const key = typeof uri === 'string' ? uri.trim() : '';
+    if (this._applicationInFlight && this._applicationInFlight.key === key) {
+      return this._applicationInFlight.promise;
+    }
+    const promise = this.ensureClient()
+      .then((instance) => instance.request('archol/setApplication', { uri: key }))
+      .then((result) => {
+        this._appliedApplication = key;
+        return result;
+      })
+      .finally(() => {
+        if (this._applicationInFlight && this._applicationInFlight.promise === promise) {
+          this._applicationInFlight = null;
+        }
+      });
+    this._applicationInFlight = { key, promise };
+    return promise;
+  }
+
+  // Used when `archol.application` changes outside the select command: notify
+  // the running server, or leave it to initializationOptions when stopped.
+  async applyConfiguredApplication() {
+    if (!this.activeClient()) return null;
+    const uri = applicationSetting();
+    if (this._appliedApplication === uri) return null;
+    return this.setApplication(uri);
   }
 
   async _startServer() {
@@ -181,12 +234,14 @@ class ArcholSession {
       }
       this._client = instance;
       this._log(`server running: ${command}`);
+      const application = applicationSetting();
       const result = await instance.request('initialize', {
         processId: process.pid,
         clientInfo: { name: 'archol-vscode', version: this._extensionVersion },
         rootUri: roots[0] ? vscode.Uri.file(roots[0]).toString() : null,
         workspaceFolders: workspaceFolderList(),
         capabilities: CLIENT_CAPABILITIES,
+        initializationOptions: { application },
       });
       if (generation !== this._generation) {
         await instance.stop();
@@ -197,6 +252,7 @@ class ArcholSession {
       instance.notify('initialized', {});
       this._serverReady = true;
       this._state = 'ready';
+      this._appliedApplication = application;
       this._setState('ready');
       const serverName = result?.serverInfo?.name || 'archol';
       const serverVersion = result?.serverInfo?.version || '';
@@ -275,6 +331,8 @@ class ArcholSession {
       const wasReady = this._serverReady;
       this._serverReady = false;
       this._client = null;
+      this._applicationInFlight = null;
+      this._appliedApplication = null;
       this._openedUris.clear();
       this._diagnostics.clear();
       if (info.intentional) {

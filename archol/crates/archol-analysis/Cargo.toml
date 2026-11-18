@@ -9,3 +9,4 @@ description = "Archol: semantic check and link (indexes for the builder)"
 [dependencies]
 archol-core = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }

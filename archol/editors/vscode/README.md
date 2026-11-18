@@ -29,7 +29,9 @@ extension at `~/.vscode/extensions/archol.archol-vscode-0.1.0` through a symlink
 1. **Developer: Reload Window**;
 2. open the repository folder (the binary is found at
    `archol/target/release/archol`);
-3. open an `.archol` file and check the status bar (`Archol: ready`).
+3. open an `.archol` file and run **Archol: Select Application** (the status
+   bar shows `Archol: no app` until an application is selected);
+4. check the status bar (`Archol: <app-name>` once the server is ready).
 
 For VS Code Insiders: `VSCODE_EXTENSIONS_DIR=~/.vscode-insiders/extensions bash archol/scripts/install-vscode.sh`.
 Uninstall: `rm ~/.vscode/extensions/archol.archol-vscode-0.1.0`.
@@ -63,8 +65,16 @@ if needed.
 
 | Setting | Default | Description |
 | :--- | :--- | :--- |
+| `archol.application` | `""` | URI of the current Archol application. **Required for compile and LSP**: the compiler and the server work from an application. Run **Archol: Select Application** to choose it; saved with *Window* scope. |
 | `archol.server.path` | `archol` | Path to the LSP server executable. |
 | `archol.server.args` | `["lsp"]` | Arguments passed to the executable (the `archol` binary uses the `lsp` subcommand). Use `[]` for a dedicated server. |
+
+The selected application URI is sent both in `initialize`
+(`initializationOptions.application`) and with `archol/setApplication`. Changing
+the setting in **Settings** also notifies the running server; when the server is
+stopped, the next initialization picks it up. The value is required for
+compilation and LSP features — without it the status bar shows
+`Archol: no app` in warning color.
 
 Resolution order:
 
@@ -90,26 +100,37 @@ the path, run **Archol: Restart LSP Server**.
 - Hover with an **Open AST** link (`command:archol.showAst?...`) that opens the
   explorer already highlighting the node at the position.
 - AST explorer: navigable tree, filter by kind/name, colors by category,
-  click to place the cursor, **Go to Code** and **Copy JSON**.
+  click to place the cursor, **Go to Code**, **Go to Declaration**,
+  **Find Usages** and **Copy JSON**.
   Clicking reuses the already open editor and **selects the whole span**
   (`span.start`..`span.end`), without opening a second tab.
+- Identifier navigation from the selected node: the toolbar shows its `id`,
+  `ref` and `refKind`; **Go to Declaration** uses `ref` (or `id`) and
+  **Find Usages** uses `id`.
+- Outside the application closure, the explorer shows a prominent banner
+  (*Outside the current application — treated as commented out*) and disables
+  the declaration/usages actions.
 - Automatic explorer refresh after edits (400 ms debounce).
 - **Archol LSP** channel with summarized traffic (method, URI, position,
   diagnostic count). The AST is never logged to the channel.
-- Status bar: `stopped`, `starting`, `ready` or `error`; click to restart.
+- Status bar: `Archol: <app-name>` when an application is selected and
+  `Archol: no app` (warning color) otherwise, with the LSP state icon
+  (`stopped`, `starting`, `ready`, `error`); click to select the application.
 
 ## Commands and shortcuts
 
 | Command | Palette | Shortcut | Description |
 | :--- | :--- | :--- | :--- |
+| `archol.selectApplication` | Archol: Select Application | — | Starts the server if needed, lists the applications (`archol/applications`), saves the pick to `archol.application` and calls `archol/setApplication`. |
 | `archol.showAst` | Archol: Open AST Explorer | `Ctrl+Alt+A` / `Cmd+Alt+A` | Opens the AST and selects the node at the current position. |
 | `archol.showLinks` | Archol: Show Server Links | `Ctrl+Alt+L` / `Cmd+Alt+L` | Requests `archol/links` and opens the response in a JSON document. |
+| `archol.updateLock` | Archol: Update Identifier Lock | — | Requests `archol/lock`; creates/prunes `bpcms.lock` with stable ids for the current application. |
 | `archol.restartServer` | Archol: Restart LSP Server | — | Stops and starts the server; reopens the open files. |
 | `archol.showOutput` | Archol: Show Server Output | — | Shows the **Archol LSP** channel. |
 
 The shortcuts apply only to editors with `editorLangId == archol`; the command
-palette always works. You can also click the status bar item to restart the
-server.
+palette always works. Clicking the status bar item opens
+**Archol: Select Application**; use **Archol: Restart LSP Server** to restart.
 
 ## AST explorer
 
@@ -120,8 +141,19 @@ requests `archol/ast` with `{ "uri": "file:///..." }` and draws `ast` as a tree:
 - **Colors** by category (declaration, expression, statement, block) are CSS
   only, using `var(--vscode-*)` to follow the light/dark theme.
 - **Click** on a node places the cursor at `span.start` and reveals the span,
-  preserving focus in the panel.
+  preserving focus in the panel. Clicking a reference never navigates away; it
+  only reveals the node's own span.
 - **Go to Code** does the same and moves focus to the editor.
+- The toolbar shows the selected node identifiers (`id 12 · ref 7 ·
+  refKind enumValue`). **Go to Declaration** is enabled when the node has `ref`
+  or `id`, requests `archol/declaration { "id": ... }` and reuses the open
+  editor to select the returned range. **Find Usages** is enabled when the node
+  has `id`, requests `archol/usages`, and opens a QuickPick whose label is
+  `relative/path:line` and whose description is the usage `kind`. With no
+  results it shows **No usages found**.
+- When `archol/ast` returns `inApplication: false` (or the AST has
+  `commentedOut: true`), a banner reads *Outside the current application —
+  treated as commented out* and the declaration/usages buttons are disabled.
 - **Copy JSON** copies the selected node; with no selection, it copies the whole AST.
 - When the open document changes, a new `archol/ast` is requested after 400 ms.
 
@@ -137,8 +169,23 @@ tree).
   The command accepts the three arguments (or the single array that VS Code
   delivers), opens the `archol.astExplorer` panel and highlights the node of the
   matching `span`.
-- **`archol/ast`**: request `{ "uri": "file:///..." }` → `{ "ast": SourceFile }`.
-  Spans are converted from byte (AST) to UTF-16 position (VS Code) and back.
+- **`initialize`**: includes
+  `initializationOptions: { "application": "<uri>" }` from `archol.application`.
+- **`archol/applications`**: request `{}` →
+  `{ "applications": [{ "uri", "path", "name" }], "current" }`. The QuickPick
+  uses `name` as the label and `uri` as the description.
+- **`archol/setApplication`**: request `{ "uri": "file:///..." }` →
+  `{ "application", "files", "services" }`. Called by the select command and
+  whenever `archol.application` changes while the server is running.
+- **`archol/ast`**: request `{ "uri": "file:///..." }` →
+  `{ "ast": SourceFile, "inApplication": true }`. An AST outside the current
+  application is marked with `commentedOut: true`. Spans are converted from
+  byte (AST) to UTF-16 position (VS Code) and back.
+- **`archol/declaration`**: request `{ "id": <id> }` → `{ "uri", "range" }` or
+  `null`. The returned LSP range is selected in the existing editor.
+- **`archol/usages`**: request `{ "id": <id> }` →
+  `{ "count", "locations": [{ "uri", "range", "kind" }] }`. Labels are built
+  from the workspace-relative path and the one-based line.
 - **`archol/links`**: request `{}` → `{ "links": ... }`, displayed as JSON in an
   untitled document.
 - **Diagnostics**: `textDocument/publishDiagnostics` with severity 1–4, `code`,
@@ -158,8 +205,9 @@ archol/editors/vscode/
   src/
     extension.js                activation, status bar and VS Code listeners
     session.js                  server lifecycle, document sync and state
-    session-support.js          settings, workspaceFolders and spawn error
-    commands.js                 palette commands and argument normalization
+    session-support.js          settings, application, workspaceFolders and spawn error
+    app-support.js              pure labels/navigation helpers (app, ranges, usage)
+    commands.js                 palette commands, select application and arguments
     diagnostics.js              severity/range mapping and showMessage
     lsp-client.js               JSON-RPC 2.0 over stdio, process and requests
     server-path.js              executable resolution and cross-platform spawn
@@ -178,6 +226,7 @@ archol/editors/vscode/
     protocol.test.js            framing, fragmentation, UTF-8 and errors
     ast-tree.test.js            tree, spans and position/byte conversion
     server-path.test.js         executable resolution on PATH and fallbacks
+    app-support.test.js         app labels, node identifiers and usage labels
 ```
 
 The client speaks the canonical LSP protocol:
@@ -230,5 +279,13 @@ node --test test
   → JavaScript string offset, handling `\r\n` and surrogate pairs.
 - The AST is treated as an acyclic JSON object; circular references are not
   supported.
+- Identifier values (`id`, `ref`, `fieldRef`, `typeRefId`) are treated as opaque
+  JSON scalars and forwarded as-is; the extension assumes the server accepts the
+  same value it returned in `archol/ast`.
+- `archol/declaration` and `archol/usages` return LSP ranges (zero-based
+  line/character), unlike AST spans, and are selected directly without byte
+  conversion.
+- The `current` value of `archol/applications` is accepted as a URI string or as
+  an object with `uri`; when absent, `archol.application` is used.
 - The server's source of truth is external to this folder: the extension only
   consumes the configured executable.

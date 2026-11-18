@@ -9,6 +9,19 @@ Custom synchronous server over stdio, in `crates/archol-lsp`:
 | `features.rs` | AST queries (hover, symbols, context) |
 | `util.rs` | URI ↔ path and LSP position (UTF-16) |
 
+## Current application
+
+The server reads `initializationOptions.application` (URI or path) and analyzes
+that application's closure. The plugin exposes `archol.application` and the
+commands **Archol: Select Application** / **Archol: Update Identifier Lock**.
+
+Files outside the closure are treated as **commented out**: no hover,
+completion, definition, references, symbols or folding, a single information
+diagnostic (code `W_OUTSIDE_APPLICATION`), `archol/ast` returns
+`commentedOut: true`, and the plugin renders the document italic/dimmed. Without an
+application the server still starts and reports
+`No application selected. Pick one in VS Code (Archol: Select Application).`
+
 ## Capabilities
 
 - `textDocumentSync` full (didOpen/didChange/didSave/didClose)
@@ -24,7 +37,8 @@ Custom synchronous server over stdio, in `crates/archol-lsp`:
 
 `TaxRegimeCode` shows the enumeration with the titles of each value; `SIMPLES`
 shows that it is a value of `TaxRegimeCode`; `Invoice` shows the artifact type
-and the service. Every hover ends with:
+and the service; an application/import alias (`as Identity`) shows the service
+URI and jumps to the service file. Every hover ends with:
 
 ```md
 [Explore AST](command:archol.showAst?%5B%22file%3A...%22%2C12%2C4%5D)
@@ -58,14 +72,21 @@ different services are not mixed.
 
 | Method | Params | Result |
 | :--- | :--- | :--- |
-| `archol/ast` | `{ "uri": "file:///..." }` | `{ "ast": <SourceFile> }` |
+| `archol/ast` | `{ "uri": "file:///..." }` | `{ "ast": <SourceFile>, "inApplication": bool }` |
 | `archol/links` | `{}` | `{ "links": <LinkIndex> }` |
+| `archol/applications` | `{}` | `{ "applications": [{uri,path,name}], "current": uri|null }` |
+| `archol/setApplication` | `{ "uri": "..." }` | `{ "application", "files", "services" }` |
+| `archol/status` | `{}` | `{ "application", "files", "services" }` or nulls |
+| `archol/declaration` | `{ "id": "..." }` | `{ "uri", "range" }` or `null` |
+| `archol/usages` | `{ "id": "..." }` | `{ "count", "locations": [{uri,range,kind}] }` |
+| `archol/lock` | `{}` | `{ "application", "path", "identifiers" }` (writes `bpcms.lock`) |
 
 ## Diagnostics
 
 Published on `textDocument/publishDiagnostics` on every open/change/save, with
 `source: "archol"` and the same code as the CLI (`E_ENUM_VALUE`,
-`E_UNKNOWN_TYPE`, ...).
+`E_UNKNOWN_TYPE`, ...). Only the current application closure produces semantic
+diagnostics; out-of-closure documents get one information diagnostic.
 
 ## Smoke test
 
@@ -73,13 +94,16 @@ Published on `textDocument/publishDiagnostics` on every open/change/save, with
 python3 archol/scripts/smoke_lsp.py
 ```
 
-Starts the real binary, runs `initialize`, hover with an AST link, enum
-completion, `archol/ast`, `archol/links`, and shuts the server down.
+Starts the real binary with `initializationOptions.application`, runs
+`initialize`, hover with an AST link, enum completion, typed references,
+`archol/ast`, `archol/links`, and shuts the server down.
 
 ## Known limitations
 
-- Whole-workspace analysis on every change; enough for 330 files, optimizable
-  with per-file caching when necessary.
+- Application-closure analysis on every change; enough for 172 files in the
+  backoffice app, optimizable with per-file caching when necessary.
+- `archol/lock` is explicit (command or CLI); ids are random until the lock is
+  written.
 - Columns in UTF-16 (LSP standard); internal offsets are bytes.
 - No `semanticTokens` in this initial version: the TextMate grammar covers
   colors.

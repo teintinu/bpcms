@@ -41,7 +41,29 @@ function buildAstHtml({ cspSource, nonce }) {
   }
   button:hover { background: var(--vscode-button-hoverBackground); }
   button:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: 1px; }
+  button:disabled {
+    opacity: .45; cursor: default;
+    background: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+  }
+  .secondary {
+    color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    background: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+  }
+  .secondary:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground)); }
   #status { color: var(--vscode-descriptionForeground); font-size: 11px; min-width: 60px; }
+  #selection {
+    flex: 1 1 100%; order: 10; color: var(--vscode-descriptionForeground);
+    font-family: var(--vscode-editor-font-family, monospace); font-size: 11px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #selection:empty { display: none; }
+  #banner {
+    padding: 8px 10px; font-weight: 600;
+    color: var(--vscode-inputValidation-warningForeground, var(--vscode-editor-foreground));
+    background: var(--vscode-inputValidation-warningBackground, rgba(255, 204, 0, .2));
+    border-bottom: 1px solid var(--vscode-inputValidation-warningBorder, var(--vscode-panel-border));
+  }
+  #banner[hidden] { display: none; }
   #tree {
     flex: 1 1 auto; overflow: auto; padding: 6px 8px 24px; white-space: nowrap;
   }
@@ -81,9 +103,13 @@ function buildAstHtml({ cspSource, nonce }) {
   <span class="file" id="file-name" title="AST file">Archol</span>
   <input id="filter" type="search" placeholder="Filter by kind or name" aria-label="Filter AST nodes">
   <button id="reveal" type="button" title="Places the cursor at the start of the selected node">Go to Code</button>
+  <button id="declaration" type="button" class="secondary" title="Opens the declaration of the selected node reference">Go to Declaration</button>
+  <button id="usages" type="button" class="secondary" title="Lists the usages of the selected declaration">Find Usages</button>
   <button id="copy" type="button" title="Copies the JSON of the selected node (or the whole AST)">Copy JSON</button>
   <span id="status" role="status"></span>
+  <span id="selection" title="Selected node identifiers"></span>
 </header>
+<div id="banner" role="alert" hidden>Outside the current application — treated as commented out</div>
 <main id="tree" role="tree" aria-label="Archol AST tree"></main>
 <script nonce="${nonce}">
 ${browserScript}

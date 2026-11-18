@@ -36,6 +36,9 @@ pub struct Artifact {
     pub params: Vec<Param>,
     pub body: Vec<Member>,
     pub span: Span,
+    /// Stable identifier from `bpcms.lock` (assigned by the semantic pass).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
 }
 
 impl Artifact {
@@ -53,6 +56,7 @@ impl Artifact {
             params,
             body,
             span,
+            id: None,
         }
     }
 }
@@ -64,7 +68,11 @@ pub struct Param {
     pub name: String,
     #[serde(rename = "typeRef")]
     pub type_ref: Option<String>,
+    #[serde(rename = "typeRefId", skip_serializing_if = "Option::is_none")]
+    pub type_ref_id: Option<String>,
     pub span: Span,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
 }
 
 /// Item in the body of an artifact or block.
@@ -76,6 +84,8 @@ pub enum Member {
         name: String,
         value: Expr,
         span: Span,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
     },
     /// `fields { ... }`, `on Order.create(...) { ... }`, `end Closed { ... }`.
     Block {
@@ -89,9 +99,20 @@ pub enum Member {
         name: String,
         body: Vec<Member>,
         span: Span,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
     },
     /// `{ fiscalPeriod }` as an argument: key without an explicit value.
     ShorthandProperty { name: String, span: Span },
+    /// `"example.com/services/orders" as Orders` inside an application's `services`.
+    ServiceEntry {
+        uri: String,
+        alias: String,
+        span: Span,
+        /// Service declaration id from `bpcms.lock`.
+        #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
+        target: Option<String>,
+    },
     /// Process statement (`if`, `try`, `return`, call, ...).
     Statement { statement: Stmt, span: Span },
     /// `service "example.com/services/orders" as Orders` inside `imports`.
@@ -99,6 +120,9 @@ pub enum Member {
         uri: String,
         alias: String,
         span: Span,
+        /// Service declaration id from `bpcms.lock`.
+        #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
+        target: Option<String>,
     },
     /// Trigger without a block: `on [Order.Created]`, `by Customer`.
     TriggerDeclaration {
@@ -117,6 +141,7 @@ impl Member {
             | Member::ShorthandProperty { span, .. }
             | Member::Statement { span, .. }
             | Member::ImportDeclaration { span, .. }
+            | Member::ServiceEntry { span, .. }
             | Member::TriggerDeclaration { span, .. } => *span,
         }
     }
@@ -127,7 +152,9 @@ impl Member {
             | Member::Block { name, .. }
             | Member::EnumValueDeclaration { name, .. }
             | Member::ShorthandProperty { name, .. } => Some(name),
-            Member::ImportDeclaration { alias, .. } => Some(alias),
+            Member::ImportDeclaration { alias, .. } | Member::ServiceEntry { alias, .. } => {
+                Some(alias)
+            }
             Member::TriggerDeclaration { .. } | Member::Statement { .. } => None,
         }
     }
@@ -165,6 +192,8 @@ pub enum Expr {
     Object {
         #[serde(rename = "typeRef")]
         type_ref: Option<String>,
+        #[serde(rename = "typeRefId", skip_serializing_if = "Option::is_none")]
+        type_ref_id: Option<String>,
         members: Vec<Member>,
         span: Span,
     },
@@ -184,6 +213,18 @@ pub enum Expr {
     MemberAccess {
         object: Box<Expr>,
         name: String,
+        span: Span,
+        /// Field identifier (from `bpcms.lock`) resolved by the semantic pass.
+        #[serde(rename = "fieldRef", skip_serializing_if = "Option::is_none")]
+        field_ref: Option<String>,
+    },
+    /// Resolved identifier reference; `ref` is the lock id of the declaration.
+    Reference {
+        #[serde(rename = "refKind")]
+        ref_kind: String,
+        name: String,
+        #[serde(rename = "ref")]
+        target: String,
         span: Span,
     },
     Binary {
@@ -217,6 +258,7 @@ impl Expr {
             | Expr::NamedArgument { span, .. }
             | Expr::Call { span, .. }
             | Expr::MemberAccess { span, .. }
+            | Expr::Reference { span, .. }
             | Expr::Binary { span, .. }
             | Expr::Unary { span, .. }
             | Expr::Raw { span, .. } => *span,

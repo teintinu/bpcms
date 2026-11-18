@@ -50,6 +50,13 @@ Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 `NullLiteral`, `List`, `Object` (`typeRef`, `members`), `Call` (callee + args),
 `NamedArgument`, `MemberAccess`, `Binary`, `Unary`, `Raw`.
 
+## Identifier ids and references
+
+Declarations may carry `id`; identifier references may carry `ref` plus
+`refKind`; member access may carry `fieldRef`; type references may carry
+`typeRefId`. All values come from `bpcms.lock`. See
+[`identifiers.md`](identifiers.md) for the lock format and traversal examples.
+
 ## Compatibility with TypeScript
 
 Node semantics follow TS: `PropertyAssignment` corresponds to

@@ -27,6 +27,12 @@ pub fn path_to_uri(path: &Path) -> String {
     }
 }
 
+/// Compares paths across relative/absolute spellings produced by clients and by
+/// the workspace walk (one is usually a suffix of the other).
+pub fn same_path(left: &str, right: &str) -> bool {
+    left == right || left.ends_with(&format!("/{right}")) || right.ends_with(&format!("/{left}"))
+}
+
 fn percent_decode(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());

@@ -47,6 +47,9 @@ fn print_members(members: &[Member], depth: usize, source: &str) {
             Member::Statement { span, .. } => println!("{pad}Stmt L{}", line(source, span.start)),
             Member::ShorthandProperty { name, .. } => println!("{pad}Shorthand {name}"),
             Member::ImportDeclaration { alias, .. } => println!("{pad}Import {alias}"),
+            Member::ServiceEntry { uri, alias, .. } => {
+                println!("{pad}ServiceEntry {uri} as {alias}")
+            }
             Member::TriggerDeclaration { keyword, .. } => println!("{pad}Trigger {keyword}"),
         }
     }

@@ -21,10 +21,12 @@
   "main": "./src/extension.js",
   "activationEvents": [
     "onLanguage:archol",
+    "onCommand:archol.selectApplication",
     "onCommand:archol.showAst",
     "onCommand:archol.showLinks",
     "onCommand:archol.restartServer",
-    "onCommand:archol.showOutput"
+    "onCommand:archol.showOutput",
+    "onCommand:archol.updateLock"
   ],
   "contributes": {
     "languages": [
@@ -55,6 +57,11 @@
     ],
     "commands": [
       {
+        "command": "archol.selectApplication",
+        "title": "Select Application",
+        "category": "Archol"
+      },
+      {
         "command": "archol.showAst",
         "title": "Open AST Explorer",
         "category": "Archol"
@@ -72,6 +79,11 @@
       {
         "command": "archol.showOutput",
         "title": "Show Server Output",
+        "category": "Archol"
+      },
+      {
+        "command": "archol.updateLock",
+        "title": "Update Identifier Lock",
         "category": "Archol"
       }
     ],
@@ -92,6 +104,12 @@
     "configuration": {
       "title": "Archol",
       "properties": {
+        "archol.application": {
+          "type": "string",
+          "default": "",
+          "scope": "window",
+          "markdownDescription": "URI of the current Archol application (`.archol` file) used by the compiler and LSP. An application is required for compile and LSP features; run **Archol: Select Application** to pick one from the workspace."
+        },
         "archol.server.path": {
           "type": "string",
           "default": "archol",

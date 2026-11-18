@@ -5,3 +5,5 @@
 require('./protocol.test');
 require('./ast-tree.test');
 require('./server-path.test');
+require('./app-support.test');
+require('./diagnostics.test');
