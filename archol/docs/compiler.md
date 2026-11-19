@@ -70,6 +70,17 @@ files that would change; `archol lint` is the same diagnostics pass as
 `archol check`. The LSP exposes `textDocument/formatting` (format-on-save by
 default for Archol) and publishes the lint diagnostics continuously.
 
+## View
+
+`archol view <file> [--app <uri|path>] [--json]` is the editor-integration
+output: a compact payload with `tokens` (highlighting class plus byte span),
+`outline` (top-level artifacts with line/column), `pending` (count) and this
+file's `diagnostics`. Without `--app` it runs lexer and parser only; with
+`--app` it analyzes the application closure and adds the application URI/path
+and semantic diagnostics. `--json` prints one line, `--pretty` indents it, and
+without either the CLI prints a short summary. The DeepSeek Harness plugin in
+`editors/dsh` consumes this command through `--json`.
+
 ## Identifiers and references
 
 `archol lock --app <app>` writes `<app>.lock` next to the application file

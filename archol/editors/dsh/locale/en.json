@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Archol file preview",
+    "description": "Previews .archol files in the right Sidebar with syntax highlighting, an artifact outline that jumps to source lines, and the file's diagnostics, using the nearest application for semantic checks when one contains the file. Open any .archol file from Files or a file card; the Archol viewer is picked automatically and plain text stays available in the viewer menu. Highlighting and diagnostics come from the local archol compiler (auto-detected, or set ARCHOL_COMPILER); without it the file still opens as plain source. The plugin is read-only and sends nothing off the machine."
+  }
+}

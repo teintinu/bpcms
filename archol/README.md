@@ -48,6 +48,7 @@ cargo run -q --bin archol -- check ../examples --app example.com/app/backoffice-
 cargo run -q --bin archol -- lock ../examples --app example.com/app/backoffice-loja
 cargo run -q --bin archol -- links ../examples --app example.com/app/backoffice-loja > links.json
 cargo run -q --bin archol -- ast ../examples/services/example.com/services/billing/billing-shapes.archol --app example.com/app/backoffice-loja
+cargo run -q --bin archol -- view ../examples/services/example.com/services/billing/billing-shapes.archol --json
 ```
 
 ## `archol` binary
@@ -59,6 +60,7 @@ archol format [dir] [--check]                  uppercase pending keywords (forma
 archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
 archol ast <file> [--app <uri|path>] [--json]  syntax AST, or annotated with ids
+archol view <file> [--app <uri|path>] [--json|--pretty]  compact preview payload for editors
 archol tokens <file>                           tokens (lexer debugging)
 archol links [dir] --app <uri|path> [--json]   closure-only index for the builder
 archol lsp                                    LSP server over stdio
@@ -90,6 +92,14 @@ workspace). The extension starts the `archol lsp` binary automatically (or the
 path configured in `archol.server.path`) and provides diagnostics, hover,
 completion, symbols, definition, references, folding, and the **AST explorer**.
 Details in [`editors/vscode/README.md`](editors/vscode/README.md).
+
+### DeepSeek Harness
+
+`editors/dsh/` is a DeepSeek Harness bundle that previews `.archol` files in
+the Web right Sidebar: lexer-backed syntax highlighting, an artifact outline
+that jumps to the declaration, and the file's diagnostics. It calls
+`archol view <file> --json`, so build the binary first. See
+[`editors/dsh/README.md`](editors/dsh/README.md).
 
 ## Coverage of this initial version
 

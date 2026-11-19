@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Pré-visualização de arquivos Archol",
+    "description": "Mostra arquivos .archol na barra lateral direita com realce de sintaxe, uma estrutura de artefatos que salta para a linha e os diagnósticos do arquivo, usando a aplicação mais próxima para as checagens semânticas quando alguma contém o arquivo. Abra qualquer .archol em Arquivos ou em um cartão de arquivo; o visualizador Archol é escolhido automaticamente e o texto puro continua disponível no menu de visualização. Realce e diagnósticos vêm do compilador archol local (detectado automaticamente ou definido em ARCHOL_COMPILER); sem ele o arquivo ainda abre como texto puro. O plugin é somente leitura e não envia nada para fora da máquina."
+  }
+}

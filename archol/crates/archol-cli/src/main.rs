@@ -1,4 +1,6 @@
-//! Archol CLI: applications, check, lock, ast, links, tokens and lsp.
+//! Archol CLI: applications, check, lock, ast, view, links, tokens and lsp.
+
+mod view;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -21,6 +23,7 @@ fn main() {
         "lock" => lock(rest),
         "applications" => applications(rest),
         "ast" => ast(rest),
+        "view" => view(rest),
         "tokens" => tokens(rest),
         "links" => links(rest),
         "lsp" => archol_lsp::run_stdio(),
@@ -46,6 +49,7 @@ fn usage() {
          \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
          \x20 ast <file> [--app <uri-or-path>] [--json]   prints the AST (annotated with --app)\n\
+         \x20 view <file> [--app <uri-or-path>] [--json] [--pretty]  compact preview payload for editors\n\
          \x20 tokens <file>                               prints the tokens\n\
          \x20 links [dir] --app <uri-or-path> [--json]    inverted index of the closure\n\
          \x20 lsp                                         LSP server on stdio"
@@ -56,6 +60,7 @@ struct Options {
     positional: Vec<String>,
     app: Option<String>,
     json: bool,
+    pretty: bool,
     check: bool,
 }
 
@@ -64,12 +69,14 @@ impl Options {
         let mut positional = Vec::new();
         let mut app = None;
         let mut json = false;
+        let mut pretty = false;
         let mut check = false;
         let mut iter = args.iter();
         while let Some(arg) = iter.next() {
             match arg.as_str() {
                 "--app" => app = iter.next().cloned(),
                 "--json" => json = true,
+                "--pretty" => pretty = true,
                 "--check" => check = true,
                 _ => positional.push(arg.clone()),
             }
@@ -78,6 +85,7 @@ impl Options {
             positional,
             app,
             json,
+            pretty,
             check,
         }
     }
@@ -377,6 +385,168 @@ fn workspace_roots(path: &Path) -> Vec<PathBuf> {
         roots
     } else {
         with_applications
+    }
+}
+
+/// Compact preview payload for editor integrations: tokens, artifact outline,
+/// pending comments and this file's diagnostics. Syntax-only unless `--app`
+/// selects an application, in which case annotations and semantic diagnostics
+/// come from the closure.
+fn view(args: &[String]) -> i32 {
+    let options = Options::parse(args);
+    let Some(file) = options.positional.first() else {
+        eprintln!("error: view requires a file");
+        return 2;
+    };
+    let path = PathBuf::from(file);
+    let result = match options.app.as_deref() {
+        Some(selector) => annotated_view(&path, selector),
+        None => syntax_view(&path),
+    };
+    let payload = match result {
+        Ok(payload) => payload,
+        Err(error) => {
+            eprintln!("error: {error}");
+            return 1;
+        }
+    };
+    if options.pretty {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
+    } else if options.json {
+        println!("{}", serde_json::to_string(&payload).unwrap_or_default());
+    } else {
+        print_view_summary(&payload);
+    }
+    0
+}
+
+fn syntax_view(path: &Path) -> Result<serde_json::Value, String> {
+    let source = std::fs::read_to_string(path)
+        .map_err(|error| format!("could not read {}: {error}", path.display()))?;
+    let text = path.to_string_lossy().to_string();
+    let parsed = parse(&source, text.clone());
+    Ok(view::payload(view::ViewInput {
+        path: &text,
+        source: &source,
+        ast: &parsed.ast,
+        diagnostics: &parsed.diagnostics,
+        application: None,
+    }))
+}
+
+fn annotated_view(path: &Path, selector: &str) -> Result<serde_json::Value, String> {
+    let (wanted, text) = (
+        std::fs::canonicalize(path).ok(),
+        path.to_string_lossy().to_string(),
+    );
+    let mut error = format!(
+        "application `{selector}` was not found from {}",
+        path.display()
+    );
+    for root in workspace_roots(path) {
+        let (files, _read_errors) = load_files(&root);
+        let services_root = find_services_root(&root);
+        let services = services_root
+            .as_ref()
+            .map(|path| path.to_string_lossy().to_string());
+        let analysis = match analyze_application(files, services.as_deref(), selector, false) {
+            Ok(analysis) => analysis,
+            Err(candidate_error) => {
+                error = candidate_error;
+                continue;
+            }
+        };
+        let Some(file) = analysis.workspace.files.iter().find(|file| {
+            file.path == text
+                || wanted.as_ref().is_some_and(|wanted| {
+                    std::fs::canonicalize(&file.path).ok().as_ref() == Some(wanted)
+                })
+        }) else {
+            error = format!("{} is not part of the application closure", path.display());
+            continue;
+        };
+        let diagnostics: Vec<archol_core::Diagnostic> = analysis
+            .diagnostics
+            .iter()
+            .filter(|entry| entry.path == file.path)
+            .map(|entry| entry.diagnostic.clone())
+            .collect();
+        let application = analysis.closure.as_ref().map(|closure| {
+            (
+                closure.application.uri.as_str(),
+                closure.application.path.as_str(),
+            )
+        });
+        return Ok(view::payload(view::ViewInput {
+            path: &file.path,
+            source: &file.source,
+            ast: &file.ast,
+            diagnostics: &diagnostics,
+            application,
+        }));
+    }
+    Err(error)
+}
+
+fn print_view_summary(payload: &serde_json::Value) {
+    let count = |field: &str| {
+        payload
+            .get(field)
+            .and_then(serde_json::Value::as_array)
+            .map(Vec::len)
+            .unwrap_or(0)
+    };
+    if let Some(application) = payload.get("application") {
+        println!(
+            "application: {}",
+            application
+                .get("uri")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("")
+        );
+    }
+    println!(
+        "{}: {} token(s), {} artifact(s), {} diagnostic(s)",
+        payload
+            .get("path")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or(""),
+        count("tokens"),
+        count("outline"),
+        count("diagnostics"),
+    );
+    if let Some(diagnostics) = payload
+        .get("diagnostics")
+        .and_then(serde_json::Value::as_array)
+    {
+        for diagnostic in diagnostics {
+            println!(
+                "{}:{}: {} {}: {}",
+                diagnostic
+                    .get("line")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(1),
+                diagnostic
+                    .get("column")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(1),
+                diagnostic
+                    .get("severity")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("error"),
+                diagnostic
+                    .get("code")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or(""),
+                diagnostic
+                    .get("message")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or(""),
+            );
+        }
     }
 }
 

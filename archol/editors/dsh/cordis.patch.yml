@@ -1,0 +1,3 @@
+- insert:
+    - id: archol-preview
+      name: '@local/archol-preview'

@@ -371,3 +371,32 @@ fn format_uppercases_pending_keywords_and_check_reports_changes() {
     assert_eq!(clean.status.code(), Some(0));
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn view_reports_tokens_outline_and_app_context() {
+    let dir = temp_dir("view");
+    let file = dir.join("invoice.archol");
+    write(
+        &file,
+        "document Invoice {\n  fields {\n    total: std.Money\n  }\n}\n",
+    );
+    let output = run(&["view", file.to_str().unwrap(), "--json"]);
+    assert_eq!(output.status.code(), Some(0));
+    let view: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(view["kind"], "ArcholView");
+    assert_eq!(view["language"], "archol");
+    assert!(!view["tokens"].as_array().unwrap().is_empty(), "{view}");
+    assert_eq!(view["outline"][0]["kind"], "Document");
+    assert_eq!(view["outline"][0]["name"], "Invoice");
+    assert_eq!(view["outline"][0]["line"], 1);
+    assert!(view["diagnostics"].as_array().unwrap().is_empty(), "{view}");
+    assert!(view.get("application").is_none(), "{view}");
+
+    let pretty = run(&["view", file.to_str().unwrap(), "--pretty"]);
+    assert_eq!(pretty.status.code(), Some(0));
+    assert!(String::from_utf8_lossy(&pretty.stdout).starts_with('{'));
+    let summary = run(&["view", file.to_str().unwrap()]);
+    assert_eq!(summary.status.code(), Some(0));
+    assert!(String::from_utf8_lossy(&summary.stdout).contains("1 artifact(s)"));
+    let _ = std::fs::remove_dir_all(dir);
+}
