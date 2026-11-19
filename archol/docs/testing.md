@@ -22,12 +22,26 @@ node --test editors/vscode/test
 | `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
 | `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
 | `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast`, `format --check`, pending diagnostics |
+| `archol-cli/tests/ast_snapshots.rs` | every example application against `<app>.expected-ast.yml`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
 | `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker, lock debouncer |
 
 ## Status
 
-Today: **72 Rust tests** (`cargo test`) and **45 JavaScript tests**
-(`node --test editors/vscode/test`); `clippy` and `fmt --check` clean.
+Run `cargo test` for the current count; JavaScript tests run with
+`node --test editors/vscode/test`. `clippy` and `fmt --check` should stay clean.
+
+## AST snapshots
+
+Each example application has `<app>.expected-ast.yml` next to its
+`<app>-application.archol`. The snapshot test runs:
+
+```bash
+archol ast examples/applications/<path>/<app>-application.archol \
+  --app <app-uri> --yaml
+```
+
+It writes the output to `<app>.result-ast.yml` (ignored by git) and compares
+with the expected file. On failure the result file stays for diffing.
 
 ## Corpus
 

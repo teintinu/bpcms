@@ -20,3 +20,5 @@ Thumbs.db
 
 # Local environment (do not version cargo home, if anyone points it here)
 .cargo/
+
+*.result-ast.yml

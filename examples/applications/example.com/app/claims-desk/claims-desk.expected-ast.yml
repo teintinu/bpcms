@@ -1,0 +1,907 @@
+"items":
+  -
+    "artifactKind": "Application"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "source"
+        "span":
+          "end": 257
+          "start": 241
+        "value":
+          "kind": "Identifier"
+          "name": "registry"
+          "span":
+            "end": 257
+            "start": 249
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "span":
+          "end": 633
+          "start": 449
+        "typeRef": "I18N"
+        "value":
+          "kind": "Object"
+          "members":
+            -
+              "kind": "PropertyAssignment"
+              "name": "pt-BR"
+              "span":
+                "end": 488
+                "start": 462
+              "value":
+                "kind": "StringLiteral"
+                "raw": "\"Mesa de Sinistros\""
+                "span":
+                  "end": 488
+                  "start": 469
+                "value": "Mesa de Sinistros"
+            -
+              "kind": "PropertyAssignment"
+              "name": "en-US"
+              "span":
+                "end": 576
+                "start": 556
+              "value":
+                "kind": "StringLiteral"
+                "raw": "\"Claims Desk\""
+                "span":
+                  "end": 576
+                  "start": 563
+                "value": "Claims Desk"
+          "span":
+            "end": 633
+            "start": 456
+          "typeRef": null
+      -
+        "body":
+          -
+            "alias": "Identity"
+            "kind": "ServiceEntry"
+            "ref": "aq"
+            "span":
+              "end": 802
+              "start": 759
+            "uri": "example.com/services/identity"
+          -
+            "alias": "Claims"
+            "kind": "ServiceEntry"
+            "ref": "b5"
+            "span":
+              "end": 912
+              "start": 873
+            "uri": "example.com/services/claims"
+          -
+            "alias": "FieldService"
+            "kind": "ServiceEntry"
+            "ref": "cd"
+            "span":
+              "end": 1026
+              "start": 974
+            "uri": "example.com/services/field-service"
+          -
+            "alias": "Payments"
+            "kind": "ServiceEntry"
+            "ref": "dj"
+            "span":
+              "end": 1131
+              "start": 1088
+            "uri": "example.com/services/payments"
+        "keyword": null
+        "kind": "Block"
+        "name": "services"
+        "span":
+          "end": 1188
+          "start": 744
+      -
+        "body":
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1303
+              "start": 1298
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Clerk"
+                "span":
+                  "end": 1303
+                  "start": 1298
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1303
+                "start": 1298
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1383
+              "start": 1375
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Adjuster"
+                "span":
+                  "end": 1383
+                  "start": 1375
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1383
+                "start": 1375
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1468
+              "start": 1456
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "FraudAnalyst"
+                "span":
+                  "end": 1468
+                  "start": 1456
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1468
+                "start": 1456
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1562
+              "start": 1548
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "FinanceAnalyst"
+                "span":
+                  "end": 1562
+                  "start": 1548
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1562
+                "start": 1548
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1643
+              "start": 1636
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Manager"
+                "span":
+                  "end": 1643
+                  "start": 1636
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1643
+                "start": 1636
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1726
+              "start": 1714
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Policyholder"
+                "span":
+                  "end": 1726
+                  "start": 1714
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1726
+                "start": 1714
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1805
+              "start": 1795
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Dispatcher"
+                "span":
+                  "end": 1805
+                  "start": 1795
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1805
+                "start": 1795
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1894
+              "start": 1879
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "FieldTechnician"
+                "span":
+                  "end": 1894
+                  "start": 1879
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1894
+                "start": 1879
+          -
+            "kind": "Statement"
+            "span":
+              "end": 1971
+              "start": 1961
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Supervisor"
+                "span":
+                  "end": 1971
+                  "start": 1961
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 1971
+                "start": 1961
+          -
+            "kind": "Statement"
+            "span":
+              "end": 2046
+              "start": 2038
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "Customer"
+                "span":
+                  "end": 2046
+                  "start": 2038
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 2046
+                "start": 2038
+          -
+            "kind": "Statement"
+            "span":
+              "end": 2218
+              "start": 2192
+            "statement":
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "Manager"
+                    "span":
+                      "end": 2199
+                      "start": 2192
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Adjuster"
+                    "span":
+                      "end": 2210
+                      "start": 2202
+                  "span":
+                    "end": 2210
+                    "start": 2192
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Clerk"
+                  "span":
+                    "end": 2218
+                    "start": 2213
+                "span":
+                  "end": 2218
+                  "start": 2192
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 2218
+                "start": 2192
+          -
+            "kind": "Statement"
+            "span":
+              "end": 2308
+              "start": 2286
+            "statement":
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Manager"
+                  "span":
+                    "end": 2293
+                    "start": 2286
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "FraudAnalyst"
+                  "span":
+                    "end": 2308
+                    "start": 2296
+                "span":
+                  "end": 2308
+                  "start": 2286
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 2308
+                "start": 2286
+          -
+            "kind": "Statement"
+            "span":
+              "end": 2410
+              "start": 2382
+            "statement":
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Supervisor"
+                  "span":
+                    "end": 2392
+                    "start": 2382
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "FieldTechnician"
+                  "span":
+                    "end": 2410
+                    "start": 2395
+                "span":
+                  "end": 2410
+                  "start": 2382
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 2410
+                "start": 2382
+          -
+            "kind": "Statement"
+            "span":
+              "end": 2502
+              "start": 2479
+            "statement":
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Supervisor"
+                  "span":
+                    "end": 2489
+                    "start": 2479
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Dispatcher"
+                  "span":
+                    "end": 2502
+                    "start": 2492
+                "span":
+                  "end": 2502
+                  "start": 2479
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 2502
+                "start": 2479
+        "keyword": null
+        "kind": "Block"
+        "name": "roles"
+        "span":
+          "end": 2506
+          "start": 1286
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "span":
+          "end": 2523
+          "start": 2510
+        "value":
+          "kind": "Identifier"
+          "name": "Claims"
+          "span":
+            "end": 2523
+            "start": 2517
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "span":
+          "end": 2642
+          "start": 2619
+        "value":
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+                "span":
+                  "end": 2631
+                  "start": 2629
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+                "span":
+                  "end": 2634
+                  "start": 2632
+              "span":
+                "end": 2634
+                "start": 2629
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "en"
+                "span":
+                  "end": 2638
+                  "start": 2636
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "US"
+                "span":
+                  "end": 2641
+                  "start": 2639
+              "span":
+                "end": 2641
+                "start": 2636
+          "kind": "List"
+          "span":
+            "end": 2642
+            "start": 2628
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "span":
+          "end": 2746
+          "start": 2717
+        "value":
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+              "span":
+                "end": 2735
+                "start": 2732
+            -
+              "kind": "Identifier"
+              "name": "qa"
+              "span":
+                "end": 2739
+                "start": 2737
+            -
+              "kind": "Identifier"
+              "name": "prod"
+              "span":
+                "end": 2745
+                "start": 2741
+          "kind": "List"
+          "span":
+            "end": 2746
+            "start": 2731
+      -
+        "body":
+          -
+            "kind": "Statement"
+            "span":
+              "end": 3042
+              "start": 3037
+            "statement":
+              "expression":
+                "kind": "Identifier"
+                "name": "start"
+                "span":
+                  "end": 3042
+                  "start": 3037
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 3042
+                "start": 3037
+          -
+            "kind": "Statement"
+            "span":
+              "end": 3076
+              "start": 3043
+            "statement":
+              "expression":
+                "elements":
+                  -
+                    "kind": "StringLiteral"
+                    "raw": "\"example.com/services/identity\""
+                    "span":
+                      "end": 3075
+                      "start": 3044
+                    "value": "example.com/services/identity"
+                "kind": "List"
+                "span":
+                  "end": 3076
+                  "start": 3043
+              "kind": "ExpressionStatement"
+              "span":
+                "end": 3076
+                "start": 3043
+        "keyword": null
+        "kind": "Block"
+        "name": "main"
+        "span":
+          "end": 3080
+          "start": 2922
+    "id": "fc"
+    "kind": "Artifact"
+    "name": "example.com/app/claims-desk"
+    "params": []
+    "span":
+      "end": 3082
+      "start": 195
+"kind": "SourceFile"
+"path": "examples/applications/example.com/app/claims-desk/claims-desk-application.archol"
+"pending":
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 9
+      "start": 3
+    "kind": "Pending"
+    "message": "application: Mesa de Sinistros (claims + field-service + payments)"
+    "span":
+      "end": 89
+      "start": 0
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 99
+      "start": 93
+    "kind": "Pending"
+    "message": "Declara a aplicação da URI example.com/app/claims-desk e abre sua composição."
+    "span":
+      "end": 194
+      "start": 90
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 267
+      "start": 261
+    "kind": "Pending"
+    "message": "Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO."
+    "span":
+      "end": 353
+      "start": 258
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 365
+      "start": 359
+    "kind": "Pending"
+    "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
+    "span":
+      "end": 446
+      "start": 356
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 498
+      "start": 492
+    "kind": "Pending"
+    "message": "Título em português (idioma default)."
+    "span":
+      "end": 551
+      "start": 489
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 586
+      "start": 580
+    "kind": "Pending"
+    "message": "Título em inglês americano."
+    "span":
+      "end": 629
+      "start": 577
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 646
+      "start": 640
+    "kind": "Pending"
+    "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
+    "span":
+      "end": 741
+      "start": 637
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 812
+      "start": 806
+    "kind": "Pending"
+    "message": "Identidade e autenticação dos usuários."
+    "span":
+      "end": 868
+      "start": 803
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 922
+      "start": 916
+    "kind": "Pending"
+    "message": "Abertura e análise de sinistros."
+    "span":
+      "end": 969
+      "start": 913
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1036
+      "start": 1030
+    "kind": "Pending"
+    "message": "Vistorias e atendimento em campo."
+    "span":
+      "end": 1083
+      "start": 1027
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1141
+      "start": 1135
+    "kind": "Pending"
+    "message": "Pagamentos de indenizações."
+    "span":
+      "end": 1184
+      "start": 1132
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1201
+      "start": 1195
+    "kind": "Pending"
+    "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
+    "span":
+      "end": 1283
+      "start": 1192
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1313
+      "start": 1307
+    "kind": "Pending"
+    "message": "Atendente: registra e triagem os sinistros."
+    "span":
+      "end": 1370
+      "start": 1304
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1393
+      "start": 1387
+    "kind": "Pending"
+    "message": "Regulador: analisa e decide a indenização."
+    "span":
+      "end": 1451
+      "start": 1384
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1478
+      "start": 1472
+    "kind": "Pending"
+    "message": "Analista antifraude: investiga indícios de fraude."
+    "span":
+      "end": 1543
+      "start": 1469
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1572
+      "start": 1566
+    "kind": "Pending"
+    "message": "Analista financeiro: acompanha os pagamentos."
+    "span":
+      "end": 1631
+      "start": 1563
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1653
+      "start": 1647
+    "kind": "Pending"
+    "message": "Gerente: responde pela operação da mesa."
+    "span":
+      "end": 1709
+      "start": 1644
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1736
+      "start": 1730
+    "kind": "Pending"
+    "message": "Segurado: acompanha o próprio sinistro."
+    "span":
+      "end": 1790
+      "start": 1727
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1815
+      "start": 1809
+    "kind": "Pending"
+    "message": "Despachante: distribui as vistorias em campo."
+    "span":
+      "end": 1874
+      "start": 1806
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1904
+      "start": 1898
+    "kind": "Pending"
+    "message": "Técnico de campo: executa a vistoria."
+    "span":
+      "end": 1956
+      "start": 1895
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 1981
+      "start": 1975
+    "kind": "Pending"
+    "message": "Supervisor: coordena campo e despacho."
+    "span":
+      "end": 2033
+      "start": 1972
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2056
+      "start": 2050
+    "kind": "Pending"
+    "message": "Cliente: acompanha o atendimento."
+    "span":
+      "end": 2103
+      "start": 2047
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2117
+      "start": 2111
+    "kind": "Pending"
+    "message": "Manager é superior a Adjuster, que é superior a Clerk."
+    "span":
+      "end": 2187
+      "start": 2108
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2232
+      "start": 2226
+    "kind": "Pending"
+    "message": "Manager é superior a FraudAnalyst."
+    "span":
+      "end": 2281
+      "start": 2223
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2322
+      "start": 2316
+    "kind": "Pending"
+    "message": "Supervisor é superior a FieldTechnician."
+    "span":
+      "end": 2377
+      "start": 2313
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2424
+      "start": 2418
+    "kind": "Pending"
+    "message": "Supervisor é superior a Dispatcher."
+    "span":
+      "end": 2474
+      "start": 2415
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2533
+      "start": 2527
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
+    "span":
+      "end": 2616
+      "start": 2524
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2652
+      "start": 2646
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro (pt-BR) é o default."
+    "span":
+      "end": 2714
+      "start": 2643
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2756
+      "start": 2750
+    "kind": "Pending"
+    "message": "Ambientes declarados para esta aplicação."
+    "span":
+      "end": 2813
+      "start": 2747
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2826
+      "start": 2820
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "span":
+      "end": 2919
+      "start": 2817
+  -
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+    "keywordSpan":
+      "end": 2942
+      "start": 2936
+    "kind": "Pending"
+    "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
+    "span":
+      "end": 3032
+      "start": 2933
