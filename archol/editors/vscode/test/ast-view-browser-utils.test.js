@@ -8,12 +8,12 @@ const utils = new Function(
   browserUtils + '; return { orderedKeys, orderedJson, orderedJsonPretty, nodeAtPath };',
 )();
 
-test('orderedKeys puts kind/title/value/message/id first and spans last', () => {
+test('orderedKeys puts kind/title/value/message/id first and locs last', () => {
   const value = {
-    span: { start: 1, end: 2 },
+    loc: { start: 1, end: 2 },
     z: 1,
     kind: 'Process',
-    keywordSpan: { start: 1, end: 2 },
+    keywordLoc: { start: 1, end: 2 },
     id: 'a',
     title: 'T',
     value: 3,
@@ -28,14 +28,14 @@ test('orderedKeys puts kind/title/value/message/id first and spans last', () => 
     'id',
     'z',
     'a',
-    'span',
-    'keywordSpan',
+    'loc',
+    'keywordLoc',
   ]);
 });
 
 test('collapsed inline JSON follows the same order', () => {
   const text = utils.orderedJson({
-    span: { start: 1, end: 2 },
+    loc: { start: 1, end: 2 },
     name: 'Dunning',
     kind: 'Artifact',
     value: 2592000,
@@ -43,17 +43,17 @@ test('collapsed inline JSON follows the same order', () => {
   });
   assert.equal(
     text,
-    '{"kind":"Artifact","value":2592000,"id":"x","name":"Dunning","span":{"start":1,"end":2}}',
+    '{"kind":"Artifact","value":2592000,"id":"x","name":"Dunning","loc":{"start":1,"end":2}}',
   );
 });
 
 test('pretty JSON follows the same order', () => {
   const text = utils.orderedJsonPretty(
-    { span: { start: 1, end: 2 }, id: 'x', kind: 'Artifact' },
+    { loc: { start: 1, end: 2 }, id: 'x', kind: 'Artifact' },
     2,
   );
   assert.ok(text.startsWith('{\n  "kind": "Artifact",\n  "id": "x",'), text);
-  assert.ok(text.endsWith('\n  "span": {\n    "start": 1,\n    "end": 2\n  }\n}'), text);
+  assert.ok(text.endsWith('\n  "loc": {\n    "start": 1,\n    "end": 2\n  }\n}'), text);
 });
 
 test('nodeAtPath walks structural children from the root', () => {

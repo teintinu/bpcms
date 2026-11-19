@@ -29,7 +29,7 @@ const browserUtils = `  function isNode(value) {
     const children = [];
     if (!node) return children;
     Object.keys(node).forEach(function (key) {
-      if (key === 'span' || key === 'kind') return;
+      if (key === 'loc' || key === 'kind') return;
       const value = node[key];
       if (Array.isArray(value)) {
         value.forEach(function (item) { if (isNode(item)) children.push(item); });
@@ -90,7 +90,7 @@ const browserUtils = `  function isNode(value) {
   function keyRank(key) {
     var index = JSON_FIRST_KEYS.indexOf(key);
     if (index !== -1) return index;
-    if (/span$/i.test(key)) return 1000;
+    if (/loc$/i.test(key)) return 1000;
     return 100;
   }
 

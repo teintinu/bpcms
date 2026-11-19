@@ -1340,7 +1340,7 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - Linguagem **Archol**, extensão **`.archol`**; o repositório mantém `examples/` como workspace (`BPCMS_WORKSPACE`).
 - Workspace Rust em `archol/`: `archol-core` (tokens, lexer, AST JSON, parser), `archol-analysis` (check + link), `archol-lsp` (LSP stdio) e `archol-cli` (binário `archol`).
 - Dependência única: `serde`/`serde_json`; LSP síncrono com JSON-RPC próprio (sem async/runtime) e plugin VSCode sem dependências npm.
-- AST: todo nó tem `kind` + `span` (bytes); `Artifact`, `PropertyAssignment`, `Block`, `EnumValueDeclaration`, `IfStatement`, `Call`, `Object` (`typeRef`) etc.
+- AST: todo nó tem `kind` + `loc` (bytes); `Artifact`, `PropertyAssignment`, `Block`, `EnumValueDeclaration`, `IfStatement`, `Call`, `Object` (`typeRef`) etc.
 - Check: `const a: TaxRegimeCode = SIMPLES` e `regime == SIMPLES` validam contra os `value` do shape; também `E_UNKNOWN_TYPE`, `E_UNKNOWN_ROLE`, `E_UNKNOWN_REF` e `E_DUP_ARTIFACT`.
 - Link: `roles[].usedBy` (role → artefatos), `enums[].values`, `artifacts[].refs` e `services[]`.
 - LSP: hover (tipo, valor de enum com títulos, link para o AST), completion de valores de enum/papéis, definição, referências, símbolos, folding e requests `archol/ast` + `archol/links`.
@@ -1372,7 +1372,7 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 
 
 **Correções de navegação (2026-11-18, 2ª rodada):**
-- Explorador de AST: clique reutiliza o editor aberto (mesma `viewColumn`) e seleciona `span.start`..`span.end`; o webview passou a enviar `start`/`end` e a extensão converte bytes UTF-8 → offsets UTF-16 antes de selecionar.
+- Explorador de AST: clique reutiliza o editor aberto (mesma `viewColumn`) e seleciona `loc.start`..`loc.end`; o webview passou a enviar `start`/`end` e a extensão converte bytes UTF-8 → offsets UTF-16 antes de selecionar.
 - Definition: resolução semântica própria (`resolve.rs`) — parâmetro/`const`, campo de documento (`invoice.status` → `status: InvoiceStatus` em `Invoice`), valor de enum em comparação tipada (`invoice.status == Overdue` → `value Overdue`, não o `icon Overdue`), sujeito implícito de `fanOut`, e contexto de `icon:` para ícones.
 - `Cmd+Click`/`Ctrl+Click`/`F12` usam o mesmo provider; documentado que no macOS é `Cmd`.
 - Testes: 35 Rust (5 novos de resolução) e 29 JavaScript (2 de conversão de span); smoke do LSP cobre as definições reais do processo de cobrança.
@@ -1454,3 +1454,14 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `owner` não existe mais como metadado; governança fica em release/lock.
 
 **Impacto:** exemplos, `DSL_REFERENCE.md` (§1.2/§1.3/§3/§5.1/§4.17/§9/§10), `DSL_EXAMPLES.md`, `BRAINSTORM.md` (B-27 e resumos) e `REVIEW_CHECKLIST.md`. Os snapshots `.expected-ast.yml` das 5 aplicações foram regenerados.
+
+## Rodada `span` → `loc` — 2026-11-19 (executada por solicitação direta)
+
+**Pedido:** renomear a propriedade `span` do AST para `loc`; prefixos viram `*Loc` (`keywordSpan` → `keywordLoc`); ajustar export e visualizador, que deve colocar propriedades de loc ao final.
+
+**Decisões aplicadas:**
+- AST serializa `loc` em todos os nós e `keywordLoc` em `Pending`.
+- `archol ast --no-loc` substitui `--no-span` e remove `loc`/`keywordLoc`.
+- O visualizador JSON lê `loc` e ordena propriedades terminadas em `loc`/`Loc` por último.
+- Teste dedicado `ast_locs.rs`; snapshots usam `--no-loc`.
+- Campos Rust internos continuam `span`; a mudança é no contrato JSON/YAML.

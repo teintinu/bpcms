@@ -5,9 +5,6 @@
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "span":
-          "end": 537
-          "start": 348
         "typeRef": "I18N"
         "value":
           "kind": "Object"
@@ -15,32 +12,17 @@
             -
               "kind": "PropertyAssignment"
               "name": "pt-BR"
-              "span":
-                "end": 388
-                "start": 361
               "value":
                 "kind": "StringLiteral"
                 "raw": "\"Central de Compras\""
-                "span":
-                  "end": 388
-                  "start": 368
                 "value": "Central de Compras"
             -
               "kind": "PropertyAssignment"
               "name": "en-US"
-              "span":
-                "end": 480
-                "start": 456
               "value":
                 "kind": "StringLiteral"
                 "raw": "\"Procurement Hub\""
-                "span":
-                  "end": 480
-                  "start": 463
                 "value": "Procurement Hub"
-          "span":
-            "end": 537
-            "start": 355
           "typeRef": null
       -
         "body":
@@ -48,271 +30,127 @@
             "alias": "Identity"
             "kind": "ServiceEntry"
             "ref": "ag"
-            "span":
-              "end": 706
-              "start": 663
             "uri": "example.com/services/identity"
           -
             "alias": "Procurement"
             "kind": "ServiceEntry"
             "ref": "ar"
-            "span":
-              "end": 826
-              "start": 777
             "uri": "example.com/services/procurement"
           -
             "alias": "Contracts"
             "kind": "ServiceEntry"
             "ref": "az"
-            "span":
-              "end": 945
-              "start": 900
             "uri": "example.com/services/contracts"
           -
             "alias": "Credit"
             "kind": "ServiceEntry"
             "ref": "ba"
-            "span":
-              "end": 1058
-              "start": 1019
             "uri": "example.com/services/credit"
         "keyword": null
         "kind": "Block"
         "name": "services"
-        "span":
-          "end": 1132
-          "start": 648
       -
         "body":
           -
             "kind": "Statement"
-            "span":
-              "end": 1251
-              "start": 1242
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Requester"
-                "span":
-                  "end": 1251
-                  "start": 1242
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1251
-                "start": 1242
           -
             "kind": "Statement"
-            "span":
-              "end": 1328
-              "start": 1323
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Buyer"
-                "span":
-                  "end": 1328
-                  "start": 1323
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1328
-                "start": 1323
           -
             "kind": "Statement"
-            "span":
-              "end": 1402
-              "start": 1394
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Approver"
-                "span":
-                  "end": 1402
-                  "start": 1394
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1402
-                "start": 1394
           -
             "kind": "Statement"
-            "span":
-              "end": 1491
-              "start": 1473
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "ProcurementManager"
-                "span":
-                  "end": 1491
-                  "start": 1473
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1491
-                "start": 1473
           -
             "kind": "Statement"
-            "span":
-              "end": 1587
-              "start": 1570
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "ComplianceAnalyst"
-                "span":
-                  "end": 1587
-                  "start": 1570
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1587
-                "start": 1570
           -
             "kind": "Statement"
-            "span":
-              "end": 1675
-              "start": 1662
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "PayablesClerk"
-                "span":
-                  "end": 1675
-                  "start": 1662
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1675
-                "start": 1662
           -
             "kind": "Statement"
-            "span":
-              "end": 1770
-              "start": 1756
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "ReceivingClerk"
-                "span":
-                  "end": 1770
-                  "start": 1756
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1770
-                "start": 1756
           -
             "kind": "Statement"
-            "span":
-              "end": 1862
-              "start": 1846
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "QualityInspector"
-                "span":
-                  "end": 1862
-                  "start": 1846
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1862
-                "start": 1846
           -
             "kind": "Statement"
-            "span":
-              "end": 1960
-              "start": 1948
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "SupplierUser"
-                "span":
-                  "end": 1960
-                  "start": 1948
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1960
-                "start": 1948
           -
             "kind": "Statement"
-            "span":
-              "end": 2063
-              "start": 2048
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "ContractManager"
-                "span":
-                  "end": 2063
-                  "start": 2048
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2063
-                "start": 2048
           -
             "kind": "Statement"
-            "span":
-              "end": 2153
-              "start": 2138
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "ContractAnalyst"
-                "span":
-                  "end": 2153
-                  "start": 2138
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2153
-                "start": 2138
           -
             "kind": "Statement"
-            "span":
-              "end": 2244
-              "start": 2232
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "LegalCounsel"
-                "span":
-                  "end": 2244
-                  "start": 2232
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2244
-                "start": 2232
           -
             "kind": "Statement"
-            "span":
-              "end": 2326
-              "start": 2313
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "CreditAnalyst"
-                "span":
-                  "end": 2326
-                  "start": 2313
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2326
-                "start": 2313
           -
             "kind": "Statement"
-            "span":
-              "end": 2420
-              "start": 2407
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "CreditManager"
-                "span":
-                  "end": 2420
-                  "start": 2407
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2420
-                "start": 2407
           -
             "kind": "Statement"
-            "span":
-              "end": 2630
-              "start": 2592
             "statement":
               "expression":
                 "kind": "Binary"
@@ -321,141 +159,66 @@
                   "left":
                     "kind": "Identifier"
                     "name": "ProcurementManager"
-                    "span":
-                      "end": 2610
-                      "start": 2592
                   "op": ">"
                   "right":
                     "kind": "Identifier"
                     "name": "Buyer"
-                    "span":
-                      "end": 2618
-                      "start": 2613
-                  "span":
-                    "end": 2618
-                    "start": 2592
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "Requester"
-                  "span":
-                    "end": 2630
-                    "start": 2621
-                "span":
-                  "end": 2630
-                  "start": 2592
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2630
-                "start": 2592
           -
             "kind": "Statement"
-            "span":
-              "end": 2708
-              "start": 2692
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "Approver"
-                  "span":
-                    "end": 2700
-                    "start": 2692
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "Buyer"
-                  "span":
-                    "end": 2708
-                    "start": 2703
-                "span":
-                  "end": 2708
-                  "start": 2692
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2708
-                "start": 2692
           -
             "kind": "Statement"
-            "span":
-              "end": 2820
-              "start": 2787
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "ContractManager"
-                  "span":
-                    "end": 2802
-                    "start": 2787
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "ContractAnalyst"
-                  "span":
-                    "end": 2820
-                    "start": 2805
-                "span":
-                  "end": 2820
-                  "start": 2787
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2820
-                "start": 2787
           -
             "kind": "Statement"
-            "span":
-              "end": 2924
-              "start": 2895
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "CreditManager"
-                  "span":
-                    "end": 2908
-                    "start": 2895
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "CreditAnalyst"
-                  "span":
-                    "end": 2924
-                    "start": 2911
-                "span":
-                  "end": 2924
-                  "start": 2895
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2924
-                "start": 2895
         "keyword": null
         "kind": "Block"
         "name": "roles"
-        "span":
-          "end": 2928
-          "start": 1230
       -
         "kind": "PropertyAssignment"
         "name": "theme"
-        "span":
-          "end": 2946
-          "start": 2932
         "value":
           "kind": "Identifier"
           "name": "Compras"
-          "span":
-            "end": 2946
-            "start": 2939
       -
         "kind": "PropertyAssignment"
         "name": "locales"
-        "span":
-          "end": 3065
-          "start": 3042
         "value":
           "elements":
             -
@@ -463,125 +226,62 @@
               "left":
                 "kind": "Identifier"
                 "name": "pt"
-                "span":
-                  "end": 3054
-                  "start": 3052
               "op": "-"
               "right":
                 "kind": "Identifier"
                 "name": "BR"
-                "span":
-                  "end": 3057
-                  "start": 3055
-              "span":
-                "end": 3057
-                "start": 3052
             -
               "kind": "Binary"
               "left":
                 "kind": "Identifier"
                 "name": "en"
-                "span":
-                  "end": 3061
-                  "start": 3059
               "op": "-"
               "right":
                 "kind": "Identifier"
                 "name": "US"
-                "span":
-                  "end": 3064
-                  "start": 3062
-              "span":
-                "end": 3064
-                "start": 3059
           "kind": "List"
-          "span":
-            "end": 3065
-            "start": 3051
       -
         "kind": "PropertyAssignment"
         "name": "environments"
-        "span":
-          "end": 3169
-          "start": 3140
         "value":
           "elements":
             -
               "kind": "Identifier"
               "name": "dev"
-              "span":
-                "end": 3158
-                "start": 3155
             -
               "kind": "Identifier"
               "name": "qa"
-              "span":
-                "end": 3162
-                "start": 3160
             -
               "kind": "Identifier"
               "name": "prod"
-              "span":
-                "end": 3168
-                "start": 3164
           "kind": "List"
-          "span":
-            "end": 3169
-            "start": 3154
       -
         "body":
           -
             "kind": "Statement"
-            "span":
-              "end": 3465
-              "start": 3460
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "start"
-                "span":
-                  "end": 3465
-                  "start": 3460
               "kind": "ExpressionStatement"
-              "span":
-                "end": 3465
-                "start": 3460
           -
             "kind": "Statement"
-            "span":
-              "end": 3499
-              "start": 3466
             "statement":
               "expression":
                 "elements":
                   -
                     "kind": "StringLiteral"
                     "raw": "\"example.com/services/identity\""
-                    "span":
-                      "end": 3498
-                      "start": 3467
                     "value": "example.com/services/identity"
                 "kind": "List"
-                "span":
-                  "end": 3499
-                  "start": 3466
               "kind": "ExpressionStatement"
-              "span":
-                "end": 3499
-                "start": 3466
         "keyword": null
         "kind": "Block"
         "name": "main"
-        "span":
-          "end": 3503
-          "start": 3345
     "id": "di"
     "kind": "Artifact"
     "name": "example.com/app/central-de-compras"
     "params": []
-    "span":
-      "end": 3505
-      "start": 202
 "kind": "SourceFile"
 "path": "examples/applications/example.com/app/central-de-compras/central-de-compras-application.archol"
 "pending":
@@ -589,407 +289,203 @@
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 9
-      "start": 3
     "kind": "Pending"
     "message": "application: Central de Compras (procurement + contracts + credit)"
-    "span":
-      "end": 89
-      "start": 0
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 99
-      "start": 93
     "kind": "Pending"
     "message": "Declara a aplicação da URI example.com/app/central-de-compras e abre sua composição."
-    "span":
-      "end": 201
-      "start": 90
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 264
-      "start": 258
     "kind": "Pending"
     "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
-    "span":
-      "end": 345
-      "start": 255
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 398
-      "start": 392
     "kind": "Pending"
     "message": "Título em português (idioma default)."
-    "span":
-      "end": 451
-      "start": 389
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 490
-      "start": 484
     "kind": "Pending"
     "message": "Título em inglês americano."
-    "span":
-      "end": 533
-      "start": 481
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 550
-      "start": 544
     "kind": "Pending"
     "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
-    "span":
-      "end": 645
-      "start": 541
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 716
-      "start": 710
     "kind": "Pending"
     "message": "Identidade e autenticação dos usuários."
-    "span":
-      "end": 772
-      "start": 707
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 836
-      "start": 830
     "kind": "Pending"
     "message": "Compras: requisições, cotações e pedidos."
-    "span":
-      "end": 895
-      "start": 827
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 955
-      "start": 949
     "kind": "Pending"
     "message": "Contratos com fornecedores e suas vigências."
-    "span":
-      "end": 1014
-      "start": 946
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1068
-      "start": 1062
     "kind": "Pending"
     "message": "Análise de crédito e limite de fornecedores."
-    "span":
-      "end": 1128
-      "start": 1059
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1145
-      "start": 1139
     "kind": "Pending"
     "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
-    "span":
-      "end": 1227
-      "start": 1136
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1261
-      "start": 1255
     "kind": "Pending"
     "message": "Solicitante: abre a requisição de compra."
-    "span":
-      "end": 1318
-      "start": 1252
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1338
-      "start": 1332
     "kind": "Pending"
     "message": "Comprador: conduz cotação e pedido."
-    "span":
-      "end": 1389
-      "start": 1329
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1412
-      "start": 1406
     "kind": "Pending"
     "message": "Aprovador: decide alçadas de aprovação."
-    "span":
-      "end": 1468
-      "start": 1403
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1501
-      "start": 1495
     "kind": "Pending"
     "message": "Gestor de compras: responde pela área de compras."
-    "span":
-      "end": 1565
-      "start": 1492
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1597
-      "start": 1591
     "kind": "Pending"
     "message": "Analista de compliance: verifica conformidade."
-    "span":
-      "end": 1657
-      "start": 1588
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1685
-      "start": 1679
     "kind": "Pending"
     "message": "Contas a pagar: liquida as faturas dos fornecedores."
-    "span":
-      "end": 1751
-      "start": 1676
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1780
-      "start": 1774
     "kind": "Pending"
     "message": "Recebedor: registra o recebimento de materiais."
-    "span":
-      "end": 1841
-      "start": 1771
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1872
-      "start": 1866
     "kind": "Pending"
     "message": "Inspetor de qualidade: aceita ou rejeita itens recebidos."
-    "span":
-      "end": 1943
-      "start": 1863
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1970
-      "start": 1964
     "kind": "Pending"
     "message": "Usuário do fornecedor: interage pelo portal do fornecedor."
-    "span":
-      "end": 2043
-      "start": 1961
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2073
-      "start": 2067
     "kind": "Pending"
     "message": "Gestor de contratos: responde pelos contratos."
-    "span":
-      "end": 2133
-      "start": 2064
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2163
-      "start": 2157
     "kind": "Pending"
     "message": "Analista de contratos: mantém minutas e aditivos."
-    "span":
-      "end": 2227
-      "start": 2154
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2254
-      "start": 2248
     "kind": "Pending"
     "message": "Jurídico: valida cláusulas sensíveis."
-    "span":
-      "end": 2308
-      "start": 2245
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2336
-      "start": 2330
     "kind": "Pending"
     "message": "Analista de crédito: analisa o risco do fornecedor."
-    "span":
-      "end": 2402
-      "start": 2327
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2430
-      "start": 2424
     "kind": "Pending"
     "message": "Gestor de crédito: decide limites de crédito."
-    "span":
-      "end": 2491
-      "start": 2421
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2505
-      "start": 2499
     "kind": "Pending"
     "message": "ProcurementManager é superior a Buyer, que é superior a Requester."
-    "span":
-      "end": 2587
-      "start": 2496
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2644
-      "start": 2638
     "kind": "Pending"
     "message": "Approver é superior a Buyer."
-    "span":
-      "end": 2687
-      "start": 2635
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2722
-      "start": 2716
     "kind": "Pending"
     "message": "ContractManager é superior a ContractAnalyst."
-    "span":
-      "end": 2782
-      "start": 2713
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2834
-      "start": 2828
     "kind": "Pending"
     "message": "CreditManager é superior a CreditAnalyst."
-    "span":
-      "end": 2890
-      "start": 2825
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2956
-      "start": 2950
     "kind": "Pending"
     "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
-    "span":
-      "end": 3039
-      "start": 2947
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 3075
-      "start": 3069
     "kind": "Pending"
     "message": "Idiomas da app; o primeiro (pt-BR) é o default."
-    "span":
-      "end": 3137
-      "start": 3066
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 3179
-      "start": 3173
     "kind": "Pending"
     "message": "Ambientes declarados para esta aplicação."
-    "span":
-      "end": 3236
-      "start": 3170
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 3249
-      "start": 3243
     "kind": "Pending"
     "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
-    "span":
-      "end": 3342
-      "start": 3240
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 3365
-      "start": 3359
     "kind": "Pending"
     "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
-    "span":
-      "end": 3455
-      "start": 3356

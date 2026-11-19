@@ -23,23 +23,23 @@ const totalStart = text.indexOf('total');
 const ast = {
   kind: 'SourceFile',
   path: '/workspace/invoice.archol',
-  span: { start: 0, end: text.length },
+  loc: { start: 0, end: text.length },
   items: [
     {
       kind: 'Artifact',
       artifactKind: 'Document',
       name: 'Invoice',
-      span: { start: 0, end: text.length },
+      loc: { start: 0, end: text.length },
       body: [
         {
           kind: 'FieldBlock',
-          span: { start: fieldsStart, end: totalStart + 'total: Money'.length },
+          loc: { start: fieldsStart, end: totalStart + 'total: Money'.length },
           fields: [
             {
               kind: 'Field',
               name: 'total',
-              span: { start: totalStart, end: totalStart + 'total: Money'.length },
-              body: [{ kind: 'TypeReference', name: 'Money', span: { start: totalStart + 7, end: totalStart + 12 } }],
+              loc: { start: totalStart, end: totalStart + 'total: Money'.length },
+              body: [{ kind: 'TypeReference', name: 'Money', loc: { start: totalStart + 7, end: totalStart + 12 } }],
             },
           ],
         },
@@ -73,7 +73,7 @@ test('findNodeAtOffset picks the deepest node containing the offset', () => {
   assert.equal(findNodePathAtOffset(ast, -1), null);
 });
 
-test('findNodeAtOffset accepts an offset at the end of the span', () => {
+test('findNodeAtOffset accepts an offset at the end of the loc', () => {
   const fieldEnd = totalStart + 'total: Money'.length;
   const found = findNodeAtOffset(ast, fieldEnd);
   assert.ok(found);
@@ -161,7 +161,7 @@ test('textOffsetsForByteSpan converts start and end while preserving accents', (
   assert.equal(start, sample.indexOf('document'));
 });
 
-test('textOffsetsForByteSpan normalizes an inverted span and out-of-range values', () => {
+test('textOffsetsForByteSpan normalizes an inverted range and out-of-range values', () => {
   const sample = 'abcç';
   const [start, end] = textOffsetsForByteSpan(sample, 999, 0);
   assert.equal(start, sample.length);
@@ -175,23 +175,23 @@ test('mergePending inserts comments into the containing node in source order', (
   const pendingAst = {
     kind: 'SourceFile',
     path: '/workspace/demo.archol',
-    span: { start: 0, end: 120 },
+    loc: { start: 0, end: 120 },
     items: [
       {
         kind: 'Artifact',
         artifactKind: 'Process',
         name: 'P',
-        span: { start: 10, end: 110 },
+        loc: { start: 10, end: 110 },
         body: [
-          { kind: 'MemberA', span: { start: 30, end: 40 } },
-          { kind: 'MemberB', span: { start: 80, end: 90 } },
+          { kind: 'MemberA', loc: { start: 30, end: 40 } },
+          { kind: 'MemberB', loc: { start: 80, end: 90 } },
         ],
       },
     ],
     pending: [
-      { kind: 'Pending', keyword: 'HACK', span: { start: 60, end: 70 } },
-      { kind: 'Pending', keyword: 'TODO', span: { start: 0, end: 5 } },
-      { kind: 'Pending', keyword: 'REVIEW', span: { start: 20, end: 25 } },
+      { kind: 'Pending', keyword: 'HACK', loc: { start: 60, end: 70 } },
+      { kind: 'Pending', keyword: 'TODO', loc: { start: 0, end: 5 } },
+      { kind: 'Pending', keyword: 'REVIEW', loc: { start: 20, end: 25 } },
     ],
   };
   mergePending(pendingAst);

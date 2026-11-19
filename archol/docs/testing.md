@@ -22,7 +22,8 @@ node --test editors/vscode/test
 | `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
 | `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
 | `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast`, `format --check`, pending diagnostics |
-| `archol-cli/tests/ast_snapshots.rs` | every example application against `<app>.expected-ast.yml`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/ast_snapshots.rs` | every example application against `<app>.expected-ast.yml` with `--no-loc`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/ast_locs.rs` | locs exist by default with valid byte ranges, and `--no-loc` removes `loc`/`keywordLoc` from JSON and YAML |
 | `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker, lock debouncer |
 
 ## Status
@@ -37,7 +38,7 @@ Each example application has `<app>.expected-ast.yml` next to its
 
 ```bash
 archol ast examples/applications/<path>/<app>-application.archol \
-  --app <app-uri> --yaml
+  --app <app-uri> --yaml --no-loc
 ```
 
 It writes the output to `<app>.result-ast.yml` (ignored by git) and compares

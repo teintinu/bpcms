@@ -198,7 +198,7 @@ ${browserNodeHelpersSource()}
         event.stopPropagation();
         if (isNode) {
           selectNode(value);
-          if (value.span && Number.isFinite(value.span.start)) revealSpan(value.span, false);
+          if (value.loc && Number.isFinite(value.loc.start)) revealSpan(value.loc, false);
         } else {
           toggleJsonPath(path);
         }
@@ -207,7 +207,7 @@ ${browserNodeHelpersSource()}
       row.addEventListener('click', function (event) {
         event.stopPropagation();
         selectNode(value);
-        if (value.span && Number.isFinite(value.span.start)) revealSpan(value.span, false);
+        if (value.loc && Number.isFinite(value.loc.start)) revealSpan(value.loc, false);
       });
     }
     wrapper.appendChild(row);
@@ -346,11 +346,11 @@ ${browserNodeHelpersSource()}
       setTransientStatus('Select an AST node');
       return;
     }
-    if (!node.span || !Number.isFinite(node.span.start)) {
+    if (!node.loc || !Number.isFinite(node.loc.start)) {
       setTransientStatus('Node has no code position');
       return;
     }
-    revealSpan(node.span, true);
+    revealSpan(node.loc, true);
   });
 
   declarationBtn.addEventListener('click', function () {

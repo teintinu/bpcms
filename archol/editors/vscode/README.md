@@ -104,8 +104,8 @@ the path, run **Archol: Restart LSP Server**.
 - AST explorer: navigable tree, filter by kind/name, colors by category,
   click to place the cursor, **Go to Code**, **Go to Declaration**,
   **Find Usages** and **Copy JSON**.
-  Clicking reuses the already open editor and **selects the whole span**
-  (`span.start`..`span.end`), without opening a second tab.
+  Clicking reuses the already open editor and **selects the whole loc**
+  (`loc.start`..`loc.end`), without opening a second tab.
 - Identifier navigation from the selected node: the toolbar shows its `id`,
   `ref` and `refKind`; **Go to Declaration** uses `ref` (or `id`) and
   **Find Usages** uses `id`.
@@ -154,16 +154,16 @@ single collapsible JSON tree:
   their contents inline on one line, clipped to the panel width. **Expand all**
   and **Collapse all** are in the toolbar.
 - **Key order:** `kind`, `title`, `value`, `message` and `id` always come first
-  (in that order); properties ending in `span`/`Span` always come last. The
+  (in that order); properties ending in `loc`/`Loc` always come last. The
   same order is used by inline previews and **Copy JSON**.
 - **Initial state:** the whole JSON starts collapsed (one line for the root).
   Opening from **Explore AST** expands the selected token and all its parent
   objects, highlights the token and scrolls it into view.
 - **Filter** matches JSON keys and scalar values; matching branches expand
   automatically.
-- **Click** an AST node object (any JSON object with `kind`/`span`) to select it
-  and reveal its span. Clicking a reference never navigates away; it only
-  reveals the node's own span.
+- **Click** an AST node object (any JSON object with `kind`/`loc`) to select it
+  and reveal its loc. Clicking a reference never navigates away; it only
+  reveals the node's own loc.
 - **Go to Code** does the same and moves focus to the editor.
 - The toolbar shows the selected node identifiers (`id 12 · ref 7 ·
   refKind enumValue`). **Go to Declaration** is enabled when the node has `ref`
@@ -180,8 +180,8 @@ single collapsible JSON tree:
 - When the open document changes, a new `archol/ast` is requested after 400 ms.
 
 The extension still uses structural index paths to find the node at a cursor
-position; clicking a JSON object with `kind`/`span` selects that node in the
-JSON tree and reveals its span.
+position; clicking a JSON object with `kind`/`loc` selects that node in the
+JSON tree and reveals its loc.
 
 ## LSP contract covered
 
@@ -189,7 +189,7 @@ JSON tree and reveals its span.
   `[Explore AST](command:archol.showAst?<encodeURIComponent(JSON.stringify([uri, line, character]))>)`.
   The command accepts the three arguments (or the single array that VS Code
   delivers), opens the `archol.astExplorer` panel and highlights the node of the
-  matching `span`.
+  matching `loc`.
 - **`initialize`**: includes
   `initializationOptions: { "application": "<uri>" }` from `archol.application`.
 - **`archol/applications`**: request `{}` →
@@ -200,7 +200,7 @@ JSON tree and reveals its span.
   whenever `archol.application` changes while the server is running.
 - **`archol/ast`**: request `{ "uri": "file:///..." }` →
   `{ "ast": SourceFile, "inApplication": true }`. An AST outside the current
-  application is marked with `commentedOut: true`. Spans are converted from
+  application is marked with `commentedOut: true`. Locs are converted from
   byte (AST) to UTF-16 position (VS Code) and back.
 - **`archol/declaration`**: request `{ "id": <id> }` → `{ "uri", "range" }` or
   `null`. The returned LSP range is selected in the existing editor.
@@ -245,7 +245,7 @@ archol/editors/vscode/
   test/
     index.js                    loads the tests for the directory command
     protocol.test.js            framing, fragmentation, UTF-8 and errors
-    ast-tree.test.js            tree, spans and position/byte conversion
+    ast-tree.test.js            tree, locs and position/byte conversion
     server-path.test.js         executable resolution on PATH and fallbacks
     app-support.test.js         app labels, node identifiers and usage labels
 ```
@@ -295,7 +295,7 @@ node --test test
 - The server may register capabilities dynamically; the extension answers
   `client/registerCapability` with `null`, but does not implement the dynamic
   providers (it only uses the fixed providers above).
-- `span.start`/`span.end` are **UTF-8 byte** offsets, as the Archol AST
+- `loc.start`/`loc.end` are **UTF-8 byte** offsets, as the Archol AST
   documents. The extension converts LSP line/character (UTF-16) → byte and byte
   → JavaScript string offset, handling `\r\n` and surrogate pairs.
 - The AST is treated as an acyclic JSON object; circular references are not
@@ -304,7 +304,7 @@ node --test test
   JSON scalars and forwarded as-is; the extension assumes the server accepts the
   same value it returned in `archol/ast`.
 - `archol/declaration` and `archol/usages` return LSP ranges (zero-based
-  line/character), unlike AST spans, and are selected directly without byte
+  line/character), unlike AST locs, and are selected directly without byte
   conversion.
 - The `current` value of `archol/applications` is accepted as a URI string or as
   an object with `uri`; when absent, `archol.application` is used.

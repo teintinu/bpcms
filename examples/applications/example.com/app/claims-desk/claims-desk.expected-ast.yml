@@ -5,9 +5,6 @@
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "span":
-          "end": 518
-          "start": 334
         "typeRef": "I18N"
         "value":
           "kind": "Object"
@@ -15,32 +12,17 @@
             -
               "kind": "PropertyAssignment"
               "name": "pt-BR"
-              "span":
-                "end": 373
-                "start": 347
               "value":
                 "kind": "StringLiteral"
                 "raw": "\"Mesa de Sinistros\""
-                "span":
-                  "end": 373
-                  "start": 354
                 "value": "Mesa de Sinistros"
             -
               "kind": "PropertyAssignment"
               "name": "en-US"
-              "span":
-                "end": 461
-                "start": 441
               "value":
                 "kind": "StringLiteral"
                 "raw": "\"Claims Desk\""
-                "span":
-                  "end": 461
-                  "start": 448
                 "value": "Claims Desk"
-          "span":
-            "end": 518
-            "start": 341
           "typeRef": null
       -
         "body":
@@ -48,207 +30,99 @@
             "alias": "Identity"
             "kind": "ServiceEntry"
             "ref": "aq"
-            "span":
-              "end": 687
-              "start": 644
             "uri": "example.com/services/identity"
           -
             "alias": "Claims"
             "kind": "ServiceEntry"
             "ref": "b5"
-            "span":
-              "end": 797
-              "start": 758
             "uri": "example.com/services/claims"
           -
             "alias": "FieldService"
             "kind": "ServiceEntry"
             "ref": "cd"
-            "span":
-              "end": 911
-              "start": 859
             "uri": "example.com/services/field-service"
           -
             "alias": "Payments"
             "kind": "ServiceEntry"
             "ref": "dj"
-            "span":
-              "end": 1016
-              "start": 973
             "uri": "example.com/services/payments"
         "keyword": null
         "kind": "Block"
         "name": "services"
-        "span":
-          "end": 1073
-          "start": 629
       -
         "body":
           -
             "kind": "Statement"
-            "span":
-              "end": 1188
-              "start": 1183
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Clerk"
-                "span":
-                  "end": 1188
-                  "start": 1183
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1188
-                "start": 1183
           -
             "kind": "Statement"
-            "span":
-              "end": 1268
-              "start": 1260
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Adjuster"
-                "span":
-                  "end": 1268
-                  "start": 1260
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1268
-                "start": 1260
           -
             "kind": "Statement"
-            "span":
-              "end": 1353
-              "start": 1341
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "FraudAnalyst"
-                "span":
-                  "end": 1353
-                  "start": 1341
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1353
-                "start": 1341
           -
             "kind": "Statement"
-            "span":
-              "end": 1447
-              "start": 1433
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "FinanceAnalyst"
-                "span":
-                  "end": 1447
-                  "start": 1433
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1447
-                "start": 1433
           -
             "kind": "Statement"
-            "span":
-              "end": 1528
-              "start": 1521
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Manager"
-                "span":
-                  "end": 1528
-                  "start": 1521
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1528
-                "start": 1521
           -
             "kind": "Statement"
-            "span":
-              "end": 1611
-              "start": 1599
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Policyholder"
-                "span":
-                  "end": 1611
-                  "start": 1599
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1611
-                "start": 1599
           -
             "kind": "Statement"
-            "span":
-              "end": 1690
-              "start": 1680
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Dispatcher"
-                "span":
-                  "end": 1690
-                  "start": 1680
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1690
-                "start": 1680
           -
             "kind": "Statement"
-            "span":
-              "end": 1779
-              "start": 1764
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "FieldTechnician"
-                "span":
-                  "end": 1779
-                  "start": 1764
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1779
-                "start": 1764
           -
             "kind": "Statement"
-            "span":
-              "end": 1856
-              "start": 1846
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Supervisor"
-                "span":
-                  "end": 1856
-                  "start": 1846
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1856
-                "start": 1846
           -
             "kind": "Statement"
-            "span":
-              "end": 1931
-              "start": 1923
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "Customer"
-                "span":
-                  "end": 1931
-                  "start": 1923
               "kind": "ExpressionStatement"
-              "span":
-                "end": 1931
-                "start": 1923
           -
             "kind": "Statement"
-            "span":
-              "end": 2103
-              "start": 2077
             "statement":
               "expression":
                 "kind": "Binary"
@@ -257,141 +131,66 @@
                   "left":
                     "kind": "Identifier"
                     "name": "Manager"
-                    "span":
-                      "end": 2084
-                      "start": 2077
                   "op": ">"
                   "right":
                     "kind": "Identifier"
                     "name": "Adjuster"
-                    "span":
-                      "end": 2095
-                      "start": 2087
-                  "span":
-                    "end": 2095
-                    "start": 2077
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "Clerk"
-                  "span":
-                    "end": 2103
-                    "start": 2098
-                "span":
-                  "end": 2103
-                  "start": 2077
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2103
-                "start": 2077
           -
             "kind": "Statement"
-            "span":
-              "end": 2193
-              "start": 2171
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "Manager"
-                  "span":
-                    "end": 2178
-                    "start": 2171
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "FraudAnalyst"
-                  "span":
-                    "end": 2193
-                    "start": 2181
-                "span":
-                  "end": 2193
-                  "start": 2171
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2193
-                "start": 2171
           -
             "kind": "Statement"
-            "span":
-              "end": 2295
-              "start": 2267
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "Supervisor"
-                  "span":
-                    "end": 2277
-                    "start": 2267
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "FieldTechnician"
-                  "span":
-                    "end": 2295
-                    "start": 2280
-                "span":
-                  "end": 2295
-                  "start": 2267
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2295
-                "start": 2267
           -
             "kind": "Statement"
-            "span":
-              "end": 2387
-              "start": 2364
             "statement":
               "expression":
                 "kind": "Binary"
                 "left":
                   "kind": "Identifier"
                   "name": "Supervisor"
-                  "span":
-                    "end": 2374
-                    "start": 2364
                 "op": ">"
                 "right":
                   "kind": "Identifier"
                   "name": "Dispatcher"
-                  "span":
-                    "end": 2387
-                    "start": 2377
-                "span":
-                  "end": 2387
-                  "start": 2364
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2387
-                "start": 2364
         "keyword": null
         "kind": "Block"
         "name": "roles"
-        "span":
-          "end": 2391
-          "start": 1171
       -
         "kind": "PropertyAssignment"
         "name": "theme"
-        "span":
-          "end": 2408
-          "start": 2395
         "value":
           "kind": "Identifier"
           "name": "Claims"
-          "span":
-            "end": 2408
-            "start": 2402
       -
         "kind": "PropertyAssignment"
         "name": "locales"
-        "span":
-          "end": 2527
-          "start": 2504
         "value":
           "elements":
             -
@@ -399,125 +198,62 @@
               "left":
                 "kind": "Identifier"
                 "name": "pt"
-                "span":
-                  "end": 2516
-                  "start": 2514
               "op": "-"
               "right":
                 "kind": "Identifier"
                 "name": "BR"
-                "span":
-                  "end": 2519
-                  "start": 2517
-              "span":
-                "end": 2519
-                "start": 2514
             -
               "kind": "Binary"
               "left":
                 "kind": "Identifier"
                 "name": "en"
-                "span":
-                  "end": 2523
-                  "start": 2521
               "op": "-"
               "right":
                 "kind": "Identifier"
                 "name": "US"
-                "span":
-                  "end": 2526
-                  "start": 2524
-              "span":
-                "end": 2526
-                "start": 2521
           "kind": "List"
-          "span":
-            "end": 2527
-            "start": 2513
       -
         "kind": "PropertyAssignment"
         "name": "environments"
-        "span":
-          "end": 2631
-          "start": 2602
         "value":
           "elements":
             -
               "kind": "Identifier"
               "name": "dev"
-              "span":
-                "end": 2620
-                "start": 2617
             -
               "kind": "Identifier"
               "name": "qa"
-              "span":
-                "end": 2624
-                "start": 2622
             -
               "kind": "Identifier"
               "name": "prod"
-              "span":
-                "end": 2630
-                "start": 2626
           "kind": "List"
-          "span":
-            "end": 2631
-            "start": 2616
       -
         "body":
           -
             "kind": "Statement"
-            "span":
-              "end": 2927
-              "start": 2922
             "statement":
               "expression":
                 "kind": "Identifier"
                 "name": "start"
-                "span":
-                  "end": 2927
-                  "start": 2922
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2927
-                "start": 2922
           -
             "kind": "Statement"
-            "span":
-              "end": 2961
-              "start": 2928
             "statement":
               "expression":
                 "elements":
                   -
                     "kind": "StringLiteral"
                     "raw": "\"example.com/services/identity\""
-                    "span":
-                      "end": 2960
-                      "start": 2929
                     "value": "example.com/services/identity"
                 "kind": "List"
-                "span":
-                  "end": 2961
-                  "start": 2928
               "kind": "ExpressionStatement"
-              "span":
-                "end": 2961
-                "start": 2928
         "keyword": null
         "kind": "Block"
         "name": "main"
-        "span":
-          "end": 2965
-          "start": 2807
     "id": "fc"
     "kind": "Artifact"
     "name": "example.com/app/claims-desk"
     "params": []
-    "span":
-      "end": 2967
-      "start": 195
 "kind": "SourceFile"
 "path": "examples/applications/example.com/app/claims-desk/claims-desk-application.archol"
 "pending":
@@ -525,359 +261,179 @@
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 9
-      "start": 3
     "kind": "Pending"
     "message": "application: Mesa de Sinistros (claims + field-service + payments)"
-    "span":
-      "end": 89
-      "start": 0
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 99
-      "start": 93
     "kind": "Pending"
     "message": "Declara a aplicação da URI example.com/app/claims-desk e abre sua composição."
-    "span":
-      "end": 194
-      "start": 90
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 250
-      "start": 244
     "kind": "Pending"
     "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
-    "span":
-      "end": 331
-      "start": 241
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 383
-      "start": 377
     "kind": "Pending"
     "message": "Título em português (idioma default)."
-    "span":
-      "end": 436
-      "start": 374
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 471
-      "start": 465
     "kind": "Pending"
     "message": "Título em inglês americano."
-    "span":
-      "end": 514
-      "start": 462
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 531
-      "start": 525
     "kind": "Pending"
     "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
-    "span":
-      "end": 626
-      "start": 522
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 697
-      "start": 691
     "kind": "Pending"
     "message": "Identidade e autenticação dos usuários."
-    "span":
-      "end": 753
-      "start": 688
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 807
-      "start": 801
     "kind": "Pending"
     "message": "Abertura e análise de sinistros."
-    "span":
-      "end": 854
-      "start": 798
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 921
-      "start": 915
     "kind": "Pending"
     "message": "Vistorias e atendimento em campo."
-    "span":
-      "end": 968
-      "start": 912
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1026
-      "start": 1020
     "kind": "Pending"
     "message": "Pagamentos de indenizações."
-    "span":
-      "end": 1069
-      "start": 1017
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1086
-      "start": 1080
     "kind": "Pending"
     "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
-    "span":
-      "end": 1168
-      "start": 1077
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1198
-      "start": 1192
     "kind": "Pending"
     "message": "Atendente: registra e triagem os sinistros."
-    "span":
-      "end": 1255
-      "start": 1189
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1278
-      "start": 1272
     "kind": "Pending"
     "message": "Regulador: analisa e decide a indenização."
-    "span":
-      "end": 1336
-      "start": 1269
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1363
-      "start": 1357
     "kind": "Pending"
     "message": "Analista antifraude: investiga indícios de fraude."
-    "span":
-      "end": 1428
-      "start": 1354
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1457
-      "start": 1451
     "kind": "Pending"
     "message": "Analista financeiro: acompanha os pagamentos."
-    "span":
-      "end": 1516
-      "start": 1448
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1538
-      "start": 1532
     "kind": "Pending"
     "message": "Gerente: responde pela operação da mesa."
-    "span":
-      "end": 1594
-      "start": 1529
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1621
-      "start": 1615
     "kind": "Pending"
     "message": "Segurado: acompanha o próprio sinistro."
-    "span":
-      "end": 1675
-      "start": 1612
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1700
-      "start": 1694
     "kind": "Pending"
     "message": "Despachante: distribui as vistorias em campo."
-    "span":
-      "end": 1759
-      "start": 1691
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1789
-      "start": 1783
     "kind": "Pending"
     "message": "Técnico de campo: executa a vistoria."
-    "span":
-      "end": 1841
-      "start": 1780
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1866
-      "start": 1860
     "kind": "Pending"
     "message": "Supervisor: coordena campo e despacho."
-    "span":
-      "end": 1918
-      "start": 1857
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 1941
-      "start": 1935
     "kind": "Pending"
     "message": "Cliente: acompanha o atendimento."
-    "span":
-      "end": 1988
-      "start": 1932
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2002
-      "start": 1996
     "kind": "Pending"
     "message": "Manager é superior a Adjuster, que é superior a Clerk."
-    "span":
-      "end": 2072
-      "start": 1993
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2117
-      "start": 2111
     "kind": "Pending"
     "message": "Manager é superior a FraudAnalyst."
-    "span":
-      "end": 2166
-      "start": 2108
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2207
-      "start": 2201
     "kind": "Pending"
     "message": "Supervisor é superior a FieldTechnician."
-    "span":
-      "end": 2262
-      "start": 2198
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2309
-      "start": 2303
     "kind": "Pending"
     "message": "Supervisor é superior a Dispatcher."
-    "span":
-      "end": 2359
-      "start": 2300
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2418
-      "start": 2412
     "kind": "Pending"
     "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
-    "span":
-      "end": 2501
-      "start": 2409
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2537
-      "start": 2531
     "kind": "Pending"
     "message": "Idiomas da app; o primeiro (pt-BR) é o default."
-    "span":
-      "end": 2599
-      "start": 2528
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2641
-      "start": 2635
     "kind": "Pending"
     "message": "Ambientes declarados para esta aplicação."
-    "span":
-      "end": 2698
-      "start": 2632
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2711
-      "start": 2705
     "kind": "Pending"
     "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
-    "span":
-      "end": 2804
-      "start": 2702
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
     "keyword": "REVIEW"
-    "keywordSpan":
-      "end": 2827
-      "start": 2821
     "kind": "Pending"
     "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
-    "span":
-      "end": 2917
-      "start": 2818

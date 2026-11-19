@@ -4,7 +4,7 @@
 // The child order is the same one used by the explorer (src/ast-view-html.js):
 // properties that are nodes, then arrays of nodes, in JSON object order.
 
-const META_KEYS = new Set(['kind', 'span']);
+const META_KEYS = new Set(['kind', 'loc']);
 
 function isAstNode(value) {
   return Boolean(value) && typeof value === 'object' && typeof value.kind === 'string';
@@ -39,17 +39,17 @@ function mergePending(ast) {
     .sort((left, right) => spanStart(left) - spanStart(right));
   delete ast.pending;
   for (const item of pending) {
-    const container = pendingContainer(ast, item.span, null);
+    const container = pendingContainer(ast, item.loc, null);
     if (!container) continue;
-    const target = chooseArray(container, item.span);
+    const target = chooseArray(container, item.loc);
     if (!target) continue;
-    target.array.splice(insertIndex(target.array, item.span), 0, item);
+    target.array.splice(insertIndex(target.array, item.loc), 0, item);
   }
   return ast;
 }
 
 function spanStart(node) {
-  return node && node.span && Number.isFinite(node.span.start) ? node.span.start : 0;
+  return node && node.loc && Number.isFinite(node.loc.start) ? node.loc.start : 0;
 }
 
 function contains(span, point) {
@@ -66,7 +66,7 @@ function pendingContainer(node, span, fallback) {
   const children = getChildren(node);
   for (const child of children) {
     if (!isAstNode(child) || child.kind === 'Pending') continue;
-    if (!child.span || !contains(child.span, span.start)) continue;
+    if (!child.loc || !contains(child.loc, span.start)) continue;
     const deeper = pendingContainer(child, span, fallback);
     if (deeper && arrayKeys(deeper).length > 0) return deeper;
   }
@@ -76,7 +76,7 @@ function pendingContainer(node, span, fallback) {
 
 function arrayKeys(node) {
   return Object.keys(node).filter((key) => {
-    if (key === 'pending' || key === 'span' || key === 'keywordSpan') return false;
+    if (key === 'pending' || key === 'loc' || key === 'keywordLoc') return false;
     const value = node[key];
     return Array.isArray(value) && value.some((item) => isAstNode(item));
   });
@@ -90,12 +90,12 @@ function chooseArray(node, span) {
     const array = node[key];
     let distance = Infinity;
     for (const item of array) {
-      if (!isAstNode(item) || !item.span) continue;
-      if (contains(item.span, span.start)) {
+      if (!isAstNode(item) || !item.loc) continue;
+      if (contains(item.loc, span.start)) {
         distance = 0;
         break;
       }
-      distance = Math.min(distance, Math.abs(item.span.start - span.start));
+      distance = Math.min(distance, Math.abs(item.loc.start - span.start));
     }
     if (!best || distance < best.distance) best = { array, distance };
   }
@@ -105,7 +105,7 @@ function chooseArray(node, span) {
 function insertIndex(array, span) {
   for (let index = 0; index < array.length; index += 1) {
     const item = array[index];
-    if (isAstNode(item) && item.span && item.span.start > span.start) return index;
+    if (isAstNode(item) && item.loc && item.loc.start > span.start) return index;
   }
   return array.length;
 }
@@ -134,7 +134,7 @@ function findNodeAtOffset(root, offset) {
   if (!isAstNode(root) || !Number.isFinite(offset)) return null;
   let best = null;
   walk(root, (node, path) => {
-    const span = node.span;
+    const span = node.loc;
     if (!span || !Number.isFinite(span.start) || !Number.isFinite(span.end)) return;
     if (offset < span.start || offset > span.end) return;
     const length = span.end - span.start;

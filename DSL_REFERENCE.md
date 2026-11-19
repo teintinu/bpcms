@@ -111,7 +111,7 @@ process Dunning(invoice: Invoice) {
   "raw": "30d",
   "value": 2592000,
   "unit": "s",
-  "span": { "start": 0, "end": 0 }
+  "loc": { "start": 0, "end": 0 }
 }
 ```
 

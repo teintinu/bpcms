@@ -59,7 +59,7 @@ archol lint [dir] --app <uri|path> [--json]    check diagnostics (lint)
 archol format [dir] [--check]                  uppercase pending keywords (format)
 archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
-archol ast <file> [--app <uri|path>] [--json|--yaml]  syntax AST, or annotated with ids
+archol ast <file> [--app <uri|path>] [--json|--yaml] [--no-loc]  syntax AST, or annotated with ids
 archol view <file> [--app <uri|path>] [--json|--pretty]  compact preview payload for editors
 archol tokens <file>                           tokens (lexer debugging)
 archol links [dir] --app <uri|path> [--json]   closure-only index for the builder
@@ -70,7 +70,7 @@ archol lsp                                    LSP server over stdio
 `check` exits with code 1 when there is an error and prints
 `file:line:column: severity code: message`. `lock` writes one identifier per
 line (CSV `id,path`); the AST then carries stable `id`/`ref` values from the lock. Only used identifiers get ids; append `*` to a path to pin it. The plugin refreshes the lock on application selection and, with a 10 s debounce, after `.archol` edits.
-`ast --yaml` exports the same AST as block-style YAML (strings are JSON-quoted), useful for snapshots.
+`ast --yaml` exports the same AST as block-style YAML (strings are JSON-quoted), useful for snapshots. `--no-loc` removes every `loc`/`keywordLoc` property, keeping diffs small.
 `format` uppercases `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` comment markers and
 `--check` exits 1 when a file would change. `lint` runs the same diagnostics as
 `check` (including pending due dates). `links` produces, among other things,
@@ -125,7 +125,7 @@ nesting, empty files, CRLF, and Unicode do not crash the CLI
 - Small files with a single responsibility; tokens organized under
   `crates/archol-core/src/token/` with tests per family.
 - No heavy macros, no async, no runtime: a direct recursive parser.
-- The AST is JSON (TypeScript style): every node has `kind` and `span`.
+- The AST is JSON (TypeScript style): every node has `kind` and `loc`.
 - The check validates **values**, not just types: `const a: TaxRegimeCode = SIMPLES`
   and `regime == SIMPLES` are checked against the shape's `value`s.
 - The link produces information the source does not have ready-made:

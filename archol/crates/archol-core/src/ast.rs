@@ -46,8 +46,10 @@ pub struct Pending {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_text: Option<String>,
     pub message: String,
+    #[serde(rename = "loc")]
     pub span: Span,
     /// Span of the keyword itself, used by `archol format`.
+    #[serde(rename = "keywordLoc")]
     pub keyword_span: Span,
 }
 
@@ -60,6 +62,7 @@ pub struct Artifact {
     pub name: String,
     pub params: Vec<Param>,
     pub body: Vec<Member>,
+    #[serde(rename = "loc")]
     pub span: Span,
     /// Stable identifier from the application lock (assigned by the semantic pass).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -95,6 +98,7 @@ pub struct Param {
     pub type_ref: Option<String>,
     #[serde(rename = "typeRefId", skip_serializing_if = "Option::is_none")]
     pub type_ref_id: Option<String>,
+    #[serde(rename = "loc")]
     pub span: Span,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -111,6 +115,7 @@ pub enum Member {
         #[serde(rename = "typeRef", skip_serializing_if = "Option::is_none")]
         type_ref: Option<String>,
         value: Expr,
+        #[serde(rename = "loc")]
         span: Span,
         #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
@@ -120,33 +125,45 @@ pub enum Member {
         keyword: Option<String>,
         name: String,
         body: Vec<Member>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// `value SIMPLE { ... }` inside a classification/workflow shape.
     EnumValueDeclaration {
         name: String,
         body: Vec<Member>,
+        #[serde(rename = "loc")]
         span: Span,
         #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
     },
     /// `{ fiscalPeriod }` as an argument: key without an explicit value.
-    ShorthandProperty { name: String, span: Span },
+    ShorthandProperty {
+        name: String,
+        #[serde(rename = "loc")]
+        span: Span,
+    },
     /// `"example.com/services/orders" as Orders` inside an application's `services`.
     ServiceEntry {
         uri: String,
         alias: String,
+        #[serde(rename = "loc")]
         span: Span,
         /// Service declaration id from the application lock.
         #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
         target: Option<String>,
     },
     /// Process statement (`if`, `try`, `return`, call, ...).
-    Statement { statement: Stmt, span: Span },
+    Statement {
+        statement: Stmt,
+        #[serde(rename = "loc")]
+        span: Span,
+    },
     /// `service "example.com/services/orders" as Orders` inside `imports`.
     ImportDeclaration {
         uri: String,
         alias: String,
+        #[serde(rename = "loc")]
         span: Span,
         /// Service declaration id from the application lock.
         #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
@@ -156,6 +173,7 @@ pub enum Member {
     TriggerDeclaration {
         keyword: String,
         targets: Vec<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
 }
@@ -194,26 +212,32 @@ impl Member {
 pub enum Expr {
     Identifier {
         name: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
     StringLiteral {
         value: String,
         raw: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
     NumberLiteral {
         value: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
     BooleanLiteral {
         value: bool,
+        #[serde(rename = "loc")]
         span: Span,
     },
     NullLiteral {
+        #[serde(rename = "loc")]
         span: Span,
     },
     List {
         elements: Vec<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// `{ pt-BR: "..." }` or `Store { code: ... }` (typed object).
@@ -223,18 +247,21 @@ pub enum Expr {
         #[serde(rename = "typeRefId", skip_serializing_if = "Option::is_none")]
         type_ref_id: Option<String>,
         members: Vec<Member>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// Named argument in a call: `send(key: invoice, ...)`.
     NamedArgument {
         name: String,
         value: Box<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// `FiscalPeriod.consolidate({ ... })`.
     Call {
         callee: String,
         args: Vec<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// Parsed literal of a Shape: `"30d"` assigned to `std.Duration`.
@@ -248,12 +275,14 @@ pub enum Expr {
         /// Base unit after normalization, for quantity shapes.
         #[serde(skip_serializing_if = "Option::is_none")]
         unit: Option<String>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// `a.b.c`.
     MemberAccess {
         object: Box<Expr>,
         name: String,
+        #[serde(rename = "loc")]
         span: Span,
         /// Field identifier (from the application lock) resolved by the semantic pass.
         #[serde(rename = "fieldRef", skip_serializing_if = "Option::is_none")]
@@ -266,22 +295,26 @@ pub enum Expr {
         name: String,
         #[serde(rename = "ref")]
         target: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
     Binary {
         op: String,
         left: Box<Expr>,
         right: Box<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     Unary {
         op: String,
         operand: Box<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     /// Tolerant fallback for expressions the parser does not model.
     Raw {
         text: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
 }
@@ -332,6 +365,7 @@ pub enum ShapeValue {
 pub enum Stmt {
     ExpressionStatement {
         expression: Expr,
+        #[serde(rename = "loc")]
         span: Span,
     },
     ConstDeclaration {
@@ -339,6 +373,7 @@ pub enum Stmt {
         #[serde(rename = "typeRef")]
         type_ref: Option<String>,
         init: Option<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     LetDeclaration {
@@ -346,6 +381,7 @@ pub enum Stmt {
         #[serde(rename = "typeRef")]
         type_ref: Option<String>,
         init: Option<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     IfStatement {
@@ -354,19 +390,23 @@ pub enum Stmt {
         then_branch: Vec<Member>,
         #[serde(rename = "else")]
         else_branch: Option<Vec<Member>>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     TryStatement {
         body: Vec<Member>,
         catches: Vec<CatchClause>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     ReturnStatement {
         value: Option<Expr>,
+        #[serde(rename = "loc")]
         span: Span,
     },
     RawStatement {
         tokens: String,
+        #[serde(rename = "loc")]
         span: Span,
     },
 }
@@ -391,5 +431,6 @@ pub struct CatchClause {
     #[serde(rename = "typeRef")]
     pub type_ref: Option<String>,
     pub body: Vec<Member>,
+    #[serde(rename = "loc")]
     pub span: Span,
 }

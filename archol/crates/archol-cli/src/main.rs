@@ -49,7 +49,7 @@ fn usage() {
          \x20 format [dir] [--check]                     uppercases pending comment keywords\n\
          \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
-         \x20 ast <file> [--app <uri-or-path>] [--json|--yaml]  prints the AST (annotated with --app)\n\
+         \x20 ast <file> [--app <uri-or-path>] [--json|--yaml] [--no-loc]  prints the AST\n\
          \x20 view <file> [--app <uri-or-path>] [--json] [--pretty]  compact preview payload for editors\n\
          \x20 tokens <file>                               prints the tokens\n\
          \x20 links [dir] --app <uri-or-path> [--json]    inverted index of the closure\n\
@@ -62,6 +62,7 @@ struct Options {
     app: Option<String>,
     json: bool,
     yaml: bool,
+    no_loc: bool,
     pretty: bool,
     check: bool,
 }
@@ -72,6 +73,7 @@ impl Options {
         let mut app = None;
         let mut json = false;
         let mut yaml = false;
+        let mut no_loc = false;
         let mut pretty = false;
         let mut check = false;
         let mut iter = args.iter();
@@ -80,6 +82,7 @@ impl Options {
                 "--app" => app = iter.next().cloned(),
                 "--json" => json = true,
                 "--yaml" => yaml = true,
+                "--no-loc" => no_loc = true,
                 "--pretty" => pretty = true,
                 "--check" => check = true,
                 _ => positional.push(arg.clone()),
@@ -90,6 +93,7 @@ impl Options {
             app,
             json,
             yaml,
+            no_loc,
             pretty,
             check,
         }
@@ -294,12 +298,12 @@ fn ast(args: &[String]) -> i32 {
     };
     let path = PathBuf::from(file);
     match options.app.as_deref() {
-        Some(selector) => annotated_ast(&path, selector, options.yaml),
-        None => syntax_ast(&path, options.yaml),
+        Some(selector) => annotated_ast(&path, selector, options.yaml, options.no_loc),
+        None => syntax_ast(&path, options.yaml, options.no_loc),
     }
 }
 
-fn syntax_ast(path: &Path, yaml: bool) -> i32 {
+fn syntax_ast(path: &Path, yaml: bool, no_loc: bool) -> i32 {
     let source = match std::fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -308,7 +312,7 @@ fn syntax_ast(path: &Path, yaml: bool) -> i32 {
         }
     };
     let result = parse(&source, path.to_string_lossy().to_string());
-    print_ast(&result.ast, yaml);
+    print_ast(&result.ast, yaml, no_loc);
     if !result.diagnostics.is_empty() {
         for diagnostic in &result.diagnostics {
             eprintln!("{}: {}", diagnostic.code, diagnostic.message);
@@ -318,7 +322,7 @@ fn syntax_ast(path: &Path, yaml: bool) -> i32 {
     0
 }
 
-fn annotated_ast(path: &Path, selector: &str, yaml: bool) -> i32 {
+fn annotated_ast(path: &Path, selector: &str, yaml: bool, no_loc: bool) -> i32 {
     let (wanted, text) = (
         std::fs::canonicalize(path).ok(),
         path.to_string_lossy().to_string(),
@@ -352,19 +356,40 @@ fn annotated_ast(path: &Path, selector: &str, yaml: bool) -> i32 {
         for (read_path, message) in &read_errors {
             eprintln!("{read_path}: {message}");
         }
-        print_ast(&file.ast, yaml);
+        print_ast(&file.ast, yaml, no_loc);
         return 0;
     }
     eprintln!("error: {error}");
     1
 }
 
-fn print_ast<T: serde::Serialize>(value: &T, yaml: bool) {
-    let json = serde_json::to_value(value).unwrap();
+fn print_ast<T: serde::Serialize>(value: &T, yaml: bool, no_loc: bool) {
+    let mut json = serde_json::to_value(value).unwrap();
+    if no_loc {
+        strip_locs(&mut json);
+    }
     if yaml {
         print!("{}", yaml::to_yaml(&json));
     } else {
         println!("{}", serde_json::to_string_pretty(&json).unwrap());
+    }
+}
+
+/// Removes every `loc`-suffixed property recursively.
+fn strip_locs(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(map) => {
+            map.retain(|key, _| !key.to_ascii_lowercase().ends_with("loc"));
+            for value in map.values_mut() {
+                strip_locs(value);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                strip_locs(item);
+            }
+        }
+        _ => {}
     }
 }
 

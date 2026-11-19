@@ -59,7 +59,14 @@ fn every_example_application_has_a_matching_ast_snapshot() {
         let relative = app.strip_prefix(&root).unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_archol"))
             .current_dir(&root)
-            .args(["ast", relative.to_str().unwrap(), "--app", &uri, "--yaml"])
+            .args([
+                "ast",
+                relative.to_str().unwrap(),
+                "--app",
+                &uri,
+                "--yaml",
+                "--no-loc",
+            ])
             .output()
             .unwrap();
         assert!(
