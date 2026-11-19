@@ -150,6 +150,14 @@ The `archol.astExplorer` panel keeps its context while hidden. The extension
 requests `archol/ast` with `{ "uri": "file:///..." }` and draws `ast` as a tree:
 
 - **Filter** compares the typed text with `kind` and with the summary (`Document Invoice`).
+- **Initial state:** the AST tree opens with `SourceFile` and the top-level artifacts expanded; every `PropertyAssignment` (and nested property) starts collapsed on one line.
+- **JSON popover:** hover a node for ~320 ms to open a floating JSON popover
+  (about 40 characters wide, clamped to the window). It shows the hovered node
+  with per-property expand/collapse, **Expand** and **Collapse** buttons. Every
+  object property starts collapsed on a single line; collapsed content is shown
+  inline (`{"a":1,"b":2}`), clipped horizontally to the popover width. Moving
+  into the popover keeps it open; leaving it or scrolling the tree closes it.
+  The native Cut/Copy/Paste context menu is disabled.
 - **Colors** by category (declaration, expression, statement, block) are CSS
   only, using `var(--vscode-*)` to follow the light/dark theme.
 - **Click** on a node places the cursor at `span.start` and reveals the span,

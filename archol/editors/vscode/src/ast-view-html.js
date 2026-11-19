@@ -67,6 +67,50 @@ function buildAstHtml({ cspSource, nonce }) {
   #tree {
     flex: 1 1 auto; overflow: auto; padding: 6px 8px 24px; white-space: nowrap;
   }
+  .json-popover {
+    position: fixed; z-index: 20; width: 40ch; max-width: calc(100vw - 24px);
+    max-height: min(60vh, 480px); display: flex; flex-direction: column;
+    border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, rgba(128,128,128,.35)));
+    border-radius: 4px; overflow: hidden;
+    background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+    box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  }
+  .json-popover[hidden] { display: none; }
+  .json-head {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px 6px;
+    border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,.35));
+    font-size: 11px; color: var(--vscode-descriptionForeground);
+    background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  }
+  .json-title {
+    flex: 1 1 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-family: var(--vscode-editor-font-family, monospace);
+    font-weight: 600; color: var(--vscode-editor-foreground);
+  }
+  .json-head button { padding: 2px 6px; font-size: 11px; }
+  .json-tree {
+    flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 5px 8px 10px;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 12px; line-height: 1.5; white-space: nowrap;
+  }
+  .json-row {
+    display: flex; align-items: flex-start; gap: 4px; min-height: 18px;
+    max-width: 100%; overflow: hidden; white-space: nowrap; cursor: default;
+  }
+  .json-row.expandable { cursor: pointer; }
+  .json-row.expandable:hover { background: var(--vscode-list-hoverBackground); }
+  .json-twisty { width: 12px; flex: 0 0 12px; color: var(--vscode-descriptionForeground); }
+  .json-key { color: var(--vscode-symbolIcon-propertyForeground, #9cdcfe); flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+  .json-string { color: var(--vscode-debugTokenExpression-string, #ce9178); }
+  .json-number { color: var(--vscode-debugTokenExpression-number, #b5cea8); }
+  .json-boolean { color: var(--vscode-debugTokenExpression-boolean, #569cd6); }
+  .json-null { color: var(--vscode-descriptionForeground); }
+  .json-preview {
+    color: var(--vscode-descriptionForeground);
+    flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  }
+  .json-children { margin-left: 14px; border-left: 1px dotted var(--vscode-panel-border, rgba(128,128,128,.35)); padding-left: 4px; }
+  .json-closing { color: var(--vscode-descriptionForeground); }
   .node-row {
     display: flex; align-items: center; gap: 5px; padding: 2px 4px;
     border-radius: 2px; cursor: pointer; user-select: none;
@@ -111,6 +155,14 @@ function buildAstHtml({ cspSource, nonce }) {
 </header>
 <div id="banner" role="alert" hidden>Outside the current application — treated as commented out</div>
 <main id="tree" role="tree" aria-label="Archol AST tree"></main>
+<div id="json-popover" class="json-popover" role="dialog" aria-label="JSON of the hovered node" hidden>
+  <div class="json-head">
+    <span class="json-title" id="json-title">JSON</span>
+    <button id="json-expand" type="button" class="secondary" title="Expand all JSON properties">Expand</button>
+    <button id="json-collapse" type="button" class="secondary" title="Collapse all JSON properties">Collapse</button>
+  </div>
+  <div id="json-tree" class="json-tree" role="tree" aria-label="JSON tree"></div>
+</div>
 <script nonce="${nonce}">
 ${browserScript}
 </script>
