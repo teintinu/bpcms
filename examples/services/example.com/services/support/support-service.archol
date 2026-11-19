@@ -2,8 +2,8 @@
 service "example.com/services/support" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Atendimento", en: "Support" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço, comparada em release e no lock.
-  version: 1.0.0
   // REVIEW [2026-12-15] Área responsável pelo serviço, usada em governança.
   owner: "Support"
   // REVIEW [2026-12-15] Dependências externas trazidas para o escopo por alias.

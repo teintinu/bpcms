@@ -8,6 +8,7 @@ application (.archol)
   ├── archol_analysis::application  entry services + transitive imports (closure)
   ├── archol_core::lex              tokens + lexical diagnostics
   ├── archol_core::parse            SourceFile (JSON AST)
+  ├── archol_analysis::i18n         I18N type + application locale filtering
   ├── archol_analysis::Symbols      closure artifacts, enums, and roles
   ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
   ├── archol_analysis::build_links  role → artifacts, enum → values, refs
@@ -38,6 +39,11 @@ The check is more than type inference:
 - Process parameters also have their type validated; an unreadable file becomes
   `E_FILE_READ` (it is not silently discarded).
 - The same artifact name, in the same service and type, is `E_DUP_ARTIFACT`.
+- Every `service` must declare `locales` with at least one locale; otherwise
+  `E_LOCALES_REQUIRED`.
+- `title`, `goal`, `instructions`, `short` and `tooltip` are marked
+  `typeRef: "I18N"`; string shorthand is expanded to the service's first locale and
+  locale map entries not supported by the application are dropped.
 
 Pending comments (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
 `SourceFile.pending`. A missing or past due date is an error

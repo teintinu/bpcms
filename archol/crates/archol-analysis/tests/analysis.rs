@@ -1,4 +1,5 @@
-use archol_analysis::{analyze, FileInput};
+use archol_analysis::{analyze, analyze_application, FileInput};
+use archol_core::{Expr, Member};
 
 fn workspace(files: &[(&str, &str)]) -> archol_analysis::Analysis {
     analyze(
@@ -20,7 +21,7 @@ fn base_files() -> Vec<(&'static str, &'static str)> {
     vec![
         (
             SERVICE,
-            "service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n}",
+            "service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\" ]\n}",
         ),
         (
             SHAPES,
@@ -141,7 +142,7 @@ fn enum_from_other_service_with_alias() {
     let files = vec![
         (
             "ws/services/example.com/services/alpha/alpha-service.archol",
-            "service \"example.com/services/alpha\" { title: { pt-BR: \"Alpha\" } }",
+            "service \"example.com/services/alpha\" { title: { pt-BR: \"Alpha\" } locales: [ \"pt-BR\" ] }",
         ),
         (
             "ws/services/example.com/services/alpha/alpha-shapes.archol",
@@ -149,7 +150,7 @@ fn enum_from_other_service_with_alias() {
         ),
         (
             "ws/services/example.com/services/beta/beta-service.archol",
-            "service \"example.com/services/beta\" {\n  imports { service \"example.com/services/alpha\" as Alpha }\n}",
+            "service \"example.com/services/beta\" {\n  locales: [ \"pt-BR\" ]\n  imports { service \"example.com/services/alpha\" as Alpha }\n}",
         ),
         (
             "ws/services/example.com/services/beta/processes/beta.archol",
@@ -176,7 +177,7 @@ fn homonymous_enum_does_not_yield_false_positive() {
     let files = vec![
         (
             "ws/services/example.com/services/a/a-service.archol",
-            "service \"example.com/services/a\" { title: { pt-BR: \"A\" } }",
+            "service \"example.com/services/a\" { title: { pt-BR: \"A\" } locales: [ \"pt-BR\" ] }",
         ),
         (
             "ws/services/example.com/services/a/a-shapes.archol",
@@ -184,7 +185,7 @@ fn homonymous_enum_does_not_yield_false_positive() {
         ),
         (
             "ws/services/example.com/services/b/b-service.archol",
-            "service \"example.com/services/b\" { title: { pt-BR: \"B\" } }",
+            "service \"example.com/services/b\" { title: { pt-BR: \"B\" } locales: [ \"pt-BR\" ] }",
         ),
         (
             "ws/services/example.com/services/b/b-shapes.archol",
@@ -231,4 +232,115 @@ fn literal_on_left_points_to_literal() {
         .expect("diagnostic");
     let expected = source.find("INVALIDO").unwrap();
     assert_eq!(diagnostic.diagnostic.span.start, expected);
+}
+
+#[test]
+fn i18n_properties_are_typed_and_filtered_by_application_locales() {
+    let files = vec![
+        (
+            "ws/applications/example.com/app/demo/demo-application.archol",
+            "application \"example.com/app/demo\" {\n  services {\n    \"example.com/services/demo\" as Demo\n  }\n  locales: [pt-BR, en-US]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" {\n  title: \"Demonstração\"\n  locales: [ \"pt-BR\", \"en\" ]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/processes/demo-process.archol",
+            "process P {\n  title: { pt-BR: \"Processo\", en: \"Process\", fr: \"Processus\" }\n  goal: \"Fazer a demonstração\"\n}",
+        ),
+    ]
+    .into_iter()
+    .map(|(path, source)| FileInput {
+        path: path.to_string(),
+        source: source.to_string(),
+    })
+    .collect();
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+
+    let service = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("demo-service.archol"))
+        .expect("service file");
+    let service_title = property(&service.ast.items[0].body, "title").expect("service title");
+    assert_eq!(service_title.0.as_deref(), Some("I18N"));
+    let Expr::Object { members, .. } = service_title.1 else {
+        panic!("string shorthand must expand to a locale map");
+    };
+    assert_eq!(members.len(), 1);
+    assert_eq!(members[0].name(), Some("pt-BR"));
+
+    let process = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("demo-process.archol"))
+        .expect("process file");
+    let (title_ty, title) = property(&process.ast.items[0].body, "title").expect("title");
+    assert_eq!(title_ty.as_deref(), Some("I18N"));
+    let Expr::Object { members, .. } = title else {
+        panic!("title must be an object");
+    };
+    let locales: Vec<_> = members.iter().filter_map(|member| member.name()).collect();
+    assert_eq!(locales, vec!["pt-BR", "en"]);
+
+    let (goal_ty, goal) = property(&process.ast.items[0].body, "goal").expect("goal");
+    assert_eq!(goal_ty.as_deref(), Some("I18N"));
+    let Expr::Object { members, .. } = goal else {
+        panic!("goal string shorthand must expand to a locale map");
+    };
+    assert_eq!(members[0].name(), Some("pt-BR"));
+}
+
+fn property<'a>(members: &'a [Member], wanted: &str) -> Option<(Option<String>, &'a Expr)> {
+    for member in members {
+        match member {
+            Member::PropertyAssignment {
+                name,
+                type_ref,
+                value,
+                ..
+            } if name == wanted => return Some((type_ref.clone(), value)),
+            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
+                if let Some(found) = property(body, wanted) {
+                    return Some(found);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+#[test]
+fn service_must_declare_at_least_one_locale() {
+    let no_locales = workspace(&[(
+        "ws/services/example.com/services/demo/demo-service.archol",
+        "service \"example.com/services/demo\" {\n  title: \"Demo\"\n}",
+    )]);
+    assert!(no_locales
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_LOCALES_REQUIRED"));
+
+    let empty = workspace(&[(
+        "ws/services/example.com/services/demo/demo-service.archol",
+        "service \"example.com/services/demo\" {\n  title: \"Demo\"\n  locales: [ ]\n}",
+    )]);
+    assert!(empty
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_LOCALES_REQUIRED"));
+
+    let valid = workspace(&[(
+        "ws/services/example.com/services/demo/demo-service.archol",
+        "service \"example.com/services/demo\" {\n  title: \"Demo\"\n  locales: [ \"pt-BR\" ]\n}",
+    )]);
+    assert!(!valid
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_LOCALES_REQUIRED"));
 }

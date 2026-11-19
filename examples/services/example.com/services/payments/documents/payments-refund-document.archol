@@ -4,7 +4,6 @@
 document Refund {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Reembolso", en: "Refund" }
-  version: 2 // REVIEW [2026-12-15] Versão do artefato Document; entra no diff e no release.
   owner: "Payments" // REVIEW [2026-12-15] Área responsável pelo documento.
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias.
 

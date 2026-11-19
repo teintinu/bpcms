@@ -4,7 +4,6 @@
 document OrderCancellation {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
-  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.

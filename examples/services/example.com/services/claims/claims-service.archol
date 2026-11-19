@@ -3,8 +3,8 @@
 service "example.com/services/claims" {
   // REVIEW [2026-12-15] Título exibido no builder e no catálogo de serviços.
   title: { pt-BR: "Sinistros", en: "Claims" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato Service; releases e diffs comparam este valor.
-  version: 1.0.0
   // REVIEW [2026-12-15] Área de negócio responsável pela manutenção do serviço.
   owner: "Claims"
 

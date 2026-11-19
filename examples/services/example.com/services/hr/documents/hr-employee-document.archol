@@ -5,7 +5,6 @@ document Employee {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Colaborador", en: "Employee" }
   // REVIEW [2026-12-15] Versão do artefato usada em diff e release.
-  version: 1
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "People"
   // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias e telas.

@@ -3,8 +3,8 @@
 service "example.com/services/field-service" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Serviço de campo", en: "Field service" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
-  version: 1.0.0
   // REVIEW [2026-12-15] Responsável pela manutenção do serviço.
   owner: "Field Service"
 

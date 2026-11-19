@@ -4,8 +4,8 @@
 service "example.com/services/shipping" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Expedição", en: "Shipping" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço; releases e locks comparam este valor.
-  version: 1.1.0
   // REVIEW [2026-12-15] Área responsável pelo serviço.
   owner: "Shipping"
   // REVIEW [2026-12-15] Serviços externos usados por este serviço, com alias local.

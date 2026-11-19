@@ -55,6 +55,9 @@ fn check_artifact(
     artifact: &Artifact,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
+    if artifact.artifact_kind == "Service" {
+        check_service_locales(artifact, diagnostics);
+    }
     for param in &artifact.params {
         if let Some(type_ref) = &param.type_ref {
             check_type_name(symbols, service, type_ref, param.span, diagnostics);
@@ -66,6 +69,31 @@ fn check_artifact(
     }
     collect_locals(&artifact.body, &mut locals);
     check_members(symbols, service, &artifact.body, &locals, diagnostics);
+}
+
+/// Every service declares `locales` with at least one language.
+fn check_service_locales(artifact: &Artifact, diagnostics: &mut Vec<Diagnostic>) {
+    let declared = artifact.body.iter().find_map(|member| match member {
+        Member::PropertyAssignment {
+            name, value, span, ..
+        } if name == "locales" => Some((*span, value)),
+        _ => None,
+    });
+    let Some((span, _)) = declared else {
+        diagnostics.push(Diagnostic::error(
+            "E_LOCALES_REQUIRED",
+            "Service must declare `locales` with at least one locale".to_string(),
+            artifact.span,
+        ));
+        return;
+    };
+    if crate::i18n::locales_of(artifact).is_empty() {
+        diagnostics.push(Diagnostic::error(
+            "E_LOCALES_REQUIRED",
+            "`locales` must contain at least one locale; the first one is the default".to_string(),
+            span,
+        ));
+    }
 }
 
 fn collect_locals(members: &[Member], locals: &mut HashMap<String, Option<String>>) {

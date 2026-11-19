@@ -4,7 +4,6 @@
 document ContractVersion {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Versão do contrato", en: "Contract version" }
-  version: 1 // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   owner: "Contracts" // REVIEW [2026-12-15] Área responsável pelo documento.
   sync: read // REVIEW [2026-12-15] Expõe os dados em modo somente leitura a outros serviços.
 

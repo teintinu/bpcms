@@ -4,8 +4,8 @@
 service "example.com/services/catalog" {
   // REVIEW [2026-12-15] Nome exibido no builder e na navegação, por idioma.
   title: { pt-BR: "Catálogo", en: "Catalog" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão semântica do artefato serviço, usada em release e diff.
-  version: 1.0.0
   // REVIEW [2026-12-15] Área de negócio responsável pela manutenção do serviço.
   owner: "Catalog"
   // REVIEW [2026-12-15] Dependências externas usadas por este serviço.

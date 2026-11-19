@@ -5,7 +5,6 @@ document FraudCheck {
   // REVIEW [2026-12-15] Título exibido no builder e nas views.
   title: { pt-BR: "Verificação antifraude", en: "Fraud check" }
   // REVIEW [2026-12-15] Versão do artefato Document.
-  version: 1
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
   owner: "Risk"
   // REVIEW [2026-12-15] Mantém a leitura do documento sempre atualizada.

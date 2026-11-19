@@ -4,7 +4,6 @@ document ReplenishmentRequest {
   // REVIEW [2026-12-15] Título exibido no builder, na inbox e nos históricos.
   title: { pt-BR: "Requisição de reposição", en: "Replenishment request" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
-  version: 1
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Inventory"
   // REVIEW [2026-12-15] Sincronização em tempo real entre as instâncias do documento.

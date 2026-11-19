@@ -3,8 +3,8 @@
 service "example.com/services/fraud-checkout" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato de serviço.
-  version: 1.0.0
   // REVIEW [2026-12-15] Área de negócio responsável pelo serviço.
   owner: "Risk"
   // REVIEW [2026-12-15] Serviços externos usados por este serviço.

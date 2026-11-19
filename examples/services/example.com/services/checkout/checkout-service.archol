@@ -3,8 +3,8 @@
 service "example.com/services/checkout" {
   // REVIEW [2026-12-15] Nome exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço; releases e diffs comparam este valor.
-  version: 1.1.0
   // REVIEW [2026-12-15] Área responsável pelo serviço.
   owner: "Checkout"
   // REVIEW [2026-12-15] Dependências externas usadas pelos artefatos deste serviço.

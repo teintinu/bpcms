@@ -26,7 +26,7 @@ fn fixtures() -> Vec<FileInput> {
         ),
         (
             "ws/services/example.com/services/billing/billing-service.archol",
-            "service \"example.com/services/billing\" { title: { pt-BR: \"Billing\" } }",
+            "service \"example.com/services/billing\" { title: { pt-BR: \"Billing\" } locales: [ \"pt-BR\" ] }",
         ),
         (
             "ws/services/example.com/services/billing/billing-shapes.archol",
@@ -42,7 +42,7 @@ fn fixtures() -> Vec<FileInput> {
         ),
         (
             "ws/services/example.com/services/catalog/catalog-service.archol",
-            "service \"example.com/services/catalog\" { title: { pt-BR: \"Catalog\" } }",
+            "service \"example.com/services/catalog\" { title: { pt-BR: \"Catalog\" } locales: [ \"pt-BR\" ] }",
         ),
         (
             OUTSIDE_PATH,

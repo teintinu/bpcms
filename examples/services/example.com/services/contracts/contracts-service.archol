@@ -5,7 +5,7 @@
 service "example.com/services/contracts" {
   // REVIEW [2026-12-15] Título exibido no construtor e nos catálogos.
   title: { pt-BR: "Contratos", en: "Contracts" }
-  version: 1.0.0 // REVIEW [2026-12-15] Versão do serviço; diff e release comparam.
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   owner: "Contracts" // REVIEW [2026-12-15] Área responsável pela evolução do serviço.
   // REVIEW [2026-12-15] Serviços de outros contextos consumidos por este serviço.
   imports {

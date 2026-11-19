@@ -5,7 +5,6 @@ document Settlement {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Liquidação", en: "Settlement" }
   // REVIEW [2026-12-15] Versão do artefato Document; releases e diffs comparam.
-  version: 1
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
   owner: "Claims"
   // REVIEW [2026-12-15] Sincronização em tempo real entre os clientes conectados.

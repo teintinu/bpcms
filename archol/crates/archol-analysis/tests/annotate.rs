@@ -11,7 +11,7 @@ fn files() -> Vec<FileInput> {
         ),
         (
             "ws/services/example.com/services/billing/billing-service.archol",
-            "service \"example.com/services/billing\" {\n  title: { pt-BR: \"Billing\" }\n}",
+            "service \"example.com/services/billing\" {\n  title: { pt-BR: \"Billing\" }\n  locales: [ \"pt-BR\" ]\n}",
         ),
         (
             "ws/services/example.com/services/billing/billing-shapes.archol",

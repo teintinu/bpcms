@@ -2,7 +2,6 @@
 // REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/backoffice-loja e abre sua composição.
 application "example.com/app/backoffice-loja" {
   source: registry // REVIEW [2026-12-15] Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
-  version: 1.2.0 // REVIEW [2026-12-15] Versão semver publicada da app; o lock fixa as versões dos serviços.
   // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
     pt-BR: "Administração da Loja" // REVIEW [2026-12-15] Título em português (idioma default).

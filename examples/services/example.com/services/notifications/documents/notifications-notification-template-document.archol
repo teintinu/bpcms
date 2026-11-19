@@ -4,7 +4,6 @@
 document NotificationTemplate {
   // REVIEW [2026-12-15] Rótulo do documento exibido no construtor.
   title: { pt-BR: "Modelo de notificação", en: "Notification template" }
-  version: 1 // REVIEW [2026-12-15] Versão do artefato Documento.
   owner: "Notifications" // REVIEW [2026-12-15] Área dona do documento.
   sync: read // REVIEW [2026-12-15] Modo de sincronização somente leitura do documento.
   // REVIEW [2026-12-15] Campos que compõem o modelo.

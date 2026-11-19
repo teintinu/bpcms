@@ -4,8 +4,8 @@
 service "example.com/services/procurement" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação do serviço.
   title: { pt-BR: "Compras", en: "Procurement" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço usada em release e diff.
-  version: 1.0.0
   // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
   owner: "Procurement"
   // REVIEW [2026-12-15] Dependências externas referenciadas pelos artefatos do serviço.

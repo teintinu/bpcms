@@ -5,7 +5,6 @@ document CheckoutSession {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Sessão de finalização", en: "Checkout session" }
   // REVIEW [2026-12-15] Versão do documento; releases e diffs comparam este valor.
-  version: 2
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Checkout"
   // REVIEW [2026-12-15] Mantém as telas abertas sincronizadas ao vivo com o documento.

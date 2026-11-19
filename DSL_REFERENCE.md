@@ -25,7 +25,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 
 | Seção | Artefatos |
 | :--- | :--- |
-| 1 | Léxico, metadados, origem, versão, lock/IDs, capabilities e serviços essenciais |
+| 1 | Léxico, metadados, origem, release, lock/IDs, capabilities e serviços essenciais |
 | 2–8 | Application, Service, Process (com Form e Message), Document, Shape, View, Role/Organogram |
 | 9–12 | Evidence, Conversation, Decision, Assumption |
 | 13–19 | Parameter, Secret, Environment, Builder, Theme, Locale, Widget, Release/Version |
@@ -86,8 +86,8 @@ stream.readStreamArray(): stream[]
 
 | Cláusula | Onde | Sintaxe | Funcionamento |
 | :--- | :--- | :--- | :--- |
-| `version` | app, service, process, document, builder, release | `version: 1.4.0` ou `version: semver("1.4.0")` | Versão do artefato. `1.4.0` é açúcar para `semver("1.4.0")`. |
-| `title` | app, service, shape, document, field, view, event, parameter, role, organogram, icon | `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18n obrigatório; ver 1.9. |
+| `title` | app, service, process, document, view, form, message, manual, shape, field, event, parameter, role, organogram, icon, end, transition, action | `title: "Nome"` ou `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18N obrigatório; string = primeiro locale do serviço; ver 1.9. |
+| `locales` | app, service | `locales: [ "pt-BR", "en" ]` | Idiomas suportados; o primeiro é o default. No serviço é **obrigatório** (≥ 1) e define o locale do I18N em forma de string. |
 | `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
 | `source` | app, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
@@ -99,18 +99,16 @@ stream.readStreamArray(): stream[]
 | `retention` | document | `retention: 5y` | Prazo de retenção antes de anonimizar/expurgar. |
 | `private` | membros de artefatos | `private <field/action>` | Membro interno; não faz parte do contrato público nem da serialização para outros serviços. Artefato de topo nunca é `private`. |
 
-## 1.3 Origem e versão (app/service)
+## 1.3 Origem (app/service)
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `source` | `source: auto` | Detecta hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares); o resto é registry BPCMS. |
 | `source` | `source: registry` | Força documentação em `/<uri>/index.html` e distribuição pelo BPCMS. |
 | `source` | `source: repository` | Força projeto Git: documentação é o **README**; código é baixado do projeto. |
-| `version` | `version: 1.4.0` | Semver; açúcar para `semver("1.4.0")`. |
-| `version` | `version: semver("1.4.0")` | Versão semântica publicada no registry. |
-| `version` | `version: tag("v1.4.0")` | Tag Git imutável (recomendada em produção). |
-| `version` | `version: commit("9f3a1c7")` | Commit Git imutável (produção/reprodutibilidade). |
-| `@` | `"<uri>"@1.2.0`, `"<uri>"@tag("v1.2.0")`, `"<uri>"@commit("9f3a1c")` | Seletor de versão em releases e rollback. Imports de serviço não usam versão; o lock do app decide. |
+| `@` | `"<uri>"@1.2.0`, `"<uri>"@tag("v1.2.0")`, `"<uri>"@commit("9f3a1c")` | Seletor de versão em releases e rollback; **não é atributo de artefato**. Imports de serviço não usam versão; o lock do app decide. |
+
+**Versão não é atributo.** Nenhum artefato (`application`, `service`, `process`, `document`, `builder`, `release`, etc.) declara `version:` no corpo. A versão publicada é o seletor de `release`/`rollback` (`@...`) e, por serviço, o valor fixado no lock do app.
 
 **Regras:** em produção, use tag/commit (ou semver imutável); branch/HEAD só em dev/QA. Uma URI de repositório pode incluir subdiretório: `github.com/acme/monorepo/apps/store`.
 
@@ -246,6 +244,7 @@ Alguns serviços são de plataforma e são acessados como capabilities, não imp
 ```archol
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
+  locales: [ "pt-BR", "en" ]
 }
 
 form VisitReport {
@@ -285,13 +284,18 @@ view VisitDetail {
 
 O Shape guarda **valor original + unidade** e projeção normalizada. A exibição usa `regionalization.system()`/`units.format`; o armazenamento não é convertido.
 
-## 1.9 I18n (`title`)
+## 1.9 I18N (`title`, `goal`, `instructions`)
 
-`I18n` é um **tipo interno** de texto localizado. Não é um `Shape` declarável; `shape I18n` é `E_RESERVED_TYPE`.
+`I18N` é um **tipo interno** de texto localizado. Não é um `Shape` declarável; `shape I18N` é `E_RESERVED_TYPE`.
 
-`title` é obrigatório em `service`, `shape`, `document`, `field`, `view`, `event`, `parameter`, `role`, `organogram` e `icon`; a `Application` também usa o mesmo tipo.
+`I18N` é o tipo de:
 
-Cada valor de locale pode ser uma string ou um mapa de formas plurais CLDR:
+- `title` em qualquer contexto que o declare: `app`, `service`, `process`, `document`, `view`, `form`, `message`, `manual`, `shape`, `field`, `event`, `parameter`, `role`, `organogram`, `icon`, `end`, `transition` e `action`;
+- `goal` em `process`;
+- `instructions` em `manual`;
+- `short` e `tooltip` dentro de um `title`.
+
+O valor de um `I18N` pode assumir **duas formas**:
 
 ```ts
 type PluralForms = {
@@ -303,9 +307,47 @@ type PluralForms = {
   other: string;
 };
 
-type I18nValue = string | PluralForms;
-type I18n = { [locale: string]: I18nValue };
+type I18NValue = string | PluralForms;
+type I18N =
+  | string
+  | { [locale: string]: I18NValue; short?: I18N; tooltip?: I18N };
 ```
+
+### String: primeiro locale do serviço
+
+Quando o valor é uma string, ela pertence **sempre ao primeiro locale** declarado em `locales` do serviço. O compilador expande a string para o mapa canônico, para que o AST diga explicitamente a que locale o texto pertence:
+
+```archol
+service "example.com/services/billing" {
+  title: "Faturamento"
+  locales: [ "pt-BR", "en" ]
+}
+
+process Dunning(invoice: Invoice) {
+  title: "Cobrança"
+  goal: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
+}
+```
+
+O AST resultante (trecho) é:
+
+```json
+{
+  "kind": "PropertyAssignment",
+  "name": "goal",
+  "typeRef": "I18N",
+  "value": {
+    "kind": "Object",
+    "members": [
+      { "kind": "PropertyAssignment", "name": "pt-BR", "value": { "kind": "StringLiteral", "value": "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento" } }
+    ]
+  }
+}
+```
+
+Todo serviço **declara `locales` com pelo menos um idioma**; o primeiro é o default. Serviço sem `locales` ou com lista vazia é `E_LOCALES_REQUIRED`. A `Application` também declara `locales`; o título da própria app usa o primeiro locale dela.
+
+### Objeto: traduções por locale
 
 ```archol
 title: { pt-BR: "Nome", en: "Name" }
@@ -329,9 +371,8 @@ title: {
 - `one` deve corresponder ao título singular quando existir.
 - Categorias `zero`, `two`, `few` e `many` são opcionais.
 - O builder resolve a categoria pelo locale/número; não é o Shape que decide plural.
-- `short` e `tooltip` aceitam o mesmo `I18nValue`.
-
-O mapa aceita locales (`pt-BR`, `en-US`, `en`) e duas versões alternativas **opcionais**, irmãs do mapa principal:
+- `short` e `tooltip` aceitam o mesmo `I18N` e são **irmãos** do mapa principal; não ficam aninhados um no outro.
+- Se `short`/`tooltip` não existirem, o builder usa o title principal.
 
 ```archol
 name: string {
@@ -346,13 +387,17 @@ name: string {
 }
 ```
 
-- `short` é o label curto para tabelas/grids.
-- `tooltip` é o texto do popover automático do title.
-- `short` e `tooltip` são **irmãos**; não ficam aninhados um no outro.
-- Se `short`/`tooltip` não existirem, o builder usa o title principal.
-- A ordem dos campos com `lookup` define a ordem de exibição; os títulos vêm dos campos.
+### Filtragem pelo `locales` da aplicação
 
-**Fallback:** locale exato → idioma (`en-US` → `en`) → locale default do app. Para plural: categoria → `other` → string do locale/título. Com `locales: [pt-BR, en-US]`, `en` cobre `en-US`; o default é `pt-BR`.
+O conjunto de locales que chega ao AST é o da **aplicação** (`Application.locales`), não o do serviço. O compilador:
+
+1. marca a propriedade com `typeRef: "I18N"`;
+2. expande string no primeiro locale do serviço (na `Application`, no primeiro locale dela);
+3. remove do mapa todo locale cuja língua não exista em `Application.locales`.
+
+A comparação aceita o locale exato e o fallback de idioma (`en` cobre `en-US`, e vice-versa). Assim, `en` sobrevive quando a app declara `en-US`, mas `fr` é descartado. O builder **nunca recebe** traduções de idiomas que a app não usa; não é erro no compilador, é filtragem.
+
+**Fallback do builder:** locale exato → idioma (`en-US` → `en`) → locale default da app. Para plural: categoria → `other` → string do locale/título. Com `locales: [pt-BR, en-US]`, o default é `pt-BR`.
 
 **Campos:** o `title` do campo é o label; o `title` do `document`/`shape`/`view`/`event`/`parameter`/`secret`/`role`/`organogram`/`service` é o nome do artefato. Em `Parameter`, `title` substitui o antigo `description`.
 
@@ -361,15 +406,16 @@ name: string {
 | Builder gera `pt-BR` e a chave existe | ok |
 | Builder gera `en-US` e só existe `en` | ok por fallback de idioma |
 | Builder gera `en-US` e não existe `en-US` nem `en` | `W_TRANSLATION` no `check`; `E_TRANSLATION` se o builder for estrito |
-| Chave fora de `locales` | `E_LOCALE_UNDECLARED` |
+| Locale no fonte fora de `Application.locales` | ignorado pelo compilador; não entra no AST |
 | Sem entrada para o locale default | `E_TITLE_MISSING` |
 | Plural sem `other`/categoria inválida | `E_PLURAL_OTHER` / `E_PLURAL_FORM` |
 | `title` ausente no artefato/campo | `E_TITLE_MISSING` |
-| `shape I18n` declarado | `E_RESERVED_TYPE` |
+| Service sem `locales` ou com lista vazia | `E_LOCALES_REQUIRED` |
+| `shape I18N` declarado | `E_RESERVED_TYPE` |
 
 **Hífen:** `pt-BR`/`en-US` são chaves válidas; o parser aceita hífen no nome da propriedade e na chave do mapa.
 
-**Artefato reutilizável:** quando `title` aparece em `Service`/`View` compartilhado, o conjunto válido é o `locales` do **app consumidor**; o artefato não fixa o conjunto.
+**Artefato reutilizável:** quando `title` aparece em `Service`/`View` compartilhado, o conjunto válido é o `locales` do **app consumidor**; o artefato não fixa o conjunto. O `locales` do serviço só define o default da forma string.
 
 **Política do construtor:** dev pode fazer fallback para o locale default e permitir editar o título em runtime, gravando de volta no fonte; produção é estrita por padrão. O construtor nunca inventa tradução.
 
@@ -380,7 +426,7 @@ name: string {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `application "<uri>" { ... }` | Identidade + composição. |
-| `title` | `title: { pt-BR: "..."; en-US: "..." }` | Nome localizado; chaves em `locales` (ver 1.9). |
+| `title` | `title: "..."` ou `title: { pt-BR: "..."; en-US: "..." }` | I18N; string = primeiro locale de `locales` (ver 1.9). |
 | `services` | `services { "<uri>" as Alias ... }` | **Entry points**; alias local opcional. A closure vem dos imports de cada serviço. |
 | `roles` | `roles { Customer; Clerk; Manager; Manager > Clerk }` | Papéis da aplicação e hierarquia (`>` = “superior a”). |
 | `theme` | `theme: Nuvula` | ID de tema fornecido pelo **construtor**; não é artefato de serviço. |
@@ -396,7 +442,6 @@ name: string {
 ```archol
 application "example.com/app/loja-do-joao" {
   source: registry
-  version: 1.4.0
   lock: "<app>.lock"
   title: {
     pt-BR: "Loja do João"
@@ -427,7 +472,8 @@ application "example.com/app/loja-do-joao" {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `service "<uri>" { ... }` | Identidade + contrato. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `title` | `title: "..."` ou `title: { pt-BR: "...", en: "..." }` | I18N obrigatório (ver 1.9). |
+| `locales` | `locales: [ "pt-BR", "en" ]` | **Obrigatório** (≥ 1 idioma); o primeiro é o default do I18N em forma de string. |
 | `imports` | `imports { service "<uri>" as Alias; integration ERP }` | Dependências por URI, **sem versão**; alias local opcional; o lock escolhe a versão. Vazio é válido. |
 | `reintroduce` | `reintroduce <Alias>.<Artifact> { ... }` | Altera/adiciona definições de um artefato importado. |
 
@@ -438,7 +484,7 @@ application "example.com/app/loja-do-joao" {
 ```archol
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
-  version: 1.2.0
+  locales: [ "pt-BR", "en" ]
   owner: "Time de Catálogo"
 
   imports { service "example.com/services/identity" as Identity }
@@ -495,6 +541,7 @@ Para processos, cada passo é um nó reutilizável. O `fraud-checkout` adiciona 
 
 ```archol
 service "example.com/services/fraud-checkout" {
+  locales: [ "pt-BR", "en" ]
   imports {
     service "example.com/services/checkout" as Checkout
   }
@@ -577,10 +624,7 @@ As duas perguntas de um processo continuam explícitas:
 ```archol
 process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
-  version: 1
-  goal: {
-    pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
-  }
+  goal: "Cotar o frete, autorizar o pagamento e confirmar a compra"
   sla: 1d
 
   on [CheckoutSession.CartValidated]
@@ -594,9 +638,8 @@ process Checkout(session: CheckoutSession) {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `process` | `process <Name>(args)` | Unidade de orquestração; os argumentos são documentos/escalares do caso. |
-| `title` | `title: I18n` | Obrigatório. |
-| `version` | `version: N` | Versão do processo; diff e release comparam. |
-| `goal` | `goal: I18n` | Objetivo de negócio. |
+| `title` | `title: I18N` | Obrigatório; string ou mapa de locales (1.9). |
+| `goal` | `goal: I18N` | Objetivo de negócio; string ou mapa de locales. |
 | `sla` | `sla: 1d` | Alvo brando do caso (exibição, KPI); não é timer. |
 | `timeout` | `timeout: 30d` | Prazo duro do caso; dispara `Timeout` no processo. |
 | `on` | `on [Doc.Event, ...]` | Lista de eventos que iniciam o processo. |
@@ -777,7 +820,7 @@ try {
 
 | Cláusula | Funcionamento |
 | :--- | :--- |
-| `error` | Erro de negócio com nome estável e `title` I18n. |
+| `error` | Erro de negócio com nome estável e `title` I18N. |
 | `throw` | Lança erro de negócio; falha de operação chega pelo mesmo `catch`. |
 | `try`/`catch` | Desvio explícito por erro; `catch` aceita lista. |
 | `timeout` | Prazo duro de task/processo; dispara `Timeout` (reservado). |
@@ -904,7 +947,7 @@ form OrderReview {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `form` | `form <Name> { ... }` | Contrato de task humana; chamado por `Form.show`. |
-| `title` | `title: I18n` | Obrigatório. |
+| `title` | `title: I18N` | Obrigatório. |
 | `document` | `document: Order` | Documento de contexto; define a linha da inbox e os campos herdados. |
 | `roles` | `roles: [Clerk]` | Quem executa a task. |
 | `timeout` | `timeout: 4h` | Prazo duro; `Timeout` no processo. |
@@ -943,7 +986,7 @@ message PickupRequest {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `message` | `message <Name> { ... }` | Contrato de mensagem entre participantes. |
-| `title` | `title: I18n` | Obrigatório. |
+| `title` | `title: I18N` | Obrigatório. |
 | `about` | `about: Shipment` | Documento de correlação: a mensagem pertence a um caso. |
 | `payload` | `payload { campo: Shape { title } }` | Contrato tipado do conteúdo. |
 
@@ -1070,7 +1113,6 @@ Um **documento** é a unidade de estado durável: campos tipados por Shape, iden
 ```archol
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
-  version: 1
   owner: "Logística"
   sync: live
   retention: 5y
@@ -1082,8 +1124,7 @@ document Shipment {
 | `document` | `document <Name> { ... }` | Declara o documento. |
 | `scopable document` | `scopable document Store { ... }` | Documento que é tipo de escopo (5.9). |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva, mesmo id (5.9). |
-| `title` | `title: I18n` | I18n obrigatório (1.9). |
-| `version` | `version: 1` | Versão do schema; migrações comparam. |
+| `title` | `title: I18N` | I18N obrigatório (1.9). |
 | `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
 | `sync` | `sync: live \| read` | `live` assina patches; `read` entrega leitura materializada. |
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
@@ -1116,7 +1157,7 @@ fields {
 
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `title` | `title: I18n` | Obrigatório; `short`/`tooltip` opcionais. |
+| `title` | `title: I18N` | Obrigatório; `short`/`tooltip` opcionais. |
 | `required` | `required` | Campo obrigatório; `required: true` também é aceito. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem de declaração. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. |
@@ -1308,12 +1349,12 @@ actions {
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `title` | `title: I18n` | Rótulo do comando/botão; obrigatório. |
+| `title` | `title: I18N` | Rótulo do comando/botão; obrigatório. |
 | `roles` | `roles: [Manager]` ou `roles: public` | Quem pode executar; obrigatório. |
 | `to` | `to: status.Issued` | Estado de destino; a aresta e o evento vêm do `transition` do Shape (5.3). |
 | `emits` | `emits { amount: total }` | Mapeia campos do payload cujo nome difere da origem. Não declara evento. |
 | `returns` | `returns: Invoice` | Valor de retorno (um único tipo); usado por `gives:` no processo. |
-| `rule` | `rule <expr> { I18n }` | Pré-condição; verdadeira = permitido. |
+| `rule` | `rule <expr> { I18N }` | Pré-condição; verdadeira = permitido. |
 | `limits` | `limits { amount <= 50000 BRL: { roles: [Manager] } }` | Limite por papel (5.6). |
 | `body` | `{ issuedAt = now() }` | Statements: atribuição de campo, `emit`, chamada interna. |
 
@@ -1751,7 +1792,7 @@ O registro é responsabilidade do builder. A DSL não declara `audit` no documen
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | declaração | `shape <Name> { ... }` | Tipo de dado; dono de semântica. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório (ver 1.9). |
 | `base` | `base: decimal \| integer \| string \| classification \| state \| attachment \| audio \| image \| video \| richtext` | Representação base; define exibição/edição. `state` é o enum de ciclo de vida (com `initial`). |
 | `capabilities` | `capabilities { attachments }` | Capacidades exigidas pelo Shape; falha de build se ausentes. |
 | `mime` | `mime: [image/*, application/octet-stream]` | Restrição de MIME para `attachment` genérico. |
@@ -1809,7 +1850,7 @@ toNumber(value) {
 
 ## 6.1 Valores enumerados
 
-Cada value é um bloco com `title` (I18n), `icon` e `ordinal` obrigatório. Um Shape `classification` enumera categorias; um Shape `state` declara o ciclo de vida (valores + `initial`) e **não declara transições** — elas ficam nas actions do Document (5.3–5.5).
+Cada value é um bloco com `title` (I18N), `icon` e `ordinal` obrigatório. Um Shape `classification` enumera categorias; um Shape `state` declara o ciclo de vida (valores + `initial`) e **não declara transições** — elas ficam nas actions do Document (5.3–5.5).
 
 ```archol
 shape InvoiceStatus {
@@ -2330,7 +2371,7 @@ View é **apresentação**: ela lê documentos, processos ou tarefas e não é d
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `view` | `view <Name> { ... }` | Tela/projeção. |
-| `title` | `title: I18n` | Obrigatório (1.9). |
+| `title` | `title: I18N` | Obrigatório (1.9). |
 | `type` | `type: table \| detail \| report \| dashboard \| kanban \| calendar \| process \| inbox` | Discriminador. |
 | `document` | `document: Customer` | Documento principal (`detail`). |
 | `process` | `process: OrderFulfillment` | Processo exibido (`process`). |
@@ -2523,7 +2564,7 @@ view TeamQueue {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `role` | `role <Name> { ... }` | Papel/permissões. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório (ver 1.9). |
 | `permissions` | `permissions: [order.manage, report.view]` | Namespaces de capacidade/ação. |
 | `capabilities` | `capabilities { equipment, laboratory-protocol }` | Capacidades exigidas pelo artefato; falha de build se ausentes. |
 | `inherits` | `inherits: Clerk` ou `inherits: [Clerk, Auditor]` | Soma as permissões herdadas às permissões próprias. |
@@ -2727,7 +2768,7 @@ A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primei
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `decision` | `decision <Name> { ... }` | Tabela de decisão. |
-| `title` | `title: I18n` | Obrigatório. |
+| `title` | `title: I18N` | Obrigatório. |
 | `returns` | `returns: ApproverTier` | Um único retorno (normalmente `classification`). |
 | `inputs` | `inputs { amount: std.Money; supplier: Supplier }` | Entradas tipadas. |
 | `cases` | `cases { <cond> -> <value> }` | Primeira condição verdadeira vence. |
@@ -2812,7 +2853,7 @@ assumption A-001 {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `parameter` | `parameter <Name> { ... }` | Configuração tipada; artefato público. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório; substitui `description`. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório; substitui `description`. |
 | `type` | `type: Shape` | Shape do valor; obrigatório. |
 | `required` | `required` | Falha no boot/uso se não houver valor; mutuamente exclusivo com `default`. |
 | `default` | `default: "..."` | Valor fallback; mutuamente exclusivo com `required`. |
@@ -2848,7 +2889,7 @@ parameter MaxRetries {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `secret` | `secret <Name> { ... }` | Segredo tipado; artefato público, valor privado. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório. |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório. |
 | `type` | `type: Shape` | Shape do valor; obrigatório, mas o valor nunca serializa. |
 | `required` | `required` | Falha no boot/uso se não houver valor. |
 | `min` / `max` | `min: 0, max: 10` | Constraints do Secret. |
@@ -2927,7 +2968,6 @@ environment dev {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `builder` | `builder <Name> { ... }` | Plugin de realização. |
-| `version` | `version: 1.0.0` | Versão do construtor. |
 | `target` | `target: browser \| server \| database \| mobile \| terminal \| document` | Alvo de geração/interpretação. |
 | `mode` | `mode: [interpret, generate]` | Modos suportados. |
 | `capabilities` | `capabilities: [gui, sync, identity, attachments, timezone, regionalization, units]` | Capabilities de alto nível que oferece (ver 1.7). |
@@ -2940,7 +2980,6 @@ environment dev {
 
 ```archol
 builder WebApp {
-  version: 1.0.0
   target: browser
   mode: [interpret, generate]
   capabilities: [gui, sync, identity, attachments, timezone, regionalization, units]
@@ -2999,7 +3038,7 @@ theme NuvulaLight {
 | `thousands` | `thousands: "."` | Separador de milhar. |
 | `messages` | `messages: "locales/pt-BR.json"` | Catálogo de mensagens. |
 
-> Locale é configuração da app/construtor; não é serviço. `I18n` de títulos é independente.
+> Locale é configuração da app/construtor; não é serviço. `I18N` de títulos é independente.
 
 ```archol
 locale pt-BR {
@@ -3396,7 +3435,6 @@ example.com/services/billing#Invoice.Paid
 ```archol
 process CloseMonth for FiscalPeriod {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  version: 1
   owner: "Controladoria"
   sla: 6h
 
@@ -3548,7 +3586,7 @@ policy FourEyesPayment {
 | Política | severidade inválida; exceção desconhecida | `E_POLICY` |
 | Ciclo | import/computed circular | `E_CYCLE` |
 | Tradução | locale sem `title` / builder estrito | `W_TRANSLATION` / `E_TRANSLATION` |
-| Tipo reservado | `shape I18n` declarado | `E_RESERVED_TYPE` |
+| Tipo reservado | `shape I18N` declarado | `E_RESERVED_TYPE` |
 | Locale | chave de `title` fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Título | sem entrada para o locale default | `E_TITLE_MISSING` |
 | Task | sem contrato, com dois contratos, executor ausente ou inválido | `E_TASK_CONTRACT_MISSING` / `E_TASK_KIND_CONFLICT` / `E_TASK_EXECUTOR_MISSING` / `E_TASK_BLACKBOX_POOL` |
@@ -3621,7 +3659,7 @@ policy FourEyesPayment {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `icon` | `icon <Name> { ... }` | Ícone público do serviço. |
-| `title` | `title: { pt-BR: "...", en: "..." }` | I18n obrigatório (ver 1.9). |
+| `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório (ver 1.9). |
 
 ```archol
 icon Draft {
@@ -3655,7 +3693,7 @@ examples/services/example.com/services/billing/
 - O identificador é o caminho relativo a `icons/`, sem `.svg`, com segmentos **camelCase** unidos por `.`.
 - Referência local: `icon: status.draft`.
 - Referência por outro serviço: `icon: AliasDoServico.status.draft` (alias em `imports`).
-- O `alt`/`aria-label`/`<title>` é o title do Icon; **não usa I18n**.
+- O `alt`/`aria-label`/`<title>` é o title do Icon; **não usa I18N**.
 - Precedência do title: `aria-label` → `<title>` → `alt` → filename humanizado.
 - Sem `aria-label`, `<title>` ou `alt`, o filename é o fallback:
   - `low-stock.svg` → `"Low Stock"`.
@@ -3795,7 +3833,7 @@ reintroduce std.Currency {
 - `prefix`, `suffix` e `infix` são mutuamente exclusivos.
 - `infix` fica na posição decimal: `CVE 100$00`.
 - `infix` exige `scale > 0`.
-- `prefix`/`suffix`/`infix` aceitam `string | I18n`.
+- `prefix`/`suffix`/`infix` aceitam `string | I18N`.
 - `scale` default vem da moeda; o field pode sobrescrever.
 - Sem `prefix/suffix/infix`, regionalization decide.
 - `sformat` fica fora desta versão.
@@ -3857,7 +3895,7 @@ Regionalization {
 - Definição: `examples/services/bpcms.org/std/std-service.archol` e `examples/services/bpcms.org/std/std-shapes.archol`.
 - Segue a regra de service: `std-service.archol` é o arquivo do principal e `std-shapes.archol` é compartilhado (30).
 - Fica na pasta normal `examples/services/bpcms.org/std/`; o construtor reconhece a URI reservada e não a trata como serviço publicável.
-- Não é versionado pelo lock; a versão da std é a do construtor/DSL.
+- Não é versionado pelo lock; a std acompanha o construtor/DSL e não declara `version`.
 - Os Shapes de medida declaram `toNumber(value)` explicitamente.
 - `Mass`, `Length`, `Volume`, `Percentage` e `Duration` implementam `write`, `read`, `parse`, `format` e `toNumber`; `Money.toNumber` é automático; `Currency` não é numérico.
 

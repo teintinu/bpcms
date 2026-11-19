@@ -102,9 +102,12 @@ pub struct Param {
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind")]
 pub enum Member {
-    /// `title: { ... }`, `version: 1`, `schedule: "0 3 1 * *"`.
+    /// `title: { ... }`, `schedule: "0 3 1 * *"`.
     PropertyAssignment {
         name: String,
+        /// Semantic type when the compiler recognizes one (`I18N`).
+        #[serde(rename = "typeRef", skip_serializing_if = "Option::is_none")]
+        type_ref: Option<String>,
         value: Expr,
         span: Span,
         #[serde(skip_serializing_if = "Option::is_none")]

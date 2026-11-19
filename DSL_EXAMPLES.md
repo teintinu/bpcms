@@ -39,8 +39,9 @@ Este documento cobre o catálogo de artefatos. Os **35 processos completos** —
 | Agendamento | `schedule` + `fanOut` | uma instância por documento |
 | Relatório | `view type: report` | agregação é projeção; documento derivado é estado |
 | Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
-| Versão | `version: semver("1.2.3")` / `tag("v1.2.3")` / `commit("9f3a1c")` | `1.4.0` é açúcar para `semver("1.4.0")` |
-| Release | `"<uri>"@1.2.3` | URI + seletor de versão |
+| Versão | `"<uri>"@1.2.3` / `@tag("v1.2.3")` / `@commit("9f3a1c")` | Seletor de release/rollback; nenhum artefato declara `version:` no corpo |
+| I18N | `title: "..."` ou `title: { pt-BR: "...", en: "..." }` | Tipo `I18N`; string = primeiro locale do serviço; o compilador filtra pelos locales da app |
+| Idiomas | `locales: [ "pt-BR", "en" ]` | App/service; no serviço é obrigatório (≥ 1); o primeiro é o default |
 | Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
 | Evento | `transition Paid { title; payload }` no `value` | evento do workflow definido no workflow; `initial ... with transition X` é o evento de criação; `events { }` só para evento sem transição |
 | Permissão | `roles: [Manager]` na action; `roles` no form | autoridade do documento + execução da task |
@@ -55,7 +56,7 @@ O catálogo cobre Application, Service, Form, Message, Document, Shape, View, Ro
 
 > **Páginas canônicas.** `http://example.com/app/loja-do-joao/index.html` é a página de **download**, com opções por SO. `http://example.com/services/catalog/index.html` é a página de **documentação para integração por API**, com opções de nuvem, protocolos (sockets/REST/RPC) e iframe para microfrontend, conforme o builder. Em produção, use `https://`.
 
-> **Duas origens.** `example.com/...` é registry BPCMS (páginas `/index.html`). `github.com/...` ou `gitlab.com/...` é repositório Git: a documentação é o **README** e o código é baixado do projeto (clone/zip/release); a versão pode ser `commit(...)` ou `tag(...)`. `source`/`version` deixam isso explícito.
+> **Duas origens.** `example.com/...` é registry BPCMS (páginas `/index.html`). `github.com/...` ou `gitlab.com/...` é repositório Git: a documentação é o **README** e o código é baixado do projeto (clone/zip/release); a versão pode ser `commit(...)` ou `tag(...)`. `source` deixa isso explícito; a versão publicada vem do seletor de release.
 
 ## Application
 
@@ -64,7 +65,6 @@ O catálogo cobre Application, Service, Form, Message, Document, Shape, View, Ro
 ```archol
 application "example.com/app/loja-do-joao" {
   source: registry
-  version: 1.4.0
   title: {
     pt-BR: "Loja do João"
     en-US: "João's Store"
@@ -95,7 +95,6 @@ application "example.com/app/loja-do-joao" {
 
 ```archol
 application "example.com/app/clinica-vida" {
-  version: 2.1.0
   title: { pt-BR: "Clínica Vida" }
   owner: "Diretoria Clínica"
 
@@ -123,7 +122,6 @@ application "example.com/app/clinica-vida" {
 
 ```archol
 application "example.com/app/rota-certa" {
-  version: 1.9.2
   title: {
     pt-BR: "Rota Certa"
     en-US: "Right Route"
@@ -149,7 +147,6 @@ application "example.com/app/rota-certa" {
 
 ```archol
 application "example.com/app/backoffice-loja" {
-  version: 1.2.0
   title: { pt-BR: "Backoffice da Loja" }
   owner: "Retaguarda"
 
@@ -171,7 +168,6 @@ application "example.com/app/backoffice-loja" {
 
 ```archol
 application "example.com/app/campo-agil" {
-  version: 1.0.0
   title: { pt-BR: "Campo Ágil" }
   owner: "Field Ops"
 
@@ -193,7 +189,6 @@ application "example.com/app/campo-agil" {
 
 ```archol
 application "example.com/app/mercado-aberto" {
-  version: 0.8.0
   title: {
     pt-BR: "Mercado Aberto"
     en-US: "Open Market"
@@ -220,7 +215,6 @@ application "example.com/app/mercado-aberto" {
 ```archol
 application "github.com/acme/field-app" {
   source: repository
-  version: commit("9f3a1c7")
   title: { pt-BR: "Field App" }
   owner: "Acme Field Ops"
 
@@ -242,7 +236,6 @@ application "github.com/acme/field-app" {
 
 ```archol
 application "example.com/app/loja-com-antifraude" {
-  version: 1.0.0
   title: { pt-BR: "Loja com Antifraude" }
 
   services {
@@ -268,7 +261,7 @@ application "example.com/app/loja-com-antifraude" {
 ```archol
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
-  version: 1.2.0
+  locales: [ "pt-BR", "en" ]
   owner: "Time de Catálogo"
   // document Product, std.Money, view ProductForm, event Product.Updated: público
 
@@ -292,7 +285,7 @@ service "example.com/services/catalog" {
 ```archol
 service "example.com/services/checkout" {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
-  version: 2.0.1
+  locales: [ "pt-BR", "en" ]
   owner: "Time de Conversão"
   // document CheckoutSession, event OrderPlaced: públicos
 
@@ -313,7 +306,7 @@ service "example.com/services/checkout" {
 ```archol
 service "example.com/services/inventory" {
   title: { pt-BR: "Estoque", en: "Inventory" }
-  version: 1.5.0
+  locales: [ "pt-BR", "en" ]
   owner: "Supply Chain"
   // document StockItem, document Reservation, view StockTable, event StockItem.Low: público
 
@@ -331,7 +324,7 @@ service "example.com/services/inventory" {
 ```archol
 service "example.com/services/billing" {
   title: { pt-BR: "Faturamento", en: "Billing" }
-  version: 1.8.0
+  locales: [ "pt-BR", "en" ]
   owner: "Financeiro"
   // document Invoice, document Payment, report CashFlow, job CloseMonth, events: públicos
 
@@ -350,7 +343,7 @@ service "example.com/services/billing" {
 ```archol
 service "example.com/services/auth" {
   title: { pt-BR: "Identidade", en: "Identity" }
-  version: 3.0.0
+  locales: [ "pt-BR", "en" ]
   owner: "Plataforma"
   // document User, document Session, roles Customer/Clerk, view LoginForm, event Session.LoggedIn: público
 
@@ -365,7 +358,7 @@ service "example.com/services/auth" {
 ```archol
 service "example.com/services/notifications" {
   title: { pt-BR: "Notificações", en: "Notifications" }
-  version: 1.1.0
+  locales: [ "pt-BR", "en" ]
   owner: "Customer Success"
   // document NotificationTemplate, event Notification.Sent: público
 
@@ -384,7 +377,7 @@ service "example.com/services/notifications" {
 ```archol
 service "gitlab.com/acme/lab-quality" {
   title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
-  version: tag("v2.3.0")
+  locales: [ "pt-BR", "en" ]
   owner: "Acme Lab"
   // document LabQualityReport, event QualityAlert: públicos
 
@@ -402,7 +395,7 @@ service "gitlab.com/acme/lab-quality" {
 ```archol
 service "example.com/services/fraud-checkout" {
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
-  version: 1.0.0
+  locales: [ "pt-BR", "en" ]
   owner: "Risk"
 
   imports {
@@ -488,10 +481,8 @@ Convenções:
 ```archol
 process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
-  version: 1
-  goal: {
-    pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
-  }
+  // I18N em forma de string: primeiro locale do serviço.
+  goal: "Cotar o frete, autorizar o pagamento e confirmar a compra"
   sla: 1d
 
   on [CheckoutSession.CartValidated]
@@ -590,7 +581,6 @@ form PaymentRetry {
 ```archol
 process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
-  version: 1
   sla: 5d
 
   on [PurchaseRequest.Submitted]
@@ -650,7 +640,6 @@ decision ApprovalLimit {
 ```archol
 process DispatchOrder(shipment: Shipment) {
   title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
-  version: 1
   sla: 1d
 
   on [Shipment.Created]
@@ -703,7 +692,6 @@ process DispatchOrder(shipment: Shipment) {
 ```archol
 process OrderCancellation(order: Order) {
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
-  version: 1
   sla: 1d
 
   on [Order.CancellationRequested]
@@ -1076,7 +1064,6 @@ message PaymentConfirmed {
 
 process OrderPacking(order: Order) {
   title: { pt-BR: "Separação do pedido", en: "Order packing" }
-  version: 1
 
   message: PaymentConfirmed
   key: order
@@ -1100,7 +1087,6 @@ process OrderPacking(order: Order) {
 ```archol
 document Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
-  version: 1
   owner: "CRM"
   sync: live
   retention: 5y
@@ -1291,7 +1277,6 @@ shape InvoiceStatus {
 
 document Invoice {
   title: { pt-BR: "Nota fiscal", en: "Invoice" }
-  version: 1
   owner: "Billing"
   sync: live
   retention: 10y
@@ -1462,7 +1447,6 @@ shape ShipmentStatus {
 
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
-  version: 1
   owner: "Dispatch"
   sync: live
 
@@ -1565,7 +1549,6 @@ document Shipment {
 
 document FreightEstimate {
   title: { pt-BR: "Estimativa de frete", en: "Freight estimate" }
-  version: 1
   owner: "Dispatch"
   sync: read
   computed from Shipment, FreightTariff
@@ -1632,7 +1615,6 @@ shape LabReportFile {
 
 document LabReport {
   title: { pt-BR: "Laudo laboratorial", en: "Lab report" }
-  version: 1
   owner: "Laboratório"
   sync: live
   retention: 20y
@@ -1777,7 +1759,6 @@ shape TicketStatus {
 
 document Ticket {
   title: { pt-BR: "Chamado", en: "Ticket" }
-  version: 1
   owner: "Support"
   sync: live
 
@@ -1951,7 +1932,6 @@ shape PurchaseRequestStatus {
 
 document PurchaseRequest {
   title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
-  version: 1
   owner: "Procurement"
   sync: live
 
@@ -2206,7 +2186,6 @@ shape ContractVersion {
 
 document Contract {
   title: { pt-BR: "Contrato", en: "Contract" }
-  version: 1
   owner: "Legal"
   sync: live
   retention: 10y
@@ -2373,7 +2352,6 @@ document Contract {
 ```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  version: 1
   owner: "Finance"
   sync: read
   retention: 10y
@@ -3968,7 +3946,7 @@ secret GoogleMapsKey {
 ```archol
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
-  version: 1.0.0
+  locales: [ "pt-BR", "en" ]
 }
 
 view VisitForm {
@@ -4013,7 +3991,6 @@ shape ParcelWeight {
 
 ```archol
 builder WebApp {
-  version: 1.0.0
   target: browser
   mode: [interpret, generate]
   capabilities: [gui, sync, identity, attachments, timezone, regionalization, units]
@@ -4030,7 +4007,6 @@ builder WebApp {
 
 ```archol
 builder ApiRust {
-  version: 1.0.0
   target: server
   mode: [interpret, generate]
   capabilities: [oltp, sync, scheduling, identity, attachments, timezone, regionalization, units]
@@ -4045,7 +4021,6 @@ builder ApiRust {
 
 ```archol
 builder Postgres {
-  version: 1.0.0
   target: database
   mode: generate
   capabilities: [oltp]
@@ -4060,7 +4035,6 @@ builder Postgres {
 
 ```archol
 builder MobileShell {
-  version: 0.4.0
   target: mobile
   mode: generate
   capabilities: [gui, sync, location, timezone, regionalization, units, capture, attachments, notify]
@@ -4079,7 +4053,6 @@ builder MobileShell {
 
 ```archol
 builder Cli {
-  version: 1.0.0
   target: terminal
   mode: interpret
   capabilities: [tui, attachments, timezone, regionalization, units]
@@ -4098,7 +4071,6 @@ builder Cli {
 
 ```archol
 builder DocsPdf {
-  version: 1.0.0
   target: document
   mode: generate
   capabilities: [print, attachments, timezone, regionalization, units]
@@ -4858,7 +4830,6 @@ view OperationsControl {
 ```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  version: 1
   owner: "Financeiro"
   computed from Invoice, Payment
   freshness: 1h
@@ -4975,7 +4946,6 @@ example.com/services/billing#Invoice.Paid
 ```archol
 process PaymentReconciliation(payment: Payment) {
   title: { pt-BR: "Conciliação de pagamento", en: "Payment reconciliation" }
-  version: 1
 
   on [Billing.Invoice.Paid]
   key: payment
@@ -5016,7 +4986,6 @@ events {
 ```archol
 process Packing(order: Order) {
   title: { pt-BR: "Separação", en: "Packing" }
-  version: 1
 
   on [Order.Placed]
   key: order
@@ -5115,7 +5084,6 @@ document Invoice {
 ```archol
 process MonthClose(fiscalPeriod: FiscalPeriod) {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  version: 1
   sla: 6h
 
   schedule: "0 2 1 * *"
@@ -5155,7 +5123,6 @@ process MonthClose(fiscalPeriod: FiscalPeriod) {
 ```archol
 process Dunning(invoice: Invoice) {
   title: { pt-BR: "Cobrança", en: "Dunning" }
-  version: 1
   sla: 45d
 
   schedule: "0 6 * * *"
@@ -5202,7 +5169,6 @@ process Dunning(invoice: Invoice) {
 ```archol
 process Replenishment(stockItem: StockItem) {
   title: { pt-BR: "Reposição", en: "Replenishment" }
-  version: 1
   sla: 2d
 
   schedule: "0 7 * * *"
@@ -5245,7 +5211,6 @@ process Replenishment(stockItem: StockItem) {
 ```archol
 process DailyDigest() {
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
-  version: 1
 
   schedule: "0 7 * * *"
 
@@ -5433,7 +5398,7 @@ paid  { title: {...}; icon: status.paid }
 ```
 
 - Arquivos/pastas em kebab-case; referências em camelCase com ponto.
-- Title: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n.
+- Title: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18N.
 - Conflito com Icon declarado no mesmo serviço é erro.
 - O builder resolve/sanitiza o SVG; isso é implementação, não DSL.
 

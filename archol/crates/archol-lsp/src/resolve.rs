@@ -485,7 +485,7 @@ mod tests {
         let files = vec![
             (
                 format!("{ROOT}/billing-service.archol"),
-                "service \"example.com/services/billing\" { title: { pt-BR: \"Billing\" } }".to_string(),
+                "service \"example.com/services/billing\" { title: { pt-BR: \"Billing\" } locales: [ \"pt-BR\" ] }".to_string(),
             ),
             (
                 format!("{ROOT}/billing-shapes.archol"),

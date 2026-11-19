@@ -5,7 +5,6 @@ document Shipment {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Remessa", en: "Shipment" }
   // REVIEW [2026-12-15] Versão do artefato; releases e locks comparam este valor.
-  version: 2
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Shipping"
   // REVIEW [2026-12-15] Sincronização em tempo real entre as telas que exibem a remessa.

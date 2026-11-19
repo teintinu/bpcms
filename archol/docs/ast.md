@@ -34,7 +34,7 @@ structure the AST explorer, the LSP, and the builder consume.
 | :--- | :--- |
 | `SourceFile` | `path`, `items` |
 | `Artifact` | `artifactKind`, `name`, `params`, `body` |
-| `PropertyAssignment` | `name`, `value` |
+| `PropertyAssignment` | `name`, `value`, `typeRef?` (`I18N`) |
 | `Block` | `keyword?`, `name`, `body` (`fields`, `actions`, `on ...`, `end ...`) |
 | `EnumValueDeclaration` | `name`, `body` |
 | `ShorthandProperty` | `name` (`{ fiscalPeriod }`, `required`) |
@@ -49,6 +49,32 @@ code that is not modeled).
 Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 `NullLiteral`, `List`, `Object` (`typeRef`, `members`), `Call` (callee + args),
 `NamedArgument`, `MemberAccess`, `Binary`, `Unary`, `Raw`.
+
+## I18N
+
+`title`, `goal`, `instructions`, `short` and `tooltip` carry `"typeRef": "I18N"` on the `PropertyAssignment`.
+The value is always a locale map in the compiled AST: a string shorthand is
+expanded to the service's first locale, and locales unsupported by the
+application are removed. The locale object itself does not repeat the type.
+
+```json
+{
+  "kind": "PropertyAssignment",
+  "name": "goal",
+  "typeRef": "I18N",
+  "value": {
+    "kind": "Object",
+    "members": [
+      { "kind": "PropertyAssignment", "name": "pt-BR",
+        "value": { "kind": "StringLiteral", "value": "Cobrar faturas vencidas" } }
+    ]
+  }
+}
+```
+
+`short`/`tooltip` are nested `I18N` entries and are not locales. The syntax
+AST (`archol ast` without `--app`) keeps values as written; locale resolution
+needs an application.
 
 ## Pending comments
 

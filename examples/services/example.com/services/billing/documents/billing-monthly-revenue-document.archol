@@ -4,7 +4,6 @@
 document MonthlyRevenue {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  version: 1 // REVIEW [2026-12-15] Versão do documento usada em release e comparação.
   // REVIEW [2026-12-15] Área responsável pelo documento.
   owner: "Billing"
   // REVIEW [2026-12-15] Documento calculado a partir de notas e pagamentos.

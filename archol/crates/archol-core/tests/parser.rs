@@ -8,7 +8,7 @@ fn ast(source: &str) -> archol_core::SourceFile {
 
 #[test]
 fn reads_artifact_with_string_name() {
-    let file = ast("service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n}");
+    let file = ast("service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\" ]\n}");
     assert_eq!(file.items.len(), 1);
     assert_eq!(file.items[0].artifact_kind, "Service");
     assert_eq!(file.items[0].name, "example.com/services/demo");
@@ -119,4 +119,25 @@ fn deep_nesting_becomes_diagnostic_not_stack_overflow() {
         .diagnostics
         .iter()
         .any(|diagnostic| diagnostic.code == "E_PARSE_DEPTH"));
+}
+
+#[test]
+fn marks_i18n_properties_with_their_type() {
+    let file = ast(
+        "process P {\n  title: \"Processo\"\n  goal: \"Fazer\"\n  instructions: { pt-BR: \"Instrução\" }\n  sla: 1d\n}",
+    );
+    let types: Vec<_> = file.items[0]
+        .body
+        .iter()
+        .filter_map(|member| match member {
+            Member::PropertyAssignment { name, type_ref, .. } => {
+                Some((name.as_str(), type_ref.as_deref()))
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(types.contains(&("title", Some("I18N"))));
+    assert!(types.contains(&("goal", Some("I18N"))));
+    assert!(types.contains(&("instructions", Some("I18N"))));
+    assert!(types.contains(&("sla", None)));
 }

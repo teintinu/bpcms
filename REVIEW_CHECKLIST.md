@@ -104,11 +104,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 ## Checklist transversal (aplicar em toda rodada)
 
-- [ ] `title: I18n` obrigatório onde a regra exige: service, shape, document, field, view, event, parameter, role, organogram, icon; application.
+- [ ] `title: I18N` onde a regra exige (app/service/process/document/view/form/message/manual/shape/field/event/parameter/role/organogram/icon/end/transition/action); `goal` no process; `instructions` no manual.
 - [ ] Campos têm `title`; payloads de evento têm `title`; cada `value` de enum tem `title` + `icon`.
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
-- [ ] `I18n` aceita `string | PluralForms` por locale; `other` obrigatório; fallback por categoria.
-- [ ] Units usam `title` I18n com `one`/`other`; sem campo `plural` separado.
+- [ ] Todo `service` declara `locales` com **pelo menos um** idioma; o primeiro é o default do I18N em forma de string (`E_LOCALES_REQUIRED` se faltar/vazio).
+- [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador marca `typeRef: "I18N"` na propriedade, expande a string e filtra pelos locales da aplicação.
+- [ ] Units usam `title` I18N com `one`/`other`; sem campo `plural` separado.
 - [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase. `documents/` e `processes/` são organizacionais; `icons/` é contêiner de namespaces de ícone; as demais subpastas são namespaces.
 - [ ] Artefatos em PascalCase, com exceções internacionais (`pH`).
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
@@ -131,7 +132,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [x] `icon <Name> { ... }`
-- [x] `title: I18n` obrigatório
+- [x] `title: I18N` obrigatório
 - [x] `Icon` definido dentro de um `Service`
 - [x] `icon` sem prefixo `Icon` nem prefixo de serviço
 - [x] Escopo do nome = serviço; mesmo nome em serviços diferentes permitido
@@ -139,7 +140,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] Sem imagem/binário no DSL
 - [x] SVG file-based: qualquer subpasta sob a raiz do serviço
 - [x] Nome do SVG: caminho relativo em camelCase com `.`; arquivos/pastas em kebab-case
-- [x] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n
+- [x] Title do SVG: `aria-label` → `<title>` → `alt` → filename humanizado; sem I18N
 - [x] Conflito SVG × Icon declarado = erro
 
 **Exemplos:** IC.1–IC.6; icons nos `*-icons.archol`; **8 SVGs sob `icons/`** (status, finance/invoice, channels, stock etc.).
@@ -154,7 +155,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Status:** ✅ revisado em DSL.
 
-**Decisão:** Icon = nome + `title`; `symbol`/`set` ficam fora da DSL. SVG file-based faz parte da alternativa de Icon: qualquer subpasta, kebab-case, identificador camelCase com ponto, title por `aria-label` → `<title>` → `alt` → filename, sem I18n. `E_ICON_UNRESOLVED` é erro de resolução do builder, não de sintaxe DSL.
+**Decisão:** Icon = nome + `title`; `symbol`/`set` ficam fora da DSL. SVG file-based faz parte da alternativa de Icon: qualquer subpasta, kebab-case, identificador camelCase com ponto, title por `aria-label` → `<title>` → `alt` → filename, sem I18N. `E_ICON_UNRESOLVED` é erro de resolução do builder, não de sintaxe DSL.
 
 ### P-ICON-SVG — SVG file-based Icons (aprovada)
 
@@ -162,7 +163,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - **Nome:** caminho relativo com segmentos camelCase e pontos; `status/refunded.svg` → `status.refunded`; `checkout/status/refunded.svg` → `checkout.status.refunded`.
 - **Referência local:** `icon: status.refunded`.
 - **Referência por alias:** `Checkout.status.refunded` quando `checkout` está importado como `Checkout`.
-- **Title:** `aria-label` → `<title>` → `alt` → filename humanizado; sem I18n.
+- **Title:** `aria-label` → `<title>` → `alt` → filename humanizado; sem I18N.
 - **Conflito:** SVG × Icon declarado ou SVG × SVG com o mesmo identificador é erro (case-insensitive).
 - **Arquivos/pastas:** kebab-case; identificador de referência camelCase.
 - **Exemplos criados:** `billing/icons/status/draft.svg`, `paid.svg`, `overdue.svg`, `billing/icons/finance/invoice/issued.svg`, `notifications/icons/channels/email.svg`, `inventory/icons/stock/low-stock.svg`, `payments/icons/status/refunded.svg`, `fraud-checkout/icons/status/fraud-checked.svg`.
@@ -196,13 +197,13 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [x] `shape <Name> { ... }`
-- [x] `title: I18n`
+- [x] `title: I18N`
 - [x] `base: decimal | integer | string | classification | workflow | attachment | audio | image | video | richtext`
 - [x] Shapes de `audio`/`image`/`video` declaram `capabilities { gui }`
 - [x] `value <name> { title; icon; ordinal }` — `classification`/`workflow`; ordinal 10, 20, 30...
 - [x] `currency`
 - [x] `dimension`, `units { unidade: { factor, title } }`
-- [x] `units` titles têm plural I18n e `format` escolhe `one`/`other`
+- [x] `units` titles têm plural I18N e `format` escolhe `one`/`other`
 - [x] `unit`, `min`, `max`, `scale` e `precision` são do field (exceto `unit` em Shape de unidade única)
 - [x] `unit` e `units` mutuamente exclusivos; `Percentage` usa `unit: "%"`
 - [x] `format` auto-seleciona unidade; `flags.unit` força
@@ -226,7 +227,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `fields { ... }` — shape composto
 - [x] `default`, `private`
 - [x] Enum: cada `value` tem `title` + `icon` + `ordinal` (exceto valores-base de `std.Currency`); workflow usa `transition`; icons são locais ao serviço
-- [x] `I18n` não é Shape; `shape I18n` é `E_RESERVED_TYPE`
+- [x] `I18N` não é Shape; `shape I18N` é `E_RESERVED_TYPE`
 - [x] `<Document>Id` é Shape implícito de FK; não declarar
 
 **Exemplos:** H.1–H.9; shapes de contexto e `<service>-shapes.archol` (compartilhados), como `citizen-shapes`, `notifications-shapes`, `billing-shapes`.
@@ -276,7 +277,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [x] `role <Name> { ... }`
-- [x] `title: I18n`
+- [x] `title: I18N`
 - [x] `permissions: [...]`
 - [x] `capabilities { ... }`
 - [x] `inherits: Role | [Role...]`; permissões próprias + herdadas
@@ -310,7 +311,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [x] `organogram <Name> { ... }`
 - [x] `scopes: [Tipo]`
-- [x] `title: I18n`
+- [x] `title: I18N`
 - [x] `hierarchy { A > B > C }`; um caminho por linha
 - [x] `fourEyes { ação requires Role }`
 - [x] `segregation { ação != ação }`
@@ -342,7 +343,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [x] `parameter <Name> { ... }`
 - [x] `secret <Name> { ... }`
-- [x] `title: I18n`
+- [x] `title: I18N`
 - [x] `type: Shape` obrigatório em ambos
 - [x] `required` bare
 - [x] `default` só em Parameter; mutuamente exclusivo com `required`
@@ -378,8 +379,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [x] `service "<uri>" { ... }`
-- [x] `title: I18n`
-- [x] `version`, `owner`
+- [x] `title: I18N`
+- [x] `owner`, `locales` obrigatório (≥ 1, primeiro é default); sem `version` em artefato
 - [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
 - [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
 - [x] Sem `provides`; contrato são os artefatos públicos
@@ -412,11 +413,11 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [ ] `document <Name> { ... }` e `scopable document <Name> { ... }`
-- [ ] `title: I18n`
+- [ ] `title: I18N`
 - [ ] `id` interno implícito; não declarar
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
-- [ ] `version`, `owner`, `sync`, `retention`
+- [ ] `owner`, `sync`, `retention`; sem `version` em artefato
 - [ ] `fields { name: Shape { title; required; lookup; unique; rule; ... } }`; sem `?`
 - [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `XxxId`; não é FK
 - [ ] campo para `scopable document` infere escopo
@@ -496,7 +497,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] TODO precisamos de algo mais proximo do conceito de user task / people task do BPM
 - [ ] `view <Name> { ... }`
-- [ ] `title: I18n`
+- [ ] `title: I18N`
 - [ ] `type: form | table | dashboard | wizard | detail | kanban`
 - [ ] `document`, `source`, `sources`
 - [ ] `roles`
@@ -556,7 +557,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 **Foco da revisão:**
 
-- [ ] Decision precisa de `title` I18n?
+- [ ] Decision precisa de `title` I18N?
 - [ ] `when` lista campos de contexto, não expressão?
 - [ ] `default` é obrigatório?
 - [ ] Decision pode chamar ação ou só classificar?
@@ -695,7 +696,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `process <Name> { ... }`
 - [ ] `title`
-- [ ] `version`, `goal`, `roles`
+- [ ] `goal`, `roles`; sem `version` em artefato
 - [ ] `start on Document.Event`, `end on Document.Event`
 - [ ] `task` (type/lane/view/reads/writes/sla/progress)
 - [ ] `pool` interno/externo/system
@@ -936,7 +937,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] Locale precisa de `title`?
 - [ ] Locale é app config ou builder asset?
-- [ ] `I18n` de titles depende de Locale?
+- [ ] `I18N` de titles depende de Locale?
 - [ ] `currency`/`units` são defaults de regionalization?
 
 **Status:** ⬜ pendente.
@@ -1000,8 +1001,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 **Sintaxe/cláusulas:**
 
 - [ ] `application "<uri>" { ... }`
-- [ ] `title: I18n`
-- [ ] `source`, `version`, `lock`
+- [ ] `title: I18N`
+- [ ] `source`, `lock`; sem `version` no corpo
 - [ ] `services { "<uri>" as Alias }`
 - [ ] `roles` + hierarquia
 - [ ] `theme` (builder)
@@ -1032,7 +1033,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `release <Name> { ... }`
 - [ ] `title`? (decidir)
-- [ ] `version`/`semver`
+- [ ] `@<selector>` (semver/tag/commit); sem `version:` no corpo
 - [ ] `lock`
 - [ ] `migration`
 - [ ] `channel`
@@ -1112,7 +1113,7 @@ O item 27 (`reintroduce`) fica como revisão transversal depois das keywords.
 
 ## Revisão de Icon — encerrada
 
-**✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18n; fallback de filename; conflito no mesmo serviço é erro.
+**✅ Aprovado:** nome + `title`; sem `symbol`/`set`; SVG file-based com namespace local; title sem I18N; fallback de filename; conflito no mesmo serviço é erro.
 
 Próximo: **Document** 🟡.
 
@@ -1405,3 +1406,23 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `archol format`/`archol lint` e formatação LSP; pendências `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` no AST (`SourceFile.pending`) com due date, erro para sem data/passada e warning em até 15 dias. Pendências são metadados: aparecem em `SourceFile.pending`, mas não recebem ID nem linha no lock; o explorador as intercala na posição do código. Comentários dos 330 arquivos de exemplo marcados com `REVIEW [2026-12-15]` (13.064 comentários).
 
 **Arquivos afetados:** `archol/crates/archol-core` (AST/parser), `archol/crates/archol-analysis` (`ids`, `application`, `annotate`, lib), `archol/crates/archol-cli`, `archol/crates/archol-lsp`, `archol/editors/vscode`, `archol/scripts/smoke_lsp.py`, `archol/docs/*`, `archol/README.md`, `DSL_REFERENCE.md` (§1.6/§2), `AGENTS.md`, `REVIEW_CHECKLIST.md`.
+
+## Rodada I18N + remoção de `version` — 2026-11-18 (executada por solicitação direta)
+
+**Pedido:** remover o atributo `version` dos artefatos; `title` e `goal` do processo passam a ser `I18N`; revisar todos os `I18N`. O valor `I18N` pode ser string (primeiro locale de `locales` do serviço) ou objeto de traduções; o compilador ignora locales ausentes nos `locales` da aplicação e envia ao AST só os existentes; o tipo precisa ficar explícito para o construtor.
+
+**Decisões aplicadas:**
+
+- `version` foi removido de **todos** os artefatos (`application`, `service`, `process`, `document`, `builder`). A versão publicada vive no seletor de `release`/`rollback` (`@...`) e, por serviço, no lock do app.
+- `service` ganhou `locales` **obrigatório** (ex.: `locales: [ "pt-BR", "en" ]`), com **pelo menos um** idioma; o primeiro é o default do `I18N` em forma de string. Serviço sem `locales` ou com lista vazia é `E_LOCALES_REQUIRED`. Exemplo real no serviço Billing.
+- `I18N` cobre `title` (todos os contextos), `goal` (process), `instructions` (manual) e `short`/`tooltip`.
+- Forma string: o compilador expande para o mapa canônico no primeiro locale do serviço (ou default da app, se o serviço não declarar `locales`).
+- Forma objeto: o compilador mantém apenas locales cuja língua exista em `Application.locales` (comparação exata ou por idioma; `en` sobrevive a `en-US`; `fr` cai).
+- AST: `PropertyAssignment.typeRef = "I18N"`; o objeto de locales não repete o tipo. O builder recebe o locale explícito de cada texto.
+- Nomenclatura da documentação normalizada para `I18N`.
+
+**Implementação:** `archol-analysis/src/i18n.rs` (novo), chamada em `analyze_application` antes do check; `ApplicationInfo.locales`; campo `type` no `PropertyAssignment` do AST; `locales` documentado em `DSL_REFERENCE.md` §1.2/§1.9/§2/§3/§4.2/§5.1; exemplos e `DSL_EXAMPLES.md` atualizados.
+
+**Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"typeRef": "I18N"` na propriedade e o mapa filtrado.
+
+**Em aberto:** validação de `locales` incompletos (`E_TITLE_MISSING`), diagnóstico para string sem locale conhecido e política estrita do builder continuam responsabilidade do construtor/check futuro.

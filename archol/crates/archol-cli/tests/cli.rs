@@ -48,7 +48,7 @@ fn service_fixture(dir: &Path) -> PathBuf {
         .join("demo-service.archol");
     write(
         &path,
-        "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } }",
+        "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } locales: [ \"pt-BR\" ] }",
     );
     path
 }
@@ -58,7 +58,7 @@ fn check_reports_invalid_enum_and_exits_with_1() {
     let dir = temp_dir("enum");
     write(
         &dir.join("services/example.com/services/demo/demo-service.archol"),
-        "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } }",
+        "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } locales: [ \"pt-BR\" ] }",
     );
     write(
         &dir.join("services/example.com/services/demo/demo-shapes.archol"),

@@ -5,7 +5,6 @@ document CreditLimit {
   // REVIEW [2026-12-15] Título exibido na interface e nos relatórios.
   title: { pt-BR: "Limite de crédito", en: "Credit limit" }
   // REVIEW [2026-12-15] Versão do artefato Document; releases e diffs comparam.
-  version: 1
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
   owner: "Credit"
   // REVIEW [2026-12-15] Sincronização de leitura: consumidores leem sem escrever no documento.

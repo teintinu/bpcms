@@ -233,6 +233,7 @@ fn declare_artifact(artifact: &mut Artifact, service: Option<String>, file: Stri
                 value,
                 span,
                 id,
+                ..
             } = member
             {
                 let field_path = field_path(service_uri, &artifact_name, name);

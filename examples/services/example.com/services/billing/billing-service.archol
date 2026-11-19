@@ -2,7 +2,7 @@
 service "example.com/services/billing" {
   // REVIEW [2026-12-15] Título legível do serviço exibido no construtor.
   title: { pt-BR: "Faturamento", en: "Billing" }
-  version: 1.0.0 // REVIEW [2026-12-15] Versão do serviço usada em release e comparação.
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço.
   owner: "Billing" // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
   // REVIEW [2026-12-15] Dependências externas referenciadas por este serviço.
   imports {

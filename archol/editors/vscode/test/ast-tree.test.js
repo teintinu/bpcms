@@ -98,6 +98,10 @@ test('nodeSummary shows the readable summary per category', () => {
   assert.equal(nodeSummary(ast.items[0].body[0]), '');
   assert.equal(nodeSummary(ast.items[0].body[0].fields[0]), 'total');
   assert.equal(nodeSummary({ kind: 'Literal', value: 'SIMPLES' }), 'SIMPLES');
+  assert.equal(
+    nodeSummary({ kind: 'PropertyAssignment', name: 'goal', typeRef: 'I18N' }),
+    'goal: I18N',
+  );
 });
 
 test('nodeCategory classifies nodes without relying on CSS', () => {

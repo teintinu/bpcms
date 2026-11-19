@@ -5,7 +5,6 @@ document Product {
   // REVIEW [2026-12-15] Título exibido no builder e na interface.
   title: { pt-BR: "Produto", en: "Product" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
-  version: 1
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
   owner: "Catalog"
   // REVIEW [2026-12-15] Modo de sincronização: atualização em tempo real entre instâncias.

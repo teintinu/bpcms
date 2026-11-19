@@ -3,8 +3,8 @@
 service "example.com/services/citizen" {
   // REVIEW [2026-12-15] Título exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Cidadão", en: "Citizen" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato Service; usada em diff, lock e release.
-  version: 1.0.0
   // REVIEW [2026-12-15] Responsável pela governança do serviço.
   owner: "Platform Citizen"
   // REVIEW [2026-12-15] Bloco de dependências externas do serviço.

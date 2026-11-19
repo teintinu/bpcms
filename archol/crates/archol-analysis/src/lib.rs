@@ -3,6 +3,7 @@
 pub mod annotate;
 pub mod application;
 pub mod check;
+pub mod i18n;
 pub mod ids;
 pub mod index;
 pub mod link;
@@ -84,6 +85,7 @@ pub fn analyze_application(
     let mut workspace = parse_workspace(files, services_root);
     let applications = application::discover(&workspace);
     let (app, closure) = application::resolve_application(&workspace, application)?;
+    i18n::resolve(&mut workspace, &closure, &app.locales);
     let symbols = Symbols::build(&workspace);
 
     let mut diagnostics: Vec<FileDiagnostic> = workspace

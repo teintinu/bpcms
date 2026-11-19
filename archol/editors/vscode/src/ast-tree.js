@@ -159,7 +159,8 @@ function nodeSummary(node) {
   const parts = [];
   if (node.artifactKind) parts.push(String(node.artifactKind));
   if (node.name) {
-    parts.push(String(node.name));
+    const typeRef = node.typeRef ? `: ${node.typeRef}` : '';
+    parts.push(`${node.name}${typeRef}`);
   } else if (node.kind === 'SourceFile' && node.path) {
     const segments = String(node.path).split(/[\\/]/);
     parts.push(segments[segments.length - 1]);

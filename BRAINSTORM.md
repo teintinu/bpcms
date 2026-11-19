@@ -14,15 +14,15 @@
 | **Produto** | BPCMS = BPM + SOA + CMS, com a LLM como porta de entrada: conversa → modelo → BPMN, telas e documentos → runtime. |
 | **Fronteira** | `Application` não declara artefatos; todo artefato vive em `Service`. A app compõe, configura e inicializa parâmetros. |
 | **V1** | Web, monólito modular, núcleo Rust + estúdio TS, BPMN subset, Document/Shape/unidades, read/live, dev interpretado. |
-| **Identidade** | Application e Service têm URI web sem protocolo; registry: `/index.html` (download/docs); repositório Git: README + código baixado do projeto; versão por semver/tag/commit. |
+| **Identidade** | Application e Service têm URI web sem protocolo; registry: `/index.html` (download/docs); repositório Git: README + código baixado do projeto; versão publicada por release (semver/tag/commit). |
 | **Lock/IDs** | Um lock por app: uma versão por serviço + ID estável para cada identificador; usado para minificação e compressão. Serviço não tem lock/IDs/versões de imports. |
 | **Contrato do serviço** | Todo artefato de topo é público; não há `exports`. `private` só em membros internos (campos/ações). |
 | **Capabilities** | Conceitos de alto nível (`gui`, `tui`, `print`, `oltp`, `sync`, `location`, `identity`, `scheduling`, `attachments`, `capture`, `notify`); tecnologia é detalhe do construtor. |
 | **Essenciais** | `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` oferece Shapes métrico/imperial e conversões. |
-| **Título** | `title` é `I18n` em artifacts e fields; suporta `short`/`tooltip`; locales definem chaves/default; prod estrito, dev pode fallback/editar. |
+| **Título** | `title`/`goal`/`instructions` são `I18N`; string = primeiro locale do serviço, objeto = mapa de locales; suporta `short`/`tooltip`; o compilador filtra pelos locales da app; prod estrito, dev pode fallback/editar. |
 | **ID/Lookup** | Document tem id implícito; `lookup` é copiado em toda referência; FK inexistente bloqueia novos vínculos; projeção puxa campos. |
 | **Extensão** | `Consumer extends User` compartilha `UserId`, herda lookup e adiciona `citizenId`; `ConsumerId` é alias de `UserId`. |
-| **Enums/Ícones** | Todo value de enum tem `title` I18n + `icon` + `ordinal` (10, 20, 30...); `Icon` é token semântico e o Theme/builder resolve a imagem. |
+| **Enums/Ícones** | Todo value de enum tem `title` I18N + `icon` + `ordinal` (10, 20, 30...); `Icon` é token semântico e o Theme/builder resolve a imagem. |
 | **Citizen** | Serviço de identificação de pessoa/organização; `CitizenId` + lookup seguro; PII em `private`; sem `taxId`. |
 | **Citizen 1:N** | Um Citizen pode ter vários Users; cada Consumer referencia o mesmo `citizenId`; sem unique; merge reatribui. |
 | **Serviço** | Conceito de negócio, não package/módulo; tipos compartilhados ficam no serviço dono; Theme/Locale são do construtor. |
@@ -348,7 +348,6 @@ Na prática, a `Application` é pequena de propósito:
 ```text
 application "example.com/app/loja-do-joao" {
   source: registry
-  version: 1.4.0
   title: {
     pt-BR: "Loja do João"
     en-US: "João's Store"
@@ -411,9 +410,9 @@ lock:
 
 > **Decisão B-30 — IDs no lock do app.** O serviço **não tem lock file, não carrega IDs e não declara versões de serviços importados**. Nomes humanos vivem no fonte; o builder/runtime troca nomes por IDs do lock para **minificação de código** e **compressão da serialização** (IDs inteiros/varint em vez de strings). O lock é a única fonte de IDs por aplicação; o mesmo serviço pode ter IDs diferentes em apps diferentes.
 
-#### 2.4.2 Título localizado
+#### 2.4.2 Texto localizado (I18N)
 
-`title` é um **texto localizado**, não uma string única. As chaves são tags de locale declaradas em `locales`; o primeiro locale é o default.
+`title`, `goal` e `instructions` são **I18N**, não strings globais. O valor pode ser uma **string** — que pertence sempre ao primeiro locale do serviço (`locales`) — ou um **mapa de locales** com traduções. O primeiro locale da aplicação é o default.
 
 ```text
 application "example.com/app/loja-do-joao" {
@@ -423,15 +422,26 @@ application "example.com/app/loja-do-joao" {
     en-US: "João's Store"
   }
 }
+
+service "example.com/services/billing" {
+  title: "Faturamento"          // string: primeiro locale do serviço (pt-BR)
+  locales: [ "pt-BR", "en" ]
+}
+
+process Dunning(invoice: Invoice) {
+  title: { pt-BR: "Cobrança", en: "Dunning" }
+  goal: "Cobrar faturas vencidas" // string: primeiro locale do serviço
+}
 ```
 
 - A chave aceita hífen (`pt-BR`, `en-US`); o parser aceita isso no nome da propriedade e na chave do mapa.
-- Se o builder gerar para `pt-BR`, funciona com a entrada `pt-BR`.
-- Se gerar para `en-US` e a chave não existir, é **erro de tradução** (`E_TRANSLATION`) ou aviso (`W_TRANSLATION`) conforme a política do construtor.
+- Todo serviço declara `locales` com pelo menos um idioma; o primeiro é o default. O compilador **marca a propriedade como `typeRef: "I18N"`** e expande a string para `{ "<primeiro-locale-do-serviço>": "..." }`, para que o construtor saiba exatamente a que locale o texto pertence.
+- O conjunto válido é o `locales` da **aplicação**: o compilador remove locales que a app não usa (`fr` cai; `en` sobrevive a `en-US` por fallback de idioma). O AST só recebe os locales existentes.
+- Se o builder gerar para `en-US` e a chave não existir, é **erro de tradução** (`E_TRANSLATION`) ou aviso (`W_TRANSLATION`) conforme a política do construtor.
 - O construtor de dev pode **fallback** para o locale default e permitir editar o título em runtime, gravando de volta no fonte.
-- Chave fora de `locales` é `E_LOCALE_UNDECLARED`; título sem o locale default é `E_TITLE_MISSING`.
+- Título sem o locale default é `E_TITLE_MISSING`.
 
-> **Decisão B-42:** `title` é `I18n`; `locales` define o conjunto e o default. Produção é estrita; dev pode fallback/editar. O construtor decide a política de fallback, mas nunca inventa tradução.
+> **Decisão B-42:** `title`, `goal` e `instructions` são `I18N`; `locales` (app e serviço) define o conjunto e o default. String é o primeiro locale do serviço; objeto é o mapa completo. O compilador filtra pelo `locales` da app e marca o tipo no AST. Produção é estrita; dev pode fallback/editar; o construtor nunca inventa tradução.
 
 **Application é um AST de composição** (metáfora da versão anterior): uma árvore declarativa que os construtores percorrem para montar a experiência. Ela não contém lógica; contém **intenção de montagem**.
 
@@ -439,10 +449,15 @@ application "example.com/app/loja-do-joao" {
 
 **Definição.** Um serviço é uma parte da aplicação — ou uma sub-aplicação — com significado de negócio. Ele **não é** biblioteca, package ou módulo: não existe serviço criado só para agrupar Shapes, Icons, Themes ou Locales compartilhados. Tipos compartilhados pertencem ao serviço de negócio que os possui; tema/idioma são do construtor, não do serviço.
 
+**Idiomas.** O serviço **sempre** declara `locales: [ "pt-BR", "en" ]`, com **pelo menos um** idioma; o primeiro é o default de todo `I18N` em forma de string. Serviço sem `locales` ou com lista vazia é `E_LOCALES_REQUIRED`. O conjunto que chega ao AST é filtrado pelo `locales` da aplicação, não pelo do serviço.
+
 **Identificador.** O identificador canônico de um `Service` também é uma **URI web sem protocolo**: `example.com/services/catalog`. A representação default no DSL é um literal entre aspas:
 
 ```text
-service "example.com/services/catalog" { ... }
+service "example.com/services/catalog" {
+  title: { pt-BR: "Catálogo", en: "Catalog" }
+  locales: [ "pt-BR", "en" ]
+}
 ```
 
 **Página de documentação.** `http://example.com/services/catalog/index.html` é a página de documentação para integração por API (em produção, `https://...`). Ela oferece, conforme as capabilities do construtor:
@@ -519,18 +534,11 @@ A URI de `Application`/`Service` pode resolver para dois tipos de origem — e i
 
 **Source.** `source: auto` (default) reconhece hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares) e resolve o resto como registry. `source: repository` ou `source: registry` força o modo. Se o repositório contém mais de um artefato, a URI pode apontar para um subdiretório: `github.com/acme/monorepo/apps/store`.
 
-**Version.** O flag `version` aceita `semver("1.4.0")`, `tag("v1.4.0")` ou `commit("9f3a1c7")`. Vale tanto para `Application` quanto para `Service` — a regra é simétrica; os exemplos mostram um seletor em cada, mas qualquer um aceita qualquer seletor. Em produção, commit/tag imutável; branch/HEAD só em dev/QA.
+**Version.** Nenhum artefato declara `version:` no corpo. A versão publicada é o seletor do `release`/`rollback` (`@1.4.0`, `@tag("v1.4.0")`, `@commit("9f3a1c7")`); por serviço, o lock do app fixa o valor usado. Em produção, commit/tag imutável; branch/HEAD só em dev/QA.
 
 ```text
-application "github.com/acme/store" {
-  source: repository
-  version: commit("9f3a1c7")
-}
-
-service "gitlab.com/acme/lab" {
-  source: repository
-  version: tag("v2.3.0")
-}
+release "github.com/acme/store"@commit("9f3a1c7") { ... }
+release "gitlab.com/acme/lab"@tag("v2.3.0") { ... }
 ```
 
 > Para artefato em repositório, **não há página `/index.html` obrigatória**: a documentação é o README (da raiz ou do subdiretório) e o código é baixado do projeto. A página de download da app, quando existir, é a página de releases/clone do repositório.
@@ -541,6 +549,7 @@ Um serviço pode alterar/adicionar definições de um artefato importado. O serv
 
 ```text
 service "example.com/services/fraud-checkout" {
+  locales: [ "pt-BR", "en" ]
   imports { service "example.com/services/checkout" as Checkout }
 
   reintroduce Checkout.Checkout {
@@ -591,7 +600,7 @@ parameter PaymentKey {
 | `source` | `config` (configuração do ambiente) ou `secret` (secret store). |
 | `required` | Falha no boot/uso se não houver valor; bare = `true`. |
 | `default` | Só para `config`; proibido para `secret`. |
-| `title` | I18n obrigatório do parâmetro; substitui `description`. |
+| `title` | I18N obrigatório do parâmetro; substitui `description`. |
 | `min`/`max`/`maxLength` | Constraints simples, como em campo. |
 
 **Regras:** `Secret` nunca é serializado, logado, exportado ou enviado à LLM; o lock guarda o **ID** do Parameter, não o valor. Parameters são declarados **no serviço**; a app só inicializa valores no `main`. O serviço não guarda valores nem versões.
@@ -626,6 +635,7 @@ O Shape continua guardando **valor original + unidade** e projeção normalizada
 ```text
 service "example.com/services/field" {
   title: { pt-BR: "Serviço de campo", en: "Field service" }
+  locales: [ "pt-BR", "en" ]
 }
 
 view VisitForm {
@@ -1448,8 +1458,8 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 | Artefato | Propósito | Propriedades-chave | Fase |
 | :--- | :--- | :--- | :--- |
-| **Application** | composição voltada ao usuário | URI, source, version, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
-| **Service** | capacidade de negócio reutilizável | URI, source, version, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
+| **Application** | composição voltada ao usuário | URI, source, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
+| **Service** | capacidade de negócio reutilizável | URI, source, locales, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
 | **Process** | orquestração de trabalho (as-is/to-be) | `for`, pools/lanes, start/end nomeados, tasks com contrato inferido, gateway/fork/join, wait, rollback, mensagens, SLAs, desfechos | Núcleo |
 | **Form** | contrato da tarefa humana | documento, campos (herdados ou novos), botões com `calls`, `stay` | Núcleo |
 | **Document** | estado durável + ações + sync | campos, índices, estados com `transition` (aresta + evento), ações com `to:`, regras, frescor, dono | Núcleo |
@@ -1521,6 +1531,7 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 ```text
 service "example.com/services/expedicao" {
+  locales: [ "pt-BR", "en" ]
   document Remessa {
     fields {
       id: RemessaId
@@ -1728,7 +1739,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | Épico | Resultado | Done when | Fase |
 | :--- | :--- | :--- | :--- |
 | **E1 — Sala de entrevista** | conversa + evidências + cobertura + suposições | 3 processos reais; cobertura > 80%; dono assina; X-01 passou | P0 |
-| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18n, id/lookup/FK, Consumer extends User, Citizen/PII e reintroduce validados; 20 casos golden | P0 |
+| **E2 — Modelo/IR** | Application, Service, Process, Document, Shape, View, Role | schema + validação + diff; URI, lock (uma versão/serviço, IDs), Parameter/segredo, I18N, id/lookup/FK, Consumer extends User, Citizen/PII e reintroduce validados; 20 casos golden | P0 |
 | **E3 — Runtime de documentos** | ações, regras, índices, unidades, read/live | CRUD + action + unit index + sync; X-03 e X-05 passaram | P1 |
 | **E4 — BPMN** | import/export, canvas, simulação, auto-layout | 50 nós legível; simulação de caso feliz + 2 exceções; X-02 passou | P0/P1 |
 | **E5 — Diagrama de documentos** | visão class-like + DDL + propósito/evidência | 1 processo validado pelo dono; DDL confere com o runtime | P1 |
@@ -1777,16 +1788,16 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | D-029 | Capabilities abertas a construtores (`llm`, `google-maps`...) | ✅ | baseline atual |
 | D-030 | Application não declara artefatos; só serviços declaram | ✅ | baseline atual |
 | D-031 | Serviços essenciais `location`, `timezone`, `regionalization`, `units` como capabilities | ✅ | baseline atual |
-| D-032 | `title` é `I18n`; locales definem chaves e default | ✅ | baseline atual |
+| D-032 | `title` é `I18N`; locales definem chaves e default | ✅ | baseline atual |
 | D-033 | Todo document tem id implícito e lookup; Shape de id não é declarado | ✅ | baseline atual |
 | D-034 | ForeignKey soft + projeção de campos na referência | ✅ | baseline atual |
 | D-035 | `Consumer extends User` compartilha `UserId` e adiciona `citizenId` que referencia o serviço Citizen | ✅ | baseline atual |
-| D-036 | `title` é `I18n` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
+| D-036 | `title` é `I18N` obrigatório em artifacts e fields; `short`/`tooltip` opcionais | ✅ | baseline atual |
 | D-037 | Roles e organogram no mesmo `<service>-organograms.archol`, com o organogram antes das roles | ✅ | baseline atual |
 | D-038 | Enum `value` tem `title` + `icon` + `ordinal`; Icon é token semântico resolvido pelo Theme/builder | ✅ | baseline atual |
 | D-044 | Shape tem `write/read` em stream, `format/parse` com flags, `toNumber` e métodos próprios; `convert` removido | ✅ | baseline atual |
 | D-045 | `units` no Shape com fatores; `unit`/`min`/`precision` no field; sem `convert` | ✅ | baseline atual |
-| D-046 | I18n aceita `PluralForms`; units carregam plural no `title` | ✅ | baseline atual |
+| D-046 | I18N aceita `PluralForms`; units carregam plural no `title` | ✅ | baseline atual |
 | D-047 | Enums divididos em `classification` e `workflow`; workflow tem `initial`/`next` | ✅ | baseline atual |
 | D-048 | Bases de mídia, formula to/from, Duration, unitStyle e operadores tipados | ✅ | baseline atual |
 | D-049 | Money/Currency na stdlib; `MoneyBRL` removido; sem câmbio | ✅ | baseline atual |
@@ -1833,7 +1844,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-23** | Página de download da aplicação? | `/<app-uri>/index.html`, com opções por SO (Windows, macOS, Linux, Android, iOS) e outras mídias do construtor. | Distribuição previsível e descobrível. | ✅ |
 | **B-24** | Página de documentação do serviço? | `/<service-uri>/index.html`, com integração por API, opção de servir na nuvem, protocolos (sockets/REST/RPC) e iframe para microfrontend, conforme construtor. | Serviço é contrato público, não só deploy. | ✅ |
 | **B-25** | A URI pode apontar para GitHub/GitLab? | Sim. Nesse caso a documentação é o **README** e o código é baixado do próprio projeto (clone/zip/release); não há `/index.html` obrigatório. | Reuso de projetos existentes sem exigir um registry BPCMS. | ✅ |
-| **B-26** | Como versionar app/serviço? | `version` aceita `semver(...)`, `tag(...)` ou `commit(...)`, tanto em `Application` quanto em `Service`; produção exige commit/tag imutável. | Versão explícita e reproduzível, com flexibilidade para repositório. | ✅ |
+| **B-26** | Como versionar app/serviço? | **Sem `version:` no artefato**: o seletor vive no `release`/`rollback` (`@semver`, `@tag`, `@commit`) e, por serviço, no lock do app. Produção exige commit/tag imutável. | Uma única forma de versionar, sem atributo redundante no artefato. | ✅ |
 | **B-27** | Como escolher registry x repositório? | `source: auto` reconhece hosts conhecidos; `source: registry`/`repository` força. URI pode incluir subdiretório do monorepo. | Funciona por convenção sem impedir controle explícito. | ✅ |
 | **B-28** | Precisamos de `wire`? | **Não**. Dependências vêm de `Service.imports`; a aplicação lista apenas entry points. O resolver monta a closure e o lock. | Uma fonte de verdade; evita drift entre app e serviço. | ✅ |
 | **B-29** | Mais de uma versão do mesmo serviço por app? | **Não**. O lock escolhe uma versão por serviço para o app inteiro; contrato incompatível falha no `check`. | Evita ambiguidade de versões e “dependency hell” silencioso. | ✅ |
@@ -1849,13 +1860,13 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-39** | Capabilities são fechadas? | **Não.** Construtores podem declarar novas capabilities (`llm`, `google-maps`, `acme.payments`), desde que documentem o contrato. | Extensível sem inflar o núcleo. | ✅ |
 | **B-40** | A Application pode declarar artefatos? | **Não.** Todo artefato vive em `Service`; a app só compõe, configura e inicializa parâmetros no `main`. | Uma única fronteira de negócio; evita duplicação app/serviço. | ✅ |
 | **B-41** | Serviços essenciais como capabilities? | **Sim**: `location`, `timezone`, `regionalization` e `units` são capabilities de plataforma; `units` depende de `regionalization` e oferece Shapes métrico/imperial com conversões. | Evita reimplementar GPS/fuso/formatação/unidades em cada serviço. | ✅ |
-| **B-42** | `title` é string ou localizado? | **Localizado**: `title: { pt-BR: "..." }`; chaves em `locales`; hífen aceito. Produção estrita; dev pode fallback/editar fonte. | Um título por locale, sem string global enganosa. | ✅ |
+| **B-42** | `title` é string ou localizado? | **I18N**: `title: "..."` (primeiro locale do serviço) ou `title: { pt-BR: "...", en: "..." }`; `goal`/`instructions` idem. Compilador marca `typeRef: "I18N"`, expande string e filtra pelos locales da app. Produção estrita; dev pode fallback/editar fonte. | Um contrato único de texto localizado, com tipo explícito para o construtor. | ✅ |
 | **B-43** | Id de document é declarado? | **Não.** Todo document tem `id` implícito; referência usa `Document.id`. Extensão compartilha o id do pai. | Menos ruído e consistência de identidade. | ✅ |
 | **B-44** | Todo document tem lookup e referências copiam? | **Sim.** `lookup` define a exibição; toda referência recebe automaticamente a projeção do alvo; archive pode materializar; FK inexistente bloqueia só novos vínculos. | Exibição rica sem reconsultar a origem. | ✅ |
 | **B-45** | Usuário do sistema e consumidor pagante são o mesmo document? | **Não.** `Consumer extends User` compartilha o `id`, herda lookup e adiciona `citizen` que referencia o Citizen. | Separa login de identificação civil/PII sem duplicar identidade. | ✅ |
-| **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18n** em service, shape, document, field, view, event, parameter, role e organogram; mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
+| **B-46** | Onde `title` é obrigatório e qual o tipo? | **I18N** em service, shape, document, field, view, event, parameter, role e organogram; string (primeiro locale) ou mapa de locales + `short`/`tooltip`; booleanos bare. | Um só contrato de label para UI, tabela e tooltip. | ✅ |
 | **B-47** | Roles e organogram são arquivos separados? | **Não.** O mesmo `<service>-organograms.archol` contém o organogram e as roles, com o organogram **antes** das roles. | A hierarquia e seus papéis são lidos juntos; o organogram primeiro mantém o contrato legível. | ✅ |
-| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18n, `icon` e `ordinal`.** O primeiro ordinal é 10; incrementos de 10. `Icon` é token semântico do serviço; o Theme/builder resolve a imagem. | Labels, imagens e binário estáveis. | ✅ |
+| **B-48** | Como representar valores enumerados? | **Cada value tem `title` I18N, `icon` e `ordinal`.** O primeiro ordinal é 10; incrementos de 10. `Icon` é token semântico do serviço; o Theme/builder resolve a imagem. | Labels, imagens e binário estáveis. | ✅ |
 | **B-49** | Onde vive identificação civil/PII? | **No serviço `Citizen`.** `Citizen` registra pessoa/organização e expõe `CitizenId` + lookup seguro; PII fica em `private` e é tratada pela segurança. `taxId` deixa de existir. | Uma fronteira clara de identificação, sem espalhar PII. | ✅ |
 | **B-50** | Um Citizen pode ter mais de um User? | **Sim.** Relação 1:N; cada User tem seu `Consumer` e o mesmo `citizenId`; não há unique. `CitizenMerged` reatribui os Users. | Uma pessoa pode ter várias contas sem duplicar a identidade civil. | ✅ |
 | **B-51** | Serviço pode ser biblioteca/módulo de artefatos? | **Não.** Serviço é conceito de negócio. Não criar serviço para hospedar Shapes/Icons/Themes/Locales compartilhados; Theme/Locale/font/color são do construtor. | Evita serviços artificiais e detalhes de implementação no negócio. | ✅ |
@@ -1863,7 +1874,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-53** | Onde ficam medidas e constantes padrão? | **Em `bpcms.org/std`**, pseudo-serviço do construtor; import obrigatório; uso `std.Mass`, `std.Length`, etc.; sem lock/endpoint. | Evita redefinir unidades e tipos universais em cada serviço. | ✅ |
 | **B-54** | Como Shape serializa, formata e expõe valor? | **`stream` canônico** com `write/read`, `format/parse` com flags, `toNumber(value)` e métodos próprios em expressão TypeScript-like. `convert` removido. | Contrato único para binário, UI e métodos. | ✅ |
 | **B-55** | Onde ficam unidade, faixa e precisão? | **No field**, não no Shape. O Shape declara `units` com fatores; `unit`, `min` e `precision` são opcionais no field. `toNumber(value)` não tem default; `format` auto-seleciona unidade. | Shape é tipo; field é uso. | ✅ |
-| **B-56** | Como representar plural? | **Dentro do I18n**: cada locale pode ser string ou `PluralForms` CLDR (`one`, `other`, `many`...); `other` obrigatório. Units usam `title` com plural, sem campo `plural` separado. | Plural é tradução, não semântica de unidade. | ✅ |
+| **B-56** | Como representar plural? | **Dentro do I18N**: cada locale pode ser string ou `PluralForms` CLDR (`one`, `other`, `many`...); `other` obrigatório. Units usam `title` com plural, sem campo `plural` separado. | Plural é tradução, não semântica de unidade. | ✅ |
 | **B-57** | Enum é classificação ou workflow? | **`base: classification`** para categorias; **`base: workflow`** para máquina de estados, com um `initial`, `next` obrigatório e `[]` terminal. Self-transition proibida; `canTransitionTo` automático; mudança inválida lança `E_INVALID_TRANSITION`. | Separa categoria de ciclo de vida. | ✅ |
 | **B-58** | Como representar mídia, unidades e operadores? | Bases `string`/`richtext`/`attachment`/`audio`/`image`/`video`; units com referência factor1 e `formula { to/from }`; `convert` inteligente; `unitStyle`; `Duration` std; operadores explícitos por Shape. | Cobre mídia, unidades não lineares e aritmética dimensional. | ✅ |
 | **B-59** | Como representar dinheiro? | `std.Money` com `base: decimal`, valor com `raw` + `currency`; `std.Currency` classification ISO com `scale`; `reintroduce` adiciona metadados e `prefix`/`suffix`/`infix`. Sem conversão cambial. | Dinheiro é valor + moeda, não número solto. | ✅ |

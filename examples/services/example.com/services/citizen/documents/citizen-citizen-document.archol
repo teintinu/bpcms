@@ -5,7 +5,6 @@ document Citizen {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Cidadão", en: "Citizen" }
   // REVIEW [2026-12-15] Versão do artefato Document; usada em diff e release.
-  version: 1
   // REVIEW [2026-12-15] Responsável pela governança do documento.
   owner: "Citizen"
   // REVIEW [2026-12-15] Modo de sincronização: leitura a partir do documento.

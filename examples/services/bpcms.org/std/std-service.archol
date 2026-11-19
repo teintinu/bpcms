@@ -2,8 +2,8 @@
 service "bpcms.org/std" {
   // REVIEW [2026-12-15] Rótulo do pseudo-serviço exibido no builder.
   title: { pt-BR: "Biblioteca padrão BPCMS", en: "BPCMS Standard Library" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão das medidas e constantes padrão oferecidas pelo construtor.
-  version: 1.0.0
   // REVIEW [2026-12-15] Responsável pela manutenção da biblioteca padrão.
   owner: "BPCMS"
 }

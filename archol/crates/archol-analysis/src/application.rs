@@ -20,6 +20,8 @@ pub struct ApplicationInfo {
     pub uri: String,
     pub path: String,
     pub services: Vec<ServiceRef>,
+    /// Application locales; the first one is the default.
+    pub locales: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -65,6 +67,7 @@ pub fn application_from_artifact(artifact: &Artifact, path: &str) -> Option<Appl
         uri: artifact.name.clone(),
         path: path.to_string(),
         services,
+        locales: crate::i18n::locales_of(artifact),
     })
 }
 
@@ -192,15 +195,15 @@ mod tests {
             ),
             (
                 "ws/services/example.com/services/a/a-service.archol",
-                "service \"example.com/services/a\" {\n  imports { service \"example.com/services/b\" as B }\n}",
+                "service \"example.com/services/a\" {\n  locales: [ \"pt-BR\" ]\n  imports { service \"example.com/services/b\" as B }\n}",
             ),
             (
                 "ws/services/example.com/services/b/b-service.archol",
-                "service \"example.com/services/b\" { title: { pt-BR: \"B\" } }",
+                "service \"example.com/services/b\" { title: { pt-BR: \"B\" } locales: [ \"pt-BR\" ] }",
             ),
             (
                 "ws/services/example.com/services/c/c-service.archol",
-                "service \"example.com/services/c\" { title: { pt-BR: \"C\" } }",
+                "service \"example.com/services/c\" { title: { pt-BR: \"C\" } locales: [ \"pt-BR\" ] }",
             ),
             (
                 "ws/services/example.com/services/c/documents/c-doc-document.archol",

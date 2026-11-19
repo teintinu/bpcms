@@ -5,7 +5,6 @@ document GoodsReceipt {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Recebimento de mercadoria", en: "Goods receipt" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
-  version: 1
   // REVIEW [2026-12-15] Área responsável pela manutenção do artefato.
   owner: "Procurement"
   // REVIEW [2026-12-15] Modo de sincronização do documento: leitura.

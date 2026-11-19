@@ -7,7 +7,6 @@ process CycleCount(countSheet: CountSheet) {
   // REVIEW [2026-12-15] Título exibido no builder, na inbox e no histórico.
   title: { pt-BR: "Contagem cíclica", en: "Cycle count" }
   // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
-  version: 1
   // REVIEW [2026-12-15] Objetivo de negócio usado na revisão e no painel do processo.
   goal: {
     // REVIEW [2026-12-15] Texto do objetivo em português.

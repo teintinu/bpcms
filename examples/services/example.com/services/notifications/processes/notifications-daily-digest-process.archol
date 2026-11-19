@@ -5,7 +5,6 @@
 process DailyDigest(notification: Notification) {
   // REVIEW [2026-12-15] Rótulo do processo no builder, na inbox e no histórico.
   title: { pt-BR: "Resumo diário", en: "Daily digest" }
-  version: 1 // REVIEW [2026-12-15] Versão do artefato Process; diff e release comparam.
   // REVIEW [2026-12-15] Objetivo de negócio do processo, usado na revisão.
   goal: {
     // REVIEW [2026-12-15] Texto do objetivo em português.

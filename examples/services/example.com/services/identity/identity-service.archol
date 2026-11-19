@@ -2,8 +2,8 @@
 service "example.com/services/identity" {
   // REVIEW [2026-12-15] Título exibido no construtor e na navegação.
   title: { pt-BR: "Identidade", en: "Identity" }
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato Service; diff e release comparam.
-  version: 1.0.0
   // REVIEW [2026-12-15] Time/área responsável pelo serviço.
   owner: "Platform Identity"
   // REVIEW [2026-12-15] Dependências externas usadas pelos artefatos deste serviço.

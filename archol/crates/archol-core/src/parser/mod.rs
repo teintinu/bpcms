@@ -347,6 +347,14 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Properties whose value has the internal `I18N` type.
+pub(crate) fn is_i18n_property(name: &str) -> bool {
+    matches!(
+        name,
+        "title" | "goal" | "instructions" | "short" | "tooltip"
+    )
+}
+
 pub(crate) fn unquote(raw: &str) -> &str {
     raw.strip_prefix('"')
         .and_then(|s| s.strip_suffix('"'))

@@ -5,7 +5,6 @@ document Technician {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Técnico", en: "Technician" }
   // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
-  version: 1
   // REVIEW [2026-12-15] Responsável pela manutenção do documento.
   owner: "Field Service"
   // REVIEW [2026-12-15] Sincronização em tempo real entre os usuários da operação.

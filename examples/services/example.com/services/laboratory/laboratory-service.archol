@@ -3,7 +3,7 @@
 service "example.com/services/laboratory" {
   // REVIEW [2026-12-15] Título exibido no builder e nos seletores de serviço.
   title: { pt-BR: "Laboratório", en: "Laboratory" }
-  version: 1.0.0 // REVIEW [2026-12-15] Versão do serviço comparada em diff e release.
+  locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio responsável pelas decisões do serviço.
   // REVIEW [2026-12-15] Dependências de outros serviços, resolvidas por alias.
   imports {
