@@ -40,8 +40,8 @@ const browserUtils = `  function isNode(value) {
     return children;
   }
 
-  function nodeAtPath(path) {
-    let node = state.ast;
+  function nodeAtPath(ast, path) {
+    let node = ast;
     if (!node || !Array.isArray(path)) return null;
     for (let index = 0; index < path.length; index += 1) {
       node = childrenOf(node)[path[index]];
@@ -83,6 +83,57 @@ const browserUtils = `  function isNode(value) {
     let total = 1;
     childrenOf(node).forEach(function (child) { total += countNodes(child); });
     return total;
-  }`;
+  }
+
+  var JSON_FIRST_KEYS = ['kind', 'title', 'value', 'message', 'id'];
+
+  function keyRank(key) {
+    var index = JSON_FIRST_KEYS.indexOf(key);
+    if (index !== -1) return index;
+    if (/span$/i.test(key)) return 1000;
+    return 100;
+  }
+
+  function orderedKeys(object) {
+    return Object.keys(object).sort(function (left, right) {
+      return keyRank(left) - keyRank(right);
+    });
+  }
+
+  function orderedJson(value) {
+    if (Array.isArray(value)) {
+      return '[' + value.map(orderedJson).join(',') + ']';
+    }
+    if (value && typeof value === 'object') {
+      return '{' + orderedKeys(value).map(function (key) {
+        return JSON.stringify(key) + ':' + orderedJson(value[key]);
+      }).join(',') + '}';
+    }
+    return JSON.stringify(value);
+  }
+
+  function orderedJsonPretty(value, spaces) {
+    var gap = ' '.repeat(spaces || 0);
+    function walk(node, level) {
+      var pad = gap.repeat(level);
+      var childPad = gap.repeat(level + 1);
+      if (Array.isArray(node)) {
+        if (node.length === 0) return '[]';
+        return '[\\n' + node.map(function (item) {
+          return childPad + walk(item, level + 1);
+        }).join(',\\n') + '\\n' + pad + ']';
+      }
+      if (node && typeof node === 'object') {
+        var keys = orderedKeys(node);
+        if (keys.length === 0) return '{}';
+        return '{\\n' + keys.map(function (key) {
+          return childPad + JSON.stringify(key) + ': ' + walk(node[key], level + 1);
+        }).join(',\\n') + '\\n' + pad + '}';
+      }
+      return JSON.stringify(node);
+    }
+    return walk(value, 0);
+  }
+`;
 
 module.exports = { browserUtils };

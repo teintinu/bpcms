@@ -147,22 +147,23 @@ palette always works. Clicking the status bar item opens
 ## AST explorer
 
 The `archol.astExplorer` panel keeps its context while hidden. The extension
-requests `archol/ast` with `{ "uri": "file:///..." }` and draws `ast` as a tree:
+requests `archol/ast` with `{ "uri": "file:///..." }` and renders `ast` as a
+single collapsible JSON tree:
 
-- **Filter** compares the typed text with `kind` and with the summary (`Document Invoice`).
-- **Initial state:** the AST tree opens with `SourceFile` and the top-level artifacts expanded; every `PropertyAssignment` (and nested property) starts collapsed on one line.
-- **JSON popover:** hover a node for ~320 ms to open a floating JSON popover
-  (about 40 characters wide, clamped to the window). It shows the hovered node
-  with per-property expand/collapse, **Expand** and **Collapse** buttons. Every
-  object property starts collapsed on a single line; collapsed content is shown
-  inline (`{"a":1,"b":2}`), clipped horizontally to the popover width. Moving
-  into the popover keeps it open; leaving it or scrolling the tree closes it.
-  The native Cut/Copy/Paste context menu is disabled.
-- **Colors** by category (declaration, expression, statement, block) are CSS
-  only, using `var(--vscode-*)` to follow the light/dark theme.
-- **Click** on a node places the cursor at `span.start` and reveals the span,
-  preserving focus in the panel. Clicking a reference never navigates away; it
-  only reveals the node's own span.
+- **JSON tree:** every object/array has a twisty; collapsed objects/arrays show
+  their contents inline on one line, clipped to the panel width. **Expand all**
+  and **Collapse all** are in the toolbar.
+- **Key order:** `kind`, `title`, `value`, `message` and `id` always come first
+  (in that order); properties ending in `span`/`Span` always come last. The
+  same order is used by inline previews and **Copy JSON**.
+- **Initial state:** the whole JSON starts collapsed (one line for the root).
+  Opening from **Explore AST** expands the selected token and all its parent
+  objects, highlights the token and scrolls it into view.
+- **Filter** matches JSON keys and scalar values; matching branches expand
+  automatically.
+- **Click** an AST node object (any JSON object with `kind`/`span`) to select it
+  and reveal its span. Clicking a reference never navigates away; it only
+  reveals the node's own span.
 - **Go to Code** does the same and moves focus to the editor.
 - The toolbar shows the selected node identifiers (`id 12 · ref 7 ·
   refKind enumValue`). **Go to Declaration** is enabled when the node has `ref`
@@ -171,16 +172,16 @@ requests `archol/ast` with `{ "uri": "file:///..." }` and draws `ast` as a tree:
   has `id`, requests `archol/usages`, and opens a QuickPick whose label is
   `relative/path:line` and whose description is the usage `kind`. With no
   results it shows **No usages found**.
+- **Copy JSON** copies the selected node or the whole AST.
+- The native Cut/Copy/Paste context menu is disabled in the webview.
 - When `archol/ast` returns `inApplication: false` (or the AST has
   `commentedOut: true`), a banner reads *Outside the current application —
   treated as commented out* and the declaration/usages buttons are disabled.
-- **Copy JSON** copies the selected node; with no selection, it copies the whole AST.
 - When the open document changes, a new `archol/ast` is requested after 400 ms.
 
-Nodes are identified by index paths over structural children (properties that
-are nodes and arrays of nodes, in JSON order). The same criterion is used by the
-extension (to find the node at a position) and by the webview (to draw the
-tree).
+The extension still uses structural index paths to find the node at a cursor
+position; clicking a JSON object with `kind`/`span` selects that node in the
+JSON tree and reveals its span.
 
 ## LSP contract covered
 

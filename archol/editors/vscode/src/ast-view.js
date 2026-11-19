@@ -25,6 +25,7 @@ class AstExplorer {
     this._current = null;
     this._selectionPath = null;
     this._selectionOffset = null;
+    this._revealSelected = false;
     this._requestSeq = 0;
     this._timer = null;
     this._dirty = false;
@@ -89,6 +90,7 @@ class AstExplorer {
       if (!selectedPath && !explicitOffset && this._selectionPath) selectedPath = this._selectionPath;
       this._selectionOffset = Number.isFinite(offset) ? offset : null;
       this._selectionPath = selectedPath;
+      this._revealSelected = explicitOffset;
       this._current = {
         ast,
         uri,
@@ -103,6 +105,7 @@ class AstExplorer {
         uri,
         fileName: this._current.fileName,
         selectedPath,
+        revealSelected: this._revealSelected,
         offset: this._selectionOffset,
         inApplication: this._current.inApplication,
         commentedOut: this._current.commentedOut,
@@ -266,6 +269,7 @@ class AstExplorer {
         uri: this._current.uri,
         fileName: this._current.fileName,
         selectedPath: this._selectionPath,
+        revealSelected: this._revealSelected,
         offset: this._selectionOffset,
         inApplication: this._current.inApplication,
         commentedOut: this._current.commentedOut,

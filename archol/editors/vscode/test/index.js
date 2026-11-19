@@ -4,6 +4,7 @@
 // Node resolves the directory as a module and this index loads the tests.
 require('./protocol.test');
 require('./ast-tree.test');
+require('./ast-view-browser-utils.test');
 require('./server-path.test');
 require('./app-support.test');
 require('./diagnostics.test');
