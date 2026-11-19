@@ -102,6 +102,10 @@ test('nodeSummary shows the readable summary per category', () => {
     nodeSummary({ kind: 'PropertyAssignment', name: 'goal', typeRef: 'I18N' }),
     'goal: I18N',
   );
+  assert.equal(
+    nodeSummary({ kind: 'ShapeLiteral', shape: 'std.Duration', raw: '30d', value: 2592000 }),
+    'std.Duration 30d',
+  );
 });
 
 test('nodeCategory classifies nodes without relying on CSS', () => {

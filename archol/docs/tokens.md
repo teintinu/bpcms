@@ -14,7 +14,7 @@ The lexer lives in `crates/archol-core/src/token/`:
 | Group | Tokens |
 | :--- | :--- |
 | identifier | `Ident` (ASCII and Unicode; accepts `µg`, `Å`) |
-| literals | `String`, `Number` (with suffix `5d`, `15m`, `2026y`), `Comment` |
+| literals | `String` (single or double quotes), `Number` (with suffix `5d`, `15m`, `2026y`), `Comment` |
 | punctuation | `{ } ( ) [ ] , : ; . @ ?` |
 | operators | `= == === != !== < > <= >= + - * / % ! && \|\| & \| -> => ??` |
 | keywords | `application service document process view form message shape role organogram policy decision integration parameter secret icon manual error value transition end if else try catch return const let on by schedule fanOut called start imports as where in true false null` |

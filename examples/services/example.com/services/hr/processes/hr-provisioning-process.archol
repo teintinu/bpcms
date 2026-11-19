@@ -12,7 +12,7 @@ process Provisioning(employee: Employee) {
     pt-BR: "Entregar e-mail e sistemas funcionando para a pessoa contratada"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 3d
+  sla: "3d"
   // REVIEW [2026-12-15] Prazo máximo do caso antes do timeout.
   timeout: 3d
 

@@ -12,7 +12,7 @@ process Offboarding(employee: Employee) {
     pt-BR: "Encerrar o vínculo com acessos revogados, equipamento devolvido e entrevista registrada"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 30d
+  sla: "30d"
   // REVIEW [2026-12-15] Prazo máximo do caso antes do timeout.
   timeout: 30d
 

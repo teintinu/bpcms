@@ -11,7 +11,7 @@ process MonthClose(fiscalPeriod: FiscalPeriod) {
     pt-BR: "Consolidar o período, revisar os números e fechar ou registrar a falha"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 5d
+  sla: "5d"
 
   // REVIEW [2026-12-15] Agenda a execução no primeiro dia do mês às três da manhã.
   schedule: "0 3 1 * *"

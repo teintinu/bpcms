@@ -17,9 +17,9 @@ parameter MaxWeight {
   // REVIEW [2026-12-15] Tipo de medida de massa, importado do serviço std.
   type: std.Mass
   // REVIEW [2026-12-15] Peso padrão de trinta quilos.
-  default: 30 kg
+  default: "30 kg"
   // REVIEW [2026-12-15] Menor valor permitido na configuração.
-  min: 1 kg
+  min: "1 kg"
   // REVIEW [2026-12-15] Maior valor permitido na configuração.
-  max: 500 kg
+  max: "500 kg"
 }

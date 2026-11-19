@@ -10,7 +10,7 @@ process ChargebackDispute(chargeback: Chargeback) {
     // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Responder a contestação dentro do prazo, com evidências"
   }
-  sla: 20d // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "20d" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a contestação emite Opened.
   on [Chargeback.Opened]

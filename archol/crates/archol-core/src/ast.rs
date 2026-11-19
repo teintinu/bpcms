@@ -4,6 +4,8 @@
 //! `Block`) and `span` (`start`/`end` in bytes). The AST explorer and the LSP
 //! consume exactly this structure.
 
+use std::collections::BTreeMap;
+
 use crate::span::Span;
 use serde::Serialize;
 
@@ -235,6 +237,19 @@ pub enum Expr {
         args: Vec<Expr>,
         span: Span,
     },
+    /// Parsed literal of a Shape: `"30d"` assigned to `std.Duration`.
+    ShapeLiteral {
+        /// Shape reference as written (`std.Duration`).
+        shape: String,
+        /// Literal text without quotes.
+        raw: String,
+        /// Parsed value; shape-dependent (number, text, or object).
+        value: ShapeValue,
+        /// Base unit after normalization, for quantity shapes.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        unit: Option<String>,
+        span: Span,
+    },
     /// `a.b.c`.
     MemberAccess {
         object: Box<Expr>,
@@ -283,6 +298,7 @@ impl Expr {
             | Expr::Object { span, .. }
             | Expr::NamedArgument { span, .. }
             | Expr::Call { span, .. }
+            | Expr::ShapeLiteral { span, .. }
             | Expr::MemberAccess { span, .. }
             | Expr::Reference { span, .. }
             | Expr::Binary { span, .. }
@@ -297,6 +313,17 @@ impl Expr {
             _ => None,
         }
     }
+}
+
+/// Parsed value of a `ShapeLiteral`, serialized untagged.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum ShapeValue {
+    Integer(i64),
+    Decimal(f64),
+    Text(String),
+    Object(BTreeMap<String, ShapeValue>),
+    List(Vec<ShapeValue>),
 }
 
 /// Process statement (TypeScript-style code).

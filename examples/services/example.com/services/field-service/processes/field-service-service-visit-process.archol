@@ -12,7 +12,7 @@ process ServiceVisit(visit: Visit) {
     pt-BR: "Executar a visita no local, com check-in por localização, assinatura do cliente e SLA"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 3d
+  sla: "3d"
 
   // REVIEW [2026-12-15] Papéis responsáveis por operar o processo.
   by: [Dispatcher]

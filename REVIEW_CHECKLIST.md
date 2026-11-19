@@ -110,6 +110,8 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Todo `service` declara `locales` com **pelo menos um** idioma; o primeiro é o default do I18N em forma de string (`E_LOCALES_REQUIRED` se faltar/vazio).
 - [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador marca `typeRef: "I18N"` na propriedade, expande a string e filtra pelos locales da aplicação.
 - [ ] Units usam `title` I18N com `one`/`other`; sem campo `plural` separado.
+- [ ] Strings aceitam aspas simples/duplas; `format` prefere duplas e `lint` avisa `W_STRING_QUOTES`.
+- [ ] Literal de `Duration` (`sla`) é string entre aspas (`sla: "30d"`); sem aspas é `E_SHAPE_LITERAL_QUOTED`.
 - [ ] Nomes de arquivos em kebab-case; referências e funções em camelCase. `documents/` e `processes/` são organizacionais; `icons/` é contêiner de namespaces de ícone; as demais subpastas são namespaces.
 - [ ] Artefatos em PascalCase, com exceções internacionais (`pH`).
 - [ ] Nomes de artefatos são claros, sem prefixo de serviço; escopo é o serviço; sem duplicidade no mesmo tipo/serviço.
@@ -696,7 +698,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [ ] `process <Name> { ... }`
 - [ ] `title`
-- [ ] `goal`, `roles`; sem `version` em artefato
+- [ ] `goal` (`I18N`), `sla` (`std.Duration`), `roles`; sem `version` em artefato
 - [ ] `start on Document.Event`, `end on Document.Event`
 - [ ] `task` (type/lane/view/reads/writes/sla/progress)
 - [ ] `pool` interno/externo/system
@@ -1426,3 +1428,19 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 **Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"typeRef": "I18N"` na propriedade e o mapa filtrado.
 
 **Em aberto:** validação de `locales` incompletos (`E_TITLE_MISSING`), diagnóstico para string sem locale conhecido e política estrita do builder continuam responsabilidade do construtor/check futuro.
+
+## Rodada literais de Shape — 2026-11-18 (executada por solicitação direta)
+
+**Pedido:** regras para literais; strings como TypeScript com preferência por aspas duplas no format/lint; Duration entre aspas; toda string atribuída a tipo Shape deve usar o `parse` em tempo de compilação; AST com `ShapeLiteral` (`shape`, `raw`, `value`, `unit`).
+
+**Decisões aplicadas:**
+- Strings aceitam aspas simples e duplas; `archol format` converte para duplas quando não há aspas duplas/escape no conteúdo; `lint` emite `W_STRING_QUOTES` enquanto estiver em aspas simples.
+- `sla` é `std.Duration` e exige literal entre aspas: `sla: "30d"`. Sem aspas: `E_SHAPE_LITERAL_QUOTED`.
+- Strings atribuídas a tipos Shape (propriedades tipadas, `let`/`const`, campos de objeto tipado, `Parameter.default`/`min`/`max` e defaults de field) são parseadas em tempo de compilação; falha vira `E_SHAPE_LITERAL`.
+- `std.Money` vira `{ raw, currency }`; `std.Mass`/`std.Duration` normalizam para a unidade-base; shapes com `normalize`/`validate` (ex.: `Email`) são normalizados/validados.
+- AST: `ShapeLiteral` com `shape`, `raw`, `value` normalizado e `unit` quando quantidade. Ex.: `"30d"` → `value: 2592000`, `unit: "s"`.
+- `std.Duration` já existia em `std-shapes.archol`; não foi criado tipo novo.
+
+**Implementação:** lexer com aspas simples; `W_STRING_QUOTES`; `format` com `quote_edits`; `shape_literal.rs` no analysis; `Expr::ShapeLiteral`/`ShapeValue` no AST.
+
+**Testes:** parser (aspas simples), pending (`format`), analysis (Duration, video, inválido, sem aspas), corpus e as 5 aplicações verdes.

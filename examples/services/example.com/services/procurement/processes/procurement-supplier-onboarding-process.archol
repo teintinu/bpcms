@@ -12,7 +12,7 @@ process SupplierOnboarding(supplier: Supplier) {
     pt-BR: "Habilitar fornecedor com cadastro no portal, documentos verificados e contas a pagar prontas"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 10d
+  sla: "10d"
 
   // REVIEW [2026-12-15] Restringe a instância às tarefas da role comprador.
   by: [Buyer]

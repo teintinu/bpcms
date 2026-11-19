@@ -47,7 +47,7 @@ impl<'a> Lexer<'a> {
             match byte {
                 b' ' | b'\t' | b'\r' | b'\n' => self.pos += 1,
                 b'/' if self.byte_at(self.pos + 1) == Some(b'/') => self.comment(),
-                b'"' => self.string(),
+                b'"' | b'\'' => self.string(),
                 b'0'..=b'9' => self.number(),
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.ident(),
                 _ => {
@@ -107,11 +107,12 @@ impl<'a> Lexer<'a> {
 
     fn string(&mut self) {
         let start = self.pos;
+        let quote = self.byte_at(self.pos).unwrap_or(b'"');
         self.pos += 1;
         while let Some(byte) = self.byte_at(self.pos) {
             match byte {
                 b'\\' => self.pos = (self.pos + 2).min(self.source.len()),
-                b'"' => {
+                byte if byte == quote => {
                     self.pos += 1;
                     self.push(TokenKind::String, start, self.pos);
                     return;

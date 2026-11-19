@@ -12,7 +12,7 @@ process FreightQuote(shipment: Shipment) {
     pt-BR: "Cotar frete em várias transportadoras e aplicar a melhor oferta"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 1d
+  sla: "1d"
 
   // REVIEW [2026-12-15] Gatilho: inicia um caso quando a remessa emite QuoteRequested.
   on [Shipment.QuoteRequested]

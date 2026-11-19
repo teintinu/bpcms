@@ -186,9 +186,27 @@ pub fn format_edits(source: &str, pending: &[Pending]) -> Vec<(Span, String)> {
         .collect()
 }
 
-/// Applies pending formatter edits to `source`.
+/// Prefer double quotes when the body has no quote/escape to preserve.
+pub fn quote_edits(source: &str) -> Vec<(Span, String)> {
+    crate::lexer::lex(source)
+        .tokens
+        .into_iter()
+        .filter(|token| token.kind == TokenKind::String)
+        .filter_map(|token| {
+            let raw = source.get(token.span.start..token.span.end)?;
+            let body = raw.strip_prefix('\'')?.strip_suffix('\'')?;
+            if body.contains('"') || body.contains('\\') {
+                return None;
+            }
+            Some((token.span, format!("\"{body}\"")))
+        })
+        .collect()
+}
+
+/// Applies pending and string-quote formatter edits to `source`.
 pub fn format_source(source: &str, pending: &[Pending]) -> String {
     let mut edits = format_edits(source, pending);
+    edits.extend(quote_edits(source));
     edits.sort_by_key(|(span, _)| span.start);
     let mut output = String::with_capacity(source.len());
     let mut cursor = 0;
@@ -315,6 +333,17 @@ mod tests {
         assert_eq!(
             format_source(source, &items),
             "// TODO lower\n// note stays\n"
+        );
+    }
+
+    #[test]
+    fn formatter_prefers_double_quotes_when_possible() {
+        let source = "document A {\n  title: 'A'\n  note: 'has \"double\" quotes'\n}\n";
+        let formatted = format_source(source, &[]);
+        assert!(formatted.contains("title: \"A\""), "{formatted}");
+        assert!(
+            formatted.contains("note: 'has \"double\" quotes'"),
+            "{formatted}"
         );
     }
 }

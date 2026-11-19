@@ -9,6 +9,8 @@ service "example.com/services/fraud-checkout" {
   owner: "Risk"
   // REVIEW [2026-12-15] Serviços externos usados por este serviço.
   imports {
+    // REVIEW [2026-12-18] Importa as medidas/constantes padrão; `sla` usa std.Duration.
+    service "bpcms.org/std" as std
     // REVIEW [2026-12-15] Importa a finalização de compra com o alias Checkout.
     service "example.com/services/checkout" as Checkout
   }

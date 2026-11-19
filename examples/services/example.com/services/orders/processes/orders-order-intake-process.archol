@@ -12,7 +12,7 @@ process OrderIntake(order: Order) {
     pt-BR: "Levar o rascunho à confirmação e reservar o estoque"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 2d
+  sla: "2d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o pedido emite Drafted.
   on [Order.Drafted]

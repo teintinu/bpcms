@@ -44,6 +44,16 @@ The check is more than type inference:
 - `title`, `goal`, `instructions`, `short` and `tooltip` are marked
   `typeRef: "I18N"`; string shorthand is expanded to the service's first locale and
   locale map entries not supported by the application are dropped.
+- `sla` is marked `typeRef: "std.Duration"`; `sla: "30d"` becomes a
+  `ShapeLiteral` with the normalized value and base unit.
+- Any string assigned to a Shape type is parsed by the shape's declarative
+  `parse`/`validate`/`normalize` (`E_SHAPE_LITERAL` on failure); unquoted
+  Duration text is `E_SHAPE_LITERAL_QUOTED`. This covers `sla`, typed
+  `let`/`const`, parameter `default`/`min`/`max`, and field defaults.
+  Quantities are normalized to the shape's base unit; `std.Money` becomes
+  `{ raw, currency }`.
+- Single-quoted strings are accepted; `W_STRING_QUOTES` asks for double quotes
+  and `archol format` converts them when possible.
 
 Pending comments (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
 `SourceFile.pending`. A missing or past due date is an error

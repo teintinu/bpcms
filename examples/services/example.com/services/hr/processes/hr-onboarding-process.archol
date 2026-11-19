@@ -12,7 +12,7 @@ process Onboarding(employee: Employee) {
     pt-BR: "Colocar a pessoa produtiva no primeiro dia, com documentos, acessos e equipamento"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 30d
+  sla: "30d"
   // REVIEW [2026-12-15] Prazo máximo do caso antes do timeout.
   timeout: 30d
 

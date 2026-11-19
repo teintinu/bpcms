@@ -9,7 +9,7 @@ process SampleRecollection(sample: Sample) {
   goal: {
     pt-BR: "Recoletar a amostra rejeitada e liberá-la para análise" // REVIEW [2026-12-15] Texto do objetivo em português.
   }
-  sla: 3d // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "3d" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a amostra é rejeitada.
   on [Sample.Rejected]

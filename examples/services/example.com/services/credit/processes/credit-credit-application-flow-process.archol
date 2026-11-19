@@ -11,7 +11,7 @@ process CreditApplicationFlow(creditApplication: CreditApplication) {
     pt-BR: "Conceder limite com risco calculado, alçada explícita e decisão rastreável"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time de dez dias, não é timer.
-  sla: 10d
+  sla: "10d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a proposta emite Submitted.
   on [CreditApplication.Submitted]

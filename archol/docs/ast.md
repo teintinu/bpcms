@@ -34,7 +34,7 @@ structure the AST explorer, the LSP, and the builder consume.
 | :--- | :--- |
 | `SourceFile` | `path`, `items` |
 | `Artifact` | `artifactKind`, `name`, `params`, `body` |
-| `PropertyAssignment` | `name`, `value`, `typeRef?` (`I18N`) |
+| `PropertyAssignment` | `name`, `value`, `typeRef?` (`I18N`, `std.Duration`, ...) |
 | `Block` | `keyword?`, `name`, `body` (`fields`, `actions`, `on ...`, `end ...`) |
 | `EnumValueDeclaration` | `name`, `body` |
 | `ShorthandProperty` | `name` (`{ fiscalPeriod }`, `required`) |
@@ -47,8 +47,9 @@ Statements: `ExpressionStatement`, `ConstDeclaration`, `LetDeclaration`,
 code that is not modeled).
 
 Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
-`NullLiteral`, `List`, `Object` (`typeRef`, `members`), `Call` (callee + args),
-`NamedArgument`, `MemberAccess`, `Binary`, `Unary`, `Raw`.
+`NullLiteral`, `List`, `Object` (`typeRef`, `members`), `ShapeLiteral`,
+`Call` (callee + args), `NamedArgument`, `MemberAccess`, `Binary`, `Unary`,
+`Raw`.
 
 ## I18N
 
@@ -75,6 +76,30 @@ application are removed. The locale object itself does not repeat the type.
 `short`/`tooltip` are nested `I18N` entries and are not locales. The syntax
 AST (`archol ast` without `--app`) keeps values as written; locale resolution
 needs an application.
+
+Other semantic types use the same `PropertyAssignment.typeRef`: `sla` is
+`std.Duration` (`"typeRef": "std.Duration"`).
+
+## Shape literals
+
+A string assigned to a Shape type is parsed at compile time and becomes a
+`ShapeLiteral`. The node carries the shape reference, the raw text, the parsed
+value and, for quantities, the base unit:
+
+```json
+{
+  "kind": "ShapeLiteral",
+  "shape": "std.Duration",
+  "raw": "30d",
+  "value": 2592000,
+  "unit": "s",
+  "span": { "start": 0, "end": 0 }
+}
+```
+
+`value` is shape-dependent: a number for quantities, text for media shapes, or
+an object when the shape's parse returns fields. Strings accept single or
+double quotes; `archol format` prefers double quotes.
 
 ## Pending comments
 

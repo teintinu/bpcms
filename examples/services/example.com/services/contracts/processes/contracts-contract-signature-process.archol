@@ -10,7 +10,7 @@ process ContractSignature(contract: Contract) {
     // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Coletar a assinatura do fornecedor no prazo e ativar o contrato"
   }
-  sla: 10d // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "10d" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o contrato emite Submitted.
   on [Contract.Submitted]

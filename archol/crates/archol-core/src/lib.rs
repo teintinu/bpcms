@@ -11,7 +11,7 @@ pub mod pending;
 pub mod span;
 pub mod token;
 
-pub use ast::{Artifact, Expr, Member, Pending, SourceFile, Stmt};
+pub use ast::{Artifact, Expr, Member, Pending, ShapeValue, SourceFile, Stmt};
 pub use diagnostic::{Diagnostic, Severity};
 pub use lexer::{lex, Lexed};
 pub use parser::{parse, ParseResult};

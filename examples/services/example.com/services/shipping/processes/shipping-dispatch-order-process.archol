@@ -12,7 +12,7 @@ process DispatchOrder(shipment: Shipment) {
     pt-BR: "Separar, embalar, pesar, cotar o frete e despachar com etiqueta"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 1d
+  sla: "1d"
 
   // REVIEW [2026-12-15] Gatilho: inicia um caso quando a remessa é criada.
   on [Shipment.Created]

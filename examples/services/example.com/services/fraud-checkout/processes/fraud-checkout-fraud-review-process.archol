@@ -11,7 +11,7 @@ process FraudReview(fraudCheck: FraudCheck) {
     pt-BR: "Avaliar o risco e decidir automaticamente ou por análise manual"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 1d
+  sla: "1d"
 
   // REVIEW [2026-12-15] Gatilho: inicia o caso quando o documento emite Created.
   on [FraudCheck.Created]

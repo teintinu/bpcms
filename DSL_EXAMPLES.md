@@ -40,6 +40,8 @@ Este documento cobre o catálogo de artefatos. Os **35 processos completos** —
 | Relatório | `view type: report` | agregação é projeção; documento derivado é estado |
 | Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
 | Versão | `"<uri>"@1.2.3` / `@tag("v1.2.3")` / `@commit("9f3a1c")` | Seletor de release/rollback; nenhum artefato declara `version:` no corpo |
+| String | `"texto"` ou `'texto'` | Aspas simples/duplas; `format` prefere duplas (`W_STRING_QUOTES` no lint) |
+| Shape literal | `sla: "30d"` | Parse do Shape em tempo de compilação; AST `ShapeLiteral` com `raw`, `value` e `unit` |
 | I18N | `title: "..."` ou `title: { pt-BR: "...", en: "..." }` | Tipo `I18N`; string = primeiro locale do serviço; o compilador filtra pelos locales da app |
 | Idiomas | `locales: [ "pt-BR", "en" ]` | App/service; no serviço é obrigatório (≥ 1); o primeiro é o default |
 | Página canônica | `http://<uri>/index.html` | app = download por SO; service = docs/integração |
@@ -473,6 +475,7 @@ Convenções:
 - sem `pool`/`lane`/`task`; `roles` no form/manual definem quem executa;
 - operações diretas (`Doc.action`, `Integracao.op`, `Decision.evaluate`) e tasks (`Form.show`, `Manual.show`, `Processo.run`);
 - sem arestas: `if`/`else if`, `parallel`, `loop`, `wait`, `try/catch` e `return`;
+- `sla` é `std.Duration`: `sla: "1d"` guarda quantidade + unidade e o AST recebe `typeRef: "std.Duration"` e um `ShapeLiteral`;
 - `end` no fim do processo, com `outcome: success | cancelled | failure`;
 - o documento só muda por `action`; decisão humana é lida no estado do documento.
 
@@ -483,7 +486,7 @@ process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   // I18N em forma de string: primeiro locale do serviço.
   goal: "Cotar o frete, autorizar o pagamento e confirmar a compra"
-  sla: 1d
+  sla: "1d"
 
   on [CheckoutSession.CartValidated]
   key: session
@@ -581,7 +584,7 @@ form PaymentRetry {
 ```archol
 process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   title: { pt-BR: "Aprovação de compra", en: "Purchase approval" }
-  sla: 5d
+  sla: "5d"
 
   on [PurchaseRequest.Submitted]
   key: purchaseRequest
@@ -640,7 +643,7 @@ decision ApprovalLimit {
 ```archol
 process DispatchOrder(shipment: Shipment) {
   title: { pt-BR: "Despacho do pedido", en: "Order dispatch" }
-  sla: 1d
+  sla: "1d"
 
   on [Shipment.Created]
   key: shipment
@@ -692,7 +695,7 @@ process DispatchOrder(shipment: Shipment) {
 ```archol
 process OrderCancellation(order: Order) {
   title: { pt-BR: "Cancelamento de pedido", en: "Order cancellation" }
-  sla: 1d
+  sla: "1d"
 
   on [Order.CancellationRequested]
   key: order
@@ -1310,7 +1313,7 @@ document Invoice {
     tax: std.Money {
       title: { pt-BR: "Imposto", en: "Tax" }
       currency: BRL
-      default: 0 BRL
+      default: "0 BRL"
     }
     total: std.Money {
       title: { pt-BR: "Total", en: "Total" }
@@ -3919,11 +3922,11 @@ parameter MaxRetries {
 parameter SupportSla {
   title: { pt-BR: "Prazo de suporte", en: "Support SLA" }
   type: std.Duration
-  default: 2h
+  default: "2h"
 }
 ```
 
-*Valida: duração tipada com unidade, em vez de string.*
+*Valida: duração tipada, com o literal entre aspas e parseado para `std.Duration`.*
 
 ### PR.6 Chave de API específica
 
@@ -5084,7 +5087,7 @@ document Invoice {
 ```archol
 process MonthClose(fiscalPeriod: FiscalPeriod) {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  sla: 6h
+  sla: "6h"
 
   schedule: "0 2 1 * *"
   fanOut: FiscalPeriod where status == Open
@@ -5123,7 +5126,7 @@ process MonthClose(fiscalPeriod: FiscalPeriod) {
 ```archol
 process Dunning(invoice: Invoice) {
   title: { pt-BR: "Cobrança", en: "Dunning" }
-  sla: 45d
+  sla: "45d"
 
   schedule: "0 6 * * *"
   fanOut: Invoice where status == Overdue and daysOverdue >= 1
@@ -5169,7 +5172,7 @@ process Dunning(invoice: Invoice) {
 ```archol
 process Replenishment(stockItem: StockItem) {
   title: { pt-BR: "Reposição", en: "Replenishment" }
-  sla: 2d
+  sla: "2d"
 
   schedule: "0 7 * * *"
   fanOut: StockItem where available < reorderPoint

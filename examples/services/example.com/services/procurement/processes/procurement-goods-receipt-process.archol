@@ -12,7 +12,7 @@ process GoodsReceipt(goodsReceipt: GoodsReceipt) {
     pt-BR: "Receber a mercadoria conferida e tratar divergência sem sujar o estoque"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 2d
+  sla: "2d"
 
   // REVIEW [2026-12-15] Restringe a instância às tarefas da role recebedor.
   by: [ReceivingClerk]

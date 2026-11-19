@@ -29,6 +29,22 @@ pub struct ParseResult {
 pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
     let lexed = lex(source);
     let pending = crate::pending::collect(source, &lexed.tokens);
+    let mut diagnostics = lexed.diagnostics;
+    for token in &lexed.tokens {
+        if token.kind != TokenKind::String {
+            continue;
+        }
+        if source
+            .get(token.span.start..token.span.end)
+            .is_some_and(|raw| raw.starts_with('\''))
+        {
+            diagnostics.push(Diagnostic::warning(
+                "W_STRING_QUOTES",
+                "Prefer double quotes; run `archol format` to normalize",
+                token.span,
+            ));
+        }
+    }
     let tokens = lexed
         .tokens
         .into_iter()
@@ -38,7 +54,7 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
         source,
         tokens,
         pos: 0,
-        diagnostics: lexed.diagnostics,
+        diagnostics,
         lines: LineIndex::new(source),
         depth: 0,
         depth_reported: false,
@@ -347,16 +363,18 @@ impl<'a> Parser<'a> {
     }
 }
 
-/// Properties whose value has the internal `I18N` type.
-pub(crate) fn is_i18n_property(name: &str) -> bool {
-    matches!(
-        name,
-        "title" | "goal" | "instructions" | "short" | "tooltip"
-    )
+/// Semantic type of a property, when the language fixes one.
+pub(crate) fn property_type_ref(name: &str) -> Option<&'static str> {
+    match name {
+        "title" | "goal" | "instructions" | "short" | "tooltip" => Some("I18N"),
+        "sla" => Some("std.Duration"),
+        _ => None,
+    }
 }
 
 pub(crate) fn unquote(raw: &str) -> &str {
     raw.strip_prefix('"')
         .and_then(|s| s.strip_suffix('"'))
+        .or_else(|| raw.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')))
         .unwrap_or(raw)
 }

@@ -2,7 +2,7 @@
 process Dunning(invoice: Invoice) {
   title: { pt-BR: "Cobrança", en: "Dunning" }
   goal: "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
-  sla: 30d
+  sla: "30d"
 
   // REVIEW [2026-12-15] Agenda a execução diária às seis da manhã.
   schedule: "0 6 * * *"

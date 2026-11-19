@@ -12,7 +12,7 @@ process ClaimSettlement(claim: Claim) {
     pt-BR: "Indenizar o sinistro com cobertura verificada, risco rastreável e compensação"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 10d
+  sla: "10d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento emite Opened.
   on [Claim.Opened]

@@ -12,7 +12,7 @@ process AccountRecovery(user: User) {
     pt-BR: "Verificar a identidade, aprovar a recuperação e desbloquear o acesso"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 3d
+  sla: "3d"
 
   // REVIEW [2026-12-15] Papéis que participam do caso.
   by: [Clerk, Manager]

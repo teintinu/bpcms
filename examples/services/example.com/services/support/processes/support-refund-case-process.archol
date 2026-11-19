@@ -12,7 +12,7 @@ process RefundCase(returnRequest: ReturnRequest) {
     pt-BR: "Decidir a elegibilidade, aprovar por alçada e reembolsar o cliente"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 5d
+  sla: "5d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando a devolução emite Requested.
   on [ReturnRequest.Requested]

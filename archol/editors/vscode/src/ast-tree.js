@@ -158,6 +158,8 @@ function nodeSummary(node) {
   if (!isAstNode(node)) return '';
   const parts = [];
   if (node.artifactKind) parts.push(String(node.artifactKind));
+  if (node.shape) parts.push(String(node.shape));
+  if (node.raw !== undefined && node.kind === 'ShapeLiteral') parts.push(String(node.raw));
   if (node.name) {
     const typeRef = node.typeRef ? `: ${node.typeRef}` : '';
     parts.push(`${node.name}${typeRef}`);

@@ -12,7 +12,7 @@ process CitizenMerge(citizen: Citizen) {
     pt-BR: "Unificar cadastros duplicados com aprovação de quatro olhos, reatribuir usuários e registrar a auditoria"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 5d
+  sla: "5d"
 
   // REVIEW [2026-12-15] Papéis que podem iniciar o processo.
   by: [Clerk, Manager]

@@ -12,7 +12,7 @@ process ClaimFraudReview(claim: Claim) {
     pt-BR: "Confirmar ou descartar a fraude com evidências registradas e prazo"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 7d
+  sla: "7d"
 
   // REVIEW [2026-12-15] Processo chamado por outro processo, sem gatilho próprio.
   called

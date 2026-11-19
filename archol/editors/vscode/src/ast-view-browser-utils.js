@@ -56,6 +56,8 @@ const browserUtils = `  function isNode(value) {
     if (!node) return '';
     const parts = [];
     if (node.artifactKind) parts.push(String(node.artifactKind));
+    if (node.shape) parts.push(String(node.shape));
+    if (node.raw !== undefined && node.kind === 'ShapeLiteral') parts.push(String(node.raw));
     if (node.name) {
       var typeRef = node.typeRef ? ': ' + node.typeRef : '';
       parts.push(String(node.name) + typeRef);

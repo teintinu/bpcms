@@ -344,3 +344,186 @@ fn service_must_declare_at_least_one_locale() {
         .iter()
         .any(|d| d.diagnostic.code == "E_LOCALES_REQUIRED"));
 }
+
+fn shape_files(process: &str) -> Vec<FileInput> {
+    [
+        (
+            "ws/applications/example.com/app/demo/demo-application.archol",
+            "application \"example.com/app/demo\" {\n  services {\n    \"example.com/services/demo\" as Demo\n  }\n  locales: [pt-BR, en-US]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\", \"en\" ]\n  imports { service \"bpcms.org/std\" as std }\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-shapes.archol",
+            "shape ProductVideo {\n  title: { pt-BR: \"Vídeo\" }\n  base: video\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-process.archol",
+            process,
+        ),
+        (
+            "ws/services/bpcms.org/std/std-service.archol",
+            "service \"bpcms.org/std\" {\n  title: { pt-BR: \"Std\" }\n  locales: [ \"pt-BR\" ]\n}",
+        ),
+        (
+            "ws/services/bpcms.org/std/std-shapes.archol",
+            "shape Duration {\n  title: { pt-BR: \"Duração\" }\n  base: decimal\n  units {\n    s: { factor: 1 }\n    h: { factor: 3600 }\n  }\n  parse: quantity\n}\nshape Money {\n  title: { pt-BR: \"Dinheiro\" }\n  base: decimal\n}\nshape Email {\n  title: { pt-BR: \"E-mail\" }\n  base: string\n  normalize: lower-trim\n  validate: email\n}",
+        ),
+    ]
+    .into_iter()
+    .map(|(path, source)| FileInput {
+        path: path.to_string(),
+        source: source.to_string(),
+    })
+    .collect()
+}
+
+#[test]
+fn duration_and_shape_strings_become_shape_literals() {
+    let files = shape_files(
+        "process P {\n  let video: ProductVideo = \"https://example.com/v.mp4\"\n  title: \"Processo\"\n  sla: \"2h\"\n}",
+    );
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+    let process = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("demo-process.archol"))
+        .expect("process");
+    let (_, sla) = property(&process.ast.items[0].body, "sla").expect("sla");
+    let Expr::ShapeLiteral {
+        shape,
+        raw,
+        value,
+        unit,
+        ..
+    } = sla
+    else {
+        panic!("sla must be a ShapeLiteral");
+    };
+    assert_eq!(shape, "std.Duration");
+    assert_eq!(raw, "2h");
+    assert!(matches!(value, archol_core::ShapeValue::Integer(7200)));
+    assert_eq!(unit.as_deref(), Some("s"));
+
+    let mut video = None;
+    walk_members(&process.ast.items[0].body, &mut |member| {
+        if let Member::Statement {
+            statement: archol_core::Stmt::LetDeclaration { name, init, .. },
+            ..
+        } = member
+        {
+            if name == "video" {
+                video = init.clone();
+            }
+        }
+    });
+    let Some(Expr::ShapeLiteral {
+        shape, value, unit, ..
+    }) = video
+    else {
+        panic!("video must be a ShapeLiteral");
+    };
+    assert_eq!(shape, "ProductVideo");
+    assert!(
+        matches!(value, archol_core::ShapeValue::Text(text) if text == "https://example.com/v.mp4")
+    );
+    assert_eq!(unit, None);
+}
+
+#[test]
+fn invalid_shape_literals_are_compile_errors() {
+    let files = shape_files("process P {\n  title: \"P\"\n  sla: \"2x\"\n}");
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    assert!(analysis
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_SHAPE_LITERAL"));
+
+    let files = shape_files("process P {\n  title: \"P\"\n  sla: 2h\n}");
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    assert!(analysis
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_SHAPE_LITERAL_QUOTED"));
+}
+
+fn walk_members(members: &[Member], visit: &mut impl FnMut(&Member)) {
+    for member in members {
+        visit(member);
+        match member {
+            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
+                walk_members(body, visit)
+            }
+            _ => {}
+        }
+    }
+}
+
+#[test]
+fn parameter_shape_literals_use_declared_type() {
+    let mut files = shape_files("process P {\n  title: \"P\"\n}");
+    files.push(FileInput {
+        path: "ws/services/example.com/services/demo/demo-parameters.archol".to_string(),
+        source: "parameter Wait {\n  title: { pt-BR: \"Espera\" }\n  type: std.Duration\n  default: \"2h\"\n}\nparameter Price {\n  title: { pt-BR: \"Preço\" }\n  type: std.Money\n  default: \"500 BRL\"\n}\nparameter Mail {\n  title: { pt-BR: \"E-mail\" }\n  type: std.Email\n  default: \"  USER@Example.COM \"\n}".to_string(),
+    });
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+    let file = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("demo-parameters.archol"))
+        .expect("parameters");
+    let (_, duration) = property(&file.ast.items[0].body, "default").expect("duration default");
+    assert!(matches!(
+        duration,
+        Expr::ShapeLiteral {
+            value: archol_core::ShapeValue::Integer(7200),
+            unit: Some(unit),
+            ..
+        } if unit == "s"
+    ));
+    let (_, money) = property(&file.ast.items[1].body, "default").expect("money default");
+    assert!(matches!(
+        money,
+        Expr::ShapeLiteral {
+            value: archol_core::ShapeValue::Object(value),
+            ..
+        } if matches!(value.get("currency"), Some(archol_core::ShapeValue::Text(code)) if code == "BRL")
+    ));
+    let (_, email) = property(&file.ast.items[2].body, "default").expect("email default");
+    assert!(
+        matches!(
+            email,
+            Expr::ShapeLiteral {
+                value: archol_core::ShapeValue::Text(text),
+                ..
+            } if text == "user@example.com"
+        ),
+        "{email:?}"
+    );
+}

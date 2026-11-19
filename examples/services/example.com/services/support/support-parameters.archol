@@ -7,7 +7,7 @@ parameter DefaultSla {
   // REVIEW [2026-12-15] Tipo duração, vindo do pseudo-serviço std.
   type: std.Duration
   // REVIEW [2026-12-15] Valor inicial de dois dias quando nada for configurado.
-  default: 2d
+  default: "2d"
 }
 
 // REVIEW [2026-12-15] Teto de reembolso usado pela alçada e pela política de autorização.
@@ -17,7 +17,7 @@ parameter RefundLimit {
   // REVIEW [2026-12-15] Tipo monetário com moeda explícita.
   type: std.Money
   // REVIEW [2026-12-15] Valor inicial de quinhentos reais.
-  default: 500 BRL
+  default: "500 BRL"
   // REVIEW [2026-12-15] Piso aceito na configuração; impede valor negativo.
-  min: 0 BRL
+  min: "0 BRL"
 }

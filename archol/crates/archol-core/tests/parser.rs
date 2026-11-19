@@ -139,5 +139,24 @@ fn marks_i18n_properties_with_their_type() {
     assert!(types.contains(&("title", Some("I18N"))));
     assert!(types.contains(&("goal", Some("I18N"))));
     assert!(types.contains(&("instructions", Some("I18N"))));
-    assert!(types.contains(&("sla", None)));
+    assert!(types.contains(&("sla", Some("std.Duration"))));
+}
+
+#[test]
+fn accepts_single_quoted_strings_and_prefers_double_quotes() {
+    let result = parse("document A {\n  title: 'Nome'\n}", "x.archol");
+    assert!(result
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == "W_STRING_QUOTES"));
+    let Member::PropertyAssignment { value, .. } = &result.ast.items[0].body[0] else {
+        panic!("title property");
+    };
+    assert!(matches!(value, Expr::StringLiteral { value, .. } if value == "Nome"));
+
+    let clean = parse("document A {\n  title: \"Nome\"\n}", "x.archol");
+    assert!(!clean
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == "W_STRING_QUOTES"));
 }

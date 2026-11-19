@@ -7,6 +7,8 @@ service "example.com/services/laboratory" {
   owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio responsável pelas decisões do serviço.
   // REVIEW [2026-12-15] Dependências de outros serviços, resolvidas por alias.
   imports {
+    // REVIEW [2026-12-18] Importa as medidas/constantes padrão; `sla` usa std.Duration.
+    service "bpcms.org/std" as std
     // REVIEW [2026-12-15] Importa o serviço Citizen como dono dos tipos de cidadão/paciente.
     service "example.com/services/citizen" as Citizen
     // REVIEW [2026-12-15] Importa o serviço Identity como dono de usuários e papéis.

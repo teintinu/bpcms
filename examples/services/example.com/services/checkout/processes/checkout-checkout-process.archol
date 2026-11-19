@@ -12,7 +12,7 @@ process Checkout(session: CheckoutSession) {
     pt-BR: "Cotar o frete, autorizar o pagamento e confirmar a compra"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 1d
+  sla: "1d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento emite CartValidated.
   on [CheckoutSession.CartValidated]

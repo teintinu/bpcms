@@ -10,7 +10,7 @@ process PaymentCapture(payment: Payment) {
     // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Autorizar, capturar e estornar o valor quando a captura não puder ser registrada"
   }
-  sla: 1d // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "1d" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o documento emite Created.
   on [Payment.Created]

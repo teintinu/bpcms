@@ -12,7 +12,7 @@ process OrderCancellation(order: Order) {
     pt-BR: "Cancelar o pedido com motivo, liberar a reserva e reverter se falhar"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 2d
+  sla: "2d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o pedido emite CancellationRequested.
   on [Order.CancellationRequested]

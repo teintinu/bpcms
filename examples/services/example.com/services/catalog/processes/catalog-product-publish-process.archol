@@ -11,7 +11,7 @@ process ProductPublish(product: Product) {
     pt-BR: "Revisar e publicar o produto com aprovação em quatro olhos"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 2d
+  sla: "2d"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o produto é submetido para revisão.
   on [Product.SubmittedForReview]

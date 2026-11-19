@@ -7,6 +7,7 @@ pub mod i18n;
 pub mod ids;
 pub mod index;
 pub mod link;
+pub mod shape_literal;
 pub mod workspace;
 
 pub use check::check;
@@ -87,6 +88,7 @@ pub fn analyze_application(
     let (app, closure) = application::resolve_application(&workspace, application)?;
     i18n::resolve(&mut workspace, &closure, &app.locales);
     let symbols = Symbols::build(&workspace);
+    let shape_diagnostics = shape_literal::resolve(&mut workspace, &symbols, &closure);
 
     let mut diagnostics: Vec<FileDiagnostic> = workspace
         .files
@@ -102,6 +104,12 @@ pub fn analyze_application(
                 })
         })
         .collect();
+    diagnostics.extend(
+        shape_diagnostics
+            .into_iter()
+            .filter(|(path, _)| closure.contains_file(path))
+            .map(|(path, diagnostic)| FileDiagnostic { path, diagnostic }),
+    );
     diagnostics.extend(
         check::check(&workspace, &symbols)
             .into_iter()

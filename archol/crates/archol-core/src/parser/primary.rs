@@ -264,7 +264,7 @@ impl Parser<'_> {
         self.expect(Colon, "E_PARSE_COLON");
         let value = self.parse_expr(false);
         let end = value.span().end;
-        let type_ref = super::is_i18n_property(&name).then(|| "I18N".to_string());
+        let type_ref = super::property_type_ref(&name).map(str::to_string);
         Some(Member::PropertyAssignment {
             name,
             type_ref,

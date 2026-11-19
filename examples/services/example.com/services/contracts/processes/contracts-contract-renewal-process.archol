@@ -10,7 +10,7 @@ process ContractRenewal(contract: Contract) {
     // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Renovar antes do vencimento, com proposta ao fornecedor e encerramento quando não houver acordo"
   }
-  sla: 60d // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "60d" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   schedule: "0 8 * * *" // REVIEW [2026-12-15] Executa a varredura diariamente às 8h.
   // REVIEW [2026-12-15] Seleciona os contratos ativos que vencem nos próximos sessenta dias.

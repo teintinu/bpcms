@@ -82,6 +82,71 @@ stream.readStream(): stream
 stream.readStreamArray(): stream[]
 ```
 
+## 1.1.2 Literais
+
+### Strings
+
+Strings usam aspas simples ou duplas, como em TypeScript:
+
+```archol
+title: { pt-BR: "Nome", en: 'Name' }
+```
+
+O `format` prefere **aspas duplas** e converte `'texto'` para `"texto"` quando o conteúdo não tem aspas duplas nem escape que mudaria o valor. O `lint` avisa com `W_STRING_QUOTES` enquanto a string estiver em aspas simples.
+
+### Duration e Shape literals
+
+Um valor cujo tipo declarado é um **Shape** pode ser escrito como string. O compilador executa o `parse` declarativo do Shape em tempo de compilação e grava no AST um `ShapeLiteral`:
+
+```archol
+process Dunning(invoice: Invoice) {
+  sla: "30d"
+}
+```
+
+```json
+{
+  "kind": "ShapeLiteral",
+  "shape": "std.Duration",
+  "raw": "30d",
+  "value": 2592000,
+  "unit": "s",
+  "span": { "start": 0, "end": 0 }
+}
+```
+
+- `shape` é a referência usada no fonte (`std.Duration`, `ProductVideo`, ...).
+- `raw` é o texto sem aspas.
+- `value` é o valor normalizado pelo `parse`; para quantidade é o número na unidade-base (30 dias = 2.592.000 s).
+- `unit` é a unidade-base do Shape, quando houver.
+- Shapes de mídia (`base: video|audio|image|attachment`) preservam o texto em `value`.
+
+**Duration exige aspas.** `sla: 30d` é erro `E_SHAPE_LITERAL_QUOTED`; o correto é `sla: "30d"`. Um literal que não passa no `parse` do Shape é `E_SHAPE_LITERAL`; o valor não é adivinhado nem truncado.
+
+A regra vale para qualquer valor com tipo Shape: `sla`, `let`/`const` tipados, campos de objeto tipado, defaults e `min`/`max`. O tipo do Shape vem de `bpcms.org/std` (`std.Duration`, `std.Mass`, `std.Money`, ...) ou de um Shape local do serviço.
+
+`Parameter` usa o `type` para parsear `default`/`min`/`max`:
+
+```archol
+parameter DefaultSla {
+  title: { pt-BR: "Prazo padrão" }
+  type: std.Duration
+  default: "2d"
+}
+
+parameter RefundLimit {
+  title: { pt-BR: "Limite de reembolso" }
+  type: std.Money
+  default: "500 BRL"
+  min: "0 BRL"
+}
+```
+
+- `std.Money` produz `value: { raw: 500, currency: "BRL" }`.
+- `std.Mass` normaliza para a unidade-base do Shape (`30 kg` → `30000 g`).
+- Shapes com `normalize`/`validate` são normalizados/validados no compile-time (`lower-trim`, `upper-trim`, `email`, `phone`, `digits`, `year-month`).
+- Shape de classificação sem `parse`/`normalize`/`validate` não vira `ShapeLiteral`; o valor continua sendo a referência/string do domínio.
+
 ## 1.2 Metadados
 
 | Cláusula | Onde | Sintaxe | Funcionamento |
@@ -625,7 +690,7 @@ As duas perguntas de um processo continuam explícitas:
 process Checkout(session: CheckoutSession) {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   goal: "Cotar o frete, autorizar o pagamento e confirmar a compra"
-  sla: 1d
+  sla: "1d"
 
   on [CheckoutSession.CartValidated]
   key: session
@@ -640,7 +705,7 @@ process Checkout(session: CheckoutSession) {
 | `process` | `process <Name>(args)` | Unidade de orquestração; os argumentos são documentos/escalares do caso. |
 | `title` | `title: I18N` | Obrigatório; string ou mapa de locales (1.9). |
 | `goal` | `goal: I18N` | Objetivo de negócio; string ou mapa de locales. |
-| `sla` | `sla: 1d` | Alvo brando do caso (exibição, KPI); não é timer. |
+| `sla` | `sla: "1d"` (`std.Duration`) | Alvo brando do caso (exibição, KPI); não é timer. O literal quantidade+unidade é um valor de `std.Duration`. |
 | `timeout` | `timeout: 30d` | Prazo duro do caso; dispara `Timeout` no processo. |
 | `on` | `on [Doc.Event, ...]` | Lista de eventos que iniciam o processo. |
 | `by` | `by: [Role, ...]` | Início manual por papéis. |
@@ -828,7 +893,7 @@ try {
 | `cancel on <Event> { ... }` | Cancela o trabalho ativo e executa o bloco. |
 
 - `on error`, `on timer` e `on breach` não existem; use `try/catch` + `timeout`.
-- `sla` é alvo brando; `timeout` é o prazo duro.
+- `sla` é `std.Duration` (alvo brando); `timeout` é o prazo duro.
 - `cancel on` é o handler de caso; pode compensar e `return` um end.
 - Um erro não tratado encerra a instância em falha, depois da compensação.
 
@@ -2856,8 +2921,8 @@ assumption A-001 {
 | `title` | `title: { pt-BR: "...", en: "..." }` | I18N obrigatório; substitui `description`. |
 | `type` | `type: Shape` | Shape do valor; obrigatório. |
 | `required` | `required` | Falha no boot/uso se não houver valor; mutuamente exclusivo com `default`. |
-| `default` | `default: "..."` | Valor fallback; mutuamente exclusivo com `required`. |
-| `min` / `max` | `min: 0, max: 10` | Constraints do Parameter, como no field. |
+| `default` | `default: "..."` ou literal Shape | Valor fallback; quando `type` é Shape, segue 1.1.2 (`default: "2d"`, `default: "500 BRL"`). |
+| `min` / `max` | `min: 0, max: 10` ou literal Shape | Constraints do Parameter; com Shape, `min: "0 BRL"`, `max: "500 kg"`. |
 | `maxLength` | `maxLength: 120` | Limite para texto, como no field. |
 
 ```archol
@@ -3436,7 +3501,7 @@ example.com/services/billing#Invoice.Paid
 process CloseMonth for FiscalPeriod {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
   owner: "Controladoria"
-  sla: 6h
+  sla: "6h"
 
   start Monthly {
     schedule: "0 2 1 * *"
@@ -3452,7 +3517,7 @@ process CloseMonth for FiscalPeriod {
   task Review {
     lane: Controllership
     form: MonthCloseReview
-    sla: 4h
+    sla: "4h"
   }
 
   Monthly -> PostEntries

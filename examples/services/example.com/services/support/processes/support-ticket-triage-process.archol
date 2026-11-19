@@ -12,7 +12,7 @@ process TicketTriage(ticket: Ticket) {
     pt-BR: "Classificar, encaminhar e responder o chamado dentro do prazo"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 8h
+  sla: "8h"
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o chamado emite Opened.
   on [Ticket.Opened]

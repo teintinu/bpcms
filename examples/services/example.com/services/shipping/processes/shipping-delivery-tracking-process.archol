@@ -12,7 +12,7 @@ process DeliveryTracking(shipment: Shipment) {
     pt-BR: "Acompanhar a entrega, tratar tentativa falha e reentregar"
   }
   // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
-  sla: 30d
+  sla: "30d"
 
   // REVIEW [2026-12-15] Indica que o processo é chamado por outro processo, sem gatilho próprio.
   called

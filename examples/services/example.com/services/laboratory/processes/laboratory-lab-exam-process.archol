@@ -10,7 +10,7 @@ process LabExam(examOrder: ExamOrder) {
     // REVIEW [2026-12-15] Texto do objetivo em português.
     pt-BR: "Coletar, analisar, validar, assinar e liberar o resultado no prazo"
   }
-  sla: 8h // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
+  sla: "8h" // REVIEW [2026-12-15] SLA brando do caso: alvo de lead time, não é timer.
 
   // REVIEW [2026-12-15] Gatilho: inicia uma instância quando o pedido emite Requested.
   on [ExamOrder.Requested]
