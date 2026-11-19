@@ -108,7 +108,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Campos têm `title`; payloads de evento têm `title`; cada `value` de enum tem `title` + `icon`.
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
 - [ ] Todo `service` declara `locales` com **pelo menos um** idioma; o primeiro é o default do I18N em forma de string (`E_LOCALES_REQUIRED` se faltar/vazio).
-- [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador marca `typeRef: "I18N"` na propriedade, expande a string e filtra pelos locales da aplicação.
+- [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador marca `typeRef: "std.bpcms.i18n"` na propriedade, expande a string e filtra pelos locales da aplicação.
 - [ ] Units usam `title` I18N com `one`/`other`; sem campo `plural` separado.
 - [ ] Strings aceitam aspas simples/duplas; `format` prefere duplas e `lint` avisa `W_STRING_QUOTES`.
 - [ ] Literal de `Duration` (`sla`) é string entre aspas (`sla: "30d"`); sem aspas é `E_SHAPE_LITERAL_QUOTED`.
@@ -1417,12 +1417,12 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `I18N` cobre `title` (todos os contextos), `goal` (process), `instructions` (manual) e `short`/`tooltip`.
 - Forma string: o compilador expande para o mapa canônico no primeiro locale do serviço (ou default da app, se o serviço não declarar `locales`).
 - Forma objeto: o compilador mantém apenas locales cuja língua exista em `Application.locales` (comparação exata ou por idioma; `en` sobrevive a `en-US`; `fr` cai).
-- AST: `PropertyAssignment.typeRef = "I18N"`; o objeto de locales não repete o tipo. O builder recebe o locale explícito de cada texto.
+- AST: `PropertyAssignment.typeRef = "std.bpcms.i18n"`; o objeto de locales não repete o tipo. O builder recebe o locale explícito de cada texto.
 - Nomenclatura da documentação normalizada para `I18N`.
 
 **Implementação:** `archol-analysis/src/i18n.rs` (novo), chamada em `analyze_application` antes do check; `ApplicationInfo.locales`; campo `type` no `PropertyAssignment` do AST; `locales` documentado em `DSL_REFERENCE.md` §1.2/§1.9/§2/§3/§4.2/§5.1; exemplos e `DSL_EXAMPLES.md` atualizados.
 
-**Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"typeRef": "I18N"` na propriedade e o mapa filtrado.
+**Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"typeRef": "std.bpcms.i18n"` na propriedade e o mapa filtrado.
 
 **Em aberto:** validação de `locales` incompletos (`E_TITLE_MISSING`), diagnóstico para string sem locale conhecido e política estrita do builder continuam responsabilidade do construtor/check futuro.
 
@@ -1465,3 +1465,9 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - O visualizador JSON lê `loc` e ordena propriedades terminadas em `loc`/`Loc` por último.
 - Teste dedicado `ast_locs.rs`; snapshots usam `--no-loc`.
 - Campos Rust internos continuam `span`; a mudança é no contrato JSON/YAML.
+
+## Rodada tipo I18N — 2026-11-19 (executada por solicitação direta)
+
+- `PropertyAssignment.typeRef` de título/goal/instructions/short/tooltip passou de `"I18N"` para `"std.bpcms.i18n"`.
+- Parser e passe I18N atualizados; testes e snapshots das 5 aplicações regenerados.
+- O nome curto I18N permanece apenas como conceito/documentação; o contrato do AST usa `std.bpcms.i18n`.

@@ -366,7 +366,7 @@ impl<'a> Parser<'a> {
 /// Semantic type of a property, when the language fixes one.
 pub(crate) fn property_type_ref(name: &str) -> Option<&'static str> {
     match name {
-        "title" | "goal" | "instructions" | "short" | "tooltip" => Some("I18N"),
+        "title" | "goal" | "instructions" | "short" | "tooltip" => Some("std.bpcms.i18n"),
         "sla" => Some("std.Duration"),
         _ => None,
     }

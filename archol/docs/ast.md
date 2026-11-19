@@ -34,7 +34,7 @@ structure the AST explorer, the LSP, and the builder consume.
 | :--- | :--- |
 | `SourceFile` | `path`, `items` |
 | `Artifact` | `artifactKind`, `name`, `params`, `body` |
-| `PropertyAssignment` | `name`, `value`, `typeRef?` (`I18N`, `std.Duration`, ...) |
+| `PropertyAssignment` | `name`, `value`, `typeRef?` (`std.bpcms.i18n`, `std.Duration`, ...) |
 | `Block` | `keyword?`, `name`, `body` (`fields`, `actions`, `on ...`, `end ...`) |
 | `EnumValueDeclaration` | `name`, `body` |
 | `ShorthandProperty` | `name` (`{ fiscalPeriod }`, `required`) |
@@ -51,9 +51,9 @@ Expressions: `Identifier`, `StringLiteral`, `NumberLiteral`, `BooleanLiteral`,
 `Call` (callee + args), `NamedArgument`, `MemberAccess`, `Binary`, `Unary`,
 `Raw`.
 
-## I18N
+## std.bpcms.i18n (I18N)
 
-`title`, `goal`, `instructions`, `short` and `tooltip` carry `"typeRef": "I18N"` on the `PropertyAssignment`.
+`title`, `goal`, `instructions`, `short` and `tooltip` carry `"typeRef": "std.bpcms.i18n"` on the `PropertyAssignment`.
 The value is always a locale map in the compiled AST: a string shorthand is
 expanded to the service's first locale, and locales unsupported by the
 application are removed. The locale object itself does not repeat the type.
@@ -62,7 +62,7 @@ application are removed. The locale object itself does not repeat the type.
 {
   "kind": "PropertyAssignment",
   "name": "goal",
-  "typeRef": "I18N",
+  "typeRef": "std.bpcms.i18n",
   "value": {
     "kind": "Object",
     "members": [

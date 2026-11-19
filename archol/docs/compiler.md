@@ -8,7 +8,7 @@ application (.archol)
   ├── archol_analysis::application  entry services + transitive imports (closure)
   ├── archol_core::lex              tokens + lexical diagnostics
   ├── archol_core::parse            SourceFile (JSON AST)
-  ├── archol_analysis::i18n         I18N type + application locale filtering
+  ├── archol_analysis::i18n         std.bpcms.i18n + application locale filtering
   ├── archol_analysis::Symbols      closure artifacts, enums, and roles
   ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
   ├── archol_analysis::build_links  role → artifacts, enum → values, refs
@@ -42,7 +42,7 @@ The check is more than type inference:
 - Every `service` must declare `locales` with at least one locale; otherwise
   `E_LOCALES_REQUIRED`.
 - `title`, `goal`, `instructions`, `short` and `tooltip` are marked
-  `typeRef: "I18N"`; string shorthand is expanded to the service's first locale and
+  `typeRef: "std.bpcms.i18n"`; string shorthand is expanded to the service's first locale and
   locale map entries not supported by the application are dropped.
 - `sla` is marked `typeRef: "std.Duration"`; `sla: "30d"` becomes a
   `ShapeLiteral` with the normalized value and base unit.

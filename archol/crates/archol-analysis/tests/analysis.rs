@@ -266,7 +266,7 @@ fn i18n_properties_are_typed_and_filtered_by_application_locales() {
         .find(|file| file.path.ends_with("demo-service.archol"))
         .expect("service file");
     let service_title = property(&service.ast.items[0].body, "title").expect("service title");
-    assert_eq!(service_title.0.as_deref(), Some("I18N"));
+    assert_eq!(service_title.0.as_deref(), Some("std.bpcms.i18n"));
     let Expr::Object { members, .. } = service_title.1 else {
         panic!("string shorthand must expand to a locale map");
     };
@@ -280,7 +280,7 @@ fn i18n_properties_are_typed_and_filtered_by_application_locales() {
         .find(|file| file.path.ends_with("demo-process.archol"))
         .expect("process file");
     let (title_ty, title) = property(&process.ast.items[0].body, "title").expect("title");
-    assert_eq!(title_ty.as_deref(), Some("I18N"));
+    assert_eq!(title_ty.as_deref(), Some("std.bpcms.i18n"));
     let Expr::Object { members, .. } = title else {
         panic!("title must be an object");
     };
@@ -288,7 +288,7 @@ fn i18n_properties_are_typed_and_filtered_by_application_locales() {
     assert_eq!(locales, vec!["pt-BR", "en"]);
 
     let (goal_ty, goal) = property(&process.ast.items[0].body, "goal").expect("goal");
-    assert_eq!(goal_ty.as_deref(), Some("I18N"));
+    assert_eq!(goal_ty.as_deref(), Some("std.bpcms.i18n"));
     let Expr::Object { members, .. } = goal else {
         panic!("goal string shorthand must expand to a locale map");
     };

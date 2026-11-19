@@ -346,9 +346,9 @@ view VisitDetail {
 
 O Shape guarda **valor original + unidade** e projeção normalizada. A exibição usa `regionalization.system()`/`units.format`; o armazenamento não é convertido.
 
-## 1.9 I18N (`title`, `goal`, `instructions`)
+## 1.9 std.bpcms.i18n (`title`, `goal`, `instructions`)
 
-`I18N` é um **tipo interno** de texto localizado. Não é um `Shape` declarável; `shape I18N` é `E_RESERVED_TYPE`.
+`std.bpcms.i18n` (I18N) é o **tipo interno** de texto localizado. Não é um `Shape` declarável; declarar `shape std.bpcms.i18n` é `E_RESERVED_TYPE`.
 
 `I18N` é o tipo de:
 
@@ -397,7 +397,7 @@ O AST resultante (trecho) é:
 {
   "kind": "PropertyAssignment",
   "name": "goal",
-  "typeRef": "I18N",
+  "typeRef": "std.bpcms.i18n",
   "value": {
     "kind": "Object",
     "members": [
@@ -453,7 +453,7 @@ name: string {
 
 O conjunto de locales que chega ao AST é o da **aplicação** (`Application.locales`), não o do serviço. O compilador:
 
-1. marca a propriedade com `typeRef: "I18N"`;
+1. marca a propriedade com `typeRef: "std.bpcms.i18n"`;
 2. expande string no primeiro locale do serviço (na `Application`, no primeiro locale dela);
 3. remove do mapa todo locale cuja língua não exista em `Application.locales`.
 
@@ -473,7 +473,7 @@ A comparação aceita o locale exato e o fallback de idioma (`en` cobre `en-US`,
 | Plural sem `other`/categoria inválida | `E_PLURAL_OTHER` / `E_PLURAL_FORM` |
 | `title` ausente no artefato/campo | `E_TITLE_MISSING` |
 | Service sem `locales` ou com lista vazia | `E_LOCALES_REQUIRED` |
-| `shape I18N` declarado | `E_RESERVED_TYPE` |
+| `shape std.bpcms.i18n` declarado | `E_RESERVED_TYPE` |
 
 **Hífen:** `pt-BR`/`en-US` são chaves válidas; o parser aceita hífen no nome da propriedade e na chave do mapa.
 
@@ -698,8 +698,8 @@ process Checkout(session: CheckoutSession) {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `process` | `process <Name>(args)` | Unidade de orquestração; os argumentos são documentos/escalares do caso. |
-| `title` | `title: I18N` | Obrigatório; string ou mapa de locales (1.9). |
-| `goal` | `goal: I18N` | Objetivo de negócio; string ou mapa de locales. |
+| `title` | `title: std.bpcms.i18n` | Obrigatório; string ou mapa de locales (1.9). |
+| `goal` | `goal: std.bpcms.i18n` | Objetivo de negócio; string ou mapa de locales. |
 | `sla` | `sla: "1d"` (`std.Duration`) | Alvo brando do caso (exibição, KPI); não é timer. O literal quantidade+unidade é um valor de `std.Duration`. |
 | `timeout` | `timeout: 30d` | Prazo duro do caso; dispara `Timeout` no processo. |
 | `on` | `on [Doc.Event, ...]` | Lista de eventos que iniciam o processo. |
@@ -1007,7 +1007,7 @@ form OrderReview {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `form` | `form <Name> { ... }` | Contrato de task humana; chamado por `Form.show`. |
-| `title` | `title: I18N` | Obrigatório. |
+| `title` | `title: std.bpcms.i18n` | Obrigatório. |
 | `document` | `document: Order` | Documento de contexto; define a linha da inbox e os campos herdados. |
 | `roles` | `roles: [Clerk]` | Quem executa a task. |
 | `timeout` | `timeout: 4h` | Prazo duro; `Timeout` no processo. |
@@ -1046,7 +1046,7 @@ message PickupRequest {
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `message` | `message <Name> { ... }` | Contrato de mensagem entre participantes. |
-| `title` | `title: I18N` | Obrigatório. |
+| `title` | `title: std.bpcms.i18n` | Obrigatório. |
 | `about` | `about: Shipment` | Documento de correlação: a mensagem pertence a um caso. |
 | `payload` | `payload { campo: Shape { title } }` | Contrato tipado do conteúdo. |
 
@@ -1183,7 +1183,7 @@ document Shipment {
 | `document` | `document <Name> { ... }` | Declara o documento. |
 | `scopable document` | `scopable document Store { ... }` | Documento que é tipo de escopo (5.9). |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva, mesmo id (5.9). |
-| `title` | `title: I18N` | I18N obrigatório (1.9). |
+| `title` | `title: std.bpcms.i18n` | I18N obrigatório (1.9). |
 | `sync` | `sync: live \| read` | `live` assina patches; `read` entrega leitura materializada. |
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo documento. |
@@ -1215,7 +1215,7 @@ fields {
 
 | Parâmetro | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `title` | `title: I18N` | Obrigatório; `short`/`tooltip` opcionais. |
+| `title` | `title: std.bpcms.i18n` | Obrigatório; `short`/`tooltip` opcionais. |
 | `required` | `required` | Campo obrigatório; `required: true` também é aceito. |
 | `lookup` | `lookup` | Inclui o campo no lookup de exibição; a ordem é a ordem de declaração. |
 | `unique` | `unique` | Unicidade lógica; índice realizando. |
@@ -1407,7 +1407,7 @@ actions {
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `title` | `title: I18N` | Rótulo do comando/botão; obrigatório. |
+| `title` | `title: std.bpcms.i18n` | Rótulo do comando/botão; obrigatório. |
 | `roles` | `roles: [Manager]` ou `roles: public` | Quem pode executar; obrigatório. |
 | `to` | `to: status.Issued` | Estado de destino; a aresta e o evento vêm do `transition` do Shape (5.3). |
 | `emits` | `emits { amount: total }` | Mapeia campos do payload cujo nome difere da origem. Não declara evento. |
@@ -2429,7 +2429,7 @@ View é **apresentação**: ela lê documentos, processos ou tarefas e não é d
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `view` | `view <Name> { ... }` | Tela/projeção. |
-| `title` | `title: I18N` | Obrigatório (1.9). |
+| `title` | `title: std.bpcms.i18n` | Obrigatório (1.9). |
 | `type` | `type: table \| detail \| report \| dashboard \| kanban \| calendar \| process \| inbox` | Discriminador. |
 | `document` | `document: Customer` | Documento principal (`detail`). |
 | `process` | `process: OrderFulfillment` | Processo exibido (`process`). |
@@ -2825,7 +2825,7 @@ A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primei
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
 | `decision` | `decision <Name> { ... }` | Tabela de decisão. |
-| `title` | `title: I18N` | Obrigatório. |
+| `title` | `title: std.bpcms.i18n` | Obrigatório. |
 | `returns` | `returns: ApproverTier` | Um único retorno (normalmente `classification`). |
 | `inputs` | `inputs { amount: std.Money; supplier: Supplier }` | Entradas tipadas. |
 | `cases` | `cases { <cond> -> <value> }` | Primeira condição verdadeira vence. |
@@ -3636,7 +3636,7 @@ policy FourEyesPayment {
 | Política | severidade inválida; exceção desconhecida | `E_POLICY` |
 | Ciclo | import/computed circular | `E_CYCLE` |
 | Tradução | locale sem `title` / builder estrito | `W_TRANSLATION` / `E_TRANSLATION` |
-| Tipo reservado | `shape I18N` declarado | `E_RESERVED_TYPE` |
+| Tipo reservado | `shape std.bpcms.i18n` declarado | `E_RESERVED_TYPE` |
 | Locale | chave de `title` fora de `locales` | `E_LOCALE_UNDECLARED` |
 | Título | sem entrada para o locale default | `E_TITLE_MISSING` |
 | Task | sem contrato, com dois contratos, executor ausente ou inválido | `E_TASK_CONTRACT_MISSING` / `E_TASK_KIND_CONFLICT` / `E_TASK_EXECUTOR_MISSING` / `E_TASK_BLACKBOX_POOL` |

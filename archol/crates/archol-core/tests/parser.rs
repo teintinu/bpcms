@@ -136,9 +136,9 @@ fn marks_i18n_properties_with_their_type() {
             _ => None,
         })
         .collect();
-    assert!(types.contains(&("title", Some("I18N"))));
-    assert!(types.contains(&("goal", Some("I18N"))));
-    assert!(types.contains(&("instructions", Some("I18N"))));
+    assert!(types.contains(&("title", Some("std.bpcms.i18n"))));
+    assert!(types.contains(&("goal", Some("std.bpcms.i18n"))));
+    assert!(types.contains(&("instructions", Some("std.bpcms.i18n"))));
     assert!(types.contains(&("sla", Some("std.Duration"))));
 }
 

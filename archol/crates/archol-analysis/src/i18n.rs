@@ -2,7 +2,7 @@
 //!
 //! `title`, `goal`, `instructions`, `short` and `tooltip` are `I18N` values: a
 //! localized string, or a map from locale to string/plural forms. The compiler
-//! marks the property with `typeRef: "I18N"` and keeps only the locales
+//! marks the property with `typeRef: "std.bpcms.i18n"` and keeps only the locales
 //! supported by the application (`locales`), so the builder never receives
 //! translations for languages the app does not use.
 //!
@@ -91,7 +91,7 @@ fn resolve_members(members: &mut [Member], app_locales: &[String], default_local
                 ..
             } => {
                 if I18N_PROPERTIES.contains(&name.as_str()) {
-                    *type_ref = Some("I18N".to_string());
+                    *type_ref = Some("std.bpcms.i18n".to_string());
                     resolve_i18n_value(value, app_locales, default_locale);
                 } else {
                     resolve_nested(value, app_locales, default_locale);
@@ -141,7 +141,7 @@ fn resolve_i18n_value(value: &mut Expr, app_locales: &[String], default_locale: 
     if let Expr::StringLiteral { .. } = value {
         let Some(locale) = default_locale else {
             // Without a service/app locale there is no key to expand into; the
-            // property still carries `typeRef: "I18N"`.
+            // property still carries `typeRef: "std.bpcms.i18n"`.
             return;
         };
         let span = value.span();
@@ -185,7 +185,7 @@ fn resolve_i18n_value(value: &mut Expr, app_locales: &[String], default_locale: 
         } = member
         {
             if name == "short" || name == "tooltip" {
-                *type_ref = Some("I18N".to_string());
+                *type_ref = Some("std.bpcms.i18n".to_string());
                 resolve_i18n_value(value, app_locales, default_locale);
             }
         }

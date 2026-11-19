@@ -5,7 +5,7 @@
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "I18N"
+        "typeRef": "std.bpcms.i18n"
         "value":
           "kind": "Object"
           "members":

@@ -1,5 +1,4 @@
 application "example.com/app/backoffice-loja" {
-  // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
     pt-BR: "Administração da Loja" // REVIEW [2026-12-15] Título em português (idioma default).
     en-US: "Store Backoffice" // REVIEW [2026-12-15] Título em inglês americano.
