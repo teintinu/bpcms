@@ -1,7 +1,6 @@
 // REVIEW [2026-12-15] application: Loja do João (catálogo, pedidos, pagamentos e entrega)
 // REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/loja-do-joao e abre sua composição.
 application "example.com/app/loja-do-joao" {
-  source: registry // REVIEW [2026-12-15] Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
   // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
     pt-BR: "Loja do João" // REVIEW [2026-12-15] Título em português (idioma default).

@@ -6,7 +6,6 @@ document PurchaseRequest {
   title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Área responsável pela manutenção do artefato.
-  owner: "Procurement"
   // REVIEW [2026-12-15] Modo de sincronização do documento: leitura.
   sync: read
 

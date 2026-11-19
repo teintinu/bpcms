@@ -4,7 +4,6 @@
 document Payment {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Pagamento", en: "Payment" }
-  owner: "Payments" // REVIEW [2026-12-15] Área responsável pelo documento.
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias.
 
   // REVIEW [2026-12-15] Campos que compõem o pagamento.

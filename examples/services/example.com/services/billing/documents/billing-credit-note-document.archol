@@ -5,7 +5,6 @@ document CreditNote {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Nota de crédito", en: "Credit note" }
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Billing"
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.
   // REVIEW [2026-12-15] Campos que compõem a nota de crédito.
   fields {

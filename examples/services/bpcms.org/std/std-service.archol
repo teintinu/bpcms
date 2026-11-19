@@ -5,5 +5,4 @@ service "bpcms.org/std" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão das medidas e constantes padrão oferecidas pelo construtor.
   // REVIEW [2026-12-15] Responsável pela manutenção da biblioteca padrão.
-  owner: "BPCMS"
 }

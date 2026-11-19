@@ -153,9 +153,7 @@ parameter RefundLimit {
 | :--- | :--- | :--- | :--- |
 | `title` | app, service, process, document, view, form, message, manual, shape, field, event, parameter, role, organogram, icon, end, transition, action | `title: "Nome"` ou `title: { pt-BR: "Nome", en: "Name", short?: {...}, tooltip?: {...} }` | I18N obrigatório; string = primeiro locale do serviço; ver 1.9. |
 | `locales` | app, service | `locales: [ "pt-BR", "en" ]` | Idiomas suportados; o primeiro é o default. No serviço é **obrigatório** (≥ 1) e define o locale do I18N em forma de string. |
-| `owner` | app, service, document, decision, assumption | `owner: "Financeiro"` | Dono humano/time; usado em revisão e promoção. |
 | `description` | app | `description: "..."` | Texto livre para documentação e busca. |
-| `source` | app, document, evidence, view/report, decision | `source: registry \| repository \| auto` (app); ver 1.3 | Origem, fonte de dados, dispositivo ou política — o significado depende do artefato. |
 | `status` | evidence, conversation, assumption | `status: proposed \| confirmed \| ...` | Estado do artefato de descoberta. Valores variam por artefato. |
 | `type` | view, release | `type: table`, `type: report`, `type: migration` | Discriminador; **não existe em task** (o tipo é inferido do contrato) nem em document (relatório é view). |
 | `mode` | builder, theme, report | `mode: [interpret, generate]`, `mode: dark`, `mode: live` | Modo de operação/apresentação. |
@@ -164,18 +162,17 @@ parameter RefundLimit {
 | `retention` | document | `retention: 5y` | Prazo de retenção antes de anonimizar/expurgar. |
 | `private` | membros de artefatos | `private <field/action>` | Membro interno; não faz parte do contrato público nem da serialização para outros serviços. Artefato de topo nunca é `private`. |
 
-## 1.3 Origem (app/service)
+## 1.3 Origem e versão
+
+**Origem não é atributo.** `source`/`owner` não existem como metadados de artefato. A origem é inferida pela URI: hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares) são projeto Git; o resto é registry BPCMS. Uma URI de repositório pode incluir subdiretório (`github.com/acme/monorepo/apps/store`).
 
 | Cláusula | Sintaxe | Funcionamento |
 | :--- | :--- | :--- |
-| `source` | `source: auto` | Detecta hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares); o resto é registry BPCMS. |
-| `source` | `source: registry` | Força documentação em `/<uri>/index.html` e distribuição pelo BPCMS. |
-| `source` | `source: repository` | Força projeto Git: documentação é o **README**; código é baixado do projeto. |
 | `@` | `"<uri>"@1.2.0`, `"<uri>"@tag("v1.2.0")`, `"<uri>"@commit("9f3a1c")` | Seletor de versão em releases e rollback; **não é atributo de artefato**. Imports de serviço não usam versão; o lock do app decide. |
 
 **Versão não é atributo.** Nenhum artefato (`application`, `service`, `process`, `document`, `builder`, `release`, etc.) declara `version:` no corpo. A versão publicada é o seletor de `release`/`rollback` (`@...`) e, por serviço, o valor fixado no lock do app.
 
-**Regras:** em produção, use tag/commit (ou semver imutável); branch/HEAD só em dev/QA. Uma URI de repositório pode incluir subdiretório: `github.com/acme/monorepo/apps/store`.
+**Regras:** em produção, use tag/commit (ou semver imutável); branch/HEAD só em dev/QA.
 
 ## 1.4 Referências e tipos
 
@@ -506,7 +503,6 @@ A comparação aceita o locale exato e o fallback de idioma (`en` cobre `en-US`,
 
 ```archol
 application "example.com/app/loja-do-joao" {
-  source: registry
   lock: "<app>.lock"
   title: {
     pt-BR: "Loja do João"
@@ -550,7 +546,6 @@ application "example.com/app/loja-do-joao" {
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
   locales: [ "pt-BR", "en" ]
-  owner: "Time de Catálogo"
 
   imports { service "example.com/services/identity" as Identity }
 }
@@ -574,7 +569,7 @@ O builder valida a closure. Se uma capability exigida por qualquer artefato não
 
 **Arquivos por contexto principal.** O `service` é o contexto principal do arquivo `examples/services/<fullpath>/<service>-service.archol`, que declara apenas ele e o coloca como primeiro artefato. Os demais arquivos são contextos `document`/`process`/`view`/`message` ou arquivos compartilhados. A regra completa está na seção 30.
 
-**Sem `source`.** Publicação/origem pertence a `Release`/lock, não ao contrato do serviço.
+**Sem `source`/`owner`.** Origem é inferida pela URI e versão pertence a `Release`/lock, não ao contrato do serviço.
 
 ## 3.1 `reintroduce`
 
@@ -718,7 +713,7 @@ process Checkout(session: CheckoutSession) {
 - Um processo tem **um** start. Para evento + manual, faça um wrapper fino.
 - `key` é obrigatória para `on`, `message` e `fanOut`.
 - O payload do evento/mensagem precisa ser atribuível aos argumentos (`E_START_PAYLOAD`).
-- `owner` e `timezone` não pertencem ao processo: dono é metadado do serviço e fuso é do tenant/scheduler.
+- `owner` e `timezone` não existem no processo; fuso é do tenant/scheduler.
 
 ## 4.3 Roles — quem executa
 
@@ -1178,7 +1173,6 @@ Um **documento** é a unidade de estado durável: campos tipados por Shape, iden
 ```archol
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
-  owner: "Logística"
   sync: live
   retention: 5y
 }
@@ -1190,7 +1184,6 @@ document Shipment {
 | `scopable document` | `scopable document Store { ... }` | Documento que é tipo de escopo (5.9). |
 | `extends` | `document Consumer extends User { ... }` | Especialização aditiva, mesmo id (5.9). |
 | `title` | `title: I18N` | I18N obrigatório (1.9). |
-| `owner` | `owner: "Billing"` | Serviço/time dono; outros só referenciam. |
 | `sync` | `sync: live \| read` | `live` assina patches; `read` entrega leitura materializada. |
 | `retention` | `retention: 5y` | Retenção antes de anonimizar/expurgar. |
 | `capabilities` | `capabilities { capture, units }` | Capacidades exigidas pelo documento. |
@@ -2763,7 +2756,6 @@ role Analyst {
 | `file` | `file: "evidence/form.pdf"` | Arquivo/URL de origem. |
 | `hash` | `hash: "sha256:..."` | Integridade/proveniência. |
 | `confidentiality` | `confidentiality: internal \| restricted` | Classificação; afeta redaction. |
-| `source` | `source: "Compras > 2026-10"` | Origem humana/organizacional. |
 | `extracted` | `extracted { document X { ... } }` | Candidatos extraídos; sempre propostos. |
 | `document` | `document <Name> { ... }` | Documento candidato. |
 | `fields` | `fields { costCenter; amount }` | Campos candidatos. |
@@ -2838,8 +2830,6 @@ A decisão é uma **tabela DMN pura** (4.17): entradas tipadas, casos com primei
 | `inputs` | `inputs { amount: std.Money; supplier: Supplier }` | Entradas tipadas. |
 | `cases` | `cases { <cond> -> <value> }` | Primeira condição verdadeira vence. |
 | `else` | `else -> <value>` | Obrigatório. |
-| `source` | `source: "Política de Compras v3"` | Norma/política que fundamenta (auditoria). |
-| `owner` | `owner: Finance` | Dono da decisão. |
 
 ```archol
 decision ApprovalLimit {
@@ -2854,8 +2844,6 @@ decision ApprovalLimit {
     amount <= 50000 BRL and supplier.risk == Low -> Manager
     else -> Director
   }
-  source: "Política de Compras v3"
-  owner: Finance
 }
 ```
 
@@ -2890,7 +2878,6 @@ gateway Tier {
 | `impact` | `impact: high \| medium \| low` | Impacto se estiver errada. |
 | `status` | `status: open \| confirmed \| rejected \| proposed` | Estado da validação. |
 | `validate` | `validate: "Conferir com Logística"` | Como validar. |
-| `owner` | `owner: "Ana"` | Responsável. |
 | `due` | `due: 2026-11-20` | Prazo. |
 | `links` | `links { process X.Y; decision Z }` | Elementos afetados. |
 | `evidence` | `evidence: "Tabela de Frete 2026"` | Evidência que confirma/derruba. |
@@ -2901,7 +2888,6 @@ assumption A-001 {
   impact: high
   status: open
   validate: "Conferir com Logística"
-  owner: "Ana"
   due: 2026-11-20
   links { process OrderFulfillment.QuoteFreight }
 }
@@ -3500,7 +3486,6 @@ example.com/services/billing#Invoice.Paid
 ```archol
 process CloseMonth for FiscalPeriod {
   title: { pt-BR: "Fechamento mensal", en: "Month close" }
-  owner: "Controladoria"
   sla: "6h"
 
   start Monthly {

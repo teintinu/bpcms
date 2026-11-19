@@ -5,7 +5,6 @@ document Reservation {
   title: { pt-BR: "Reserva", en: "Reservation" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Inventory"
   // REVIEW [2026-12-15] Sincronização em tempo real entre as instâncias do documento.
   sync: live
 

@@ -382,12 +382,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 
 - [x] `service "<uri>" { ... }`
 - [x] `title: I18N`
-- [x] `owner`, `locales` obrigatório (≥ 1, primeiro é default); sem `version` em artefato
+- [x] `locales` obrigatório (≥ 1, primeiro é default); sem `owner`/`version` em artefato
 - [x] `imports { service "<uri>" as Alias; integration X }`; vazio permitido
 - [x] `reintroduce <Alias>.<Artifact> { ... }`; altera qualquer parte de artefato importado
 - [x] Sem `provides`; contrato são os artefatos públicos
 - [x] Sem `roles` inline; organogram e roles no `*-organograms.archol`, organogram primeiro
-- [x] Sem `source`; publicação/origem no Release/lock
+- [x] Sem `source`/`owner`; origem inferida pela URI e versão no Release/lock
 - [x] Sem `exports`; todo artefato de topo é público
 - [x] Serviço é conceito de negócio, não biblioteca/package/módulo
 - [x] Não criar serviço para Shapes/Icons/Themes/Locales compartilhados
@@ -419,7 +419,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `id` interno implícito; não declarar
 - [ ] `lookup` como tag de campo; ordem dos campos
 - [ ] `extends` (pai único, mesmo serviço, aditivo, mesmo id)
-- [ ] `owner`, `sync`, `retention`; sem `version` em artefato
+- [ ] `sync`, `retention`; sem `owner`/`version` em artefato
 - [ ] `fields { name: Shape { title; required; lookup; unique; rule; ... } }`; sem `?`
 - [ ] Campo `Target` é `DocumentRef` implícito: `id` + lookup do alvo; sem `XxxId`; não é FK
 - [ ] campo para `scopable document` infere escopo
@@ -553,9 +553,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `when`
 - [ ] `cases { cond -> outcome }`
 - [ ] `default`
-- [ ] `owner`
 
-**Exemplos:** N.1–N.6; arquivos de contexto e `<service>-decisions.archol` (compartilhadas).
 
 **Foco da revisão:**
 
@@ -815,7 +813,6 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] `impact`
 - [ ] `status`
 - [ ] `validate`
-- [ ] `owner`
 - [ ] `due`
 - [ ] `links`
 
@@ -1287,7 +1284,7 @@ Motivo comum: duas fontes de verdade, sintaxe redundante, conceito de runtime va
 - Sintaxe TS-like: `let`/`const`, `try/catch`, `loop`/`forEach`, `if`, `return`, objeto de argumentos.
 - **Variáveis somente no topo do processo**; nenhuma declaração dentro de `try`/`catch`/`if`/`loop`/`parallel`/`forEach`.
 - **Ends ao final do processo**; fluxos terminam com `return <End>`.
-- `owner` e `timezone` removidos dos processos: dono é metadado do serviço; fuso é do tenant/scheduler.
+- `owner` e `timezone` não existem em artefatos: origem é inferida pela URI; fuso é do tenant/scheduler.
 - Assíncrono implícito; `parallel`, `wait`, `send`/`receive`, `run` e `cancel on` fazem parte da sintaxe.
 - Variáveis duráveis por instância; documentos entram por referência.
 - Decisão humana é lida no **estado do documento** após o form, não em `returns`.
@@ -1444,3 +1441,16 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 **Implementação:** lexer com aspas simples; `W_STRING_QUOTES`; `format` com `quote_edits`; `shape_literal.rs` no analysis; `Expr::ShapeLiteral`/`ShapeValue` no AST.
 
 **Testes:** parser (aspas simples), pending (`format`), analysis (Duration, video, inválido, sem aspas), corpus e as 5 aplicações verdes.
+
+## Rodada metadados `source`/`owner` — 2026-11-19 (executada por solicitação direta)
+
+**Pedido:** remover os atributos `source` e `owner` dos artefatos.
+
+**Decisões aplicadas:**
+- Removidos `owner:` de `service`, `document` e `decision` (78 linhas nos exemplos).
+- Removidos `source:` de metadados de `application`, `decision` e `evidence` (10 linhas).
+- Origem é inferida pela URI: hosts Git conhecidos viram repositório; o resto é registry BPCMS. Não há atributo para forçar `source`.
+- **Mantidos** os `source` estruturais, que não são metadado: `view.source` (documento da tela), `source: device ...` (campo lido de dispositivo), `source: config|secret` em Parameter e o campo `source` de dados.
+- `owner` não existe mais como metadado; governança fica em release/lock.
+
+**Impacto:** exemplos, `DSL_REFERENCE.md` (§1.2/§1.3/§3/§5.1/§4.17/§9/§10), `DSL_EXAMPLES.md`, `BRAINSTORM.md` (B-27 e resumos) e `REVIEW_CHECKLIST.md`. Os snapshots `.expected-ast.yml` das 5 aplicações foram regenerados.

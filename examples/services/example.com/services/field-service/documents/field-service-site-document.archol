@@ -6,7 +6,6 @@ document Site {
   title: { pt-BR: "Site", en: "Site" }
   // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
   // REVIEW [2026-12-15] Responsável pela manutenção do documento.
-  owner: "Field Service"
 
   // REVIEW [2026-12-15] Campos que compõem o site.
   fields {

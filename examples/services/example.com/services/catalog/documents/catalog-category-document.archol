@@ -6,7 +6,6 @@ document Category {
   title: { pt-BR: "Categoria", en: "Category" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
-  owner: "Catalog"
   // REVIEW [2026-12-15] Modo de sincronização: consumidores recebem apenas leitura.
   sync: read
 

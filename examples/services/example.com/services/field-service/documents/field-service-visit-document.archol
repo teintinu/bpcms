@@ -6,7 +6,6 @@ document Visit {
   title: { pt-BR: "Visita técnica", en: "Visit" }
   // REVIEW [2026-12-15] Versão do artefato; diff e release comparam.
   // REVIEW [2026-12-15] Responsável pela manutenção do documento.
-  owner: "Field Service"
   // REVIEW [2026-12-15] Sincronização em tempo real entre os usuários da operação.
   sync: live
   // REVIEW [2026-12-15] Prazo de retenção dos registros da visita.

@@ -5,7 +5,6 @@ service "example.com/services/notifications" {
   // REVIEW [2026-12-15] Rótulo exibido no construtor.
   title: { pt-BR: "Notificações", en: "Notifications" }
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
-  owner: "Customer Success" // REVIEW [2026-12-15] Área responsável pelo serviço.
   // REVIEW [2026-12-15] Dependências externas do serviço.
   imports {
     // REVIEW [2026-12-15] Importa o serviço Citizen com o alias Citizen (tipos de e-mail, telefone etc.).

@@ -249,9 +249,7 @@ decision CreditScoring {
     else -> High
   }
   // REVIEW [2026-12-15] Documento-fonte da política de crédito aplicada.
-  source: "Política de Crédito v4"
   // REVIEW [2026-12-15] Área responsável pela manutenção da decisão.
-  owner: "Credit"
 }
 
 // REVIEW [2026-12-15] Integração REST com o bureau externo de crédito.

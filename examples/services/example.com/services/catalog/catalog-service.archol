@@ -7,7 +7,6 @@ service "example.com/services/catalog" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão semântica do artefato serviço, usada em release e diff.
   // REVIEW [2026-12-15] Área de negócio responsável pela manutenção do serviço.
-  owner: "Catalog"
   // REVIEW [2026-12-15] Dependências externas usadas por este serviço.
   imports {
     // REVIEW [2026-12-15] Importa o pseudo-serviço de medidas/constantes padrão do construtor.

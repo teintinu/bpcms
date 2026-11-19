@@ -5,7 +5,6 @@ service "example.com/services/inventory" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do artefato Service usada em release e compatibilidade.
   // REVIEW [2026-12-15] Área de negócio responsável pelo serviço.
-  owner: "Supply Chain"
   // REVIEW [2026-12-15] Bloco de dependências externas usadas pelos artefatos do serviço.
   imports {
     // REVIEW [2026-12-15] Importa as medidas e constantes padrão do construtor sob o alias std.

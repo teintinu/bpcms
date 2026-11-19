@@ -6,7 +6,6 @@ document Coverage {
   title: { pt-BR: "Cobertura", en: "Coverage" }
   // REVIEW [2026-12-15] Versão do artefato Document; releases e diffs comparam.
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
-  owner: "Claims"
 
   // REVIEW [2026-12-15] Campos que compõem a cobertura.
   fields {

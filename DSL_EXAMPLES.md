@@ -38,7 +38,7 @@ Este documento cobre o catálogo de artefatos. Os **35 processos completos** —
 | Subpasso | `Processo.run({…})` | sempre outra instância de processo |
 | Agendamento | `schedule` + `fanOut` | uma instância por documento |
 | Relatório | `view type: report` | agregação é projeção; documento derivado é estado |
-| Origem | `source: registry` / `repository` / `auto` | registry BPCMS x projeto Git |
+| Origem | URI (`github.com/...` = repositório; resto = registry) | inferida; não há atributo `source` |
 | Versão | `"<uri>"@1.2.3` / `@tag("v1.2.3")` / `@commit("9f3a1c")` | Seletor de release/rollback; nenhum artefato declara `version:` no corpo |
 | String | `"texto"` ou `'texto'` | Aspas simples/duplas; `format` prefere duplas (`W_STRING_QUOTES` no lint) |
 | Shape literal | `sla: "30d"` | Parse do Shape em tempo de compilação; AST `ShapeLiteral` com `raw`, `value` e `unit` |
@@ -66,12 +66,10 @@ O catálogo cobre Application, Service, Form, Message, Document, Shape, View, Ro
 
 ```archol
 application "example.com/app/loja-do-joao" {
-  source: registry
   title: {
     pt-BR: "Loja do João"
     en-US: "João's Store"
   }
-  owner: "Time Loja"
   description: "Loja virtual de ponta a ponta"
 
   services {
@@ -98,7 +96,6 @@ application "example.com/app/loja-do-joao" {
 ```archol
 application "example.com/app/clinica-vida" {
   title: { pt-BR: "Clínica Vida" }
-  owner: "Diretoria Clínica"
 
   services {
     "example.com/services/encounters"
@@ -128,7 +125,6 @@ application "example.com/app/rota-certa" {
     pt-BR: "Rota Certa"
     en-US: "Right Route"
   }
-  owner: "Operações"
 
   services {
     "example.com/services/dispatch"
@@ -150,7 +146,6 @@ application "example.com/app/rota-certa" {
 ```archol
 application "example.com/app/backoffice-loja" {
   title: { pt-BR: "Backoffice da Loja" }
-  owner: "Retaguarda"
 
   services {
     "example.com/services/inventory"
@@ -171,7 +166,6 @@ application "example.com/app/backoffice-loja" {
 ```archol
 application "example.com/app/campo-agil" {
   title: { pt-BR: "Campo Ágil" }
-  owner: "Field Ops"
 
   services {
     "example.com/services/work-orders"
@@ -195,7 +189,6 @@ application "example.com/app/mercado-aberto" {
     pt-BR: "Mercado Aberto"
     en-US: "Open Market"
   }
-  owner: "Marketplace"
 
   services {
     "example.com/services/sellers"
@@ -216,9 +209,7 @@ application "example.com/app/mercado-aberto" {
 
 ```archol
 application "github.com/acme/field-app" {
-  source: repository
   title: { pt-BR: "Field App" }
-  owner: "Acme Field Ops"
 
   services {
     "github.com/acme/work-orders"
@@ -264,7 +255,6 @@ application "example.com/app/loja-com-antifraude" {
 service "example.com/services/catalog" {
   title: { pt-BR: "Catálogo", en: "Catalog" }
   locales: [ "pt-BR", "en" ]
-  owner: "Time de Catálogo"
   // document Product, std.Money, view ProductForm, event Product.Updated: público
 
   parameter DefaultCurrency {
@@ -288,7 +278,6 @@ service "example.com/services/catalog" {
 service "example.com/services/checkout" {
   title: { pt-BR: "Finalização da compra", en: "Checkout" }
   locales: [ "pt-BR", "en" ]
-  owner: "Time de Conversão"
   // document CheckoutSession, event OrderPlaced: públicos
 
   imports {
@@ -309,7 +298,6 @@ service "example.com/services/checkout" {
 service "example.com/services/inventory" {
   title: { pt-BR: "Estoque", en: "Inventory" }
   locales: [ "pt-BR", "en" ]
-  owner: "Supply Chain"
   // document StockItem, document Reservation, view StockTable, event StockItem.Low: público
 
   imports {
@@ -327,7 +315,6 @@ service "example.com/services/inventory" {
 service "example.com/services/billing" {
   title: { pt-BR: "Faturamento", en: "Billing" }
   locales: [ "pt-BR", "en" ]
-  owner: "Financeiro"
   // document Invoice, document Payment, report CashFlow, job CloseMonth, events: públicos
 
   imports {
@@ -346,7 +333,6 @@ service "example.com/services/billing" {
 service "example.com/services/auth" {
   title: { pt-BR: "Identidade", en: "Identity" }
   locales: [ "pt-BR", "en" ]
-  owner: "Plataforma"
   // document User, document Session, roles Customer/Clerk, view LoginForm, event Session.LoggedIn: público
 
   imports { integration Email }
@@ -361,7 +347,6 @@ service "example.com/services/auth" {
 service "example.com/services/notifications" {
   title: { pt-BR: "Notificações", en: "Notifications" }
   locales: [ "pt-BR", "en" ]
-  owner: "Customer Success"
   // document NotificationTemplate, event Notification.Sent: público
 
   imports {
@@ -380,7 +365,6 @@ service "example.com/services/notifications" {
 service "gitlab.com/acme/lab-quality" {
   title: { pt-BR: "Qualidade laboratorial", en: "Laboratory quality" }
   locales: [ "pt-BR", "en" ]
-  owner: "Acme Lab"
   // document LabQualityReport, event QualityAlert: públicos
 
   imports {
@@ -398,7 +382,6 @@ service "gitlab.com/acme/lab-quality" {
 service "example.com/services/fraud-checkout" {
   title: { pt-BR: "Finalização da compra antifraude", en: "Fraud checkout" }
   locales: [ "pt-BR", "en" ]
-  owner: "Risk"
 
   imports {
     service "example.com/services/checkout" as Checkout
@@ -1090,7 +1073,6 @@ process OrderPacking(order: Order) {
 ```archol
 document Customer {
   title: { pt-BR: "Cliente", en: "Customer" }
-  owner: "CRM"
   sync: live
   retention: 5y
 
@@ -1280,7 +1262,6 @@ shape InvoiceStatus {
 
 document Invoice {
   title: { pt-BR: "Nota fiscal", en: "Invoice" }
-  owner: "Billing"
   sync: live
   retention: 10y
 
@@ -1450,7 +1431,6 @@ shape ShipmentStatus {
 
 document Shipment {
   title: { pt-BR: "Remessa", en: "Shipment" }
-  owner: "Dispatch"
   sync: live
 
   fields {
@@ -1552,7 +1532,6 @@ document Shipment {
 
 document FreightEstimate {
   title: { pt-BR: "Estimativa de frete", en: "Freight estimate" }
-  owner: "Dispatch"
   sync: read
   computed from Shipment, FreightTariff
   freshness: 15m
@@ -1618,7 +1597,6 @@ shape LabReportFile {
 
 document LabReport {
   title: { pt-BR: "Laudo laboratorial", en: "Lab report" }
-  owner: "Laboratório"
   sync: live
   retention: 20y
 
@@ -1762,7 +1740,6 @@ shape TicketStatus {
 
 document Ticket {
   title: { pt-BR: "Chamado", en: "Ticket" }
-  owner: "Support"
   sync: live
 
   fields {
@@ -1935,7 +1912,6 @@ shape PurchaseRequestStatus {
 
 document PurchaseRequest {
   title: { pt-BR: "Solicitação de compra", en: "Purchase request" }
-  owner: "Procurement"
   sync: live
 
   fields {
@@ -2189,7 +2165,6 @@ shape ContractVersion {
 
 document Contract {
   title: { pt-BR: "Contrato", en: "Contract" }
-  owner: "Legal"
   sync: live
   retention: 10y
 
@@ -2355,7 +2330,6 @@ document Contract {
 ```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  owner: "Finance"
   sync: read
   retention: 10y
   computed from Invoice, Payment
@@ -3078,8 +3052,6 @@ evidence PurchaseFormPDF {
   file: "evidence/purchase-form.pdf"
   hash: "sha256:7f3a..."
   confidentiality: internal
-  source: "Compras > 2026-10"
-
   extracted {
     document PurchaseRequest {
       fields { costCenter; amount; justification; approver }
@@ -3387,8 +3359,6 @@ decision ApprovalLimit {
     else -> Director
   }
 
-  source: "Política de Compras v3"
-  owner: "Financeiro"
 }
 
 tier = ApprovalLimit.evaluate({
@@ -3405,7 +3375,7 @@ if (tier == Auto) {
 }
 ```
 
-*Valida: `returns` como `classification` (valores `auto`/`manager`/`director` com `icon` e `ordinal`), `inputs` tipados, `else` obrigatório, `source`/`owner`, e o processo consumindo a decisão com `evaluate` + `if/else`.*
+*Valida: `returns` como `classification` (valores `auto`/`manager`/`director` com `icon` e `ordinal`), `inputs` tipados, `else` obrigatório, e o processo consumindo a decisão com `evaluate` + `if/else`.*
 
 ### N.2 Elegibilidade de reembolso
 
@@ -3447,8 +3417,6 @@ decision RefundEligibility {
     else -> reject
   }
 
-  source: "Política de Trocas e Devoluções v2"
-  owner: "Atendimento"
 }
 ```
 
@@ -3498,8 +3466,6 @@ decision TicketRouting {
     else -> general
   }
 
-  source: "Matriz de Roteamento de Suporte v5"
-  owner: "Suporte"
 }
 ```
 
@@ -3551,8 +3517,6 @@ decision ReplenishmentPolicy {
     else -> cancel
   }
 
-  source: "Política de Estoque v4"
-  owner: "Supply"
 }
 ```
 
@@ -3598,8 +3562,6 @@ decision FraudRisk {
     else -> Low
   }
 
-  source: "Modelo de Risco v2"
-  owner: "Risco"
 }
 ```
 
@@ -3651,8 +3613,6 @@ decision CreditScoring {
     else -> subprime
   }
 
-  source: "Política de Crédito 2026"
-  owner: "Crédito"
 }
 ```
 
@@ -3667,7 +3627,6 @@ assumption A-001 {
   impact: high
   status: open
   validate: "Conferir com Logística"
-  owner: "Ana"
   due: 2026-11-20
   links { process OrderFulfillment.QuoteFreight }
 }
@@ -3683,7 +3642,6 @@ assumption A-002 {
   impact: high
   status: rejected
   evidence: "Tabela de Frete 2026 mostra limites diferentes"
-  owner: "Bruno"
   links { decision WeightLimit }
 }
 ```
@@ -3698,7 +3656,6 @@ assumption A-003 {
   impact: high
   status: confirmed
   evidence: "Contrato e requisito fiscal"
-  owner: "Financeiro"
   links { document Invoice.customer }
 }
 ```
@@ -3713,7 +3670,6 @@ assumption A-004 {
   impact: high
   status: open
   validate: "Validar com conselho/responsável técnico"
-  owner: "Dra. Lima"
   due: 2026-11-25
   links { process LabExamFlow.Release }
 }
@@ -3729,7 +3685,6 @@ assumption A-005 {
   impact: medium
   status: proposed
   validate: "Medir falhas por 30 dias"
-  owner: "Ops"
   links { process InsuranceClaim.RetryPayment }
 }
 ```
@@ -3744,7 +3699,6 @@ assumption A-006 {
   impact: medium
   status: confirmed
   evidence: "Política de Retenção 2026"
-  owner: "Jurídico"
   links { evidence OnboardingChecklistPDF }
 }
 ```
@@ -4833,7 +4787,6 @@ view OperationsControl {
 ```archol
 document MonthlyRevenue {
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
-  owner: "Financeiro"
   computed from Invoice, Payment
   freshness: 1h
   exposes: [revenue, invoiceCount, calculatedAt]

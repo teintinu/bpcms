@@ -5,7 +5,6 @@ service "example.com/services/orders" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço; release e diff comparam este número.
   // REVIEW [2026-12-15] Área responsável pelo serviço.
-  owner: "Orders"
   // REVIEW [2026-12-15] Dependências externas usadas pelos artefatos deste serviço.
   imports {
     // REVIEW [2026-12-15] Importa o pseudo-serviço de medidas e constantes padrão.

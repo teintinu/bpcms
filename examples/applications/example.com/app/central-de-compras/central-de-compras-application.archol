@@ -1,7 +1,6 @@
 // REVIEW [2026-12-15] application: Central de Compras (procurement + contracts + credit)
 // REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/central-de-compras e abre sua composição.
 application "example.com/app/central-de-compras" {
-  source: registry // REVIEW [2026-12-15] Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
   // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
     pt-BR: "Central de Compras" // REVIEW [2026-12-15] Título em português (idioma default).

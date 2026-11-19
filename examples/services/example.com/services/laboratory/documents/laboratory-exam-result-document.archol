@@ -4,7 +4,6 @@
 document ExamResult {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Resultado de exame", en: "Exam result" }
-  owner: "Laboratory" // REVIEW [2026-12-15] Dono de negócio do documento.
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre cliente e servidor.
   // REVIEW [2026-12-15] Campos que compõem o resultado.
   fields {

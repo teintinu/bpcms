@@ -5,7 +5,6 @@ document MonthlyRevenue {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Receita mensal", en: "Monthly revenue" }
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Billing"
   // REVIEW [2026-12-15] Documento calculado a partir de notas e pagamentos.
   computed from Invoice, Payment
   freshness: 1h // REVIEW [2026-12-15] Tempo máximo antes de recomputar os dados.

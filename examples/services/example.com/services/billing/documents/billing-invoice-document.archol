@@ -5,7 +5,6 @@ document Invoice {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Nota fiscal", en: "Invoice" }
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Billing"
   sync: live // REVIEW [2026-12-15] Sincronização em tempo real entre as partes.
   retention: 5y // REVIEW [2026-12-15] Retenção obrigatória do documento por cinco anos.
 

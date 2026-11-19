@@ -347,7 +347,6 @@ Na prática, a `Application` é pequena de propósito:
 
 ```text
 application "example.com/app/loja-do-joao" {
-  source: registry
   title: {
     pt-BR: "Loja do João"
     en-US: "João's Store"
@@ -532,7 +531,7 @@ A URI de `Application`/`Service` pode resolver para dois tipos de origem — e i
 | **Distribuição** | app: download por SO; serviço: API/nuvem/iframe | clone, zip ou release do próprio projeto |
 | **Versão** | semver | commit, tag ou flag explícita de versão |
 
-**Source.** `source: auto` (default) reconhece hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares) e resolve o resto como registry. `source: repository` ou `source: registry` força o modo. Se o repositório contém mais de um artefato, a URI pode apontar para um subdiretório: `github.com/acme/monorepo/apps/store`.
+**Source.** `source` não é atributo. A origem é inferida pela URI: hosts de repositório conhecidos (GitHub, GitLab, Bitbucket e similares) são projeto Git; o resto é registry BPCMS. Se o repositório contém mais de um artefato, a URI pode apontar para um subdiretório: `github.com/acme/monorepo/apps/store`. TODO backend deverá retornar se há possiblidade baixar o fonte ou rodar online, ou ambos.
 
 **Version.** Nenhum artefato declara `version:` no corpo. A versão publicada é o seletor do `release`/`rollback` (`@1.4.0`, `@tag("v1.4.0")`, `@commit("9f3a1c7")`); por serviço, o lock do app fixa o valor usado. Em produção, commit/tag imutável; branch/HEAD só em dev/QA.
 
@@ -1458,8 +1457,8 @@ O PDF é uma apresentação de 7 telas de baixa fidelidade do **Khayyam XP Appli
 
 | Artefato | Propósito | Propriedades-chave | Fase |
 | :--- | :--- | :--- | :--- |
-| **Application** | composição voltada ao usuário | URI, source, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
-| **Service** | capacidade de negócio reutilizável | URI, source, locales, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
+| **Application** | composição voltada ao usuário | URI, localized title, entry-point services, lock, download page, theme, locales, roles, environments; **sem artefatos** | Núcleo |
+| **Service** | capacidade de negócio reutilizável | URI, locales, imports sem versão, reintroduce, docs page, contratos, papéis, dono de dados; todo artefato de topo é público | Núcleo |
 | **Process** | orquestração de trabalho (as-is/to-be) | `for`, pools/lanes, start/end nomeados, tasks com contrato inferido, gateway/fork/join, wait, rollback, mensagens, SLAs, desfechos | Núcleo |
 | **Form** | contrato da tarefa humana | documento, campos (herdados ou novos), botões com `calls`, `stay` | Núcleo |
 | **Document** | estado durável + ações + sync | campos, índices, estados com `transition` (aresta + evento), ações com `to:`, regras, frescor, dono | Núcleo |
@@ -1845,7 +1844,7 @@ Prazos entram no `PLAN.md` depois do **spike de stack** (B-07) e do primeiro exp
 | **B-24** | Página de documentação do serviço? | `/<service-uri>/index.html`, com integração por API, opção de servir na nuvem, protocolos (sockets/REST/RPC) e iframe para microfrontend, conforme construtor. | Serviço é contrato público, não só deploy. | ✅ |
 | **B-25** | A URI pode apontar para GitHub/GitLab? | Sim. Nesse caso a documentação é o **README** e o código é baixado do próprio projeto (clone/zip/release); não há `/index.html` obrigatório. | Reuso de projetos existentes sem exigir um registry BPCMS. | ✅ |
 | **B-26** | Como versionar app/serviço? | **Sem `version:` no artefato**: o seletor vive no `release`/`rollback` (`@semver`, `@tag`, `@commit`) e, por serviço, no lock do app. Produção exige commit/tag imutável. | Uma única forma de versionar, sem atributo redundante no artefato. | ✅ |
-| **B-27** | Como escolher registry x repositório? | `source: auto` reconhece hosts conhecidos; `source: registry`/`repository` força. URI pode incluir subdiretório do monorepo. | Funciona por convenção sem impedir controle explícito. | ✅ |
+| **B-27** | Como escolher registry x repositório? | **Sem atributo `source`**: a origem é inferida pelo host da URI (GitHub/GitLab/Bitbucket = repositório; resto = registry). URI pode incluir subdiretório do monorepo. | Uma única convenção, sem metadado redundante. | ✅ |
 | **B-28** | Precisamos de `wire`? | **Não**. Dependências vêm de `Service.imports`; a aplicação lista apenas entry points. O resolver monta a closure e o lock. | Uma fonte de verdade; evita drift entre app e serviço. | ✅ |
 | **B-29** | Mais de uma versão do mesmo serviço por app? | **Não**. O lock escolhe uma versão por serviço para o app inteiro; contrato incompatível falha no `check`. | Evita ambiguidade de versões e “dependency hell” silencioso. | ✅ |
 | **B-30** | Onde ficam IDs e versões? | **Só no lock do app**. Ele mapeia cada identificador para um ID estável (minificação/compressão) e cada serviço para uma versão. Serviço não tem lock, IDs nem versões de imports. | Serve múltiplos apps sem contaminar o serviço; IDs por app. | ✅ |

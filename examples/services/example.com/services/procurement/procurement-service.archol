@@ -7,7 +7,6 @@ service "example.com/services/procurement" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço usada em release e diff.
   // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
-  owner: "Procurement"
   // REVIEW [2026-12-15] Dependências externas referenciadas pelos artefatos do serviço.
   imports {
     // REVIEW [2026-12-15] Importa as medidas e constantes padrão do construtor (Money, Mass, Count).

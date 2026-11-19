@@ -6,7 +6,6 @@ document Claim {
   title: { pt-BR: "Sinistro", en: "Claim" }
   // REVIEW [2026-12-15] Versão do artefato Document; releases e diffs comparam.
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
-  owner: "Claims"
   // REVIEW [2026-12-15] Sincronização em tempo real entre os clientes conectados.
   sync: live
   // REVIEW [2026-12-15] Retenção legal dos registros por dez anos.

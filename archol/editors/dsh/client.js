@@ -448,6 +448,7 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 className: 'archol-chip',
                 'aria-expanded': showOutline,
+                'aria-controls': 'archol-outline',
                 title: showOutline ? t('outline.close') : t('outline.title'),
                 onClick: () => setShowOutline(value => !value),
               },
@@ -460,6 +461,7 @@ window.__ModuleLoader__.load({
                 type: 'button',
                 className: 'archol-chip',
                 'aria-expanded': showDiagnostics,
+                'aria-controls': 'archol-diagnostics',
                 title: t('diagnostics.toggle'),
                 onClick: () => setShowDiagnostics(value => !value),
               },
@@ -467,11 +469,11 @@ window.__ModuleLoader__.load({
               ' ',
               t(diagnostics.length === 1 ? 'diagnostics.one' : 'diagnostics.other'),
             ),
-            view.phase === 'loading' && h('span', { className: 'archol-status' }, t('analysis.loading.short')),
+            view.phase === 'loading' && h('span', { className: 'archol-status', role: 'status', 'aria-live': 'polite' }, t('analysis.loading.short')),
           ),
           view.phase === 'error' && h(
             'div',
-            { className: 'archol-note archol-note-error', 'data-archol-note': 'error' },
+            { className: 'archol-note archol-note-error', 'data-archol-note': 'error', role: 'alert' },
             h('span', null, unavailable ? t('analysis.failed') : t('analysis.error')),
             h('span', { className: 'archol-note-detail', title: view.message }, view.message),
             h(
@@ -482,7 +484,7 @@ window.__ModuleLoader__.load({
           ),
           showDiagnostics && diagnostics.length > 0 && h(
             'div',
-            { className: 'archol-diags', 'data-archol-diagnostics': diagnostics.length },
+            { className: 'archol-diags', id: 'archol-diagnostics', 'data-archol-diagnostics': diagnostics.length },
             diagnostics.map((diagnostic, index) => h(
               'button',
               {
@@ -499,7 +501,7 @@ window.__ModuleLoader__.load({
           ),
           showOutline && h(
             'div',
-            { className: 'archol-outline', key: 'outline', 'data-archol-outline': '' },
+            { className: 'archol-outline', key: 'outline', id: 'archol-outline', 'data-archol-outline': '' },
             outline.length === 0
               ? h(
                 'span',

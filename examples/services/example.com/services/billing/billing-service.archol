@@ -3,7 +3,6 @@ service "example.com/services/billing" {
   // REVIEW [2026-12-15] Título legível do serviço exibido no construtor.
   title: { pt-BR: "Faturamento", en: "Billing" }
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço.
-  owner: "Billing" // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
   // REVIEW [2026-12-15] Dependências externas referenciadas por este serviço.
   imports {
     // REVIEW [2026-12-15] Importa medidas e constantes padrão do construtor sob o alias std.

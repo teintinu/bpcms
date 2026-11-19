@@ -5,7 +5,6 @@ document StockItem {
   title: { pt-BR: "Item de estoque", en: "Stock item" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Inventory"
   // REVIEW [2026-12-15] Sincronização em tempo real entre as instâncias do documento.
   sync: live
   // REVIEW [2026-12-15] Campos persistidos no item de estoque.

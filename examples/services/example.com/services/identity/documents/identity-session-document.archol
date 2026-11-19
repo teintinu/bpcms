@@ -6,7 +6,6 @@ document Session {
   title: { pt-BR: "Sessão", en: "Session" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Time/área responsável pelo documento.
-  owner: "Identity"
   // REVIEW [2026-12-15] Sincronização somente de leitura com a fonte de identidade.
   sync: read
 

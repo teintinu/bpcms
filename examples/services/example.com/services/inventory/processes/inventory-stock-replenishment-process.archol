@@ -92,7 +92,6 @@ decision ReorderPoint {
   // REVIEW [2026-12-15] Título exibido no builder e na revisão.
   title: { pt-BR: "Ponto de pedido", en: "Reorder point" }
   // REVIEW [2026-12-15] Área responsável pela decisão.
-  owner: "Supply Chain"
   // REVIEW [2026-12-15] Shape de classificação devolvido pela decisão.
   returns: ReorderDecision
 

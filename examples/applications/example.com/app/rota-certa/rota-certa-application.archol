@@ -1,7 +1,6 @@
 // REVIEW [2026-12-15] application: Rota Certa (pedidos, entregas e suporte)
 // REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/rota-certa e abre sua composição.
 application "example.com/app/rota-certa" {
-  source: registry // REVIEW [2026-12-15] Origem: registry BPCMS, com docs em /<uri>/index.html e download por SO.
   // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
     pt-BR: "Rota Certa" // REVIEW [2026-12-15] Título em português (idioma default).

@@ -184,7 +184,5 @@ decision ApprovalLimit {
     else -> Director
   }
   // REVIEW [2026-12-15] Fonte normativa da política aplicada.
-  source: "Política de Compras v3"
   // REVIEW [2026-12-15] Área responsável pela política.
-  owner: "Procurement"
 }

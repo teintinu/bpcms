@@ -6,7 +6,6 @@ document ReturnRequest {
   title: { pt-BR: "Solicitação de devolução", en: "Return request" }
   // REVIEW [2026-12-15] Versão do artefato Document; diff e release comparam.
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Support"
   // REVIEW [2026-12-15] Sincronização ao vivo: réplicas acompanham cada transição.
   sync: live
   // REVIEW [2026-12-15] Campos que compõem a solicitação.

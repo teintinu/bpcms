@@ -5,7 +5,6 @@ service "example.com/services/credit" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão semântica do serviço; releases e diffs comparam este valor.
   // REVIEW [2026-12-15] Área de negócio responsável pela manutenção do serviço.
-  owner: "Credit"
   // REVIEW [2026-12-15] Serviços externos consumidos, cada um com um alias de referência.
   imports {
     // REVIEW [2026-12-15] Importa medidas e constantes padrão do construtor sob o alias std.

@@ -3,7 +3,6 @@ service "example.com/services/payments" {
   // REVIEW [2026-12-15] Título exibido no builder e na navegação.
   title: { pt-BR: "Pagamentos", en: "Payments" }
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
-  owner: "Payments" // REVIEW [2026-12-15] Área responsável pelo serviço.
   // REVIEW [2026-12-15] Dependências externas usadas pelos artefatos deste serviço.
   imports {
     // REVIEW [2026-12-15] Medidas e moedas padrão do construtor, referenciadas como std.*.

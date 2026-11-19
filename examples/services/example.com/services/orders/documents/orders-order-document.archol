@@ -6,7 +6,6 @@ document Order {
   title: { pt-BR: "Pedido", en: "Order" }
   // REVIEW [2026-12-15] Versão do artefato; diff e release comparam este número.
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Orders"
   // REVIEW [2026-12-15] Modo de sincronização em tempo real entre cliente e servidor.
   sync: live
 

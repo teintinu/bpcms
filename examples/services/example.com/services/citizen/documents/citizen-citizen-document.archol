@@ -6,7 +6,6 @@ document Citizen {
   title: { pt-BR: "Cidadão", en: "Citizen" }
   // REVIEW [2026-12-15] Versão do artefato Document; usada em diff e release.
   // REVIEW [2026-12-15] Responsável pela governança do documento.
-  owner: "Citizen"
   // REVIEW [2026-12-15] Modo de sincronização: leitura a partir do documento.
   sync: read
   // REVIEW [2026-12-15] Campos que compõem o cadastro do cidadão.

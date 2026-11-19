@@ -5,7 +5,6 @@ document Bill {
   // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Conta a pagar", en: "Bill" }
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "Billing"
   sync: read // REVIEW [2026-12-15] Sincronização apenas de leitura para consumidores externos.
   // REVIEW [2026-12-15] Campos que compõem a conta a pagar.
   fields {

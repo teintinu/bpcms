@@ -6,7 +6,6 @@ document Employee {
   title: { pt-BR: "Colaborador", en: "Employee" }
   // REVIEW [2026-12-15] Versão do artefato usada em diff e release.
   // REVIEW [2026-12-15] Área responsável pelo documento.
-  owner: "People"
   // REVIEW [2026-12-15] Sincronização em tempo real entre instâncias e telas.
   sync: live
   // REVIEW [2026-12-15] Prazo de retenção dos dados do colaborador.

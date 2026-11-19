@@ -268,7 +268,5 @@ decision TicketRouting {
     else -> General
   }
   // REVIEW [2026-12-15] Origem normativa da regra de negócio.
-  source: "Política de atendimento v1"
   // REVIEW [2026-12-15] Área dona da decisão.
-  owner: Support
 }

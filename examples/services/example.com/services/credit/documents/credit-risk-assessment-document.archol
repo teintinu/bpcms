@@ -6,7 +6,6 @@ document RiskAssessment {
   title: { pt-BR: "Avaliação de risco", en: "Risk assessment" }
   // REVIEW [2026-12-15] Versão do artefato Document; releases e diffs comparam.
   // REVIEW [2026-12-15] Área de negócio responsável pelo documento.
-  owner: "Credit"
   // REVIEW [2026-12-15] Deriva os dados da proposta; não é editado manualmente.
   computed from CreditApplication
   // REVIEW [2026-12-15] Recalcula a avaliação no máximo a cada dez minutos.

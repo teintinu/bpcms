@@ -362,7 +362,5 @@ decision FraudRisk {
   }
 
   // REVIEW [2026-12-15] Norma que fundamenta as regras da decisão.
-  source: "Política Antifraude v4"
   // REVIEW [2026-12-15] Área responsável pela manutenção da decisão.
-  owner: "Fraud"
 }

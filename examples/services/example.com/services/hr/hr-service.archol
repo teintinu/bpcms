@@ -6,7 +6,6 @@ service "example.com/services/hr" {
   locales: [ "pt-BR", "en" ] // REVIEW [2026-12-18] Idiomas suportados pelo serviço; o primeiro é o default do I18N em forma de string.
   // REVIEW [2026-12-15] Versão do serviço usada em diff e release.
   // REVIEW [2026-12-15] Área responsável pela manutenção do serviço.
-  owner: "People"
 
   // REVIEW [2026-12-15] Dependências externas expostas por alias neste arquivo.
   imports {
