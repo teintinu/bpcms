@@ -374,6 +374,11 @@ pub fn artifact_path(uri: &str, artifact_kind: &str, name: &str) -> String {
     format!("{uri}#{}/{}", artifact_kind.to_ascii_lowercase(), name)
 }
 
+/// Canonical path of an auto-created service permission.
+pub fn permission_path(uri: &str, name: &str) -> String {
+    format!("{uri}#permission/{name}")
+}
+
 pub fn field_path(uri: &str, document: &str, field: &str) -> String {
     format!("{uri}#document/{document}/field/{field}")
 }

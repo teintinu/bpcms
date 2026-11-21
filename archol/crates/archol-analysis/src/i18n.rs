@@ -13,7 +13,7 @@
 
 use std::collections::BTreeMap;
 
-use archol_core::{Artifact, Expr, Member, Span, Stmt};
+use archol_core::{Artifact, Expr, Member, ShapeData, Stmt};
 
 use crate::application::Closure;
 use crate::workspace::Workspace;
@@ -39,7 +39,7 @@ pub fn locales_of(artifact: &Artifact) -> Vec<String> {
 fn service_locales(workspace: &Workspace) -> BTreeMap<String, Vec<String>> {
     let mut locales = BTreeMap::new();
     for (_, artifact) in workspace.artifacts() {
-        if artifact.artifact_kind != "Service" {
+        if artifact.artifact_kind() != "Service" {
             continue;
         }
         locales.insert(artifact.name.clone(), locales_of(artifact));
@@ -91,7 +91,7 @@ fn resolve_members(members: &mut [Member], app_locales: &[String], default_local
                 ..
             } => {
                 if I18N_PROPERTIES.contains(&name.as_str()) {
-                    *type_ref = Some("std.bpcms.i18n".to_string());
+                    *type_ref = None;
                     resolve_i18n_value(value, app_locales, default_locale);
                 } else {
                     resolve_nested(value, app_locales, default_locale);
@@ -138,57 +138,71 @@ fn resolve_statement(statement: &mut Stmt, app_locales: &[String], default_local
 
 /// An `I18N` value: a string (first service locale) or a locale map.
 fn resolve_i18n_value(value: &mut Expr, app_locales: &[String], default_locale: Option<&str>) {
-    if let Expr::StringLiteral { .. } = value {
-        let Some(locale) = default_locale else {
-            // Without a service/app locale there is no key to expand into; the
-            // property still carries `typeRef: "std.bpcms.i18n"`.
-            return;
-        };
-        let span = value.span();
-        let literal = std::mem::replace(
-            value,
-            Expr::NullLiteral {
-                span: Span::new(span.start, span.start),
-            },
-        );
-        *value = Expr::Object {
-            type_ref: None,
-            type_ref_id: None,
-            members: vec![Member::PropertyAssignment {
-                name: locale.to_string(),
-                type_ref: None,
-                value: literal,
-                span,
-                id: None,
-            }],
-            span,
-        };
+    let Some(map) = i18n_map(value, app_locales, default_locale) else {
         return;
+    };
+    let loc = value.span();
+    *value = Expr::ShapeValue {
+        type_ref: "std.bpcms.i18n".to_string(),
+        value: map,
+        loc,
+    };
+}
+
+fn i18n_map(
+    value: &Expr,
+    app_locales: &[String],
+    default_locale: Option<&str>,
+) -> Option<BTreeMap<String, ShapeData>> {
+    if let Expr::StringLiteral { value: raw, .. } = value {
+        let locale = default_locale?;
+        let mut map = BTreeMap::new();
+        map.insert(locale.to_string(), ShapeData::Text(raw.clone()));
+        return Some(map);
     }
 
     let Expr::Object { members, .. } = value else {
-        return;
+        return None;
     };
-
-    members.retain(|member| match member {
-        Member::PropertyAssignment { name, .. } => {
-            name == "short" || name == "tooltip" || locale_supported(name, app_locales)
-        }
-        _ => false,
-    });
-    for member in members.iter_mut() {
-        if let Member::PropertyAssignment {
-            name,
-            type_ref,
-            value,
-            ..
-        } = member
-        {
-            if name == "short" || name == "tooltip" {
-                *type_ref = Some("std.bpcms.i18n".to_string());
-                resolve_i18n_value(value, app_locales, default_locale);
+    let mut map = BTreeMap::new();
+    for member in members {
+        let Member::PropertyAssignment { name, value, .. } = member else {
+            continue;
+        };
+        if name == "short" || name == "tooltip" {
+            if let Some(nested) = i18n_map(value, app_locales, default_locale) {
+                map.insert(name.clone(), ShapeData::Object(nested));
+            }
+        } else if locale_supported(name, app_locales) {
+            if let Some(data) = shape_data(value) {
+                map.insert(name.clone(), data);
             }
         }
+    }
+    Some(map)
+}
+
+fn shape_data(value: &Expr) -> Option<ShapeData> {
+    match value {
+        Expr::StringLiteral { value, .. } => Some(ShapeData::Text(value.clone())),
+        Expr::NumberLiteral { value, .. } => Some(ShapeData::Text(value.clone())),
+        Expr::BooleanLiteral { value, .. } => Some(ShapeData::Text(value.to_string())),
+        Expr::Object { members, .. } => {
+            let mut map = BTreeMap::new();
+            for member in members {
+                let Member::PropertyAssignment { name, value, .. } = member else {
+                    continue;
+                };
+                if let Some(data) = shape_data(value) {
+                    map.insert(name.clone(), data);
+                }
+            }
+            Some(ShapeData::Object(map))
+        }
+        Expr::List { elements, .. } => Some(ShapeData::List(
+            elements.iter().filter_map(shape_data).collect(),
+        )),
+        _ => None,
     }
 }
 

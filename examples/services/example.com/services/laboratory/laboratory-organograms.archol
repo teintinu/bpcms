@@ -16,8 +16,6 @@ organogram Laboratory {
     LabManager > AnalyzerDevice
   }
 
-  // REVIEW [2026-12-15] O gestor administra as roles operacionais abaixo dele.
-  LabManager manages [Collector, Analyst, SupportLiaison, AnalyzerDevice]
   // REVIEW [2026-12-15] Delega ao patologista após sete dias de ausência do gestor.
   LabManager delegates to Pathologist when absent for 7d
 

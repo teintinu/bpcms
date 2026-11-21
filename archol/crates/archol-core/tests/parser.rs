@@ -1,4 +1,4 @@
-use archol_core::{parse, Expr, Member, Stmt, TokenKind};
+use archol_core::{parse, ArtifactKind, Expr, Member, Stmt, TokenKind};
 
 fn ast(source: &str) -> archol_core::SourceFile {
     let result = parse(source, "test.archol");
@@ -10,7 +10,8 @@ fn ast(source: &str) -> archol_core::SourceFile {
 fn reads_artifact_with_string_name() {
     let file = ast("service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\" ]\n}");
     assert_eq!(file.items.len(), 1);
-    assert_eq!(file.items[0].artifact_kind, "Service");
+    assert_eq!(file.items[0].kind, ArtifactKind::Service);
+    assert_eq!(file.items[0].artifact_kind(), "Service");
     assert_eq!(file.items[0].name, "example.com/services/demo");
 }
 
@@ -136,9 +137,9 @@ fn marks_i18n_properties_with_their_type() {
             _ => None,
         })
         .collect();
-    assert!(types.contains(&("title", Some("std.bpcms.i18n"))));
-    assert!(types.contains(&("goal", Some("std.bpcms.i18n"))));
-    assert!(types.contains(&("instructions", Some("std.bpcms.i18n"))));
+    assert!(types.contains(&("title", None)));
+    assert!(types.contains(&("goal", None)));
+    assert!(types.contains(&("instructions", None)));
     assert!(types.contains(&("sla", Some("std.Duration"))));
 }
 
@@ -159,4 +160,42 @@ fn accepts_single_quoted_strings_and_prefers_double_quotes() {
         .diagnostics
         .iter()
         .any(|diagnostic| diagnostic.code == "W_STRING_QUOTES"));
+}
+
+#[test]
+fn reads_typed_artifact_kinds_and_hierarchy_chains() {
+    let file = ast(
+        "organogram Finance {\n  title: { pt-BR: \"Financeiro\" }\n  hierarchy {\n    FinanceManager > CollectionAgent > Clerk\n  }\n}\nrole Clerk { title: { pt-BR: \"Faturista\" } }",
+    );
+    assert_eq!(file.items[0].kind, ArtifactKind::Organogram);
+    assert_eq!(file.items[0].kind.node_kind(), "ArtifactOrganogram");
+    assert_eq!(file.items[1].kind, ArtifactKind::Role);
+    assert_eq!(file.items[1].kind.node_kind(), "ArtifactRole");
+    let Member::Hierarchy { chains, .. } = &file.items[0].body[1] else {
+        panic!("expected hierarchy member");
+    };
+    assert_eq!(chains.len(), 1);
+    let names: Vec<_> = chains[0]
+        .roles
+        .iter()
+        .map(|role| role.name.as_str())
+        .collect();
+    assert_eq!(names, vec!["FinanceManager", "CollectionAgent", "Clerk"]);
+    assert!(chains[0].roles.iter().all(|role| role.role_ref.is_none()));
+}
+
+#[test]
+fn hierarchy_rejects_single_role_lines() {
+    let result = parse(
+        "organogram O {\n  hierarchy {\n    Clerk\n  }\n}",
+        "x.archol",
+    );
+    assert!(
+        result
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_HIERARCHY_CHAIN"),
+        "{:?}",
+        result.diagnostics
+    );
 }

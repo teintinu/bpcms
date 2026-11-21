@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use archol_core::{Artifact, Diagnostic, Expr, Member, ShapeValue, Stmt};
+use archol_core::{Artifact, Diagnostic, Expr, Member, ShapeData, Stmt};
 
 use crate::application::Closure;
 use crate::index::Symbols;
@@ -53,7 +53,7 @@ pub fn resolve(
         let path = file.path.clone();
         let service = file.service.clone();
         for artifact in &mut file.ast.items {
-            let context = if matches!(artifact.artifact_kind.as_str(), "Parameter" | "Secret") {
+            let context = if matches!(artifact.artifact_kind(), "Parameter" | "Secret") {
                 property(&artifact.body, "type").and_then(text_value)
             } else {
                 None
@@ -335,7 +335,7 @@ fn resolve_shape<'a>(
         .map(|(_, info)| info)
 }
 
-fn parse_literal(raw: &str, info: &ShapeInfo) -> Result<(ShapeValue, Option<String>), String> {
+fn parse_literal(raw: &str, info: &ShapeInfo) -> Result<(ShapeData, Option<String>), String> {
     let text = raw.trim();
     if text.is_empty() {
         return Err("Shape literal cannot be empty".to_string());
@@ -361,7 +361,7 @@ fn parse_literal(raw: &str, info: &ShapeInfo) -> Result<(ShapeValue, Option<Stri
             ));
         }
     }
-    Ok((ShapeValue::Text(text), None))
+    Ok((ShapeData::Text(text), None))
 }
 
 fn valid_text(value: &str, validate: &str) -> bool {
@@ -394,7 +394,7 @@ fn valid_text(value: &str, validate: &str) -> bool {
     }
 }
 
-fn parse_quantity(raw: &str, info: &ShapeInfo) -> Result<(ShapeValue, Option<String>), String> {
+fn parse_quantity(raw: &str, info: &ShapeInfo) -> Result<(ShapeData, Option<String>), String> {
     let (number_text, unit_text) = split_quantity(raw)?;
     let number: f64 = number_text
         .parse()
@@ -454,7 +454,7 @@ fn split_quantity(raw: &str) -> Result<(&str, &str), String> {
     Ok((&raw[..end], &raw[end..]))
 }
 
-fn parse_money(raw: &str) -> Result<(ShapeValue, Option<String>), String> {
+fn parse_money(raw: &str) -> Result<(ShapeData, Option<String>), String> {
     let (number_text, currency_text) = split_quantity(raw)?;
     let number: f64 = number_text
         .parse()
@@ -467,16 +467,16 @@ fn parse_money(raw: &str) -> Result<(ShapeValue, Option<String>), String> {
     value.insert("raw".to_string(), number_value_from_f64(number));
     value.insert(
         "currency".to_string(),
-        ShapeValue::Text(currency.to_string()),
+        ShapeData::Text(currency.to_string()),
     );
-    Ok((ShapeValue::Object(value), None))
+    Ok((ShapeData::Object(value), None))
 }
 
-fn number_value_from_f64(value: f64) -> ShapeValue {
+fn number_value_from_f64(value: f64) -> ShapeData {
     if value.fract() == 0.0 && value.abs() <= i64::MAX as f64 {
-        ShapeValue::Integer(value as i64)
+        ShapeData::Integer(value as i64)
     } else {
-        ShapeValue::Decimal(value)
+        ShapeData::Decimal(value)
     }
 }
 
@@ -496,7 +496,7 @@ fn is_shape_literal(info: &ShapeInfo) -> bool {
 fn catalog(workspace: &Workspace) -> BTreeMap<(Option<String>, String), ShapeInfo> {
     let mut catalog = BTreeMap::new();
     for (file, artifact) in workspace.artifacts() {
-        if artifact.artifact_kind != "Shape" {
+        if artifact.artifact_kind() != "Shape" {
             continue;
         }
         let info = shape_info(artifact);

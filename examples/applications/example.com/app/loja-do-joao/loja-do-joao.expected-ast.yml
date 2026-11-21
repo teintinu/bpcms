@@ -1,29 +1,15 @@
 "items":
   -
-    "artifactKind": "Application"
     "body":
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "std.bpcms.i18n"
         "value":
-          "kind": "Object"
-          "members":
-            -
-              "kind": "PropertyAssignment"
-              "name": "pt-BR"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Loja do João\""
-                "value": "Loja do João"
-            -
-              "kind": "PropertyAssignment"
-              "name": "en-US"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"João's Store\""
-                "value": "João's Store"
-          "typeRef": null
+          "kind": "ShapeValue"
+          "typeRef": "std.bpcms.i18n"
+          "value":
+            "en-US": "João's Store"
+            "pt-BR": "Loja do João"
       -
         "body":
           -
@@ -224,7 +210,7 @@
         "kind": "Block"
         "name": "main"
     "id": "eo"
-    "kind": "Artifact"
+    "kind": "ArtifactApplication"
     "name": "example.com/app/loja-do-joao"
     "params": []
 "kind": "SourceFile"

@@ -108,7 +108,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [ ] Campos têm `title`; payloads de evento têm `title`; cada `value` de enum tem `title` + `icon`.
 - [ ] `short`/`tooltip` são irmãos do mapa principal; fallback exato → idioma → default.
 - [ ] Todo `service` declara `locales` com **pelo menos um** idioma; o primeiro é o default do I18N em forma de string (`E_LOCALES_REQUIRED` se faltar/vazio).
-- [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador marca `typeRef: "std.bpcms.i18n"` na propriedade, expande a string e filtra pelos locales da aplicação.
+- [ ] `I18N` aceita string (primeiro locale do serviço) ou mapa de locales; cada locale aceita `string | PluralForms`; `other` obrigatório. O compilador emite um `ShapeValue` com `typeRef: "std.bpcms.i18n"`, expande a string e filtra pelos locales da aplicação.
 - [ ] Units usam `title` I18N com `one`/`other`; sem campo `plural` separado.
 - [ ] Strings aceitam aspas simples/duplas; `format` prefere duplas e `lint` avisa `W_STRING_QUOTES`.
 - [ ] Literal de `Duration` (`sla`) é string entre aspas (`sla: "30d"`); sem aspas é `E_SHAPE_LITERAL_QUOTED`.
@@ -284,9 +284,9 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `capabilities { ... }`
 - [x] `inherits: Role | [Role...]`; permissões próprias + herdadas
 - [x] `scopes`
-- [x] `manages` / `delegates to` por linha
+- [x] `delegates to` por linha
 - [x] `all` / `only` / `except`
-- [x] `manages` é sempre others-only; auto-atribuição proibida
+- [x] Atribuição derivada da hierarquia; auto-atribuição proibida
 - [x] Papel público; sem `private` de topo
 - [x] Papel definido no serviço ou no organogram
 
@@ -298,12 +298,12 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `permissions` é lista de namespaces ou catálogo?
 - [x] Herança de papel é suficiente?
 - [x] Organogram + roles no mesmo arquivo, com o organogram primeiro, está funcionando?
-- [x] O gerente atribui apenas papéis em `manages`, nunca a si mesmo?
+- [x] O gerente atribui apenas papéis abaixo dele na hierarquia, nunca a si mesmo?
 - [x] As permissões do papel atribuído são independentes das permissões do gerente?
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo, `scopes` e `manages`; `manages` é sempre others-only; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; organogram e roles no mesmo `*-organograms.archol`, com o organogram antes das roles; Support tem `Manager` local; exemplos R.1–R.8 com títulos, hierarquia e herança múltipla.
+**Decisões:** role com `title`, `permissions` como namespaces de ação, `inherits` aditivo e `scopes`; não existe `manages`; a autoridade de atribuição deriva da hierarquia do organograma; auto-atribuição proibida; o papel atribuído define as permissões do alvo, não o papel do gerente; organogram e roles no mesmo `*-organograms.archol`, com o organogram antes das roles; Support tem `Manager` local; exemplos R.1–R.8 com títulos, hierarquia e herança múltipla.
 
 ## 4. Organogram ✅
 
@@ -318,7 +318,7 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `fourEyes { ação requires Role }`
 - [x] `segregation { ação != ação }`
 - [x] `delegates to ... when absent for 7d`
-- [x] `manages [Role]`; um por linha
+- [x] Sem `manages`; atribuição deriva dos descendentes na hierarquia
 - [x] `signature { Role }`
 - [x] `requires` dentro de `fourEyes`
 - [x] organogram antes das roles no mesmo arquivo (`*-organograms.archol`)
@@ -331,11 +331,11 @@ Enquanto o status não for **aprovada**, não editar. Reverter também é mudan�
 - [x] `title` de organogram é obrigatório?
 - [x] `fourEyes`/`segregation` são avaliados no runtime ou no build? — build valida estrutura; runtime decide.
 - [x] `limits`/`dataMasking` pertencem ao Document, não ao Organogram.
-- [x] `manages`/`delegates to` são linhas independentes; sem `roleManagement`.
+- [x] `delegates to` aponta para uma role abaixo na hierarquia; sem `roleManagement`.
 
 **Status:** ✅ revisado e aprovado para a v0.1.
 
-**Decisões:** `scopes` plural; `manages` e `delegates to` por linha; `delegates to` sem `->`; `fourEyes` exige ator diferente com role; `segregation` e `signature` ficam no Organogram até revisão de Document; `limits` e `dataMasking` movidos para Document; build valida estrutura, runtime decide autorização.
+**Decisões:** `scopes` plural; `delegates to` por linha e sem `->`; autoridade de atribuição derivada da hierarquia; `fourEyes` exige ator diferente com role; `segregation` e `signature` ficam no Organogram até revisão de Document; `limits` e `dataMasking` movidos para Document; build valida estrutura, runtime decide autorização.
 
 ## 5. Parameter / Secret ✅
 
@@ -1417,12 +1417,12 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - `I18N` cobre `title` (todos os contextos), `goal` (process), `instructions` (manual) e `short`/`tooltip`.
 - Forma string: o compilador expande para o mapa canônico no primeiro locale do serviço (ou default da app, se o serviço não declarar `locales`).
 - Forma objeto: o compilador mantém apenas locales cuja língua exista em `Application.locales` (comparação exata ou por idioma; `en` sobrevive a `en-US`; `fr` cai).
-- AST: `PropertyAssignment.typeRef = "std.bpcms.i18n"`; o objeto de locales não repete o tipo. O builder recebe o locale explícito de cada texto.
+- AST: o valor é um `ShapeValue` com `typeRef = "std.bpcms.i18n"` e `value` como mapa de locales. O builder recebe o locale explícito de cada texto.
 - Nomenclatura da documentação normalizada para `I18N`.
 
 **Implementação:** `archol-analysis/src/i18n.rs` (novo), chamada em `analyze_application` antes do check; `ApplicationInfo.locales`; campo `type` no `PropertyAssignment` do AST; `locales` documentado em `DSL_REFERENCE.md` §1.2/§1.9/§2/§3/§4.2/§5.1; exemplos e `DSL_EXAMPLES.md` atualizados.
 
-**Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"typeRef": "std.bpcms.i18n"` na propriedade e o mapa filtrado.
+**Testes:** `cargo test` verde, incluindo o teste `i18n_properties_are_typed_and_filtered_by_application_locales`; `cargo run -q --bin archol -- ast ... --app example.com/app/backoffice-loja` mostra `"kind": "ShapeValue"` e `"typeRef": "std.bpcms.i18n"`.
 
 **Em aberto:** validação de `locales` incompletos (`E_TITLE_MISSING`), diagnóstico para string sem locale conhecido e política estrita do builder continuam responsabilidade do construtor/check futuro.
 
@@ -1468,6 +1468,73 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 
 ## Rodada tipo I18N — 2026-11-19 (executada por solicitação direta)
 
-- `PropertyAssignment.typeRef` de título/goal/instructions/short/tooltip passou de `"I18N"` para `"std.bpcms.i18n"`.
+- O valor de título/goal/instructions/short/tooltip passou a ser um token `ShapeValue` com `typeRef: "std.bpcms.i18n"`.
 - Parser e passe I18N atualizados; testes e snapshots das 5 aplicações regenerados.
 - O nome curto I18N permanece apenas como conceito/documentação; o contrato do AST usa `std.bpcms.i18n`.
+
+## Rodada organograma — 2026-11-19 (executada por solicitação direta)
+
+**Pedido:** repensar a duplicação entre `hierarchy` e `manages`; implementar a alternativa A.
+
+**Decisão aplicada:**
+- `hierarchy` é a única fonte da árvore de reporte.
+- `manages` foi removido de exemplos, roles e organogramas.
+- A autoridade de `assignRole` é derivada dos **descendentes transitivos** da hierarquia, dentro dos `scopes` do organograma.
+- Auto-atribuição continua proibida.
+- `delegates to` continua separado e aponta para uma role abaixo na hierarquia.
+- `assigns` para autoridade fora da linha hierárquica fica como evolução futura, não implementada nesta versão.
+- `fourEyes`, `segregation` e `signature` não mudaram.
+
+**Impacto:** 17 organogramas de exemplo (linhas `manages` + comentários), `DSL_REFERENCE.md`, `DSL_EXAMPLES.md`, `REVIEW_CHECKLIST.md` e o keyword do plugin (`archol.tmLanguage.json`).
+
+## Rodada AST tipado + hierarchy — 2026-11-19 (executada por solicitação direta)
+
+**Pedido:** cada artefato no AST deve ter seu próprio `kind` (sem `artifactKind`) e
+`hierarchy { A > B > C }` deve virar um nó estruturado; toda referência a role
+deve carregar o necessário para o construtor chegar rápido à role.
+
+**Decisão aplicada:**
+- `kind` do artefato passa a ser o tipo: `ArtifactApplication`, `ArtifactService`,
+  `ArtifactDocument`, `ArtifactProcess`, `ArtifactView`, `ArtifactForm`,
+  `ArtifactMessage`, `ArtifactShape`, `ArtifactRole`, `ArtifactOrganogram`,
+  `ArtifactPolicy`, `ArtifactDecision`, `ArtifactIntegration`,
+  `ArtifactParameter`, `ArtifactSecret`, `ArtifactIcon`, `ArtifactManual`,
+  `ArtifactError`. `artifactKind` deixou de existir no AST.
+- `hierarchy` deixa de ser `Block`/`Binary`: vira `Hierarchy` → `HierarchyChain`
+  → `RoleRef`, com `ref` (id do lock), `refKind: "role"`, `service`, `path` e
+  `line` da declaração após a análise.
+- `ArtifactOrganogram` anotado ganha `roles` derivado (`OrganogramRole`):
+  `manages` transitivo, `inherits`, `permissions`, `title` e ponteiros
+  `RolePointer` com `ref`/`refKind`/`service`/`path`/`line`.
+- `ArtifactRole` continua sendo artefato de topo; a projeção não é fonte.
+- Check novo: `E_UNKNOWN_ROLE`, `E_HIERARCHY_CYCLE`, `E_HIERARCHY_DUPLICATE`;
+  parser: `E_HIERARCHY_ROLE`, `E_HIERARCHY_CHAIN`, `E_HIERARCHY_TRAILING`.
+
+**Impacto:** `archol-core` (AST/parser), `archol-analysis` (annotate/check/link/
+organograma), LSP, CLI/AST explorer, docs (`ast.md`, `compiler.md`, `README.md`),
+`DSL_REFERENCE.md` e snapshots das 5 aplicações regenerados.
+
+
+## Rodada permissões + índice do service — 2026-11-21 (executada por solicitação direta)
+
+**Pedido:** permissões como artefato auto-criado dentro do serviço; AST do serviço
+com a relação de todos os seus artefatos; identificadores e referências corretos.
+
+**Decisão aplicada:**
+- `ArtifactService.permissions` contém um `ArtifactPermission` por
+  `namespace.action` único usado pelas roles do serviço; `namespace` é tudo
+  menos o último segmento e `action` é o último.
+- Cada permissão ganha id no lock (`<service>#permission/<nome>`) e as entradas
+  `permissions` das roles deixam de ser `MemberAccess`/`Identifier` e passam a
+  `Reference` com `refKind: "permission"` e `ref`.
+- `ArtifactService.artifacts` indexa todos os artefatos do serviço com
+  `ArtifactPointer` (`artifact` tipado, `name`, `ref`, `path`, `line`),
+  incluindo as permissões auto-criadas; o próprio service não entra na lista.
+- `OrganogramRole.permissions` usa `PermissionPointer` (`name`, `ref`,
+  `refKind`, `line`).
+- Sem permissões duplicadas por serviço; a primeira ocorrência define o `loc` e
+  a linha do artefato auto-criado.
+
+**Impacto:** `archol-core` (AST), `archol-analysis` (annotate/service/organogram),
+snapshots, docs (`ast.md`, `compiler.md`, `README.md`), `DSL_REFERENCE.md` e
+testes de análise.

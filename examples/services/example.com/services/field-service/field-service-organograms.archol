@@ -13,8 +13,6 @@ organogram FieldOperations {
     Dispatcher > Customer
   }
 
-  // REVIEW [2026-12-15] O supervisor gerencia despachantes e técnicos.
-  Supervisor manages [Dispatcher, FieldTechnician]
   // REVIEW [2026-12-15] Na ausência do supervisor por três dias, o despachante assume.
   Supervisor delegates to Dispatcher when absent for 3d
 

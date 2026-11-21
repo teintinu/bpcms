@@ -23,8 +23,6 @@ organogram Sourcing {
     ProcurementManager > QualityInspector
   }
 
-  // REVIEW [2026-12-15] Declara formalmente quem o gestor de compras gerencia.
-  ProcurementManager manages [Buyer, Approver, ComplianceAnalyst, PayablesClerk, ReceivingClerk, QualityInspector]
 
   // REVIEW [2026-12-15] Impede que a mesma pessoa envie e aprove a solicitação.
   segregation {

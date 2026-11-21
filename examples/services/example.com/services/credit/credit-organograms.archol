@@ -11,8 +11,6 @@ organogram RiskDesk {
     CreditManager > CreditAnalyst
   }
 
-  // REVIEW [2026-12-15] Declara que o gerente gerencia, diretamente, o analista de crédito.
-  CreditManager manages [CreditAnalyst]
 
   // REVIEW [2026-12-15] Segregação de funções: impede que a mesma pessoa execute as duas actions.
   segregation {

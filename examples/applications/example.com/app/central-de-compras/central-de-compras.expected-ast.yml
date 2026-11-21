@@ -1,29 +1,15 @@
 "items":
   -
-    "artifactKind": "Application"
     "body":
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "std.bpcms.i18n"
         "value":
-          "kind": "Object"
-          "members":
-            -
-              "kind": "PropertyAssignment"
-              "name": "pt-BR"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Central de Compras\""
-                "value": "Central de Compras"
-            -
-              "kind": "PropertyAssignment"
-              "name": "en-US"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Procurement Hub\""
-                "value": "Procurement Hub"
-          "typeRef": null
+          "kind": "ShapeValue"
+          "typeRef": "std.bpcms.i18n"
+          "value":
+            "en-US": "Procurement Hub"
+            "pt-BR": "Central de Compras"
       -
         "body":
           -
@@ -279,7 +265,7 @@
         "kind": "Block"
         "name": "main"
     "id": "di"
-    "kind": "Artifact"
+    "kind": "ArtifactApplication"
     "name": "example.com/app/central-de-compras"
     "params": []
 "kind": "SourceFile"

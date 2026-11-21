@@ -7,7 +7,10 @@ fn main() {
     for item in &result.ast.items {
         println!(
             "ARTIFACT {} {} {}..{}",
-            item.artifact_kind, item.name, item.span.start, item.span.end
+            item.artifact_kind(),
+            item.name,
+            item.span.start,
+            item.span.end
         );
         print_members(&item.body, 1, &source);
     }
@@ -51,6 +54,12 @@ fn print_members(members: &[Member], depth: usize, source: &str) {
                 println!("{pad}ServiceEntry {uri} as {alias}")
             }
             Member::TriggerDeclaration { keyword, .. } => println!("{pad}Trigger {keyword}"),
+            Member::Hierarchy { chains, .. } => {
+                for chain in chains {
+                    let names: Vec<_> = chain.roles.iter().map(|role| role.name.as_str()).collect();
+                    println!("{pad}Hierarchy {}", names.join(" > "));
+                }
+            }
         }
     }
 }

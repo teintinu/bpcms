@@ -1,41 +1,22 @@
-// REVIEW [2026-12-15] service: example.com/services/billing
-
-// REVIEW [2026-12-15] Declara o organograma financeiro e suas relações de hierarquia.
 organogram Finance {
-  // REVIEW [2026-12-15] Título exibido no construtor.
-  title: { pt-BR: "Organograma financeiro", en: "Finance organogram" }
-
-  // REVIEW [2026-12-15] Define a cadeia de subordinação entre os papéis financeiros.
+  title: "Organograma financeiro"
   hierarchy {
-    // REVIEW [2026-12-15] O gerente financeiro lidera o agente de cobrança, que lidera o faturista.
     FinanceManager > CollectionAgent > Clerk
   }
-
-  FinanceManager manages [CollectionAgent, Clerk] // REVIEW [2026-12-15] O gerente gerencia os demais papéis.
 }
 
-// REVIEW [2026-12-15] Papel operacional que cria e emite notas e contas.
 role Clerk {
-  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Faturista", en: "Billing clerk" }
-  // REVIEW [2026-12-15] Permissões operacionais concedidas ao faturista.
   permissions: [invoice.view, invoice.create, invoice.issue, invoice.collect]
 }
 
-// REVIEW [2026-12-15] Papel de cobrança que herda as permissões do faturista.
 role CollectionAgent {
-  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Agente de cobrança", en: "Collection agent" }
-  inherits: Clerk // REVIEW [2026-12-15] Herda as permissões do papel Clerk.
-  // REVIEW [2026-12-15] Permissões adicionais de cobrança e cancelamento.
+  inherits: Clerk 
   permissions: [invoice.collect, invoice.cancel]
 }
 
-// REVIEW [2026-12-15] Papel de gestão financeira que herda as permissões de cobrança.
 role FinanceManager {
-  // REVIEW [2026-12-15] Título exibido na interface.
   title: { pt-BR: "Gerente financeiro", en: "Finance manager" }
-  inherits: CollectionAgent // REVIEW [2026-12-15] Herda as permissões do papel CollectionAgent.
-  // REVIEW [2026-12-15] Permissões de aprovação, fechamento e relatórios.
   permissions: [invoice.approve, period.close, report.view]
 }

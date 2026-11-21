@@ -9,8 +9,6 @@ organogram Support {
     // REVIEW [2026-12-15] O gerente fica acima do agente de suporte.
     Manager > SupportAgent
   }
-  // REVIEW [2026-12-15] Declara explicitamente que o gerente coordena os agentes.
-  Manager manages [SupportAgent]
 }
 
 // REVIEW [2026-12-15] Papel com poder de decisão sobre chamados e devoluções.

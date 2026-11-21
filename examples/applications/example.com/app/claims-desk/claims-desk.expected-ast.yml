@@ -1,29 +1,15 @@
 "items":
   -
-    "artifactKind": "Application"
     "body":
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "std.bpcms.i18n"
         "value":
-          "kind": "Object"
-          "members":
-            -
-              "kind": "PropertyAssignment"
-              "name": "pt-BR"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Mesa de Sinistros\""
-                "value": "Mesa de Sinistros"
-            -
-              "kind": "PropertyAssignment"
-              "name": "en-US"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Claims Desk\""
-                "value": "Claims Desk"
-          "typeRef": null
+          "kind": "ShapeValue"
+          "typeRef": "std.bpcms.i18n"
+          "value":
+            "en-US": "Claims Desk"
+            "pt-BR": "Mesa de Sinistros"
       -
         "body":
           -
@@ -251,7 +237,7 @@
         "kind": "Block"
         "name": "main"
     "id": "fc"
-    "kind": "Artifact"
+    "kind": "ArtifactApplication"
     "name": "example.com/app/claims-desk"
     "params": []
 "kind": "SourceFile"

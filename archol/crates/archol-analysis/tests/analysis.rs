@@ -265,13 +265,17 @@ fn i18n_properties_are_typed_and_filtered_by_application_locales() {
         .iter()
         .find(|file| file.path.ends_with("demo-service.archol"))
         .expect("service file");
-    let service_title = property(&service.ast.items[0].body, "title").expect("service title");
-    assert_eq!(service_title.0.as_deref(), Some("std.bpcms.i18n"));
-    let Expr::Object { members, .. } = service_title.1 else {
-        panic!("string shorthand must expand to a locale map");
+    let (service_ty, service_title) =
+        property(&service.ast.items[0].body, "title").expect("service title");
+    assert_eq!(service_ty, None);
+    let Expr::ShapeValue {
+        type_ref, value, ..
+    } = service_title
+    else {
+        panic!("string shorthand must become a ShapeValue");
     };
-    assert_eq!(members.len(), 1);
-    assert_eq!(members[0].name(), Some("pt-BR"));
+    assert_eq!(type_ref, "std.bpcms.i18n");
+    assert_eq!(value.keys().collect::<Vec<_>>(), vec!["pt-BR"]);
 
     let process = analysis
         .workspace
@@ -280,19 +284,25 @@ fn i18n_properties_are_typed_and_filtered_by_application_locales() {
         .find(|file| file.path.ends_with("demo-process.archol"))
         .expect("process file");
     let (title_ty, title) = property(&process.ast.items[0].body, "title").expect("title");
-    assert_eq!(title_ty.as_deref(), Some("std.bpcms.i18n"));
-    let Expr::Object { members, .. } = title else {
-        panic!("title must be an object");
+    assert_eq!(title_ty, None);
+    let Expr::ShapeValue {
+        type_ref, value, ..
+    } = title
+    else {
+        panic!("title must become a ShapeValue");
     };
-    let locales: Vec<_> = members.iter().filter_map(|member| member.name()).collect();
-    assert_eq!(locales, vec!["pt-BR", "en"]);
+    assert_eq!(type_ref, "std.bpcms.i18n");
+    assert_eq!(
+        value.keys().map(String::as_str).collect::<Vec<_>>(),
+        vec!["en", "pt-BR"]
+    );
 
     let (goal_ty, goal) = property(&process.ast.items[0].body, "goal").expect("goal");
-    assert_eq!(goal_ty.as_deref(), Some("std.bpcms.i18n"));
-    let Expr::Object { members, .. } = goal else {
-        panic!("goal string shorthand must expand to a locale map");
+    assert_eq!(goal_ty, None);
+    let Expr::ShapeValue { value, .. } = goal else {
+        panic!("goal string shorthand must become a ShapeValue");
     };
-    assert_eq!(members[0].name(), Some("pt-BR"));
+    assert_eq!(value.keys().collect::<Vec<_>>(), vec!["pt-BR"]);
 }
 
 fn property<'a>(members: &'a [Member], wanted: &str) -> Option<(Option<String>, &'a Expr)> {
@@ -415,7 +425,7 @@ fn duration_and_shape_strings_become_shape_literals() {
     };
     assert_eq!(shape, "std.Duration");
     assert_eq!(raw, "2h");
-    assert!(matches!(value, archol_core::ShapeValue::Integer(7200)));
+    assert!(matches!(value, archol_core::ShapeData::Integer(7200)));
     assert_eq!(unit.as_deref(), Some("s"));
 
     let mut video = None;
@@ -438,7 +448,7 @@ fn duration_and_shape_strings_become_shape_literals() {
     };
     assert_eq!(shape, "ProductVideo");
     assert!(
-        matches!(value, archol_core::ShapeValue::Text(text) if text == "https://example.com/v.mp4")
+        matches!(value, archol_core::ShapeData::Text(text) if text == "https://example.com/v.mp4")
     );
     assert_eq!(unit, None);
 }
@@ -502,7 +512,7 @@ fn parameter_shape_literals_use_declared_type() {
     assert!(matches!(
         duration,
         Expr::ShapeLiteral {
-            value: archol_core::ShapeValue::Integer(7200),
+            value: archol_core::ShapeData::Integer(7200),
             unit: Some(unit),
             ..
         } if unit == "s"
@@ -511,19 +521,284 @@ fn parameter_shape_literals_use_declared_type() {
     assert!(matches!(
         money,
         Expr::ShapeLiteral {
-            value: archol_core::ShapeValue::Object(value),
+            value: archol_core::ShapeData::Object(value),
             ..
-        } if matches!(value.get("currency"), Some(archol_core::ShapeValue::Text(code)) if code == "BRL")
+        } if matches!(value.get("currency"), Some(archol_core::ShapeData::Text(code)) if code == "BRL")
     ));
     let (_, email) = property(&file.ast.items[2].body, "default").expect("email default");
     assert!(
         matches!(
             email,
             Expr::ShapeLiteral {
-                value: archol_core::ShapeValue::Text(text),
+                value: archol_core::ShapeData::Text(text),
                 ..
             } if text == "user@example.com"
         ),
         "{email:?}"
     );
+}
+
+#[test]
+fn i18n_string_uses_service_locales_except_for_the_application() {
+    let files = vec![
+        (
+            "ws/applications/example.com/app/demo/demo-application.archol",
+            "application \"example.com/app/demo\" {\n  services {\n    \"example.com/services/demo\" as Demo\n  }\n  title: \"App\"\n  locales: [ \"pt-BR\", \"en-US\" ]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" {\n  title: \"Serviço\"\n  locales: [ \"en\", \"pt-BR\" ]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/processes/demo-process.archol",
+            "process P {\n  title: \"Processo\"\n}",
+        ),
+    ]
+    .into_iter()
+    .map(|(path, source)| FileInput {
+        path: path.to_string(),
+        source: source.to_string(),
+    })
+    .collect();
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+
+    let default_locale = |file_suffix: &str, wanted: &str| {
+        let file = analysis
+            .workspace
+            .files
+            .iter()
+            .find(|file| file.path.ends_with(file_suffix))
+            .expect("file");
+        let (_, value) = property(&file.ast.items[0].body, wanted).expect("property");
+        let Expr::ShapeValue { value, .. } = value else {
+            panic!("{wanted} must be a ShapeValue");
+        };
+        value.keys().next().cloned()
+    };
+
+    assert_eq!(
+        default_locale("demo-application.archol", "title").as_deref(),
+        Some("pt-BR")
+    );
+    assert_eq!(
+        default_locale("demo-service.archol", "title").as_deref(),
+        Some("en")
+    );
+    assert_eq!(
+        default_locale("demo-process.archol", "title").as_deref(),
+        Some("en")
+    );
+}
+
+fn organogram_files(hierarchy: &str) -> Vec<FileInput> {
+    [
+        (
+            "ws/applications/example.com/app/demo/demo-application.archol",
+            "application \"example.com/app/demo\" {\n  services {\n    \"example.com/services/demo\" as Demo\n  }\n  locales: [pt-BR]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\" ]\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-organograms.archol",
+            &format!(
+                "organogram Finance {{\n  title: {{ pt-BR: \"Financeiro\" }}\n  hierarchy {{\n{hierarchy}\n  }}\n}}\nrole Clerk {{\n  title: {{ pt-BR: \"Faturista\" }}\n  permissions: [invoice.view]\n}}\nrole CollectionAgent {{\n  title: {{ pt-BR: \"Cobrança\" }}\n  inherits: Clerk\n  permissions: [invoice.collect]\n}}\nrole FinanceManager {{\n  title: {{ pt-BR: \"Gerente\" }}\n  permissions: [invoice.approve]\n}}"
+            ),
+        ),
+    ]
+    .into_iter()
+    .map(|(path, source)| FileInput {
+        path: path.to_string(),
+        source: source.to_string(),
+    })
+    .collect()
+}
+
+#[test]
+fn hierarchy_roles_resolve_to_lock_refs_and_derive_manages() {
+    let analysis = analyze_application(
+        organogram_files("FinanceManager > CollectionAgent > Clerk"),
+        Some("ws/services"),
+        "example.com/app/demo",
+        false,
+    )
+    .expect("analysis");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+    let organogram = analysis
+        .workspace
+        .files
+        .iter()
+        .flat_map(|file| file.ast.items.iter())
+        .find(|artifact| artifact.kind == archol_core::ArtifactKind::Organogram)
+        .expect("organogram");
+    let Member::Hierarchy { chains, .. } = &organogram.body[1] else {
+        panic!("expected hierarchy");
+    };
+    assert!(chains[0].roles.iter().all(|role| role.role_ref.is_some()));
+    assert!(chains[0].roles.iter().all(|role| role.path.is_some()));
+
+    let by_name = |name: &str| {
+        organogram
+            .roles
+            .iter()
+            .find(|role| role.name == name)
+            .unwrap_or_else(|| panic!("role {name}"))
+    };
+    let order: Vec<_> = organogram
+        .roles
+        .iter()
+        .map(|role| role.name.as_str())
+        .collect();
+    assert_eq!(order, vec!["FinanceManager", "CollectionAgent", "Clerk"]);
+    assert_eq!(
+        by_name("FinanceManager")
+            .manages
+            .iter()
+            .map(|role| role.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["CollectionAgent", "Clerk"]
+    );
+    assert!(by_name("Clerk").manages.is_empty());
+    assert_eq!(
+        by_name("CollectionAgent")
+            .inherits
+            .iter()
+            .map(|role| role.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["Clerk"]
+    );
+    assert_eq!(
+        by_name("FinanceManager")
+            .permissions
+            .iter()
+            .map(|permission| permission.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["invoice.approve"]
+    );
+    assert!(by_name("FinanceManager")
+        .permissions
+        .iter()
+        .all(|permission| !permission.permission_ref.is_empty()));
+}
+
+#[test]
+fn hierarchy_reports_unknown_roles_and_cycles() {
+    let unknown = analyze_application(
+        organogram_files("FinanceManager > Ghost"),
+        Some("ws/services"),
+        "example.com/app/demo",
+        false,
+    )
+    .expect("analysis");
+    assert!(unknown
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_UNKNOWN_ROLE"));
+
+    let cycle = analyze_application(
+        organogram_files("FinanceManager > CollectionAgent\n    CollectionAgent > FinanceManager"),
+        Some("ws/services"),
+        "example.com/app/demo",
+        false,
+    )
+    .expect("analysis");
+    assert!(cycle
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_HIERARCHY_CYCLE"));
+
+    let duplicate = analyze_application(
+        organogram_files("FinanceManager > Clerk\n    FinanceManager > Clerk"),
+        Some("ws/services"),
+        "example.com/app/demo",
+        false,
+    )
+    .expect("analysis");
+    assert!(duplicate
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_HIERARCHY_DUPLICATE"));
+}
+
+#[test]
+fn service_ast_indexes_its_artifacts_and_auto_permissions() {
+    let analysis = analyze_application(
+        organogram_files("FinanceManager > CollectionAgent > Clerk"),
+        Some("ws/services"),
+        "example.com/app/demo",
+        false,
+    )
+    .expect("analysis");
+    let service = analysis
+        .workspace
+        .files
+        .iter()
+        .flat_map(|file| file.ast.items.iter())
+        .find(|artifact| artifact.kind == archol_core::ArtifactKind::Service)
+        .expect("service");
+    let names: Vec<_> = service
+        .artifacts
+        .iter()
+        .map(|pointer| (pointer.artifact.name(), pointer.name.as_str()))
+        .collect();
+    assert!(names.contains(&("Organogram", "Finance")), "{names:?}");
+    assert!(names.contains(&("Role", "FinanceManager")), "{names:?}");
+    assert!(names.contains(&("Permission", "invoice.view")), "{names:?}");
+    assert!(service
+        .artifacts
+        .iter()
+        .all(|pointer| !pointer.artifact_ref.is_empty() && !pointer.path.is_empty()));
+
+    let permissions: Vec<_> = service
+        .permissions
+        .iter()
+        .map(|permission| {
+            (
+                permission.name.as_str(),
+                permission.namespace.as_str(),
+                permission.action.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        permissions,
+        vec![
+            ("invoice.approve", "invoice", "approve"),
+            ("invoice.collect", "invoice", "collect"),
+            ("invoice.view", "invoice", "view"),
+        ]
+    );
+    assert!(service
+        .permissions
+        .iter()
+        .all(|permission| !permission.permission_ref.is_empty()));
+
+    let role = analysis
+        .workspace
+        .files
+        .iter()
+        .flat_map(|file| file.ast.items.iter())
+        .find(|artifact| {
+            artifact.kind == archol_core::ArtifactKind::Role && artifact.name == "Clerk"
+        })
+        .expect("role");
+    let permissions = property(&role.body, "permissions")
+        .expect("role permissions")
+        .1;
+    let Expr::List { elements, .. } = permissions else {
+        panic!("permissions must be a List");
+    };
+    assert!(elements.iter().all(
+        |element| matches!(element, Expr::Reference { ref_kind, .. } if ref_kind == "permission")
+    ));
 }

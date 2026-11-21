@@ -119,7 +119,7 @@ pub fn build(workspace: &Workspace, symbols: &Symbols) -> LinkIndex {
         collect_role_usages(
             &artifact.body,
             &artifact.name,
-            &artifact.artifact_kind,
+            artifact.artifact_kind(),
             &file.path,
             &file.lines,
             &mut roles,
@@ -131,13 +131,13 @@ pub fn build(workspace: &Workspace, symbols: &Symbols) -> LinkIndex {
                 .or_default()
                 .push(ArtifactBrief {
                     name: artifact.name.clone(),
-                    kind: artifact.artifact_kind.clone(),
+                    kind: artifact.artifact_kind().to_string(),
                 });
         }
 
         artifacts.push(ArtifactLink {
             name: artifact.name.clone(),
-            kind: artifact.artifact_kind.clone(),
+            kind: artifact.artifact_kind().to_string(),
             service: file.service.clone(),
             path: file.path.clone(),
             span: (artifact.span.start, artifact.span.end),
@@ -210,6 +210,20 @@ fn collect_role_usages(
             }
             Member::Statement { statement, .. } => {
                 collect_statement_roles(statement, artifact, artifact_kind, path, lines, roles)
+            }
+            Member::Hierarchy { chains, .. } => {
+                for chain in chains {
+                    for role in &chain.roles {
+                        let line = lines.line_col(role.span.start).0 as usize + 1;
+                        roles.entry(role.name.clone()).or_default().insert(Usage {
+                            artifact: artifact.to_string(),
+                            artifact_kind: artifact_kind.to_string(),
+                            usage: "hierarchy".to_string(),
+                            path: path.to_string(),
+                            line,
+                        });
+                    }
+                }
             }
             _ => {}
         }

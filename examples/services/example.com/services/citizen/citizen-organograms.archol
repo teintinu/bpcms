@@ -9,8 +9,6 @@ organogram Citizen {
     // REVIEW [2026-12-15] Manager fica acima de Clerk na hierarquia.
     Manager > Clerk
   }
-  // REVIEW [2026-12-15] Relação de gestão: Manager gerencia os ocupantes de Clerk.
-  Manager manages [Clerk]
   // REVIEW [2026-12-15] Política de quatro olhos aplicada a operações sensíveis.
   fourEyes {
     // REVIEW [2026-12-15] A operação citizen.merge exige aprovação de um Manager.

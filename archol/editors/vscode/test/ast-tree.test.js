@@ -26,8 +26,7 @@ const ast = {
   loc: { start: 0, end: text.length },
   items: [
     {
-      kind: 'Artifact',
-      artifactKind: 'Document',
+      kind: 'ArtifactDocument',
       name: 'Invoice',
       loc: { start: 0, end: text.length },
       body: [
@@ -67,8 +66,8 @@ test('findNodeAtOffset picks the deepest node containing the offset', () => {
   assert.equal(findNodeAtOffset(ast, totalStart).node.kind, 'Field');
   assert.deepEqual(findNodePathAtOffset(ast, totalStart), [0, 0, 0]);
   assert.equal(findNodeAtOffset(ast, fieldsStart).node.kind, 'FieldBlock');
-  assert.equal(findNodeAtOffset(ast, text.indexOf('document')).node.kind, 'Artifact');
-  assert.equal(findNodeAtOffset(ast, text.length - 1).node.kind, 'Artifact');
+  assert.equal(findNodeAtOffset(ast, text.indexOf('document')).node.kind, 'ArtifactDocument');
+  assert.equal(findNodeAtOffset(ast, text.length - 1).node.kind, 'ArtifactDocument');
   assert.equal(findNodeAtOffset(ast, text.length + 50), null);
   assert.equal(findNodePathAtOffset(ast, -1), null);
 });
@@ -77,7 +76,7 @@ test('findNodeAtOffset accepts an offset at the end of the loc', () => {
   const fieldEnd = totalStart + 'total: Money'.length;
   const found = findNodeAtOffset(ast, fieldEnd);
   assert.ok(found);
-  assert.ok(['Field', 'TypeReference', 'FieldBlock', 'Artifact', 'SourceFile'].includes(found.node.kind));
+  assert.ok(['Field', 'TypeReference', 'FieldBlock', 'ArtifactDocument', 'SourceFile'].includes(found.node.kind));
 });
 
 test('walk visits the tree in pre-order', () => {
@@ -85,7 +84,7 @@ test('walk visits the tree in pre-order', () => {
   walk(ast, (node, path) => visited.push(`${path.join('.')}:${node.kind}`));
   assert.deepEqual(visited, [
     ':SourceFile',
-    '0:Artifact',
+    '0:ArtifactDocument',
     '0.0:FieldBlock',
     '0.0.0:Field',
     '0.0.0.0:TypeReference',
@@ -111,7 +110,7 @@ test('nodeSummary shows the readable summary per category', () => {
 test('nodeCategory classifies nodes without relying on CSS', () => {
   assert.equal(nodeCategory('SourceFile'), 'block');
   assert.equal(nodeCategory('FieldBlock'), 'block');
-  assert.equal(nodeCategory('Artifact'), 'declaration');
+  assert.equal(nodeCategory('ArtifactDocument'), 'declaration');
   assert.equal(nodeCategory('FieldDeclaration'), 'declaration');
   assert.equal(nodeCategory('ReturnStatement'), 'statement');
   assert.equal(nodeCategory('IfStatement'), 'statement');
@@ -178,8 +177,7 @@ test('mergePending inserts comments into the containing node in source order', (
     loc: { start: 0, end: 120 },
     items: [
       {
-        kind: 'Artifact',
-        artifactKind: 'Process',
+        kind: 'ArtifactProcess',
         name: 'P',
         loc: { start: 10, end: 110 },
         body: [
@@ -199,7 +197,7 @@ test('mergePending inserts comments into the containing node in source order', (
   const rootChildren = getChildren(pendingAst);
   assert.equal(rootChildren[0].kind, 'Pending');
   assert.equal(rootChildren[0].keyword, 'TODO');
-  assert.equal(rootChildren[1].kind, 'Artifact');
+  assert.equal(rootChildren[1].kind, 'ArtifactProcess');
   const body = getChildren(rootChildren[1]);
   assert.deepEqual(body.map((node) => node.kind), ['Pending', 'MemberA', 'Pending', 'MemberB']);
   assert.equal(body[0].keyword, 'REVIEW');

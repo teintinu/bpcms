@@ -7,12 +7,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use archol_core::{Artifact, Expr, Member, Span, Stmt};
+use archol_core::{Artifact, ArtifactKind, Expr, HierarchyChain, Member, Span, Stmt};
 
 use crate::application::Closure;
 use crate::ids::{
-    application_path, artifact_path, field_path, param_path, service_path, value_path, Lock,
-    LockEntry,
+    application_path, artifact_path, field_path, param_path, permission_path, service_path,
+    value_path, Lock, LockEntry,
 };
 use crate::workspace::Workspace;
 
@@ -141,6 +141,32 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
         }
     }
 
+    // Pass 1b: auto-created permissions of each service, from role `permissions`.
+    for permission in collect_permissions(workspace, closure) {
+        let Some(service) = permission.service.clone() else {
+            continue;
+        };
+        let path = permission_path(&service, &permission.name);
+        let decl = Decl {
+            path: path.clone(),
+            kind: "permission".to_string(),
+            name: permission.name.clone(),
+            service: Some(service),
+            file: permission.file,
+            span: permission.span,
+            fields: BTreeMap::new(),
+            values: BTreeMap::new(),
+            params: BTreeMap::new(),
+        };
+        roots.insert(path);
+        scope
+            .by_name
+            .entry(decl.name.clone())
+            .or_default()
+            .push(scope.decls.len());
+        scope.decls.push(decl);
+    }
+
     // Pass 2: resolve references to paths.
     let mut usages = Vec::new();
     for file_index in 0..workspace.files.len() {
@@ -207,13 +233,14 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
 }
 
 fn declare_artifact(artifact: &mut Artifact, service: Option<String>, file: String) -> Decl {
-    let kind = artifact.artifact_kind.to_ascii_lowercase();
+    let artifact_kind = artifact.artifact_kind();
+    let kind = artifact_kind.to_ascii_lowercase();
     let path = match kind.as_str() {
         "application" => application_path(&artifact.name),
         "service" => service_path(&artifact.name),
         _ => artifact_path(
             service.as_deref().unwrap_or(""),
-            &artifact.artifact_kind,
+            artifact_kind,
             &artifact.name,
         ),
     };
@@ -267,12 +294,7 @@ fn declare_artifact(artifact: &mut Artifact, service: Option<String>, file: Stri
 
     let mut params = BTreeMap::new();
     for param in &mut artifact.params {
-        let param_path = param_path(
-            service_uri,
-            &artifact.artifact_kind,
-            &artifact_name,
-            &param.name,
-        );
+        let param_path = param_path(service_uri, artifact_kind, &artifact_name, &param.name);
         param.id = Some(param_path.clone());
         params.insert(
             param.name.clone(),
@@ -317,6 +339,13 @@ fn finalize_members(members: &mut [Member], ids: &BTreeMap<String, String>) {
                 finalize_members(body, ids);
             }
             Member::Block { body, .. } => finalize_members(body, ids),
+            Member::Hierarchy { chains, .. } => {
+                for chain in chains {
+                    for role in &mut chain.roles {
+                        role.role_ref = finalize_opt(role.role_ref.take(), ids);
+                    }
+                }
+            }
             Member::ServiceEntry { target, .. } | Member::ImportDeclaration { target, .. } => {
                 *target = finalize_opt(target.take(), ids);
             }
@@ -568,6 +597,7 @@ fn annotate_members(members: &mut [Member], ctx: &mut Ctx<'_>) {
             Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
                 annotate_members(body, ctx)
             }
+            Member::Hierarchy { chains, .. } => annotate_hierarchy(chains, ctx),
             Member::Statement { statement, .. } => annotate_statement(statement, ctx),
             Member::ServiceEntry {
                 uri, span, target, ..
@@ -576,6 +606,30 @@ fn annotate_members(members: &mut [Member], ctx: &mut Ctx<'_>) {
                 uri, span, target, ..
             } => annotate_service_ref(uri, *span, target, ctx),
             _ => {}
+        }
+    }
+}
+
+fn annotate_hierarchy(chains: &mut [HierarchyChain], ctx: &mut Ctx<'_>) {
+    for chain in chains {
+        for role in &mut chain.roles {
+            let name = role.name.clone();
+            let span = role.span;
+            let Some(decl) = ctx.scope.artifact(&name, ctx.service) else {
+                continue;
+            };
+            if decl.kind != "role" {
+                continue;
+            }
+            role.role_ref = Some(decl.path.clone());
+            role.service = decl.service.clone();
+            role.path = Some(decl.file.clone());
+            ctx.usages.push(Usage {
+                id: decl.path.clone(),
+                file: ctx.file.to_string(),
+                span,
+                kind: "roleRef".to_string(),
+            });
         }
     }
 }
@@ -602,9 +656,114 @@ fn annotate_property(name: &str, value: &mut Expr, ctx: &mut Ctx<'_>) {
             annotate_artifact_refs(value, None, "artifactRef", ctx);
         }
         "roles" => annotate_artifact_refs(value, Some("role"), "roleRef", ctx),
+        "permissions" => annotate_permission_refs(value, ctx),
         "fanOut" => annotate_expr(value, ctx),
         _ => annotate_expr(value, ctx),
     }
+}
+
+/// Permissions used by a role become references to the service's auto-created
+/// permission artifacts, so the builder follows `ref` instead of re-parsing text.
+fn annotate_permission_refs(value: &mut Expr, ctx: &mut Ctx<'_>) {
+    match value {
+        Expr::List { elements, .. } => {
+            for element in elements {
+                annotate_permission_refs(element, ctx);
+            }
+        }
+        Expr::Identifier { .. } | Expr::MemberAccess { .. } => {
+            let Some(name) = expr_text(value) else {
+                return;
+            };
+            let span = value.span();
+            let Some(decl) = ctx.scope.artifact(&name, ctx.service) else {
+                return;
+            };
+            if decl.kind != "permission" {
+                return;
+            }
+            *value = Expr::Reference {
+                ref_kind: "permission".to_string(),
+                name,
+                target: decl.path.clone(),
+                span,
+            };
+            ctx.usages.push(Usage {
+                id: decl.path.clone(),
+                file: ctx.file.to_string(),
+                span,
+                kind: "permissionRef".to_string(),
+            });
+        }
+        _ => {}
+    }
+}
+
+/// Source spelling of a permission (`invoice.view`, `exam.perform.hemogram`).
+fn expr_text(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Identifier { name, .. } => Some(name.clone()),
+        Expr::MemberAccess { object, name, .. } => Some(format!("{}.{}", expr_text(object)?, name)),
+        Expr::Reference { name, .. } => Some(name.clone()),
+        _ => None,
+    }
+}
+
+/// One permission expression found in a role.
+struct FoundPermission {
+    service: Option<String>,
+    name: String,
+    file: String,
+    span: Span,
+}
+
+fn collect_permissions(workspace: &Workspace, closure: &Closure) -> Vec<FoundPermission> {
+    let mut found: Vec<FoundPermission> = Vec::new();
+    for file in &workspace.files {
+        if !closure.contains_file(&file.path) {
+            continue;
+        }
+        for artifact in &file.ast.items {
+            if artifact.kind != ArtifactKind::Role {
+                continue;
+            }
+            let Some(value) = property_value(&artifact.body, "permissions") else {
+                continue;
+            };
+            for expr in permission_exprs(value) {
+                let Some(name) = expr_text(expr) else {
+                    continue;
+                };
+                let duplicate = found
+                    .iter()
+                    .any(|entry| entry.service == file.service && entry.name == name);
+                if duplicate {
+                    continue;
+                }
+                found.push(FoundPermission {
+                    service: file.service.clone(),
+                    name,
+                    file: file.path.clone(),
+                    span: expr.span(),
+                });
+            }
+        }
+    }
+    found
+}
+
+fn permission_exprs(value: &Expr) -> Vec<&Expr> {
+    match value {
+        Expr::List { elements, .. } => elements.iter().collect(),
+        _ => vec![value],
+    }
+}
+
+fn property_value<'a>(members: &'a [Member], wanted: &str) -> Option<&'a Expr> {
+    members.iter().find_map(|member| match member {
+        Member::PropertyAssignment { name, value, .. } if name == wanted => Some(value),
+        _ => None,
+    })
 }
 
 fn annotate_artifact_refs(

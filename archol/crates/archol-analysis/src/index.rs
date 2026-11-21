@@ -54,7 +54,7 @@ impl Symbols {
         for (file, artifact) in workspace.artifacts() {
             let info = ArtifactInfo {
                 name: artifact.name.clone(),
-                kind: artifact.artifact_kind.clone(),
+                kind: artifact.artifact_kind().to_string(),
                 service: file.service.clone(),
                 path: file.path.clone(),
                 span_start: artifact.span.start,
@@ -65,10 +65,10 @@ impl Symbols {
                 .entry(artifact.name.clone())
                 .or_default()
                 .push(info);
-            if artifact.artifact_kind == "Role" {
+            if artifact.artifact_kind() == "Role" {
                 symbols.roles.insert(artifact.name.clone());
             }
-            if artifact.artifact_kind == "Service" {
+            if artifact.artifact_kind() == "Service" {
                 let mut map = BTreeMap::new();
                 walk_members(&artifact.body, &mut |member| {
                     if let Member::ImportDeclaration { uri, alias, .. } = member {
@@ -79,7 +79,7 @@ impl Symbols {
                 });
                 symbols.imports.insert(artifact.name.clone(), map);
             }
-            if artifact.artifact_kind == "Shape" {
+            if artifact.artifact_kind() == "Shape" {
                 let values = enum_values(artifact);
                 if !values.is_empty() {
                     symbols.enums.push(EnumInfo {

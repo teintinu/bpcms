@@ -34,6 +34,19 @@ The check is more than type inference:
 - Unknown PascalCase types in fields (`x: Missing { ... }`) produce
   `E_UNKNOWN_TYPE`.
 - `roles: [Ghost]` produces `E_UNKNOWN_ROLE` if the role does not exist.
+- `hierarchy { A > B > C }` is parsed as `Hierarchy`/`HierarchyChain`/`RoleRef`
+  (not as a generic `Block`). The check reports `E_UNKNOWN_ROLE`,
+  `E_HIERARCHY_CYCLE` and `E_HIERARCHY_DUPLICATE`; parser-level lines report
+  `E_HIERARCHY_ROLE`, `E_HIERARCHY_CHAIN` and `E_HIERARCHY_TRAILING`.
+- With an application, each annotated `ArtifactOrganogram` gains a derived
+  `roles` array (`OrganogramRole`) with `manages` (transitive descendants),
+  `inherits`, `permissions`, `title` and role pointers (`ref`, `refKind`,
+  `service`, `path`). The `role` artifacts stay at the top level.
+- Every unique `permissions` entry of the service's roles becomes an
+  auto-created `ArtifactPermission` under `ArtifactService.permissions`; role
+  entries become `Reference` nodes with `refKind: "permission"`. The service
+  also gains `artifacts`, a typed index (`ArtifactPointer`) of every artifact in
+  its files, including the auto-created permissions.
 - `about`, `document`, `source`, `sources`, `appliesTo`, and `fanOut` must point
   to existing artifacts (`E_UNKNOWN_REF`).
 - Process parameters also have their type validated; an unreadable file becomes
@@ -41,9 +54,10 @@ The check is more than type inference:
 - The same artifact name, in the same service and type, is `E_DUP_ARTIFACT`.
 - Every `service` must declare `locales` with at least one locale; otherwise
   `E_LOCALES_REQUIRED`.
-- `title`, `goal`, `instructions`, `short` and `tooltip` are marked
-  `typeRef: "std.bpcms.i18n"`; string shorthand is expanded to the service's first locale and
-  locale map entries not supported by the application are dropped.
+- `title`, `goal`, `instructions`, `short` and `tooltip` become a `ShapeValue`
+  with `typeRef: "std.bpcms.i18n"`; string shorthand is expanded to the
+  service's first locale and locale map entries not supported by the
+  application are dropped.
 - `sla` is marked `typeRef: "std.Duration"`; `sla: "30d"` becomes a
   `ShapeLiteral` with the normalized value and base unit.
 - Any string assigned to a Shape type is parsed by the shape's declarative

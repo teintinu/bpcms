@@ -105,7 +105,11 @@ that jumps to the declaration, and the file's diagnostics. It calls
 ## Coverage of this initial version
 
 Already working: the full corpus lexer, tolerant parser (0 errors across 330
-files) with a depth limit, JSON AST, check of enum values in `const`/`let` and
+files) with a depth limit, JSON AST with one typed `kind` per artifact
+(`ArtifactDocument`, `ArtifactRole`, ...), structured `Hierarchy` chains with
+resolved role references, a derived organogram projection (`manages`,
+`inherits`, permissions, declaration line), auto-created service permissions
+(`ArtifactPermission`) and a typed service artifact index, check of enum values in `const`/`let` and
 comparisons, enums resolved per service with `Alias.Type`, unknown
 types/roles/references, duplication, `E_FILE_READ`, inverted link, LSP with
 hover/completion/definition (including enum values)/references/symbols/folding,

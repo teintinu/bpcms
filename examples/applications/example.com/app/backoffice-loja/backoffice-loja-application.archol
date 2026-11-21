@@ -1,17 +1,13 @@
 application "example.com/app/backoffice-loja" {
-  title: {
-    pt-BR: "Administração da Loja" // REVIEW [2026-12-15] Título em português (idioma default).
-    en-US: "Store Backoffice" // REVIEW [2026-12-15] Título em inglês americano.
-  }
+  title: "Administração da Loja"
 
-  // REVIEW [2026-12-15] Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity // REVIEW [2026-12-15] Identidade e autenticação dos usuários.
-    "example.com/services/orders" as Orders // REVIEW [2026-12-15] Pedidos de venda administrados pela loja.
-    "example.com/services/inventory" as Inventory // REVIEW [2026-12-15] Estoque e disponibilidade de produtos.
-    "example.com/services/billing" as Billing // REVIEW [2026-12-15] Faturamento e cobrança.
-    "example.com/services/support" as Support // REVIEW [2026-12-15] Atendimento e ocorrências de suporte.
-    "example.com/services/notifications" as Notifications // REVIEW [2026-12-15] Avisos e notificações aos usuários.
+    "example.com/services/identity" as Identity 
+    "example.com/services/orders" as Orders 
+    "example.com/services/inventory" as Inventory 
+    "example.com/services/billing" as Billing 
+    "example.com/services/support" as Support 
+      "example.com/services/notifications" as Notifications 
   }
   // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
   roles {
@@ -29,7 +25,7 @@ application "example.com/app/backoffice-loja" {
     Manager > Dispatcher > Driver
   }
   theme: Backoffice // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
-  locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
+  locales: [pt-BR] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
   environments: [dev, qa, prod] // REVIEW [2026-12-15] Ambientes em que a aplicação é promovida.
 
   // REVIEW [2026-12-15] Bloco de inicialização da app; só configura, não contém regra de negócio.

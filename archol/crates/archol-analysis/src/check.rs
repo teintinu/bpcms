@@ -1,10 +1,10 @@
 //! Semantic check: validates enum values, types, roles, references and
 //! duplicates. Enums are resolved in the file's service (including `Alias.Type`).
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use archol_core::pending;
-use archol_core::{Artifact, Diagnostic, Expr, Member, Stmt};
+use archol_core::{Artifact, Diagnostic, Expr, HierarchyChain, Member, Span, Stmt};
 
 use crate::index::{ident_list, Symbols, PRIMITIVES};
 use crate::workspace::Workspace;
@@ -16,7 +16,7 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
     for (file, artifact) in workspace.artifacts() {
         let key = (
             file.service.clone(),
-            artifact.artifact_kind.clone(),
+            artifact.artifact_kind().to_string(),
             artifact.name.clone(),
         );
         if let Some(first) = seen.get(&key) {
@@ -26,7 +26,8 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
                     "E_DUP_ARTIFACT",
                     format!(
                         "Duplicate {} {} in service (first declaration at offset {first})",
-                        artifact.artifact_kind, artifact.name
+                        artifact.artifact_kind(),
+                        artifact.name
                     ),
                     artifact.span,
                 ),
@@ -55,7 +56,7 @@ fn check_artifact(
     artifact: &Artifact,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    if artifact.artifact_kind == "Service" {
+    if artifact.artifact_kind() == "Service" {
         check_service_locales(artifact, diagnostics);
     }
     for param in &artifact.params {
@@ -149,12 +150,104 @@ fn check_members(
             Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
                 check_members(symbols, service, body, locals, diagnostics);
             }
+            Member::Hierarchy { chains, span } => {
+                check_hierarchy(symbols, chains, *span, diagnostics);
+            }
             Member::Statement { statement, .. } => {
                 check_statement(symbols, service, statement, locals, diagnostics)
             }
             _ => {}
         }
     }
+}
+
+fn check_hierarchy(
+    symbols: &Symbols,
+    chains: &[HierarchyChain],
+    span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut seen_edges: BTreeSet<(String, String)> = BTreeSet::new();
+    for chain in chains {
+        for role in &chain.roles {
+            if !symbols.roles.contains(&role.name) {
+                diagnostics.push(Diagnostic::error(
+                    "E_UNKNOWN_ROLE",
+                    format!("Role '{}' not declared in the workspace", role.name),
+                    role.span,
+                ));
+            }
+        }
+        for pair in chain.roles.windows(2) {
+            let (from, to) = (&pair[0], &pair[1]);
+            if from.name == to.name {
+                diagnostics.push(Diagnostic::error(
+                    "E_HIERARCHY_CYCLE",
+                    format!("Role '{}' cannot manage itself", from.name),
+                    to.span,
+                ));
+                continue;
+            }
+            if !seen_edges.insert((from.name.clone(), to.name.clone())) {
+                diagnostics.push(Diagnostic::error(
+                    "E_HIERARCHY_DUPLICATE",
+                    format!(
+                        "Hierarchy edge {} > {} is declared more than once",
+                        from.name, to.name
+                    ),
+                    to.span,
+                ));
+                continue;
+            }
+            edges
+                .entry(from.name.clone())
+                .or_default()
+                .push(to.name.clone());
+        }
+    }
+    if has_hierarchy_cycle(&edges) {
+        diagnostics.push(Diagnostic::error(
+            "E_HIERARCHY_CYCLE",
+            "Hierarchy contains a cycle".to_string(),
+            span,
+        ));
+    }
+}
+
+fn has_hierarchy_cycle(edges: &BTreeMap<String, Vec<String>>) -> bool {
+    fn visit(
+        node: &str,
+        edges: &BTreeMap<String, Vec<String>>,
+        visiting: &mut BTreeSet<String>,
+        visited: &mut BTreeSet<String>,
+    ) -> bool {
+        if visited.contains(node) {
+            return false;
+        }
+        if !visiting.insert(node.to_string()) {
+            return true;
+        }
+        if let Some(next) = edges.get(node) {
+            for child in next {
+                if visit(child, edges, visiting, visited) {
+                    return true;
+                }
+            }
+        }
+        visiting.remove(node);
+        visited.insert(node.to_string());
+        false
+    }
+
+    let mut visiting = BTreeSet::new();
+    let mut visited = BTreeSet::new();
+    for node in edges.keys() {
+        if visit(node, edges, &mut visiting, &mut visited) {
+            return true;
+        }
+    }
+    false
 }
 
 fn check_statement(

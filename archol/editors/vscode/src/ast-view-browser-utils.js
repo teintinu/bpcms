@@ -52,10 +52,20 @@ const browserUtils = `  function isNode(value) {
 
   function pathKey(path) { return path.join('/'); }
 
+  function artifactKindOf(node) {
+    if (!node) return '';
+    const kind = node.kind;
+    if (typeof kind === 'string' && kind.startsWith('Artifact') && kind !== 'Artifact') {
+      return kind.slice('Artifact'.length);
+    }
+    return '';
+  }
+
   function summaryOf(node) {
     if (!node) return '';
     const parts = [];
-    if (node.artifactKind) parts.push(String(node.artifactKind));
+    const artifactKind = artifactKindOf(node);
+    if (artifactKind !== '') parts.push(artifactKind);
     if (node.shape) parts.push(String(node.shape));
     if (node.raw !== undefined && node.kind === 'ShapeLiteral') parts.push(String(node.raw));
     if (node.name) {
@@ -85,7 +95,7 @@ const browserUtils = `  function isNode(value) {
     return total;
   }
 
-  var JSON_FIRST_KEYS = ['kind', 'title', 'value', 'message', 'id'];
+  var JSON_FIRST_KEYS = ['kind', 'title', 'name', 'value', 'message', 'id'];
 
   function keyRank(key) {
     var index = JSON_FIRST_KEYS.indexOf(key);

@@ -1,29 +1,14 @@
 "items":
   -
-    "artifactKind": "Application"
     "body":
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "std.bpcms.i18n"
         "value":
-          "kind": "Object"
-          "members":
-            -
-              "kind": "PropertyAssignment"
-              "name": "pt-BR"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Administração da Loja\""
-                "value": "Administração da Loja"
-            -
-              "kind": "PropertyAssignment"
-              "name": "en-US"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Store Backoffice\""
-                "value": "Store Backoffice"
-          "typeRef": null
+          "kind": "ShapeValue"
+          "typeRef": "std.bpcms.i18n"
+          "value":
+            "pt-BR": "Administração da Loja"
       -
         "body":
           -
@@ -177,15 +162,6 @@
               "right":
                 "kind": "Identifier"
                 "name": "BR"
-            -
-              "kind": "Binary"
-              "left":
-                "kind": "Identifier"
-                "name": "en"
-              "op": "-"
-              "right":
-                "kind": "Identifier"
-                "name": "US"
           "kind": "List"
       -
         "kind": "PropertyAssignment"
@@ -232,66 +208,12 @@
         "kind": "Block"
         "name": "main"
     "id": "f4"
-    "kind": "Artifact"
+    "kind": "ArtifactApplication"
     "name": "example.com/app/backoffice-loja"
     "params": []
 "kind": "SourceFile"
 "path": "examples/applications/example.com/app/backoffice-loja/backoffice-loja-application.archol"
 "pending":
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Título em português (idioma default)."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Título em inglês americano."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Identidade e autenticação dos usuários."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Pedidos de venda administrados pela loja."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Estoque e disponibilidade de produtos."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Faturamento e cobrança."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Atendimento e ocorrências de suporte."
-  -
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-    "keyword": "REVIEW"
-    "kind": "Pending"
-    "message": "Avisos e notificações aos usuários."
   -
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"

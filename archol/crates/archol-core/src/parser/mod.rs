@@ -14,7 +14,7 @@ mod member;
 mod primary;
 mod stmt;
 
-use crate::ast::{Artifact, Member, Param, SourceFile};
+use crate::ast::{Artifact, ArtifactKind, Member, Param, SourceFile};
 use crate::diagnostic::Diagnostic;
 use crate::lexer::lex;
 use crate::span::{LineIndex, Span};
@@ -227,8 +227,10 @@ impl<'a> Parser<'a> {
         }
         let body = self.parse_body();
         let end = self.prev_end();
+        let kind =
+            ArtifactKind::from_name(keyword.artifact_name()).unwrap_or(ArtifactKind::Document);
         Some(Artifact::new(
-            keyword.artifact_name(),
+            kind,
             name,
             params,
             body,
@@ -366,7 +368,6 @@ impl<'a> Parser<'a> {
 /// Semantic type of a property, when the language fixes one.
 pub(crate) fn property_type_ref(name: &str) -> Option<&'static str> {
     match name {
-        "title" | "goal" | "instructions" | "short" | "tooltip" => Some("std.bpcms.i18n"),
         "sla" => Some("std.Duration"),
         _ => None,
     }

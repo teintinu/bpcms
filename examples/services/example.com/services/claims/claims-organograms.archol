@@ -17,8 +17,6 @@ organogram Indemnity {
     Clerk > Policyholder
   }
 
-  // REVIEW [2026-12-15] Papéis sob gestão direta do gerente de sinistros.
-  Manager manages [Clerk, Adjuster, FraudAnalyst, FinanceAnalyst]
   // REVIEW [2026-12-15] Delega as atribuições ao ajustador quando o gerente se ausenta por sete dias.
   Manager delegates to Adjuster when absent for 7d
 

@@ -12,9 +12,7 @@ organogram Logistics {
   }
 
   // REVIEW [2026-12-15] O gerente responde pelo despachante.
-  Manager manages [Dispatcher]
   // REVIEW [2026-12-15] O despachante responde pelo embalador.
-  Dispatcher manages [Packer]
 }
 
 // REVIEW [2026-12-15] Papel operacional de embalar e consultar remessas.

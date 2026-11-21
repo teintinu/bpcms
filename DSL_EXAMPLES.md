@@ -2976,7 +2976,6 @@ organogram Laboratory {
     LabManager > SupportLiaison
   }
 
-  LabManager manages [Collector, Analyst, SupportLiaison]
   LabManager delegates to Pathologist when absent for 7d
 
   segregation { exam.perform != exam.release }

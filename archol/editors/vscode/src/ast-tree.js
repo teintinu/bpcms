@@ -154,10 +154,20 @@ function findNodePathAtOffset(root, offset) {
   return found ? found.path : null;
 }
 
+function artifactKindOf(node) {
+  if (!isAstNode(node)) return '';
+  const kind = node.kind;
+  if (typeof kind === 'string' && kind.startsWith('Artifact') && kind !== 'Artifact') {
+    return kind.slice('Artifact'.length);
+  }
+  return '';
+}
+
 function nodeSummary(node) {
   if (!isAstNode(node)) return '';
   const parts = [];
-  if (node.artifactKind) parts.push(String(node.artifactKind));
+  const artifactKind = artifactKindOf(node);
+  if (artifactKind !== '') parts.push(artifactKind);
   if (node.shape) parts.push(String(node.shape));
   if (node.raw !== undefined && node.kind === 'ShapeLiteral') parts.push(String(node.raw));
   if (node.name) {
@@ -174,8 +184,8 @@ function nodeSummary(node) {
 }
 
 function nodeCategory(kind) {
-  if (/Block$|Body$|^SourceFile$/.test(kind)) return 'block';
-  if (/Declaration$|^Artifact$|^Field$|^Parameter$|^Transition$|^Value$|^Role$|^Action$|^PropertyAssignment$|^ShorthandProperty$/.test(kind)) {
+  if (/Block$|Body$|^SourceFile$|^Hierarchy$|^HierarchyChain$/.test(kind)) return 'block';
+  if (/Declaration$|^Artifact|^Field$|^Parameter$|^Transition$|^Value$|^Role$|^Action$|^PropertyAssignment$|^ShorthandProperty$/.test(kind)) {
     return 'declaration';
   }
   if (/Statement$|^Return|^If|^Send|^Try|^Catch|^Let|^Const/.test(kind)) return 'statement';

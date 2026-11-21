@@ -153,7 +153,7 @@ single collapsible JSON tree:
 - **JSON tree:** every object/array has a twisty; collapsed objects/arrays show
   their contents inline on one line, clipped to the panel width. **Expand all**
   and **Collapse all** are in the toolbar.
-- **Key order:** `kind`, `title`, `value`, `message` and `id` always come first
+- **Key order:** `kind`, `title`, `name`, `value`, `message` and `id` always come first
   (in that order); properties ending in `loc`/`Loc` always come last. The
   same order is used by inline previews and **Copy JSON**.
 - **Initial state:** the whole JSON starts collapsed (one line for the root).

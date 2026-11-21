@@ -13,8 +13,6 @@ organogram Agreements {
     ContractManager > LegalCounsel
   }
 
-  // REVIEW [2026-12-15] O gestor administra e distribui trabalho para os dois papéis abaixo dele.
-  ContractManager manages [ContractAnalyst, LegalCounsel]
 
   // REVIEW [2026-12-15] Papéis com poder de assinatura no organograma.
   signature {

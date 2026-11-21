@@ -207,7 +207,7 @@ impl Server {
                 json!({
                     "label": item.name,
                     "kind": 5,
-                    "detail": item.artifact_kind,
+                    "detail": item.artifact_kind(),
                 })
             })
             .collect();

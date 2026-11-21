@@ -12,8 +12,6 @@ organogram Supply {
     StockManager > WarehouseOperator
   }
 
-  // REVIEW [2026-12-15] Declara que StockManager gerencia formalmente WarehouseOperator.
-  StockManager manages [WarehouseOperator]
 }
 
 // REVIEW [2026-12-15] Papel operacional que executa contagens, ajustes e reservas no armazém.

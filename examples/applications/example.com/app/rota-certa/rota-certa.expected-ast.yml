@@ -1,29 +1,15 @@
 "items":
   -
-    "artifactKind": "Application"
     "body":
       -
         "kind": "PropertyAssignment"
         "name": "title"
-        "typeRef": "std.bpcms.i18n"
         "value":
-          "kind": "Object"
-          "members":
-            -
-              "kind": "PropertyAssignment"
-              "name": "pt-BR"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Rota Certa\""
-                "value": "Rota Certa"
-            -
-              "kind": "PropertyAssignment"
-              "name": "en-US"
-              "value":
-                "kind": "StringLiteral"
-                "raw": "\"Right Route\""
-                "value": "Right Route"
-          "typeRef": null
+          "kind": "ShapeValue"
+          "typeRef": "std.bpcms.i18n"
+          "value":
+            "en-US": "Right Route"
+            "pt-BR": "Rota Certa"
       -
         "body":
           -
@@ -214,7 +200,7 @@
         "kind": "Block"
         "name": "main"
     "id": "fd"
-    "kind": "Artifact"
+    "kind": "ArtifactApplication"
     "name": "example.com/app/rota-certa"
     "params": []
 "kind": "SourceFile"

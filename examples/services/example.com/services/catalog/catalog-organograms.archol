@@ -11,8 +11,6 @@ organogram Merchandising {
     Publisher > Curator
   }
 
-  // REVIEW [2026-12-15] Declara explicitamente que Publisher gerencia Curator.
-  Publisher manages [Curator]
 
   // REVIEW [2026-12-15] Regra de quatro olhos para operações sensíveis.
   fourEyes {

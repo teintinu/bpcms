@@ -7,6 +7,8 @@ pub mod i18n;
 pub mod ids;
 pub mod index;
 pub mod link;
+pub mod organogram;
+pub mod service;
 pub mod shape_literal;
 pub mod workspace;
 
@@ -123,6 +125,8 @@ pub fn analyze_application(
     let lock_path = ids::lock_path_for_application(std::path::Path::new(&app.path));
     let lock = ids::Lock::load(&lock_path, &app.uri)?;
     let semantic = annotate::annotate(&mut workspace, &closure, lock);
+    organogram::attach(&mut workspace, &semantic, &closure);
+    service::attach(&mut workspace, &semantic, &closure);
     if write_lock && semantic.lock.dirty {
         semantic.lock.save(&lock_path)?;
     }

@@ -1,6 +1,6 @@
 //! Members: properties, blocks, enum values, imports and triggers.
 
-use crate::ast::Member;
+use crate::ast::{HierarchyChain, Member, RoleRef};
 use crate::span::Span;
 use crate::token::{Keyword, TokenKind};
 
@@ -44,6 +44,12 @@ impl Parser<'_> {
 
         if let Some(member) = self.try_parse_property() {
             return Some(member);
+        }
+        if self.kind() == TokenKind::Ident
+            && self.text(self.cur().span) == "hierarchy"
+            && self.peek(1) == TokenKind::LBrace
+        {
+            return Some(self.parse_hierarchy());
         }
         if self.is_block_start() {
             return Some(self.parse_block_member());
@@ -133,6 +139,96 @@ impl Parser<'_> {
             name,
             body,
             span: Span::new(start, end),
+        }
+    }
+
+    /// `hierarchy { Manager > Clerk > Customer }`: one reporting chain per line.
+    fn parse_hierarchy(&mut self) -> Member {
+        let start = self.cur().span.start;
+        self.advance(); // hierarchy
+        self.expect(TokenKind::LBrace, "E_PARSE_BLOCK");
+        let mut chains = Vec::new();
+        while !self.at_eof() && self.kind() != TokenKind::RBrace {
+            if self.eat(TokenKind::Semicolon) {
+                continue;
+            }
+            if self.kind() != TokenKind::Ident {
+                self.error(
+                    "E_HIERARCHY_ROLE",
+                    "Expected a role name at the start of a hierarchy line".to_string(),
+                );
+                self.skip_hierarchy_line();
+                continue;
+            }
+            let chain_start = self.cur().span.start;
+            let mut roles = Vec::new();
+            loop {
+                let token = self.advance();
+                roles.push(RoleRef {
+                    kind: "RoleRef",
+                    name: self.text(token.span).to_string(),
+                    role_ref: None,
+                    ref_kind: "role",
+                    service: None,
+                    path: None,
+                    line: None,
+                    span: token.span,
+                });
+                if self.kind() != TokenKind::Gt
+                    || self.line_of(self.cur().span.start) != self.line_of(token.span.start)
+                {
+                    break;
+                }
+                self.advance(); // >
+                if self.kind() != TokenKind::Ident {
+                    self.error(
+                        "E_HIERARCHY_ROLE",
+                        "Expected a subordinate role after `>`".to_string(),
+                    );
+                    break;
+                }
+            }
+            let end = roles
+                .last()
+                .map(|role| role.span.end)
+                .unwrap_or(chain_start);
+            if roles.len() < 2 {
+                self.error(
+                    "E_HIERARCHY_CHAIN",
+                    "A hierarchy line needs at least two roles (`Manager > Clerk`)".to_string(),
+                );
+            }
+            chains.push(HierarchyChain {
+                kind: "HierarchyChain",
+                roles,
+                span: Span::new(chain_start, end),
+            });
+            if self.kind() != TokenKind::RBrace
+                && self.kind() != TokenKind::Semicolon
+                && self.line_of(self.cur().span.start) == self.line_of(end)
+            {
+                self.error(
+                    "E_HIERARCHY_TRAILING",
+                    "Expected a new line after the hierarchy chain".to_string(),
+                );
+                self.skip_hierarchy_line();
+            }
+        }
+        self.expect(TokenKind::RBrace, "E_PARSE_UNCLOSED");
+        Member::Hierarchy {
+            chains,
+            span: Span::new(start, self.prev_end()),
+        }
+    }
+
+    /// Skip the rest of the current line inside a `hierarchy` block.
+    fn skip_hierarchy_line(&mut self) {
+        let line = self.line_of(self.cur().span.start);
+        while !self.at_eof()
+            && self.kind() != TokenKind::RBrace
+            && self.line_of(self.cur().span.start) == line
+        {
+            self.advance();
         }
     }
 

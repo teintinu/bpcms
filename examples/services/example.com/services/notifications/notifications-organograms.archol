@@ -11,8 +11,6 @@ organogram CustomerSuccess {
     SuccessManager > SuccessAgent
   }
 
-  // REVIEW [2026-12-15] Declara explicitamente quem o gerente administra.
-  SuccessManager manages [SuccessAgent]
 }
 
 // REVIEW [2026-12-15] Papel operacional que atende, revisa e suprime notificações.

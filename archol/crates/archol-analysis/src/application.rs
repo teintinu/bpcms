@@ -39,7 +39,7 @@ impl Closure {
 }
 
 pub fn is_application(artifact: &Artifact) -> bool {
-    artifact.artifact_kind == "Application"
+    artifact.artifact_kind() == "Application"
 }
 
 pub fn application_from_artifact(artifact: &Artifact, path: &str) -> Option<ApplicationInfo> {
@@ -95,7 +95,7 @@ pub fn find_by_uri<'a>(apps: &'a [ApplicationInfo], uri: &str) -> Option<&'a App
 fn import_graph(workspace: &Workspace) -> BTreeMap<String, BTreeSet<String>> {
     let mut graph: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for (_, artifact) in workspace.artifacts() {
-        if artifact.artifact_kind != "Service" {
+        if artifact.artifact_kind() != "Service" {
             continue;
         }
         let mut imports = BTreeSet::new();

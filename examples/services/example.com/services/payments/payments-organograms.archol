@@ -9,7 +9,6 @@ organogram Treasury {
     Manager > Analyst // REVIEW [2026-12-15] O gerente está acima do analista.
   }
 
-  Manager manages [Analyst] // REVIEW [2026-12-15] Explicita que o gerente gerencia analistas.
 }
 
 // REVIEW [2026-12-15] Papel operacional que registra cobranças e responde contestações.

@@ -10,8 +10,6 @@ organogram Sales {
     Manager > Clerk > Customer // REVIEW [2026-12-15] gerente acima do atendente, que está acima do cliente
   }
 
-  // REVIEW [2026-12-15] Declara que o gerente administra os atendentes.
-  Manager manages [Clerk]
 }
 
 // REVIEW [2026-12-15] Papel do cliente: acompanha e solicita cancelamento dos próprios pedidos.

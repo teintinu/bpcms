@@ -458,7 +458,7 @@ pub fn document_symbols(ast: &SourceFile, text: &str) -> Vec<serde_json::Value> 
                 .collect();
             serde_json::json!({
                 "name": artifact.name,
-                "detail": artifact.artifact_kind,
+                "detail": artifact.artifact_kind(),
                 "kind": 5,
                 "range": range(text, artifact.span),
                 "selectionRange": range(text, artifact.span),

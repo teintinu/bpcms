@@ -11,8 +11,6 @@ organogram Risk {
     RiskManager > RiskAnalyst
   }
 
-  // REVIEW [2026-12-15] Declara que o gerente gerencia diretamente o analista de risco.
-  RiskManager manages [RiskAnalyst]
 }
 
 // REVIEW [2026-12-15] Papel do analista de risco, base da cadeia hierárquica.

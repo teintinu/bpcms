@@ -18,10 +18,6 @@ organogram People {
     PeopleOps > NewHire
   }
 
-  // REVIEW [2026-12-15] Pessoas e cultura gerencia recrutador e administrador de TI.
-  PeopleOps manages [Recruiter, ITAdmin]
-  // REVIEW [2026-12-15] O gestor contratante gerencia Pessoas e cultura.
-  HiringManager manages [PeopleOps]
   // REVIEW [2026-12-15] Em ausência do gestor por cinco dias, Pessoas e cultura assume o papel.
   HiringManager delegates to PeopleOps when absent for 5d
 }

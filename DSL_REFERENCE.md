@@ -397,17 +397,24 @@ O AST resultante (trecho) é:
 {
   "kind": "PropertyAssignment",
   "name": "goal",
-  "typeRef": "std.bpcms.i18n",
   "value": {
-    "kind": "Object",
-    "members": [
-      { "kind": "PropertyAssignment", "name": "pt-BR", "value": { "kind": "StringLiteral", "value": "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento" } }
-    ]
+    "kind": "ShapeValue",
+    "typeRef": "std.bpcms.i18n",
+    "value": {
+      "pt-BR": "Cobrar faturas vencidas com lembrete, escalonamento e cancelamento"
+    }
   }
 }
 ```
 
-Todo serviço **declara `locales` com pelo menos um idioma**; o primeiro é o default. Serviço sem `locales` ou com lista vazia é `E_LOCALES_REQUIRED`. A `Application` também declara `locales`; o título da própria app usa o primeiro locale dela.
+Todo serviço **declara `locales` com pelo menos um idioma**; o primeiro é o default. Serviço sem `locales` ou com lista vazia é `E_LOCALES_REQUIRED`.
+
+A regra do default depende do dono do artefato:
+
+- **Artefato de serviço** (`document`, `process`, `view`, `form`, `message`, `shape`, `role`, etc.): o primeiro locale do `locales` **do serviço**.
+- **`Application`**: o primeiro locale do `locales` **da própria aplicação**.
+
+`std.bpcms.i18n` aceita string em qualquer um desses contextos; a string é expandida para `{ "<locale-default>": "..." }`.
 
 ### Objeto: traduções por locale
 
@@ -453,7 +460,7 @@ name: string {
 
 O conjunto de locales que chega ao AST é o da **aplicação** (`Application.locales`), não o do serviço. O compilador:
 
-1. marca a propriedade com `typeRef: "std.bpcms.i18n"`;
+1. emite o valor como `ShapeValue` com `typeRef: "std.bpcms.i18n"`;
 2. expande string no primeiro locale do serviço (na `Application`, no primeiro locale dela);
 3. remove do mapa todo locale cuja língua não exista em `Application.locales`.
 
@@ -2627,15 +2634,14 @@ view TeamQueue {
 | `capabilities` | `capabilities { equipment, laboratory-protocol }` | Capacidades exigidas pelo artefato; falha de build se ausentes. |
 | `inherits` | `inherits: Clerk` ou `inherits: [Clerk, Auditor]` | Soma as permissões herdadas às permissões próprias. |
 | `scopes` | `scopes: [Store, FiscalYear]` | Tipos de escopo da role/organograma. |
-| `manages` | `LabManager manages [Collector, Analyst]` | Atribuição de roles a terceiros; nunca a si mesmo; não concede as permissões da role. |
 | `all` | `Store: {all}` | Todos os escopos do tipo; bare, sem `true`. |
 | `only` | `Store: {only: [storeForSP, storeForRJ]}` | Lista de **referências a documentos**; escopo novo não entra. |
 | `except` | `Store: {except: [storeForSP]}` | Todos, exceto as referências listadas; escopo novo entra. |
 | `organogram` | `organogram <Name> { ... }` | Hierarquia e regras de autorização. |
-| `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. |
+| `hierarchy` | `hierarchy { Manager > Clerk > Customer }` | `>` = superior a; um caminho por linha. No AST vira `Hierarchy` → `HierarchyChain` → `RoleRef` (com `ref`/`refKind`, `service` e `path` após a análise). |
 | `fourEyes` | `fourEyes { payment.approve requires Approver }` | Exige um segundo ator diferente, com a role indicada. |
 | `segregation` | `segregation { shipment.pick != shipment.check }` | Impede que o mesmo ator faça as duas ações. |
-| `delegates to` | `Supervisor delegates to Checker when absent for 7d` | Delegação temporária e condicional. |
+| `delegates to` | `Supervisor delegates to Checker when absent for 7d` | Delegação temporária e condicional para uma role abaixo na hierarquia. |
 | `signature` | `signature { Pathologist }` | Papel com autoridade de assinatura. |
 | `requires` | `fourEyes { X requires Role }` | Papel/condição exigida. |
 | `when absent` | `... when absent for 7d` | Condição e vigência da delegação. |
@@ -2669,7 +2675,6 @@ organogram Store {
     InvoiceManager > Clerk
   }
 
-  InvoiceManager manages [Clerk]
   InvoiceManager delegates to Clerk when absent for 7d
 
   fourEyes {
@@ -2698,7 +2703,7 @@ assignRole(regionalUser, InvoiceManager, scopes: {
 - `inherits` aceita uma role ou lista;
 - herança é aditiva, sem substituição/remoção;
 - ciclos são erro de build;
-- a role herdeira mantém `title`, `scopes` e `manages` próprios;
+- a role herdeira mantém `title` e `scopes` próprios;
 - permissões herdadas não mudam a identidade da role.
 
 ```archol
@@ -2729,21 +2734,35 @@ role Analyst {
 - a referência é resolvida no runtime, não no assignment;
 - `all` não precisa de referência.
 
-**Atribuição de papel.** `manages` define autoridade de atribuição, não permissões:
+**Atribuição de papel.** Não existe `manages`: a autoridade de atribuição é derivada da **hierarquia**:
+
+- `hierarchy { A > B > C }` declara arestas diretas `A → B` e `B → C`;
+- uma role pode atribuir qualquer role **abaixo dela** na hierarquia (descendentes transitivos), dentro dos `scopes` do organograma;
+- auto-atribuição é proibida;
+- o alvo recebe as permissões do **papel atribuído**, não as do gerente;
+- o gerente não precisa ter as permissões do papel que atribui;
+- a operação é `assignRole(target, role)`, com `target != actor`;
+- a atribuição é auditada.
+
+`all`/`only`/`except` continuam valendo para os escopos do assignment:
 
 - `all` inclui escopos presentes e futuros;
 - `only` é fail-closed: escopo novo não entra;
 - `except` é fail-open: escopo novo entra, exceto os listados;
 - `all`, `only` e `except` são mutuamente exclusivos por escopo;
-- `except: []` equivale a todos, mas `all` é a forma explícita recomendada;
-- todo `manages` é `others-only`; o gerente só atribui a terceiros;
-- o gerente pode atribuir apenas papéis listados em `manages`;
-- o alvo recebe as permissões do **papel atribuído**, não as do gerente;
-- o gerente não precisa ter as permissões do papel que gerencia;
-- auto-atribuição é proibida mesmo que o papel esteja em `manages`;
-- `manages` não é `inherits` e não é `delegates to`;
-- a atribuição é auditada;
-- a operação é `assignRole(target, role)`, com `target != actor`.
+- `except: []` equivale a todos, mas `all` é a forma explícita recomendada.
+
+**Sem `manages`.** Quando for necessário permitir atribuição **fora** da linha hierárquica, a evolução prevista é uma cláusula explícita `assigns [Role]`; ela não existe nesta versão.
+
+**Projeção no AST.** O `ArtifactOrganogram` anotado (`--app`) ganha um array
+`roles` derivado, sem criar uma segunda fonte: cada `OrganogramRole` aponta para
+o `ArtifactRole` de topo por `ref` (id do lock), `refKind`, `service` e `path`,
+e traz `manages` (descendentes transitivos), `inherits`, `permissions`, `title` e
+`line` da declaração. O construtor chega à role sem recompilar a hierarquia.
+No `ArtifactService` anotado, `permissions` reúne as permissões auto-criadas do
+serviço (`ArtifactPermission`, uma por `namespace.action`) e `artifacts` indexa
+todos os artefatos do serviço (`ArtifactPointer`, com `artifact`, `name`, `ref`,
+`path` e `line`).
 
 ---
 

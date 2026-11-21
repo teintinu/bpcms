@@ -48,7 +48,7 @@ pub fn payload(input: ViewInput<'_>) -> Value {
         .map(|artifact| {
             let (line, column) = lines.line_col(artifact.span.start);
             json!({
-                "kind": artifact.artifact_kind,
+                "kind": artifact.artifact_kind(),
                 "name": artifact.name,
                 "line": line + 1,
                 "column": column + 1,
