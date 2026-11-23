@@ -14,7 +14,7 @@
           -
             "alias": "Identity"
             "kind": "ServiceEntry"
-            "ref": "aq"
+            "ref": "ar"
             "uri": "example.com/services/identity"
           -
             "alias": "Orders"
@@ -24,22 +24,22 @@
           -
             "alias": "Inventory"
             "kind": "ServiceEntry"
-            "ref": "bh"
+            "ref": "bj"
             "uri": "example.com/services/inventory"
           -
             "alias": "Billing"
             "kind": "ServiceEntry"
-            "ref": "b1"
+            "ref": "ce"
             "uri": "example.com/services/billing"
           -
             "alias": "Support"
             "kind": "ServiceEntry"
-            "ref": "eb"
+            "ref": "gy"
             "uri": "example.com/services/support"
           -
             "alias": "Notifications"
             "kind": "ServiceEntry"
-            "ref": "c5"
+            "ref": "ep"
             "uri": "example.com/services/notifications"
         "keyword": null
         "kind": "Block"
@@ -207,7 +207,7 @@
         "keyword": null
         "kind": "Block"
         "name": "main"
-    "id": "f4"
+    "id": "ir"
     "kind": "ArtifactApplication"
     "name": "example.com/app/backoffice-loja"
     "params": []

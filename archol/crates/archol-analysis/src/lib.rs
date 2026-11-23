@@ -124,7 +124,7 @@ pub fn analyze_application(
 
     let lock_path = ids::lock_path_for_application(std::path::Path::new(&app.path));
     let lock = ids::Lock::load(&lock_path, &app.uri)?;
-    let semantic = annotate::annotate(&mut workspace, &closure, lock);
+    let semantic = annotate::annotate(&mut workspace, &closure, &symbols, lock);
     organogram::attach(&mut workspace, &semantic, &closure);
     service::attach(&mut workspace, &semantic, &closure);
     if write_lock && semantic.lock.dirty {

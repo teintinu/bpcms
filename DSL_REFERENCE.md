@@ -222,7 +222,7 @@ b,example.com/services/billing#shape/InvoiceStatus/value/Overdue
 **Ciclo de compilação:**
 
 1. durante a compilação, referências são resolvidas para **paths**, sem gerar número;
-2. no final, IDs são atribuídos **apenas aos identificadores usados** — artefatos da closure são raízes; campos, valores de enum e parâmetros só recebem ID quando referenciados;
+2. no final, IDs são atribuídos **apenas aos identificadores usados** — artefatos da closure são raízes, **exceto os do pseudo-serviço reservado `bpcms.org/std`**, que nunca entram no lock (referências como `std.Mass` mantêm o nome qualificado, sem ID); campos, valores de enum e parâmetros só recebem ID quando referenciados;
 3. identificadores nunca referenciados ficam sem ID e sem linha no lock.
 
 **Caminhos canônicos:** aplicação `<app-uri>#application`; serviço `<service-uri>#service`; artefato `<service-uri>#<tipo>/<Nome>`; campo `<service-uri>#document/<Documento>/field/<campo>`; valor de enum `<service-uri>#shape/<Shape>/value/<Valor>`; parâmetro `<service-uri>#process/<Processo>/param/<param>`.

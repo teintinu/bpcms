@@ -1538,3 +1538,29 @@ com a relação de todos os seus artefatos; identificadores e referências corre
 **Impacto:** `archol-core` (AST), `archol-analysis` (annotate/service/organogram),
 snapshots, docs (`ast.md`, `compiler.md`, `README.md`), `DSL_REFERENCE.md` e
 testes de análise.
+
+## Rodada std fora do lock + alias de tipos — 2026-11-23 (executada por solicitação direta)
+
+**Pedido:** o lock deve conter apenas identificadores realmente usados; o
+`bpcms.org/std` não pode poluir o lock com shapes que a aplicação não usa, e
+referências qualificadas (`std.Money`, `Citizen.Email`) precisam resolver de
+verdade.
+
+**Decisão aplicada:**
+- `bpcms.org/std` continua na closure para resolução/validação, mas não é
+  declarado como raiz nem entra no `scope` de IDs: nenhum `std#service` ou
+  `std#shape/*` é gravado no lock (§29/B-53). `typeRef` qualificado permanece no
+  AST sem `typeRefId`.
+- `Scope::type_artifact` resolve tipos qualificados pelo mapa de `imports` do
+  serviço (`Alias.Tipo`), inclusive tipos de outros serviços de negócio; antes
+  `base_type` não removia o alias e nenhum `typeRefId` era gerado nesses casos.
+- Locks das 5 aplicações regenerados. O backoffice-loja perdeu 58 linhas de
+  std sem renumerar os demais IDs; central-de-compras, claims-desk,
+  loja-do-joao e rota-certa também receberam as permissões que estavam
+  pendentes desde a rodada anterior.
+- Snapshot `backoffice-loja.expected-ast.yml` atualizado para os IDs vigentes
+  (já estava defasado em relação ao lock do HEAD).
+
+**Impacto:** `archol-analysis` (`annotate.rs`, `lib.rs`), testes de análise,
+`examples/applications/**/*.lock`, `backoffice-loja.expected-ast.yml`,
+`archol/docs/identifiers.md` e `DSL_REFERENCE.md`.

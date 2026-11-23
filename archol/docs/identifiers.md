@@ -44,7 +44,10 @@ c,example.com/services/billing#document/Invoice/field/status
 During compilation references are resolved to **paths**, not numbers. At the
 end:
 
-- every artifact in the application closure is a root and gets an id;
+- every artifact in the application closure is a root and gets an id, **except
+  the reserved `bpcms.org/std`** — it is a builder pseudo-service, has no
+  endpoint and never enters the lock; references to it keep the qualified name
+  (`std.Money`) without a `typeRefId`;
 - pending comments (`TODO`, `REVIEW`, ...) are metadata and never get ids or
   lock lines;
 - a field, enum value, or parameter gets an id only when something references

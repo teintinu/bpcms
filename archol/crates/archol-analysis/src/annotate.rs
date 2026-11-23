@@ -14,7 +14,12 @@ use crate::ids::{
     application_path, artifact_path, field_path, param_path, permission_path, service_path,
     value_path, Lock, LockEntry,
 };
+use crate::index::Symbols;
 use crate::workspace::Workspace;
+
+/// Reserved builder pseudo-service. It provides standard measures and
+/// constants but is not published, has no endpoint and never enters the lock.
+pub const RESERVED_SERVICE: &str = "bpcms.org/std";
 
 #[derive(Clone, Debug)]
 pub struct DeclInfo {
@@ -49,6 +54,8 @@ pub struct SemanticIndex {
 struct Scope {
     decls: Vec<Decl>,
     by_name: BTreeMap<String, Vec<usize>>,
+    /// Service URI -> import alias -> imported service URI.
+    imports: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 #[derive(Clone)]
@@ -93,6 +100,28 @@ impl Scope {
             .or_else(|| indices.first().map(|index| &self.decls[*index]))
     }
 
+    /// Resolves a type reference, honoring `imports` aliases (`std.Mass`,
+    /// `Citizen.Email`). The reserved std service has no lock ids, so it never
+    /// resolves to a declaration.
+    fn type_artifact(&self, type_ref: &str, service: Option<&str>) -> Option<&Decl> {
+        let base = base_type(type_ref);
+        let Some((alias, local)) = base.split_once('.') else {
+            return self.artifact(base, service);
+        };
+        let target = self
+            .imports
+            .get(service?)
+            .and_then(|imports| imports.get(alias))?;
+        if target == RESERVED_SERVICE {
+            return None;
+        }
+        self.by_name
+            .get(local)?
+            .iter()
+            .map(|index| &self.decls[*index])
+            .find(|decl| decl.service.as_deref() == Some(target.as_str()))
+    }
+
     fn field_type(&self, type_name: &str, field: &str, service: Option<&str>) -> Option<String> {
         self.artifact(type_name, service)?
             .fields
@@ -116,8 +145,19 @@ impl Scope {
 }
 
 /// Compiles references to paths, then assigns ids only to used identifiers.
-pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) -> SemanticIndex {
-    let mut scope = Scope::default();
+///
+/// The reserved `bpcms.org/std` service is skipped by the id pass: it has no
+/// endpoint and never enters the lock.
+pub fn annotate(
+    workspace: &mut Workspace,
+    closure: &Closure,
+    symbols: &Symbols,
+    mut lock: Lock,
+) -> SemanticIndex {
+    let mut scope = Scope {
+        imports: symbols.imports.clone(),
+        ..Scope::default()
+    };
     let mut roots = BTreeSet::new();
 
     // Pass 1: declarations and their canonical paths (no ids yet).
@@ -127,6 +167,9 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
             continue;
         }
         let service = workspace.files[file_index].service.clone();
+        if service.as_deref() == Some(RESERVED_SERVICE) {
+            continue;
+        }
         let artifacts_len = workspace.files[file_index].ast.items.len();
         for artifact_index in 0..artifacts_len {
             let artifact = &mut workspace.files[file_index].ast.items[artifact_index];
@@ -175,6 +218,9 @@ pub fn annotate(workspace: &mut Workspace, closure: &Closure, mut lock: Lock) ->
             continue;
         }
         let service = workspace.files[file_index].service.clone();
+        if service.as_deref() == Some(RESERVED_SERVICE) {
+            continue;
+        }
         let mut artifact_index = 0;
         while artifact_index < workspace.files[file_index].ast.items.len() {
             let artifact = &mut workspace.files[file_index].ast.items[artifact_index];
@@ -578,7 +624,7 @@ fn annotate_param_types(artifact: &mut Artifact, ctx: &mut Ctx<'_>) {
         let Some(type_ref) = param.type_ref.clone() else {
             continue;
         };
-        if let Some(decl) = ctx.scope.artifact(base_type(&type_ref), ctx.service) {
+        if let Some(decl) = ctx.scope.type_artifact(&type_ref, ctx.service) {
             param.type_ref_id = Some(decl.path.clone());
             ctx.usages.push(Usage {
                 id: decl.path.clone(),
@@ -822,7 +868,7 @@ fn annotate_expr(expr: &mut Expr, ctx: &mut Ctx<'_>) {
             span,
         } => {
             if let Some(ty) = type_ref.as_deref() {
-                if let Some(decl) = ctx.scope.artifact(base_type(ty), ctx.service) {
+                if let Some(decl) = ctx.scope.type_artifact(ty, ctx.service) {
                     *type_ref_id = Some(decl.path.clone());
                     ctx.usages.push(Usage {
                         id: decl.path.clone(),

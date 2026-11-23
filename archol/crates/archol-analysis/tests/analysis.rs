@@ -454,6 +454,105 @@ fn duration_and_shape_strings_become_shape_literals() {
 }
 
 #[test]
+fn qualified_type_references_resolve_through_import_aliases() {
+    let files = vec![
+        (
+            "ws/applications/example.com/app/demo/demo-application.archol",
+            "application \"example.com/app/demo\" {\n  services {\n    \"example.com/services/a\" as A\n  }\n  locales: [pt-BR]\n}",
+        ),
+        (
+            "ws/services/example.com/services/a/a-service.archol",
+            "service \"example.com/services/a\" {\n  title: { pt-BR: \"A\" }\n  locales: [ \"pt-BR\" ]\n  imports {\n    service \"bpcms.org/std\" as std\n    service \"example.com/services/b\" as Bee\n  }\n}",
+        ),
+        (
+            "ws/services/example.com/services/a/documents/a-doc-document.archol",
+            "document Doc {\n  title: { pt-BR: \"Doc\" }\n  fields {\n    thing: Bee.Thing { title: { pt-BR: \"Coisa\" } }\n    amount: std.Money { title: { pt-BR: \"Valor\" } }\n  }\n}",
+        ),
+        (
+            "ws/services/example.com/services/b/b-service.archol",
+            "service \"example.com/services/b\" {\n  title: { pt-BR: \"B\" }\n  locales: [ \"pt-BR\" ]\n}",
+        ),
+        (
+            "ws/services/example.com/services/b/b-shapes.archol",
+            "shape Thing {\n  title: { pt-BR: \"Coisa\" }\n  base: string\n}",
+        ),
+        (
+            "ws/services/bpcms.org/std/std-service.archol",
+            "service \"bpcms.org/std\" {\n  title: { pt-BR: \"Std\" }\n  locales: [ \"pt-BR\" ]\n}",
+        ),
+        (
+            "ws/services/bpcms.org/std/std-shapes.archol",
+            "shape Money {\n  title: { pt-BR: \"Dinheiro\" }\n  base: decimal\n}",
+        ),
+    ]
+    .into_iter()
+    .map(|(path, source)| FileInput {
+        path: path.to_string(),
+        source: source.to_string(),
+    })
+    .collect();
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+    let document = analysis
+        .workspace
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("a-doc-document.archol"))
+        .expect("document");
+    let (_, thing) = property(&document.ast.items[0].body, "thing").expect("thing");
+    let Expr::Object { type_ref_id, .. } = thing else {
+        panic!("thing must be an Object");
+    };
+    assert!(
+        type_ref_id.is_some(),
+        "`Bee.Thing` must resolve through the import alias"
+    );
+    let (_, amount) = property(&document.ast.items[0].body, "amount").expect("amount");
+    let Expr::Object { type_ref_id, .. } = amount else {
+        panic!("amount must be an Object");
+    };
+    assert_eq!(
+        *type_ref_id, None,
+        "the reserved std must resolve without a lock id"
+    );
+}
+
+#[test]
+fn reserved_std_never_enters_the_lock() {
+    let files = shape_files("process P {\n  title: \"P\"\n}");
+    let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
+        .expect("analysis");
+    let semantic = analysis.semantic.expect("semantic");
+    assert!(
+        semantic.lock.entry_for("bpcms.org/std#service").is_none(),
+        "the reserved std service must not enter the lock"
+    );
+    assert!(
+        semantic
+            .lock
+            .entry_for("bpcms.org/std#shape/Duration")
+            .is_none(),
+        "std shapes must not enter the lock"
+    );
+    assert!(
+        semantic
+            .lock
+            .entry_for("example.com/services/demo#shape/ProductVideo")
+            .is_some(),
+        "business artifacts remain roots"
+    );
+}
+
+#[test]
 fn invalid_shape_literals_are_compile_errors() {
     let files = shape_files("process P {\n  title: \"P\"\n  sla: \"2x\"\n}");
     let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
