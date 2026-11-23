@@ -901,3 +901,28 @@ fn service_ast_indexes_its_artifacts_and_auto_permissions() {
         |element| matches!(element, Expr::Reference { ref_kind, .. } if ref_kind == "permission")
     ));
 }
+
+#[test]
+fn reintroduce_requires_an_import_and_an_existing_target() {
+    let mut files = base_files();
+    files.push((
+        "ws/services/example.com/services/other/other-service.archol",
+        "service \"example.com/services/other\" {\n  locales: [ \"pt-BR\" ]\n  reintroduce Missing.TaxRegimeCode {\n    value OUTRO { title: { pt-BR: \"Outro\" } }\n  }\n}",
+    ));
+    let analysis = workspace(&files);
+    assert!(analysis
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_REINTRODUCE_IMPORT"));
+
+    let mut files = base_files();
+    files.push((
+        "ws/services/example.com/services/other/other-service.archol",
+        "service \"example.com/services/other\" {\n  locales: [ \"pt-BR\" ]\n  imports {\n    service \"example.com/services/demo\" as Demo\n  }\n  reintroduce Demo.Missing {\n    value X { title: { pt-BR: \"X\" } }\n  }\n}",
+    ));
+    let analysis = workspace(&files);
+    assert!(analysis
+        .diagnostics
+        .iter()
+        .any(|d| d.diagnostic.code == "E_REINTRODUCE_TARGET"));
+}

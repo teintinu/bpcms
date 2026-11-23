@@ -22,7 +22,9 @@ node --test editors/vscode/test
 | `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
 | `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
 | `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast`, `format --check`, pending diagnostics |
-| `archol-cli/tests/ast_snapshots.rs` | every example application against `<app>.expected-ast.yml` with `--no-loc`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/source_snapshots.rs` | each application file against `<app>.expected-source.yml` with `archol ast --no-loc`; writes `<app>.result-source.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/application_snapshots.rs` | each resolved tree against `<app>.expected-ast.yml` with `archol application --no-loc --no-body`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/application_ast.rs` | closed/typed `ArcholApplication` for every app, role/permission inverse, and the `reintroduce` merge in `loja-com-antifraude` |
 | `archol-cli/tests/ast_locs.rs` | locs exist by default with valid byte ranges, and `--no-loc` removes `loc`/`keywordLoc` from JSON and YAML |
 | `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker, lock debouncer |
 
@@ -33,16 +35,29 @@ Run `cargo test` for the current count; JavaScript tests run with
 
 ## AST snapshots
 
-Each example application has `<app>.expected-ast.yml` next to its
-`<app>-application.archol`. The snapshot test runs:
+Each example application has two snapshots next to its
+`<app>-application.archol`:
+
+- `<app>.expected-source.yml` — the per-file `SourceFile` from
+  `archol ast <app-file> --app <app-uri> --yaml --no-loc`;
+- `<app>.expected-ast.yml` — the resolved `ArcholApplication` from
+  `archol application examples --app <app-uri> --yaml --no-loc --no-body`.
+
+The tests write `<app>.result-source.yml` and `<app>.result-ast.yml` (ignored
+by git) and compare them with the expected files. On failure the result stays
+for diffing.
+
+To refresh both families after an intentional change:
 
 ```bash
-archol ast examples/applications/<path>/<app>-application.archol \
-  --app <app-uri> --yaml --no-loc
+bash archol/scripts/test-update-snapshots.sh
 ```
 
-It writes the output to `<app>.result-ast.yml` (ignored by git) and compares
-with the expected file. On failure the result file stays for diffing.
+To run the suite without touching snapshots:
+
+```bash
+bash archol/scripts/test.sh
+```
 
 ## Corpus
 

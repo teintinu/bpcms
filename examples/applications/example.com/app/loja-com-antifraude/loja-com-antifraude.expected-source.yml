@@ -1,0 +1,291 @@
+"kind": "SourceFile"
+"items":
+  -
+    "kind": "ArtifactApplication"
+    "name": "example.com/app/loja-com-antifraude"
+    "id": "ca"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "value":
+          "kind": "ShapeValue"
+          "value":
+            "en-US": "Antifraud Store"
+            "pt-BR": "Loja com Antifraude"
+          "typeRef": "std.bpcms.i18n"
+      -
+        "kind": "Block"
+        "name": "services"
+        "body":
+          -
+            "kind": "ServiceEntry"
+            "alias": "Checkout"
+            "ref": "w"
+            "uri": "example.com/services/checkout"
+          -
+            "kind": "ServiceEntry"
+            "alias": "FraudCheckout"
+            "ref": "a6"
+            "uri": "example.com/services/fraud-checkout"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Notifications"
+            "ref": "b6"
+            "uri": "example.com/services/notifications"
+        "keyword": null
+      -
+        "kind": "Block"
+        "name": "roles"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "MemberAccess"
+                "name": "Customer"
+                "object":
+                  "kind": "Identifier"
+                  "name": "Checkout"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "MemberAccess"
+                "name": "SupportAgent"
+                "object":
+                  "kind": "Identifier"
+                  "name": "Checkout"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "MemberAccess"
+                "name": "RiskAnalyst"
+                "object":
+                  "kind": "Identifier"
+                  "name": "FraudCheckout"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "MemberAccess"
+                "name": "RiskManager"
+                "object":
+                  "kind": "Identifier"
+                  "name": "FraudCheckout"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "MemberAccess"
+                  "name": "RiskManager"
+                  "object":
+                    "kind": "Identifier"
+                    "name": "FraudCheckout"
+                "op": ">"
+                "right":
+                  "kind": "MemberAccess"
+                  "name": "RiskAnalyst"
+                  "object":
+                    "kind": "Identifier"
+                    "name": "FraudCheckout"
+        "keyword": null
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "value":
+          "kind": "Identifier"
+          "name": "Nuvula"
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "en"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "US"
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+            -
+              "kind": "Identifier"
+              "name": "qa"
+            -
+              "kind": "Identifier"
+              "name": "prod"
+      -
+        "kind": "Block"
+        "name": "main"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "start"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "List"
+                "elements":
+                  -
+                    "kind": "StringLiteral"
+                    "value": "example.com/services/checkout"
+                    "raw": "\"example.com/services/checkout\""
+        "keyword": null
+    "params": []
+"path": "examples/applications/example.com/app/loja-com-antifraude/loja-com-antifraude-application.archol"
+"pending":
+  -
+    "kind": "Pending"
+    "message": "application: Loja com Antifraude (checkout + fraude + notificações)"
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Declara a aplicação da URI example.com/app/loja-com-antifraude e abre sua composição."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em português (idioma default)."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em inglês americano."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Entry points da aplicação; o antifraude reintroduz artefatos do checkout."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Finalização de compra e sessão de checkout."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Reintroduz o estado e a ação de risco."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Avisos e notificações aos clientes."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Papéis da aplicação, qualificados pelo serviço dono."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Cliente que finaliza a compra."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Atendente que apoia a finalização."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista que verifica o risco."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gerente que responde pela análise de risco."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "O gerente de risco é superior ao analista de risco."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro é o default."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Ambientes em que a aplicação é promovida."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Faz o boot antecipado do checkout antes do antifraude."
+    "dateText": "2026-12-23"
+    "dueDate": "2026-12-23"
+    "keyword": "REVIEW"

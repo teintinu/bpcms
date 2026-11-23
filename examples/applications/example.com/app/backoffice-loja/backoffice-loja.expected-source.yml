@@ -1,0 +1,306 @@
+"kind": "SourceFile"
+"items":
+  -
+    "kind": "ArtifactApplication"
+    "name": "example.com/app/backoffice-loja"
+    "id": "g5"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "value":
+          "kind": "ShapeValue"
+          "value":
+            "pt-BR": "Administração da Loja"
+          "typeRef": "std.bpcms.i18n"
+      -
+        "kind": "Block"
+        "name": "services"
+        "body":
+          -
+            "kind": "ServiceEntry"
+            "alias": "Identity"
+            "ref": "aq"
+            "uri": "example.com/services/identity"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Orders"
+            "ref": "al"
+            "uri": "example.com/services/orders"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Inventory"
+            "ref": "bi"
+            "uri": "example.com/services/inventory"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Billing"
+            "ref": "cc"
+            "uri": "example.com/services/billing"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Support"
+            "ref": "gw"
+            "uri": "example.com/services/support"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Notifications"
+            "ref": "en"
+            "uri": "example.com/services/notifications"
+        "keyword": null
+      -
+        "kind": "Block"
+        "name": "roles"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Manager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "SupportAgent"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Admin"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Dispatcher"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Driver"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "Admin"
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Manager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Manager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "SupportAgent"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "Manager"
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Dispatcher"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Driver"
+        "keyword": null
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "value":
+          "kind": "Identifier"
+          "name": "Backoffice"
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+            -
+              "kind": "Identifier"
+              "name": "qa"
+            -
+              "kind": "Identifier"
+              "name": "prod"
+      -
+        "kind": "Block"
+        "name": "main"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "set"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "MemberAccess"
+                  "name": "TaxRegime"
+                  "object":
+                    "kind": "Identifier"
+                    "name": "Billing"
+                "op": "="
+                "right":
+                  "kind": "StringLiteral"
+                  "value": "SIMPLES"
+                  "raw": "\"SIMPLES\""
+        "keyword": null
+    "params": []
+"path": "examples/applications/example.com/app/backoffice-loja/backoffice-loja-application.archol"
+"pending":
+  -
+    "kind": "Pending"
+    "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Balconista: opera a loja no dia a dia."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gerente: responde pela operação da loja."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Agente de suporte: atende clientes e ocorrências."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Administrador: acesso amplo à configuração."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Despachante: organiza as entregas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Motorista: executa as entregas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Admin é superior a Manager, que por sua vez é superior a Clerk."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a SupportAgent."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a Dispatcher, que é superior a Driver."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro (pt-BR) é o default."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Ambientes em que a aplicação é promovida."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Inicializa o Parameter TaxRegime do serviço Billing com o Simples Nacional."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"

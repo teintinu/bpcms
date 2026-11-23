@@ -6,6 +6,7 @@
 pub mod ast;
 pub mod diagnostic;
 pub mod lexer;
+pub mod order;
 pub mod parser;
 pub mod pending;
 pub mod span;

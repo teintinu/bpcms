@@ -1,4 +1,5 @@
 'use strict';
+const astOrder = require('../../../ast-order.json');
 
 // Pure functions for the webview script (no reference to tree state).
 const browserUtils = `  function isNode(value) {
@@ -95,12 +96,13 @@ const browserUtils = `  function isNode(value) {
     return total;
   }
 
-  var JSON_FIRST_KEYS = ['kind', 'title', 'name', 'value', 'message', 'id'];
+  var AST_ORDER = ${JSON.stringify(astOrder)};
+  var LOC_SUFFIX = new RegExp(AST_ORDER.locSuffix + '$', 'i');
 
   function keyRank(key) {
-    var index = JSON_FIRST_KEYS.indexOf(key);
+    var index = AST_ORDER.firstKeys.indexOf(key);
     if (index !== -1) return index;
-    if (/loc$/i.test(key)) return 1000;
+    if (LOC_SUFFIX.test(key)) return 1000;
     return 100;
   }
 

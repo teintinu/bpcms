@@ -14,40 +14,31 @@ service "example.com/services/fraud-checkout" {
     service "example.com/services/checkout" as Checkout
   }
 
-  // REVIEW [2026-12-15] Reabre o shape CheckoutStatus do checkout para acrescentar valores.
+  // REVIEW [2026-12-23] Reabre o shape CheckoutStatus do checkout para acrescentar o estado de risco verificado.
   reintroduce Checkout.CheckoutStatus {
-    // REVIEW [2026-12-15] Novo valor ShippingQuoted, alcançável pela transição FraudChecked.
-    value ShippingQuoted {
-      // REVIEW [2026-12-15] Transição que leva ao estado de risco verificado.
-      transition FraudChecked {
-        // REVIEW [2026-12-15] Título exibido na timeline do documento.
-        title: { pt-BR: "Risco verificado", en: "Risk checked" }
-      }
-    }
-
-    // REVIEW [2026-12-15] Novo estado FraudChecked, de risco verificado.
+    // REVIEW [2026-12-23] Novo estado FraudChecked, de risco verificado.
     value FraudChecked {
-      // REVIEW [2026-12-15] Título exibido na timeline do documento.
+      // REVIEW [2026-12-23] Título exibido na timeline do documento.
       title: { pt-BR: "Risco verificado", en: "Risk checked" }
-      // REVIEW [2026-12-15] Ícone do estado, definido neste serviço.
-      icon: status.fraudChecked
-      // REVIEW [2026-12-15] Posição do estado na ordenação do shape.
+      // REVIEW [2026-12-23] Ícone do estado, definido neste serviço.
+      icon: Approved
+      // REVIEW [2026-12-23] Posição do estado na ordenação do shape.
       ordinal: 25
     }
 
-    // REVIEW [2026-12-15] Insere FraudChecked antes de PaymentAuthorized na ordem dos estados.
+    // REVIEW [2026-12-23] Insere FraudChecked antes de PaymentAuthorized na ordem dos estados.
     insert FraudChecked before PaymentAuthorized
   }
 
-  // REVIEW [2026-12-15] Reabre o documento CheckoutSession do checkout para acrescentar ação.
+  // REVIEW [2026-12-23] Reabre o documento CheckoutSession do checkout para acrescentar ação.
   reintroduce Checkout.CheckoutSession {
-    // REVIEW [2026-12-15] Nova action de verificação de risco na sessão de checkout.
+    // REVIEW [2026-12-23] Nova action de verificação de risco na sessão de checkout.
     action checkFraud() {
-      // REVIEW [2026-12-15] Título exibido no botão da action.
+      // REVIEW [2026-12-23] Título exibido no botão da action.
       title: { pt-BR: "Verificar risco", en: "Check risk" }
-      // REVIEW [2026-12-15] Papéis autorizados a executar a action.
+      // REVIEW [2026-12-23] Papéis autorizados a executar a action.
       roles: [RiskAnalyst]
-      // REVIEW [2026-12-15] Estado de destino após a action.
+      // REVIEW [2026-12-23] Estado de destino após a action.
       to: status.FraudChecked
     }
   }

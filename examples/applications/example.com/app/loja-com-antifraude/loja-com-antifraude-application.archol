@@ -1,0 +1,36 @@
+// REVIEW [2026-12-23] application: Loja com Antifraude (checkout + fraude + notificações)
+// REVIEW [2026-12-23] Declara a aplicação da URI example.com/app/loja-com-antifraude e abre sua composição.
+application "example.com/app/loja-com-antifraude" {
+  // REVIEW [2026-12-23] Nome localizado da aplicação, exibido no construtor e no runtime.
+  title: {
+    pt-BR: "Loja com Antifraude" // REVIEW [2026-12-23] Título em português (idioma default).
+    en-US: "Antifraud Store" // REVIEW [2026-12-23] Título em inglês americano.
+  }
+
+  // REVIEW [2026-12-23] Entry points da aplicação; o antifraude reintroduz artefatos do checkout.
+  services {
+    "example.com/services/checkout" as Checkout // REVIEW [2026-12-23] Finalização de compra e sessão de checkout.
+    "example.com/services/fraud-checkout" as FraudCheckout // REVIEW [2026-12-23] Reintroduz o estado e a ação de risco.
+    "example.com/services/notifications" as Notifications // REVIEW [2026-12-23] Avisos e notificações aos clientes.
+  }
+
+  // REVIEW [2026-12-23] Papéis da aplicação, qualificados pelo serviço dono.
+  roles {
+    Checkout.Customer // REVIEW [2026-12-23] Cliente que finaliza a compra.
+    Checkout.SupportAgent // REVIEW [2026-12-23] Atendente que apoia a finalização.
+    FraudCheckout.RiskAnalyst // REVIEW [2026-12-23] Analista que verifica o risco.
+    FraudCheckout.RiskManager // REVIEW [2026-12-23] Gerente que responde pela análise de risco.
+    // REVIEW [2026-12-23] O gerente de risco é superior ao analista de risco.
+    FraudCheckout.RiskManager > FraudCheckout.RiskAnalyst
+  }
+
+  theme: Nuvula // REVIEW [2026-12-23] Tema visual fornecido pelo construtor.
+  locales: [pt-BR, en-US] // REVIEW [2026-12-23] Idiomas da app; o primeiro é o default.
+  environments: [dev, qa, prod] // REVIEW [2026-12-23] Ambientes em que a aplicação é promovida.
+
+  // REVIEW [2026-12-23] Bloco de inicialização da app; só configura, não contém regra de negócio.
+  main {
+    // REVIEW [2026-12-23] Faz o boot antecipado do checkout antes do antifraude.
+    start ["example.com/services/checkout"]
+  }
+}

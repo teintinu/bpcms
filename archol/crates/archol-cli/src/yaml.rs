@@ -80,7 +80,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn emits_block_style_yaml() {
+    fn emits_block_style_yaml_in_canonical_order() {
         let value = json!({
             "kind": "SourceFile",
             "path": "examples/a.archol",
@@ -88,9 +88,10 @@ mod tests {
                 { "kind": "Artifact", "name": "A", "empty": [], "flags": [true, null] }
             ]
         });
+        let value = archol_core::order::ordered(value);
         assert_eq!(
             to_yaml(&value),
-            "\"items\":\n  -\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n    \"kind\": \"Artifact\"\n    \"name\": \"A\"\n\"kind\": \"SourceFile\"\n\"path\": \"examples/a.archol\"\n"
+            "\"kind\": \"SourceFile\"\n\"items\":\n  -\n    \"kind\": \"Artifact\"\n    \"name\": \"A\"\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n\"path\": \"examples/a.archol\"\n"
         );
     }
 

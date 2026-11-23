@@ -1,7 +1,7 @@
 //! AST snapshots for every example application.
 //!
 //! Runs `archol ast <app> --app <uri> --yaml`, writes the generated YAML to
-//! `<app>.result-ast.yml` and compares it with `<app>.expected-ast.yml`.
+//! `<app>.result-source.yml` and compares it with `<app>.expected-source.yml`.
 //! The result file is intentionally kept so a failed snapshot can be diffed.
 
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ fn application_uri(source: &str) -> String {
 }
 
 #[test]
-fn every_example_application_has_a_matching_ast_snapshot() {
+fn every_example_application_has_a_matching_source_snapshot() {
     let root = repo_root();
     let mut apps = Vec::new();
     application_files(&root.join("examples/applications"), &mut apps);
@@ -76,8 +76,8 @@ fn every_example_application_has_a_matching_ast_snapshot() {
             String::from_utf8_lossy(&output.stderr)
         );
 
-        let result = app.with_file_name(format!("{slug}.result-ast.yml"));
-        let expected = app.with_file_name(format!("{slug}.expected-ast.yml"));
+        let result = app.with_file_name(format!("{slug}.result-source.yml"));
+        let expected = app.with_file_name(format!("{slug}.expected-source.yml"));
         std::fs::write(&result, &output.stdout).unwrap();
         let Some(expected_text) = std::fs::read_to_string(&expected).ok() else {
             failures.push(format!(

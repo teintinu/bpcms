@@ -19,4 +19,4 @@ archol-analysis = { path = "crates/archol-analysis" }
 archol-lsp = { path = "crates/archol-lsp" }
 archol-cli = { path = "crates/archol-cli" }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }

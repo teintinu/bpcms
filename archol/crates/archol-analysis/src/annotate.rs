@@ -384,7 +384,9 @@ fn finalize_members(members: &mut [Member], ids: &BTreeMap<String, String>) {
                 *id = finalize_opt(id.take(), ids);
                 finalize_members(body, ids);
             }
-            Member::Block { body, .. } => finalize_members(body, ids),
+            Member::Block { body, .. } | Member::Reintroduce { body, .. } => {
+                finalize_members(body, ids)
+            }
             Member::Hierarchy { chains, .. } => {
                 for chain in chains {
                     for role in &mut chain.roles {
@@ -640,9 +642,10 @@ fn annotate_members(members: &mut [Member], ctx: &mut Ctx<'_>) {
     for member in members {
         match member {
             Member::PropertyAssignment { name, value, .. } => annotate_property(name, value, ctx),
-            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
-                annotate_members(body, ctx)
-            }
+            Member::Block { body, .. }
+            | Member::EnumValueDeclaration { body, .. }
+            | Member::Reintroduce { body, .. } => annotate_members(body, ctx),
+            Member::Insert { .. } => {}
             Member::Hierarchy { chains, .. } => annotate_hierarchy(chains, ctx),
             Member::Statement { statement, .. } => annotate_statement(statement, ctx),
             Member::ServiceEntry {

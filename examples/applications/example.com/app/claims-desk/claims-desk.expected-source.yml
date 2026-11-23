@@ -1,0 +1,425 @@
+"kind": "SourceFile"
+"items":
+  -
+    "kind": "ArtifactApplication"
+    "name": "example.com/app/claims-desk"
+    "id": "gc"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "value":
+          "kind": "ShapeValue"
+          "value":
+            "en-US": "Claims Desk"
+            "pt-BR": "Mesa de Sinistros"
+          "typeRef": "std.bpcms.i18n"
+      -
+        "kind": "Block"
+        "name": "services"
+        "body":
+          -
+            "kind": "ServiceEntry"
+            "alias": "Identity"
+            "ref": "ar"
+            "uri": "example.com/services/identity"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Claims"
+            "ref": "c7"
+            "uri": "example.com/services/claims"
+          -
+            "kind": "ServiceEntry"
+            "alias": "FieldService"
+            "ref": "dv"
+            "uri": "example.com/services/field-service"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Payments"
+            "ref": "f4"
+            "uri": "example.com/services/payments"
+        "keyword": null
+      -
+        "kind": "Block"
+        "name": "roles"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Adjuster"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "FraudAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "FinanceAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Manager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Policyholder"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Dispatcher"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "FieldTechnician"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Supervisor"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Customer"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "Manager"
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Adjuster"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Manager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "FraudAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Supervisor"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "FieldTechnician"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Supervisor"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Dispatcher"
+        "keyword": null
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "value":
+          "kind": "Identifier"
+          "name": "Claims"
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "en"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "US"
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+            -
+              "kind": "Identifier"
+              "name": "qa"
+            -
+              "kind": "Identifier"
+              "name": "prod"
+      -
+        "kind": "Block"
+        "name": "main"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "start"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "List"
+                "elements":
+                  -
+                    "kind": "StringLiteral"
+                    "value": "example.com/services/identity"
+                    "raw": "\"example.com/services/identity\""
+        "keyword": null
+    "params": []
+"path": "examples/applications/example.com/app/claims-desk/claims-desk-application.archol"
+"pending":
+  -
+    "kind": "Pending"
+    "message": "application: Mesa de Sinistros (claims + field-service + payments)"
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Declara a aplicação da URI example.com/app/claims-desk e abre sua composição."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em português (idioma default)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em inglês americano."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Identidade e autenticação dos usuários."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Abertura e análise de sinistros."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Vistorias e atendimento em campo."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Pagamentos de indenizações."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Atendente: registra e triagem os sinistros."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Regulador: analisa e decide a indenização."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista antifraude: investiga indícios de fraude."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista financeiro: acompanha os pagamentos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gerente: responde pela operação da mesa."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Segurado: acompanha o próprio sinistro."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Despachante: distribui as vistorias em campo."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Técnico de campo: executa a vistoria."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Supervisor: coordena campo e despacho."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Cliente: acompanha o atendimento."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a Adjuster, que é superior a Clerk."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a FraudAnalyst."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Supervisor é superior a FieldTechnician."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Supervisor é superior a Dispatcher."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro (pt-BR) é o default."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Ambientes declarados para esta aplicação."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"

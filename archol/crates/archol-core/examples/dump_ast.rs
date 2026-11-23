@@ -60,6 +60,29 @@ fn print_members(members: &[Member], depth: usize, source: &str) {
                     println!("{pad}Hierarchy {}", names.join(" > "));
                 }
             }
+            Member::Reintroduce {
+                service,
+                artifact,
+                body,
+                span,
+            } => {
+                println!(
+                    "{pad}Reintroduce {service}.{artifact} L{}",
+                    line(source, span.start)
+                );
+                if depth < 4 {
+                    print_members(body, depth + 1, source);
+                }
+            }
+            Member::Insert {
+                target,
+                position,
+                anchor,
+                span,
+            } => println!(
+                "{pad}Insert {target} {position} {anchor} L{}",
+                line(source, span.start)
+            ),
         }
     }
 }

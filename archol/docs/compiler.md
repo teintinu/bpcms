@@ -13,6 +13,7 @@ application (.archol)
   ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...
   ├── archol_analysis::build_links  role → artifacts, enum → values, refs
   └── archol_analysis::annotate     reference paths, then ids for used paths
+      archol_analysis::application_ast  resolved ArcholApplication (builder)
 ```
 
 **There is no compilation without an application.** `check`, `lock`, `links`

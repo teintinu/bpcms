@@ -1,0 +1,5 @@
+{
+  "firstKeys": ["kind", "title", "name", "value", "message", "id"],
+  "locSuffix": "loc",
+  "fallback": "alphabetical"
+}

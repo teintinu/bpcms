@@ -1,0 +1,477 @@
+"kind": "SourceFile"
+"items":
+  -
+    "kind": "ArtifactApplication"
+    "name": "example.com/app/central-de-compras"
+    "id": "dj"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "value":
+          "kind": "ShapeValue"
+          "value":
+            "en-US": "Procurement Hub"
+            "pt-BR": "Central de Compras"
+          "typeRef": "std.bpcms.i18n"
+      -
+        "kind": "Block"
+        "name": "services"
+        "body":
+          -
+            "kind": "ServiceEntry"
+            "alias": "Identity"
+            "ref": "ah"
+            "uri": "example.com/services/identity"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Procurement"
+            "ref": "a0"
+            "uri": "example.com/services/procurement"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Contracts"
+            "ref": "bm"
+            "uri": "example.com/services/contracts"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Credit"
+            "ref": "b0"
+            "uri": "example.com/services/credit"
+        "keyword": null
+      -
+        "kind": "Block"
+        "name": "roles"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Requester"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Buyer"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Approver"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "ProcurementManager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "ComplianceAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "PayablesClerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "ReceivingClerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "QualityInspector"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "SupplierUser"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "ContractManager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "ContractAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "LegalCounsel"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "CreditAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "CreditManager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "ProcurementManager"
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Buyer"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Requester"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Approver"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Buyer"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "ContractManager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "ContractAnalyst"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "CreditManager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "CreditAnalyst"
+        "keyword": null
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "value":
+          "kind": "Identifier"
+          "name": "Compras"
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "en"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "US"
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+            -
+              "kind": "Identifier"
+              "name": "qa"
+            -
+              "kind": "Identifier"
+              "name": "prod"
+      -
+        "kind": "Block"
+        "name": "main"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "start"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "List"
+                "elements":
+                  -
+                    "kind": "StringLiteral"
+                    "value": "example.com/services/identity"
+                    "raw": "\"example.com/services/identity\""
+        "keyword": null
+    "params": []
+"path": "examples/applications/example.com/app/central-de-compras/central-de-compras-application.archol"
+"pending":
+  -
+    "kind": "Pending"
+    "message": "application: Central de Compras (procurement + contracts + credit)"
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Declara a aplicação da URI example.com/app/central-de-compras e abre sua composição."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em português (idioma default)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em inglês americano."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Identidade e autenticação dos usuários."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Compras: requisições, cotações e pedidos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Contratos com fornecedores e suas vigências."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Análise de crédito e limite de fornecedores."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Solicitante: abre a requisição de compra."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Comprador: conduz cotação e pedido."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Aprovador: decide alçadas de aprovação."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gestor de compras: responde pela área de compras."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista de compliance: verifica conformidade."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Contas a pagar: liquida as faturas dos fornecedores."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Recebedor: registra o recebimento de materiais."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Inspetor de qualidade: aceita ou rejeita itens recebidos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Usuário do fornecedor: interage pelo portal do fornecedor."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gestor de contratos: responde pelos contratos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista de contratos: mantém minutas e aditivos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Jurídico: valida cláusulas sensíveis."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Analista de crédito: analisa o risco do fornecedor."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gestor de crédito: decide limites de crédito."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "ProcurementManager é superior a Buyer, que é superior a Requester."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Approver é superior a Buyer."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "ContractManager é superior a ContractAnalyst."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "CreditManager é superior a CreditAnalyst."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro (pt-BR) é o default."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Ambientes declarados para esta aplicação."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"

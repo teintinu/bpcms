@@ -333,6 +333,22 @@ pub enum Member {
         #[serde(rename = "loc")]
         span: Span,
     },
+    /// `reintroduce Alias.Artifact { ... }` inside a service body.
+    Reintroduce {
+        service: String,
+        artifact: String,
+        body: Vec<Member>,
+        #[serde(rename = "loc")]
+        span: Span,
+    },
+    /// `insert X before Y` inside a reintroduce body.
+    Insert {
+        target: String,
+        position: String,
+        anchor: String,
+        #[serde(rename = "loc")]
+        span: Span,
+    },
 }
 
 impl Member {
@@ -346,7 +362,9 @@ impl Member {
             | Member::Statement { span, .. }
             | Member::ImportDeclaration { span, .. }
             | Member::ServiceEntry { span, .. }
-            | Member::TriggerDeclaration { span, .. } => *span,
+            | Member::TriggerDeclaration { span, .. }
+            | Member::Reintroduce { span, .. }
+            | Member::Insert { span, .. } => *span,
         }
     }
 
@@ -359,7 +377,9 @@ impl Member {
             Member::ImportDeclaration { alias, .. } | Member::ServiceEntry { alias, .. } => {
                 Some(alias)
             }
+            Member::Reintroduce { artifact, .. } => Some(artifact),
             Member::TriggerDeclaration { .. }
+            | Member::Insert { .. }
             | Member::Statement { .. }
             | Member::Hierarchy { .. } => None,
         }

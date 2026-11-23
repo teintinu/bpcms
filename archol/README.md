@@ -12,9 +12,9 @@ This directory contains the compiler, the LSP server, and the editor plugin.
 | Path | Contents |
 | :--- | :--- |
 | `crates/archol-core` | lexer, tokens, JSON AST, and parser |
-| `crates/archol-analysis` | semantic check (enum, types, roles) and inverted link |
+| `crates/archol-analysis` | semantic check, inverted link, and the resolved application AST |
 | `crates/archol-lsp` | Language Server Protocol server over stdio |
-| `crates/archol-cli` | `archol` binary (`check`, `ast`, `tokens`, `links`, `lsp`) |
+| `crates/archol-cli` | `archol` binary (`check`, `application`, `ast`, `tokens`, `links`, `lsp`) |
 | `editors/vscode` | VSCode extension (LSP client + AST explorer), with no npm dependencies |
 | `docs` | architecture, tokens, AST, LSP, and tests |
 | `scripts` | `smoke_lsp.py` (initialize, hover, completion, AST, links) |
@@ -37,6 +37,8 @@ cd archol
 cargo build              # debug
 cargo build --release    # final binary in target/release/archol
 cargo test               # lexer, parser, check, link, and corpus tests
+bash archol/scripts/test.sh                       # same suite, from any directory
+bash archol/scripts/test-update-snapshots.sh      # rewrite expected AST snapshots
 ```
 
 Compilation starts from an **application**. The commands below use the
@@ -45,6 +47,7 @@ backoffice app (its closure covers 172 files and 11 services):
 ```bash
 cargo run -q --bin archol -- applications ../examples
 cargo run -q --bin archol -- check ../examples --app example.com/app/backoffice-loja
+cargo run -q --bin archol -- application ../examples --app example.com/app/backoffice-loja > application.json
 cargo run -q --bin archol -- lock ../examples --app example.com/app/backoffice-loja
 cargo run -q --bin archol -- links ../examples --app example.com/app/backoffice-loja > links.json
 cargo run -q --bin archol -- ast ../examples/services/example.com/services/billing/billing-shapes.archol --app example.com/app/backoffice-loja
@@ -59,6 +62,7 @@ archol lint [dir] --app <uri|path> [--json]    check diagnostics (lint)
 archol format [dir] [--check]                  uppercase pending keywords (format)
 archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
+archol application [dir] --app <uri|path> [--json|--yaml] [--no-loc|--no-body]  resolved application AST
 archol ast <file> [--app <uri|path>] [--json|--yaml] [--no-loc]  syntax AST, or annotated with ids
 archol view <file> [--app <uri|path>] [--json|--pretty]  compact preview payload for editors
 archol tokens <file>                           tokens (lexer debugging)
@@ -70,7 +74,9 @@ archol lsp                                    LSP server over stdio
 `check` exits with code 1 when there is an error and prints
 `file:line:column: severity code: message`. `lock` writes one identifier per
 line (CSV `id,path`); the AST then carries stable `id`/`ref` values from the lock. Only used identifiers get ids; append `*` to a path to pin it. The plugin refreshes the lock on application selection and, with a 10 s debounce, after `.archol` edits.
-`ast --yaml` exports the same AST as block-style YAML (strings are JSON-quoted), useful for snapshots. `--no-loc` removes every `loc`/`keywordLoc` property, keeping diffs small.
+JSON/YAML property order comes from [`ast-order.json`](ast-order.json) and is shared by the CLI, the LSP and the AST explorer (`kind`, `title`, `name`, `value`, `message`, `id` first; `loc` keys last; the rest alphabetical).
+
+`ast --yaml` exports the same AST as block-style YAML (strings are JSON-quoted), useful for snapshots. `application --yaml --no-loc --no-body` is the snapshot form of the resolved tree. After an intentional AST change, run `archol/scripts/test-update-snapshots.sh`; it reruns both snapshot tests, copies each `.result-source.yml`/`.result-ast.yml` over its expected file, and reruns the full suite. `--no-loc` removes every `loc`/`keywordLoc` property, keeping diffs small.
 `format` uppercases `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` comment markers and
 `--check` exits 1 when a file would change. `lint` runs the same diagnostics as
 `check` (including pending due dates). `links` produces, among other things,
@@ -113,7 +119,8 @@ resolved role references, a derived organogram projection (`manages`,
 comparisons, enums resolved per service with `Alias.Type`, unknown
 types/roles/references, duplication, `E_FILE_READ`, inverted link, LSP with
 hover/completion/definition (including enum values)/references/symbols/folding,
-and the VSCode plugin with the AST explorer.
+the VSCode plugin with the AST explorer, and the resolved `ArcholApplication`
+tree (`archol application`) with `reintroduce` merged into the owner artifact.
 
 Not yet implemented (documented in the specification, out of scope for this
 round): `E_FILE_*` file path rules in the check, `semanticTokens`,

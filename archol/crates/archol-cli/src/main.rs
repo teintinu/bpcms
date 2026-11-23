@@ -8,7 +8,7 @@ use std::process::exit;
 
 use archol_analysis::application;
 use archol_analysis::{analyze_application, find_services_root, parse_workspace, FileInput};
-use archol_core::{lex, parse};
+use archol_core::{lex, parse, Severity};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -23,6 +23,7 @@ fn main() {
         "format" => format(rest),
         "lock" => lock(rest),
         "applications" => applications(rest),
+        "application" | "app" => application(rest),
         "ast" => ast(rest),
         "view" => view(rest),
         "tokens" => tokens(rest),
@@ -49,6 +50,7 @@ fn usage() {
          \x20 format [dir] [--check]                     uppercases pending comment keywords\n\
          \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
+         \x20 application [dir] --app <uri-or-path> [--json|--yaml] [--no-loc|--no-body]  resolved application AST\n\
          \x20 ast <file> [--app <uri-or-path>] [--json|--yaml] [--no-loc]  prints the AST\n\
          \x20 view <file> [--app <uri-or-path>] [--json] [--pretty]  compact preview payload for editors\n\
          \x20 tokens <file>                               prints the tokens\n\
@@ -63,6 +65,7 @@ struct Options {
     json: bool,
     yaml: bool,
     no_loc: bool,
+    no_body: bool,
     pretty: bool,
     check: bool,
 }
@@ -74,6 +77,7 @@ impl Options {
         let mut json = false;
         let mut yaml = false;
         let mut no_loc = false;
+        let mut no_body = false;
         let mut pretty = false;
         let mut check = false;
         let mut iter = args.iter();
@@ -83,6 +87,7 @@ impl Options {
                 "--json" => json = true,
                 "--yaml" => yaml = true,
                 "--no-loc" => no_loc = true,
+                "--no-body" => no_body = true,
                 "--pretty" => pretty = true,
                 "--check" => check = true,
                 _ => positional.push(arg.clone()),
@@ -94,6 +99,7 @@ impl Options {
             json,
             yaml,
             no_loc,
+            no_body,
             pretty,
             check,
         }
@@ -290,6 +296,50 @@ fn applications(args: &[String]) -> i32 {
     i32::from(!read_errors.is_empty())
 }
 
+fn application(args: &[String]) -> i32 {
+    let options = Options::parse(args);
+    let root = options.root();
+    let (files, read_errors) = load_files(&root);
+    for (path, message) in &read_errors {
+        eprintln!("{path}: {message}");
+    }
+    let services_root = find_services_root(&root);
+    let services = services_root
+        .as_ref()
+        .map(|path| path.to_string_lossy().to_string());
+    let Some(selector) = options.app.as_deref() else {
+        return missing_app(files, services.as_deref());
+    };
+    let analysis = match analyze_application(files, services.as_deref(), selector, false) {
+        Ok(analysis) => analysis,
+        Err(error) => {
+            eprintln!("error: {error}");
+            return 1;
+        }
+    };
+    if analysis
+        .diagnostics
+        .iter()
+        .any(|entry| matches!(entry.diagnostic.severity, Severity::Error))
+    {
+        eprintln!("error: application has diagnostics; run `archol check` first");
+        return 1;
+    }
+    match archol_analysis::application_ast::build(&analysis, &root.to_string_lossy()) {
+        Ok(mut value) => {
+            if options.no_body {
+                strip_bodies(&mut value);
+            }
+            print_ast(&value, options.yaml, options.no_loc);
+            0
+        }
+        Err(error) => {
+            eprintln!("error: {error}");
+            1
+        }
+    }
+}
+
 fn ast(args: &[String]) -> i32 {
     let options = Options::parse(args);
     let Some(file) = options.positional.first() else {
@@ -365,6 +415,7 @@ fn annotated_ast(path: &Path, selector: &str, yaml: bool, no_loc: bool) -> i32 {
 
 fn print_ast<T: serde::Serialize>(value: &T, yaml: bool, no_loc: bool) {
     let mut json = serde_json::to_value(value).unwrap();
+    archol_core::order::order_value(&mut json);
     if no_loc {
         strip_locs(&mut json);
     }
@@ -387,6 +438,24 @@ fn strip_locs(value: &mut serde_json::Value) {
         serde_json::Value::Array(items) => {
             for item in items {
                 strip_locs(item);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Removes every `body` property recursively; the projections remain.
+fn strip_bodies(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(map) => {
+            map.remove("body");
+            for value in map.values_mut() {
+                strip_bodies(value);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                strip_bodies(item);
             }
         }
         _ => {}

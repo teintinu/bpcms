@@ -8,3 +8,4 @@ description = "Archol: lexer, AST and parser for the language"
 
 [dependencies]
 serde = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,2375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bpcms.org/archol/application-ast.schema.json",
+  "title": "ArcholApplication",
+  "description": "Resolved application AST consumed by builders. schemaVersion 1.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schemaVersion",
+    "uri",
+    "path",
+    "workspaceRoot",
+    "artifact",
+    "application",
+    "main",
+    "files",
+    "pending",
+    "index"
+  ],
+  "properties": {
+    "kind": {
+      "const": "ArcholApplication"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "uri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "$ref": "#/$defs/shapeValue"
+    },
+    "theme": {
+      "$ref": "#/$defs/themeRef"
+    },
+    "locales": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/localeRef"
+      }
+    },
+    "environments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/environmentEntry"
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/artifactDef"
+      }
+    },
+    "application": {
+      "$ref": "#/$defs/applicationConfig"
+    },
+    "main": {
+      "$ref": "#/$defs/mainEntry"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fileEntry"
+      }
+    },
+    "pending": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pendingEntry"
+      }
+    },
+    "index": {
+      "$ref": "#/$defs/index"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "loc": {
+      "type": "object",
+      "required": [
+        "file",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "expr": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "body": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "shapeValue": {
+      "type": "object",
+      "required": [
+        "kind",
+        "typeRef",
+        "value",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShapeValue"
+        },
+        "typeRef": {
+          "const": "std.bpcms.i18n"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "themeRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ThemeRef"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "localeRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "tag",
+        "default"
+      ],
+      "properties": {
+        "kind": {
+          "const": "LocaleRef"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "environmentEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "EnvironmentEntry"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifactDef": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/serviceDef"
+        },
+        {
+          "$ref": "#/$defs/roleDef"
+        },
+        {
+          "$ref": "#/$defs/permissionDef"
+        },
+        {
+          "$ref": "#/$defs/organogramDef"
+        },
+        {
+          "$ref": "#/$defs/documentDef"
+        },
+        {
+          "$ref": "#/$defs/shapeDef"
+        },
+        {
+          "$ref": "#/$defs/viewDef"
+        },
+        {
+          "$ref": "#/$defs/formDef"
+        },
+        {
+          "$ref": "#/$defs/processDef"
+        },
+        {
+          "$ref": "#/$defs/messageDef"
+        },
+        {
+          "$ref": "#/$defs/policyDef"
+        },
+        {
+          "$ref": "#/$defs/decisionDef"
+        },
+        {
+          "$ref": "#/$defs/integrationDef"
+        },
+        {
+          "$ref": "#/$defs/parameterDef"
+        },
+        {
+          "$ref": "#/$defs/secretDef"
+        },
+        {
+          "$ref": "#/$defs/iconDef"
+        },
+        {
+          "$ref": "#/$defs/manualDef"
+        },
+        {
+          "$ref": "#/$defs/errorDef"
+        }
+      ]
+    },
+    "defBase": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "serviceId",
+        "name",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
+      }
+    },
+    "refBase": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      }
+    },
+    "serviceDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "url",
+        "path",
+        "loc",
+        "locales",
+        "entryPoint",
+        "aliases",
+        "imports"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ServiceDef"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "locales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "entryPoint": {
+          "type": "boolean"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/serviceAlias"
+          }
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/serviceRef"
+          }
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "additionalProperties": false
+    },
+    "serviceAlias": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "use",
+        "by",
+        "path",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ServiceAlias"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "use": {
+          "enum": [
+            "entryPoint",
+            "import"
+          ]
+        },
+        "by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "roleDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "RoleDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "organogram": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/organogramRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inherits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permissionRef"
+          }
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "inherits",
+        "permissions"
+      ],
+      "unevaluatedProperties": false
+    },
+    "permissionDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "PermissionDef"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "usedBy": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/organogramRef"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "namespace",
+        "action",
+        "roles"
+      ],
+      "unevaluatedProperties": false
+    },
+    "organogramDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "OrganogramDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hierarchy": {
+          "$ref": "#/$defs/hierarchy"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/organogramRoleDef"
+          }
+        },
+        "fourEyes": {
+          "$ref": "#/$defs/body"
+        },
+        "segregation": {
+          "$ref": "#/$defs/body"
+        },
+        "delegations": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "kind",
+        "hierarchy",
+        "roles"
+      ],
+      "unevaluatedProperties": false
+    },
+    "organogramRoleDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "role",
+        "manages",
+        "inherits",
+        "permissions"
+      ],
+      "properties": {
+        "kind": {
+          "const": "OrganogramRoleDef"
+        },
+        "role": {
+          "$ref": "#/$defs/roleRef"
+        },
+        "manages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "inherits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permissionRef"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hierarchy": {
+      "type": "object",
+      "required": [
+        "kind",
+        "chains"
+      ],
+      "properties": {
+        "kind": {
+          "const": "Hierarchy"
+        },
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/roleRef"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "documentDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "DocumentDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldDef"
+          }
+        },
+        "lifecycle": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/lifecycleDef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actionDef"
+          }
+        },
+        "indexes": {
+          "$ref": "#/$defs/body"
+        },
+        "relations": {
+          "$ref": "#/$defs/body"
+        },
+        "events": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "kind",
+        "fields",
+        "actions"
+      ],
+      "unevaluatedProperties": false
+    },
+    "fieldDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "type",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FieldDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "$ref": "#/$defs/typeRef"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "default": {
+          "$ref": "#/$defs/expr"
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compute": {
+          "$ref": "#/$defs/expr"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "typeRef": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/shapeRef"
+        },
+        {
+          "$ref": "#/$defs/stdRef"
+        },
+        {
+          "$ref": "#/$defs/primitiveRef"
+        },
+        {
+          "$ref": "#/$defs/documentRef"
+        }
+      ]
+    },
+    "lifecycleDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "shape",
+        "initial",
+        "states"
+      ],
+      "properties": {
+        "kind": {
+          "const": "LifecycleDef"
+        },
+        "shape": {
+          "$ref": "#/$defs/shapeRef"
+        },
+        "initial": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shapeValueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creationEvent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shapeValueRef"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "actionDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "roles",
+        "to",
+        "form",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ActionDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "to": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shapeValueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "form": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/formRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limits": {
+          "$ref": "#/$defs/body"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "additionalProperties": false
+    },
+    "shapeDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShapeDef"
+        },
+        "shapeKind": {
+          "type": "string"
+        },
+        "base": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shapeValueDef"
+          }
+        },
+        "formula": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "conversions": {
+          "$ref": "#/$defs/body"
+        },
+        "methods": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "kind",
+        "shapeKind",
+        "values"
+      ],
+      "unevaluatedProperties": false
+    },
+    "shapeValueDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShapeValueDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "icon": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/iconRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transitionDef"
+          }
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "transitionDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "to"
+      ],
+      "properties": {
+        "kind": {
+          "const": "TransitionDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "$ref": "#/$defs/shapeValueRef"
+        },
+        "event": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldDef"
+          }
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ViewDef"
+        },
+        "viewKind": {
+          "type": "string"
+        },
+        "binds": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/documentRef"
+              },
+              {
+                "$ref": "#/$defs/processRef"
+              }
+            ]
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actionRef"
+          }
+        },
+        "filters": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "kind",
+        "viewKind",
+        "binds"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "FormDef"
+        },
+        "document": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/documentRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldDef"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/formActionDef"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "fields",
+        "actions"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formActionDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "calls",
+        "stay"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FormActionDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calls": {
+          "$ref": "#/$defs/actionRef"
+        },
+        "stay": {
+          "type": "boolean"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "messageDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "MessageDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "about": {
+          "$ref": "#/$defs/documentRef"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldDef"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "about",
+        "payload"
+      ],
+      "unevaluatedProperties": false
+    },
+    "processDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ProcessDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "start": {
+          "$ref": "#/$defs/startSpec"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stepDef"
+          }
+        },
+        "flow": {
+          "$ref": "#/$defs/flowDef"
+        },
+        "ends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/endDef"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/messageRef"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decisionRef"
+          }
+        },
+        "sla": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "steps",
+        "flow"
+      ],
+      "unevaluatedProperties": false
+    },
+    "stepDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "roles",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StepDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lane": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/actionRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "form": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/formRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "flowDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FlowDef"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/flowEdge"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "flowEdge": {
+      "type": "object",
+      "required": [
+        "kind",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FlowEdge"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "endDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "EndDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "startSpec": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StartSpec"
+        },
+        "trigger": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/expr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schedule": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/expr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "policyDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "PolicyDef"
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rules": {
+          "$ref": "#/$defs/body"
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anyRef"
+          }
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "decisionDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "DecisionDef"
+        },
+        "inputs": {
+          "$ref": "#/$defs/body"
+        },
+        "outputs": {
+          "$ref": "#/$defs/body"
+        },
+        "rules": {
+          "$ref": "#/$defs/body"
+        },
+        "table": {
+          "$ref": "#/$defs/body"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "integrationDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "IntegrationDef"
+        },
+        "integrationKind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "endpoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/secretRef"
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameterRef"
+          }
+        },
+        "operations": {
+          "$ref": "#/$defs/body"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "parameterDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ParameterDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "type": {
+          "$ref": "#/$defs/typeRef"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {
+          "$ref": "#/$defs/expr"
+        },
+        "min": {
+          "$ref": "#/$defs/expr"
+        },
+        "max": {
+          "$ref": "#/$defs/expr"
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/expr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "type"
+      ],
+      "unevaluatedProperties": false
+    },
+    "secretDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "SecretDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "type": {
+          "$ref": "#/$defs/typeRef"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "constraints": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "required": [
+        "kind",
+        "type"
+      ],
+      "unevaluatedProperties": false
+    },
+    "iconDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "IconDef"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hash": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "manualDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ManualDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "steps": {
+          "$ref": "#/$defs/body"
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anyRef"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "errorDef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/defBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ErrorDef"
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retryable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anyRef"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "anyRef": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/serviceRef"
+        },
+        {
+          "$ref": "#/$defs/roleRef"
+        },
+        {
+          "$ref": "#/$defs/permissionRef"
+        },
+        {
+          "$ref": "#/$defs/organogramRef"
+        },
+        {
+          "$ref": "#/$defs/documentRef"
+        },
+        {
+          "$ref": "#/$defs/shapeRef"
+        },
+        {
+          "$ref": "#/$defs/viewRef"
+        },
+        {
+          "$ref": "#/$defs/formRef"
+        },
+        {
+          "$ref": "#/$defs/processRef"
+        },
+        {
+          "$ref": "#/$defs/messageRef"
+        },
+        {
+          "$ref": "#/$defs/policyRef"
+        },
+        {
+          "$ref": "#/$defs/decisionRef"
+        },
+        {
+          "$ref": "#/$defs/integrationRef"
+        },
+        {
+          "$ref": "#/$defs/parameterRef"
+        },
+        {
+          "$ref": "#/$defs/secretRef"
+        },
+        {
+          "$ref": "#/$defs/iconRef"
+        },
+        {
+          "$ref": "#/$defs/manualRef"
+        },
+        {
+          "$ref": "#/$defs/errorRef"
+        },
+        {
+          "$ref": "#/$defs/fieldRef"
+        },
+        {
+          "$ref": "#/$defs/shapeValueRef"
+        },
+        {
+          "$ref": "#/$defs/stepRef"
+        },
+        {
+          "$ref": "#/$defs/actionRef"
+        },
+        {
+          "$ref": "#/$defs/stdRef"
+        },
+        {
+          "$ref": "#/$defs/primitiveRef"
+        }
+      ]
+    },
+    "serviceRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ServiceRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "roleRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "RoleRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "permissionRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "PermissionRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "organogramRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "OrganogramRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "documentRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "DocumentRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "shapeRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShapeRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "viewRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ViewRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "FormRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "processRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ProcessRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "messageRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "MessageRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "policyRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "PolicyRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "decisionRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "DecisionRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "integrationRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "IntegrationRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "parameterRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ParameterRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "secretRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "SecretRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "iconRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "IconRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "manualRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ManualRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "errorRef": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/refBase"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "const": "ErrorRef"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "fieldRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "documentId",
+        "fieldPath",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FieldRef"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fieldPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "shapeValueRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "shapeId",
+        "valuePath",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShapeValueRef"
+        },
+        "shapeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valuePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stepRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "processId",
+        "stepPath",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StepRef"
+        },
+        "processId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stepPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "actionRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "documentId",
+        "actionPath",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ActionRef"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actionPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stdRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StdRef"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^std\\."
+        }
+      },
+      "additionalProperties": false
+    },
+    "primitiveRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "PrimitiveRef"
+        },
+        "name": {
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "stream"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicationConfig": {
+      "type": "object",
+      "required": [
+        "kind",
+        "roles",
+        "roleHierarchy"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ApplicationConfig"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "roleHierarchy": {
+          "$ref": "#/$defs/hierarchy"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mainEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "parameters",
+        "secrets",
+        "start",
+        "statements"
+      ],
+      "properties": {
+        "kind": {
+          "const": "MainEntry"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameterSet"
+          }
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/secretSet"
+          }
+        },
+        "start": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/startEntry"
+          }
+        },
+        "statements": {
+          "$ref": "#/$defs/body"
+        }
+      },
+      "additionalProperties": false
+    },
+    "parameterSet": {
+      "type": "object",
+      "required": [
+        "kind",
+        "parameter",
+        "value",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ParameterSet"
+        },
+        "parameter": {
+          "$ref": "#/$defs/parameterRef"
+        },
+        "value": {
+          "$ref": "#/$defs/expr"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "secretSet": {
+      "type": "object",
+      "required": [
+        "kind",
+        "secret",
+        "name",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "SecretSet"
+        },
+        "secret": {
+          "$ref": "#/$defs/secretRef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "startEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "service",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StartEntry"
+        },
+        "service": {
+          "$ref": "#/$defs/serviceRef"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fileEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "serviceId",
+        "application"
+      ],
+      "properties": {
+        "kind": {
+          "const": "FileEntry"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "serviceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "application": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pendingEntry": {
+      "type": "object",
+      "required": [
+        "kind",
+        "keyword",
+        "message",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "PendingEntry"
+        },
+        "keyword": {
+          "enum": [
+            "TODO",
+            "FIXME",
+            "REVIEW",
+            "OPTIMIZE",
+            "HACK"
+          ]
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "dateText": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "index": {
+      "type": "object",
+      "required": [
+        "byKind",
+        "byService"
+      ],
+      "properties": {
+        "byKind": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "byService": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -97,7 +97,9 @@ fn resolve_members(members: &mut [Member], app_locales: &[String], default_local
                     resolve_nested(value, app_locales, default_locale);
                 }
             }
-            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
+            Member::Block { body, .. }
+            | Member::EnumValueDeclaration { body, .. }
+            | Member::Reintroduce { body, .. } => {
                 resolve_members(body, app_locales, default_locale);
             }
             Member::Statement { statement, .. } => {

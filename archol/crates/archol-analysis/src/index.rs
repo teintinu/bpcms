@@ -192,9 +192,9 @@ pub fn walk_members<'a>(members: &'a [Member], visit: &mut impl FnMut(&'a Member
     for member in members {
         visit(member);
         match member {
-            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
-                walk_members(body, visit)
-            }
+            Member::Block { body, .. }
+            | Member::EnumValueDeclaration { body, .. }
+            | Member::Reintroduce { body, .. } => walk_members(body, visit),
             Member::Statement { statement, .. } => walk_statement(statement, visit),
             Member::PropertyAssignment { value, .. } => walk_expr(value, visit),
             _ => {}

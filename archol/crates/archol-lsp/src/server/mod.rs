@@ -490,27 +490,29 @@ impl Server {
                     .iter()
                     .find(|file| same_path(&file.path, &path))
                 {
-                    let ast = serde_json::to_value(&file.ast).unwrap_or(Value::Null);
+                    let mut ast = serde_json::to_value(&file.ast).unwrap_or(Value::Null);
+                    archol_core::order::order_value(&mut ast);
                     return json!({ "ast": ast, "inApplication": true });
                 }
             }
-            return json!({
-                "ast": {
-                    "kind": "SourceFile",
-                    "path": path,
-                    "commentedOut": true,
-                    "items": [],
-                },
-                "inApplication": false,
+            let mut ast = json!({
+                "kind": "SourceFile",
+                "path": path,
+                "commentedOut": true,
+                "items": [],
             });
+            archol_core::order::order_value(&mut ast);
+            return json!({ "ast": ast, "inApplication": false });
         }
 
         let Some(text) = self.document_source(&path) else {
             return json!({ "ast": Value::Null, "inApplication": false });
         };
         let parsed = archol_core::parse(&text, path);
+        let mut ast = serde_json::to_value(&parsed.ast).unwrap_or(Value::Null);
+        archol_core::order::order_value(&mut ast);
         json!({
-            "ast": serde_json::to_value(&parsed.ast).unwrap_or(Value::Null),
+            "ast": ast,
             "inApplication": false,
         })
     }

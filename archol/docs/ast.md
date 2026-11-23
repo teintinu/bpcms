@@ -4,6 +4,11 @@ The AST is serializable to JSON, in the style of the TypeScript AST: every node
 has `kind` (the node name) and `loc` (`start`/`end` in bytes). It is the
 structure the AST explorer, the LSP, and the builder consume.
 
+For the resolved, whole-application tree consumed by builders, see
+[`application-ast.md`](application-ast.md) and its JSON Schema
+[`application-ast.schema.json`](application-ast.schema.json). `SourceFile` below
+remains the per-file syntax tree.
+
 ```json
 {
   "kind": "SourceFile",
@@ -26,6 +31,15 @@ structure the AST explorer, the LSP, and the builder consume.
   ]
 }
 ```
+
+## Property order
+
+JSON, YAML, the LSP AST response and the AST explorer share one order file:
+[`archol/ast-order.json`](../ast-order.json). The first keys keep a semantic
+order (`kind`, `title`, `name`, `value`, `message`, `id`), keys ending in `loc`
+go last, and every other key is alphabetical. `archol_core::order::order_value`
+applies it recursively before the CLI prints JSON/YAML or the LSP sends the AST;
+the extension reads the same JSON file for its tree and JSON view.
 
 ## Nodes
 

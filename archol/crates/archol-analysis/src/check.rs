@@ -58,6 +58,7 @@ fn check_artifact(
 ) {
     if artifact.artifact_kind() == "Service" {
         check_service_locales(artifact, diagnostics);
+        check_reintroductions(symbols, service, artifact, diagnostics);
     }
     for param in &artifact.params {
         if let Some(type_ref) = &param.type_ref {
@@ -70,6 +71,59 @@ fn check_artifact(
     }
     collect_locals(&artifact.body, &mut locals);
     check_members(symbols, service, &artifact.body, &locals, diagnostics);
+}
+
+/// `reintroduce` must import the owner service and name an existing artifact.
+fn check_reintroductions(
+    symbols: &Symbols,
+    service: Option<&str>,
+    artifact: &Artifact,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let Some(service) = service else {
+        return;
+    };
+    let imports = symbols.imports.get(service);
+    for member in &artifact.body {
+        let Member::Reintroduce {
+            service: alias,
+            artifact: target,
+            span,
+            ..
+        } = member
+        else {
+            continue;
+        };
+        let Some(target_uri) = imports.and_then(|imports| imports.get(alias)) else {
+            diagnostics.push(Diagnostic::error(
+                "E_REINTRODUCE_IMPORT",
+                format!("Service alias `{alias}` is not imported; cannot reintroduce `{target}`"),
+                *span,
+            ));
+            continue;
+        };
+        let matches: Vec<_> = symbols
+            .artifacts
+            .get(target)
+            .into_iter()
+            .flatten()
+            .filter(|artifact| artifact.service.as_deref() == Some(target_uri.as_str()))
+            .filter(|artifact| artifact.kind != "Service")
+            .collect();
+        if matches.is_empty() {
+            diagnostics.push(Diagnostic::error(
+                "E_REINTRODUCE_TARGET",
+                format!("Artifact `{target}` was not found in `{target_uri}`"),
+                *span,
+            ));
+        } else if matches.len() > 1 {
+            diagnostics.push(Diagnostic::error(
+                "E_REINTRODUCE_AMBIGUOUS",
+                format!("Artifact `{target}` is ambiguous in `{target_uri}`"),
+                *span,
+            ));
+        }
+    }
 }
 
 /// Every service declares `locales` with at least one language.
@@ -147,7 +201,9 @@ fn check_members(
             Member::PropertyAssignment { name, value, .. } => {
                 check_value(symbols, service, name, value, locals, diagnostics);
             }
-            Member::Block { body, .. } | Member::EnumValueDeclaration { body, .. } => {
+            Member::Block { body, .. }
+            | Member::EnumValueDeclaration { body, .. }
+            | Member::Reintroduce { body, .. } => {
                 check_members(symbols, service, body, locals, diagnostics);
             }
             Member::Hierarchy { chains, span } => {

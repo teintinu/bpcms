@@ -2,6 +2,7 @@
 
 pub mod annotate;
 pub mod application;
+pub mod application_ast;
 pub mod check;
 pub mod i18n;
 pub mod ids;

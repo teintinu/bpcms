@@ -1,0 +1,374 @@
+"kind": "SourceFile"
+"items":
+  -
+    "kind": "ArtifactApplication"
+    "name": "example.com/app/loja-do-joao"
+    "id": "e1"
+    "body":
+      -
+        "kind": "PropertyAssignment"
+        "name": "title"
+        "value":
+          "kind": "ShapeValue"
+          "value":
+            "en-US": "João's Store"
+            "pt-BR": "Loja do João"
+          "typeRef": "std.bpcms.i18n"
+      -
+        "kind": "Block"
+        "name": "services"
+        "body":
+          -
+            "kind": "ServiceEntry"
+            "alias": "Identity"
+            "ref": "ay"
+            "uri": "example.com/services/identity"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Catalog"
+            "ref": "ae"
+            "uri": "example.com/services/catalog"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Orders"
+            "ref": "an"
+            "uri": "example.com/services/orders"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Payments"
+            "ref": "ea"
+            "uri": "example.com/services/payments"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Shipping"
+            "ref": "eu"
+            "uri": "example.com/services/shipping"
+          -
+            "kind": "ServiceEntry"
+            "alias": "Notifications"
+            "ref": "db"
+            "uri": "example.com/services/notifications"
+        "keyword": null
+      -
+        "kind": "Block"
+        "name": "roles"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Customer"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Manager"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Dispatcher"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "Driver"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Identifier"
+                  "name": "Manager"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Clerk"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "Binary"
+                  "left":
+                    "kind": "Identifier"
+                    "name": "Manager"
+                  "op": ">"
+                  "right":
+                    "kind": "Identifier"
+                    "name": "Dispatcher"
+                "op": ">"
+                "right":
+                  "kind": "Identifier"
+                  "name": "Driver"
+        "keyword": null
+      -
+        "kind": "PropertyAssignment"
+        "name": "theme"
+        "value":
+          "kind": "Identifier"
+          "name": "Nuvula"
+      -
+        "kind": "PropertyAssignment"
+        "name": "locales"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "pt"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "BR"
+            -
+              "kind": "Binary"
+              "left":
+                "kind": "Identifier"
+                "name": "en"
+              "op": "-"
+              "right":
+                "kind": "Identifier"
+                "name": "US"
+      -
+        "kind": "PropertyAssignment"
+        "name": "environments"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "kind": "Identifier"
+              "name": "dev"
+            -
+              "kind": "Identifier"
+              "name": "qa"
+            -
+              "kind": "Identifier"
+              "name": "prod"
+      -
+        "kind": "Block"
+        "name": "main"
+        "body":
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "set"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Binary"
+                "left":
+                  "kind": "MemberAccess"
+                  "name": "DefaultCurrency"
+                  "object":
+                    "kind": "Identifier"
+                    "name": "Catalog"
+                "op": "="
+                "right":
+                  "kind": "StringLiteral"
+                  "value": "BRL"
+                  "raw": "\"BRL\""
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "Identifier"
+                "name": "start"
+          -
+            "kind": "Statement"
+            "statement":
+              "kind": "ExpressionStatement"
+              "expression":
+                "kind": "List"
+                "elements":
+                  -
+                    "kind": "StringLiteral"
+                    "value": "example.com/services/identity"
+                    "raw": "\"example.com/services/identity\""
+        "keyword": null
+    "params": []
+"path": "examples/applications/example.com/app/loja-do-joao/loja-do-joao-application.archol"
+"pending":
+  -
+    "kind": "Pending"
+    "message": "application: Loja do João (catálogo, pedidos, pagamentos e entrega)"
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Declara a aplicação da URI example.com/app/loja-do-joao e abre sua composição."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Nome localizado da aplicação, exibido no construtor e no runtime."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em português (idioma default)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Título em inglês americano."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Entry points da aplicação; cada alias local é usado nas referências cruzadas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Identidade e autenticação dos usuários."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Catálogo de produtos e preços."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Carrinho e pedidos de venda."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Cobrança e autorização de pagamentos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Cotação e rastreio de entregas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Avisos e notificações aos clientes."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Papéis da aplicação e a hierarquia entre eles (`>` = superior a)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Cliente: compra na loja."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Balconista: apoia o atendimento e os pedidos."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Gerente: responde pela operação da loja."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Despachante: organiza as entregas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Motorista: executa as entregas."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a Clerk."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Manager é superior a Dispatcher, que é superior a Driver."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Tema visual fornecido pelo construtor (não é artefato de serviço)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Idiomas da app; o primeiro (pt-BR) é o default."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Ambientes em que a aplicação é promovida."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Inicializa Catalog.DefaultCurrency com o real brasileiro (moeda padrão da loja)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"
+  -
+    "kind": "Pending"
+    "message": "Faz o boot antecipado do serviço de identidade (não declara dependência)."
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+    "keyword": "REVIEW"

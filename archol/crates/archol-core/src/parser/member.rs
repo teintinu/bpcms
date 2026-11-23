@@ -13,6 +13,20 @@ impl Parser<'_> {
         if self.kind() == TokenKind::String {
             return Some(self.parse_service_entry());
         }
+        if self.kind() == TokenKind::Ident {
+            let text = self.text(self.cur().span);
+            if text == "reintroduce"
+                && self.peek(1) == TokenKind::Ident
+                && self.peek(2) == TokenKind::Dot
+                && self.peek(3) == TokenKind::Ident
+                && self.peek(4) == TokenKind::LBrace
+            {
+                return Some(self.parse_reintroduce());
+            }
+            if text == "insert" && self.peek(1) == TokenKind::Ident {
+                return Some(self.parse_insert());
+            }
+        }
         match self.kind() {
             TokenKind::Keyword(Keyword::Service) if self.peek(1) == TokenKind::String => {
                 return Some(self.parse_import())
@@ -58,6 +72,89 @@ impl Parser<'_> {
             return Some(member);
         }
         Some(self.parse_expression_statement())
+    }
+
+    /// `reintroduce Alias.Artifact { ... }` inside a service body.
+    fn parse_reintroduce(&mut self) -> Member {
+        let start = self.cur().span.start;
+        self.advance(); // reintroduce
+        let service = if self.kind() == TokenKind::Ident {
+            let token = self.advance();
+            self.text(token.span).to_string()
+        } else {
+            self.error(
+                "E_REINTRODUCE_TARGET",
+                "Expected a service alias".to_string(),
+            );
+            String::new()
+        };
+        self.expect(TokenKind::Dot, "E_REINTRODUCE_TARGET");
+        let artifact = if self.kind() == TokenKind::Ident {
+            let token = self.advance();
+            self.text(token.span).to_string()
+        } else {
+            self.error(
+                "E_REINTRODUCE_TARGET",
+                "Expected an artifact name".to_string(),
+            );
+            String::new()
+        };
+        let body = self.parse_body();
+        let span = Span::new(start, self.prev_end());
+        Member::Reintroduce {
+            service,
+            artifact,
+            body,
+            span,
+        }
+    }
+
+    /// `insert X before Y` (or `after`) inside a reintroduce body.
+    fn parse_insert(&mut self) -> Member {
+        let start = self.cur().span.start;
+        self.advance(); // insert
+        let target = if self.kind() == TokenKind::Ident {
+            let token = self.advance();
+            self.text(token.span).to_string()
+        } else {
+            self.error(
+                "E_REINTRODUCE_INSERT",
+                "Expected the inserted name".to_string(),
+            );
+            String::new()
+        };
+        let position = if self.kind() == TokenKind::Ident {
+            let token = self.advance();
+            self.text(token.span).to_string()
+        } else {
+            self.error(
+                "E_REINTRODUCE_INSERT",
+                "Expected `before` or `after`".to_string(),
+            );
+            String::new()
+        };
+        let anchor = if self.kind() == TokenKind::Ident {
+            let token = self.advance();
+            self.text(token.span).to_string()
+        } else {
+            self.error(
+                "E_REINTRODUCE_INSERT",
+                "Expected the anchor name".to_string(),
+            );
+            String::new()
+        };
+        if position != "before" && position != "after" {
+            self.error(
+                "E_REINTRODUCE_INSERT",
+                "`insert` position must be `before` or `after`".to_string(),
+            );
+        }
+        Member::Insert {
+            target,
+            position,
+            anchor,
+            span: Span::new(start, self.prev_end()),
+        }
     }
 
     /// `name: value`, including hyphenated keys (`pt-BR: "..."`).
