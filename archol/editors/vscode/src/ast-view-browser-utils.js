@@ -72,7 +72,7 @@ const browserUtils = `  function isNode(value) {
     if (node.name) {
       var typeRef = node.typeRef ? ': ' + node.typeRef : '';
       parts.push(String(node.name) + typeRef);
-    } else if (node.kind === 'SourceFile' && node.path) {
+    } else if (node.kind === 'ArcholApplication' && (node.uri || node.path)) {
       const segments = String(node.path).split(/[\\\\/]/);
       parts.push(segments[segments.length - 1]);
     }
@@ -83,7 +83,7 @@ const browserUtils = `  function isNode(value) {
   }
 
   function categoryOf(kind) {
-    if (/Block$|Body$|^SourceFile$/.test(kind)) return 'block';
+    if (/Block$|Body$|^ArcholApplication$/.test(kind)) return 'block';
     if (/Declaration$|^Artifact$|^Field$|^Parameter$|^Transition$|^Value$|^Role$|^Action$|^PropertyAssignment$|^ShorthandProperty$/.test(kind)) return 'declaration';
     if (/Statement$|^Return|^If|^Send|^Try|^Catch|^Let|^Const/.test(kind)) return 'statement';
     if (/Expression$|Literal$|^Call|^Reference|^Binary|^Unary|^Identifier$|^MemberAccess$|^List$|^Object$|^NamedArgument$/.test(kind)) return 'expression';

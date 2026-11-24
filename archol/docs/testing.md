@@ -21,11 +21,9 @@ node --test editors/vscode/test
 | `archol-analysis/src/ids.rs` (inline tests) | sequential used-only ids, usage-first allocation, base36, CSV roundtrip, pinned `*`, duplicate rejection |
 | `archol-analysis/src/application.rs` (inline tests) | application discovery, transitive imports, closure file set |
 | `archol-lsp/src/resolve.rs` + `server/tests.rs` | field/enum definitions, app selection, declaration/usages by id |
-| `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, annotated `ast`, `format --check`, pending diagnostics |
-| `archol-cli/tests/source_snapshots.rs` | each application file against `<app>.expected-source.yml` with `archol ast --no-loc`; writes `<app>.result-source.yml` (gitignored) and fails on diff |
+| `archol-cli/tests/cli.rs` | `--app` required, `applications`, `lock` create/stable/prune, application `ast`/`application`, `format --check`, pending diagnostics |
 | `archol-cli/tests/application_snapshots.rs` | each resolved tree against `<app>.expected-ast.yml` with `archol application --no-loc --no-body`; writes `<app>.result-ast.yml` (gitignored) and fails on diff |
 | `archol-cli/tests/application_ast.rs` | closed/typed `ArcholApplication` for every app, role/permission inverse, and the `reintroduce` merge in `loja-com-antifraude` |
-| `archol-cli/tests/ast_locs.rs` | locs exist by default with valid byte ranges, and `--no-loc` removes `loc`/`keywordLoc` from JSON and YAML |
 | `editors/vscode/test` | JSON-RPC framing, AST tree, byte-span conversion, application/quick-pick helpers, outside marker, lock debouncer |
 
 ## Status
@@ -35,19 +33,17 @@ Run `cargo test` for the current count; JavaScript tests run with
 
 ## AST snapshots
 
-Each example application has two snapshots next to its
+Each example application has one snapshot next to its
 `<app>-application.archol`:
 
-- `<app>.expected-source.yml` — the per-file `SourceFile` from
-  `archol ast <app-file> --app <app-uri> --yaml --no-loc`;
 - `<app>.expected-ast.yml` — the resolved `ArcholApplication` from
   `archol application examples --app <app-uri> --yaml --no-loc --no-body`.
 
-The tests write `<app>.result-source.yml` and `<app>.result-ast.yml` (ignored
-by git) and compare them with the expected files. On failure the result stays
-for diffing.
+There is no emitted `SourceFile` AST snapshot. The test writes
+`<app>.result-ast.yml` (ignored by git) and compares it with the expected file.
+On failure the result stays for diffing.
 
-To refresh both families after an intentional change:
+To refresh the application snapshots after an intentional change:
 
 ```bash
 bash archol/scripts/test-update-snapshots.sh

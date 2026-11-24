@@ -4,11 +4,9 @@
 # Usage:
 #   bash archol/scripts/test-update-snapshots.sh
 #
-# Two families are updated:
-#   - source:    `<app>.result-source.yml`    -> `<app>.expected-source.yml`
-#                (per-file `SourceFile` from `archol ast`)
+# One family is updated:
 #   - application: `<app>.result-ast.yml`     -> `<app>.expected-ast.yml`
-#                (resolved `ArcholApplication` from `archol application`)
+#                  (resolved `ArcholApplication` from `archol application`).
 #
 # The snapshot tests write the result files before comparing them. This script
 # removes stale results, runs both snapshot tests (differences are expected to
@@ -41,7 +39,7 @@ cd "$ARCHOL"
 echo "==> Removing stale result snapshots"
 find "$APPLICATIONS" -name '*.result-*.yml' -delete
 
-for test in source_snapshots application_snapshots; do
+for test in application_snapshots; do
   echo "==> Running $test (differences are expected)"
   if cargo test -p archol-cli --test "$test"; then
     echo "==> $test already matched; refreshing its expected files anyway"
@@ -75,7 +73,6 @@ update_family() {
   done
 }
 
-update_family source
 update_family ast
 
 find "$APPLICATIONS" -name '*.result-*.yml' -delete

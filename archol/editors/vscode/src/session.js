@@ -163,12 +163,6 @@ class ArcholSession {
     this._client.notify('textDocument/didClose', { textDocument: { uri } });
   }
 
-  async fetchAst(uri) {
-    const instance = await this.ensureClient();
-    const result = await instance.request('archol/ast', { uri });
-    return normalizeAstResult(result);
-  }
-
   async fetchApplicationAst() {
     const instance = await this.ensureClient();
     const result = await instance.request('archol/applicationAst', { noBody: true });

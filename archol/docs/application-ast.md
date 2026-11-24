@@ -6,9 +6,10 @@
 
 ## 1. Purpose
 
-`SourceFile` answers "what is written in this file". The application AST answers
-"what does this application mean": one closed tree with the whole closure, every
-definition resolved and every reference linked by id.
+The internal `SourceFile` tree answers "what is written in this file". The
+application AST answers "what does this application mean": one closed tree with
+the whole closure, every definition resolved and every reference linked by id.
+It is the only emitted AST; its root is always `ArcholApplication`.
 
 - A definition appears **once**, inside the `artifact` map.
 - Every reference is a typed node with the target id and the use `loc`.
@@ -608,8 +609,10 @@ reserved `std` namespace use dedicated nodes:
 }
 ```
 
-`roles` is the selection from the application's `roles` block. Roles in the
-closure that are not selected still exist in `artifact`; they are used by
+`title`, `theme`, `locales` and `environments` are **root-level** fields next to
+`application` (see section 2), not members of `ApplicationConfig`. `roles` is
+the selection from the application's `roles` block. Roles in the closure that
+are not selected still exist in `artifact`; they are used by
 documents/processes. There is no `appRole` boolean.
 
 The DSL must allow service-qualified role references, because the same role
@@ -736,13 +739,13 @@ merged definition only; there is no second version and no provenance field.
 The full tree (with `body` and `loc`) is the builder contract. `--no-body`
 removes every `body` and keeps the typed projections, which is the recommended
 mode for large applications; `--no-loc` removes locations for diffs. The shape
-and the ids stay the same in both modes. `SourceFile` remains for per-file
-tooling.
+and the ids stay the same in both modes. `SourceFile` is an internal parser
+structure only.
 
 ## 12. Compatibility and migration
 
-- `SourceFile` and its snapshots are unchanged. `ArcholApplication` is a new
-  output, emitted only with application context.
+- Every CLI/LSP AST output requires an application and starts at
+  `ArcholApplication`; there is no public `SourceFile` output.
 - The application `roles` block must accept service-qualified references; bare
   names are accepted only when unambiguous.
 - `reintroduce` is parsed, checked and merged for the corpus. Process-task
@@ -769,7 +772,6 @@ The tree is emitted by `archol application [dir] --app <uri|path>`
 - i18n values contain only application locales;
 - `SecretDef`/`SecretSet` never contain a value;
 - two runs produce byte-identical JSON;
-- `SourceFile` snapshots are unchanged.
 
 Schema validation is run separately with the JSON Schema (the Rust test focuses
 on closure and typed references).

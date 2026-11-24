@@ -1,13 +1,12 @@
 # AST
 
-The AST is serializable to JSON, in the style of the TypeScript AST: every node
-has `kind` (the node name) and `loc` (`start`/`end` in bytes). It is the
-structure the AST explorer, the LSP, and the builder consume.
+This is the **internal per-file syntax tree** used by the parser, checker, LSP
+features and formatter. Every node has `kind` (the node name) and `loc`
+(`start`/`end` in bytes). It is never emitted as a public AST.
 
-For the resolved, whole-application tree consumed by builders, see
-[`application-ast.md`](application-ast.md) and its JSON Schema
-[`application-ast.schema.json`](application-ast.schema.json). `SourceFile` below
-remains the per-file syntax tree.
+Every emitted AST is the resolved application tree, whose root is always
+`ArcholApplication`: see [`application-ast.md`](application-ast.md) and its JSON
+Schema [`application-ast.schema.json`](application-ast.schema.json).
 
 ```json
 {
@@ -197,9 +196,8 @@ does not carry the I18N type.
 }
 ```
 
-`short`/`tooltip` are nested `I18N` entries and are not locales. The syntax
-AST (`archol ast` without `--app`) keeps values as written; locale resolution
-needs an application.
+`short`/`tooltip` are nested `I18N` entries and are not locales. The internal
+syntax tree keeps values as written; locale resolution needs an application.
 
 Other semantic types still use `PropertyAssignment.typeRef`: `sla` is
 `std.Duration` (`"typeRef": "std.Duration"`).

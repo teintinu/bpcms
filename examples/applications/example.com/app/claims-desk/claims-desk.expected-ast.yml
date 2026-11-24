@@ -1,4 +1,10 @@
 "kind": "ArcholApplication"
+"title":
+  "kind": "ShapeValue"
+  "value":
+    "en-US": "Claims Desk"
+    "pt-BR": "Mesa de Sinistros"
+  "typeRef": "std.bpcms.i18n"
 "application":
   "kind": "ApplicationConfig"
   "roleHierarchy":
@@ -15207,6 +15213,16 @@
           "valuePath": "Lost"
     "relations": []
     "serviceId": "f4"
+"environments":
+  -
+    "kind": "EnvironmentEntry"
+    "name": "dev"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "qa"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "prod"
 "files":
   -
     "kind": "FileEntry"
@@ -16747,6 +16763,15 @@
       - "l"
       - "n"
       - "r"
+"locales":
+  -
+    "kind": "LocaleRef"
+    "default": true
+    "tag": "pt-BR"
+  -
+    "kind": "LocaleRef"
+    "default": false
+    "tag": "en-US"
 "main":
   "kind": "MainEntry"
   "parameters": []
@@ -53373,5 +53398,8 @@
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
 "schemaVersion": 1
+"theme":
+  "kind": "ThemeRef"
+  "id": "Claims"
 "uri": "example.com/app/claims-desk"
 "workspaceRoot": "/Users/teintinu/dsv/bpcms/examples"

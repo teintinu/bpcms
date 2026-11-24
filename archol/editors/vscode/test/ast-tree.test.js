@@ -7,7 +7,6 @@ const {
   findNodeAtOffset,
   findNodePathAtOffset,
   getChildren,
-  mergePending,
   nodeAtPath,
   nodeCategory,
   nodeSummary,
@@ -21,7 +20,7 @@ const text = 'document Invoice {\n  fields {\n    total: Money\n  }\n}\n';
 const fieldsStart = text.indexOf('fields');
 const totalStart = text.indexOf('total');
 const ast = {
-  kind: 'SourceFile',
+  kind: 'ArcholApplication',
   path: '/workspace/invoice.archol',
   loc: { start: 0, end: text.length },
   items: [
@@ -76,14 +75,14 @@ test('findNodeAtOffset accepts an offset at the end of the loc', () => {
   const fieldEnd = totalStart + 'total: Money'.length;
   const found = findNodeAtOffset(ast, fieldEnd);
   assert.ok(found);
-  assert.ok(['Field', 'TypeReference', 'FieldBlock', 'ArtifactDocument', 'SourceFile'].includes(found.node.kind));
+  assert.ok(['Field', 'TypeReference', 'FieldBlock', 'ArtifactDocument', 'ArcholApplication'].includes(found.node.kind));
 });
 
 test('walk visits the tree in pre-order', () => {
   const visited = [];
   walk(ast, (node, path) => visited.push(`${path.join('.')}:${node.kind}`));
   assert.deepEqual(visited, [
-    ':SourceFile',
+    ':ArcholApplication',
     '0:ArtifactDocument',
     '0.0:FieldBlock',
     '0.0.0:Field',
@@ -108,7 +107,7 @@ test('nodeSummary shows the readable summary per category', () => {
 });
 
 test('nodeCategory classifies nodes without relying on CSS', () => {
-  assert.equal(nodeCategory('SourceFile'), 'block');
+  assert.equal(nodeCategory('ArcholApplication'), 'block');
   assert.equal(nodeCategory('FieldBlock'), 'block');
   assert.equal(nodeCategory('ArtifactDocument'), 'declaration');
   assert.equal(nodeCategory('FieldDeclaration'), 'declaration');
@@ -167,39 +166,4 @@ test('textOffsetsForByteSpan normalizes an inverted range and out-of-range value
   assert.equal(end, sample.length);
   const [a, b] = textOffsetsForByteSpan(sample, 3, 5);
   assert.equal(sample.slice(a, b), 'ç');
-});
-
-
-test('mergePending inserts comments into the containing node in source order', () => {
-  const pendingAst = {
-    kind: 'SourceFile',
-    path: '/workspace/demo.archol',
-    loc: { start: 0, end: 120 },
-    items: [
-      {
-        kind: 'ArtifactProcess',
-        name: 'P',
-        loc: { start: 10, end: 110 },
-        body: [
-          { kind: 'MemberA', loc: { start: 30, end: 40 } },
-          { kind: 'MemberB', loc: { start: 80, end: 90 } },
-        ],
-      },
-    ],
-    pendings: [
-      { kind: 'PendingHack', loc: { start: 60, end: 70 } },
-      { kind: 'PendingTodo', loc: { start: 0, end: 5 } },
-      { kind: 'PendingReview', loc: { start: 20, end: 25 } },
-    ],
-  };
-  mergePending(pendingAst);
-  assert.equal(pendingAst.pendings, undefined);
-  const rootChildren = getChildren(pendingAst);
-  assert.equal(rootChildren[0].kind, 'PendingTodo');
-  assert.equal(rootChildren[0].kind, 'PendingTodo');
-  assert.equal(rootChildren[1].kind, 'ArtifactProcess');
-  const body = getChildren(rootChildren[1]);
-  assert.deepEqual(body.map((node) => node.kind), ['PendingReview', 'MemberA', 'PendingHack', 'MemberB']);
-  assert.equal(body[0].kind, 'PendingReview');
-  assert.equal(body[2].kind, 'PendingHack');
 });

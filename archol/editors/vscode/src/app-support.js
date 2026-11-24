@@ -138,8 +138,7 @@ function usageTargetId(node) {
   return node.id !== undefined && node.id !== null ? node.id : null;
 }
 
-// `archol/ast` may return `{ ast, inApplication }`; an AST outside the
-// application closure has `commentedOut: true`.
+// `archol/applicationAst` returns `{ ast, application, inApplication }`.
 function normalizeAstResult(result) {
   if (!result || typeof result !== 'object') {
     return { ast: null, inApplication: true, commentedOut: false };

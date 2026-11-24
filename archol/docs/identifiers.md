@@ -170,8 +170,8 @@ entry and a service `imports { service "<uri>" as Alias }` entry carry the `ref`
 service declaration, so the explorer can jump from `Identity` to the service file.
 
 Files outside the closure are inert. The LSP treats them as **commented out**:
-no hover, completion, definition, references or symbols, a single information
-diagnostic, and `archol/ast` returns `commentedOut: true`.
+no hover, completion, definition, references or symbols, and a single
+information diagnostic.
 
 The VS Code setting `archol.application` selects the current application; the
 status bar shows it and **Archol: Select Application** changes it.

@@ -139,8 +139,8 @@ def main():
         except FileNotFoundError:
             pass
 
-    ast = request(4, "archol/ast", {"uri": uri})["result"]["ast"]
-    assert ast["kind"] == "SourceFile" and ast["items"]
+    ast = request(4, "archol/applicationAst", {"noBody": True})["result"]["ast"]
+    assert ast["kind"] == "ArcholApplication" and ast["artifact"]
     links = request(5, "archol/links", {})["result"]["links"]
     assert links["roles"] and links["enums"]
 

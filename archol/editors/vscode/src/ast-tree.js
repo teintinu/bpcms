@@ -1,6 +1,6 @@
 'use strict';
 
-// Pure utilities over the AST returned by `archol/ast`.
+// Pure utilities over the resolved application AST.
 // The child order is the same one used by the explorer (src/ast-view-html.js):
 // properties that are nodes, then arrays of nodes, in JSON object order.
 
@@ -27,88 +27,6 @@ function getChildren(node) {
   return children;
 }
 
-
-// The server returns comments in `SourceFile.pendings` (one kind per keyword). The explorer shows them
-// as children of the deepest node that contains them, in source order, so the
-// tree follows the file instead of listing every pending at the end.
-function mergePending(ast) {
-  if (!isAstNode(ast) || !Array.isArray(ast.pendings)) return ast;
-  const pending = ast.pendings
-    .filter(isAstNode)
-    .filter((node) => /^Pending(Todo|Fixme|Review|Optimize|Hack)$/.test(node.kind))
-    .sort((left, right) => spanStart(left) - spanStart(right));
-  delete ast.pendings;
-  for (const item of pending) {
-    const container = pendingContainer(ast, item.loc, null);
-    if (!container) continue;
-    const target = chooseArray(container, item.loc);
-    if (!target) continue;
-    target.array.splice(insertIndex(target.array, item.loc), 0, item);
-  }
-  return ast;
-}
-
-function spanStart(node) {
-  return node && node.loc && Number.isFinite(node.loc.start) ? node.loc.start : 0;
-}
-
-function contains(span, point) {
-  return Boolean(span)
-    && Number.isFinite(span.start)
-    && Number.isFinite(span.end)
-    && Number.isFinite(point)
-    && point >= span.start
-    && point <= span.end;
-}
-
-// Deepest node with a child array that contains the pending comment.
-function pendingContainer(node, span, fallback) {
-  const children = getChildren(node);
-  for (const child of children) {
-    if (!isAstNode(child) || child.kind === 'Pending') continue;
-    if (!child.loc || !contains(child.loc, span.start)) continue;
-    const deeper = pendingContainer(child, span, fallback);
-    if (deeper && arrayKeys(deeper).length > 0) return deeper;
-  }
-  if (arrayKeys(node).length > 0) return node;
-  return fallback;
-}
-
-function arrayKeys(node) {
-  return Object.keys(node).filter((key) => {
-    if (key === 'pending' || key === 'loc' || key === 'keywordLoc') return false;
-    const value = node[key];
-    return Array.isArray(value) && value.some((item) => isAstNode(item));
-  });
-}
-
-function chooseArray(node, span) {
-  const keys = arrayKeys(node);
-  if (keys.length === 0) return null;
-  let best = null;
-  for (const key of keys) {
-    const array = node[key];
-    let distance = Infinity;
-    for (const item of array) {
-      if (!isAstNode(item) || !item.loc) continue;
-      if (contains(item.loc, span.start)) {
-        distance = 0;
-        break;
-      }
-      distance = Math.min(distance, Math.abs(item.loc.start - span.start));
-    }
-    if (!best || distance < best.distance) best = { array, distance };
-  }
-  return best;
-}
-
-function insertIndex(array, span) {
-  for (let index = 0; index < array.length; index += 1) {
-    const item = array[index];
-    if (isAstNode(item) && item.loc && item.loc.start > span.start) return index;
-  }
-  return array.length;
-}
 
 function nodeAtPath(root, path) {
   let node = root;
@@ -173,7 +91,7 @@ function nodeSummary(node) {
   if (node.name) {
     const typeRef = node.typeRef ? `: ${node.typeRef}` : '';
     parts.push(`${node.name}${typeRef}`);
-  } else if (node.kind === 'SourceFile' && node.path) {
+  } else if (node.kind === 'ArcholApplication' && (node.uri || node.path)) {
     const segments = String(node.path).split(/[\\/]/);
     parts.push(segments[segments.length - 1]);
   }
@@ -184,7 +102,7 @@ function nodeSummary(node) {
 }
 
 function nodeCategory(kind) {
-  if (/Block$|Body$|^SourceFile$|^Hierarchy$|^HierarchyChain$/.test(kind)) return 'block';
+  if (/Block$|Body$|^ArcholApplication$|^Hierarchy$|^HierarchyChain$/.test(kind)) return 'block';
   if (/Declaration$|^Artifact|^Field$|^Parameter$|^Transition$|^Value$|^Role$|^Action$|^PropertyAssignment$|^ShorthandProperty$/.test(kind)) {
     return 'declaration';
   }
@@ -241,7 +159,6 @@ function textOffsetsForByteSpan(text, startByte, endByte) {
 }
 
 module.exports = {
-  mergePending,
   byteOffsetAtText,
   textOffsetsForByteSpan,
   findNodeAtOffset,

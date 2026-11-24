@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn emits_block_style_yaml_in_canonical_order() {
         let value = json!({
-            "kind": "SourceFile",
+            "kind": "ArcholApplication",
             "path": "examples/a.archol",
             "items": [
                 { "kind": "Artifact", "name": "A", "empty": [], "flags": [true, null] }
@@ -91,7 +91,7 @@ mod tests {
         let value = archol_core::order::ordered(value);
         assert_eq!(
             to_yaml(&value),
-            "\"kind\": \"SourceFile\"\n\"items\":\n  -\n    \"kind\": \"Artifact\"\n    \"name\": \"A\"\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n\"path\": \"examples/a.archol\"\n"
+            "\"kind\": \"ArcholApplication\"\n\"items\":\n  -\n    \"kind\": \"Artifact\"\n    \"name\": \"A\"\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n\"path\": \"examples/a.archol\"\n"
         );
     }
 

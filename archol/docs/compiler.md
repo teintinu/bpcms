@@ -7,7 +7,7 @@ application (.archol)
   │
   ├── archol_analysis::application  entry services + transitive imports (closure)
   ├── archol_core::lex              tokens + lexical diagnostics
-  ├── archol_core::parse            SourceFile (JSON AST)
+  ├── archol_core::parse            SourceFile (internal syntax tree)
   ├── archol_analysis::i18n         std.bpcms.i18n + application locale filtering
   ├── archol_analysis::Symbols      closure artifacts, enums, and roles
   ├── archol_analysis::check        E_DUP_ARTIFACT, E_UNKNOWN_TYPE, E_ENUM_VALUE, ...

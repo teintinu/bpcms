@@ -23,8 +23,7 @@ fn main() {
         "format" => format(rest),
         "lock" => lock(rest),
         "applications" => applications(rest),
-        "application" | "app" => application(rest),
-        "ast" => ast(rest),
+        "application" | "app" | "ast" => application(rest),
         "view" => view(rest),
         "tokens" => tokens(rest),
         "links" => links(rest),
@@ -51,7 +50,7 @@ fn usage() {
          \x20 lock [dir] --app <uri-or-path>              creates or prunes <app>.lock\n\
          \x20 applications [dir] [--json]                 lists discovered applications\n\
          \x20 application [dir] --app <uri-or-path> [--json|--yaml] [--no-loc|--no-body]  resolved application AST\n\
-         \x20 ast <file> [--app <uri-or-path>] [--json|--yaml] [--no-loc]  prints the AST\n\
+         \x20 ast [dir] --app <uri-or-path> [--json|--yaml] [--no-loc|--no-body]  alias for application\n\
          \x20 view <file> [--app <uri-or-path>] [--json] [--pretty]  compact preview payload for editors\n\
          \x20 tokens <file>                               prints the tokens\n\
          \x20 links [dir] --app <uri-or-path> [--json]    inverted index of the closure\n\
@@ -303,6 +302,11 @@ fn applications(args: &[String]) -> i32 {
 fn application(args: &[String]) -> i32 {
     let options = Options::parse(args);
     let root = options.root();
+    let root = if root.is_file() {
+        workspace_roots(&root).into_iter().next().unwrap_or(root)
+    } else {
+        root
+    };
     let (files, read_errors) = load_files(&root);
     for (path, message) in &read_errors {
         eprintln!("{path}: {message}");
@@ -342,79 +346,6 @@ fn application(args: &[String]) -> i32 {
             1
         }
     }
-}
-
-fn ast(args: &[String]) -> i32 {
-    let options = Options::parse(args);
-    let Some(file) = options.positional.first() else {
-        eprintln!("error: ast requires a file");
-        return 2;
-    };
-    let path = PathBuf::from(file);
-    match options.app.as_deref() {
-        Some(selector) => annotated_ast(&path, selector, options.yaml, options.no_loc),
-        None => syntax_ast(&path, options.yaml, options.no_loc),
-    }
-}
-
-fn syntax_ast(path: &Path, yaml: bool, no_loc: bool) -> i32 {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(error) => {
-            eprintln!("could not read {}: {error}", path.display());
-            return 2;
-        }
-    };
-    let result = parse(&source, path.to_string_lossy().to_string());
-    print_ast(&result.ast, yaml, no_loc);
-    if !result.diagnostics.is_empty() {
-        for diagnostic in &result.diagnostics {
-            eprintln!("{}: {}", diagnostic.code, diagnostic.message);
-        }
-        return 1;
-    }
-    0
-}
-
-fn annotated_ast(path: &Path, selector: &str, yaml: bool, no_loc: bool) -> i32 {
-    let (wanted, text) = (
-        std::fs::canonicalize(path).ok(),
-        path.to_string_lossy().to_string(),
-    );
-    let mut error = format!(
-        "application `{selector}` was not found from {}",
-        path.display()
-    );
-    for root in workspace_roots(path) {
-        let (files, read_errors) = load_files(&root);
-        let services_root = find_services_root(&root);
-        let services = services_root
-            .as_ref()
-            .map(|path| path.to_string_lossy().to_string());
-        let analysis = match analyze_application(files, services.as_deref(), selector, false) {
-            Ok(analysis) => analysis,
-            Err(candidate_error) => {
-                error = candidate_error;
-                continue;
-            }
-        };
-        let Some(file) = analysis.workspace.files.iter().find(|file| {
-            file.path == text
-                || wanted.as_ref().is_some_and(|wanted| {
-                    std::fs::canonicalize(&file.path).ok().as_ref() == Some(wanted)
-                })
-        }) else {
-            error = format!("{} is not part of the application closure", path.display());
-            continue;
-        };
-        for (read_path, message) in &read_errors {
-            eprintln!("{read_path}: {message}");
-        }
-        print_ast(&file.ast, yaml, no_loc);
-        return 0;
-    }
-    eprintln!("error: {error}");
-    1
 }
 
 fn print_ast<T: serde::Serialize>(value: &T, yaml: bool, no_loc: bool) {

@@ -126,25 +126,52 @@ pub fn analyze_application(
     let lock_path = ids::lock_path_for_application(std::path::Path::new(&app.path));
     let lock = ids::Lock::load(&lock_path, &app.uri)?;
     let mut semantic = annotate::annotate(&mut workspace, &closure, &symbols, lock);
-    semantic.lock.assign_files(closure.files.iter().cloned());
-    let mut pending_keys = Vec::new();
+    let workspace_root = services_root
+        .and_then(|path| std::path::Path::new(path).parent())
+        .map(|path| path.to_string_lossy().to_string())
+        .or_else(|| {
+            std::path::Path::new(&app.path)
+                .ancestors()
+                .find(|path| path.file_name().is_some_and(|name| name == "applications"))
+                .and_then(std::path::Path::parent)
+                .map(|path| path.to_string_lossy().to_string())
+        });
+    let file_key = |path: &str| -> String {
+        workspace_root
+            .as_deref()
+            .and_then(|root| path.strip_prefix(root.trim_end_matches('/')))
+            .map(|path| path.trim_start_matches('/').to_string())
+            .unwrap_or_else(|| path.to_string())
+    };
+    let file_keys: Vec<String> = closure.files.iter().map(|path| file_key(path)).collect();
+    semantic.lock.assign_files(file_keys);
+    let mut pending_rows = Vec::new();
     for file in workspace
         .files
         .iter()
         .filter(|file| closure.contains_file(&file.path))
     {
+        let key = file_key(&file.path);
         for pending in &file.ast.pendings {
-            pending_keys.push(pending.id.clone());
+            pending_rows.push((
+                file.path.clone(),
+                pending.id.clone(),
+                format!("pending:{key}:{}", pending.span.start),
+            ));
         }
     }
-    let pending_ids = semantic.lock.assign_pendings(pending_keys);
+    let pending_ids = semantic
+        .lock
+        .assign_pendings(pending_rows.iter().map(|(_, _, key)| key.clone()));
     for file in workspace
         .files
         .iter_mut()
         .filter(|file| closure.contains_file(&file.path))
     {
+        let key = file_key(&file.path);
         for pending in &mut file.ast.pendings {
-            if let Some(id) = pending_ids.get(&pending.id) {
+            let lock_key = format!("pending:{key}:{}", pending.span.start);
+            if let Some(id) = pending_ids.get(&lock_key) {
                 pending.id = id.clone();
             }
         }

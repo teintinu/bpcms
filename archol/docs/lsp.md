@@ -17,8 +17,8 @@ commands **Archol: Select Application** / **Archol: Update Identifier Lock**.
 
 Files outside the closure are treated as **commented out**: no hover,
 completion, definition, references, symbols or folding, a single information
-diagnostic (code `W_OUTSIDE_APPLICATION`), `archol/ast` returns
-`commentedOut: true`, and the plugin renders the document italic/dimmed. Without an
+diagnostic (code `W_OUTSIDE_APPLICATION`), and the plugin renders the document
+italic/dimmed. Without an
 application the server still starts and reports
 `No application selected. Pick one in VS Code (Archol: Select Application).`
 
@@ -74,7 +74,6 @@ different services are not mixed.
 
 | Method | Params | Result |
 | :--- | :--- | :--- |
-| `archol/ast` | `{ "uri": "file:///..." }` | `{ "ast": <SourceFile>, "inApplication": bool }` |
 | `archol/applicationAst` | `{ "noBody"?: bool }` | `{ "ast": <ArcholApplication>, "application": { uri, path }, "inApplication": bool }` |
 | `archol/links` | `{}` | `{ "links": <LinkIndex> }` |
 | `archol/applications` | `{}` | `{ "applications": [{uri,path,name}], "current": uri|null }` |
@@ -101,7 +100,7 @@ python3 archol/scripts/smoke_lsp.py
 
 Starts the real binary with `initializationOptions.application`, runs
 `initialize`, hover with an AST link, enum completion, typed references,
-`archol/ast`, `archol/links`, and shuts the server down.
+`archol/applicationAst`, `archol/links`, and shuts the server down.
 
 ## Known limitations
 

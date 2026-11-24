@@ -132,11 +132,6 @@ impl Server {
                 let result = self.folding(&params);
                 self.rpc.respond(id, result);
             }
-            "archol/ast" => {
-                let uri = params.get("uri").and_then(Value::as_str).unwrap_or("");
-                let result = self.ast(uri);
-                self.rpc.respond(id, result);
-            }
             "archol/applicationAst" => {
                 let result = self.application_ast(&params);
                 self.rpc.respond(id, result);
@@ -525,46 +520,6 @@ impl Server {
             }
             Err(error) => json!({ "ast": Value::Null, "error": error }),
         }
-    }
-
-    fn ast(&mut self, uri: &str) -> Value {
-        let Some(path) = self.resolve_path(uri) else {
-            return json!({ "ast": Value::Null, "inApplication": false });
-        };
-        if self.application.is_some() {
-            let analysis = self.analysis();
-            if app::in_application(analysis, &path) {
-                if let Some(file) = analysis
-                    .workspace
-                    .files
-                    .iter()
-                    .find(|file| same_path(&file.path, &path))
-                {
-                    let mut ast = serde_json::to_value(&file.ast).unwrap_or(Value::Null);
-                    archol_core::order::order_value(&mut ast);
-                    return json!({ "ast": ast, "inApplication": true });
-                }
-            }
-            let mut ast = json!({
-                "kind": "SourceFile",
-                "path": path,
-                "commentedOut": true,
-                "items": [],
-            });
-            archol_core::order::order_value(&mut ast);
-            return json!({ "ast": ast, "inApplication": false });
-        }
-
-        let Some(text) = self.document_source(&path) else {
-            return json!({ "ast": Value::Null, "inApplication": false });
-        };
-        let parsed = archol_core::parse(&text, path);
-        let mut ast = serde_json::to_value(&parsed.ast).unwrap_or(Value::Null);
-        archol_core::order::order_value(&mut ast);
-        json!({
-            "ast": ast,
-            "inApplication": false,
-        })
     }
 
     fn workspace_symbols(&mut self, params: &Value) -> Value {

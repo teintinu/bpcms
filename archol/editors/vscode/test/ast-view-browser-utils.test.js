@@ -60,7 +60,7 @@ test('pretty JSON follows the same order', () => {
 
 test('nodeAtPath walks structural children from the root', () => {
   const ast = {
-    kind: 'SourceFile',
+    kind: 'ArcholApplication',
     items: [{ kind: 'ArtifactDocument', body: [{ kind: 'PropertyAssignment' }] }],
   };
   assert.equal(utils.nodeAtPath(ast, [0, 0]).kind, 'PropertyAssignment');

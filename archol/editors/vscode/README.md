@@ -183,9 +183,8 @@ JSON tree:
 - **Copy JSON** copies the selected node or the whole AST.
 - The native Cut/Copy/Paste context menu is disabled in the webview.
 - When the application is missing or the request fails, the panel shows the
-  server error; when a per-file AST outside the closure is used as fallback,
-  the *Outside the current application* banner and the disabled navigation
-  buttons still apply.
+  server error. There is no per-file `SourceFile` fallback: the explorer always
+  renders the current `ArcholApplication`.
 - When any document changes, a new `archol/applicationAst` is requested after
   400 ms; selecting another application also refreshes the panel.
 
@@ -208,10 +207,6 @@ JSON tree and reveals its loc.
 - **`archol/setApplication`**: request `{ "uri": "file:///..." }` →
   `{ "application", "files", "services" }`. Called by the select command and
   whenever `archol.application` changes while the server is running.
-- **`archol/ast`**: request `{ "uri": "file:///..." }` →
-  `{ "ast": SourceFile, "inApplication": true }`. An AST outside the current
-  application is marked with `commentedOut: true`. Locs are converted from
-  byte (AST) to UTF-16 position (VS Code) and back.
 - **`archol/applicationAst`**: request `{ "noBody": true }` →
   `{ "ast": ArcholApplication, "application": { "uri", "path" } }`. This is the
   tree used by the explorer; it is rebuilt from the current closure on every
@@ -316,7 +311,7 @@ node --test test
   supported.
 - Identifier values (`id`, `ref`, `fieldRef`, `typeRefId`) are treated as opaque
   JSON scalars and forwarded as-is; the extension assumes the server accepts the
-  same value it returned in `archol/ast`.
+  same value it returned in `archol/applicationAst`.
 - `archol/declaration` and `archol/usages` return LSP ranges (zero-based
   line/character), unlike AST locs, and are selected directly without byte
   conversion.

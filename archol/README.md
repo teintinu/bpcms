@@ -63,7 +63,7 @@ archol format [dir] [--check]                  uppercase pending keywords (forma
 archol lock [dir] --app <uri|path>             create/prune <app>.lock (stable ids)
 archol applications [dir] [--json]             list applications in a workspace
 archol application [dir] --app <uri|path> [--json|--yaml] [--no-loc|--no-body]  resolved application AST
-archol ast <file> [--app <uri|path>] [--json|--yaml] [--no-loc]  syntax AST, or annotated with ids
+archol ast [dir] --app <uri|path> [--json|--yaml] [--no-loc|--no-body]  alias for application
 archol view <file> [--app <uri|path>] [--json|--pretty]  compact preview payload for editors
 archol tokens <file>                           tokens (lexer debugging)
 archol links [dir] --app <uri|path> [--json]   closure-only index for the builder
@@ -76,7 +76,7 @@ archol lsp                                    LSP server over stdio
 line (CSV `id,path`); the AST then carries stable `id`/`ref` values from the lock. Only used identifiers get ids; append `*` to a path to pin it. The plugin refreshes the lock on application selection and, with a 10 s debounce, after `.archol` edits.
 JSON/YAML property order comes from [`ast-order.json`](ast-order.json) and is shared by the CLI, the LSP and the AST explorer (`kind`, `title`, `name`, `value`, `message`, `id` first; `loc` keys last; the rest alphabetical).
 
-`ast --yaml` exports the same AST as block-style YAML (strings are JSON-quoted), useful for snapshots. `application --yaml --no-loc --no-body` is the snapshot form of the resolved tree. After an intentional AST change, run `archol/scripts/test-update-snapshots.sh`; it reruns both snapshot tests, copies each `.result-source.yml`/`.result-ast.yml` over its expected file, and reruns the full suite. `--no-loc` removes every `loc`/`keywordLoc` property, keeping diffs small.
+Every emitted AST is the resolved `ArcholApplication`; `ast` is an alias for `application` and also requires `--app`. `--yaml` exports it as block-style YAML (strings are JSON-quoted). After an intentional AST change, run `archol/scripts/test-update-snapshots.sh`; it reruns the application snapshot test, copies each `.result-ast.yml` over its expected file, and reruns the full suite. `--no-loc` removes every `loc`/`keywordLoc` property, keeping diffs small.
 `format` uppercases `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` comment markers and
 `--check` exits 1 when a file would change. `lint` runs the same diagnostics as
 `check` (including pending due dates). `links` produces, among other things,

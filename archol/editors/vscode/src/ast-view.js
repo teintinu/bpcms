@@ -5,14 +5,13 @@ const crypto = require('node:crypto');
 const vscode = require('vscode');
 const { buildAstHtml } = require('./ast-view-html');
 const { normalizeAstResult, usageQuickPickItem } = require('./app-support');
-const { byteOffsetAtText, findNodePathAtOffset, mergePending, textOffsetsForByteSpan } = require('./ast-tree');
+const { byteOffsetAtText, textOffsetsForByteSpan } = require('./ast-tree');
 
 const VIEW_TYPE = 'archol.astExplorer';
 const REFRESH_DEBOUNCE_MS = 400;
 
 class AstExplorer {
   constructor(options) {
-    this._getAst = options.getAst;
     this._getApplicationAst = options.getApplicationAst;
     this._getDeclaration = options.getDeclaration;
     this._getUsages = options.getUsages;
@@ -79,51 +78,42 @@ class AstExplorer {
     const uri = this._target.uri;
     if (!this._current) this._post({ type: 'loading' });
     try {
-      const applicationMode = typeof this._getApplicationAst === 'function';
-      const result = applicationMode
-        ? normalizeAstResult(await this._getApplicationAst())
-        : normalizeAstResult(await this._getAst(uri));
+      if (typeof this._getApplicationAst !== 'function') {
+        throw new Error('The AST explorer requires the application AST.');
+      }
+      const result = normalizeAstResult(await this._getApplicationAst());
       if (requestId !== this._requestSeq || this._disposed || !this._panel) return;
-      const ast = applicationMode ? result.ast : mergePending(result.ast);
+      const ast = result.ast;
       if (!ast) {
         throw new Error(result.error || 'The server did not return an application AST.');
       }
-      const document = applicationMode
-        ? null
-        : await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
-      const explicitOffset = options.selectOffset !== undefined && options.selectOffset !== null;
-      let offset = explicitOffset ? options.selectOffset : this._selectionOffset;
-      let selectedPath = null;
-      if (!applicationMode && Number.isFinite(offset)) selectedPath = findNodePathAtOffset(ast, offset);
-      if (!selectedPath && !explicitOffset && this._selectionPath) selectedPath = this._selectionPath;
-      this._selectionOffset = Number.isFinite(offset) ? offset : null;
-      this._selectionPath = selectedPath;
-      this._revealSelected = explicitOffset;
       const application = result.application || null;
+      const selectedPath = null;
+      this._selectionOffset = null;
+      this._selectionPath = null;
+      this._revealSelected = false;
       this._current = {
         ast,
         uri,
-        fileName: applicationMode
-          ? (application?.uri || 'Application')
-          : (path.basename(document.uri.fsPath) || 'Archol'),
-        inApplication: result.inApplication,
-        commentedOut: result.commentedOut,
+        fileName: application?.uri || 'Application',
+        inApplication: true,
+        commentedOut: false,
         application,
-        applicationMode,
+        applicationMode: true,
       };
       this._dirty = false;
       this._post({
         type: 'setAst',
         ast,
-        uri: this._current.uri,
+        uri,
         fileName: this._current.fileName,
         selectedPath,
-        revealSelected: this._revealSelected,
-        offset: this._selectionOffset,
-        inApplication: this._current.inApplication,
-        commentedOut: this._current.commentedOut,
-        application: this._current.application,
-        applicationMode,
+        revealSelected: false,
+        offset: null,
+        inApplication: true,
+        commentedOut: false,
+        application,
+        applicationMode: true,
       });
     } catch (error) {
       if (requestId !== this._requestSeq || this._disposed) return;

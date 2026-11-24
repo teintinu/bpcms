@@ -102,24 +102,24 @@ test('navigation targets prefer ref for declarations and require id for usages',
 });
 
 test('normalizeAstResult honors inApplication and commentedOut', () => {
-  const inApp = normalizeAstResult({ ast: { kind: 'SourceFile' }, inApplication: true });
-  assert.deepEqual(inApp, { ast: { kind: 'SourceFile' }, inApplication: true, commentedOut: false });
+  const inApp = normalizeAstResult({ ast: { kind: 'ArcholApplication' }, inApplication: true });
+  assert.deepEqual(inApp, { ast: { kind: 'ArcholApplication' }, inApplication: true, commentedOut: false });
   assert.equal(isOutsideApplication(inApp), false);
 
-  const outside = normalizeAstResult({ ast: { kind: 'SourceFile' }, inApplication: false });
+  const outside = normalizeAstResult({ ast: { kind: 'ArcholApplication' }, inApplication: false });
   assert.equal(outside.commentedOut, true);
   assert.equal(isOutsideApplication(outside), true);
 
-  const commented = normalizeAstResult({ ast: { kind: 'SourceFile', commentedOut: true }, inApplication: true });
+  const commented = normalizeAstResult({ ast: { kind: 'ArcholApplication', commentedOut: true }, inApplication: true });
   assert.equal(commented.commentedOut, true);
   assert.equal(isOutsideApplication(commented), true);
 
-  const rootFlag = normalizeAstResult({ ast: { kind: 'SourceFile' }, inApplication: true, commentedOut: true });
+  const rootFlag = normalizeAstResult({ ast: { kind: 'ArcholApplication' }, inApplication: true, commentedOut: true });
   assert.equal(rootFlag.commentedOut, true);
   assert.equal(isOutsideApplication(rootFlag), true);
 
   assert.deepEqual(normalizeAstResult(null), { ast: null, inApplication: true, commentedOut: false });
-  assert.equal(normalizeAstResult({ kind: 'SourceFile' }).ast.kind, 'SourceFile');
+  assert.equal(normalizeAstResult({ kind: 'ArcholApplication' }).ast.kind, 'ArcholApplication');
 });
 
 test('normalizeAstResult carries the application and error for the app AST', () => {

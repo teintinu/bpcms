@@ -231,6 +231,45 @@ fn application_ast_is_closed_typed_and_merged() {
             );
         }
 
+        assert_eq!(
+            tree["title"]["kind"],
+            "ShapeValue",
+            "{}: application title",
+            app.display()
+        );
+        assert_eq!(
+            tree["theme"]["kind"],
+            "ThemeRef",
+            "{}: application theme",
+            app.display()
+        );
+        let locales = tree["locales"].as_array().expect("application locales");
+        assert!(!locales.is_empty(), "{}: empty locales", app.display());
+        assert_eq!(
+            locales[0]["default"],
+            true,
+            "{}: default locale",
+            app.display()
+        );
+        for locale in locales {
+            assert_eq!(locale["kind"], "LocaleRef");
+            assert!(locale["tag"].as_str().is_some_and(|tag| !tag.is_empty()));
+        }
+        let environments = tree["environments"]
+            .as_array()
+            .expect("application environments");
+        assert!(
+            !environments.is_empty(),
+            "{}: empty environments",
+            app.display()
+        );
+        for environment in environments {
+            assert_eq!(environment["kind"], "EnvironmentEntry");
+            assert!(environment["name"]
+                .as_str()
+                .is_some_and(|name| !name.is_empty()));
+        }
+
         // Role <-> permission inverse is consistent.
         let mut roles: BTreeMap<&str, &Value> = BTreeMap::new();
         let mut permissions: BTreeMap<&str, &Value> = BTreeMap::new();

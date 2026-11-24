@@ -272,22 +272,67 @@ impl<'a> Builder<'a> {
         for ids in by_service.values_mut() {
             ids.sort();
         }
-        json!({
-            "kind": "ArcholApplication",
-            "schemaVersion": 1,
-            "uri": self.closure.application.uri,
-            "path": self.rel(&self.closure.application.path),
-            "workspaceRoot": self.workspace_root,
-            "artifact": artifact,
-            "application": application,
-            "main": main,
-            "files": self.files(),
-            "pendings": self.pendings(),
-            "index": {
+        let title =
+            property(&self.app.body, "title").map(|value| self.expr_json(value, self.app_file));
+        let theme = property_string(&self.app.body, "theme").map(|id| {
+            json!({
+                "kind": "ThemeRef",
+                "id": id,
+            })
+        });
+        let locales: Vec<Value> = property_string_list(&self.app.body, "locales")
+            .into_iter()
+            .enumerate()
+            .map(|(index, tag)| {
+                json!({
+                    "kind": "LocaleRef",
+                    "tag": tag,
+                    "default": index == 0,
+                })
+            })
+            .collect();
+        let environments: Vec<Value> = property_string_list(&self.app.body, "environments")
+            .into_iter()
+            .map(|name| {
+                json!({
+                    "kind": "EnvironmentEntry",
+                    "name": name,
+                })
+            })
+            .collect();
+        let mut root = Map::new();
+        root.insert("kind".to_string(), json!("ArcholApplication"));
+        root.insert("schemaVersion".to_string(), json!(1));
+        root.insert("uri".to_string(), json!(self.closure.application.uri));
+        root.insert(
+            "path".to_string(),
+            json!(self.rel(&self.closure.application.path)),
+        );
+        root.insert("workspaceRoot".to_string(), json!(self.workspace_root));
+        if let Some(title) = title {
+            root.insert("title".to_string(), title);
+        }
+        if let Some(theme) = theme {
+            root.insert("theme".to_string(), theme);
+        }
+        root.insert("locales".to_string(), Value::Array(locales));
+        root.insert("environments".to_string(), Value::Array(environments));
+        root.insert(
+            "artifact".to_string(),
+            Value::Object(artifact.into_iter().collect()),
+        );
+        root.insert("application".to_string(), application);
+        root.insert("main".to_string(), main);
+        root.insert("files".to_string(), Value::Array(self.files()));
+        root.insert("pendings".to_string(), Value::Array(self.pendings()));
+        root.insert(
+            "index".to_string(),
+            json!({
                 "byKind": by_kind,
                 "byService": by_service,
-            },
-        })
+            }),
+        );
+        Value::Object(root)
     }
 
     // --- paths / locations ------------------------------------------------
@@ -309,14 +354,20 @@ impl<'a> Builder<'a> {
             .to_string()
     }
 
+    fn file_id(&self, path: &str) -> Option<String> {
+        let relative = self.rel(path);
+        self.file_ids.get(&relative).cloned().or_else(|| {
+            self.file_ids
+                .iter()
+                .find(|(key, _)| path.ends_with(key.as_str()))
+                .map(|(_, id)| id.clone())
+        })
+    }
+
     fn loc(&self, file: &ParsedFile, span: Span) -> Value {
         let (line, column) = file.lines.line_col(span.start);
         json!({
-            "file": self
-                .file_ids
-                .get(&file.path)
-                .cloned()
-                .unwrap_or_else(|| self.rel(&file.path)),
+            "file": self.file_id(&file.path).unwrap_or_else(|| self.rel(&file.path)),
             "start": span.start,
             "end": span.end,
             "line": line + 1,
@@ -329,11 +380,7 @@ impl<'a> Builder<'a> {
         match file {
             Some(file) => self.loc(file, span),
             None => json!({
-                "file": self
-                    .file_ids
-                    .get(path)
-                    .cloned()
-                    .unwrap_or_else(|| self.rel(path)),
+                "file": self.file_id(path).unwrap_or_else(|| self.rel(path)),
                 "start": span.start,
                 "end": span.end,
             }),
@@ -1986,7 +2033,7 @@ impl<'a> Builder<'a> {
             let application = file.path == self.closure.application.path;
             files.push(json!({
                 "kind": "FileEntry",
-                "id": self.file_ids.get(&file.path).cloned().unwrap_or_default(),
+                "id": self.file_id(&file.path).unwrap_or_default(),
                 "path": self.rel(&file.path),
                 "serviceId": file
                     .service

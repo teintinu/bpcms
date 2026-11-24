@@ -1,4 +1,10 @@
 "kind": "ArcholApplication"
+"title":
+  "kind": "ShapeValue"
+  "value":
+    "en-US": "Procurement Hub"
+    "pt-BR": "Central de Compras"
+  "typeRef": "std.bpcms.i18n"
 "application":
   "kind": "ApplicationConfig"
   "roleHierarchy":
@@ -9068,6 +9074,16 @@
         "id": "a9"
     "scopes": []
     "serviceId": "ba"
+"environments":
+  -
+    "kind": "EnvironmentEntry"
+    "name": "dev"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "qa"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "prod"
 "files":
   -
     "kind": "FileEntry"
@@ -10000,6 +10016,15 @@
       - "el"
       - "f"
       - "m"
+"locales":
+  -
+    "kind": "LocaleRef"
+    "default": true
+    "tag": "pt-BR"
+  -
+    "kind": "LocaleRef"
+    "default": false
+    "tag": "en-US"
 "main":
   "kind": "MainEntry"
   "parameters": []
@@ -36792,5 +36817,8 @@
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
 "schemaVersion": 1
+"theme":
+  "kind": "ThemeRef"
+  "id": "Compras"
 "uri": "example.com/app/central-de-compras"
 "workspaceRoot": "/Users/teintinu/dsv/bpcms/examples"

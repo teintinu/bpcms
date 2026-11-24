@@ -84,7 +84,6 @@ function activate(context) {
   applyApplication(applicationSetting());
 
   astExplorer = new AstExplorer({
-    getAst: (uri) => session.fetchAst(uri),
     getApplicationAst: () => session.fetchApplicationAst(),
     getDeclaration: (id) => session.fetchDeclaration(id),
     getUsages: (id) => session.fetchUsages(id),

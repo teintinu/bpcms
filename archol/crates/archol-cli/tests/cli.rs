@@ -127,8 +127,8 @@ fn deep_nesting_does_not_overflow_stack() {
     }
     source.push_str("\n}\n");
     write(&file, &source);
-    let output = run(&["ast", file.to_str().unwrap()]);
-    assert_eq!(output.status.code(), Some(1));
+    let output = run(&["view", file.to_str().unwrap()]);
+    assert_eq!(output.status.code(), Some(0));
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -308,11 +308,11 @@ fn ast_with_app_contains_typed_references() {
     );
     app_fixture(&dir, APP, SERVICE);
 
-    let output = run(&["ast", process.to_str().unwrap(), "--app", APP]);
+    let output = run(&["application", dir.to_str().unwrap(), "--app", APP]);
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
     let ast: serde_json::Value = serde_json::from_str(&stdout).unwrap();
-    assert_eq!(ast["kind"], "SourceFile");
+    assert_eq!(ast["kind"], "ArcholApplication");
     assert!(stdout.contains("\"ref\":"), "{stdout}");
     assert!(stdout.contains("\"fieldRef\":"), "{stdout}");
     assert!(stdout.contains("\"typeRefId\":"), "{stdout}");
@@ -339,10 +339,17 @@ fn pending_comments_get_prefixed_lock_ids() {
         "{lock}"
     );
 
-    let ast = run(&["ast", service.to_str().unwrap(), "--app", APP]);
+    let ast = run(&["application", dir.to_str().unwrap(), "--app", APP]);
     assert_eq!(ast.status.code(), Some(0));
     let ast: serde_json::Value = serde_json::from_slice(&ast.stdout).unwrap();
-    let pending = &ast["pendings"][0];
+    let pending = ast["pendings"]
+        .as_array()
+        .and_then(|pendings| {
+            pendings
+                .iter()
+                .find(|pending| pending["kind"] == "PendingReview")
+        })
+        .expect("PendingReview entry");
     assert_eq!(pending["kind"], "PendingReview");
     let id = pending["id"].as_str().expect("pending id");
     assert!(id.starts_with("p:"), "{id}");

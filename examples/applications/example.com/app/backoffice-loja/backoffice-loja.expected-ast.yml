@@ -1,4 +1,9 @@
 "kind": "ArcholApplication"
+"title":
+  "kind": "ShapeValue"
+  "value":
+    "pt-BR": "Administração da Loja"
+  "typeRef": "std.bpcms.i18n"
 "application":
   "kind": "ApplicationConfig"
   "roleHierarchy":
@@ -17496,6 +17501,16 @@
           "valuePath": "Lost"
     "relations": []
     "serviceId": "bp"
+"environments":
+  -
+    "kind": "EnvironmentEntry"
+    "name": "dev"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "qa"
+  -
+    "kind": "EnvironmentEntry"
+    "name": "prod"
 "files":
   -
     "kind": "FileEntry"
@@ -19562,6 +19577,11 @@
       - "pl"
       - "pm"
       - "pn"
+"locales":
+  -
+    "kind": "LocaleRef"
+    "default": true
+    "tag": "pt-BR"
 "main":
   "kind": "MainEntry"
   "parameters":
@@ -62402,5 +62422,8 @@
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
 "schemaVersion": 1
+"theme":
+  "kind": "ThemeRef"
+  "id": "Backoffice"
 "uri": "example.com/app/backoffice-loja"
 "workspaceRoot": "/Users/teintinu/dsv/bpcms/examples"
