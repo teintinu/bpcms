@@ -137,6 +137,10 @@ impl Server {
                 let result = self.ast(uri);
                 self.rpc.respond(id, result);
             }
+            "archol/applicationAst" => {
+                let result = self.application_ast(&params);
+                self.rpc.respond(id, result);
+            }
             "archol/inApplication" => {
                 let uri = params.get("uri").and_then(Value::as_str).unwrap_or("");
                 let inside = uri_to_path(uri)
@@ -336,7 +340,11 @@ impl Server {
         let identifiers = analysis
             .semantic
             .as_ref()
-            .map(|semantic| semantic.lock.entries.len())
+            .map(|semantic| {
+                semantic.lock.entries.len()
+                    + semantic.lock.file_entries.len()
+                    + semantic.lock.pending_entries.len()
+            })
             .unwrap_or(0);
         let result = json!({
             "application": closure.application.uri,
@@ -370,7 +378,11 @@ impl Server {
         let identifiers = analysis
             .semantic
             .as_ref()
-            .map(|semantic| semantic.lock.entries.len())
+            .map(|semantic| {
+                semantic.lock.entries.len()
+                    + semantic.lock.file_entries.len()
+                    + semantic.lock.pending_entries.len()
+            })
             .unwrap_or(0);
         self.cache = Some(analysis);
         self.publish_diagnostics();
@@ -470,11 +482,49 @@ impl Server {
             return Value::Null;
         };
         let parsed = archol_core::parse(&text, path);
-        let edits: Vec<Value> = archol_core::pending::format_edits(&text, &parsed.ast.pending)
+        let edits: Vec<Value> = archol_core::pending::format_edits(&text, &parsed.ast.pendings)
             .into_iter()
             .map(|(span, new_text)| json!({ "range": range(&text, span), "newText": new_text }))
             .collect();
         Value::Array(edits)
+    }
+
+    fn application_ast(&mut self, params: &Value) -> Value {
+        if self.application.is_none() {
+            return json!({ "ast": Value::Null, "error": NO_APPLICATION_MESSAGE });
+        }
+        let root = self.root.to_string_lossy().to_string();
+        let analysis = self.analysis();
+        if analysis.closure.is_none() || analysis.semantic.is_none() {
+            return json!({
+                "ast": Value::Null,
+                "error": "The selected application has no resolved closure.",
+            });
+        }
+        let application = analysis.closure.as_ref().map(|closure| {
+            json!({
+                "uri": closure.application.uri,
+                "path": closure.application.path,
+            })
+        });
+        match archol_analysis::application_ast::build(analysis, &root) {
+            Ok(mut ast) => {
+                if params
+                    .get("noBody")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(true)
+                {
+                    strip_bodies(&mut ast);
+                }
+                archol_core::order::order_value(&mut ast);
+                json!({
+                    "ast": ast,
+                    "application": application,
+                    "inApplication": true,
+                })
+            }
+            Err(error) => json!({ "ast": Value::Null, "error": error }),
+        }
     }
 
     fn ast(&mut self, uri: &str) -> Value {
@@ -733,6 +783,23 @@ fn info_diagnostic(message: &str, code: &str) -> Value {
         "code": code,
         "message": message,
     })
+}
+
+fn strip_bodies(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            map.remove("body");
+            for value in map.values_mut() {
+                strip_bodies(value);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                strip_bodies(item);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn normalize(path: &Path) -> String {

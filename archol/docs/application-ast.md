@@ -65,7 +65,7 @@ definition resolved and every reference linked by id.
     "statements": []
   },
   "files": [],
-  "pending": [],
+  "pendings": [],
   "index": {
     "byKind": {
       "ServiceDef": ["s1"],
@@ -80,7 +80,8 @@ definition resolved and every reference linked by id.
 
 `uri` is the application URL from the DSL. `path` is the application file,
 relative to `workspaceRoot`. `workspaceRoot` is the only absolute path in the
-document; every `loc.file` and `files[].path` is relative to it.
+document; `files[].path` is relative to it and `loc.file` is a file id from
+`files`.
 
 `title`, `theme`, `locales` and `environments` are application composition, not
 artifacts. `theme` and `locales` reference builder assets; tokens and locale
@@ -122,7 +123,7 @@ Rules:
   "id": "a2",
   "serviceId": "s2",
   "name": "Customer",
-  "loc": { "file": "...", "start": 610, "end": 780, "line": 24, "column": 1 },
+  "loc": { "file": "f:a", "start": 610, "end": 780, "line": 24, "column": 1 },
   "body": [ ... ]
 }
 ```
@@ -142,7 +143,7 @@ the whole tree.
   "name": "service-name",
   "url": "example.com/services/service-name",
   "path": "services/example.com/services/service-name/service-name-service.archol",
-  "loc": { "file": "...", "start": 0, "end": 180, "line": 1, "column": 1 },
+  "loc": { "file": "f:a", "start": 0, "end": 180, "line": 1, "column": 1 },
   "title": { "kind": "ShapeValue", "typeRef": "std.bpcms.i18n", "value": {} },
   "locales": ["pt-BR", "en-US"],
   "entryPoint": true,
@@ -153,7 +154,7 @@ the whole tree.
       "use": "entryPoint",
       "by": null,
       "path": "examples/applications/example.com/app/app/app-application.archol",
-      "loc": { "file": "...", "start": 0, "end": 0 }
+      "loc": { "file": "f:a", "start": 0, "end": 0 }
     }
   ],
   "imports": [
@@ -168,7 +169,7 @@ the whole tree.
   `by` is the importing service id. `use` is `entryPoint` or `import`.
 - `imports`: services this service imports. The closure is `entryPoint` +
   transitive `imports`.
-- `path`: the service root file; `loc.file` is the same file.
+- `path`: the service root file; `loc.file` is its `f:<base36>` file id.
 
 `bpcms.org/std` is a reserved builder pseudo-service. It is not a
 `ServiceDef`, has no lock id and no endpoint. Built-in types use `StdRef`
@@ -549,7 +550,8 @@ reference has no `body`, no `name` and no URL; resolve it through `artifact[id]`
 The complete set: `ServiceRef`, `RoleRef`, `PermissionRef`, `OrganogramRef`,
 `DocumentRef`, `ShapeRef`, `ViewRef`, `FormRef`, `ProcessRef`, `MessageRef`,
 `PolicyRef`, `DecisionRef`, `IntegrationRef`, `ParameterRef`, `SecretRef`,
-`IconRef`, `ManualRef`, `ErrorRef`.
+`IconRef`, `ManualRef`, `ErrorRef`. Pending comments are metadata, not
+references: they live in `pendings` with their own `p:<base36>` ids.
 
 ### 5.2 Member references
 
@@ -659,17 +661,19 @@ Bare names are accepted only when unambiguous. The check gains
 declare a dependency; it only boots early. `statements` keeps tolerant members
 that are not modeled as `set`/`start`.
 
-## 8. `files`, `pending`, `index`
+## 8. `files`, `pendings`, `index`
 
 ```jsonc
 "files": [
-  { "kind": "FileEntry", "path": "examples/applications/.../app-application.archol",
+  { "kind": "FileEntry", "id": "f:a",
+    "path": "examples/applications/.../app-application.archol",
     "serviceId": null, "application": true },
-  { "kind": "FileEntry", "path": "services/.../billing-organograms.archol",
+  { "kind": "FileEntry", "id": "f:b",
+    "path": "services/.../billing-organograms.archol",
     "serviceId": "s3", "application": false }
 ],
-"pending": [
-  { "kind": "PendingEntry", "keyword": "REVIEW", "dueDate": "2026-12-15",
+"pendings": [
+  { "kind": "PendingReview", "id": "p:a", "dueDate": "2026-12-15",
     "message": "revisar", "loc": { ... } }
 ],
 "index": {
@@ -678,12 +682,16 @@ that are not modeled as `set`/`start`.
 }
 ```
 
-`files` maps every closure file to its owner service. The application file has
-`serviceId: null` and `application: true`; files of the reserved
-`bpcms.org/std` pseudo-service also have `serviceId: null`, because std has no
-`ServiceDef`. `pending` covers TODO/FIXME/REVIEW/
-OPTIMIZE/HACK comments; they are metadata, not artifacts. `index` is derived;
-the `artifact` map remains the source of truth.
+`files` maps every closure file to an `f:<base36>` id and its owner service.
+The id is assigned by a counter separate from artifact ids and is what every
+`loc.file` points to. The application file has `serviceId: null` and
+`application: true`; files of the reserved `bpcms.org/std` pseudo-service also
+have `serviceId: null`, because std has no `ServiceDef`. `pendings` covers
+TODO/FIXME/REVIEW/OPTIMIZE/HACK comments with one kind per keyword
+(`PendingTodo`, `PendingFixme`, `PendingReview`, `PendingOptimize`,
+`PendingHack`), a `p:<base36>` id from another separate counter, and a `loc`.
+They are metadata, not artifacts and not references. `index` is derived; the
+`artifact` map remains the source of truth.
 
 ## 9. `reintroduce`
 
@@ -795,7 +803,7 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
       "name": "service-name",
       "url": "example.com/services/service-name",
       "path": "services/example.com/services/service-name/service-name-service.archol",
-      "loc": { "file": "services/.../service-name-service.archol",
+      "loc": { "file": "f:a",
                "start": 0, "end": 200, "line": 1, "column": 1 },
       "title": { "kind": "ShapeValue", "typeRef": "std.bpcms.i18n", "value": {} },
       "locales": ["pt-BR", "en-US"],
@@ -804,7 +812,7 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
         { "kind": "ServiceAlias", "name": "serviceAlias", "use": "entryPoint",
           "by": null,
           "path": "examples/applications/example.com/app/app/app-application.archol",
-          "loc": { "file": "...", "start": 120, "end": 180 } }
+          "loc": { "file": "f:a", "start": 120, "end": 180 } }
       ],
       "imports": []
     },
@@ -813,7 +821,7 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
       "id": "a2",
       "serviceId": "s2",
       "name": "Customer",
-      "loc": { "file": "...", "start": 0, "end": 0 },
+      "loc": { "file": "f:a", "start": 0, "end": 0 },
       "title": { "kind": "ShapeValue", "typeRef": "std.bpcms.i18n",
                  "value": { "pt-BR": "Cliente", "en-US": "Customer" } },
       "organogram": null,
@@ -832,19 +840,19 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
       "action": "create",
       "roles": [],
       "usedBy": [],
-      "loc": { "file": "...", "start": 0, "end": 0 }
+      "loc": { "file": "f:a", "start": 0, "end": 0 }
     },
     "a9": {
       "kind": "DocumentDef",
       "id": "a9",
       "serviceId": "s2",
       "name": "Order",
-      "loc": { "file": "...", "start": 0, "end": 0 },
+      "loc": { "file": "f:a", "start": 0, "end": 0 },
       "title": { "kind": "ShapeValue", "typeRef": "std.bpcms.i18n", "value": {} },
       "fields": [
         { "kind": "FieldDef", "name": "total",
           "type": { "kind": "StdRef", "name": "std.Money" },
-          "loc": { "file": "...", "start": 0, "end": 0 } }
+          "loc": { "file": "f:a", "start": 0, "end": 0 } }
       ],
       "lifecycle": null,
       "actions": [],
@@ -857,17 +865,17 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
 
   "application": {
     "kind": "ApplicationConfig",
-    "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { "file": "...", "start": 0, "end": 0 } } ],
+    "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { "file": "f:a", "start": 0, "end": 0 } } ],
     "roleHierarchy": { "kind": "Hierarchy", "chains": [] }
   },
 
   "main": { "kind": "MainEntry", "parameters": [], "secrets": [], "start": [], "statements": [] },
   "files": [
-    { "kind": "FileEntry",
+    { "kind": "FileEntry", "id": "f:a",
       "path": "examples/applications/example.com/app/app/app-application.archol",
       "serviceId": null, "application": true }
   ],
-  "pending": [],
+  "pendings": [],
   "index": {
     "byKind": {
       "ServiceDef": ["s1"],

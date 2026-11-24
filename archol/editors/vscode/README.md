@@ -146,25 +146,33 @@ palette always works. Clicking the status bar item opens
 
 ## AST explorer
 
-The `archol.astExplorer` panel keeps its context while hidden. The extension
-requests `archol/ast` with `{ "uri": "file:///..." }` and renders `ast` as a
-single collapsible JSON tree:
+The `archol.astExplorer` panel keeps its context while hidden. It always
+requests `archol/applicationAst` with `{ "noBody": true }` and renders the
+resolved `ArcholApplication` of the current application as a single collapsible
+JSON tree:
 
 - **JSON tree:** every object/array has a twisty; collapsed objects/arrays show
   their contents inline on one line, clipped to the panel width. **Expand all**
   and **Collapse all** are in the toolbar.
 - **Key order:** `kind`, `title`, `name`, `value`, `message` and `id` always come first
   (in that order); properties ending in `loc`/`Loc` always come last. The
-  same order is used by inline previews and **Copy JSON**.
-- **Initial state:** the whole JSON starts collapsed (one line for the root).
-  Opening from **Explore AST** expands the selected token and all its parent
-  objects, highlights the token and scrolls it into view.
+  same order is used by inline previews, the JSON/YAML CLI and **Copy JSON**.
+- **Initial state:** the root is expanded and the application/config rows are
+  visible; deep nodes start collapsed.
 - **Filter** matches JSON keys and scalar values; matching branches expand
   automatically.
-- **Click** an AST node object (any JSON object with `kind`/`loc`) to select it
-  and reveal its loc. Clicking a reference never navigates away; it only
-  reveals the node's own loc.
-- **Go to Code** does the same and moves focus to the editor.
+- **References:** every artifact/local reference (`RoleRef`, `DocumentRef`,
+  `ServiceRef`, `FieldRef`, `ActionRef`, ...) gets a dotted
+  underline and a `↗` badge. **Hover** shows a compact popup with the target
+  node summary (no children); **click** expands its ancestors, selects it and
+  scrolls to it.
+- **Back/forward:** the toolbar keeps an AST navigation history; `←`/`→` move
+  through the nodes you visited.
+- **Favorites:** `☆` adds/removes the selected node; the `Favorites…` select
+  jumps back to a saved node. Favorites persist in the webview state.
+- **Go to Code** selects the node's `loc`; for application nodes it resolves
+  `loc.file` (an `f:<base36>` id) through `files[]` and opens the corresponding
+  path when present.
 - The toolbar shows the selected node identifiers (`id 12 · ref 7 ·
   refKind enumValue`). **Go to Declaration** is enabled when the node has `ref`
   or `id`, requests `archol/declaration { "id": ... }` and reuses the open
@@ -174,10 +182,12 @@ single collapsible JSON tree:
   results it shows **No usages found**.
 - **Copy JSON** copies the selected node or the whole AST.
 - The native Cut/Copy/Paste context menu is disabled in the webview.
-- When `archol/ast` returns `inApplication: false` (or the AST has
-  `commentedOut: true`), a banner reads *Outside the current application —
-  treated as commented out* and the declaration/usages buttons are disabled.
-- When the open document changes, a new `archol/ast` is requested after 400 ms.
+- When the application is missing or the request fails, the panel shows the
+  server error; when a per-file AST outside the closure is used as fallback,
+  the *Outside the current application* banner and the disabled navigation
+  buttons still apply.
+- When any document changes, a new `archol/applicationAst` is requested after
+  400 ms; selecting another application also refreshes the panel.
 
 The extension still uses structural index paths to find the node at a cursor
 position; clicking a JSON object with `kind`/`loc` selects that node in the
@@ -202,6 +212,10 @@ JSON tree and reveals its loc.
   `{ "ast": SourceFile, "inApplication": true }`. An AST outside the current
   application is marked with `commentedOut: true`. Locs are converted from
   byte (AST) to UTF-16 position (VS Code) and back.
+- **`archol/applicationAst`**: request `{ "noBody": true }` →
+  `{ "ast": ArcholApplication, "application": { "uri", "path" } }`. This is the
+  tree used by the explorer; it is rebuilt from the current closure on every
+  request.
 - **`archol/declaration`**: request `{ "id": <id> }` → `{ "uri", "range" }` or
   `null`. The returned LSP range is selected in the existing editor.
 - **`archol/usages`**: request `{ "id": <id> }` →

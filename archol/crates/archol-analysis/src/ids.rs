@@ -40,8 +40,12 @@ impl LockEntry {
 #[derive(Clone, Debug, Default)]
 pub struct Lock {
     pub application: String,
-    /// base path -> entry
+    /// base path -> entry (artifacts)
     pub entries: BTreeMap<String, LockEntry>,
+    /// file path -> entry (`f:<base36>`)
+    pub file_entries: BTreeMap<String, LockEntry>,
+    /// pending key -> entry (`p:<base36>`)
+    pub pending_entries: BTreeMap<String, LockEntry>,
     /// Pinned base paths in file order; written first on save.
     pinned_order: Vec<String>,
     pub dirty: bool,
@@ -52,6 +56,8 @@ impl Lock {
         Self {
             application: application.into(),
             entries: BTreeMap::new(),
+            file_entries: BTreeMap::new(),
+            pending_entries: BTreeMap::new(),
             pinned_order: Vec::new(),
             dirty: false,
         }
@@ -153,14 +159,21 @@ impl Lock {
                 id: id.to_string(),
                 path: path.to_string(),
             };
-            if lock.entries.insert(base.clone(), entry.clone()).is_some() {
+            let target = if id.starts_with("f:") {
+                &mut lock.file_entries
+            } else if id.starts_with("p:") {
+                &mut lock.pending_entries
+            } else {
+                &mut lock.entries
+            };
+            if target.insert(base.clone(), entry.clone()).is_some() {
                 return Err(format!(
                     "{}:{}: duplicate path `{base}`",
                     lock_path.display(),
                     index + 1
                 ));
             }
-            if entry.pinned() {
+            if entry.pinned() && !id.starts_with("f:") && !id.starts_with("p:") {
                 lock.pinned_order.push(base);
             }
         }
@@ -186,11 +199,12 @@ impl Lock {
             .values()
             .filter(|entry| !entry.pinned())
             .collect();
-        generated
-            .sort_by_key(|entry| (id_rank(&entry.id).unwrap_or(usize::MAX), entry.path.clone()));
+        generated.sort_by_key(|entry| (entry_rank(&entry.id), entry.path.clone()));
         for entry in generated {
             write_entry(&mut body, entry)?;
         }
+        write_group(&mut body, &self.file_entries)?;
+        write_group(&mut body, &self.pending_entries)?;
         std::fs::write(path, body)
             .map_err(|error| format!("cannot write {}: {error}", path.display()))
     }
@@ -237,6 +251,102 @@ impl Lock {
         ids_by_path
     }
 
+    /// Assigns `f:<base36>` ids to closure files; prunes removed files.
+    pub fn assign_files<I>(&mut self, paths: I) -> BTreeMap<String, String>
+    where
+        I: IntoIterator<Item = String>,
+    {
+        let wanted: BTreeSet<String> = paths.into_iter().collect();
+        let before = self.file_entries.len();
+        self.file_entries.retain(|path, _| wanted.contains(path));
+        if self.file_entries.len() != before {
+            self.dirty = true;
+        }
+        let mut assigned = BTreeMap::new();
+        let mut rank = self.next_prefixed_rank("f");
+        let mut used = self.all_ids();
+        for path in wanted {
+            if let Some(entry) = self.file_entries.get(&path) {
+                assigned.insert(path, entry.id.clone());
+                continue;
+            }
+            let id = allocate_prefixed_id("f", &mut rank, &mut used);
+            self.file_entries.insert(
+                path.clone(),
+                LockEntry {
+                    id: id.clone(),
+                    path: path.clone(),
+                },
+            );
+            self.dirty = true;
+            assigned.insert(path, id);
+        }
+        assigned
+    }
+
+    /// Assigns `p:<base36>` ids to pending keys; prunes removed pendings.
+    pub fn assign_pendings<I>(&mut self, keys: I) -> BTreeMap<String, String>
+    where
+        I: IntoIterator<Item = String>,
+    {
+        let wanted: BTreeSet<String> = keys.into_iter().collect();
+        let before = self.pending_entries.len();
+        self.pending_entries.retain(|key, _| wanted.contains(key));
+        if self.pending_entries.len() != before {
+            self.dirty = true;
+        }
+        let mut assigned = BTreeMap::new();
+        let mut rank = self.next_prefixed_rank("p");
+        let mut used = self.all_ids();
+        for key in wanted {
+            if let Some(entry) = self.pending_entries.get(&key) {
+                assigned.insert(key, entry.id.clone());
+                continue;
+            }
+            let id = allocate_prefixed_id("p", &mut rank, &mut used);
+            self.pending_entries.insert(
+                key.clone(),
+                LockEntry {
+                    id: id.clone(),
+                    path: key.clone(),
+                },
+            );
+            self.dirty = true;
+            assigned.insert(key, id);
+        }
+        assigned
+    }
+
+    fn all_ids(&self) -> BTreeSet<String> {
+        self.entries
+            .values()
+            .chain(self.file_entries.values())
+            .chain(self.pending_entries.values())
+            .map(|entry| entry.id.clone())
+            .collect()
+    }
+
+    fn next_prefixed_rank(&self, prefix: &str) -> usize {
+        let prefix = format!("{prefix}:");
+        self.entries
+            .values()
+            .chain(self.file_entries.values())
+            .chain(self.pending_entries.values())
+            .filter_map(|entry| entry.id.strip_prefix(&prefix))
+            .filter_map(id_rank)
+            .max()
+            .unwrap_or(0)
+            + 1
+    }
+
+    pub fn file_id(&self, path: &str) -> Option<&str> {
+        self.file_entries.get(path).map(|entry| entry.id.as_str())
+    }
+
+    pub fn pending_id(&self, key: &str) -> Option<&str> {
+        self.pending_entries.get(key).map(|entry| entry.id.as_str())
+    }
+
     pub fn entry_for(&self, path: &str) -> Option<&LockEntry> {
         self.entries.get(path)
     }
@@ -250,6 +360,8 @@ impl Lock {
         let used: BTreeSet<&str> = self
             .entries
             .values()
+            .chain(self.file_entries.values())
+            .chain(self.pending_entries.values())
             .map(|entry| entry.id.as_str())
             .collect();
         let mut candidate = self
@@ -270,6 +382,33 @@ impl Lock {
     }
 }
 
+fn allocate_prefixed_id(prefix: &str, rank: &mut usize, used: &mut BTreeSet<String>) -> String {
+    loop {
+        let id = format!("{prefix}:{}", rank_id(*rank));
+        *rank += 1;
+        if used.insert(id.clone()) {
+            return id;
+        }
+    }
+}
+
+fn entry_rank(id: &str) -> usize {
+    id.strip_prefix("f:")
+        .or_else(|| id.strip_prefix("p:"))
+        .and_then(id_rank)
+        .or_else(|| id_rank(id))
+        .unwrap_or(usize::MAX)
+}
+
+fn write_group(body: &mut String, entries: &BTreeMap<String, LockEntry>) -> Result<(), String> {
+    let mut group: Vec<&LockEntry> = entries.values().collect();
+    group.sort_by_key(|entry| (entry_rank(&entry.id), entry.path.clone()));
+    for entry in group {
+        write_entry(body, entry)?;
+    }
+    Ok(())
+}
+
 fn write_entry(body: &mut String, entry: &LockEntry) -> Result<(), String> {
     if entry.path.contains(',') {
         return Err(format!("path must not contain a comma: {}", entry.path));
@@ -287,6 +426,9 @@ pub fn lock_path_for_application(application_file: &Path) -> PathBuf {
 }
 
 pub fn is_safe_id(id: &str) -> bool {
+    if let Some(rest) = id.strip_prefix("f:").or_else(|| id.strip_prefix("p:")) {
+        return id_rank(rest).is_some();
+    }
     let mut chars = id.chars();
     match chars.next() {
         Some(first) if first.is_ascii_alphabetic() || first == '_' => {}
@@ -522,6 +664,45 @@ mod tests {
         lock.assign(&used(&["svc#service"]));
         lock.save(&path).unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "a,svc#service*\n");
+    }
+
+    #[test]
+    fn file_and_pending_ids_use_separate_prefixed_counters() {
+        let path = temp_path("files-pendings");
+        let mut lock = Lock::new("app");
+        let files = lock.assign_files(vec![
+            "services/a.archol".to_string(),
+            "applications/app.archol".to_string(),
+        ]);
+        assert_eq!(files["applications/app.archol"], "f:a");
+        assert_eq!(files["services/a.archol"], "f:b");
+
+        let pendings = lock.assign_pendings(vec![
+            "pending:services/a.archol:10".to_string(),
+            "pending:applications/app.archol:0".to_string(),
+        ]);
+        assert_eq!(pendings["pending:applications/app.archol:0"], "p:a");
+        assert_eq!(pendings["pending:services/a.archol:10"], "p:b");
+
+        let ids = lock.assign(&BTreeMap::from([("svc#service".to_string(), 1)]));
+        assert_eq!(ids["svc#service"], "a");
+
+        assert!(is_safe_id("f:a"));
+        assert!(is_safe_id("p:z"));
+        lock.save(&path).unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(text.contains("f:a,applications/app.archol"), "{text}");
+        assert!(
+            text.contains("p:a,pending:applications/app.archol:0"),
+            "{text}"
+        );
+
+        let loaded = Lock::load(&path, "app").unwrap();
+        assert_eq!(loaded.file_id("applications/app.archol"), Some("f:a"));
+        assert_eq!(
+            loaded.pending_id("pending:services/a.archol:10"),
+            Some("p:b")
+        );
     }
 
     #[test]

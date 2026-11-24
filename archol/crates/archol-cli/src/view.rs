@@ -57,7 +57,7 @@ pub fn payload(input: ViewInput<'_>) -> Value {
             })
         })
         .collect();
-    let pending = input.ast.pending.len();
+    let pending = input.ast.pendings.len();
     let diagnostics: Vec<Value> = input
         .diagnostics
         .iter()

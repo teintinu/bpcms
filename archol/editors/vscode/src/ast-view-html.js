@@ -125,11 +125,36 @@ function buildAstHtml({ cspSource, nonce }) {
   mark { color: inherit; background: var(--vscode-editor-findMatchHighlightBackground, rgba(234,92,0,.33)); border-radius: 2px; }
   .empty { margin: 16px 4px; color: var(--vscode-descriptionForeground); white-space: normal; }
   .empty.error { color: var(--vscode-errorForeground, #f48771); }
+  .ref-link .json-key { color: var(--vscode-textLink-foreground, #3794ff); text-decoration: underline; text-decoration-style: dotted; }
+  .ref-link:hover .json-key { text-decoration-style: solid; }
+  .ref-badge {
+    flex: 0 0 auto; font-size: 10px; line-height: 14px; padding: 0 4px; border-radius: 8px;
+    color: var(--vscode-textLink-foreground, #3794ff);
+    border: 1px solid currentColor; margin-left: 4px;
+  }
+  #ref-popup {
+    position: fixed; z-index: 50; max-width: 460px; max-height: 240px; overflow: hidden;
+    padding: 8px 10px; border-radius: 4px; pointer-events: none;
+    background: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+    color: var(--vscode-editorHoverWidget-foreground, var(--vscode-editor-foreground));
+    border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .28);
+    font-family: var(--vscode-editor-font-family, monospace); font-size: 11px;
+    line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  #ref-popup[hidden] { display: none; }
+  #favorites { max-width: 180px; padding: 4px 6px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border, transparent); border-radius: 2px; }
 </style>
 </head>
 <body>
 <header class="toolbar">
   <span class="file" id="file-name" title="AST file">Archol</span>
+  <button id="back" type="button" class="secondary" title="Back in the AST history" disabled>←</button>
+  <button id="forward" type="button" class="secondary" title="Forward in the AST history" disabled>→</button>
+  <button id="favorite" type="button" class="secondary" title="Add or remove the selected node from favorites">☆</button>
+  <select id="favorites" title="AST favorites" aria-label="AST favorites">
+    <option value="">Favorites…</option>
+  </select>
   <input id="filter" type="search" placeholder="Filter by kind or name" aria-label="Filter AST nodes">
   <button id="reveal" type="button" title="Places the cursor at the start of the selected node">Go to Code</button>
   <button id="declaration" type="button" class="secondary" title="Opens the declaration of the selected node reference">Go to Declaration</button>
@@ -142,6 +167,7 @@ function buildAstHtml({ cspSource, nonce }) {
 </header>
 <div id="banner" role="alert" hidden>Outside the current application — treated as commented out</div>
 <main id="tree" class="json-tree" role="tree" aria-label="Archol AST JSON"></main>
+<div id="ref-popup" role="tooltip" hidden></div>
 <script nonce="${nonce}">
 ${browserScript}
 </script>

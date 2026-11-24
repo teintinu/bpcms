@@ -169,6 +169,12 @@ class ArcholSession {
     return normalizeAstResult(result);
   }
 
+  async fetchApplicationAst() {
+    const instance = await this.ensureClient();
+    const result = await instance.request('archol/applicationAst', { noBody: true });
+    return normalizeAstResult(result);
+  }
+
   async fetchDeclaration(id) {
     const instance = await this.ensureClient();
     return instance.request('archol/declaration', { id });
@@ -191,6 +197,10 @@ class ArcholSession {
       .then((instance) => instance.request('archol/setApplication', { uri: key }))
       .then((result) => {
         this._appliedApplication = key;
+        const astExplorer = this._getAstExplorer();
+        if (astExplorer && astExplorer.visible) {
+          astExplorer.refresh().catch((error) => this._log(`failed to refresh AST: ${error.message}`));
+        }
         return result;
       })
       .finally(() => {

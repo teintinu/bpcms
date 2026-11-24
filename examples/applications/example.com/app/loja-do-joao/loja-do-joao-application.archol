@@ -1,40 +1,22 @@
-// REVIEW [2026-12-15] application: Loja do João (catálogo, pedidos, pagamentos e entrega)
-// REVIEW [2026-12-15] Declara a aplicação da URI example.com/app/loja-do-joao e abre sua composição.
 application "example.com/app/loja-do-joao" {
-  // REVIEW [2026-12-15] Nome localizado da aplicação, exibido no construtor e no runtime.
   title: {
-    pt-BR: "Loja do João" // REVIEW [2026-12-15] Título em português (idioma default).
-    en-US: "João's Store" // REVIEW [2026-12-15] Título em inglês americano.
+    pt-BR: "Loja do João"
+    en-US: "João's Store"
   }
 
-  // REVIEW [2026-12-15] Entry points da aplicação; cada alias local é usado nas referências cruzadas.
   services {
-    "example.com/services/identity" as Identity // REVIEW [2026-12-15] Identidade e autenticação dos usuários.
-    "example.com/services/catalog" as Catalog // REVIEW [2026-12-15] Catálogo de produtos e preços.
-    "example.com/services/orders" as Orders // REVIEW [2026-12-15] Carrinho e pedidos de venda.
-    "example.com/services/payments" as Payments // REVIEW [2026-12-15] Cobrança e autorização de pagamentos.
-    "example.com/services/shipping" as Shipping // REVIEW [2026-12-15] Cotação e rastreio de entregas.
-    "example.com/services/notifications" as Notifications // REVIEW [2026-12-15] Avisos e notificações aos clientes.
+    "example.com/services/identity" as Identity
+    "example.com/services/catalog" as Catalog
+    "example.com/services/orders" as Orders 
+    "example.com/services/payments" as Payments 
+    "example.com/services/shipping" as Shipping 
+    "example.com/services/notifications" as Notifications
   }
-  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
-  roles {
-    Customer // REVIEW [2026-12-15] Cliente: compra na loja.
-    Clerk // REVIEW [2026-12-15] Balconista: apoia o atendimento e os pedidos.
-    Manager // REVIEW [2026-12-15] Gerente: responde pela operação da loja.
-    Dispatcher // REVIEW [2026-12-15] Despachante: organiza as entregas.
-    Driver // REVIEW [2026-12-15] Motorista: executa as entregas.
-    // REVIEW [2026-12-15] Manager é superior a Clerk.
-    Manager > Clerk
-    // REVIEW [2026-12-15] Manager é superior a Dispatcher, que é superior a Driver.
-    Manager > Dispatcher > Driver
-  }
-  theme: Nuvula // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
-  locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
-  environments: [dev, qa, prod] // REVIEW [2026-12-15] Ambientes em que a aplicação é promovida.
+  theme: Nuvula
+  locales: [pt-BR, en-US] 
+  environments: [dev, qa, prod]
 
-  // REVIEW [2026-12-15] Bloco de inicialização da app; só configura, não contém regra de negócio.
   main {
-    // REVIEW [2026-12-15] Inicializa Catalog.DefaultCurrency com o real brasileiro (moeda padrão da loja).
     set Catalog.DefaultCurrency = "BRL"
     // REVIEW [2026-12-15] Faz o boot antecipado do serviço de identidade (não declara dependência).
     start ["example.com/services/identity"]

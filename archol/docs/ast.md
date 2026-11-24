@@ -227,16 +227,19 @@ double quotes; `archol format` prefers double quotes.
 
 ## Pending comments
 
-`SourceFile.pending` is an array of `Pending` nodes for comments beginning with
+`SourceFile.pendings` is an array of typed pending nodes for comments beginning with
 `TODO`, `FIXME`, `REVIEW`, `OPTIMIZE` or `HACK` (case-insensitive). A `Date`
-value is the due date. Pendings are **metadata, not artifacts**: they have no
-`id` and never appear in the application lock. The AST explorer merges them
-into the tree at their source position.
+value is the due date. Pendings are **metadata, not artifacts**: each keyword
+has its own kind (`PendingTodo`, `PendingFixme`, `PendingReview`,
+`PendingOptimize`, `PendingHack`) and each comment gets a `p:<base36>` id from
+a counter separate from artifact ids. Those ids are written to the application
+lock as `p:<base36>,pending:<file>:<start>` lines; the resolved application AST
+lists them under `pendings`.
 
 ```json
 {
-  "kind": "Pending",
-  "keyword": "REVIEW",
+  "kind": "PendingReview",
+  "id": "p:a",
   "dueDate": "2026-12-15",
   "dateText": "2026-12-15",
   "message": "revisar depois do carnaval",

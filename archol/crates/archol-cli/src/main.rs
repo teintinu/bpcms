@@ -207,7 +207,7 @@ fn format(args: &[String]) -> i32 {
     let mut changed = 0;
     for file in &files {
         let parsed = parse(&file.source, file.path.clone());
-        let formatted = archol_core::pending::format_source(&file.source, &parsed.ast.pending);
+        let formatted = archol_core::pending::format_source(&file.source, &parsed.ast.pendings);
         if formatted == file.source {
             continue;
         }
@@ -258,7 +258,11 @@ fn lock(args: &[String]) -> i32 {
     let identifiers = analysis
         .semantic
         .as_ref()
-        .map(|semantic| semantic.lock.entries.len())
+        .map(|semantic| {
+            semantic.lock.entries.len()
+                + semantic.lock.file_entries.len()
+                + semantic.lock.pending_entries.len()
+        })
         .unwrap_or(0);
     println!("lock: {}", lock_path.display());
     println!("identifiers: {identifiers}");

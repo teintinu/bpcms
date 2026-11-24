@@ -98,6 +98,7 @@ struct Builder<'a> {
     artifacts: BTreeMap<(String, String, String), ArtifactMeta<'a>>,
     app_aliases: BTreeMap<String, String>,
     decls: BTreeMap<String, &'a DeclInfo>,
+    file_ids: BTreeMap<String, String>,
     merged: BTreeMap<String, Merged>,
     effective: BTreeMap<String, Vec<String>>,
     permission_roles: BTreeMap<String, Vec<String>>,
@@ -160,6 +161,12 @@ impl<'a> Builder<'a> {
         for (id, decl) in &semantic.declarations {
             decls.insert(id.clone(), decl);
         }
+        let file_ids = semantic
+            .lock
+            .file_entries
+            .iter()
+            .map(|(path, entry)| (path.clone(), entry.id.clone()))
+            .collect();
         let workspace_root = std::fs::canonicalize(root)
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_else(|_| root.to_string());
@@ -175,6 +182,7 @@ impl<'a> Builder<'a> {
             artifacts,
             app_aliases: BTreeMap::new(),
             decls,
+            file_ids,
             merged: BTreeMap::new(),
             effective: BTreeMap::new(),
             permission_roles: BTreeMap::new(),
@@ -274,7 +282,7 @@ impl<'a> Builder<'a> {
             "application": application,
             "main": main,
             "files": self.files(),
-            "pending": self.pending(),
+            "pendings": self.pendings(),
             "index": {
                 "byKind": by_kind,
                 "byService": by_service,
@@ -304,7 +312,11 @@ impl<'a> Builder<'a> {
     fn loc(&self, file: &ParsedFile, span: Span) -> Value {
         let (line, column) = file.lines.line_col(span.start);
         json!({
-            "file": self.rel(&file.path),
+            "file": self
+                .file_ids
+                .get(&file.path)
+                .cloned()
+                .unwrap_or_else(|| self.rel(&file.path)),
             "start": span.start,
             "end": span.end,
             "line": line + 1,
@@ -316,7 +328,15 @@ impl<'a> Builder<'a> {
         let file = self.workspace.files.iter().find(|file| file.path == path);
         match file {
             Some(file) => self.loc(file, span),
-            None => json!({ "file": self.rel(path), "start": span.start, "end": span.end }),
+            None => json!({
+                "file": self
+                    .file_ids
+                    .get(path)
+                    .cloned()
+                    .unwrap_or_else(|| self.rel(path)),
+                "start": span.start,
+                "end": span.end,
+            }),
         }
     }
 
@@ -1966,6 +1986,7 @@ impl<'a> Builder<'a> {
             let application = file.path == self.closure.application.path;
             files.push(json!({
                 "kind": "FileEntry",
+                "id": self.file_ids.get(&file.path).cloned().unwrap_or_default(),
                 "path": self.rel(&file.path),
                 "serviceId": file
                     .service
@@ -1982,13 +2003,13 @@ impl<'a> Builder<'a> {
         files
     }
 
-    fn pending(&self) -> Vec<Value> {
+    fn pendings(&self) -> Vec<Value> {
         let mut pending = Vec::new();
         for file in &self.workspace.files {
             if !self.closure.contains_file(&file.path) {
                 continue;
             }
-            for entry in &file.ast.pending {
+            for entry in &file.ast.pendings {
                 pending.push(self.pending_json(file, entry));
             }
         }
@@ -1997,8 +2018,8 @@ impl<'a> Builder<'a> {
 
     fn pending_json(&self, file: &ParsedFile, pending: &Pending) -> Value {
         let mut value = Map::new();
-        value.insert("kind".to_string(), json!("PendingEntry"));
-        value.insert("keyword".to_string(), json!(pending.keyword));
+        value.insert("kind".to_string(), json!(pending.kind));
+        value.insert("id".to_string(), json!(pending.id));
         value.insert("message".to_string(), json!(pending.message));
         value.insert("loc".to_string(), self.loc(file, pending.span));
         if let Some(due) = &pending.due_date {

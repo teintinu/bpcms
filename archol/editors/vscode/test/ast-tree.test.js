@@ -186,20 +186,20 @@ test('mergePending inserts comments into the containing node in source order', (
         ],
       },
     ],
-    pending: [
-      { kind: 'Pending', keyword: 'HACK', loc: { start: 60, end: 70 } },
-      { kind: 'Pending', keyword: 'TODO', loc: { start: 0, end: 5 } },
-      { kind: 'Pending', keyword: 'REVIEW', loc: { start: 20, end: 25 } },
+    pendings: [
+      { kind: 'PendingHack', loc: { start: 60, end: 70 } },
+      { kind: 'PendingTodo', loc: { start: 0, end: 5 } },
+      { kind: 'PendingReview', loc: { start: 20, end: 25 } },
     ],
   };
   mergePending(pendingAst);
-  assert.equal(pendingAst.pending, undefined);
+  assert.equal(pendingAst.pendings, undefined);
   const rootChildren = getChildren(pendingAst);
-  assert.equal(rootChildren[0].kind, 'Pending');
-  assert.equal(rootChildren[0].keyword, 'TODO');
+  assert.equal(rootChildren[0].kind, 'PendingTodo');
+  assert.equal(rootChildren[0].kind, 'PendingTodo');
   assert.equal(rootChildren[1].kind, 'ArtifactProcess');
   const body = getChildren(rootChildren[1]);
-  assert.deepEqual(body.map((node) => node.kind), ['Pending', 'MemberA', 'Pending', 'MemberB']);
-  assert.equal(body[0].keyword, 'REVIEW');
-  assert.equal(body[2].keyword, 'HACK');
+  assert.deepEqual(body.map((node) => node.kind), ['PendingReview', 'MemberA', 'PendingHack', 'MemberB']);
+  assert.equal(body[0].kind, 'PendingReview');
+  assert.equal(body[2].kind, 'PendingHack');
 });

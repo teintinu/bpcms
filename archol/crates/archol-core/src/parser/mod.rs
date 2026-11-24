@@ -27,8 +27,9 @@ pub struct ParseResult {
 }
 
 pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
+    let path = path.into();
     let lexed = lex(source);
-    let pending = crate::pending::collect(source, &lexed.tokens);
+    let pending = crate::pending::collect(source, &lexed.tokens, &path);
     let mut diagnostics = lexed.diagnostics;
     for token in &lexed.tokens {
         if token.kind != TokenKind::String {
@@ -59,8 +60,8 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
         depth: 0,
         depth_reported: false,
     };
-    let mut ast = parser.parse_file(path.into());
-    ast.pending = pending;
+    let mut ast = parser.parse_file(path);
+    ast.pendings = pending;
     ParseResult {
         ast,
         diagnostics: parser.diagnostics,

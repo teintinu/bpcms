@@ -28,16 +28,16 @@ function getChildren(node) {
 }
 
 
-// The server returns comments in `SourceFile.pending`. The explorer shows them
+// The server returns comments in `SourceFile.pendings` (one kind per keyword). The explorer shows them
 // as children of the deepest node that contains them, in source order, so the
 // tree follows the file instead of listing every pending at the end.
 function mergePending(ast) {
-  if (!isAstNode(ast) || !Array.isArray(ast.pending)) return ast;
-  const pending = ast.pending
+  if (!isAstNode(ast) || !Array.isArray(ast.pendings)) return ast;
+  const pending = ast.pendings
     .filter(isAstNode)
-    .filter((node) => node.kind === 'Pending')
+    .filter((node) => /^Pending(Todo|Fixme|Review|Optimize|Hack)$/.test(node.kind))
     .sort((left, right) => spanStart(left) - spanStart(right));
-  delete ast.pending;
+  delete ast.pendings;
   for (const item of pending) {
     const container = pendingContainer(ast, item.loc, null);
     if (!container) continue;

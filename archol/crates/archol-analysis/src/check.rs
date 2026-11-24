@@ -41,7 +41,7 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
     }
     let today = pending::today();
     for file in &workspace.files {
-        for item in &file.ast.pending {
+        for item in &file.ast.pendings {
             for diagnostic in pending::validate(item, today) {
                 diagnostics.push((file.path.clone(), diagnostic));
             }

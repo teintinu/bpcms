@@ -101,12 +101,24 @@ function usageQuickPickItem(location, rootUri) {
   };
 }
 
+// A typed reference is either a plain lock id (`ref`) or a node
+// (`{ kind: "PendingRef", id, ... }`). Both reduce to the target id.
+function referenceTargetId(node) {
+  if (!node || typeof node !== 'object') return null;
+  const ref = node.ref;
+  if (ref && typeof ref === 'object') {
+    return ref.id !== undefined && ref.id !== null ? ref.id : null;
+  }
+  return ref !== undefined && ref !== null ? ref : null;
+}
+
 // Brief identifier information shown for the selected AST node.
 function referenceSummary(node) {
   if (!node || typeof node !== 'object') return '';
   const parts = [];
   if (node.id !== undefined && node.id !== null) parts.push(`id ${node.id}`);
-  if (node.ref !== undefined && node.ref !== null) parts.push(`ref ${node.ref}`);
+  const ref = referenceTargetId(node);
+  if (ref !== null) parts.push(`ref ${ref}`);
   if (node.refKind) parts.push(`refKind ${node.refKind}`);
   return parts.join(' · ');
 }
@@ -115,7 +127,8 @@ function referenceSummary(node) {
 // the node's own declaration id.
 function declarationTargetId(node) {
   if (!node || typeof node !== 'object') return null;
-  if (node.ref !== undefined && node.ref !== null) return node.ref;
+  const ref = referenceTargetId(node);
+  if (ref !== null) return ref;
   if (node.id !== undefined && node.id !== null) return node.id;
   return null;
 }
@@ -138,7 +151,14 @@ function normalizeAstResult(result) {
   const commentedOut = Boolean(result.commentedOut)
     || Boolean(ast && ast.commentedOut)
     || !inApplication;
-  return { ast, inApplication, commentedOut };
+  const application = result.application && typeof result.application === 'object'
+    ? result.application
+    : null;
+  const normalized = { ast, inApplication, commentedOut };
+  if (application) normalized.application = application;
+  const error = typeof result.error === 'string' ? result.error : '';
+  if (error) normalized.error = error;
+  return normalized;
 }
 
 function isOutsideApplication(result) {
@@ -149,7 +169,7 @@ function isOutsideApplication(result) {
 // Source injected into the webview script so the behavior tested here is the
 // exact behavior used by the tree.
 function browserNodeHelpersSource() {
-  return [referenceSummary, declarationTargetId, usageTargetId]
+  return [referenceTargetId, referenceSummary, declarationTargetId, usageTargetId]
     .map((fn) => fn.toString())
     .join('\n');
 }

@@ -70,8 +70,19 @@ pub fn days_between(from: Date, to: Date) -> i64 {
     days_from_civil(to) - days_from_civil(from)
 }
 
+/// Typed node kind for one pending keyword.
+pub fn pending_kind(keyword: &str) -> &'static str {
+    match keyword {
+        "FIXME" => "PendingFixme",
+        "REVIEW" => "PendingReview",
+        "OPTIMIZE" => "PendingOptimize",
+        "HACK" => "PendingHack",
+        _ => "PendingTodo",
+    }
+}
+
 /// Collects pending comments from the lexer tokens (comments included).
-pub fn collect(source: &str, tokens: &[Token]) -> Vec<Pending> {
+pub fn collect(source: &str, tokens: &[Token], path: &str) -> Vec<Pending> {
     let mut pending = Vec::new();
     for token in tokens
         .iter()
@@ -111,8 +122,8 @@ pub fn collect(source: &str, tokens: &[Token]) -> Vec<Pending> {
         }
 
         pending.push(Pending {
-            kind: "Pending",
-            keyword: canonical.to_string(),
+            kind: pending_kind(canonical),
+            id: format!("pending:{path}:{}", token.span.start),
             due_date,
             date_text,
             message: rest.to_string(),
@@ -133,7 +144,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
                 "E_PENDING_DATE",
                 format!(
                     "{} has an invalid due date `{}` (expected YYYY-MM-DD)",
-                    pending.keyword,
+                    pending.keyword(),
                     pending.date_text.as_deref().unwrap_or("")
                 ),
                 pending.span,
@@ -141,7 +152,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
         } else {
             diagnostics.push(Diagnostic::error(
                 "E_PENDING_NO_DATE",
-                format!("{} has no due date; add [YYYY-MM-DD]", pending.keyword),
+                format!("{} has no due date; add [YYYY-MM-DD]", pending.keyword()),
                 pending.span,
             ));
         }
@@ -154,7 +165,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
             "E_PENDING_EXPIRED",
             format!(
                 "{} expired on {} ({} day(s) ago)",
-                pending.keyword,
+                pending.keyword(),
                 due.iso(),
                 -remaining
             ),
@@ -165,7 +176,7 @@ pub fn validate(pending: &Pending, today: Date) -> Vec<Diagnostic> {
             "W_PENDING_SOON",
             format!(
                 "{} is due in {} day(s) on {}",
-                pending.keyword,
+                pending.keyword(),
                 remaining,
                 due.iso()
             ),
@@ -181,7 +192,8 @@ pub fn format_edits(source: &str, pending: &[Pending]) -> Vec<(Span, String)> {
         .iter()
         .filter_map(|pending| {
             let current = source.get(pending.keyword_span.start..pending.keyword_span.end)?;
-            (current != pending.keyword).then(|| (pending.keyword_span, pending.keyword.clone()))
+            (current != pending.keyword())
+                .then(|| (pending.keyword_span, pending.keyword().to_string()))
         })
         .collect()
 }
@@ -279,7 +291,7 @@ mod tests {
 
     fn parse_pending(source: &str) -> Vec<Pending> {
         let lexed = lex(source);
-        collect(source, &lexed.tokens)
+        collect(source, &lexed.tokens, "test.archol")
     }
 
     #[test]
@@ -287,10 +299,12 @@ mod tests {
         let items =
             parse_pending("// todo implementar criptografia\n// FixMe [2027-03-12] corrigir\n");
         assert_eq!(items.len(), 2);
-        assert_eq!(items[0].keyword, "TODO");
+        assert_eq!(items[0].kind, "PendingTodo");
+        assert_eq!(items[0].keyword(), "TODO");
         assert_eq!(items[0].due_date, None);
         assert_eq!(items[0].message, "implementar criptografia");
-        assert_eq!(items[1].keyword, "FIXME");
+        assert_eq!(items[1].kind, "PendingFixme");
+        assert_eq!(items[1].keyword(), "FIXME");
         assert_eq!(items[1].due_date.as_deref(), Some("2027-03-12"));
         assert_eq!(items[1].message, "corrigir");
     }

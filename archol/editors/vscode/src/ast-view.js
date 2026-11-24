@@ -13,6 +13,7 @@ const REFRESH_DEBOUNCE_MS = 400;
 class AstExplorer {
   constructor(options) {
     this._getAst = options.getAst;
+    this._getApplicationAst = options.getApplicationAst;
     this._getDeclaration = options.getDeclaration;
     this._getUsages = options.getUsages;
     this._log = options.log || (() => {});
@@ -78,37 +79,51 @@ class AstExplorer {
     const uri = this._target.uri;
     if (!this._current) this._post({ type: 'loading' });
     try {
-      const result = normalizeAstResult(await this._getAst(uri));
+      const applicationMode = typeof this._getApplicationAst === 'function';
+      const result = applicationMode
+        ? normalizeAstResult(await this._getApplicationAst())
+        : normalizeAstResult(await this._getAst(uri));
       if (requestId !== this._requestSeq || this._disposed || !this._panel) return;
-      const ast = mergePending(result.ast);
-      if (!ast) throw new Error('The server did not return an AST for this document.');
-      const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+      const ast = applicationMode ? result.ast : mergePending(result.ast);
+      if (!ast) {
+        throw new Error(result.error || 'The server did not return an application AST.');
+      }
+      const document = applicationMode
+        ? null
+        : await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
       const explicitOffset = options.selectOffset !== undefined && options.selectOffset !== null;
       let offset = explicitOffset ? options.selectOffset : this._selectionOffset;
       let selectedPath = null;
-      if (Number.isFinite(offset)) selectedPath = findNodePathAtOffset(ast, offset);
+      if (!applicationMode && Number.isFinite(offset)) selectedPath = findNodePathAtOffset(ast, offset);
       if (!selectedPath && !explicitOffset && this._selectionPath) selectedPath = this._selectionPath;
       this._selectionOffset = Number.isFinite(offset) ? offset : null;
       this._selectionPath = selectedPath;
       this._revealSelected = explicitOffset;
+      const application = result.application || null;
       this._current = {
         ast,
         uri,
-        fileName: path.basename(document.uri.fsPath) || 'Archol',
+        fileName: applicationMode
+          ? (application?.uri || 'Application')
+          : (path.basename(document.uri.fsPath) || 'Archol'),
         inApplication: result.inApplication,
         commentedOut: result.commentedOut,
+        application,
+        applicationMode,
       };
       this._dirty = false;
       this._post({
         type: 'setAst',
         ast,
-        uri,
+        uri: this._current.uri,
         fileName: this._current.fileName,
         selectedPath,
         revealSelected: this._revealSelected,
         offset: this._selectionOffset,
         inApplication: this._current.inApplication,
         commentedOut: this._current.commentedOut,
+        application: this._current.application,
+        applicationMode,
       });
     } catch (error) {
       if (requestId !== this._requestSeq || this._disposed) return;
@@ -202,7 +217,8 @@ class AstExplorer {
       const end = Number.isFinite(Number(message.end)) ? Number(message.end) : start;
       if (Array.isArray(message.path)) this._selectionPath = message.path;
       if (Number.isFinite(start)) this._selectionOffset = start;
-      this._reveal(start, end, Boolean(message.focus)).catch((error) => {
+      const file = typeof message.file === 'string' ? message.file : '';
+      this._reveal(start, end, Boolean(message.focus), file).catch((error) => {
         this._log(`failed to go to code: ${error.message}`);
       });
       return;
@@ -273,15 +289,25 @@ class AstExplorer {
         offset: this._selectionOffset,
         inApplication: this._current.inApplication,
         commentedOut: this._current.commentedOut,
+        application: this._current.application || null,
+        applicationMode: Boolean(this._current.applicationMode),
       });
     } else {
       this._post({ type: 'loading' });
     }
   }
 
-  async _reveal(startByte, endByte, focus) {
+  async _reveal(startByte, endByte, focus, file) {
     if (!this._current) return;
-    const uri = vscode.Uri.parse(this._current.uri);
+    let uri = vscode.Uri.parse(this._current.uri);
+    if (file) {
+      if (path.isAbsolute(file)) {
+        uri = vscode.Uri.file(file);
+      } else {
+        const folder = (vscode.workspace.workspaceFolders || [])[0];
+        if (folder) uri = vscode.Uri.joinPath(folder.uri, file);
+      }
+    }
     const document = await vscode.workspace.openTextDocument(uri);
     const text = document.getText();
     const textLength = Buffer.byteLength(text, 'utf8');

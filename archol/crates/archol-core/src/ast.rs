@@ -18,7 +18,7 @@ pub struct SourceFile {
     pub items: Vec<Artifact>,
     /// TODO/FIXME/REVIEW/OPTIMIZE/HACK comments found in the file.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub pending: Vec<Pending>,
+    pub pendings: Vec<Pending>,
 }
 
 impl SourceFile {
@@ -27,7 +27,7 @@ impl SourceFile {
             kind: "SourceFile",
             path: path.into(),
             items,
-            pending: Vec::new(),
+            pendings: Vec::new(),
         }
     }
 }
@@ -37,8 +37,8 @@ impl SourceFile {
 #[serde(rename_all = "camelCase")]
 pub struct Pending {
     pub kind: &'static str,
-    /// Canonical uppercase keyword (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`).
-    pub keyword: String,
+    /// Stable id for this comment, independent from the application lock.
+    pub id: String,
     /// Valid due date (`YYYY-MM-DD`), when present.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub due_date: Option<String>,
@@ -51,6 +51,20 @@ pub struct Pending {
     /// Span of the keyword itself, used by `archol format`.
     #[serde(rename = "keywordLoc")]
     pub keyword_span: Span,
+}
+
+impl Pending {
+    /// Canonical uppercase keyword derived from the node kind.
+    pub fn keyword(&self) -> &'static str {
+        match self.kind {
+            "PendingTodo" => "TODO",
+            "PendingFixme" => "FIXME",
+            "PendingReview" => "REVIEW",
+            "PendingOptimize" => "OPTIMIZE",
+            "PendingHack" => "HACK",
+            _ => "TODO",
+        }
+    }
 }
 
 /// Kind of a top-level artifact. Its `kind` in JSON is the typed node name

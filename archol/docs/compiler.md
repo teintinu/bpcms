@@ -71,9 +71,11 @@ The check is more than type inference:
   and `archol format` converts them when possible.
 
 Pending comments (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
-`SourceFile.pending`. A missing or past due date is an error
+`SourceFile.pendings`. A missing or past due date is an error
 (`E_PENDING_NO_DATE`/`E_PENDING_EXPIRED`); a due date within 15 days is a
-warning (`W_PENDING_SOON`); malformed dates are `E_PENDING_DATE`.
+warning (`W_PENDING_SOON`); malformed dates are `E_PENDING_DATE`. Each keyword
+has its own kind (`PendingTodo`, ...), and `archol lock` persists pending ids as
+`p:<base36>` lines alongside file ids (`f:<base36>`).
 
 Diagnostics carry a stable code, message, and `span`. The CLI prints
 `file:line:column: severity code: message`.

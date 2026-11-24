@@ -188,9 +188,18 @@ fn lock_creates_stable_csv_and_prunes_removed_identifiers() {
     assert!(ids.contains(&"a"), "{ids:?}");
     let unique: std::collections::BTreeSet<_> = ids.iter().collect();
     assert_eq!(unique.len(), ids.len(), "duplicate id: {ids:?}");
-    assert!(ids
-        .iter()
-        .all(|id| id.chars().all(|ch| ch.is_ascii_lowercase())));
+    assert!(ids.iter().all(|id| {
+        let base = id
+            .strip_prefix("f:")
+            .or_else(|| id.strip_prefix("p:"))
+            .unwrap_or(id);
+        base.chars()
+            .next()
+            .is_some_and(|ch| ch.is_ascii_lowercase())
+            && base
+                .chars()
+                .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit())
+    }));
     let paths: Vec<&str> = entries.iter().map(|(_, path)| path.as_str()).collect();
     assert!(
         paths.contains(&format!("{SERVICE}#service").as_str()),
@@ -311,7 +320,7 @@ fn ast_with_app_contains_typed_references() {
 }
 
 #[test]
-fn pending_comments_are_metadata_and_never_get_ids() {
+fn pending_comments_get_prefixed_lock_ids() {
     let dir = temp_dir("pending-ids");
     let service = service_fixture(&dir);
     let mut source = std::fs::read_to_string(&service).unwrap();
@@ -321,20 +330,23 @@ fn pending_comments_are_metadata_and_never_get_ids() {
     let output = run(&["lock", dir.to_str().unwrap(), "--app", APP]);
     assert_eq!(output.status.code(), Some(0));
     let lock = std::fs::read_to_string(app_path.with_extension("lock")).unwrap();
-    assert!(!lock.contains("pending"), "{lock}");
     assert!(!lock.contains("REVIEW"), "{lock}");
+    assert!(lock.lines().any(|line| line.starts_with("f:")), "{lock}");
+    assert!(lock.lines().any(|line| line.starts_with("p:")), "{lock}");
     assert_eq!(
         lock.lines().filter(|line| !line.is_empty()).count(),
-        2,
+        5,
         "{lock}"
     );
 
-    let ast = run(&["ast", service.to_str().unwrap()]);
+    let ast = run(&["ast", service.to_str().unwrap(), "--app", APP]);
     assert_eq!(ast.status.code(), Some(0));
     let ast: serde_json::Value = serde_json::from_slice(&ast.stdout).unwrap();
-    let pending = &ast["pending"][0];
-    assert_eq!(pending["kind"], "Pending");
-    assert!(pending.get("id").is_none(), "{pending}");
+    let pending = &ast["pendings"][0];
+    assert_eq!(pending["kind"], "PendingReview");
+    let id = pending["id"].as_str().expect("pending id");
+    assert!(id.starts_with("p:"), "{id}");
+    assert!(lock.contains(id), "{lock}");
     let _ = std::fs::remove_dir_all(dir);
 }
 

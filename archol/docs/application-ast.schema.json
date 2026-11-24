@@ -14,7 +14,7 @@
     "application",
     "main",
     "files",
-    "pending",
+    "pendings",
     "index"
   ],
   "properties": {
@@ -72,14 +72,14 @@
         "$ref": "#/$defs/fileEntry"
       }
     },
-    "pending": {
+    "index": {
+      "$ref": "#/$defs/index"
+    },
+    "pendings": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/pendingEntry"
       }
-    },
-    "index": {
-      "$ref": "#/$defs/index"
     }
   },
   "additionalProperties": false,
@@ -94,7 +94,7 @@
       "properties": {
         "file": {
           "type": "string",
-          "minLength": 1
+          "pattern": "^f:[a-z][a-z0-9]*$"
         },
         "start": {
           "type": "integer",
@@ -2283,6 +2283,7 @@
       "type": "object",
       "required": [
         "kind",
+        "id",
         "path",
         "serviceId",
         "application"
@@ -2303,6 +2304,10 @@
         },
         "application": {
           "type": "boolean"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^f:[a-z][a-z0-9]*$"
         }
       },
       "additionalProperties": false
@@ -2311,21 +2316,18 @@
       "type": "object",
       "required": [
         "kind",
-        "keyword",
+        "id",
         "message",
         "loc"
       ],
       "properties": {
         "kind": {
-          "const": "PendingEntry"
-        },
-        "keyword": {
           "enum": [
-            "TODO",
-            "FIXME",
-            "REVIEW",
-            "OPTIMIZE",
-            "HACK"
+            "PendingTodo",
+            "PendingFixme",
+            "PendingReview",
+            "PendingOptimize",
+            "PendingHack"
           ]
         },
         "dueDate": {
@@ -2339,6 +2341,10 @@
         },
         "loc": {
           "$ref": "#/$defs/loc"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^p:[a-z][a-z0-9]*$"
         }
       },
       "additionalProperties": false

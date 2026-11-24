@@ -122,6 +122,24 @@ test('normalizeAstResult honors inApplication and commentedOut', () => {
   assert.equal(normalizeAstResult({ kind: 'SourceFile' }).ast.kind, 'SourceFile');
 });
 
+test('normalizeAstResult carries the application and error for the app AST', () => {
+  const resolved = normalizeAstResult({
+    ast: { kind: 'ArcholApplication' },
+    application: { uri: 'example.com/app/demo', path: 'apps/demo.archol' },
+    inApplication: true,
+  });
+  assert.equal(resolved.ast.kind, 'ArcholApplication');
+  assert.deepEqual(resolved.application, {
+    uri: 'example.com/app/demo',
+    path: 'apps/demo.archol',
+  });
+  assert.equal(resolved.error, undefined);
+
+  const failed = normalizeAstResult({ ast: null, error: 'no application' });
+  assert.equal(failed.ast, null);
+  assert.equal(failed.error, 'no application');
+});
+
 test('browserNodeHelpersSource exposes the same tested functions to the webview', () => {
   const source = browserNodeHelpersSource();
   assert.match(source, /function referenceSummary\(node\)/);

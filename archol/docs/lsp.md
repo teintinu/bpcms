@@ -75,6 +75,7 @@ different services are not mixed.
 | Method | Params | Result |
 | :--- | :--- | :--- |
 | `archol/ast` | `{ "uri": "file:///..." }` | `{ "ast": <SourceFile>, "inApplication": bool }` |
+| `archol/applicationAst` | `{ "noBody"?: bool }` | `{ "ast": <ArcholApplication>, "application": { uri, path }, "inApplication": bool }` |
 | `archol/links` | `{}` | `{ "links": <LinkIndex> }` |
 | `archol/applications` | `{}` | `{ "applications": [{uri,path,name}], "current": uri|null }` |
 | `archol/setApplication` | `{ "uri": "..." }` | `{ "application", "files", "services" }` |

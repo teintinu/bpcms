@@ -125,7 +125,30 @@ pub fn analyze_application(
 
     let lock_path = ids::lock_path_for_application(std::path::Path::new(&app.path));
     let lock = ids::Lock::load(&lock_path, &app.uri)?;
-    let semantic = annotate::annotate(&mut workspace, &closure, &symbols, lock);
+    let mut semantic = annotate::annotate(&mut workspace, &closure, &symbols, lock);
+    semantic.lock.assign_files(closure.files.iter().cloned());
+    let mut pending_keys = Vec::new();
+    for file in workspace
+        .files
+        .iter()
+        .filter(|file| closure.contains_file(&file.path))
+    {
+        for pending in &file.ast.pendings {
+            pending_keys.push(pending.id.clone());
+        }
+    }
+    let pending_ids = semantic.lock.assign_pendings(pending_keys);
+    for file in workspace
+        .files
+        .iter_mut()
+        .filter(|file| closure.contains_file(&file.path))
+    {
+        for pending in &mut file.ast.pendings {
+            if let Some(id) = pending_ids.get(&pending.id) {
+                pending.id = id.clone();
+            }
+        }
+    }
     organogram::attach(&mut workspace, &semantic, &closure);
     service::attach(&mut workspace, &semantic, &closure);
     if write_lock && semantic.lock.dirty {
