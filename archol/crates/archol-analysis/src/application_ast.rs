@@ -206,9 +206,12 @@ impl<'a> Builder<'a> {
             }
             for entry in body {
                 if let Member::ServiceEntry { uri, alias, .. } = entry {
-                    if !alias.is_empty() {
-                        self.app_aliases.insert(alias.clone(), uri.clone());
-                    }
+                    let alias = if alias.is_empty() {
+                        default_alias(uri)
+                    } else {
+                        alias.clone()
+                    };
+                    self.app_aliases.insert(alias, uri.clone());
                 }
             }
         }
@@ -2236,7 +2239,7 @@ impl<'a> Builder<'a> {
         let mut statements = Vec::new();
         for member in &self.app.body {
             match member {
-                Member::Block { name, body, .. } if name == "main" => {
+                Member::Block { name, body, .. } if name == "main" || name == "main()" => {
                     let mut index = 0;
                     while index < body.len() {
                         let Member::Statement { statement, .. } = &body[index] else {
@@ -2249,6 +2252,16 @@ impl<'a> Builder<'a> {
                             index += 1;
                             continue;
                         };
+                        if let Expr::Binary {
+                            op, left, right, ..
+                        } = expression
+                        {
+                            if op == "=" {
+                                self.set_assignment(left, right, &mut parameters, &mut secrets);
+                                index += 1;
+                                continue;
+                            }
+                        }
                         if let Expr::Identifier { name, .. } = expression {
                             if name == "set" {
                                 if let Some(Member::Statement { statement, .. }) =
@@ -2339,10 +2352,26 @@ impl<'a> Builder<'a> {
                 && meta.artifact.kind == ArtifactKind::Parameter
         });
         if let Some(parameter) = parameter {
+            let value = if let Expr::Identifier { name, span } = right {
+                property_string(&parameter.artifact.body, "type")
+                    .and_then(|ty| {
+                        self.resolve_artifact_id(
+                            &parameter.file.path,
+                            base_type(&ty),
+                            "Shape",
+                            service_uri,
+                        )
+                    })
+                    .filter(|shape_id| self.shape_has_value(shape_id, name))
+                    .map(|shape_id| self.shape_value_ref(&shape_id, name, parameter.file, *span))
+                    .unwrap_or_else(|| serde_json::to_value(right).unwrap())
+            } else {
+                serde_json::to_value(right).unwrap()
+            };
             parameters.push(json!({
                 "kind": "ParameterSet",
                 "parameter": self.reference("ParameterRef", &parameter.id, self.app_file, left.span()),
-                "value": serde_json::to_value(right).unwrap(),
+                "value": value,
                 "loc": self.loc(self.app_file, left.span()),
             }));
         }

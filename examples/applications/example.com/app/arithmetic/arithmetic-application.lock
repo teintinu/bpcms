@@ -10,11 +10,11 @@ m,example.com/services/arithmetic#step/MultiplyJob
 n,example.com/services/arithmetic#step/ShowSumReport
 o,example.com/services/arithmetic#step/SubtractJob
 p,example.com/services/arithmetic#step/SumJob
+q,example.com/services/arithmetic#parameter/defaultOperator
 f:a,applications/example.com/app/arithmetic/arithmetic-application.archol
 f:g,services/example.com/services/arithmetic/arithmetic-organograms.archol
 f:h,services/example.com/services/arithmetic/arithmetic-service.archol
 f:j,services/example.com/services/arithmetic/arithmetic-shapes.archol
 f:k,services/example.com/services/arithmetic/processes/arithmetic-arithmetic-operation-process.archol
-p:l,pending:applications/example.com/app/arithmetic/arithmetic-application.archol:127
-p:r,pending:services/example.com/services/arithmetic/arithmetic-shapes.archol:182
+f:l,services/example.com/services/arithmetic/arithmetic-parameters.archol
 p:x,pending:services/example.com/services/arithmetic/processes/arithmetic-arithmetic-operation-process.archol:255

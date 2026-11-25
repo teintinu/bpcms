@@ -5,11 +5,14 @@ application "example.com/app/arithmetic" {
   }
 
   services {
-    // TOFIX [2026-12-25] o "as" é opcional, quando ausente o nome do service é o mesmo da ultima parte do path. O AST precisa ser capaz de inferir o nome do service a partir do path, sem precisar do "as".
     "example.com/services/arithmetic"
   }
 
   theme: Nuvula
   locales: [pt-BR, en-US]
   environments: [dev]
+
+  main() {
+    Arithmetic.defaultOperator = Sum;
+  }
 }

@@ -847,6 +847,28 @@
     "guard": null
     "serviceId": "j"
     "stepKind": "compute"
+  "q":
+    "name": "defaultOperator"
+    "kind": "ParameterDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Default operator"
+        "pt-BR": "Operador padrão"
+      "typeRef": "std.bpcms.i18n"
+    "value":
+      "kind": "ShapeValueRef"
+      "shapeId": "h"
+      "valuePath": "Multiply"
+    "id": "q"
+    "default":
+      "name": "Sum"
+      "kind": "Identifier"
+    "required": false
+    "serviceId": "j"
+    "type":
+      "kind": "ShapeRef"
+      "id": "h"
 "environments":
   -
     "name": "dev"
@@ -863,6 +885,12 @@
     "id": "f:g"
     "application": false
     "path": "services/example.com/services/arithmetic/arithmetic-organograms.archol"
+    "serviceId": "j"
+  -
+    "kind": "FileEntry"
+    "id": "f:l"
+    "application": false
+    "path": "services/example.com/services/arithmetic/arithmetic-parameters.archol"
     "serviceId": "j"
   -
     "kind": "FileEntry"
@@ -886,6 +914,8 @@
   "byKind":
     "OrganogramDef":
       - "d"
+    "ParameterDef":
+      - "q"
     "ProcessDef":
       - "i"
     "RoleDef":
@@ -913,6 +943,7 @@
       - "n"
       - "o"
       - "p"
+      - "q"
 "locales":
   -
     "kind": "LocaleRef"
@@ -924,18 +955,21 @@
     "tag": "en-US"
 "main":
   "kind": "MainEntry"
-  "parameters": []
+  "parameters":
+    -
+      "kind": "ParameterSet"
+      "value":
+        "kind": "ShapeValueRef"
+        "shapeId": "h"
+        "valuePath": "Multiply"
+      "parameter":
+        "kind": "ParameterRef"
+        "id": "q"
   "secrets": []
   "start": []
   "statements": []
 "path": "applications/example.com/app/arithmetic/arithmetic-application.archol"
 "pendings":
-  -
-    "kind": "PendingTofix"
-    "message": "o \"as\" é opcional, quando ausente o nome do service é o mesmo da ultima parte do path. O AST precisa ser capaz de inferir o nome do service a partir do path, sem precisar do \"as\"."
-    "id": "p:l"
-    "dateText": "2026-12-25"
-    "dueDate": "2026-12-25"
   -
     "kind": "PendingTofix"
     "message": "Icon também pode ser um character UTF-8, como \"+\" ou \"-\". O AST precisa ser capaz de inferir o tipo do icon a partir do valor informado."

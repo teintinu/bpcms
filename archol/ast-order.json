@@ -1,5 +1,5 @@
 {
-  "firstKeys": ["name", "kind", "uri", "title", "value", "message", "id"],
+  "firstKeys": ["name", "kind", "uri", "title", "parameter", "value", "message", "id"],
   "locSuffix": "loc",
   "fallback": "alphabetical"
 }

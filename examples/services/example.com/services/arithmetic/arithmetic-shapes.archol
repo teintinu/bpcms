@@ -3,7 +3,6 @@ shape ArithmeticOperation {
   base: classification
   value Sum {
     title: { pt-BR: "Soma", en: "Sum" }
-    // TOFIX [2026-12-25] Icon também pode ser um character UTF-8, como "+" ou "-". O AST precisa ser capaz de inferir o tipo do icon a partir do valor informado.
     icon: "+"
     ordinal: 10
   }

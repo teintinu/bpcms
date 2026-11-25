@@ -1,0 +1,5 @@
+parameter defaultOperator {
+  title: { pt-BR: "Operador padrão", en: "Default operator" }
+  type: ArithmeticOperation
+  default: Sum
+}

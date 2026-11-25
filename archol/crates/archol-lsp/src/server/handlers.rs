@@ -158,14 +158,16 @@ impl Server {
         let prefix = &text[line_start..offset];
 
         let analysis = self.analysis();
-        let enum_type = expected_enum(analysis, &path, offset, prefix);
-        if let Some(enum_type) = enum_type {
-            let service = analysis
-                .workspace
-                .files
-                .iter()
-                .find(|file| file.path == path)
-                .and_then(|file| file.service.clone());
+        let expected = expected_enum(analysis, &path, offset, prefix);
+        if let Some((enum_type, enum_service)) = expected {
+            let service = enum_service.or_else(|| {
+                analysis
+                    .workspace
+                    .files
+                    .iter()
+                    .find(|file| file.path == path)
+                    .and_then(|file| file.service.clone())
+            });
             if let Some(info) = analysis
                 .symbols
                 .resolve_enum(&enum_type, service.as_deref())
@@ -215,16 +217,24 @@ impl Server {
     }
 }
 
-fn expected_enum(analysis: &Analysis, path: &str, offset: usize, prefix: &str) -> Option<String> {
+fn expected_enum(
+    analysis: &Analysis,
+    path: &str,
+    offset: usize,
+    prefix: &str,
+) -> Option<(String, Option<String>)> {
     let file = analysis
         .workspace
         .files
         .iter()
         .find(|file| file.path == path)?;
     let trimmed = prefix.trim_end();
-    if trimmed.ends_with('=') && !trimmed.ends_with("==") && !trimmed.ends_with("!=") {
+    if let Some((left, _right)) = assignment_parts(trimmed) {
         if let Some((_, ty)) = features::const_at(&file.ast, offset) {
-            return ty.map(|ty| ty.to_string());
+            return ty.map(|ty| (ty.to_string(), file.service.clone()));
+        }
+        if let Some((ty, service)) = parameter_assignment_type(analysis, left) {
+            return Some((ty, Some(service)));
         }
         return None;
     }
@@ -235,9 +245,84 @@ fn expected_enum(analysis: &Analysis, path: &str, offset: usize, prefix: &str) -
             .trim_end()
             .rsplit(|c: char| !(c.is_alphanumeric() || c == '_'))
             .next()?;
-        return features::local_type(artifact, var);
+        return features::local_type(artifact, var).map(|ty| (ty, file.service.clone()));
     }
     None
+}
+
+/// Splits `target = value` while ignoring comparison operators.
+fn assignment_parts(text: &str) -> Option<(&str, &str)> {
+    let index = text.rfind('=')?;
+    let before = text[..index].trim_end();
+    if before.ends_with('=')
+        || before.ends_with('!')
+        || before.ends_with('<')
+        || before.ends_with('>')
+    {
+        return None;
+    }
+    let left = before.trim_end();
+    let left = left.strip_prefix("set ").unwrap_or(left).trim();
+    let right = text[index + 1..].trim();
+    if left.is_empty() || right.contains(' ') {
+        return None;
+    }
+    Some((left, right))
+}
+
+/// Type of `Alias.Parameter` (or a bare Parameter) assigned in `main`.
+fn parameter_assignment_type(analysis: &Analysis, target: &str) -> Option<(String, String)> {
+    let closure = analysis.closure.as_ref()?;
+    let (alias, name) = match target.rsplit_once('.') {
+        Some((alias, name)) => (Some(alias), name),
+        None => (None, target),
+    };
+    for service in &closure.application.services {
+        let service_alias = if service.alias.is_empty() {
+            default_alias(&service.uri)
+        } else {
+            service.alias.clone()
+        };
+        if alias.is_some_and(|alias| alias != service_alias) {
+            continue;
+        }
+        let Some(artifact) = analysis
+            .workspace
+            .files
+            .iter()
+            .filter(|file| file.service.as_deref() == Some(service.uri.as_str()))
+            .flat_map(|file| file.ast.items.iter())
+            .find(|artifact| artifact.name == name && artifact.artifact_kind() == "Parameter")
+        else {
+            continue;
+        };
+        for member in &artifact.body {
+            if let archol_core::Member::PropertyAssignment { name, value, .. } = member {
+                if name == "type" {
+                    if let archol_core::Expr::Identifier { name: ty, .. } = value {
+                        return Some((ty.clone(), service.uri.clone()));
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn default_alias(uri: &str) -> String {
+    let last = uri.rsplit('/').next().unwrap_or(uri);
+    last.split(['-', '_'])
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            chars
+                .next()
+                .map(|first| {
+                    first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+                })
+                .unwrap_or_default()
+        })
+        .collect()
 }
 
 fn ast_link(path: &str, text: &str, span: Span) -> String {
