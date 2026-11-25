@@ -17,8 +17,11 @@ process CitizenMerge(citizen: Citizen) {
   // REVIEW [2026-12-15] Papéis que podem iniciar o processo.
   by: [Clerk, Manager]
 
-  // REVIEW [2026-12-15] Variável durável da instância: contagem de contas reatribuídas.
-  let reassignedUsers: std.Count
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: contagem de contas reatribuídas.
+    reassignedUsers: std.Count
+  }
 
   // REVIEW [2026-12-15] Bloco que captura timeout do caso e das tarefas humanas.
   try {

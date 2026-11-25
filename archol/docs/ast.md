@@ -35,7 +35,7 @@ Schema [`application-ast.schema.json`](application-ast.schema.json).
 
 JSON, YAML, the LSP AST response and the AST explorer share one order file:
 [`archol/ast-order.json`](../ast-order.json). The first keys keep a semantic
-order (`kind`, `title`, `name`, `value`, `message`, `id`), keys ending in `loc`
+order (`name`, `kind`, `uri`, `title`, `value`, `message`, `id`), keys ending in `loc`
 go last, and every other key is alphabetical. `archol_core::order::order_value`
 applies it recursively before the CLI prints JSON/YAML or the LSP sends the AST;
 the extension reads the same JSON file for its tree and JSON view.
@@ -45,7 +45,7 @@ the extension reads the same JSON file for its tree and JSON view.
 | `kind` | Main fields |
 | :--- | :--- |
 | `SourceFile` | `path`, `items` |
-| `Artifact<Kind>` | one `kind` per artifact: `ArtifactApplication`, `ArtifactService`, `ArtifactDocument`, `ArtifactProcess`, `ArtifactView`, `ArtifactForm`, `ArtifactMessage`, `ArtifactShape`, `ArtifactRole`, `ArtifactOrganogram`, `ArtifactPolicy`, `ArtifactDecision`, `ArtifactIntegration`, `ArtifactParameter`, `ArtifactSecret`, `ArtifactIcon`, `ArtifactManual`, `ArtifactPermission`, `ArtifactError`; fields `name`, `params`, `body`, `id?`, `roles?`, `artifacts?`, `permissions?` |
+| `Artifact<Kind>` | one `kind` per artifact: `ArtifactApplication`, `ArtifactService`, `ArtifactDocument`, `ArtifactProcess`, `ArtifactView`, `ArtifactForm`, `ArtifactStep`, `ArtifactMessage`, `ArtifactShape`, `ArtifactRole`, `ArtifactOrganogram`, `ArtifactPolicy`, `ArtifactDecision`, `ArtifactIntegration`, `ArtifactParameter`, `ArtifactSecret`, `ArtifactIcon`, `ArtifactManual`, `ArtifactPermission`, `ArtifactError`; fields `name`, `params`, `body`, `id?`, `roles?`, `artifacts?`, `permissions?` |
 | `ArtifactPointer` | service index row: `artifact` (typed kind), `name`, `ref`, `path`, `line` |
 | `ArtifactPermission` | auto-created permission: `name`, `namespace`, `action`, `ref`, `path`, `line`, `loc` |
 | `PermissionPointer` | role permission: `name`, `ref`, `refKind: "permission"`, `line` |
@@ -226,9 +226,9 @@ double quotes; `archol format` prefers double quotes.
 ## Pending comments
 
 `SourceFile.pendings` is an array of typed pending nodes for comments beginning with
-`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE` or `HACK` (case-insensitive). A `Date`
+`TODO`, `TOFIX`, `FIXME`, `REVIEW`, `OPTIMIZE` or `HACK` (case-insensitive). A `Date`
 value is the due date. Pendings are **metadata, not artifacts**: each keyword
-has its own kind (`PendingTodo`, `PendingFixme`, `PendingReview`,
+has its own kind (`PendingTodo`, `PendingTofix`, `PendingFixme`, `PendingReview`,
 `PendingOptimize`, `PendingHack`) and each comment gets a `p:<base36>` id from
 a counter separate from artifact ids. Those ids are written to the application
 lock as `p:<base36>,pending:<file>:<start>` lines; the resolved application AST

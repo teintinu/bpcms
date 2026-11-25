@@ -17,8 +17,11 @@ process ServiceVisit(visit: Visit) {
   // REVIEW [2026-12-15] Papéis responsáveis por operar o processo.
   by: [Dispatcher]
 
-  // REVIEW [2026-12-15] Variável durável que registra se o agendamento foi concluído.
-  let scheduled = false
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável que registra se o agendamento foi concluído.
+    scheduled: boolean = false
+  }
 
   // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e de qualquer form.
   try {

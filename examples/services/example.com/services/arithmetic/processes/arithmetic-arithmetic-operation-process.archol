@@ -1,0 +1,65 @@
+process ArithmeticOperation() {
+  title: { pt-BR: "Operação aritmética", en: "Arithmetic operation" }
+  goal: { pt-BR: "Perguntar a e b, executar a operação e mostrar o resultado", en: "Ask for a and b, perform the operation and show the result" }
+  // TOFIX [2026-12-25] remover by: [Operator] --- as lanes declaram os papéis que executam o processo.
+  // by: [Operator]
+
+  vars {
+    value1: number
+    operation: ArithmeticOperation
+    value2: number
+    result: number
+  }
+
+  lane Operator for [Operator] {
+    AskForAB
+    SumJob if operation === Sum
+    SubtractJob if operation === Subtract
+    MultiplyJob if operation === Multiply
+    DivideJob if operation === Divide
+    ShowSumReport
+
+    catch (error) {
+      allow retry
+      report ShowErrorReport {
+        title: { pt-BR: "Erro na operação", en: "Operation error" }
+        show error
+      }
+    }
+  }
+}
+
+form AskForAB {
+  title: { pt-BR: "Perguntar a e b", en: "Ask for a and b" }
+  edit value1
+  edit operation
+  edit value2
+}
+
+compute SumJob {
+  title: { pt-BR: "Somar a e b", en: "Add a and b" }
+  result = value1 + value2
+}
+
+compute SubtractJob {
+  title: { pt-BR: "Subtrair a e b", en: "Subtract a and b" }
+  result = value1 - value2
+}
+
+compute MultiplyJob {
+  title: { pt-BR: "Multiplicar a e b", en: "Multiply a and b" }
+  result = value1 * value2
+}
+
+compute DivideJob{
+  title: { pt-BR: "Dividir a e b", en: "Divide a and b" }
+  result = value1 / value2
+}
+
+report ShowSumReport {
+  title: { pt-BR: "Mostrar resultado da operação", en: "Show operation result" }
+  show value1
+  show operation
+  show value2
+  show result
+}

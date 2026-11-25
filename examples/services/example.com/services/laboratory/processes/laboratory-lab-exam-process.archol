@@ -16,10 +16,13 @@ process LabExam(examOrder: ExamOrder) {
   on [ExamOrder.Requested]
   key: examOrder // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
 
-  // REVIEW [2026-12-15] Variável durável da instância: leitura do analisador.
-  let reading: ExamReading
-  // REVIEW [2026-12-15] Variável durável da instância: resultado gerado.
-  let result: ExamResult
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: leitura do analisador.
+    reading: ExamReading
+    // REVIEW [2026-12-15] Variável durável da instância: resultado gerado.
+    result: ExamResult
+  }
 
   // REVIEW [2026-12-15] Laço de tentativas de coleta, limitado a duas iterações.
   loop CollectionAttempt max 2 {

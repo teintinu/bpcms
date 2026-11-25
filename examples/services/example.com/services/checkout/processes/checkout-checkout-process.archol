@@ -19,12 +19,15 @@ process Checkout(session: CheckoutSession) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: session // REVIEW [2026-12-15] o caso é a própria CheckoutSession
 
-  // REVIEW [2026-12-15] Variável durável da instância: oferta de frete; começa nula.
-  let offer: FreightOffer | null = null
-  // REVIEW [2026-12-15] Flag durável que registra se o pagamento foi autorizado.
-  let authorized = false
-  // REVIEW [2026-12-15] Código de autorização devolvido pelo gateway de pagamento.
-  let authorization: string
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: oferta de frete; começa nula.
+    offer: FreightOffer | null = null
+    // REVIEW [2026-12-15] Flag durável que registra se o pagamento foi autorizado.
+    authorized: boolean = false
+    // REVIEW [2026-12-15] Código de autorização devolvido pelo gateway de pagamento.
+    authorization: string
+  }
 
   // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e de qualquer form.
   try {

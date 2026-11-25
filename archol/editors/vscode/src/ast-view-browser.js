@@ -73,7 +73,8 @@ ${browserNodeHelpersSource()}
       && kind !== 'StdRef'
       && kind !== 'PrimitiveRef'
       && kind !== 'ThemeRef'
-      && kind !== 'LocaleRef';
+      && kind !== 'LocaleRef'
+      && kind !== 'VariableRef';
   }
 
   function buildAstIndex(ast) {
@@ -735,23 +736,24 @@ ${browserNodeHelpersSource()}
       state.commentedOut = Boolean(message.commentedOut);
       state.selectedPath = Array.isArray(message.selectedPath) ? message.selectedPath : null;
       state.selectedNode = state.selectedPath && state.ast
-        ? nodeAtPath(state.ast, state.selectedPath)
+        ? valueAtJsonPath(state.ast, state.selectedPath)
         : null;
       state.jsonExpanded = new Set(['']);
       renderFavorites();
-      if (message.revealSelected && state.selectedNode) {
-        const selectedJsonPath = findJsonPath(state.ast, state.selectedNode, []);
-        if (selectedJsonPath) {
-          for (let size = 0; size <= selectedJsonPath.length; size += 1) {
-            state.jsonExpanded.add(pathKey(selectedJsonPath.slice(0, size)));
-          }
+      if (message.revealSelected && Array.isArray(state.selectedPath)) {
+        // Collapse everything except the parents of the selected node. The
+        // selected node itself stays collapsed; its row is still visible.
+        for (let size = 0; size < state.selectedPath.length; size += 1) {
+          state.jsonExpanded.add(pathKey(state.selectedPath.slice(0, size)));
         }
       }
       fileEl.textContent = state.fileName;
       fileEl.title = message.uri || state.fileName;
       updateBanner();
       render();
-      if (message.revealSelected) scrollSelectedRow();
+      if (message.revealSelected) {
+        requestAnimationFrame(function () { scrollSelectedRow(); });
+      }
       return;
     }
     if (message.type === 'loading') {

@@ -19,10 +19,13 @@ process DispatchOrder(shipment: Shipment) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: shipment
 
-  // REVIEW [2026-12-15] Frete cotado; começa nulo até a cotação ou o informe manual.
-  let freight: std.Money | null = null
-  // REVIEW [2026-12-15] Código de rastreio emitido; começa nulo até a etiqueta.
-  let tracking: TrackingCode | null = null
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Frete cotado; começa nulo até a cotação ou o informe manual.
+    freight: std.Money | null = null
+    // REVIEW [2026-12-15] Código de rastreio emitido; começa nulo até a etiqueta.
+    tracking: TrackingCode | null = null
+  }
 
   // REVIEW [2026-12-15] Bloco que tenta executar a separação no prazo.
   try {

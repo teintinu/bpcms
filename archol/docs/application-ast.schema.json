@@ -11,7 +11,6 @@
     "path",
     "workspaceRoot",
     "artifact",
-    "application",
     "main",
     "files",
     "pendings",
@@ -59,9 +58,6 @@
       "additionalProperties": {
         "$ref": "#/$defs/artifactDef"
       }
-    },
-    "application": {
-      "$ref": "#/$defs/applicationConfig"
     },
     "main": {
       "$ref": "#/$defs/mainEntry"
@@ -251,6 +247,9 @@
         },
         {
           "$ref": "#/$defs/formDef"
+        },
+        {
+          "$ref": "#/$defs/stepArtifactDef"
         },
         {
           "$ref": "#/$defs/processDef"
@@ -927,6 +926,9 @@
               "$ref": "#/$defs/iconRef"
             },
             {
+              "$ref": "#/$defs/iconLiteral"
+            },
+            {
               "type": "null"
             }
           ]
@@ -1151,6 +1153,18 @@
             "$ref": "#/$defs/roleRef"
           }
         },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/variableDef"
+          }
+        },
+        "lanes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/laneDef"
+          }
+        },
         "steps": {
           "type": "array",
           "items": {
@@ -1240,6 +1254,25 @@
             }
           ]
         },
+        "stepKind": {
+          "enum": [
+            "form",
+            "compute",
+            "report"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "guard": {
+          "$ref": "#/$defs/expr"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stepCommand"
+          }
+        },
         "event": {
           "type": [
             "string",
@@ -1296,6 +1329,238 @@
         "to": {
           "type": "string",
           "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "variableDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "type"
+      ],
+      "properties": {
+        "kind": {
+          "const": "VariableDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "$ref": "#/$defs/typeRef"
+        },
+        "default": {
+          "$ref": "#/$defs/expr"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "laneDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "roles",
+        "steps"
+      ],
+      "properties": {
+        "kind": {
+          "const": "LaneDef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roleRef"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stepDef"
+          }
+        },
+        "catches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/catchDef"
+          }
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "catchDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "variable",
+        "commands",
+        "steps"
+      ],
+      "properties": {
+        "kind": {
+          "const": "CatchDef"
+        },
+        "variable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/allowCommand"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stepDef"
+          }
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "allowCommand": {
+      "type": "object",
+      "required": [
+        "kind",
+        "action"
+      ],
+      "properties": {
+        "kind": {
+          "const": "AllowCommand"
+        },
+        "action": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "guardText": {
+      "type": "object",
+      "required": [
+        "kind",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "const": "GuardText"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stepCommand": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/editCommand"
+        },
+        {
+          "$ref": "#/$defs/showCommand"
+        },
+        {
+          "$ref": "#/$defs/sleepCommand"
+        },
+        {
+          "$ref": "#/$defs/assignCommand"
+        }
+      ]
+    },
+    "editCommand": {
+      "type": "object",
+      "required": [
+        "kind",
+        "field"
+      ],
+      "properties": {
+        "kind": {
+          "const": "EditCommand"
+        },
+        "field": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "showCommand": {
+      "type": "object",
+      "required": [
+        "kind",
+        "field"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ShowCommand"
+        },
+        "field": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sleepCommand": {
+      "type": "object",
+      "required": [
+        "kind",
+        "duration"
+      ],
+      "properties": {
+        "kind": {
+          "const": "SleepCommand"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "assignCommand": {
+      "type": "object",
+      "required": [
+        "kind",
+        "target",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "AssignCommand"
+        },
+        "target": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/expr"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
         }
       },
       "additionalProperties": false
@@ -1710,6 +1975,9 @@
           "$ref": "#/$defs/stepRef"
         },
         {
+          "$ref": "#/$defs/stepArtifactRef"
+        },
+        {
           "$ref": "#/$defs/actionRef"
         },
         {
@@ -1960,6 +2228,29 @@
       ],
       "unevaluatedProperties": false
     },
+    "variableRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "VariableRef"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "processId": {
+          "type": "string"
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
     "iconRef": {
       "allOf": [
         {
@@ -1975,6 +2266,26 @@
         "kind"
       ],
       "unevaluatedProperties": false
+    },
+    "iconLiteral": {
+      "type": "object",
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "IconLiteral"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
     },
     "manualRef": {
       "allOf": [
@@ -2053,6 +2364,81 @@
         "valuePath": {
           "type": "string",
           "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stepArtifactRef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StepArtifactRef"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "loc": {
+          "$ref": "#/$defs/loc"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stepArtifactDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "stepKind",
+        "commands",
+        "loc"
+      ],
+      "properties": {
+        "kind": {
+          "const": "StepArtifactDef"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stepKind": {
+          "enum": [
+            "form",
+            "compute",
+            "report"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/shapeValue"
+        },
+        "guard": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/expr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stepCommand"
+          }
         },
         "loc": {
           "$ref": "#/$defs/loc"
@@ -2146,29 +2532,6 @@
             "boolean",
             "stream"
           ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "applicationConfig": {
-      "type": "object",
-      "required": [
-        "kind",
-        "roles",
-        "roleHierarchy"
-      ],
-      "properties": {
-        "kind": {
-          "const": "ApplicationConfig"
-        },
-        "roles": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/roleRef"
-          }
-        },
-        "roleHierarchy": {
-          "$ref": "#/$defs/hierarchy"
         }
       },
       "additionalProperties": false
@@ -2324,6 +2687,7 @@
         "kind": {
           "enum": [
             "PendingTodo",
+            "PendingTofix",
             "PendingFixme",
             "PendingReview",
             "PendingOptimize",

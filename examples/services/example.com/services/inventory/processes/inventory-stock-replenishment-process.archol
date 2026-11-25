@@ -20,8 +20,11 @@ process StockReplenishment(stockItem: StockItem) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: stockItem
 
-  // REVIEW [2026-12-15] Variável durável da instância: decisão de reposição do item.
-  let decision: ReorderDecision
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: decisão de reposição do item.
+    decision: ReorderDecision
+  }
 
   // REVIEW [2026-12-15] Avalia o ponto de pedido do item e guarda a decisão retornada.
   decision = ReorderPoint.evaluate({

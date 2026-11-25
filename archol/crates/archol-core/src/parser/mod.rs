@@ -14,7 +14,7 @@ mod member;
 mod primary;
 mod stmt;
 
-use crate::ast::{Artifact, ArtifactKind, Member, Param, SourceFile};
+use crate::ast::{Artifact, ArtifactKind, Expr, Member, Param, SourceFile};
 use crate::diagnostic::Diagnostic;
 use crate::lexer::lex;
 use crate::span::{LineIndex, Span};
@@ -59,6 +59,7 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
         lines: LineIndex::new(source),
         depth: 0,
         depth_reported: false,
+        stop_at_lbrace: false,
     };
     let mut ast = parser.parse_file(path);
     ast.pendings = pending;
@@ -67,6 +68,30 @@ pub fn parse(source: &str, path: impl Into<String>) -> ParseResult {
         diagnostics: parser.diagnostics,
         line_index: parser.lines,
     }
+}
+
+/// Parses a single expression, used by step guards and other embedded clauses.
+pub fn parse_expression(source: &str, path: impl Into<String>) -> (Expr, Vec<Diagnostic>) {
+    let lexed = lex(source);
+    let diagnostics = lexed.diagnostics;
+    let tokens = lexed
+        .tokens
+        .into_iter()
+        .filter(|token| !token.kind.is_trivia())
+        .collect();
+    let mut parser = Parser {
+        source,
+        tokens,
+        pos: 0,
+        diagnostics,
+        lines: LineIndex::new(source),
+        depth: 0,
+        depth_reported: false,
+        stop_at_lbrace: false,
+    };
+    let expr = parser.parse_expr(false);
+    let _ = path.into();
+    (expr, parser.diagnostics)
 }
 
 /// Maximum nesting depth. Above this the parser recovers with `E_PARSE_DEPTH`
@@ -81,6 +106,8 @@ pub(crate) struct Parser<'a> {
     lines: LineIndex,
     depth: usize,
     depth_reported: bool,
+    /// Guard expressions stop before the step body's `{`.
+    stop_at_lbrace: bool,
 }
 
 impl<'a> Parser<'a> {
@@ -222,19 +249,35 @@ impl<'a> Parser<'a> {
             let _ = self.parse_type_ref();
         }
 
+        let guard = if matches!(keyword, crate::token::Keyword::Compute)
+            && self.kind() == TokenKind::Keyword(crate::token::Keyword::If)
+        {
+            self.advance();
+            self.stop_at_lbrace = true;
+            let guard = self.parse_expr(true);
+            self.stop_at_lbrace = false;
+            Some(guard)
+        } else {
+            None
+        };
+
         if self.kind() != TokenKind::LBrace {
             self.error("E_PARSE_BLOCK", format!("Expected '{{' after {name}"));
             return None;
         }
         let body = self.parse_body();
         let end = self.prev_end();
-        let kind =
+        let mut kind =
             ArtifactKind::from_name(keyword.artifact_name()).unwrap_or(ArtifactKind::Document);
+        if kind == ArtifactKind::Form && is_form_step(&body) {
+            kind = ArtifactKind::Step;
+        }
         Some(Artifact::new(
             kind,
             name,
             params,
             body,
+            guard,
             Span::new(start, end),
         ))
     }
@@ -364,6 +407,28 @@ impl<'a> Parser<'a> {
             self.advance();
         }
     }
+}
+
+fn is_form_step(body: &[Member]) -> bool {
+    let has_document = body.iter().any(
+        |member| matches!(member, Member::PropertyAssignment { name, .. } if name == "document"),
+    );
+    let has_fields = body
+        .iter()
+        .any(|member| matches!(member, Member::Block { name, .. } if name == "fields"));
+    let has_edit = body.iter().any(|member| {
+        matches!(
+            member,
+            Member::Statement {
+                statement: crate::ast::Stmt::ExpressionStatement {
+                    expression: crate::ast::Expr::Identifier { name, .. },
+                    ..
+                },
+                ..
+            } if name == "edit"
+        )
+    });
+    !has_document && !has_fields && has_edit
 }
 
 /// Semantic type of a property, when the language fixes one.

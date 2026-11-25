@@ -19,12 +19,15 @@ process FreightQuote(shipment: Shipment) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: shipment
 
-  // REVIEW [2026-12-15] Oferta da transportadora A; começa nula.
-  let quoteA: std.Money | null = null
-  // REVIEW [2026-12-15] Oferta da transportadora B; começa nula.
-  let quoteB: std.Money | null = null
-  // REVIEW [2026-12-15] Oferta da transportadora C; começa nula.
-  let quoteC: std.Money | null = null
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Oferta da transportadora A; começa nula.
+    quoteA: std.Money | null = null
+    // REVIEW [2026-12-15] Oferta da transportadora B; começa nula.
+    quoteB: std.Money | null = null
+    // REVIEW [2026-12-15] Oferta da transportadora C; começa nula.
+    quoteC: std.Money | null = null
+  }
 
   // REVIEW [2026-12-15] Executa as três cotações em paralelo e junta os resultados.
   parallel {

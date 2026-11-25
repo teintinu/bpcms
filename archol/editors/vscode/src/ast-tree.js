@@ -48,27 +48,47 @@ function walk(node, visit, path = []) {
   }
 }
 
-function findNodeAtOffset(root, offset) {
-  if (!isAstNode(root) || !Number.isFinite(offset)) return null;
+function findNodeAtOffset(root, offset, file) {
+  if (!root || typeof root !== 'object' || !Number.isFinite(offset)) return null;
   let best = null;
-  walk(root, (node, path) => {
-    const span = node.loc;
-    if (!span || !Number.isFinite(span.start) || !Number.isFinite(span.end)) return;
-    if (offset < span.start || offset > span.end) return;
-    const length = span.end - span.start;
-    if (
-      best === null
-      || path.length > best.path.length
-      || (path.length === best.path.length && length < best.length)
-    ) {
-      best = { node, path, length };
+  function visit(value, path) {
+    if (Array.isArray(value)) {
+      for (let index = 0; index < value.length; index += 1) {
+        visit(value[index], path.concat(index));
+      }
+      return;
     }
-  });
+    if (!value || typeof value !== 'object') return;
+    const span = value.loc;
+    if (
+      typeof value.kind === 'string'
+      && span
+      && Number.isFinite(span.start)
+      && Number.isFinite(span.end)
+      && (!file || span.file === file)
+      && offset >= span.start
+      && offset <= span.end
+    ) {
+      const length = span.end - span.start;
+      if (
+        best === null
+        || length < best.length
+        || (length === best.length && path.length < best.path.length)
+      ) {
+        best = { node: value, path, length };
+      }
+    }
+    for (const key of Object.keys(value)) {
+      if (key === 'loc') continue;
+      visit(value[key], path.concat(key));
+    }
+  }
+  visit(root, []);
   return best;
 }
 
-function findNodePathAtOffset(root, offset) {
-  const found = findNodeAtOffset(root, offset);
+function findNodePathAtOffset(root, offset, file) {
+  const found = findNodeAtOffset(root, offset, file);
   return found ? found.path : null;
 }
 

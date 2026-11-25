@@ -1,37 +1,14 @@
 "kind": "ArcholApplication"
+"uri": "example.com/app/loja-com-antifraude"
 "title":
   "kind": "ShapeValue"
   "value":
     "en-US": "Antifraud Store"
     "pt-BR": "Loja com Antifraude"
   "typeRef": "std.bpcms.i18n"
-"application":
-  "kind": "ApplicationConfig"
-  "roleHierarchy":
-    "kind": "Hierarchy"
-    "chains":
-      -
-        -
-          "kind": "RoleRef"
-          "id": "o"
-        -
-          "kind": "RoleRef"
-          "id": "c"
-  "roles":
-    -
-      "kind": "RoleRef"
-      "id": "d"
-    -
-      "kind": "RoleRef"
-      "id": "e"
-    -
-      "kind": "RoleRef"
-      "id": "c"
-    -
-      "kind": "RoleRef"
-      "id": "o"
 "artifact":
   "a":
+    "name": "SuccessAgent"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -39,7 +16,6 @@
         "en": "Customer success agent"
         "pt-BR": "Agente de sucesso do cliente"
       "typeRef": "std.bpcms.i18n"
-    "name": "SuccessAgent"
     "id": "a"
     "capabilities": []
     "inherits": []
@@ -59,8 +35,8 @@
     "scopes": []
     "serviceId": "b6"
   "a1":
-    "kind": "PermissionDef"
     "name": "fraud.approve"
+    "kind": "PermissionDef"
     "id": "a1"
     "action": "approve"
     "namespace": "fraud"
@@ -74,8 +50,8 @@
     "serviceId": "a6"
     "usedBy": []
   "a2":
-    "kind": "PermissionDef"
     "name": "fraud.override"
+    "kind": "PermissionDef"
     "id": "a2"
     "action": "override"
     "namespace": "fraud"
@@ -86,8 +62,8 @@
     "serviceId": "a6"
     "usedBy": []
   "a3":
-    "kind": "PermissionDef"
     "name": "fraud.reject"
+    "kind": "PermissionDef"
     "id": "a3"
     "action": "reject"
     "namespace": "fraud"
@@ -101,8 +77,8 @@
     "serviceId": "a6"
     "usedBy": []
   "a4":
-    "kind": "PermissionDef"
     "name": "fraud.review"
+    "kind": "PermissionDef"
     "id": "a4"
     "action": "review"
     "namespace": "fraud"
@@ -116,8 +92,8 @@
     "serviceId": "a6"
     "usedBy": []
   "a5":
-    "kind": "PermissionDef"
     "name": "report.view"
+    "kind": "PermissionDef"
     "id": "a5"
     "action": "view"
     "namespace": "report"
@@ -128,6 +104,7 @@
     "serviceId": "a6"
     "usedBy": []
   "a6":
+    "name": "example.com/services/fraud-checkout"
     "kind": "ServiceDef"
     "title":
       "kind": "ShapeValue"
@@ -135,12 +112,11 @@
         "en": "Fraud checkout"
         "pt-BR": "Finalização da compra antifraude"
       "typeRef": "std.bpcms.i18n"
-    "name": "example.com/services/fraud-checkout"
     "id": "a6"
     "aliases":
       -
-        "kind": "ServiceAlias"
         "name": "FraudCheckout"
+        "kind": "ServiceAlias"
         "by": null
         "path": "applications/example.com/app/loja-com-antifraude/loja-com-antifraude-application.archol"
         "use": "entryPoint"
@@ -155,8 +131,8 @@
     "path": "services/example.com/services/fraud-checkout/fraud-checkout-service.archol"
     "url": "example.com/services/fraud-checkout"
   "a7":
-    "kind": "ShapeDef"
     "name": "FraudCheckStatus"
+    "kind": "ShapeDef"
     "id": "a7"
     "base": "state"
     "conversions": []
@@ -167,6 +143,7 @@
     "unit": null
     "values":
       -
+        "name": "Pending"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -174,13 +151,13 @@
             "en": "Pending"
             "pt-BR": "Pendente"
           "typeRef": "std.bpcms.i18n"
-        "name": "Pending"
         "icon":
           "kind": "IconRef"
           "id": "dm"
         "ordinal": 10
         "transitions":
           -
+            "name": "Evaluated"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -188,20 +165,20 @@
                 "en": "Risk evaluated"
                 "pt-BR": "Risco avaliado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Evaluated"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "score"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "number"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "a7"
               "valuePath": "Evaluated"
       -
+        "name": "Evaluated"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -209,13 +186,13 @@
             "en": "Evaluated"
             "pt-BR": "Avaliada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Evaluated"
         "icon":
           "kind": "IconRef"
           "id": "dl"
         "ordinal": 20
         "transitions":
           -
+            "name": "Approved"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -223,20 +200,20 @@
                 "en": "Risk approved"
                 "pt-BR": "Risco aprovado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Approved"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "approvedAt"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "a7"
               "valuePath": "Approved"
           -
+            "name": "Rejected"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -244,20 +221,20 @@
                 "en": "Risk rejected"
                 "pt-BR": "Risco rejeitado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Rejected"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "a7"
               "valuePath": "Rejected"
       -
+        "name": "Approved"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -265,13 +242,13 @@
             "en": "Approved"
             "pt-BR": "Aprovada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Approved"
         "icon":
           "kind": "IconRef"
           "id": "dk"
         "ordinal": 30
         "transitions": []
       -
+        "name": "Rejected"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -279,13 +256,13 @@
             "en": "Rejected"
             "pt-BR": "Rejeitada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Rejected"
         "icon":
           "kind": "IconRef"
           "id": "dn"
         "ordinal": 40
         "transitions": []
   "a9":
+    "name": "Consumer"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -293,12 +270,11 @@
         "en": "Consumer"
         "pt-BR": "Consumidor"
       "typeRef": "std.bpcms.i18n"
-    "name": "Consumer"
     "id": "a9"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "setCitizen"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -309,37 +285,37 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "citizen"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "c0"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "byCitizen"
+        "kind": "PropertyAssignment"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "MemberAccess"
               "name": "id"
+              "kind": "MemberAccess"
               "object":
-                "kind": "Identifier"
                 "name": "citizen"
+                "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "hash"
+            "kind": "Identifier"
     "lifecycle": null
     "relations": []
     "serviceId": "bt"
   "aa":
-    "kind": "ShapeDef"
     "name": "Image"
+    "kind": "ShapeDef"
     "id": "aa"
     "base": "image"
     "conversions": []
@@ -350,6 +326,7 @@
     "unit": null
     "values": []
   "ab":
+    "name": "NotificationTemplate"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -357,12 +334,11 @@
         "en": "Notification template"
         "pt-BR": "Modelo de notificação"
       "typeRef": "std.bpcms.i18n"
-    "name": "NotificationTemplate"
     "id": "ab"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "create"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -371,8 +347,8 @@
             "id": "j"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "update"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -383,67 +359,67 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "key"
+        "kind": "FieldDef"
         "maxLength": 80
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "channel"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "u"
       -
-        "kind": "FieldDef"
         "name": "subject"
+        "kind": "FieldDef"
         "maxLength": 160
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "body"
-        "type":
-          "kind": "PrimitiveRef"
-          "name": "string"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
+      -
         "name": "locale"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "b7"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "uniqueKey"
+        "kind": "PropertyAssignment"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "Identifier"
               "name": "key"
-            -
               "kind": "Identifier"
+            -
               "name": "channel"
-            -
               "kind": "Identifier"
+            -
               "name": "locale"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "unique"
+            "kind": "Identifier"
     "lifecycle": null
     "relations": []
     "serviceId": "b6"
   "ag":
-    "kind": "PermissionDef"
     "name": "checkout.authorize"
+    "kind": "PermissionDef"
     "id": "ag"
     "action": "authorize"
     "namespace": "checkout"
@@ -454,8 +430,8 @@
     "serviceId": "w"
     "usedBy": []
   "ah":
-    "kind": "PermissionDef"
     "name": "checkout.confirm"
+    "kind": "PermissionDef"
     "id": "ah"
     "action": "confirm"
     "namespace": "checkout"
@@ -466,8 +442,8 @@
     "serviceId": "w"
     "usedBy": []
   "ai":
-    "kind": "PermissionDef"
     "name": "checkout.pay"
+    "kind": "PermissionDef"
     "id": "ai"
     "action": "pay"
     "namespace": "checkout"
@@ -481,8 +457,8 @@
     "serviceId": "w"
     "usedBy": []
   "aj":
-    "kind": "PermissionDef"
     "name": "checkout.quote"
+    "kind": "PermissionDef"
     "id": "aj"
     "action": "quote"
     "namespace": "checkout"
@@ -493,8 +469,8 @@
     "serviceId": "w"
     "usedBy": []
   "ak":
-    "kind": "PermissionDef"
     "name": "checkout.recover"
+    "kind": "PermissionDef"
     "id": "ak"
     "action": "recover"
     "namespace": "checkout"
@@ -505,8 +481,8 @@
     "serviceId": "w"
     "usedBy": []
   "al":
-    "kind": "PermissionDef"
     "name": "checkout.start"
+    "kind": "PermissionDef"
     "id": "al"
     "action": "start"
     "namespace": "checkout"
@@ -520,8 +496,8 @@
     "serviceId": "w"
     "usedBy": []
   "am":
-    "kind": "PermissionDef"
     "name": "checkout.view"
+    "kind": "PermissionDef"
     "id": "am"
     "action": "view"
     "namespace": "checkout"
@@ -532,8 +508,8 @@
     "serviceId": "w"
     "usedBy": []
   "an":
-    "kind": "PermissionDef"
     "name": "report.view"
+    "kind": "PermissionDef"
     "id": "an"
     "action": "view"
     "namespace": "report"
@@ -544,8 +520,8 @@
     "serviceId": "w"
     "usedBy": []
   "ao":
-    "kind": "ShapeDef"
     "name": "CheckoutStatus"
+    "kind": "ShapeDef"
     "id": "ao"
     "base": "state"
     "conversions": []
@@ -556,6 +532,7 @@
     "unit": null
     "values":
       -
+        "name": "Draft"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -563,13 +540,13 @@
             "en": "Draft"
             "pt-BR": "Rascunho"
           "typeRef": "std.bpcms.i18n"
-        "name": "Draft"
         "icon":
           "kind": "IconRef"
           "id": "ck"
         "ordinal": 10
         "transitions":
           -
+            "name": "Validated"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -577,26 +554,26 @@
                 "en": "Cart validated"
                 "pt-BR": "Carrinho validado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Validated"
             "event": "CartValidated"
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "customer"
+                "kind": "FieldDef"
                 "type":
                   "kind": "DocumentRef"
                   "id": "i"
               -
-                "kind": "FieldDef"
                 "name": "total"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.Money"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Validated"
           -
+            "name": "Abandoned"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -604,20 +581,20 @@
                 "en": "Purchase abandoned"
                 "pt-BR": "Compra abandonada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Abandoned"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Abandoned"
       -
+        "name": "Validated"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -625,13 +602,13 @@
             "en": "Cart validated"
             "pt-BR": "Carrinho validado"
           "typeRef": "std.bpcms.i18n"
-        "name": "Validated"
         "icon":
           "kind": "IconRef"
           "id": "co"
         "ordinal": 20
         "transitions":
           -
+            "name": "ShippingQuoted"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -639,26 +616,26 @@
                 "en": "Shipping quoted"
                 "pt-BR": "Frete cotado"
               "typeRef": "std.bpcms.i18n"
-            "name": "ShippingQuoted"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "freight"
-                "type":
-                  "kind": "StdRef"
-                  "name": "std.Money"
-              -
                 "kind": "FieldDef"
-                "name": "deliveryDays"
                 "type":
+                  "name": "std.Money"
                   "kind": "StdRef"
+              -
+                "name": "deliveryDays"
+                "kind": "FieldDef"
+                "type":
                   "name": "std.Count"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "ShippingQuoted"
           -
+            "name": "Abandoned"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -666,20 +643,20 @@
                 "en": "Purchase abandoned"
                 "pt-BR": "Compra abandonada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Abandoned"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Abandoned"
       -
+        "name": "ShippingQuoted"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -687,13 +664,13 @@
             "en": "Shipping quoted"
             "pt-BR": "Frete cotado"
           "typeRef": "std.bpcms.i18n"
-        "name": "ShippingQuoted"
         "icon":
           "kind": "IconRef"
           "id": "cn"
         "ordinal": 30
         "transitions":
           -
+            "name": "PaymentAuthorized"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -701,20 +678,20 @@
                 "en": "Payment authorized"
                 "pt-BR": "Pagamento autorizado"
               "typeRef": "std.bpcms.i18n"
-            "name": "PaymentAuthorized"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "authorizationCode"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "PaymentAuthorized"
           -
+            "name": "Abandoned"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -722,20 +699,20 @@
                 "en": "Purchase abandoned"
                 "pt-BR": "Compra abandonada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Abandoned"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Abandoned"
       -
+        "name": "FraudChecked"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -743,13 +720,13 @@
             "en": "Risk checked"
             "pt-BR": "Risco verificado"
           "typeRef": "std.bpcms.i18n"
-        "name": "FraudChecked"
         "icon":
           "kind": "IconRef"
           "id": "dk"
         "ordinal": 25
         "transitions": []
       -
+        "name": "PaymentAuthorized"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -757,13 +734,13 @@
             "en": "Payment authorized"
             "pt-BR": "Pagamento autorizado"
           "typeRef": "std.bpcms.i18n"
-        "name": "PaymentAuthorized"
         "icon":
           "kind": "IconRef"
           "id": "cl"
         "ordinal": 40
         "transitions":
           -
+            "name": "Abandoned"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -771,20 +748,20 @@
                 "en": "Purchase abandoned"
                 "pt-BR": "Compra abandonada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Abandoned"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Abandoned"
           -
+            "name": "Confirmed"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -792,20 +769,20 @@
                 "en": "Purchase confirmed"
                 "pt-BR": "Compra confirmada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Confirmed"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "confirmedAt"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ao"
               "valuePath": "Confirmed"
       -
+        "name": "Confirmed"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -813,13 +790,13 @@
             "en": "Order confirmed"
             "pt-BR": "Pedido confirmado"
           "typeRef": "std.bpcms.i18n"
-        "name": "Confirmed"
         "icon":
           "kind": "IconRef"
           "id": "ci"
         "ordinal": 50
         "transitions": []
       -
+        "name": "Abandoned"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -827,15 +804,14 @@
             "en": "Abandoned"
             "pt-BR": "Abandonada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Abandoned"
         "icon":
           "kind": "IconRef"
           "id": "cg"
         "ordinal": 60
         "transitions": []
   "aq":
-    "kind": "PermissionDef"
     "name": "citizen.approve"
+    "kind": "PermissionDef"
     "id": "aq"
     "action": "approve"
     "namespace": "citizen"
@@ -846,8 +822,8 @@
     "serviceId": "z"
     "usedBy": []
   "ar":
-    "kind": "PermissionDef"
     "name": "citizen.audit"
+    "kind": "PermissionDef"
     "id": "ar"
     "action": "audit"
     "namespace": "citizen"
@@ -858,8 +834,8 @@
     "serviceId": "z"
     "usedBy": []
   "as":
-    "kind": "PermissionDef"
     "name": "citizen.block"
+    "kind": "PermissionDef"
     "id": "as"
     "action": "block"
     "namespace": "citizen"
@@ -870,8 +846,8 @@
     "serviceId": "z"
     "usedBy": []
   "at":
-    "kind": "PermissionDef"
     "name": "citizen.merge"
+    "kind": "PermissionDef"
     "id": "at"
     "action": "merge"
     "namespace": "citizen"
@@ -885,8 +861,8 @@
         "kind": "OrganogramRef"
         "id": "b"
   "au":
-    "kind": "PermissionDef"
     "name": "citizen.register"
+    "kind": "PermissionDef"
     "id": "au"
     "action": "register"
     "namespace": "citizen"
@@ -900,8 +876,8 @@
     "serviceId": "z"
     "usedBy": []
   "av":
-    "kind": "PermissionDef"
     "name": "citizen.search"
+    "kind": "PermissionDef"
     "id": "av"
     "action": "search"
     "namespace": "citizen"
@@ -915,8 +891,8 @@
     "serviceId": "z"
     "usedBy": []
   "aw":
-    "kind": "PermissionDef"
     "name": "report.view"
+    "kind": "PermissionDef"
     "id": "aw"
     "action": "view"
     "namespace": "report"
@@ -927,8 +903,8 @@
     "serviceId": "z"
     "usedBy": []
   "ax":
-    "kind": "ShapeDef"
     "name": "CitizenKind"
+    "kind": "ShapeDef"
     "id": "ax"
     "base": "classification"
     "conversions": []
@@ -939,6 +915,7 @@
     "unit": null
     "values":
       -
+        "name": "Person"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -946,13 +923,13 @@
             "en": "Person"
             "pt-BR": "Pessoa"
           "typeRef": "std.bpcms.i18n"
-        "name": "Person"
         "icon":
           "kind": "IconRef"
           "id": "c8"
         "ordinal": 10
         "transitions": []
       -
+        "name": "Organization"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -960,15 +937,14 @@
             "en": "Organization"
             "pt-BR": "Organização"
           "typeRef": "std.bpcms.i18n"
-        "name": "Organization"
         "icon":
           "kind": "IconRef"
           "id": "c7"
         "ordinal": 20
         "transitions": []
   "ay":
-    "kind": "ShapeDef"
     "name": "CitizenStatus"
+    "kind": "ShapeDef"
     "id": "ay"
     "base": "state"
     "conversions": []
@@ -979,6 +955,7 @@
     "unit": null
     "values":
       -
+        "name": "Active"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -986,13 +963,13 @@
             "en": "Active"
             "pt-BR": "Ativo"
           "typeRef": "std.bpcms.i18n"
-        "name": "Active"
         "icon":
           "kind": "IconRef"
           "id": "c4"
         "ordinal": 10
         "transitions":
           -
+            "name": "Merged"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1000,12 +977,11 @@
                 "en": "Citizen merged"
                 "pt-BR": "Cidadão mesclado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Merged"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "target"
+                "kind": "FieldDef"
                 "type":
                   "kind": "DocumentRef"
                   "id": "c0"
@@ -1014,6 +990,7 @@
               "shapeId": "ay"
               "valuePath": "Merged"
           -
+            "name": "Blocked"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1021,20 +998,20 @@
                 "en": "Citizen blocked"
                 "pt-BR": "Cidadão bloqueado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Blocked"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "ay"
               "valuePath": "Blocked"
       -
+        "name": "Merged"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1042,13 +1019,13 @@
             "en": "Merged"
             "pt-BR": "Mesclado"
           "typeRef": "std.bpcms.i18n"
-        "name": "Merged"
         "icon":
           "kind": "IconRef"
           "id": "c6"
         "ordinal": 20
         "transitions": []
       -
+        "name": "Blocked"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1056,13 +1033,13 @@
             "en": "Blocked"
             "pt-BR": "Bloqueado"
           "typeRef": "std.bpcms.i18n"
-        "name": "Blocked"
         "icon":
           "kind": "IconRef"
           "id": "c5"
         "ordinal": 30
         "transitions": []
   "b":
+    "name": "Citizen"
     "kind": "OrganogramDef"
     "title":
       "kind": "ShapeValue"
@@ -1070,7 +1047,6 @@
         "en": "Citizen organogram"
         "pt-BR": "Organograma do cidadão"
       "typeRef": "std.bpcms.i18n"
-    "name": "Citizen"
     "id": "b"
     "delegations": []
     "fourEyes":
@@ -1079,25 +1055,25 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "MemberAccess"
             "name": "merge"
+            "kind": "MemberAccess"
             "object":
-              "kind": "Identifier"
               "name": "citizen"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "requires"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "Manager"
+            "kind": "Identifier"
     "hierarchy":
       "kind": "Hierarchy"
       "chains":
@@ -1170,8 +1146,8 @@
     "segregation": []
     "serviceId": "z"
   "b0":
-    "kind": "PermissionDef"
     "name": "notification.manage"
+    "kind": "PermissionDef"
     "id": "b0"
     "action": "manage"
     "namespace": "notification"
@@ -1182,8 +1158,8 @@
     "serviceId": "b6"
     "usedBy": []
   "b1":
-    "kind": "PermissionDef"
     "name": "notification.review"
+    "kind": "PermissionDef"
     "id": "b1"
     "action": "review"
     "namespace": "notification"
@@ -1197,8 +1173,8 @@
     "serviceId": "b6"
     "usedBy": []
   "b2":
-    "kind": "PermissionDef"
     "name": "notification.suppress"
+    "kind": "PermissionDef"
     "id": "b2"
     "action": "suppress"
     "namespace": "notification"
@@ -1212,8 +1188,8 @@
     "serviceId": "b6"
     "usedBy": []
   "b3":
-    "kind": "PermissionDef"
     "name": "notification.template.manage"
+    "kind": "PermissionDef"
     "id": "b3"
     "action": "manage"
     "namespace": "notification.template"
@@ -1224,8 +1200,8 @@
     "serviceId": "b6"
     "usedBy": []
   "b4":
-    "kind": "PermissionDef"
     "name": "notification.view"
+    "kind": "PermissionDef"
     "id": "b4"
     "action": "view"
     "namespace": "notification"
@@ -1239,8 +1215,8 @@
     "serviceId": "b6"
     "usedBy": []
   "b5":
-    "kind": "PermissionDef"
     "name": "report.view"
+    "kind": "PermissionDef"
     "id": "b5"
     "action": "view"
     "namespace": "report"
@@ -1251,6 +1227,7 @@
     "serviceId": "b6"
     "usedBy": []
   "b6":
+    "name": "example.com/services/notifications"
     "kind": "ServiceDef"
     "title":
       "kind": "ShapeValue"
@@ -1258,12 +1235,11 @@
         "en": "Notifications"
         "pt-BR": "Notificações"
       "typeRef": "std.bpcms.i18n"
-    "name": "example.com/services/notifications"
     "id": "b6"
     "aliases":
       -
-        "kind": "ServiceAlias"
         "name": "Notifications"
+        "kind": "ServiceAlias"
         "by": null
         "path": "applications/example.com/app/loja-com-antifraude/loja-com-antifraude-application.archol"
         "use": "entryPoint"
@@ -1278,8 +1254,8 @@
     "path": "services/example.com/services/notifications/notifications-service.archol"
     "url": "example.com/services/notifications"
   "b7":
-    "kind": "ShapeDef"
     "name": "LocaleTag"
+    "kind": "ShapeDef"
     "id": "b7"
     "base": "classification"
     "conversions": []
@@ -1290,6 +1266,7 @@
     "unit": null
     "values":
       -
+        "name": "PtBr"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1297,13 +1274,13 @@
             "en": "Portuguese (Brazil)"
             "pt-BR": "Português (Brasil)"
           "typeRef": "std.bpcms.i18n"
-        "name": "PtBr"
         "icon":
           "kind": "IconRef"
           "id": "eg"
         "ordinal": 10
         "transitions": []
       -
+        "name": "EnUs"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1311,15 +1288,14 @@
             "en": "English (US)"
             "pt-BR": "Inglês (EUA)"
           "typeRef": "std.bpcms.i18n"
-        "name": "EnUs"
         "icon":
           "kind": "IconRef"
           "id": "ef"
         "ordinal": 20
         "transitions": []
   "b8":
-    "kind": "ShapeDef"
     "name": "NotificationStatus"
+    "kind": "ShapeDef"
     "id": "b8"
     "base": "state"
     "conversions": []
@@ -1330,6 +1306,7 @@
     "unit": null
     "values":
       -
+        "name": "Queued"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1337,13 +1314,13 @@
             "en": "Queued"
             "pt-BR": "Na fila"
           "typeRef": "std.bpcms.i18n"
-        "name": "Queued"
         "icon":
           "kind": "IconRef"
           "id": "eh"
         "ordinal": 10
         "transitions":
           -
+            "name": "Sent"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1351,20 +1328,20 @@
                 "en": "Notification sent"
                 "pt-BR": "Notificação enviada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Sent"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "sentAt"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Sent"
           -
+            "name": "Failed"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1372,20 +1349,20 @@
                 "en": "Delivery failed"
                 "pt-BR": "Falha no envio"
               "typeRef": "std.bpcms.i18n"
-            "name": "Failed"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "error"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Failed"
           -
+            "name": "Sent"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1393,20 +1370,20 @@
                 "en": "Digest sent"
                 "pt-BR": "Resumo enviado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Sent"
             "event": "Digested"
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "sentAt"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Sent"
           -
+            "name": "Suppressed"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1414,20 +1391,20 @@
                 "en": "Notification suppressed"
                 "pt-BR": "Notificação suprimida"
               "typeRef": "std.bpcms.i18n"
-            "name": "Suppressed"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Suppressed"
       -
+        "name": "Sent"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1435,13 +1412,13 @@
             "en": "Sent"
             "pt-BR": "Enviada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Sent"
         "icon":
           "kind": "IconRef"
           "id": "ej"
         "ordinal": 20
         "transitions":
           -
+            "name": "Read"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1449,20 +1426,20 @@
                 "en": "Notification read"
                 "pt-BR": "Notificação lida"
               "typeRef": "std.bpcms.i18n"
-            "name": "Read"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "readAt"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Read"
       -
+        "name": "Failed"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1470,13 +1447,13 @@
             "en": "Failed"
             "pt-BR": "Falhou"
           "typeRef": "std.bpcms.i18n"
-        "name": "Failed"
         "icon":
           "kind": "IconRef"
           "id": "ed"
         "ordinal": 30
         "transitions":
           -
+            "name": "Queued"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1484,20 +1461,20 @@
                 "en": "Delivery retried"
                 "pt-BR": "Envio repetido"
               "typeRef": "std.bpcms.i18n"
-            "name": "Queued"
             "event": "Retried"
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "at"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "StdRef"
                   "name": "std.DateTime"
+                  "kind": "StdRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "b8"
               "valuePath": "Queued"
       -
+        "name": "Read"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1505,13 +1482,13 @@
             "en": "Read"
             "pt-BR": "Lida"
           "typeRef": "std.bpcms.i18n"
-        "name": "Read"
         "icon":
           "kind": "IconRef"
           "id": "ei"
         "ordinal": 40
         "transitions": []
       -
+        "name": "Suppressed"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1519,13 +1496,13 @@
             "en": "Suppressed"
             "pt-BR": "Suprimida"
           "typeRef": "std.bpcms.i18n"
-        "name": "Suppressed"
         "icon":
           "kind": "IconRef"
           "id": "ek"
         "ordinal": 50
         "transitions": []
   "ba":
+    "name": "Session"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -1533,12 +1510,11 @@
         "en": "Session"
         "pt-BR": "Sessão"
       "typeRef": "std.bpcms.i18n"
-    "name": "Session"
     "id": "ba"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "start"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -1547,8 +1523,8 @@
             "id": "s"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "end"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -1560,8 +1536,8 @@
           "shapeId": "bu"
           "valuePath": "Ended"
       -
-        "kind": "ActionDef"
         "name": "expire"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -1575,68 +1551,68 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "user"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "i"
       -
-        "kind": "FieldDef"
         "name": "issuedAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
+      -
         "name": "expiresAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
+      -
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "bu"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "byUser"
-        "value":
-          "kind": "List"
-          "elements":
-            -
-              "kind": "MemberAccess"
-              "name": "id"
-              "object":
-                "kind": "Identifier"
-                "name": "user"
-            -
-              "kind": "Identifier"
-              "name": "issuedAt"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "range"
-      -
         "kind": "PropertyAssignment"
-        "name": "byExpiry"
         "value":
           "kind": "List"
           "elements":
             -
+              "name": "id"
+              "kind": "MemberAccess"
+              "object":
+                "name": "user"
+                "kind": "Identifier"
+            -
+              "name": "issuedAt"
               "kind": "Identifier"
-              "name": "expiresAt"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "range"
+            "kind": "Identifier"
+      -
+        "name": "byExpiry"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "expiresAt"
+              "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
+            "name": "range"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -1663,8 +1639,8 @@
     "relations": []
     "serviceId": "bt"
   "bd":
-    "kind": "PermissionDef"
     "name": "catalog.view"
+    "kind": "PermissionDef"
     "id": "bd"
     "action": "view"
     "namespace": "catalog"
@@ -1684,8 +1660,8 @@
     "serviceId": "bt"
     "usedBy": []
   "be":
-    "kind": "PermissionDef"
     "name": "customer.manage"
+    "kind": "PermissionDef"
     "id": "be"
     "action": "manage"
     "namespace": "customer"
@@ -1699,8 +1675,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bf":
-    "kind": "PermissionDef"
     "name": "customer.view"
+    "kind": "PermissionDef"
     "id": "bf"
     "action": "view"
     "namespace": "customer"
@@ -1717,8 +1693,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bg":
-    "kind": "PermissionDef"
     "name": "environment.manage"
+    "kind": "PermissionDef"
     "id": "bg"
     "action": "manage"
     "namespace": "environment"
@@ -1729,8 +1705,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bh":
-    "kind": "PermissionDef"
     "name": "order.create"
+    "kind": "PermissionDef"
     "id": "bh"
     "action": "create"
     "namespace": "order"
@@ -1750,8 +1726,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bi":
-    "kind": "PermissionDef"
     "name": "order.manage"
+    "kind": "PermissionDef"
     "id": "bi"
     "action": "manage"
     "namespace": "order"
@@ -1768,8 +1744,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bj":
-    "kind": "PermissionDef"
     "name": "order.view"
+    "kind": "PermissionDef"
     "id": "bj"
     "action": "view"
     "namespace": "order"
@@ -1780,8 +1756,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bk":
-    "kind": "PermissionDef"
     "name": "order.viewOwn"
+    "kind": "PermissionDef"
     "id": "bk"
     "action": "viewOwn"
     "namespace": "order"
@@ -1801,8 +1777,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bl":
-    "kind": "PermissionDef"
     "name": "refund.approve"
+    "kind": "PermissionDef"
     "id": "bl"
     "action": "approve"
     "namespace": "refund"
@@ -1819,8 +1795,8 @@
         "kind": "OrganogramRef"
         "id": "d4"
   "bm":
-    "kind": "PermissionDef"
     "name": "report.view"
+    "kind": "PermissionDef"
     "id": "bm"
     "action": "view"
     "namespace": "report"
@@ -1834,8 +1810,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bn":
-    "kind": "PermissionDef"
     "name": "shipment.deliver"
+    "kind": "PermissionDef"
     "id": "bn"
     "action": "deliver"
     "namespace": "shipment"
@@ -1846,8 +1822,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bo":
-    "kind": "PermissionDef"
     "name": "shipment.dispatch"
+    "kind": "PermissionDef"
     "id": "bo"
     "action": "dispatch"
     "namespace": "shipment"
@@ -1858,8 +1834,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bp":
-    "kind": "PermissionDef"
     "name": "shipment.track"
+    "kind": "PermissionDef"
     "id": "bp"
     "action": "track"
     "namespace": "shipment"
@@ -1870,8 +1846,8 @@
     "serviceId": "bt"
     "usedBy": []
   "bq":
-    "kind": "PermissionDef"
     "name": "user.manage"
+    "kind": "PermissionDef"
     "id": "bq"
     "action": "manage"
     "namespace": "user"
@@ -1882,6 +1858,7 @@
     "serviceId": "bt"
     "usedBy": []
   "br":
+    "name": "Dispatcher"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -1889,7 +1866,6 @@
         "en": "Dispatcher"
         "pt-BR": "Despachante"
       "typeRef": "std.bpcms.i18n"
-    "name": "Dispatcher"
     "id": "br"
     "capabilities": []
     "inherits": []
@@ -1906,6 +1882,7 @@
     "scopes": []
     "serviceId": "bt"
   "bs":
+    "name": "Driver"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -1913,7 +1890,6 @@
         "en": "Driver"
         "pt-BR": "Motorista"
       "typeRef": "std.bpcms.i18n"
-    "name": "Driver"
     "id": "bs"
     "capabilities": []
     "inherits": []
@@ -1930,6 +1906,7 @@
     "scopes": []
     "serviceId": "bt"
   "bt":
+    "name": "example.com/services/identity"
     "kind": "ServiceDef"
     "title":
       "kind": "ShapeValue"
@@ -1937,12 +1914,11 @@
         "en": "Identity"
         "pt-BR": "Identidade"
       "typeRef": "std.bpcms.i18n"
-    "name": "example.com/services/identity"
     "id": "bt"
     "aliases":
       -
-        "kind": "ServiceAlias"
         "name": "Identity"
+        "kind": "ServiceAlias"
         "by": "w"
         "path": "services/example.com/services/checkout/checkout-service.archol"
         "use": "import"
@@ -1957,8 +1933,8 @@
     "path": "services/example.com/services/identity/identity-service.archol"
     "url": "example.com/services/identity"
   "bu":
-    "kind": "ShapeDef"
     "name": "SessionStatus"
+    "kind": "ShapeDef"
     "id": "bu"
     "base": "state"
     "conversions": []
@@ -1969,6 +1945,7 @@
     "unit": null
     "values":
       -
+        "name": "Active"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -1976,13 +1953,13 @@
             "en": "Active"
             "pt-BR": "Ativa"
           "typeRef": "std.bpcms.i18n"
-        "name": "Active"
         "icon":
           "kind": "IconRef"
           "id": "dx"
         "ordinal": 10
         "transitions":
           -
+            "name": "Ended"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -1990,7 +1967,6 @@
                 "en": "Session ended"
                 "pt-BR": "Sessão encerrada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Ended"
             "event": null
             "payload": []
             "to":
@@ -1998,6 +1974,7 @@
               "shapeId": "bu"
               "valuePath": "Ended"
           -
+            "name": "Expired"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2005,7 +1982,6 @@
                 "en": "Session expired"
                 "pt-BR": "Sessão expirada"
               "typeRef": "std.bpcms.i18n"
-            "name": "Expired"
             "event": null
             "payload": []
             "to":
@@ -2013,6 +1989,7 @@
               "shapeId": "bu"
               "valuePath": "Expired"
       -
+        "name": "Ended"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -2020,13 +1997,13 @@
             "en": "Ended"
             "pt-BR": "Encerrada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Ended"
         "icon":
           "kind": "IconRef"
           "id": "dz"
         "ordinal": 20
         "transitions": []
       -
+        "name": "Expired"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -2034,15 +2011,14 @@
             "en": "Expired"
             "pt-BR": "Expirada"
           "typeRef": "std.bpcms.i18n"
-        "name": "Expired"
         "icon":
           "kind": "IconRef"
           "id": "d0"
         "ordinal": 30
         "transitions": []
   "bv":
-    "kind": "ShapeDef"
     "name": "UserStatus"
+    "kind": "ShapeDef"
     "id": "bv"
     "base": "state"
     "conversions": []
@@ -2053,6 +2029,7 @@
     "unit": null
     "values":
       -
+        "name": "Active"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -2060,13 +2037,13 @@
             "en": "Active"
             "pt-BR": "Ativo"
           "typeRef": "std.bpcms.i18n"
-        "name": "Active"
         "icon":
           "kind": "IconRef"
           "id": "dx"
         "ordinal": 10
         "transitions":
           -
+            "name": "Suspended"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2074,20 +2051,20 @@
                 "en": "User suspended"
                 "pt-BR": "Usuário suspenso"
               "typeRef": "std.bpcms.i18n"
-            "name": "Suspended"
             "event": null
             "payload":
               -
-                "kind": "FieldDef"
                 "name": "reason"
+                "kind": "FieldDef"
                 "type":
-                  "kind": "PrimitiveRef"
                   "name": "string"
+                  "kind": "PrimitiveRef"
             "to":
               "kind": "ShapeValueRef"
               "shapeId": "bv"
               "valuePath": "Suspended"
           -
+            "name": "Disabled"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2095,7 +2072,6 @@
                 "en": "User disabled"
                 "pt-BR": "Usuário desativado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Disabled"
             "event": null
             "payload": []
             "to":
@@ -2103,6 +2079,7 @@
               "shapeId": "bv"
               "valuePath": "Disabled"
       -
+        "name": "Suspended"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -2110,13 +2087,13 @@
             "en": "Suspended"
             "pt-BR": "Suspenso"
           "typeRef": "std.bpcms.i18n"
-        "name": "Suspended"
         "icon":
           "kind": "IconRef"
           "id": "d1"
         "ordinal": 20
         "transitions":
           -
+            "name": "Disabled"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2124,7 +2101,6 @@
                 "en": "User disabled"
                 "pt-BR": "Usuário desativado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Disabled"
             "event": null
             "payload": []
             "to":
@@ -2132,6 +2108,7 @@
               "shapeId": "bv"
               "valuePath": "Disabled"
           -
+            "name": "Active"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2139,7 +2116,6 @@
                 "en": "Access unlocked"
                 "pt-BR": "Acesso liberado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Active"
             "event": "Unlocked"
             "payload": []
             "to":
@@ -2147,6 +2123,7 @@
               "shapeId": "bv"
               "valuePath": "Active"
       -
+        "name": "Disabled"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -2154,13 +2131,13 @@
             "en": "Disabled"
             "pt-BR": "Desativado"
           "typeRef": "std.bpcms.i18n"
-        "name": "Disabled"
         "icon":
           "kind": "IconRef"
           "id": "dy"
         "ordinal": 30
         "transitions":
           -
+            "name": "Active"
             "kind": "TransitionDef"
             "title":
               "kind": "ShapeValue"
@@ -2168,7 +2145,6 @@
                 "en": "Access unlocked"
                 "pt-BR": "Acesso liberado"
               "typeRef": "std.bpcms.i18n"
-            "name": "Active"
             "event": "Unlocked"
             "payload": []
             "to":
@@ -2176,6 +2152,7 @@
               "shapeId": "bv"
               "valuePath": "Active"
   "c":
+    "name": "RiskAnalyst"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -2183,7 +2160,6 @@
         "en": "Risk analyst"
         "pt-BR": "Analista de risco"
       "typeRef": "std.bpcms.i18n"
-    "name": "RiskAnalyst"
     "id": "c"
     "capabilities": []
     "inherits": []
@@ -2203,6 +2179,7 @@
     "scopes": []
     "serviceId": "a6"
   "c0":
+    "name": "Citizen"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -2210,12 +2187,11 @@
         "en": "Citizen"
         "pt-BR": "Cidadão"
       "typeRef": "std.bpcms.i18n"
-    "name": "Citizen"
     "id": "c0"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "register"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -2224,8 +2200,8 @@
             "id": "k"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "registerPerson"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -2234,8 +2210,8 @@
             "id": "f"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "registerOrganization"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -2244,8 +2220,8 @@
             "id": "f"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "merge"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -2257,8 +2233,8 @@
           "shapeId": "ay"
           "valuePath": "Merged"
       -
-        "kind": "ActionDef"
         "name": "block"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -2272,128 +2248,128 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "kind"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "ax"
       -
-        "kind": "FieldDef"
         "name": "displayName"
+        "kind": "FieldDef"
         "maxLength": 160
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "avatar"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "aa"
       -
-        "kind": "FieldDef"
         "name": "country"
+        "kind": "FieldDef"
         "maxLength": 2
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "ay"
       -
-        "kind": "FieldDef"
         "name": "mergedInto"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "c0"
       -
-        "kind": "FieldDef"
         "name": "mergedAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
-        "name": "createdAt"
         "type":
-          "kind": "StdRef"
           "name": "std.DateTime"
+          "kind": "StdRef"
+      -
+        "name": "createdAt"
+        "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "byDisplayName"
+        "kind": "PropertyAssignment"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "Identifier"
               "name": "displayName"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "search"
+            "kind": "Identifier"
       -
-        "kind": "PropertyAssignment"
         "name": "byKind"
+        "kind": "PropertyAssignment"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "Identifier"
               "name": "kind"
-            -
               "kind": "Identifier"
+            -
               "name": "status"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "hash"
-      -
-        "kind": "PropertyAssignment"
-        "name": "byCountry"
-        "value":
-          "kind": "List"
-          "elements":
-            -
               "kind": "Identifier"
-              "name": "country"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "hash"
+            "kind": "Identifier"
       -
+        "name": "byCountry"
         "kind": "PropertyAssignment"
-        "name": "byMergedInto"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "MemberAccess"
-              "name": "id"
-              "object":
-                "kind": "Identifier"
-                "name": "mergedInto"
+              "name": "country"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "hash"
+            "kind": "Identifier"
+      -
+        "name": "byMergedInto"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "id"
+              "kind": "MemberAccess"
+              "object":
+                "name": "mergedInto"
+                "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
+            "name": "hash"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -2420,6 +2396,7 @@
     "relations": []
     "serviceId": "z"
   "c1":
+    "name": "DirectoryUnavailable"
     "kind": "ErrorDef"
     "title":
       "kind": "ShapeValue"
@@ -2427,17 +2404,16 @@
         "en": "Identity directory unavailable"
         "pt-BR": "Diretório de identidade indisponível"
       "typeRef": "std.bpcms.i18n"
-    "name": "DirectoryUnavailable"
     "id": "c1"
     "serviceId": "z"
   "c2":
-    "kind": "FormDef"
     "name": "MergeApproval"
+    "kind": "FormDef"
     "id": "c2"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "approve"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "merge"
@@ -2448,8 +2424,8 @@
       "id": "c0"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "target"
+        "kind": "FieldDef"
         "required": true
         "type":
           "kind": "DocumentRef"
@@ -2460,13 +2436,13 @@
         "id": "f"
     "serviceId": "z"
   "c3":
-    "kind": "FormDef"
     "name": "Registration"
+    "kind": "FormDef"
     "id": "c3"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "register"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "register"
@@ -2479,6 +2455,7 @@
     "roles": []
     "serviceId": "z"
   "c4":
+    "name": "Active"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2486,11 +2463,11 @@
         "en": "Active"
         "pt-BR": "Ativo"
       "typeRef": "std.bpcms.i18n"
-    "name": "Active"
     "id": "c4"
     "namespace": ""
     "serviceId": "z"
   "c5":
+    "name": "Blocked"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2498,11 +2475,11 @@
         "en": "Blocked"
         "pt-BR": "Bloqueado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Blocked"
     "id": "c5"
     "namespace": ""
     "serviceId": "z"
   "c6":
+    "name": "Merged"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2510,11 +2487,11 @@
         "en": "Merged"
         "pt-BR": "Mesclado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Merged"
     "id": "c6"
     "namespace": ""
     "serviceId": "z"
   "c7":
+    "name": "Organization"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2522,11 +2499,11 @@
         "en": "Organization"
         "pt-BR": "Organização"
       "typeRef": "std.bpcms.i18n"
-    "name": "Organization"
     "id": "c7"
     "namespace": ""
     "serviceId": "z"
   "c8":
+    "name": "Person"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2534,13 +2511,12 @@
         "en": "Person"
         "pt-BR": "Pessoa"
       "typeRef": "std.bpcms.i18n"
-    "name": "Person"
     "id": "c8"
     "namespace": ""
     "serviceId": "z"
   "c9":
-    "kind": "IntegrationDef"
     "name": "IdentityDirectory"
+    "kind": "IntegrationDef"
     "id": "c9"
     "endpoint": null
     "integrationKind": null
@@ -2548,6 +2524,7 @@
     "secrets": []
     "serviceId": "z"
   "cb":
+    "name": "Declined"
     "kind": "ErrorDef"
     "title":
       "kind": "ShapeValue"
@@ -2555,10 +2532,10 @@
         "en": "Payment declined"
         "pt-BR": "Pagamento recusado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Declined"
     "id": "cb"
     "serviceId": "w"
   "cc":
+    "name": "Timeout"
     "kind": "ErrorDef"
     "title":
       "kind": "ShapeValue"
@@ -2566,10 +2543,10 @@
         "en": "Timed out"
         "pt-BR": "Prazo esgotado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Timeout"
     "id": "cc"
     "serviceId": "w"
   "cd":
+    "name": "Unavailable"
     "kind": "ErrorDef"
     "title":
       "kind": "ShapeValue"
@@ -2577,17 +2554,16 @@
         "en": "Freight unavailable"
         "pt-BR": "Frete indisponível"
       "typeRef": "std.bpcms.i18n"
-    "name": "Unavailable"
     "id": "cd"
     "serviceId": "w"
   "ce":
-    "kind": "FormDef"
     "name": "FreightReview"
+    "kind": "FormDef"
     "id": "ce"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "apply"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "quoteShipping"
@@ -2598,40 +2574,40 @@
       "id": "h"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "freightAmount"
-        "required": true
-        "type":
-          "kind": "StdRef"
-          "name": "std.Money"
-      -
         "kind": "FieldDef"
-        "name": "days"
         "required": true
         "type":
+          "name": "std.Money"
           "kind": "StdRef"
+      -
+        "name": "days"
+        "kind": "FieldDef"
+        "required": true
+        "type":
           "name": "std.Count"
+          "kind": "StdRef"
     "roles":
       -
         "kind": "RoleRef"
         "id": "e"
     "serviceId": "w"
   "cf":
-    "kind": "FormDef"
     "name": "PaymentRetry"
+    "kind": "FormDef"
     "id": "cf"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "retry"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "retryPayment"
           "documentId": "h"
         "stay": false
       -
-        "kind": "FormActionDef"
         "name": "cancel"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "abandon"
@@ -2642,24 +2618,25 @@
       "id": "h"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "method"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "x"
       -
-        "kind": "FieldDef"
         "name": "reason"
+        "kind": "FieldDef"
         "maxLength": 500
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
     "roles":
       -
         "kind": "RoleRef"
         "id": "d"
     "serviceId": "w"
   "cg":
+    "name": "Abandoned"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2667,11 +2644,11 @@
         "en": "Abandoned"
         "pt-BR": "Abandonada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Abandoned"
     "id": "cg"
     "namespace": ""
     "serviceId": "w"
   "ch":
+    "name": "Boleto"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2679,11 +2656,11 @@
         "en": "Boleto"
         "pt-BR": "Boleto"
       "typeRef": "std.bpcms.i18n"
-    "name": "Boleto"
     "id": "ch"
     "namespace": ""
     "serviceId": "w"
   "ci":
+    "name": "Confirmed"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2691,11 +2668,11 @@
         "en": "Order confirmed"
         "pt-BR": "Pedido confirmado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Confirmed"
     "id": "ci"
     "namespace": ""
     "serviceId": "w"
   "cj":
+    "name": "CreditCard"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2703,11 +2680,11 @@
         "en": "Credit card"
         "pt-BR": "Cartão de crédito"
       "typeRef": "std.bpcms.i18n"
-    "name": "CreditCard"
     "id": "cj"
     "namespace": ""
     "serviceId": "w"
   "ck":
+    "name": "Draft"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2715,11 +2692,11 @@
         "en": "Draft"
         "pt-BR": "Rascunho"
       "typeRef": "std.bpcms.i18n"
-    "name": "Draft"
     "id": "ck"
     "namespace": ""
     "serviceId": "w"
   "cl":
+    "name": "PaymentAuthorized"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2727,11 +2704,11 @@
         "en": "Payment authorized"
         "pt-BR": "Pagamento autorizado"
       "typeRef": "std.bpcms.i18n"
-    "name": "PaymentAuthorized"
     "id": "cl"
     "namespace": ""
     "serviceId": "w"
   "cm":
+    "name": "Pix"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2739,11 +2716,11 @@
         "en": "Pix"
         "pt-BR": "Pix"
       "typeRef": "std.bpcms.i18n"
-    "name": "Pix"
     "id": "cm"
     "namespace": ""
     "serviceId": "w"
   "cn":
+    "name": "ShippingQuoted"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2751,11 +2728,11 @@
         "en": "Shipping quoted"
         "pt-BR": "Frete cotado"
       "typeRef": "std.bpcms.i18n"
-    "name": "ShippingQuoted"
     "id": "cn"
     "namespace": ""
     "serviceId": "w"
   "co":
+    "name": "Validated"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -2763,13 +2740,12 @@
         "en": "Cart validated"
         "pt-BR": "Carrinho validado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Validated"
     "id": "co"
     "namespace": ""
     "serviceId": "w"
   "cp":
-    "kind": "IntegrationDef"
     "name": "FreightGateway"
+    "kind": "IntegrationDef"
     "id": "cp"
     "endpoint": null
     "integrationKind": null
@@ -2777,8 +2753,8 @@
     "secrets": []
     "serviceId": "w"
   "cq":
-    "kind": "IntegrationDef"
     "name": "PaymentGateway"
+    "kind": "IntegrationDef"
     "id": "cq"
     "endpoint": null
     "integrationKind": null
@@ -2786,6 +2762,7 @@
     "secrets": []
     "serviceId": "w"
   "cr":
+    "name": "Storefront"
     "kind": "OrganogramDef"
     "title":
       "kind": "ShapeValue"
@@ -2793,7 +2770,6 @@
         "en": "Storefront organogram"
         "pt-BR": "Organograma da loja"
       "typeRef": "std.bpcms.i18n"
-    "name": "Storefront"
     "id": "cr"
     "delegations": []
     "fourEyes": []
@@ -2866,6 +2842,7 @@
     "segregation": []
     "serviceId": "w"
   "cs":
+    "name": "Checkout"
     "kind": "ProcessDef"
     "title":
       "kind": "ShapeValue"
@@ -2873,22 +2850,21 @@
         "en": "Checkout"
         "pt-BR": "Finalização da compra"
       "typeRef": "std.bpcms.i18n"
-    "name": "Checkout"
     "id": "cs"
     "decisions": []
     "ends":
       -
-        "kind": "EndDef"
         "name": "Confirmed"
-        "outcome": null
-      -
         "kind": "EndDef"
+        "outcome": "success"
+      -
         "name": "Abandoned"
-        "outcome": null
-      -
         "kind": "EndDef"
+        "outcome": "cancelled"
+      -
         "name": "Expired"
-        "outcome": null
+        "kind": "EndDef"
+        "outcome": "failure"
     "flow":
       "kind": "FlowDef"
       "edges": []
@@ -2904,15 +2880,39 @@
         "kind": "List"
         "elements":
           -
-            "kind": "MemberAccess"
             "name": "CartValidated"
+            "kind": "MemberAccess"
             "object":
-              "kind": "Identifier"
               "name": "CheckoutSession"
+              "kind": "Identifier"
     "steps": []
+    "variables":
+      -
+        "name": "offer"
+        "kind": "VariableDef"
+        "default":
+          "kind": "NullLiteral"
+        "type":
+          "kind": "ShapeRef"
+          "id": "ct"
+      -
+        "name": "authorized"
+        "kind": "VariableDef"
+        "default":
+          "kind": "BooleanLiteral"
+          "value": false
+        "type":
+          "name": "boolean"
+          "kind": "PrimitiveRef"
+      -
+        "name": "authorization"
+        "kind": "VariableDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
   "ct":
-    "kind": "ShapeDef"
     "name": "FreightOffer"
+    "kind": "ShapeDef"
     "id": "ct"
     "base": null
     "conversions": []
@@ -2923,8 +2923,8 @@
     "unit": null
     "values": []
   "cu":
-    "kind": "ViewDef"
     "name": "CheckoutProgress"
+    "kind": "ViewDef"
     "id": "cu"
     "binds":
       -
@@ -2935,8 +2935,8 @@
     "serviceId": "w"
     "viewKind": "process"
   "cv":
-    "kind": "ViewDef"
     "name": "Funnel"
+    "kind": "ViewDef"
     "id": "cv"
     "binds":
       -
@@ -2949,20 +2949,20 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "period"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
     "serviceId": "w"
     "viewKind": "report"
   "cw":
-    "kind": "ViewDef"
     "name": "MyCheckouts"
+    "kind": "ViewDef"
     "id": "cw"
     "binds": []
     "commands": []
@@ -2970,8 +2970,8 @@
     "serviceId": "w"
     "viewKind": "inbox"
   "cx":
-    "kind": "ViewDef"
     "name": "SessionDetail"
+    "kind": "ViewDef"
     "id": "cx"
     "binds":
       -
@@ -2982,8 +2982,8 @@
     "serviceId": "w"
     "viewKind": "detail"
   "cy":
-    "kind": "ViewDef"
     "name": "SessionPulse"
+    "kind": "ViewDef"
     "id": "cy"
     "binds":
       -
@@ -2996,13 +2996,13 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
     "serviceId": "w"
     "viewKind": "dashboard"
   "cz":
-    "kind": "ViewDef"
     "name": "Sessions"
+    "kind": "ViewDef"
     "id": "cz"
     "binds":
       -
@@ -3027,25 +3027,26 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "period"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "customer"
+            "kind": "Identifier"
     "serviceId": "w"
     "viewKind": "table"
   "d":
+    "name": "Customer"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -3053,7 +3054,6 @@
         "en": "Customer"
         "pt-BR": "Cliente"
       "typeRef": "std.bpcms.i18n"
-    "name": "Customer"
     "id": "d"
     "capabilities": []
     "inherits": []
@@ -3070,6 +3070,7 @@
     "scopes": []
     "serviceId": "w"
   "d0":
+    "name": "Expired"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3077,11 +3078,11 @@
         "en": "Expired"
         "pt-BR": "Expirada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Expired"
     "id": "d0"
     "namespace": ""
     "serviceId": "bt"
   "d1":
+    "name": "Suspended"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3089,11 +3090,11 @@
         "en": "Suspended"
         "pt-BR": "Suspenso"
       "typeRef": "std.bpcms.i18n"
-    "name": "Suspended"
     "id": "d1"
     "namespace": ""
     "serviceId": "bt"
   "d2":
+    "name": "EscalateRecovery"
     "kind": "ManualDef"
     "title":
       "kind": "ShapeValue"
@@ -3101,10 +3102,10 @@
         "en": "Escalate account recovery"
         "pt-BR": "Escalar recuperação de acesso"
       "typeRef": "std.bpcms.i18n"
-    "name": "EscalateRecovery"
     "id": "d2"
     "serviceId": "bt"
   "d3":
+    "name": "AccessRestored"
     "kind": "MessageDef"
     "title":
       "kind": "ShapeValue"
@@ -3112,26 +3113,26 @@
         "en": "Access restored"
         "pt-BR": "Acesso restaurado"
       "typeRef": "std.bpcms.i18n"
-    "name": "AccessRestored"
     "id": "d3"
     "about":
       "kind": "DocumentRef"
       "id": "i"
     "payload":
       -
-        "kind": "FieldDef"
         "name": "name"
-        "type":
-          "kind": "PrimitiveRef"
-          "name": "string"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
+      -
         "name": "email"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "t"
     "serviceId": "bt"
   "d4":
+    "name": "Platform"
     "kind": "OrganogramDef"
     "title":
       "kind": "ShapeValue"
@@ -3139,7 +3140,6 @@
         "en": "Platform organogram"
         "pt-BR": "Organograma da plataforma"
       "typeRef": "std.bpcms.i18n"
-    "name": "Platform"
     "id": "d4"
     "delegations": []
     "fourEyes":
@@ -3148,25 +3148,25 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "MemberAccess"
             "name": "approve"
+            "kind": "MemberAccess"
             "object":
-              "kind": "Identifier"
               "name": "refund"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "requires"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "Manager"
+            "kind": "Identifier"
     "hierarchy":
       "kind": "Hierarchy"
       "chains":
@@ -3330,6 +3330,7 @@
     "segregation": []
     "serviceId": "bt"
   "d5":
+    "name": "SessionTtl"
     "kind": "ParameterDef"
     "title":
       "kind": "ShapeValue"
@@ -3337,7 +3338,6 @@
         "en": "Session TTL"
         "pt-BR": "Duração da sessão"
       "typeRef": "std.bpcms.i18n"
-    "name": "SessionTtl"
     "value": null
     "id": "d5"
     "default":
@@ -3349,9 +3349,10 @@
     "required": false
     "serviceId": "bt"
     "type":
-      "kind": "StdRef"
       "name": "std."
+      "kind": "StdRef"
   "d6":
+    "name": "AccountRecovery"
     "kind": "ProcessDef"
     "title":
       "kind": "ShapeValue"
@@ -3359,14 +3360,13 @@
         "en": "Account recovery"
         "pt-BR": "Recuperação de acesso"
       "typeRef": "std.bpcms.i18n"
-    "name": "AccountRecovery"
     "id": "d6"
     "decisions": []
     "ends":
       -
-        "kind": "EndDef"
         "name": "Restored"
-        "outcome": null
+        "kind": "EndDef"
+        "outcome": "success"
     "flow":
       "kind": "FlowDef"
       "edges": []
@@ -3381,8 +3381,8 @@
       "trigger": null
     "steps": []
   "d7":
-    "kind": "ViewDef"
     "name": "CitizenAccounts"
+    "kind": "ViewDef"
     "id": "d7"
     "binds":
       -
@@ -3395,20 +3395,20 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "citizen"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
     "serviceId": "bt"
     "viewKind": "table"
   "d8":
-    "kind": "ViewDef"
     "name": "RecoveryProgress"
+    "kind": "ViewDef"
     "id": "d8"
     "binds":
       -
@@ -3419,8 +3419,8 @@
     "serviceId": "bt"
     "viewKind": "process"
   "d9":
-    "kind": "ViewDef"
     "name": "RecoveryQueue"
+    "kind": "ViewDef"
     "id": "d9"
     "binds": []
     "commands": []
@@ -3428,6 +3428,7 @@
     "serviceId": "bt"
     "viewKind": "inbox"
   "da":
+    "name": "Analyze"
     "kind": "ManualDef"
     "title":
       "kind": "ShapeValue"
@@ -3435,10 +3436,10 @@
         "en": "Analyze duplicate"
         "pt-BR": "Analisar duplicidade"
       "typeRef": "std.bpcms.i18n"
-    "name": "Analyze"
     "id": "da"
     "serviceId": "z"
   "db":
+    "name": "EscalateMerge"
     "kind": "ManualDef"
     "title":
       "kind": "ShapeValue"
@@ -3446,10 +3447,10 @@
         "en": "Escalate duplicate review"
         "pt-BR": "Escalar revisão da duplicidade"
       "typeRef": "std.bpcms.i18n"
-    "name": "EscalateMerge"
     "id": "db"
     "serviceId": "z"
   "dc":
+    "name": "ManualReassign"
     "kind": "ManualDef"
     "title":
       "kind": "ShapeValue"
@@ -3457,10 +3458,10 @@
         "en": "Reassign accounts manually"
         "pt-BR": "Reatribuir contas manualmente"
       "typeRef": "std.bpcms.i18n"
-    "name": "ManualReassign"
     "id": "dc"
     "serviceId": "z"
   "dd":
+    "name": "RegisterAudit"
     "kind": "ManualDef"
     "title":
       "kind": "ShapeValue"
@@ -3468,10 +3469,10 @@
         "en": "Register merge audit"
         "pt-BR": "Registrar auditoria da mesclagem"
       "typeRef": "std.bpcms.i18n"
-    "name": "RegisterAudit"
     "id": "dd"
     "serviceId": "z"
   "de":
+    "name": "CitizenMerge"
     "kind": "ProcessDef"
     "title":
       "kind": "ShapeValue"
@@ -3479,14 +3480,13 @@
         "en": "Citizen merge"
         "pt-BR": "Mesclagem de cidadãos"
       "typeRef": "std.bpcms.i18n"
-    "name": "CitizenMerge"
     "id": "de"
     "decisions": []
     "ends":
       -
-        "kind": "EndDef"
         "name": "Completed"
-        "outcome": null
+        "kind": "EndDef"
+        "outcome": "success"
     "flow":
       "kind": "FlowDef"
       "edges": []
@@ -3500,9 +3500,16 @@
       "schedule": null
       "trigger": null
     "steps": []
+    "variables":
+      -
+        "name": "reassignedUsers"
+        "kind": "VariableDef"
+        "type":
+          "name": "std.Count"
+          "kind": "StdRef"
   "df":
-    "kind": "ShapeDef"
     "name": "Phone"
+    "kind": "ShapeDef"
     "id": "df"
     "base": "string"
     "conversions": []
@@ -3513,8 +3520,8 @@
     "unit": null
     "values": []
   "dg":
-    "kind": "ViewDef"
     "name": "Duplicates"
+    "kind": "ViewDef"
     "id": "dg"
     "binds": []
     "commands": []
@@ -3522,8 +3529,8 @@
     "serviceId": "z"
     "viewKind": "inbox"
   "dh":
-    "kind": "ViewDef"
     "name": "MergeProgress"
+    "kind": "ViewDef"
     "id": "dh"
     "binds":
       -
@@ -3534,8 +3541,8 @@
     "serviceId": "z"
     "viewKind": "process"
   "di":
-    "kind": "ViewDef"
     "name": "Registry"
+    "kind": "ViewDef"
     "id": "di"
     "binds":
       -
@@ -3548,40 +3555,40 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "kind"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "country"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
     "serviceId": "z"
     "viewKind": "table"
   "dj":
-    "kind": "FormDef"
     "name": "RiskReview"
+    "kind": "FormDef"
     "id": "dj"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "approve"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "approve"
           "documentId": "r"
         "stay": false
       -
-        "kind": "FormActionDef"
         "name": "reject"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "reject"
@@ -3592,18 +3599,19 @@
       "id": "r"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "reason"
+        "kind": "FieldDef"
         "maxLength": 500
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
     "roles":
       -
         "kind": "RoleRef"
         "id": "c"
     "serviceId": "a6"
   "dk":
+    "name": "Approved"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3611,11 +3619,11 @@
         "en": "Approved"
         "pt-BR": "Aprovada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Approved"
     "id": "dk"
     "namespace": ""
     "serviceId": "a6"
   "dl":
+    "name": "Evaluated"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3623,11 +3631,11 @@
         "en": "Evaluated"
         "pt-BR": "Avaliada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Evaluated"
     "id": "dl"
     "namespace": ""
     "serviceId": "a6"
   "dm":
+    "name": "Pending"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3635,11 +3643,11 @@
         "en": "Pending"
         "pt-BR": "Pendente"
       "typeRef": "std.bpcms.i18n"
-    "name": "Pending"
     "id": "dm"
     "namespace": ""
     "serviceId": "a6"
   "dn":
+    "name": "Rejected"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3647,11 +3655,11 @@
         "en": "Rejected"
         "pt-BR": "Rejeitada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Rejected"
     "id": "dn"
     "namespace": ""
     "serviceId": "a6"
   "do":
+    "name": "Risk"
     "kind": "OrganogramDef"
     "title":
       "kind": "ShapeValue"
@@ -3659,7 +3667,6 @@
         "en": "Risk organogram"
         "pt-BR": "Organograma de risco"
       "typeRef": "std.bpcms.i18n"
-    "name": "Risk"
     "id": "do"
     "delegations": []
     "fourEyes": []
@@ -3715,6 +3722,7 @@
     "segregation": []
     "serviceId": "a6"
   "dp":
+    "name": "FraudReview"
     "kind": "ProcessDef"
     "title":
       "kind": "ShapeValue"
@@ -3722,22 +3730,21 @@
         "en": "Fraud review"
         "pt-BR": "Análise antifraude"
       "typeRef": "std.bpcms.i18n"
-    "name": "FraudReview"
     "id": "dp"
     "decisions": []
     "ends":
       -
-        "kind": "EndDef"
         "name": "Cleared"
-        "outcome": null
-      -
         "kind": "EndDef"
+        "outcome": "success"
+      -
         "name": "Approved"
-        "outcome": null
-      -
         "kind": "EndDef"
+        "outcome": "success"
+      -
         "name": "Rejected"
-        "outcome": null
+        "kind": "EndDef"
+        "outcome": "cancelled"
     "flow":
       "kind": "FlowDef"
       "edges": []
@@ -3753,15 +3760,15 @@
         "kind": "List"
         "elements":
           -
-            "kind": "MemberAccess"
             "name": "Created"
+            "kind": "MemberAccess"
             "object":
-              "kind": "Identifier"
               "name": "FraudCheck"
+              "kind": "Identifier"
     "steps": []
   "dq":
-    "kind": "ViewDef"
     "name": "FraudDetail"
+    "kind": "ViewDef"
     "id": "dq"
     "binds":
       -
@@ -3772,8 +3779,8 @@
     "serviceId": "a6"
     "viewKind": "detail"
   "dr":
-    "kind": "ViewDef"
     "name": "FraudProgress"
+    "kind": "ViewDef"
     "id": "dr"
     "binds":
       -
@@ -3784,8 +3791,8 @@
     "serviceId": "a6"
     "viewKind": "process"
   "ds":
-    "kind": "ViewDef"
     "name": "FraudTable"
+    "kind": "ViewDef"
     "id": "ds"
     "binds":
       -
@@ -3798,20 +3805,20 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "period"
+            "kind": "Identifier"
     "serviceId": "a6"
     "viewKind": "table"
   "dt":
-    "kind": "ViewDef"
     "name": "RiskInbox"
+    "kind": "ViewDef"
     "id": "dt"
     "binds": []
     "commands": []
@@ -3819,13 +3826,13 @@
     "serviceId": "a6"
     "viewKind": "inbox"
   "du":
-    "kind": "FormDef"
     "name": "IdentityVerification"
+    "kind": "FormDef"
     "id": "du"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "confirm"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "confirmIdentity"
@@ -3841,13 +3848,13 @@
         "id": "n"
     "serviceId": "bt"
   "dv":
-    "kind": "FormDef"
     "name": "RecoveryApproval"
+    "kind": "FormDef"
     "id": "dv"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "approve"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "approveRecovery"
@@ -3863,13 +3870,13 @@
         "id": "g"
     "serviceId": "bt"
   "dw":
-    "kind": "FormDef"
     "name": "SignIn"
+    "kind": "FormDef"
     "id": "dw"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "signIn"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "start"
@@ -3880,23 +3887,24 @@
       "id": "ba"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "email"
+        "kind": "FieldDef"
         "required": true
         "type":
           "kind": "ShapeRef"
           "id": "t"
       -
-        "kind": "FieldDef"
         "name": "password"
+        "kind": "FieldDef"
         "maxLength": 128
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
     "roles": []
     "serviceId": "bt"
   "dx":
+    "name": "Active"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3904,11 +3912,11 @@
         "en": "Active"
         "pt-BR": "Ativo"
       "typeRef": "std.bpcms.i18n"
-    "name": "Active"
     "id": "dx"
     "namespace": ""
     "serviceId": "bt"
   "dy":
+    "name": "Disabled"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3916,11 +3924,11 @@
         "en": "Disabled"
         "pt-BR": "Desativado"
       "typeRef": "std.bpcms.i18n"
-    "name": "Disabled"
     "id": "dy"
     "namespace": ""
     "serviceId": "bt"
   "dz":
+    "name": "Ended"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -3928,11 +3936,11 @@
         "en": "Ended"
         "pt-BR": "Encerrada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Ended"
     "id": "dz"
     "namespace": ""
     "serviceId": "bt"
   "e":
+    "name": "SupportAgent"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -3940,7 +3948,6 @@
         "en": "Support agent"
         "pt-BR": "Agente de atendimento"
       "typeRef": "std.bpcms.i18n"
-    "name": "SupportAgent"
     "id": "e"
     "capabilities": []
     "inherits":
@@ -3969,13 +3976,13 @@
     "scopes": []
     "serviceId": "w"
   "ea":
-    "kind": "FormDef"
     "name": "OptOutReview"
+    "kind": "FormDef"
     "id": "ea"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "suppress"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "suppress"
@@ -3986,26 +3993,26 @@
       "id": "l"
     "fields":
       -
-        "kind": "FieldDef"
         "name": "reason"
+        "kind": "FieldDef"
         "maxLength": 500
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
     "roles":
       -
         "kind": "RoleRef"
         "id": "a"
     "serviceId": "b6"
   "eb":
-    "kind": "FormDef"
     "name": "TemplateEditor"
+    "kind": "FormDef"
     "id": "eb"
     "actions":
       -
-        "kind": "FormActionDef"
         "name": "save"
+        "kind": "FormActionDef"
         "calls":
           "kind": "ActionRef"
           "actionPath": "update"
@@ -4018,6 +4025,7 @@
     "roles": []
     "serviceId": "b6"
   "ec":
+    "name": "Email"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4025,11 +4033,11 @@
         "en": "Email"
         "pt-BR": "Correio eletrônico"
       "typeRef": "std.bpcms.i18n"
-    "name": "Email"
     "id": "ec"
     "namespace": ""
     "serviceId": "b6"
   "ed":
+    "name": "Failed"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4037,11 +4045,11 @@
         "en": "Failed"
         "pt-BR": "Falhou"
       "typeRef": "std.bpcms.i18n"
-    "name": "Failed"
     "id": "ed"
     "namespace": ""
     "serviceId": "b6"
   "ee":
+    "name": "InApp"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4049,11 +4057,11 @@
         "en": "In-app"
         "pt-BR": "No aplicativo"
       "typeRef": "std.bpcms.i18n"
-    "name": "InApp"
     "id": "ee"
     "namespace": ""
     "serviceId": "b6"
   "ef":
+    "name": "LocaleEnUs"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4061,11 +4069,11 @@
         "en": "English (US)"
         "pt-BR": "Inglês (EUA)"
       "typeRef": "std.bpcms.i18n"
-    "name": "LocaleEnUs"
     "id": "ef"
     "namespace": ""
     "serviceId": "b6"
   "eg":
+    "name": "LocalePtBr"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4073,11 +4081,11 @@
         "en": "Portuguese (Brazil)"
         "pt-BR": "Português (Brasil)"
       "typeRef": "std.bpcms.i18n"
-    "name": "LocalePtBr"
     "id": "eg"
     "namespace": ""
     "serviceId": "b6"
   "eh":
+    "name": "Queued"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4085,11 +4093,11 @@
         "en": "Queued"
         "pt-BR": "Na fila"
       "typeRef": "std.bpcms.i18n"
-    "name": "Queued"
     "id": "eh"
     "namespace": ""
     "serviceId": "b6"
   "ei":
+    "name": "Read"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4097,11 +4105,11 @@
         "en": "Read"
         "pt-BR": "Lida"
       "typeRef": "std.bpcms.i18n"
-    "name": "Read"
     "id": "ei"
     "namespace": ""
     "serviceId": "b6"
   "ej":
+    "name": "Sent"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4109,11 +4117,11 @@
         "en": "Sent"
         "pt-BR": "Enviada"
       "typeRef": "std.bpcms.i18n"
-    "name": "Sent"
     "id": "ej"
     "namespace": ""
     "serviceId": "b6"
   "ek":
+    "name": "Suppressed"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4121,11 +4129,11 @@
         "en": "Suppressed"
         "pt-BR": "Suprimida"
       "typeRef": "std.bpcms.i18n"
-    "name": "Suppressed"
     "id": "ek"
     "namespace": ""
     "serviceId": "b6"
   "el":
+    "name": "WhatsApp"
     "kind": "IconDef"
     "title":
       "kind": "ShapeValue"
@@ -4133,13 +4141,12 @@
         "en": "WhatsApp"
         "pt-BR": "WhatsApp"
       "typeRef": "std.bpcms.i18n"
-    "name": "WhatsApp"
     "id": "el"
     "namespace": ""
     "serviceId": "b6"
   "em":
-    "kind": "IntegrationDef"
     "name": "Email"
+    "kind": "IntegrationDef"
     "id": "em"
     "endpoint": null
     "integrationKind": null
@@ -4147,8 +4154,8 @@
     "secrets": []
     "serviceId": "b6"
   "en":
-    "kind": "IntegrationDef"
     "name": "WhatsApp"
+    "kind": "IntegrationDef"
     "id": "en"
     "endpoint": null
     "integrationKind": null
@@ -4156,6 +4163,7 @@
     "secrets": []
     "serviceId": "b6"
   "eo":
+    "name": "DigestSummary"
     "kind": "MessageDef"
     "title":
       "kind": "ShapeValue"
@@ -4163,26 +4171,26 @@
         "en": "Daily digest"
         "pt-BR": "Resumo diário"
       "typeRef": "std.bpcms.i18n"
-    "name": "DigestSummary"
     "id": "eo"
     "about":
       "kind": "DocumentRef"
       "id": "l"
     "payload":
       -
-        "kind": "FieldDef"
         "name": "recipient"
-        "type":
-          "kind": "PrimitiveRef"
-          "name": "string"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
+      -
         "name": "channel"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "u"
     "serviceId": "b6"
   "ep":
+    "name": "CustomerSuccess"
     "kind": "OrganogramDef"
     "title":
       "kind": "ShapeValue"
@@ -4190,7 +4198,6 @@
         "en": "Customer success organogram"
         "pt-BR": "Organograma de sucesso do cliente"
       "typeRef": "std.bpcms.i18n"
-    "name": "CustomerSuccess"
     "id": "ep"
     "delegations": []
     "fourEyes": []
@@ -4249,6 +4256,7 @@
     "segregation": []
     "serviceId": "b6"
   "eq":
+    "name": "FromEmail"
     "kind": "ParameterDef"
     "title":
       "kind": "ShapeValue"
@@ -4256,7 +4264,6 @@
         "en": "From email"
         "pt-BR": "Remetente"
       "typeRef": "std.bpcms.i18n"
-    "name": "FromEmail"
     "value": null
     "id": "eq"
     "default":
@@ -4267,14 +4274,15 @@
     "required": false
     "serviceId": "b6"
     "type":
-      "kind": "StdRef"
       "name": "std."
+      "kind": "StdRef"
   "er":
-    "kind": "PolicyDef"
     "name": "NotificationConsent"
+    "kind": "PolicyDef"
     "id": "er"
     "serviceId": "b6"
   "es":
+    "name": "DailyDigest"
     "kind": "ProcessDef"
     "title":
       "kind": "ShapeValue"
@@ -4282,18 +4290,17 @@
         "en": "Daily digest"
         "pt-BR": "Resumo diário"
       "typeRef": "std.bpcms.i18n"
-    "name": "DailyDigest"
     "id": "es"
     "decisions": []
     "ends":
       -
-        "kind": "EndDef"
         "name": "Sent"
-        "outcome": null
-      -
         "kind": "EndDef"
+        "outcome": "success"
+      -
         "name": "Suppressed"
-        "outcome": null
+        "kind": "EndDef"
+        "outcome": "cancelled"
     "flow":
       "kind": "FlowDef"
       "edges": []
@@ -4311,6 +4318,7 @@
       "trigger": null
     "steps": []
   "et":
+    "name": "WhatsAppToken"
     "kind": "SecretDef"
     "title":
       "kind": "ShapeValue"
@@ -4318,16 +4326,15 @@
         "en": "WhatsApp token"
         "pt-BR": "Credencial do WhatsApp"
       "typeRef": "std.bpcms.i18n"
-    "name": "WhatsAppToken"
     "id": "et"
     "required": false
     "serviceId": "b6"
     "type":
-      "kind": "PrimitiveRef"
       "name": "string"
+      "kind": "PrimitiveRef"
   "eu":
-    "kind": "ViewDef"
     "name": "DigestProgress"
+    "kind": "ViewDef"
     "id": "eu"
     "binds":
       -
@@ -4338,8 +4345,8 @@
     "serviceId": "b6"
     "viewKind": "process"
   "ev":
-    "kind": "ViewDef"
     "name": "NotificationDetail"
+    "kind": "ViewDef"
     "id": "ev"
     "binds":
       -
@@ -4362,8 +4369,8 @@
     "serviceId": "b6"
     "viewKind": "detail"
   "ew":
-    "kind": "ViewDef"
     "name": "NotificationInbox"
+    "kind": "ViewDef"
     "id": "ew"
     "binds": []
     "commands": []
@@ -4371,8 +4378,8 @@
     "serviceId": "b6"
     "viewKind": "inbox"
   "ex":
-    "kind": "ViewDef"
     "name": "NotificationKanban"
+    "kind": "ViewDef"
     "id": "ex"
     "binds":
       -
@@ -4383,8 +4390,8 @@
     "serviceId": "b6"
     "viewKind": "kanban"
   "ey":
-    "kind": "ViewDef"
     "name": "NotificationTable"
+    "kind": "ViewDef"
     "id": "ey"
     "binds":
       -
@@ -4397,25 +4404,26 @@
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "status"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "channel"
+            "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "period"
+            "kind": "Identifier"
     "serviceId": "b6"
     "viewKind": "table"
   "f":
+    "name": "Manager"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -4423,7 +4431,6 @@
         "en": "Registration manager"
         "pt-BR": "Gestor de cadastro"
       "typeRef": "std.bpcms.i18n"
-    "name": "Manager"
     "id": "f"
     "capabilities": []
     "inherits":
@@ -4455,6 +4462,7 @@
     "scopes": []
     "serviceId": "z"
   "g":
+    "name": "Manager"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -4462,7 +4470,6 @@
         "en": "Manager"
         "pt-BR": "Gerente"
       "typeRef": "std.bpcms.i18n"
-    "name": "Manager"
     "id": "g"
     "capabilities": []
     "inherits":
@@ -4500,6 +4507,7 @@
     "scopes": []
     "serviceId": "bt"
   "h":
+    "name": "CheckoutSession"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -4507,12 +4515,11 @@
         "en": "Checkout session"
         "pt-BR": "Sessão de finalização"
       "typeRef": "std.bpcms.i18n"
-    "name": "CheckoutSession"
     "id": "h"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "create"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4521,8 +4528,8 @@
             "id": "d"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "validateCart"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4534,8 +4541,8 @@
           "shapeId": "ao"
           "valuePath": "Validated"
       -
-        "kind": "ActionDef"
         "name": "quoteShipping"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4550,8 +4557,8 @@
           "shapeId": "ao"
           "valuePath": "ShippingQuoted"
       -
-        "kind": "ActionDef"
         "name": "authorizePayment"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4563,8 +4570,8 @@
           "shapeId": "ao"
           "valuePath": "PaymentAuthorized"
       -
-        "kind": "ActionDef"
         "name": "retryPayment"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4573,8 +4580,8 @@
             "id": "d"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "abandon"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4592,8 +4599,8 @@
           "shapeId": "ao"
           "valuePath": "Abandoned"
       -
-        "kind": "ActionDef"
         "name": "confirmOrder"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4605,8 +4612,8 @@
           "shapeId": "ao"
           "valuePath": "Confirmed"
       -
-        "kind": "ActionDef"
         "name": "checkFraud"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4620,102 +4627,102 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "customer"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "i"
       -
-        "kind": "FieldDef"
         "name": "total"
-        "type":
-          "kind": "StdRef"
-          "name": "std.Money"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "std.Money"
+          "kind": "StdRef"
+      -
         "name": "freight"
+        "kind": "FieldDef"
         "type":
-          "kind": "StdRef"
           "name": "std.Money"
-      -
-        "kind": "FieldDef"
-        "name": "deliveryDays"
-        "type":
           "kind": "StdRef"
-          "name": "std.Count"
       -
+        "name": "deliveryDays"
         "kind": "FieldDef"
+        "type":
+          "name": "std.Count"
+          "kind": "StdRef"
+      -
         "name": "paymentMethod"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "x"
       -
-        "kind": "FieldDef"
         "name": "authorizationCode"
+        "kind": "FieldDef"
         "maxLength": 60
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "ao"
       -
-        "kind": "FieldDef"
         "name": "createdAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
-        "name": "confirmedAt"
         "type":
-          "kind": "StdRef"
           "name": "std.DateTime"
+          "kind": "StdRef"
+      -
+        "name": "confirmedAt"
+        "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "byCustomer"
-        "value":
-          "kind": "List"
-          "elements":
-            -
-              "kind": "MemberAccess"
-              "name": "id"
-              "object":
-                "kind": "Identifier"
-                "name": "customer"
-            -
-              "kind": "Identifier"
-              "name": "createdAt"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "range"
-      -
         "kind": "PropertyAssignment"
-        "name": "byStatus"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "Identifier"
-              "name": "status"
+              "name": "id"
+              "kind": "MemberAccess"
+              "object":
+                "name": "customer"
+                "kind": "Identifier"
             -
-              "kind": "Identifier"
               "name": "createdAt"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "range"
+            "kind": "Identifier"
+      -
+        "name": "byStatus"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "status"
+              "kind": "Identifier"
+            -
+              "name": "createdAt"
+              "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
+            "name": "range"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -4758,6 +4765,7 @@
     "relations": []
     "serviceId": "w"
   "i":
+    "name": "User"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -4765,12 +4773,11 @@
         "en": "User"
         "pt-BR": "Usuário"
       "typeRef": "std.bpcms.i18n"
-    "name": "User"
     "id": "i"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "create"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4779,8 +4786,8 @@
             "id": "m"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "suspend"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4792,8 +4799,8 @@
           "shapeId": "bv"
           "valuePath": "Suspended"
       -
-        "kind": "ActionDef"
         "name": "disable"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4805,8 +4812,8 @@
           "shapeId": "bv"
           "valuePath": "Disabled"
       -
-        "kind": "ActionDef"
         "name": "unlock"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4818,8 +4825,8 @@
           "shapeId": "bv"
           "valuePath": "Active"
       -
-        "kind": "ActionDef"
         "name": "confirmIdentity"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4828,8 +4835,8 @@
             "id": "n"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "approveRecovery"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4838,8 +4845,8 @@
             "id": "g"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "private recalculateRisk"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -4850,92 +4857,92 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "name"
+        "kind": "FieldDef"
         "maxLength": 120
         "required": true
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "nickname"
+        "kind": "FieldDef"
         "maxLength": 40
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "avatar"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "aa"
       -
-        "kind": "FieldDef"
         "name": "email"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "t"
       -
-        "kind": "FieldDef"
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "bv"
       -
-        "kind": "FieldDef"
         "name": "identityVerifiedAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
+      -
         "name": "recoveryApprovedAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
-        "name": "createdAt"
         "type":
-          "kind": "StdRef"
           "name": "std.DateTime"
+          "kind": "StdRef"
+      -
+        "name": "createdAt"
+        "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "email"
-        "value":
-          "kind": "List"
-          "elements":
-            -
-              "kind": "Identifier"
-              "name": "email"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "unique"
-      -
         "kind": "PropertyAssignment"
-        "name": "byStatus"
         "value":
           "kind": "List"
           "elements":
             -
+              "name": "email"
               "kind": "Identifier"
-              "name": "status"
-            -
-              "kind": "Identifier"
-              "name": "createdAt"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
+            "name": "unique"
             "kind": "Identifier"
+      -
+        "name": "byStatus"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "status"
+              "kind": "Identifier"
+            -
+              "name": "createdAt"
+              "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
             "name": "range"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -4962,6 +4969,7 @@
     "relations": []
     "serviceId": "bt"
   "j":
+    "name": "SuccessManager"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -4969,7 +4977,6 @@
         "en": "Customer success manager"
         "pt-BR": "Gerente de sucesso do cliente"
       "typeRef": "std.bpcms.i18n"
-    "name": "SuccessManager"
     "id": "j"
     "capabilities": []
     "inherits":
@@ -5001,6 +5008,7 @@
     "scopes": []
     "serviceId": "b6"
   "k":
+    "name": "Clerk"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5008,7 +5016,6 @@
         "en": "Registration clerk"
         "pt-BR": "Atendente de cadastro"
       "typeRef": "std.bpcms.i18n"
-    "name": "Clerk"
     "id": "k"
     "capabilities": []
     "inherits": []
@@ -5028,6 +5035,7 @@
     "scopes": []
     "serviceId": "z"
   "l":
+    "name": "Notification"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -5035,12 +5043,11 @@
         "en": "Notification"
         "pt-BR": "Notificação"
       "typeRef": "std.bpcms.i18n"
-    "name": "Notification"
     "id": "l"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "send"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5052,8 +5059,8 @@
           "shapeId": "b8"
           "valuePath": "Sent"
       -
-        "kind": "ActionDef"
         "name": "fail"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5065,8 +5072,8 @@
           "shapeId": "b8"
           "valuePath": "Failed"
       -
-        "kind": "ActionDef"
         "name": "retry"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5078,8 +5085,8 @@
           "shapeId": "b8"
           "valuePath": "Queued"
       -
-        "kind": "ActionDef"
         "name": "markRead"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5091,8 +5098,8 @@
           "shapeId": "b8"
           "valuePath": "Read"
       -
-        "kind": "ActionDef"
         "name": "sendDigest"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5104,8 +5111,8 @@
           "shapeId": "b8"
           "valuePath": "Sent"
       -
-        "kind": "ActionDef"
         "name": "suppress"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5117,8 +5124,8 @@
           "shapeId": "b8"
           "valuePath": "Suppressed"
       -
-        "kind": "ActionDef"
         "name": "retryFailed"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5129,98 +5136,98 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "template"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "ab"
       -
-        "kind": "FieldDef"
         "name": "recipient"
-        "type":
-          "kind": "PrimitiveRef"
-          "name": "string"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
+      -
         "name": "channel"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "u"
       -
-        "kind": "FieldDef"
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "b8"
       -
-        "kind": "FieldDef"
         "name": "consent"
+        "kind": "FieldDef"
         "type":
-          "kind": "PrimitiveRef"
           "name": "boolean"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "sentAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
+      -
         "name": "readAt"
+        "kind": "FieldDef"
         "type":
-          "kind": "StdRef"
           "name": "std.DateTime"
+          "kind": "StdRef"
       -
-        "kind": "FieldDef"
         "name": "error"
-        "type":
-          "kind": "PrimitiveRef"
-          "name": "string"
-      -
         "kind": "FieldDef"
-        "name": "suppressionReason"
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
+      -
+        "name": "suppressionReason"
+        "kind": "FieldDef"
+        "type":
+          "name": "string"
+          "kind": "PrimitiveRef"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "byStatus"
-        "value":
-          "kind": "List"
-          "elements":
-            -
-              "kind": "Identifier"
-              "name": "status"
-            -
-              "kind": "Identifier"
-              "name": "sentAt"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "range"
-      -
         "kind": "PropertyAssignment"
-        "name": "byRecipient"
         "value":
           "kind": "List"
           "elements":
             -
+              "name": "status"
               "kind": "Identifier"
-              "name": "recipient"
             -
-              "kind": "Identifier"
               "name": "sentAt"
+              "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
-            "kind": "Identifier"
             "name": "range"
+            "kind": "Identifier"
+      -
+        "name": "byRecipient"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "recipient"
+              "kind": "Identifier"
+            -
+              "name": "sentAt"
+              "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
+            "name": "range"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -5255,6 +5262,7 @@
     "relations": []
     "serviceId": "b6"
   "m":
+    "name": "Admin"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5262,7 +5270,6 @@
         "en": "Admin"
         "pt-BR": "Administrador"
       "typeRef": "std.bpcms.i18n"
-    "name": "Admin"
     "id": "m"
     "capabilities": []
     "inherits":
@@ -5306,6 +5313,7 @@
     "scopes": []
     "serviceId": "bt"
   "n":
+    "name": "Clerk"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5313,7 +5321,6 @@
         "en": "Clerk"
         "pt-BR": "Atendente"
       "typeRef": "std.bpcms.i18n"
-    "name": "Clerk"
     "id": "n"
     "capabilities": []
     "inherits":
@@ -5342,6 +5349,7 @@
     "scopes": []
     "serviceId": "bt"
   "o":
+    "name": "RiskManager"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5349,7 +5357,6 @@
         "en": "Risk manager"
         "pt-BR": "Gerente de risco"
       "typeRef": "std.bpcms.i18n"
-    "name": "RiskManager"
     "id": "o"
     "capabilities": []
     "inherits":
@@ -5378,6 +5385,7 @@
     "scopes": []
     "serviceId": "a6"
   "p":
+    "name": "SessionEngine"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5385,7 +5393,6 @@
         "en": "Session engine"
         "pt-BR": "Motor de finalização"
       "typeRef": "std.bpcms.i18n"
-    "name": "SessionEngine"
     "id": "p"
     "capabilities": []
     "inherits": []
@@ -5405,6 +5412,7 @@
     "scopes": []
     "serviceId": "w"
   "q":
+    "name": "Auditor"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5412,7 +5420,6 @@
         "en": "Registration auditor"
         "pt-BR": "Auditor de cadastro"
       "typeRef": "std.bpcms.i18n"
-    "name": "Auditor"
     "id": "q"
     "capabilities": []
     "inherits": []
@@ -5432,6 +5439,7 @@
     "scopes": []
     "serviceId": "z"
   "r":
+    "name": "FraudCheck"
     "kind": "DocumentDef"
     "title":
       "kind": "ShapeValue"
@@ -5439,12 +5447,11 @@
         "en": "Fraud check"
         "pt-BR": "Verificação antifraude"
       "typeRef": "std.bpcms.i18n"
-    "name": "FraudCheck"
     "id": "r"
     "actions":
       -
-        "kind": "ActionDef"
         "name": "create"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5453,8 +5460,8 @@
             "id": "c"
         "to": null
       -
-        "kind": "ActionDef"
         "name": "evaluate"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5466,8 +5473,8 @@
           "shapeId": "a7"
           "valuePath": "Evaluated"
       -
-        "kind": "ActionDef"
         "name": "approve"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5479,8 +5486,8 @@
           "shapeId": "a7"
           "valuePath": "Approved"
       -
-        "kind": "ActionDef"
         "name": "reject"
+        "kind": "ActionDef"
         "form": null
         "limits": []
         "roles":
@@ -5494,86 +5501,86 @@
     "events": []
     "fields":
       -
-        "kind": "FieldDef"
         "name": "session"
+        "kind": "FieldDef"
         "type":
           "kind": "DocumentRef"
           "id": "h"
       -
-        "kind": "FieldDef"
         "name": "score"
+        "kind": "FieldDef"
         "type":
-          "kind": "PrimitiveRef"
           "name": "number"
-      -
-        "kind": "FieldDef"
-        "name": "approved"
-        "type":
           "kind": "PrimitiveRef"
-          "name": "boolean"
       -
+        "name": "approved"
         "kind": "FieldDef"
+        "type":
+          "name": "boolean"
+          "kind": "PrimitiveRef"
+      -
         "name": "status"
+        "kind": "FieldDef"
         "type":
           "kind": "ShapeRef"
           "id": "a7"
       -
-        "kind": "FieldDef"
         "name": "rejectionReason"
+        "kind": "FieldDef"
         "type":
-          "kind": "PrimitiveRef"
           "name": "string"
+          "kind": "PrimitiveRef"
       -
-        "kind": "FieldDef"
         "name": "evaluatedAt"
-        "type":
-          "kind": "StdRef"
-          "name": "std.DateTime"
-      -
         "kind": "FieldDef"
-        "name": "reviewedAt"
         "type":
-          "kind": "StdRef"
           "name": "std.DateTime"
+          "kind": "StdRef"
+      -
+        "name": "reviewedAt"
+        "kind": "FieldDef"
+        "type":
+          "name": "std.DateTime"
+          "kind": "StdRef"
     "indexes":
       -
-        "kind": "PropertyAssignment"
         "name": "bySession"
-        "value":
-          "kind": "List"
-          "elements":
-            -
-              "kind": "MemberAccess"
-              "name": "id"
-              "object":
-                "kind": "Identifier"
-                "name": "session"
-      -
-        "kind": "Statement"
-        "statement":
-          "kind": "ExpressionStatement"
-          "expression":
-            "kind": "Identifier"
-            "name": "hash"
-      -
         "kind": "PropertyAssignment"
-        "name": "byStatus"
         "value":
           "kind": "List"
           "elements":
             -
-              "kind": "Identifier"
-              "name": "status"
-            -
-              "kind": "Identifier"
-              "name": "evaluatedAt"
+              "name": "id"
+              "kind": "MemberAccess"
+              "object":
+                "name": "session"
+                "kind": "Identifier"
       -
         "kind": "Statement"
         "statement":
           "kind": "ExpressionStatement"
           "expression":
+            "name": "hash"
             "kind": "Identifier"
+      -
+        "name": "byStatus"
+        "kind": "PropertyAssignment"
+        "value":
+          "kind": "List"
+          "elements":
+            -
+              "name": "status"
+              "kind": "Identifier"
+            -
+              "name": "evaluatedAt"
+              "kind": "Identifier"
+      -
+        "kind": "Statement"
+        "statement":
+          "kind": "ExpressionStatement"
+          "expression":
             "name": "range"
+            "kind": "Identifier"
     "lifecycle":
       "kind": "LifecycleDef"
       "creationEvent": null
@@ -5604,6 +5611,7 @@
     "relations": []
     "serviceId": "a6"
   "s":
+    "name": "Customer"
     "kind": "RoleDef"
     "title":
       "kind": "ShapeValue"
@@ -5611,7 +5619,6 @@
         "en": "Customer"
         "pt-BR": "Cliente"
       "typeRef": "std.bpcms.i18n"
-    "name": "Customer"
     "id": "s"
     "capabilities": []
     "inherits": []
@@ -5631,8 +5638,8 @@
     "scopes": []
     "serviceId": "bt"
   "t":
-    "kind": "ShapeDef"
     "name": "Email"
+    "kind": "ShapeDef"
     "id": "t"
     "base": "string"
     "conversions": []
@@ -5643,8 +5650,8 @@
     "unit": null
     "values": []
   "u":
-    "kind": "ShapeDef"
     "name": "Channel"
+    "kind": "ShapeDef"
     "id": "u"
     "base": "classification"
     "conversions": []
@@ -5655,6 +5662,7 @@
     "unit": null
     "values":
       -
+        "name": "Email"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5662,11 +5670,11 @@
             "en": "Email"
             "pt-BR": "Correio eletrônico"
           "typeRef": "std.bpcms.i18n"
-        "name": "Email"
         "icon": null
         "ordinal": 10
         "transitions": []
       -
+        "name": "Whatsapp"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5674,13 +5682,13 @@
             "en": "WhatsApp"
             "pt-BR": "WhatsApp"
           "typeRef": "std.bpcms.i18n"
-        "name": "Whatsapp"
         "icon":
           "kind": "IconRef"
           "id": "el"
         "ordinal": 20
         "transitions": []
       -
+        "name": "InApp"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5688,13 +5696,13 @@
             "en": "In-app"
             "pt-BR": "No aplicativo"
           "typeRef": "std.bpcms.i18n"
-        "name": "InApp"
         "icon":
           "kind": "IconRef"
           "id": "ee"
         "ordinal": 30
         "transitions": []
   "w":
+    "name": "example.com/services/checkout"
     "kind": "ServiceDef"
     "title":
       "kind": "ShapeValue"
@@ -5702,18 +5710,17 @@
         "en": "Checkout"
         "pt-BR": "Finalização da compra"
       "typeRef": "std.bpcms.i18n"
-    "name": "example.com/services/checkout"
     "id": "w"
     "aliases":
       -
-        "kind": "ServiceAlias"
         "name": "Checkout"
+        "kind": "ServiceAlias"
         "by": null
         "path": "applications/example.com/app/loja-com-antifraude/loja-com-antifraude-application.archol"
         "use": "entryPoint"
       -
-        "kind": "ServiceAlias"
         "name": "Checkout"
+        "kind": "ServiceAlias"
         "by": "a6"
         "path": "services/example.com/services/fraud-checkout/fraud-checkout-service.archol"
         "use": "import"
@@ -5728,8 +5735,8 @@
     "path": "services/example.com/services/checkout/checkout-service.archol"
     "url": "example.com/services/checkout"
   "x":
-    "kind": "ShapeDef"
     "name": "PaymentMethod"
+    "kind": "ShapeDef"
     "id": "x"
     "base": "classification"
     "conversions": []
@@ -5740,6 +5747,7 @@
     "unit": null
     "values":
       -
+        "name": "CreditCard"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5747,13 +5755,13 @@
             "en": "Credit card"
             "pt-BR": "Cartão de crédito"
           "typeRef": "std.bpcms.i18n"
-        "name": "CreditCard"
         "icon":
           "kind": "IconRef"
           "id": "cj"
         "ordinal": 10
         "transitions": []
       -
+        "name": "Pix"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5761,13 +5769,13 @@
             "en": "Pix"
             "pt-BR": "Pix"
           "typeRef": "std.bpcms.i18n"
-        "name": "Pix"
         "icon":
           "kind": "IconRef"
           "id": "cm"
         "ordinal": 20
         "transitions": []
       -
+        "name": "Boleto"
         "kind": "ShapeValueDef"
         "title":
           "kind": "ShapeValue"
@@ -5775,15 +5783,14 @@
             "en": "Boleto"
             "pt-BR": "Boleto"
           "typeRef": "std.bpcms.i18n"
-        "name": "Boleto"
         "icon":
           "kind": "IconRef"
           "id": "ch"
         "ordinal": 30
         "transitions": []
   "y":
-    "kind": "PermissionDef"
     "name": "citizen.view"
+    "kind": "PermissionDef"
     "id": "y"
     "action": "view"
     "namespace": "citizen"
@@ -5800,6 +5807,7 @@
     "serviceId": "z"
     "usedBy": []
   "z":
+    "name": "example.com/services/citizen"
     "kind": "ServiceDef"
     "title":
       "kind": "ShapeValue"
@@ -5807,18 +5815,17 @@
         "en": "Citizen"
         "pt-BR": "Cidadão"
       "typeRef": "std.bpcms.i18n"
-    "name": "example.com/services/citizen"
     "id": "z"
     "aliases":
       -
-        "kind": "ServiceAlias"
         "name": "Citizen"
+        "kind": "ServiceAlias"
         "by": "bt"
         "path": "services/example.com/services/identity/identity-service.archol"
         "use": "import"
       -
-        "kind": "ServiceAlias"
         "name": "Citizen"
+        "kind": "ServiceAlias"
         "by": "b6"
         "path": "services/example.com/services/notifications/notifications-service.archol"
         "use": "import"
@@ -5831,14 +5838,14 @@
     "url": "example.com/services/citizen"
 "environments":
   -
-    "kind": "EnvironmentEntry"
     "name": "dev"
-  -
     "kind": "EnvironmentEntry"
+  -
     "name": "qa"
-  -
     "kind": "EnvironmentEntry"
+  -
     "name": "prod"
+    "kind": "EnvironmentEntry"
 "files":
   -
     "kind": "FileEntry"
@@ -6672,68 +6679,32 @@
     "dueDate": "2026-12-23"
   -
     "kind": "PendingReview"
-    "message": "Papéis da aplicação, qualificados pelo serviço dono."
-    "id": "p:b"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
-    "message": "Cliente que finaliza a compra."
-    "id": "p:c"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
-    "message": "Atendente que apoia a finalização."
-    "id": "p:d"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
-    "message": "Analista que verifica o risco."
-    "id": "p:e"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
-    "message": "Gerente que responde pela análise de risco."
-    "id": "p:f"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
-    "message": "O gerente de risco é superior ao analista de risco."
-    "id": "p:g"
-    "dateText": "2026-12-23"
-    "dueDate": "2026-12-23"
-  -
-    "kind": "PendingReview"
     "message": "Tema visual fornecido pelo construtor."
-    "id": "p:h"
+    "id": "p:caq"
     "dateText": "2026-12-23"
     "dueDate": "2026-12-23"
   -
     "kind": "PendingReview"
     "message": "Idiomas da app; o primeiro é o default."
-    "id": "p:i"
+    "id": "p:car"
     "dateText": "2026-12-23"
     "dueDate": "2026-12-23"
   -
     "kind": "PendingReview"
     "message": "Ambientes em que a aplicação é promovida."
-    "id": "p:j"
+    "id": "p:cas"
     "dateText": "2026-12-23"
     "dueDate": "2026-12-23"
   -
     "kind": "PendingReview"
     "message": "Bloco de inicialização da app; só configura, não contém regra de negócio."
-    "id": "p:k"
+    "id": "p:cat"
     "dateText": "2026-12-23"
     "dueDate": "2026-12-23"
   -
     "kind": "PendingReview"
     "message": "Faz o boot antecipado do checkout antes do antifraude."
-    "id": "p:l"
+    "id": "p:cau"
     "dateText": "2026-12-23"
     "dueDate": "2026-12-23"
   -
@@ -19578,284 +19549,290 @@
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
-    "message": "Variável durável da instância: oferta de frete; começa nula."
+    "message": "Variáveis duráveis do processo; substituem as antigas declarações `let`."
     "id": "p:a7b"
+    "dateText": "2026-12-25"
+    "dueDate": "2026-12-25"
+  -
+    "kind": "PendingReview"
+    "message": "Variável durável da instância: oferta de frete; começa nula."
+    "id": "p:b7m"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Flag durável que registra se o pagamento foi autorizado."
-    "id": "p:a7c"
+    "id": "p:b7n"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Código de autorização devolvido pelo gateway de pagamento."
-    "id": "p:a7d"
+    "id": "p:b7o"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Bloco externo: captura timeout do caso e de qualquer form."
-    "id": "p:a7f"
+    "id": "p:b7p"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Bloco interno: tenta cotar o frete automaticamente."
-    "id": "p:a7g"
+    "id": "p:b7q"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Chama a integração de frete e guarda a oferta retornada."
-    "id": "p:a7h"
+    "id": "p:b7r"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Captura a indisponibilidade da cotação para abrir o form manual."
-    "id": "p:a7i"
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-  -
-    "kind": "PendingReview"
-    "message": "Se a cotação falhar, o suporte informa o frete manualmente pelo form."
     "id": "p:a7j"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
+    "message": "Se a cotação falhar, o suporte informa o frete manualmente pelo form."
+    "id": "p:b7s"
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+  -
+    "kind": "PendingReview"
     "message": "Só registra o frete automático quando a cotação produziu uma oferta."
-    "id": "p:a7k"
+    "id": "p:b7t"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Persiste frete e prazo no documento; a action dispara a transição."
-    "id": "p:a7l"
+    "id": "p:b7u"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Valor do frete cotado."
-    "id": "p:a7m"
+    "id": "p:b7v"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo de entrega em dias."
-    "id": "p:a7n"
+    "id": "p:b7w"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Laço de tentativas de pagamento, limitado a três iterações."
-    "id": "p:a7o"
+    "id": "p:b7x"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tenta autorizar o pagamento a cada iteração."
-    "id": "p:a7p"
+    "id": "p:b7y"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Chama o gateway e guarda o código de autorização."
-    "id": "p:a7q"
+    "id": "p:b7z"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Total do pedido a autorizar."
-    "id": "p:a7r"
+    "id": "p:b70"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Forma de pagamento escolhida pelo cliente."
-    "id": "p:a7t"
+    "id": "p:b71"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Registra a autorização no documento."
-    "id": "p:a7u"
+    "id": "p:b72"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Marca que a autorização ocorreu."
-    "id": "p:a7v"
+    "id": "p:b73"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Sai do laço de tentativas."
-    "id": "p:a7w"
+    "id": "p:b74"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Captura a recusa do pagamento para oferecer nova tentativa."
-    "id": "p:a7x"
+    "id": "p:b75"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Pagamento recusado: abre o form para tentar de novo ou desistir."
-    "id": "p:a7y"
+    "id": "p:b76"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Se o cliente desistiu, o documento foi abandonado."
-    "id": "p:a7z"
+    "id": "p:b77"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Encerra o processo no desfecho Abandoned."
-    "id": "p:a70"
+    "id": "p:b78"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Se as três tentativas terminaram sem autorização..."
-    "id": "p:a71"
+    "id": "p:b79"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "...abandona a sessão com um motivo legível."
-    "id": "p:a72"
+    "id": "p:b8a"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "...e encerra no desfecho Expired."
-    "id": "p:a73"
+    "id": "p:b8b"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Confirma a compra no documento."
-    "id": "p:a74"
+    "id": "p:b8c"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Encerra no desfecho de sucesso."
-    "id": "p:a75"
+    "id": "p:b8d"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Captura o estouro de prazo do caso ou de um form."
-    "id": "p:a77"
+    "id": "p:b8e"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Timeout de form ou do caso: abandona a sessão e encerra em Expired."
-    "id": "p:a78"
+    "id": "p:b8f"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Retorna o desfecho de falha."
-    "id": "p:a79"
+    "id": "p:b8g"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Declara o desfecho de sucesso do caso."
-    "id": "p:a8a"
+    "id": "p:b8h"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido no histórico e nos filtros."
-    "id": "p:a8b"
+    "id": "p:b8i"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Classificação do desfecho para KPI."
-    "id": "p:a8c"
+    "id": "p:b8j"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Declara o desfecho de cancelamento do caso."
-    "id": "p:a8d"
+    "id": "p:b8k"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido no histórico."
-    "id": "p:a8f"
+    "id": "p:b8l"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Classificação do desfecho para KPI."
-    "id": "p:a8g"
+    "id": "p:b8m"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Declara o desfecho de falha do caso."
-    "id": "p:a8h"
+    "id": "p:b8n"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido no histórico."
-    "id": "p:a8i"
+    "id": "p:b8o"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Classificação do desfecho para KPI."
-    "id": "p:a8j"
+    "id": "p:b8p"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Erro de negócio: frete indisponível."
-    "id": "p:a8k"
+    "id": "p:b8q"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título do erro exibido ao usuário."
-    "id": "p:a8l"
+    "id": "p:b8r"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Erro de negócio: pagamento recusado."
-    "id": "p:a8m"
+    "id": "p:b8s"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título do erro exibido ao usuário."
-    "id": "p:a8n"
+    "id": "p:b8t"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Erro reservado de prazo."
-    "id": "p:a8o"
+    "id": "p:b8u"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título do erro exibido ao usuário."
-    "id": "p:a8p"
+    "id": "p:b8v"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
@@ -21414,404 +21391,410 @@
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
-    "message": "Variável durável da instância: contagem de contas reatribuídas."
+    "message": "Variáveis duráveis do processo; substituem as antigas declarações `let`."
     "id": "p:bhw"
+    "dateText": "2026-12-25"
+    "dueDate": "2026-12-25"
+  -
+    "kind": "PendingReview"
+    "message": "Variável durável da instância: contagem de contas reatribuídas."
+    "id": "p:b8w"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Bloco que captura timeout do caso e das tarefas humanas."
-    "id": "p:bfu"
+    "id": "p:b8x"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Abre a tarefa manual de análise da duplicidade."
-    "id": "p:bfv"
+    "id": "p:b8y"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "on timer da análise: escala e segue para a aprovação"
-    "id": "p:bfx"
+    "id": "p:b8z"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Abre o form de aprovação da mesclagem antes de efetivar."
-    "id": "p:bfy"
+    "id": "p:b80"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Bloco que captura falha do diretório de identidade."
-    "id": "p:bfz"
+    "id": "p:b81"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Reatribui as contas do duplicado para o cadastro sobrevivente."
-    "id": "p:bf0"
+    "id": "p:b82"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Cadastro duplicado que será absorvido."
-    "id": "p:bf1"
+    "id": "p:b83"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Cadastro de destino que permanece."
-    "id": "p:bf2"
+    "id": "p:b84"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Se o diretório falhar, o atendente reatribui manualmente."
-    "id": "p:bf3"
+    "id": "p:b85"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Abre a tarefa de registro do parecer de auditoria."
-    "id": "p:bf4"
+    "id": "p:b86"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Encerra a instância no desfecho de sucesso."
-    "id": "p:bf5"
+    "id": "p:b87"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Declara o desfecho de sucesso do caso."
-    "id": "p:bf6"
+    "id": "p:b88"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido no histórico."
-    "id": "p:bf7"
+    "id": "p:b89"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Classificação do desfecho para KPI."
-    "id": "p:bf8"
+    "id": "p:b9a"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Erro de negócio: diretório de identidade indisponível."
-    "id": "p:bf9"
+    "id": "p:b9b"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título do erro exibido ao usuário."
-    "id": "p:bga"
+    "id": "p:b9c"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Form de aprovação da mesclagem, executado por gestor."
-    "id": "p:bgc"
+    "id": "p:b9d"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido na inbox e no histórico."
-    "id": "p:bgd"
+    "id": "p:b9e"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Documento-sujeito do form."
-    "id": "p:bge"
+    "id": "p:b9f"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Papéis que podem assumir a tarefa."
-    "id": "p:bgf"
+    "id": "p:b9g"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo para conclusão antes do timeout."
-    "id": "p:bgg"
+    "id": "p:b9h"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Distribuição da tarefa por puxada (pull), sem atribuição automática."
-    "id": "p:bgh"
-    "dateText": "2026-12-15"
-    "dueDate": "2026-12-15"
-  -
-    "kind": "PendingReview"
-    "message": "Campos exibidos e coletados no form."
     "id": "p:bgi"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
+    "message": "Campos exibidos e coletados no form."
+    "id": "p:b9i"
+    "dateText": "2026-12-15"
+    "dueDate": "2026-12-15"
+  -
+    "kind": "PendingReview"
     "message": "Nome de exibição do cidadão (somente leitura no form)."
-    "id": "p:bgj"
+    "id": "p:b9j"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tipo do cidadão (somente leitura no form)."
-    "id": "p:bgk"
+    "id": "p:b9k"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "País do cidadão (somente leitura no form)."
-    "id": "p:bgl"
+    "id": "p:b9l"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Campo de referência ao cadastro de destino da mesclagem."
-    "id": "p:bgm"
+    "id": "p:b9m"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido no formulário."
-    "id": "p:bgn"
+    "id": "p:b9n"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Torna o destino obrigatório."
-    "id": "p:bgo"
+    "id": "p:b9o"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Ações disponíveis para concluir a tarefa."
-    "id": "p:bgp"
+    "id": "p:b9p"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Aprovar dispara a operação merge do documento com o alvo escolhido."
-    "id": "p:bgr"
+    "id": "p:b9q"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tarefa manual de análise da duplicidade."
-    "id": "p:bgs"
+    "id": "p:b9r"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido na inbox."
-    "id": "p:bgt"
+    "id": "p:b9s"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Documento-sujeito da tarefa."
-    "id": "p:bgu"
+    "id": "p:b9t"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Papéis que podem assumir a tarefa."
-    "id": "p:bgv"
+    "id": "p:b9u"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Instruções exibidas ao responsável."
-    "id": "p:bgw"
+    "id": "p:b9v"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo para conclusão antes do timeout."
-    "id": "p:bgx"
+    "id": "p:b9w"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prioridade relativa na fila de trabalho."
-    "id": "p:bgy"
+    "id": "p:b9x"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Distribuição da tarefa por puxada (pull)."
-    "id": "p:bg0"
+    "id": "p:b9y"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tarefa manual de reatribuição de contas."
-    "id": "p:bg1"
+    "id": "p:b9z"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido na inbox."
-    "id": "p:bg2"
+    "id": "p:b90"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Documento-sujeito da tarefa."
-    "id": "p:bg3"
+    "id": "p:b91"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Papéis que podem assumir a tarefa."
-    "id": "p:bg4"
+    "id": "p:b92"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Instruções exibidas ao responsável."
-    "id": "p:bg5"
+    "id": "p:b93"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo para conclusão antes do timeout."
-    "id": "p:bg6"
+    "id": "p:b94"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tarefa manual de registro da auditoria."
-    "id": "p:bg7"
+    "id": "p:b95"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido na inbox."
-    "id": "p:bg8"
+    "id": "p:b96"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Documento-sujeito da tarefa."
-    "id": "p:bg9"
+    "id": "p:b97"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Papéis que podem assumir a tarefa."
-    "id": "p:bha"
+    "id": "p:b98"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Instruções exibidas ao responsável."
-    "id": "p:bhd"
+    "id": "p:b99"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo para conclusão antes do timeout."
-    "id": "p:bhe"
+    "id": "p:caa"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Tarefa manual de escalação da revisão da duplicidade."
-    "id": "p:bhf"
+    "id": "p:cab"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Título exibido na inbox."
-    "id": "p:bhg"
+    "id": "p:cac"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Documento-sujeito da tarefa."
-    "id": "p:bhh"
+    "id": "p:cad"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Papéis que podem assumir a tarefa."
-    "id": "p:bhi"
+    "id": "p:cae"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Instruções exibidas ao responsável."
-    "id": "p:bhj"
+    "id": "p:caf"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo para conclusão antes do timeout."
-    "id": "p:bhk"
+    "id": "p:cag"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Integração com o diretório externo de identidade."
-    "id": "p:bhl"
+    "id": "p:cah"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Protocolo de comunicação usado pela integração."
-    "id": "p:bhm"
+    "id": "p:cai"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "URL base lida da variável de ambiente."
-    "id": "p:bhn"
+    "id": "p:caj"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Autenticação por OAuth2."
-    "id": "p:bho"
+    "id": "p:cak"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Prazo máximo de cada chamada."
-    "id": "p:bhp"
+    "id": "p:cal"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Retentativa exponencial limitada a três tentativas."
-    "id": "p:bhq"
+    "id": "p:cam"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Cabeçalho usado para garantir idempotência das chamadas."
-    "id": "p:bhr"
+    "id": "p:can"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Operações expostas pela integração."
-    "id": "p:bhs"
+    "id": "p:cao"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
     "kind": "PendingReview"
     "message": "Reatribui contas do duplicado ao sobrevivente e devolve a contagem."
-    "id": "p:bht"
+    "id": "p:cap"
     "dateText": "2026-12-15"
     "dueDate": "2026-12-15"
   -
@@ -27368,5 +27351,4 @@
 "theme":
   "kind": "ThemeRef"
   "id": "Nuvula"
-"uri": "example.com/app/loja-com-antifraude"
 "workspaceRoot": "/Users/teintinu/dsv/bpcms/examples"

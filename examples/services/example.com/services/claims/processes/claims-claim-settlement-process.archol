@@ -19,12 +19,15 @@ process ClaimSettlement(claim: Claim) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: claim
 
-  // REVIEW [2026-12-15] Variável durável com a faixa de risco de fraude avaliada.
-  let fraudBand: FraudBand
-  // REVIEW [2026-12-15] Variável durável que guarda a liquidação aberta para o sinistro.
-  let settlement: Settlement
-  // REVIEW [2026-12-15] Flag durável que registra se a triagem foi escalonada.
-  let escalated = false
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável com a faixa de risco de fraude avaliada.
+    fraudBand: FraudBand
+    // REVIEW [2026-12-15] Variável durável que guarda a liquidação aberta para o sinistro.
+    settlement: Settlement
+    // REVIEW [2026-12-15] Flag durável que registra se a triagem foi escalonada.
+    escalated: boolean = false
+  }
 
   // REVIEW [2026-12-15] Triagem obrigatória: abre o formulário para o atendente.
   try {
@@ -32,7 +35,7 @@ process ClaimSettlement(claim: Claim) {
     ClaimTriage.show({ claim })
   } catch (Timeout) { // REVIEW [2026-12-15] prazo da triagem esgotado
     // REVIEW [2026-12-15] Sem triagem no prazo, marca o escalonamento...
-    escalated = true
+    escalated: boolean = true
     // REVIEW [2026-12-15] ...e abre a tarefa manual de escalonamento.
     EscalateSettlement.show({ claim })
   }

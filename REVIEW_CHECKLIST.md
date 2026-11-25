@@ -1120,6 +1120,9 @@ Service revisado; seguimos para **Document**.
 
 ## Pendências ao final do checklist
 
+- [ ] `externalServices/`: serviços de terceiros no workspace, com código-fonte baixado e compilado localmente.
+- [ ] `externalServices/`: serviços consumidos online, sem código-fonte local, com resolução remota e cache/contrato.
+- [ ] Package manager para instalar, versionar e resolver `externalServices` (registry/URL/repositório), com lock por aplicação.
 - [ ] Revisar `mask`, `limits`, `segregation` e `signature` com exemplos reais.
 
 
@@ -1402,7 +1405,7 @@ Testes passaram de 21 para **30 Rust** (+9: profundidade, escape, alias, homôni
 - Lock atualizado automaticamente ao selecionar a app (servidor) e, após mudanças em `.archol`, com debounce de 10s (`archol.lockDebounceMs`); o plugin só atualiza se o arquivo alterado estiver na closure (`archol/inApplication`).
 - Popover de hover mostra o ID estável do identificador sob o cursor (declaração ou referência), permitindo correlacionar com o AST/lock.
 - Right-click em arquivo de aplicação (editor/Explorer) define a app atual; IDs manuais no lock ficam no topo e sobrevivem à poda.
-- `archol format`/`archol lint` e formatação LSP; pendências `TODO`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` no AST (`SourceFile.pending`) com due date, erro para sem data/passada e warning em até 15 dias. Pendências são metadados: aparecem em `SourceFile.pending`, mas não recebem ID nem linha no lock; o explorador as intercala na posição do código. Comentários dos 330 arquivos de exemplo marcados com `REVIEW [2026-12-15]` (13.064 comentários).
+- `archol format`/`archol lint` e formatação LSP; pendências `TODO`/`TOFIX`/`FIXME`/`REVIEW`/`OPTIMIZE`/`HACK` no AST (`SourceFile.pending`) com due date, erro para sem data/passada e warning em até 15 dias. Pendências são metadados: aparecem em `SourceFile.pending`, mas não recebem ID nem linha no lock; o explorador as intercala na posição do código. Comentários dos 330 arquivos de exemplo marcados com `REVIEW [2026-12-15]` (13.064 comentários).
 
 **Arquivos afetados:** `archol/crates/archol-core` (AST/parser), `archol/crates/archol-analysis` (`ids`, `application`, `annotate`, lib), `archol/crates/archol-cli`, `archol/crates/archol-lsp`, `archol/editors/vscode`, `archol/scripts/smoke_lsp.py`, `archol/docs/*`, `archol/README.md`, `DSL_REFERENCE.md` (§1.6/§2), `AGENTS.md`, `REVIEW_CHECKLIST.md`.
 

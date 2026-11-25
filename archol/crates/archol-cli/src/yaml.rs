@@ -91,7 +91,7 @@ mod tests {
         let value = archol_core::order::ordered(value);
         assert_eq!(
             to_yaml(&value),
-            "\"kind\": \"ArcholApplication\"\n\"items\":\n  -\n    \"kind\": \"Artifact\"\n    \"name\": \"A\"\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n\"path\": \"examples/a.archol\"\n"
+            "\"kind\": \"ArcholApplication\"\n\"items\":\n  -\n    \"name\": \"A\"\n    \"kind\": \"Artifact\"\n    \"empty\": []\n    \"flags\":\n      - true\n      - null\n\"path\": \"examples/a.archol\"\n"
         );
     }
 

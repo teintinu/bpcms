@@ -50,6 +50,7 @@ fn def_kind_for_ref(kind: &str) -> Option<String> {
             | "ShapeValueRef"
             | "StepRef"
             | "ActionRef"
+            | "VariableRef"
     ) {
         return None;
     }
@@ -215,21 +216,6 @@ fn application_ast_is_closed_typed_and_merged() {
             app.display(),
             problems.join("\n")
         );
-
-        // Application role selection and hierarchy resolve to RoleDefs.
-        for role in tree["application"]["roles"]
-            .as_array()
-            .into_iter()
-            .flatten()
-        {
-            let id = role["id"].as_str().unwrap_or("");
-            assert_eq!(
-                artifacts.get(id).and_then(|entry| entry["kind"].as_str()),
-                Some("RoleDef"),
-                "{}: app role `{id}`",
-                app.display()
-            );
-        }
 
         assert_eq!(
             tree["title"]["kind"],

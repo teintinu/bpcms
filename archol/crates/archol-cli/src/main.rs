@@ -302,11 +302,7 @@ fn applications(args: &[String]) -> i32 {
 fn application(args: &[String]) -> i32 {
     let options = Options::parse(args);
     let root = options.root();
-    let root = if root.is_file() {
-        workspace_roots(&root).into_iter().next().unwrap_or(root)
-    } else {
-        root
-    };
+    let root = workspace_roots(&root).into_iter().next().unwrap_or(root);
     let (files, read_errors) = load_files(&root);
     for (path, message) in &read_errors {
         eprintln!("{path}: {message}");
@@ -402,7 +398,7 @@ fn strip_bodies(value: &mut serde_json::Value) {
 /// not stop the search too early.
 fn workspace_roots(path: &Path) -> Vec<PathBuf> {
     let mut dir = if path.is_dir() {
-        path.to_path_buf()
+        path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
     } else {
         path.parent()
             .filter(|parent| !parent.as_os_str().is_empty())
@@ -411,8 +407,10 @@ fn workspace_roots(path: &Path) -> Vec<PathBuf> {
     };
     let mut roots = Vec::new();
     loop {
-        if find_services_root(&dir).is_some() {
-            roots.push(dir.clone());
+        if let Some(services) = find_services_root(&dir) {
+            if let Some(parent) = services.parent() {
+                roots.push(parent.to_path_buf());
+            }
         }
         match dir.parent() {
             Some(parent) if !parent.as_os_str().is_empty() => dir = parent.to_path_buf(),

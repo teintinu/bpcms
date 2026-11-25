@@ -5,7 +5,24 @@ const crypto = require('node:crypto');
 const vscode = require('vscode');
 const { buildAstHtml } = require('./ast-view-html');
 const { normalizeAstResult, usageQuickPickItem } = require('./app-support');
-const { byteOffsetAtText, textOffsetsForByteSpan } = require('./ast-tree');
+const { byteOffsetAtText, findNodeAtOffset, textOffsetsForByteSpan } = require('./ast-tree');
+
+function fileIdForUri(ast, uri) {
+  if (!ast || !Array.isArray(ast.files)) return null;
+  let target = '';
+  try {
+    target = vscode.Uri.parse(String(uri)).fsPath;
+  } catch {
+    target = String(uri || '');
+  }
+  const normalized = target.replace(/\\/g, '/');
+  const entry = ast.files.find((file) => {
+    const path = String(file?.path || '').replace(/\\/g, '/');
+    if (!path) return false;
+    return normalized === path || normalized.endsWith(`/${path}`);
+  });
+  return entry && entry.id ? entry.id : null;
+}
 
 const VIEW_TYPE = 'archol.astExplorer';
 const REFRESH_DEBOUNCE_MS = 400;
@@ -88,10 +105,13 @@ class AstExplorer {
         throw new Error(result.error || 'The server did not return an application AST.');
       }
       const application = result.application || null;
-      const selectedPath = null;
-      this._selectionOffset = null;
-      this._selectionPath = null;
-      this._revealSelected = false;
+      const fileId = fileIdForUri(ast, uri);
+      const selection = Number.isFinite(options.selectOffset)
+        ? findNodeAtOffset(ast, options.selectOffset, fileId)
+        : null;
+      const selectedPath = selection ? selection.path.slice() : null;
+      this._selectionPath = selectedPath;
+      this._revealSelected = Boolean(selection);
       this._current = {
         ast,
         uri,
@@ -108,8 +128,8 @@ class AstExplorer {
         uri,
         fileName: this._current.fileName,
         selectedPath,
-        revealSelected: false,
-        offset: null,
+        revealSelected: Boolean(selection),
+        offset: Number.isFinite(options.selectOffset) ? options.selectOffset : null,
         inApplication: true,
         commentedOut: false,
         application,

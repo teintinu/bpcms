@@ -18,10 +18,13 @@ process CreditApplicationFlow(creditApplication: CreditApplication) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: creditApplication
 
-  // REVIEW [2026-12-15] Variável durável da instância: score do bureau; começa nula.
-  let bureauScore: std.Count | null = null
-  // REVIEW [2026-12-15] Variável durável da instância: faixa de risco; começa nula.
-  let band: RiskBand | null = null
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: score do bureau; começa nula.
+    bureauScore: std.Count | null = null
+    // REVIEW [2026-12-15] Variável durável da instância: faixa de risco; começa nula.
+    band: RiskBand | null = null
+  }
 
   // REVIEW [2026-12-15] Inicia a análise manual da proposta antes de consultar o bureau.
   CreditApplication.startReview()

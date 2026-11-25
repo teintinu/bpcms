@@ -70,7 +70,7 @@ The check is more than type inference:
 - Single-quoted strings are accepted; `W_STRING_QUOTES` asks for double quotes
   and `archol format` converts them when possible.
 
-Pending comments (`TODO`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
+Pending comments (`TODO`, `TOFIX`, `FIXME`, `REVIEW`, `OPTIMIZE`, `HACK`) are parsed into
 `SourceFile.pendings`. A missing or past due date is an error
 (`E_PENDING_NO_DATE`/`E_PENDING_EXPIRED`); a due date within 15 days is a
 warning (`W_PENDING_SOON`); malformed dates are `E_PENDING_DATE`. Each keyword

@@ -15,20 +15,6 @@ application "example.com/app/rota-certa" {
     "example.com/services/support" as Support // REVIEW [2026-12-15] Atendimento e ocorrências de suporte.
     "example.com/services/notifications" as Notifications // REVIEW [2026-12-15] Avisos e notificações aos usuários.
   }
-  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
-  roles {
-    Dispatcher // REVIEW [2026-12-15] Despachante: organiza as entregas.
-    Driver // REVIEW [2026-12-15] Motorista: executa as entregas.
-    Manager // REVIEW [2026-12-15] Gerente: responde pela operação.
-    Clerk // REVIEW [2026-12-15] Balconista: apoia o atendimento e os pedidos.
-    SupportAgent // REVIEW [2026-12-15] Agente de suporte: atende ocorrências.
-    // REVIEW [2026-12-15] Manager é superior a Dispatcher, que é superior a Driver.
-    Manager > Dispatcher > Driver
-    // REVIEW [2026-12-15] Manager é superior a Clerk.
-    Manager > Clerk
-    // REVIEW [2026-12-15] Manager é superior a SupportAgent.
-    Manager > SupportAgent
-  }
   theme: Ops // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
   locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
   environments: [dev, qa, prod] // REVIEW [2026-12-15] Ambientes em que a aplicação é promovida.

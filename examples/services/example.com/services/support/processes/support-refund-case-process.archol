@@ -19,10 +19,13 @@ process RefundCase(returnRequest: ReturnRequest) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: returnRequest
 
-  // REVIEW [2026-12-15] Variável durável da instância: parecer de elegibilidade.
-  let verdict: RefundVerdict
-  // REVIEW [2026-12-15] Flag durável que registra se o caso foi escalonado por timeout.
-  let escalated = false
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: parecer de elegibilidade.
+    verdict: RefundVerdict
+    // REVIEW [2026-12-15] Flag durável que registra se o caso foi escalonado por timeout.
+    escalated: boolean = false
+  }
 
   // REVIEW [2026-12-15] Bloco que captura timeout do form de conferência.
   try {
@@ -30,7 +33,7 @@ process RefundCase(returnRequest: ReturnRequest) {
     RefundReview.show({ returnRequest })
   } catch (Timeout) {
     // REVIEW [2026-12-15] Sem conferência no prazo, o caso é escalonado.
-    escalated = true
+    escalated: boolean = true
   }
 
   // REVIEW [2026-12-15] Decide o parecer conforme a escalada.

@@ -14,15 +14,6 @@ application "example.com/app/loja-com-antifraude" {
     "example.com/services/notifications" as Notifications // REVIEW [2026-12-23] Avisos e notificações aos clientes.
   }
 
-  // REVIEW [2026-12-23] Papéis da aplicação, qualificados pelo serviço dono.
-  roles {
-    Checkout.Customer // REVIEW [2026-12-23] Cliente que finaliza a compra.
-    Checkout.SupportAgent // REVIEW [2026-12-23] Atendente que apoia a finalização.
-    FraudCheckout.RiskAnalyst // REVIEW [2026-12-23] Analista que verifica o risco.
-    FraudCheckout.RiskManager // REVIEW [2026-12-23] Gerente que responde pela análise de risco.
-    // REVIEW [2026-12-23] O gerente de risco é superior ao analista de risco.
-    FraudCheckout.RiskManager > FraudCheckout.RiskAnalyst
-  }
 
   theme: Nuvula // REVIEW [2026-12-23] Tema visual fornecido pelo construtor.
   locales: [pt-BR, en-US] // REVIEW [2026-12-23] Idiomas da app; o primeiro é o default.

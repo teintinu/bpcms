@@ -19,10 +19,13 @@ process TicketTriage(ticket: Ticket) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: ticket
 
-  // REVIEW [2026-12-15] Variável durável da instância: fila de destino calculada na triagem.
-  let queue: TicketCategory
-  // REVIEW [2026-12-15] Flag durável que registra se a triagem já foi tratada.
-  let handled = false
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: fila de destino calculada na triagem.
+    queue: TicketCategory
+    // REVIEW [2026-12-15] Flag durável que registra se a triagem já foi tratada.
+    handled: boolean = false
+  }
 
   // REVIEW [2026-12-15] Laço de tentativas de triagem, limitado a duas iterações.
   loop TriageAttempt max 2 {

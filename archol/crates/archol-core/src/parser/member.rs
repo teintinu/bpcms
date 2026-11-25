@@ -1,6 +1,6 @@
 //! Members: properties, blocks, enum values, imports and triggers.
 
-use crate::ast::{HierarchyChain, Member, RoleRef};
+use crate::ast::{HierarchyChain, Member, RoleRef, Stmt};
 use crate::span::Span;
 use crate::token::{Keyword, TokenKind};
 
@@ -56,6 +56,15 @@ impl Parser<'_> {
             _ => {}
         }
 
+        if self.kind() == TokenKind::Ident && self.peek(1) == TokenKind::Keyword(Keyword::If) {
+            return Some(self.parse_step_call());
+        }
+        if self.kind() == TokenKind::Ident
+            && self.text(self.cur().span) == "vars"
+            && self.peek(1) == TokenKind::LBrace
+        {
+            return Some(self.parse_vars_block());
+        }
         if let Some(member) = self.try_parse_property() {
             return Some(member);
         }
@@ -236,6 +245,79 @@ impl Parser<'_> {
             name,
             body,
             span: Span::new(start, end),
+        }
+    }
+
+    /// `StepName if <expr>` inside a lane.
+    fn parse_step_call(&mut self) -> Member {
+        let start = self.cur().span.start;
+        let name_token = self.advance();
+        let name = self.text(name_token.span).to_string();
+        self.advance(); // if
+        let guard = self.parse_expr(true);
+        let span = Span::new(start, guard.span().end);
+        Member::StepCall {
+            name,
+            guard: Some(guard),
+            span,
+        }
+    }
+
+    /// `vars { name: Type = default }`: durable process variables.
+    fn parse_vars_block(&mut self) -> Member {
+        let start = self.cur().span.start;
+        self.advance(); // vars
+        self.expect(TokenKind::LBrace, "E_PARSE_BLOCK");
+        let mut body = Vec::new();
+        loop {
+            while self.eat(TokenKind::Semicolon) || self.eat(TokenKind::Comma) {}
+            if self.kind() == TokenKind::RBrace {
+                self.advance();
+                break;
+            }
+            if self.at_eof() {
+                self.error("E_PARSE_UNCLOSED", "Unclosed block".to_string());
+                break;
+            }
+            let member_start = self.cur().span.start;
+            if !matches!(self.kind(), TokenKind::Ident | TokenKind::Keyword(_)) {
+                self.error(
+                    "E_VAR_NAME",
+                    "Expected a variable name in `vars`".to_string(),
+                );
+                self.recover_member(member_start);
+                continue;
+            }
+            let name_token = self.advance();
+            let name = self.text(name_token.span).to_string();
+            self.expect(TokenKind::Colon, "E_VAR_TYPE");
+            let type_ref = self.parse_type_ref();
+            let init = if self.eat(TokenKind::Assign) {
+                Some(self.parse_expr(true))
+            } else {
+                None
+            };
+            let end = init
+                .as_ref()
+                .map(|expr| expr.span().end)
+                .unwrap_or_else(|| self.prev_end());
+            let span = Span::new(member_start, end);
+            body.push(Member::Statement {
+                statement: Stmt::LetDeclaration {
+                    name,
+                    type_ref,
+                    init,
+                    span,
+                },
+                span,
+            });
+        }
+        let span = Span::new(start, self.prev_end());
+        Member::Block {
+            keyword: None,
+            name: "vars".to_string(),
+            body,
+            span,
         }
     }
 

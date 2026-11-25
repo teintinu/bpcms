@@ -19,8 +19,11 @@ process OrderIntake(order: Order) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: order // REVIEW [2026-12-15] o caso é o próprio pedido
 
-  // REVIEW [2026-12-15] Variável durável que percorre cada item do pedido.
-  let item: OrderItem
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável que percorre cada item do pedido.
+    item: OrderItem
+  }
 
   // REVIEW [2026-12-15] Bloco externo: captura o timeout da revisão do rascunho.
   try {

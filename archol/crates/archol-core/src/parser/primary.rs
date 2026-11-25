@@ -49,7 +49,10 @@ impl Parser<'_> {
                     let span = Span::new(expr.span().start, self.prev_end());
                     expr = Expr::Call { callee, args, span };
                 }
-                LBrace if matches!(expr, Expr::Identifier { .. } | Expr::MemberAccess { .. }) => {
+                LBrace
+                    if !self.stop_at_lbrace
+                        && matches!(expr, Expr::Identifier { .. } | Expr::MemberAccess { .. }) =>
+                {
                     let name = render(&expr);
                     let members = self.parse_object_members();
                     let span = Span::new(expr.span().start, self.prev_end());
@@ -314,7 +317,10 @@ impl Parser<'_> {
     }
 
     fn parse_type_segment(&mut self) -> Option<String> {
-        if !matches!(self.kind(), Ident) {
+        if !matches!(
+            self.kind(),
+            Ident | crate::token::TokenKind::Keyword(crate::token::Keyword::Null)
+        ) {
             return None;
         }
         let first = self.advance();

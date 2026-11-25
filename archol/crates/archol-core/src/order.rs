@@ -99,7 +99,7 @@ mod tests {
         });
         order_value(&mut value);
         let keys: Vec<_> = value.as_object().unwrap().keys().cloned().collect();
-        assert_eq!(keys, ["kind", "name", "a", "z", "keywordLoc", "loc"]);
+        assert_eq!(keys, ["name", "kind", "a", "z", "keywordLoc", "loc"]);
     }
 
     #[test]

@@ -18,7 +18,7 @@ pub use ast::{
 };
 pub use diagnostic::{Diagnostic, Severity};
 pub use lexer::{lex, Lexed};
-pub use parser::{parse, ParseResult};
+pub use parser::{parse, parse_expression, ParseResult};
 pub use pending::Date;
 pub use span::{LineIndex, Span};
 pub use token::{Keyword, Token, TokenKind};

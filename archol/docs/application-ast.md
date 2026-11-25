@@ -49,15 +49,6 @@ It is the only emitted AST; its root is always `ArcholApplication`.
     "a9": { "kind": "DocumentDef", ... }
   },
 
-  "application": {
-    "kind": "ApplicationConfig",
-    "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { ... } } ],
-    "roleHierarchy": {
-      "kind": "Hierarchy",
-      "chains": [[ { "kind": "RoleRef", "id": "a2", "loc": { ... } } ]]
-    }
-  },
-
   "main": {
     "kind": "MainEntry",
     "parameters": [],
@@ -367,6 +358,7 @@ effective.
 ```
 
 - `values` is ordered after `insert before/after` is applied.
+- A one-character `icon` is emitted as `IconLiteral`; a named icon stays `IconRef`.
 - `transitions` live on the source value; `name` is the event name; `to` is the
   destination value. There is no transition artifact and no `TransitionRef`.
 - `ShapeValueDef` has `name`; references use `valuePath: "Draft"`.
@@ -383,6 +375,27 @@ effective.
   "title": { ... },
   "start": { "kind": "StartSpec", "trigger": null, "schedule": null },
   "roles": [],
+  "variables": [
+    { "kind": "VariableDef", "name": "value1", "type": { "kind": "PrimitiveRef", "name": "number" }, "loc": { ... } }
+  ],
+  "lanes": [
+    {
+      "kind": "LaneDef",
+      "name": "Operator",
+      "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { ... } } ],
+      "steps": [ ... ],
+      "catches": [
+        {
+          "kind": "CatchDef",
+          "variable": "error",
+          "commands": [ { "kind": "AllowCommand", "action": "retry", "loc": { ... } } ],
+          "steps": [ ... ],
+          "loc": { ... }
+        }
+      ],
+      "loc": { ... }
+    }
+  ],
   "steps": [
     {
       "kind": "StepDef",
@@ -414,6 +427,10 @@ effective.
 - `flow.nodes` and `flow.edges` use step names relative to `steps`, not
   `steps.AuthorizePayment`.
 - `StepDef` has `name`; references use `stepPath: "AuthorizePayment"`.
+- `variables` mirrors the process `vars` block and `lanes` mirrors `lane` blocks; `steps` is flattened in lane order.
+- New step syntax adds `stepKind` (`form`, `compute`, `report`), `title`, `commands` (`EditCommand`, `ShowCommand`, `SleepCommand`, `AssignCommand`) and `guard` (a typed expression).
+- A guard like `operation === Sum` becomes `Binary` with `VariableRef` on the left and `ShapeValueRef` on the right. `VariableRef` carries `name` and `processId`; variables are sub-artifacts and do not get lock ids yet.
+- A lane `catch (error)` becomes `CatchDef` with `allow` commands and its own steps; the current step is the process status.
 - `ActionRef` points to a document action (`documentId` + `actionPath`).
 
 ### 4.8 `ViewDef`, `FormDef`, `MessageDef`
@@ -535,6 +552,28 @@ builder needs:
 
 ## 5. References
 
+### 4.9 `StepArtifactDef`
+
+```jsonc
+"k1": {
+  "kind": "StepArtifactDef",
+  "id": "k1",
+  "serviceId": "s3",
+  "name": "SumJob",
+  "stepKind": "compute",
+  "title": { ... },
+  "guard": null,
+  "commands": [
+    { "kind": "AssignCommand", "target": "result", "value": { ... }, "loc": { ... } }
+  ],
+  "loc": { ... }
+}
+```
+
+- Step artifacts are reusable by processes of the same service; a process lane step carries a `StepArtifactRef` to the definition.
+- `stepKind` is `form`, `compute` or `report`; commands use process variables by name.
+- The flow guard lives in the **lane step call** (`SumJob if operation === Sum`), not in the reusable Step artifact. The instance in `ProcessDef.steps` carries `guard` and a `StepArtifactRef`.
+
 ### 5.1 Typed artifact references
 
 Every artifact reference is a node with its own kind and the **target id**:
@@ -593,42 +632,7 @@ reserved `std` namespace use dedicated nodes:
 `PrimitiveRef.name` is one of `string`, `number`, `boolean`, `stream`.
 `StdRef.name` starts with `std.`. Neither has an id; both are built-in.
 
-## 6. Application config
-
-```jsonc
-"application": {
-  "kind": "ApplicationConfig",
-  "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { ... } } ],
-  "roleHierarchy": {
-    "kind": "Hierarchy",
-    "chains": [[
-      { "kind": "RoleRef", "id": "a2", "loc": { ... } },
-      { "kind": "RoleRef", "id": "a5", "loc": { ... } }
-    ]]
-  }
-}
-```
-
-`title`, `theme`, `locales` and `environments` are **root-level** fields next to
-`application` (see section 2), not members of `ApplicationConfig`. `roles` is
-the selection from the application's `roles` block. Roles in the closure that
-are not selected still exist in `artifact`; they are used by
-documents/processes. There is no `appRole` boolean.
-
-The DSL must allow service-qualified role references, because the same role
-name can exist in several services:
-
-```archol
-roles {
-  Identity.Customer
-  Identity.Manager > Identity.Clerk
-}
-```
-
-Bare names are accepted only when unambiguous. The check gains
-`E_APP_ROLE_AMBIGUOUS` and `E_APP_ROLE_UNKNOWN`.
-
-## 7. `main`
+## 6. `main`
 
 ```jsonc
 {
@@ -664,7 +668,7 @@ Bare names are accepted only when unambiguous. The check gains
 declare a dependency; it only boots early. `statements` keeps tolerant members
 that are not modeled as `set`/`start`.
 
-## 8. `files`, `pendings`, `index`
+## 7. `files`, `pendings`, `index`
 
 ```jsonc
 "files": [
@@ -690,13 +694,13 @@ The id is assigned by a counter separate from artifact ids and is what every
 `loc.file` points to. The application file has `serviceId: null` and
 `application: true`; files of the reserved `bpcms.org/std` pseudo-service also
 have `serviceId: null`, because std has no `ServiceDef`. `pendings` covers
-TODO/FIXME/REVIEW/OPTIMIZE/HACK comments with one kind per keyword
-(`PendingTodo`, `PendingFixme`, `PendingReview`, `PendingOptimize`,
+TODO/TOFIX/FIXME/REVIEW/OPTIMIZE/HACK comments with one kind per keyword
+(`PendingTodo`, `PendingTofix`, `PendingFixme`, `PendingReview`, `PendingOptimize`,
 `PendingHack`), a `p:<base36>` id from another separate counter, and a `loc`.
 They are metadata, not artifacts and not references. `index` is derived; the
 `artifact` map remains the source of truth.
 
-## 9. `reintroduce`
+## 8. `reintroduce`
 
 `reintroduce` is applied before the tree is emitted. The AST contains the
 merged definition only; there is no second version and no provenance field.
@@ -714,7 +718,7 @@ merged definition only; there is no second version and no provenance field.
 - A conflict (`E_REINTRODUCE_CONFLICT`) prevents emission, so the builder never
   sees two values for the same key.
 
-## 10. Invariants
+## 9. Invariants
 
 1. **Closed:** every reference id resolves in `artifact`; every member path
    exists in the owner.
@@ -734,7 +738,7 @@ merged definition only; there is no second version and no provenance field.
    are sorted by id; `byKind`/`byService` arrays are sorted; no timestamps.
 9. **Opaque ids:** consumers never parse `id`.
 
-## 11. Determinism and size
+## 10. Determinism and size
 
 The full tree (with `body` and `loc`) is the builder contract. `--no-body`
 removes every `body` and keeps the typed projections, which is the recommended
@@ -742,7 +746,7 @@ mode for large applications; `--no-loc` removes locations for diffs. The shape
 and the ids stay the same in both modes. `SourceFile` is an internal parser
 structure only.
 
-## 12. Compatibility and migration
+## 11. Compatibility and migration
 
 - Every CLI/LSP AST output requires an application and starts at
   `ArcholApplication`; there is no public `SourceFile` output.
@@ -755,7 +759,7 @@ structure only.
   re-apply `reintroduce` or recompute permissions/hierarchies.
 - Schema changes bump `schemaVersion`; consumers reject unknown major versions.
 
-## 13. Test matrix
+## 12. Test matrix
 
 The tree is emitted by `archol application [dir] --app <uri|path>`
 (`--json`/`--yaml`/`--no-loc`). The golden test lives in
@@ -780,7 +784,7 @@ The `loja-do-joao`, `backoffice-loja`, `central-de-compras`, `rota-certa`,
 `claims-desk` and `loja-com-antifraude` apps are the initial corpus. The last
 one imports `fraud-checkout` and covers the merged `reintroduce` path.
 
-## 14. Worked example
+## 13. Worked example
 
 ```jsonc
 {
@@ -863,12 +867,6 @@ one imports `fraud-checkout` and covers the merged `reintroduce` path.
       "events": [],
       "body": []
     }
-  },
-
-  "application": {
-    "kind": "ApplicationConfig",
-    "roles": [ { "kind": "RoleRef", "id": "a2", "loc": { "file": "f:a", "start": 0, "end": 0 } } ],
-    "roleHierarchy": { "kind": "Hierarchy", "chains": [] }
   },
 
   "main": { "kind": "MainEntry", "parameters": [], "secrets": [], "start": [], "statements": [] },

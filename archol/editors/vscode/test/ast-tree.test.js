@@ -22,7 +22,6 @@ const totalStart = text.indexOf('total');
 const ast = {
   kind: 'ArcholApplication',
   path: '/workspace/invoice.archol',
-  loc: { start: 0, end: text.length },
   items: [
     {
       kind: 'ArtifactDocument',
@@ -63,7 +62,7 @@ test('nodeAtPath follows the same path used by the explorer', () => {
 
 test('findNodeAtOffset picks the deepest node containing the offset', () => {
   assert.equal(findNodeAtOffset(ast, totalStart).node.kind, 'Field');
-  assert.deepEqual(findNodePathAtOffset(ast, totalStart), [0, 0, 0]);
+  assert.deepEqual(findNodePathAtOffset(ast, totalStart), ['items', 0, 'body', 0, 'fields', 0]);
   assert.equal(findNodeAtOffset(ast, fieldsStart).node.kind, 'FieldBlock');
   assert.equal(findNodeAtOffset(ast, text.indexOf('document')).node.kind, 'ArtifactDocument');
   assert.equal(findNodeAtOffset(ast, text.length - 1).node.kind, 'ArtifactDocument');
@@ -166,4 +165,39 @@ test('textOffsetsForByteSpan normalizes an inverted range and out-of-range value
   assert.equal(end, sample.length);
   const [a, b] = textOffsetsForByteSpan(sample, 3, 5);
   assert.equal(sample.slice(a, b), 'ç');
+});
+
+test('findNodeAtOffset filters by the file id when provided', () => {
+  const withFiles = JSON.parse(JSON.stringify(ast));
+  withFiles.items[0].loc.file = 'f:a';
+  withFiles.items[0].body[0].loc.file = 'f:a';
+  withFiles.items[0].body[0].fields[0].loc.file = 'f:a';
+  withFiles.items[0].body[0].fields[0].body[0].loc.file = 'f:a';
+  assert.equal(findNodeAtOffset(withFiles, totalStart, 'f:a').node.kind, 'Field');
+  assert.equal(findNodeAtOffset(withFiles, totalStart, 'f:b'), null);
+});
+
+test('findNodeAtOffset walks artifact maps and returns raw JSON paths', () => {
+  const app = {
+    kind: 'ArcholApplication',
+    artifact: {
+      i: { kind: 'ProcessDef', loc: { file: 'f:b', start: 0, end: 10 } },
+    },
+  };
+  assert.deepEqual(findNodePathAtOffset(app, 5, 'f:b'), ['artifact', 'i']);
+  assert.equal(findNodeAtOffset(app, 5, 'f:a'), null);
+});
+
+test('findNodeAtOffset prefers the outer node when spans are equal', () => {
+  const nested = {
+    kind: 'Root',
+    items: [
+      {
+        kind: 'Outer',
+        loc: { start: 0, end: 10 },
+        child: { kind: 'Inner', loc: { start: 0, end: 10 } },
+      },
+    ],
+  };
+  assert.equal(findNodeAtOffset(nested, 5).node.kind, 'Outer');
 });

@@ -17,10 +17,13 @@ process PaymentCapture(payment: Payment) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: payment
 
-  // REVIEW [2026-12-15] Variável durável: código de autorização devolvido pelo gateway.
-  let authorization: string
-  // REVIEW [2026-12-15] Variável durável: comprovante devolvido na captura.
-  let receipt: string
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável: código de autorização devolvido pelo gateway.
+    authorization: string
+    // REVIEW [2026-12-15] Variável durável: comprovante devolvido na captura.
+    receipt: string
+  }
 
   // REVIEW [2026-12-15] Bloco que captura timeout do caso e de qualquer form.
   try {

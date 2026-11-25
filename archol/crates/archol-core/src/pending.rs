@@ -1,4 +1,4 @@
-//! Pending comments: TODO, FIXME, REVIEW, OPTIMIZE and HACK.
+//! Pending comments: TODO, TOFIX, FIXME, REVIEW, OPTIMIZE and HACK.
 //!
 //! Syntax: `// KEYWORD [YYYY-MM-DD] message`. The keyword is case-insensitive
 //! in source and canonicalized to uppercase in the AST and by the formatter.
@@ -12,7 +12,7 @@ use crate::diagnostic::Diagnostic;
 use crate::span::Span;
 use crate::token::{Token, TokenKind};
 
-pub const KEYWORDS: [&str; 5] = ["TODO", "FIXME", "REVIEW", "OPTIMIZE", "HACK"];
+pub const KEYWORDS: [&str; 6] = ["TODO", "TOFIX", "FIXME", "REVIEW", "OPTIMIZE", "HACK"];
 const SOON_DAYS: i64 = 15;
 
 /// A calendar date used by pending-date checks.
@@ -73,6 +73,7 @@ pub fn days_between(from: Date, to: Date) -> i64 {
 /// Typed node kind for one pending keyword.
 pub fn pending_kind(keyword: &str) -> &'static str {
     match keyword {
+        "TOFIX" => "PendingTofix",
         "FIXME" => "PendingFixme",
         "REVIEW" => "PendingReview",
         "OPTIMIZE" => "PendingOptimize",
@@ -297,8 +298,8 @@ mod tests {
     #[test]
     fn recognizes_keywords_case_insensitively_and_keeps_message() {
         let items =
-            parse_pending("// todo implementar criptografia\n// FixMe [2027-03-12] corrigir\n");
-        assert_eq!(items.len(), 2);
+            parse_pending("// todo implementar criptografia\n// FixMe [2027-03-12] corrigir\n// tofix [2027-03-13] ajustar\n");
+        assert_eq!(items.len(), 3);
         assert_eq!(items[0].kind, "PendingTodo");
         assert_eq!(items[0].keyword(), "TODO");
         assert_eq!(items[0].due_date, None);
@@ -307,6 +308,9 @@ mod tests {
         assert_eq!(items[1].keyword(), "FIXME");
         assert_eq!(items[1].due_date.as_deref(), Some("2027-03-12"));
         assert_eq!(items[1].message, "corrigir");
+        assert_eq!(items[2].kind, "PendingTofix");
+        assert_eq!(items[2].keyword(), "TOFIX");
+        assert_eq!(items[2].message, "ajustar");
     }
 
     #[test]

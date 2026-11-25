@@ -21,8 +21,11 @@ process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   // REVIEW [2026-12-15] Chave de identidade, correlação e dedup da instância.
   key: purchaseRequest
 
-  // REVIEW [2026-12-15] Variável durável da instância: alçada calculada para a compra.
-  let tier: ApproverTier
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Variável durável da instância: alçada calculada para a compra.
+    tier: ApproverTier
+  }
 
   // REVIEW [2026-12-15] Bloco externo: captura timeout do caso e dos forms.
   try {

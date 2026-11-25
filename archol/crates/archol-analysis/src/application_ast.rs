@@ -215,7 +215,7 @@ impl<'a> Builder<'a> {
     }
 
     fn build(&mut self) -> Value {
-        let (application, main) = self.application_and_main();
+        let main = self.application_and_main();
         for entry in main
             .get("parameters")
             .and_then(Value::as_array)
@@ -321,7 +321,6 @@ impl<'a> Builder<'a> {
             "artifact".to_string(),
             Value::Object(artifact.into_iter().collect()),
         );
-        root.insert("application".to_string(), application);
         root.insert("main".to_string(), main);
         root.insert("files".to_string(), Value::Array(self.files()));
         root.insert("pendings".to_string(), Value::Array(self.pendings()));
@@ -426,6 +425,7 @@ impl<'a> Builder<'a> {
             ArtifactKind::Shape => Some(self.shape_def(meta)),
             ArtifactKind::View => Some(self.view_def(meta)),
             ArtifactKind::Form => Some(self.form_def(meta)),
+            ArtifactKind::Step => Some(self.step_artifact_def(meta)),
             ArtifactKind::Process => Some(self.process_def(meta)),
             ArtifactKind::Message => Some(self.message_def(meta)),
             ArtifactKind::Policy => Some(self.generic_def(meta, "PolicyDef")),
@@ -513,7 +513,7 @@ impl<'a> Builder<'a> {
                         entry_point = true;
                         aliases.push(json!({
                             "kind": "ServiceAlias",
-                            "name": if alias.is_empty() { service.artifact.name.clone() } else { alias.clone() },
+                            "name": if alias.is_empty() { default_alias(&service.uri) } else { alias.clone() },
                             "use": "entryPoint",
                             "by": Value::Null,
                             "path": self.rel(&self.app_file.path),
@@ -548,7 +548,7 @@ impl<'a> Builder<'a> {
                             if uri == &service.uri {
                                 aliases.push(json!({
                                     "kind": "ServiceAlias",
-                                    "name": if alias.is_empty() { service.artifact.name.clone() } else { alias.clone() },
+                                    "name": if alias.is_empty() { default_alias(&service.uri) } else { alias.clone() },
                                     "use": "import",
                                     "by": artifact.id,
                                     "path": self.rel(&file.path),
@@ -1111,13 +1111,7 @@ impl<'a> Builder<'a> {
             value.insert(
                 "icon".to_string(),
                 property(body, "icon")
-                    .and_then(|expr| {
-                        let name = expr_text(expr)?;
-                        let id =
-                            self.resolve_artifact_id(&origin.file, &name, "Icon", &meta.service)?;
-                        let file = self.file_of_id(&id).unwrap_or(meta.file);
-                        Some(self.reference("IconRef", &id, file, meta.artifact.span))
-                    })
+                    .map(|expr| self.icon_json(expr, &origin.file, &meta.service))
                     .unwrap_or(Value::Null),
             );
             let mut transitions = Vec::new();
@@ -1195,9 +1189,16 @@ impl<'a> Builder<'a> {
         );
         let mut binds = Vec::new();
         for key in ["source", "sources", "document", "process"] {
+            let expected = match key {
+                "process" => "Process",
+                "document" | "source" | "sources" => "Document",
+                _ => "",
+            };
             if let Some(value) = property(&body, key) {
                 for (expr, span) in expr_items(value) {
-                    if let Some((id, kind)) = self.resolve_expr_artifact(expr, &meta.service) {
+                    if let Some((id, kind)) =
+                        self.resolve_expr_artifact(expr, &meta.service, expected)
+                    {
                         binds.push(self.reference(ref_kind_name(&kind), &id, meta.file, span));
                     }
                 }
@@ -1239,6 +1240,22 @@ impl<'a> Builder<'a> {
             }
         }
         commands
+    }
+
+    fn step_artifact_def(&self, meta: &ArtifactMeta<'a>) -> Value {
+        let body = self.body_of(meta);
+        let mut def = self.base_def(meta, "StepArtifactDef");
+        def.insert("stepKind".to_string(), json!(step_kind(&body)));
+        if let Some(title) = property(&body, "title") {
+            def.insert("title".to_string(), self.expr_json(title, meta.file));
+        }
+        def.insert("guard".to_string(), Value::Null);
+        def.insert(
+            "commands".to_string(),
+            json!(self.step_commands(&body, meta)),
+        );
+        def.insert("body".to_string(), self.body_json(&body));
+        Value::Object(def)
     }
 
     fn form_def(&self, meta: &ArtifactMeta<'a>) -> Value {
@@ -1361,8 +1378,31 @@ impl<'a> Builder<'a> {
                     .unwrap_or(Value::Null),
             }),
         );
+        let variables = self.process_variables(&body, meta);
+        if !variables.is_empty() {
+            def.insert("variables".to_string(), json!(variables));
+        }
+        let variable_types = self.process_variable_types(&body);
+        let step_defs = self.service_steps(&meta.service);
+        let lanes = self.process_lanes(&body, meta, &variable_types, &step_defs);
+        if !lanes.is_empty() {
+            def.insert("lanes".to_string(), json!(lanes));
+        }
         let mut roles = Vec::new();
-        if let Some(value) = property(&body, "roles") {
+        if !lanes.is_empty() {
+            let mut seen = BTreeSet::new();
+            for lane in &lanes {
+                if let Some(lane_roles) = lane.get("roles").and_then(Value::as_array) {
+                    for role in lane_roles {
+                        if let Some(id) = role.get("id").and_then(Value::as_str) {
+                            if seen.insert(id.to_string()) {
+                                roles.push(role.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        } else if let Some(value) = property(&body, "roles") {
             for (expr, span) in expr_items(value) {
                 if let Some(id) = self.resolve_expr_id(expr, &meta.service, "Role") {
                     roles.push(self.reference("RoleRef", &id, meta.file, span));
@@ -1370,9 +1410,16 @@ impl<'a> Builder<'a> {
             }
         }
         def.insert("roles".to_string(), json!(roles));
-        let steps = block_body(&body, "steps")
+        let mut steps = block_body(&body, "steps")
             .map(|steps| self.steps_json(steps, meta))
             .unwrap_or_default();
+        if steps.is_empty() && !lanes.is_empty() {
+            for lane in &lanes {
+                if let Some(lane_steps) = lane.get("steps").and_then(Value::as_array) {
+                    steps.extend(lane_steps.iter().cloned());
+                }
+            }
+        }
         def.insert("steps".to_string(), json!(steps));
         let nodes: Vec<String> = steps
             .iter()
@@ -1382,18 +1429,22 @@ impl<'a> Builder<'a> {
             "flow".to_string(),
             json!({ "kind": "FlowDef", "nodes": nodes, "edges": [] }),
         );
+        let end_outcomes = end_outcomes(&body);
         let ends: Vec<Value> = body
             .iter()
             .filter_map(|member| match member {
                 Member::Block {
                     keyword,
                     name,
+                    body: end_body,
                     span,
                     ..
                 } if keyword.as_deref() == Some("end") => Some(json!({
                     "kind": "EndDef",
                     "name": name,
-                    "outcome": Value::Null,
+                    "outcome": property(end_body, "outcome")
+                        .and_then(expr_text)
+                        .or_else(|| end_outcomes.get(name).cloned()),
                     "loc": self.loc(meta.file, *span),
                 })),
                 _ => None,
@@ -1411,6 +1462,545 @@ impl<'a> Builder<'a> {
         );
         def.insert("body".to_string(), self.body_json(&body));
         Value::Object(def)
+    }
+
+    fn process_variables(&self, body: &[Member], meta: &ArtifactMeta<'a>) -> Vec<Value> {
+        let Some(variables) = block_body(body, "vars") else {
+            return Vec::new();
+        };
+        variables
+            .iter()
+            .filter_map(|member| {
+                let Member::Statement {
+                    statement:
+                        Stmt::LetDeclaration {
+                            name,
+                            type_ref,
+                            init,
+                            span,
+                        },
+                    ..
+                } = member
+                else {
+                    return None;
+                };
+                let mut variable = Map::new();
+                variable.insert("kind".to_string(), json!("VariableDef"));
+                variable.insert("name".to_string(), json!(name));
+                variable.insert(
+                    "type".to_string(),
+                    type_ref
+                        .as_deref()
+                        .map(|ty| self.type_ref_by_name(ty, &meta.service, meta.file, *span))
+                        .unwrap_or(Value::Null),
+                );
+                if let Some(init) = init {
+                    variable.insert("default".to_string(), self.expr_json(init, meta.file));
+                }
+                variable.insert("loc".to_string(), self.loc(meta.file, *span));
+                Some(Value::Object(variable))
+            })
+            .collect()
+    }
+
+    fn process_variable_types(&self, body: &[Member]) -> BTreeMap<String, String> {
+        let Some(variables) = block_body(body, "vars") else {
+            return BTreeMap::new();
+        };
+        variables
+            .iter()
+            .filter_map(|member| {
+                let Member::Statement {
+                    statement: Stmt::LetDeclaration { name, type_ref, .. },
+                    ..
+                } = member
+                else {
+                    return None;
+                };
+                let ty = type_ref.as_deref()?;
+                Some((name.clone(), ty.to_string()))
+            })
+            .collect()
+    }
+
+    fn process_lanes(
+        &self,
+        body: &[Member],
+        meta: &ArtifactMeta<'a>,
+        variable_types: &BTreeMap<String, String>,
+        step_defs: &BTreeMap<String, &ArtifactMeta<'a>>,
+    ) -> Vec<Value> {
+        let mut lanes = Vec::new();
+        for member in body {
+            let Member::Block {
+                name: label,
+                body: lane_body,
+                span,
+                ..
+            } = member
+            else {
+                continue;
+            };
+            let Some((name, role_names)) = parse_lane_header(label) else {
+                continue;
+            };
+            let mut roles = Vec::new();
+            for role_name in role_names {
+                if let Some(id) =
+                    self.resolve_artifact_id(&meta.file.path, &role_name, "Role", &meta.service)
+                {
+                    roles.push(self.reference("RoleRef", &id, meta.file, *span));
+                }
+            }
+            let steps = self.lane_steps(lane_body, &name, &roles, meta, variable_types, step_defs);
+            let catches = self.lane_catches(lane_body, &name, &roles, meta, variable_types);
+            let mut lane = Map::new();
+            lane.insert("kind".to_string(), json!("LaneDef"));
+            lane.insert("name".to_string(), json!(name));
+            lane.insert("roles".to_string(), json!(roles));
+            lane.insert("steps".to_string(), json!(steps));
+            if !catches.is_empty() {
+                lane.insert("catches".to_string(), json!(catches));
+            }
+            lane.insert("loc".to_string(), self.loc(meta.file, *span));
+            lanes.push(Value::Object(lane));
+        }
+        lanes
+    }
+
+    fn lane_steps(
+        &self,
+        body: &[Member],
+        lane: &str,
+        roles: &[Value],
+        meta: &ArtifactMeta<'a>,
+        variable_types: &BTreeMap<String, String>,
+        step_defs: &BTreeMap<String, &ArtifactMeta<'a>>,
+    ) -> Vec<Value> {
+        let mut steps = Vec::new();
+        for member in body {
+            match member {
+                Member::Block {
+                    name: label,
+                    body: step_body,
+                    span,
+                    ..
+                } => {
+                    if let Some(step) =
+                        self.step_json(label, step_body, *span, lane, roles, meta, variable_types)
+                    {
+                        steps.push(step);
+                    }
+                }
+                Member::StepCall { name, guard, .. } => {
+                    if let Some(step_meta) = step_defs.get(name) {
+                        steps.push(self.reusable_step_json(
+                            step_meta,
+                            lane,
+                            roles,
+                            variable_types,
+                            meta,
+                            guard.as_ref(),
+                        ));
+                    }
+                }
+                Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Identifier { name, .. },
+                            ..
+                        },
+                    ..
+                } => {
+                    if let Some(step_meta) = step_defs.get(name) {
+                        steps.push(self.reusable_step_json(
+                            step_meta,
+                            lane,
+                            roles,
+                            variable_types,
+                            meta,
+                            None,
+                        ));
+                    }
+                }
+                _ => {}
+            }
+        }
+        steps
+    }
+
+    fn service_steps(&self, service: &str) -> BTreeMap<String, &ArtifactMeta<'a>> {
+        self.artifacts
+            .values()
+            .filter(|meta| meta.service == service && meta.artifact.kind == ArtifactKind::Step)
+            .map(|meta| (meta.name.clone(), meta))
+            .collect()
+    }
+
+    fn reusable_step_json(
+        &self,
+        step_meta: &ArtifactMeta<'a>,
+        lane: &str,
+        roles: &[Value],
+        variable_types: &BTreeMap<String, String>,
+        process_meta: &ArtifactMeta<'a>,
+        call_guard: Option<&Expr>,
+    ) -> Value {
+        let body = &step_meta.artifact.body;
+        let mut step = Map::new();
+        step.insert("kind".to_string(), json!("StepDef"));
+        step.insert("name".to_string(), json!(step_meta.name));
+        step.insert("stepKind".to_string(), json!(step_kind(body)));
+        step.insert("lane".to_string(), json!(lane));
+        step.insert("roles".to_string(), json!(roles));
+        step.insert(
+            "ref".to_string(),
+            self.reference(
+                "StepArtifactRef",
+                &step_meta.id,
+                step_meta.file,
+                step_meta.artifact.span,
+            ),
+        );
+        if let Some(title) = property(body, "title") {
+            step.insert("title".to_string(), self.expr_json(title, step_meta.file));
+        }
+        if let Some(guard) = call_guard {
+            step.insert(
+                "guard".to_string(),
+                self.guard_expr_json(guard, 0, variable_types, process_meta),
+            );
+        }
+        step.insert(
+            "commands".to_string(),
+            json!(self.step_commands(body, step_meta)),
+        );
+        step.insert(
+            "loc".to_string(),
+            self.loc(step_meta.file, step_meta.artifact.span),
+        );
+        Value::Object(step)
+    }
+
+    fn guard_json(
+        &self,
+        text: &str,
+        offset: usize,
+        variable_types: &BTreeMap<String, String>,
+        meta: &ArtifactMeta<'a>,
+    ) -> Value {
+        let (expr, _) = archol_core::parse_expression(text, "<guard>");
+        self.guard_expr_json(&expr, offset, variable_types, meta)
+    }
+
+    fn guard_expr_json(
+        &self,
+        expr: &Expr,
+        offset: usize,
+        variable_types: &BTreeMap<String, String>,
+        meta: &ArtifactMeta<'a>,
+    ) -> Value {
+        match expr {
+            Expr::Identifier { name, span } => {
+                if variable_types.contains_key(name) {
+                    return json!({
+                        "kind": "VariableRef",
+                        "name": name,
+                        "processId": meta.id,
+                        "loc": self.loc(meta.file, Span::new(span.start + offset, span.end + offset)),
+                    });
+                }
+                json!({
+                    "kind": "Identifier",
+                    "name": name,
+                    "loc": self.loc(meta.file, Span::new(span.start + offset, span.end + offset)),
+                })
+            }
+            Expr::Binary {
+                op,
+                left,
+                right,
+                span,
+            } => {
+                let right = if matches!(op.as_str(), "==" | "===" | "!=" | "!==") {
+                    if let (
+                        Expr::Identifier {
+                            name: left_name, ..
+                        },
+                        Expr::Identifier {
+                            name: value,
+                            span: value_span,
+                        },
+                    ) = (left.as_ref(), right.as_ref())
+                    {
+                        if let Some(shape_id) = variable_types
+                            .get(left_name)
+                            .and_then(|ty| {
+                                self.resolve_artifact_id(
+                                    &meta.file.path,
+                                    base_type(ty),
+                                    "Shape",
+                                    &meta.service,
+                                )
+                            })
+                            .filter(|shape_id| self.shape_has_value(shape_id, value))
+                        {
+                            return json!({
+                                "kind": "Binary",
+                                "op": op,
+                                "left": self.guard_expr_json(left, offset, variable_types, meta),
+                                "right": self.shape_value_ref(
+                                    &shape_id,
+                                    value,
+                                    meta.file,
+                                    Span::new(value_span.start + offset, value_span.end + offset),
+                                ),
+                                "loc": self.loc(
+                                    meta.file,
+                                    Span::new(span.start + offset, span.end + offset),
+                                ),
+                            });
+                        }
+                    }
+                    self.guard_expr_json(right, offset, variable_types, meta)
+                } else {
+                    self.guard_expr_json(right, offset, variable_types, meta)
+                };
+                json!({
+                    "kind": "Binary",
+                    "op": op,
+                    "left": self.guard_expr_json(left, offset, variable_types, meta),
+                    "right": right,
+                    "loc": self.loc(meta.file, Span::new(span.start + offset, span.end + offset)),
+                })
+            }
+            Expr::Unary { op, operand, span } => json!({
+                "kind": "Unary",
+                "op": op,
+                "operand": self.guard_expr_json(operand, offset, variable_types, meta),
+                "loc": self.loc(meta.file, Span::new(span.start + offset, span.end + offset)),
+            }),
+            _ => {
+                let mut value = serde_json::to_value(expr).unwrap_or(Value::Null);
+                shift_expr_locs(&mut value, offset);
+                value
+            }
+        }
+    }
+
+    fn shape_has_value(&self, shape_id: &str, value: &str) -> bool {
+        self.artifacts
+            .values()
+            .find(|meta| meta.id == shape_id)
+            .map(|meta| {
+                meta.artifact.body.iter().any(|member| {
+                    matches!(
+                        member,
+                        Member::EnumValueDeclaration { name, .. } if name == value
+                    )
+                })
+            })
+            .unwrap_or(false)
+    }
+
+    fn lane_catches(
+        &self,
+        body: &[Member],
+        lane: &str,
+        roles: &[Value],
+        meta: &ArtifactMeta<'a>,
+        variable_types: &BTreeMap<String, String>,
+    ) -> Vec<Value> {
+        let mut catches = Vec::new();
+        for member in body {
+            let Member::Block {
+                name: label,
+                body: catch_body,
+                span,
+                ..
+            } = member
+            else {
+                continue;
+            };
+            let Some(variable) = parse_catch_header(label) else {
+                continue;
+            };
+            let mut commands = Vec::new();
+            let mut steps = Vec::new();
+            let mut index = 0;
+            while index < catch_body.len() {
+                let member = &catch_body[index];
+                if let Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Identifier { name, .. },
+                            ..
+                        },
+                    ..
+                } = member
+                {
+                    if name == "allow" {
+                        if let Some(Member::Statement {
+                            statement:
+                                Stmt::ExpressionStatement {
+                                    expression: Expr::Identifier { name: action, .. },
+                                    ..
+                                },
+                            ..
+                        }) = catch_body.get(index + 1)
+                        {
+                            commands.push(json!({
+                                "kind": "AllowCommand",
+                                "action": action,
+                                "loc": self.loc(meta.file, member.span()),
+                            }));
+                            index += 2;
+                            continue;
+                        }
+                    }
+                }
+                if let Member::Block {
+                    name: step_label,
+                    body: step_body,
+                    span: step_span,
+                    ..
+                } = member
+                {
+                    if let Some(step) = self.step_json(
+                        step_label,
+                        step_body,
+                        *step_span,
+                        lane,
+                        roles,
+                        meta,
+                        variable_types,
+                    ) {
+                        steps.push(step);
+                    }
+                }
+                index += 1;
+            }
+            catches.push(json!({
+                "kind": "CatchDef",
+                "variable": variable,
+                "commands": commands,
+                "steps": steps,
+                "loc": self.loc(meta.file, *span),
+            }));
+        }
+        catches
+    }
+
+    fn step_json(
+        &self,
+        label: &str,
+        step_body: &[Member],
+        span: Span,
+        lane: &str,
+        roles: &[Value],
+        meta: &ArtifactMeta<'a>,
+        variable_types: &BTreeMap<String, String>,
+    ) -> Option<Value> {
+        let (step_kind, name, guard) = parse_step_header(label)?;
+        let mut step = Map::new();
+        step.insert("kind".to_string(), json!("StepDef"));
+        step.insert("name".to_string(), json!(name));
+        step.insert("stepKind".to_string(), json!(step_kind));
+        step.insert("lane".to_string(), json!(lane));
+        step.insert("roles".to_string(), json!(roles));
+        if let Some(title) = property(step_body, "title") {
+            step.insert("title".to_string(), self.expr_json(title, meta.file));
+        }
+        if let Some(guard) = guard {
+            let guard_offset = span.start + label.find(&guard).unwrap_or(0);
+            step.insert(
+                "guard".to_string(),
+                self.guard_json(&guard, guard_offset, variable_types, meta),
+            );
+        }
+        step.insert(
+            "commands".to_string(),
+            json!(self.step_commands(step_body, meta)),
+        );
+        step.insert("loc".to_string(), self.loc(meta.file, span));
+        Some(Value::Object(step))
+    }
+
+    fn step_commands(&self, body: &[Member], meta: &ArtifactMeta<'a>) -> Vec<Value> {
+        let mut commands = Vec::new();
+        let mut index = 0;
+        while index < body.len() {
+            let member = &body[index];
+            if let Member::Statement {
+                statement:
+                    Stmt::ExpressionStatement {
+                        expression, span, ..
+                    },
+                ..
+            } = member
+            {
+                match expression {
+                    Expr::Identifier { name, .. } if name == "edit" || name == "show" => {
+                        if let Some(Member::Statement {
+                            statement:
+                                Stmt::ExpressionStatement {
+                                    expression: Expr::Identifier { name: field, .. },
+                                    ..
+                                },
+                            ..
+                        }) = body.get(index + 1)
+                        {
+                            commands.push(json!({
+                                "kind": if name == "edit" { "EditCommand" } else { "ShowCommand" },
+                                "field": field,
+                                "loc": self.loc(meta.file, *span),
+                            }));
+                            index += 2;
+                            continue;
+                        }
+                    }
+                    Expr::Identifier { name, .. } if name == "sleep" => {
+                        if let Some(Member::Statement {
+                            statement:
+                                Stmt::ExpressionStatement {
+                                    expression:
+                                        Expr::NumberLiteral {
+                                            value: duration, ..
+                                        },
+                                    ..
+                                },
+                            ..
+                        }) = body.get(index + 1)
+                        {
+                            commands.push(json!({
+                                "kind": "SleepCommand",
+                                "duration": duration,
+                                "loc": self.loc(meta.file, *span),
+                            }));
+                            index += 2;
+                            continue;
+                        }
+                    }
+                    Expr::Binary {
+                        op, left, right, ..
+                    } if op == "=" => {
+                        let Expr::Identifier { name: target, .. } = left.as_ref() else {
+                            index += 1;
+                            continue;
+                        };
+                        commands.push(json!({
+                            "kind": "AssignCommand",
+                            "target": target,
+                            "value": self.expr_json(right, meta.file),
+                            "loc": self.loc(meta.file, *span),
+                        }));
+                    }
+                    _ => {}
+                }
+            }
+            index += 1;
+        }
+        commands
     }
 
     fn steps_json(&self, steps: &[Member], meta: &ArtifactMeta<'a>) -> Vec<Value> {
@@ -1572,6 +2162,30 @@ impl<'a> Builder<'a> {
         Value::Object(def)
     }
 
+    fn icon_json(&self, expr: &Expr, file: &str, service: &str) -> Value {
+        if let Expr::StringLiteral { value, span, .. } = expr {
+            if value.chars().count() == 1 {
+                return json!({
+                    "kind": "IconLiteral",
+                    "value": value,
+                    "loc": self.loc_in(file, *span),
+                });
+            }
+        }
+        let name = match expr_text(expr) {
+            Some(name) => name,
+            None => return Value::Null,
+        };
+        let Some(id) = self.resolve_artifact_id(file, &name, "Icon", service) else {
+            return Value::Null;
+        };
+        let icon_file = self.file_of_id(&id);
+        match icon_file {
+            Some(icon_file) => self.reference("IconRef", &id, icon_file, expr.span()),
+            None => json!({ "kind": "IconRef", "id": id, "loc": self.loc_in(file, expr.span()) }),
+        }
+    }
+
     fn generic_def(&self, meta: &ArtifactMeta<'a>, kind: &str) -> Value {
         let body = self.body_of(meta);
         let mut def = self.base_def(meta, kind);
@@ -1615,60 +2229,13 @@ impl<'a> Builder<'a> {
 
     // --- application / main ----------------------------------------------
 
-    fn application_and_main(&self) -> (Value, Value) {
-        let mut roles = Vec::new();
-        let mut chains: Vec<Value> = Vec::new();
+    fn application_and_main(&self) -> Value {
         let mut parameters = Vec::new();
         let mut secrets = Vec::new();
         let mut start = Vec::new();
         let mut statements = Vec::new();
         for member in &self.app.body {
             match member {
-                Member::Block { name, body, .. } if name == "roles" => {
-                    for entry in body {
-                        let Member::Statement { statement, .. } = entry else {
-                            continue;
-                        };
-                        let Stmt::ExpressionStatement { expression, .. } = statement else {
-                            continue;
-                        };
-                        match expression {
-                            Expr::Binary {
-                                op, left, right, ..
-                            } if op == ">" => {
-                                let mut chain = Vec::new();
-                                flatten_hierarchy(left, &mut chain);
-                                flatten_hierarchy(right, &mut chain);
-                                let refs: Vec<Value> = chain
-                                    .iter()
-                                    .filter_map(|expr| {
-                                        self.resolve_app_role(expr).map(|id| {
-                                            self.reference(
-                                                "RoleRef",
-                                                &id,
-                                                self.app_file,
-                                                expr.span(),
-                                            )
-                                        })
-                                    })
-                                    .collect();
-                                if !refs.is_empty() {
-                                    chains.push(Value::Array(refs));
-                                }
-                            }
-                            _ => {
-                                if let Some(id) = self.resolve_app_role(expression) {
-                                    roles.push(self.reference(
-                                        "RoleRef",
-                                        &id,
-                                        self.app_file,
-                                        expression.span(),
-                                    ));
-                                }
-                            }
-                        }
-                    }
-                }
                 Member::Block { name, body, .. } if name == "main" => {
                     let mut index = 0;
                     while index < body.len() {
@@ -1740,11 +2307,6 @@ impl<'a> Builder<'a> {
                 _ => {}
             }
         }
-        let application = json!({
-            "kind": "ApplicationConfig",
-            "roles": roles,
-            "roleHierarchy": { "kind": "Hierarchy", "chains": chains },
-        });
         let main = json!({
             "kind": "MainEntry",
             "parameters": parameters,
@@ -1752,7 +2314,7 @@ impl<'a> Builder<'a> {
             "start": start,
             "statements": statements,
         });
-        (application, main)
+        main
     }
 
     fn set_assignment(
@@ -1800,32 +2362,6 @@ impl<'a> Builder<'a> {
                     "loc": self.loc(self.app_file, left.span()),
                 }));
             }
-        }
-    }
-
-    fn resolve_app_role(&self, expr: &Expr) -> Option<String> {
-        match expr {
-            Expr::Identifier { name, .. } => {
-                for service in self.closure.application.services.iter() {
-                    if let Some(meta) = self.find_artifact(&service.uri, name, "Role") {
-                        if meta.artifact.kind == ArtifactKind::Role {
-                            return Some(meta.id.clone());
-                        }
-                    }
-                }
-                self.artifacts
-                    .values()
-                    .find(|meta| meta.name == *name && meta.artifact.kind == ArtifactKind::Role)
-                    .map(|meta| meta.id.clone())
-            }
-            Expr::MemberAccess { object, name, .. } => {
-                let alias = expr_text(object)?;
-                let service_uri = self.app_aliases.get(&alias)?;
-                self.find_artifact(service_uri, name, "Role")
-                    .filter(|meta| meta.artifact.kind == ArtifactKind::Role)
-                    .map(|meta| meta.id.clone())
-            }
-            _ => None,
         }
     }
 
@@ -2137,17 +2673,23 @@ impl<'a> Builder<'a> {
             .unwrap_or(false)
     }
 
-    fn resolve_expr_artifact(&self, expr: &Expr, service: &str) -> Option<(String, String)> {
+    fn resolve_expr_artifact(
+        &self,
+        expr: &Expr,
+        service: &str,
+        kind: &str,
+    ) -> Option<(String, String)> {
         let text = expr_text(expr)?;
-        self.resolve_artifact_id("", &text, "", service).map(|id| {
-            let kind = self
-                .artifacts
-                .values()
-                .find(|meta| meta.id == id)
-                .map(|meta| meta.artifact.artifact_kind().to_string())
-                .unwrap_or_default();
-            (id, kind)
-        })
+        self.resolve_artifact_id("", &text, kind, service)
+            .map(|id| {
+                let kind = self
+                    .artifacts
+                    .values()
+                    .find(|meta| meta.id == id)
+                    .map(|meta| meta.artifact.artifact_kind().to_string())
+                    .unwrap_or_default();
+                (id, kind)
+            })
     }
 
     fn resolve_artifact_id(
@@ -2427,6 +2969,9 @@ fn members_contain_permission(members: &[Member], permission: &str) -> bool {
             members_contain_permission(body, permission)
         }
         Member::Statement { statement, .. } => statement_contains_permission(statement, permission),
+        Member::StepCall { guard, .. } => guard
+            .as_ref()
+            .is_some_and(|guard| expr_contains_permission(guard, permission)),
         Member::Reintroduce { body, .. } => members_contain_permission(body, permission),
         Member::Insert { .. }
         | Member::Hierarchy { .. }
@@ -2542,18 +3087,6 @@ fn ref_kind_name(kind: &str) -> &'static str {
     }
 }
 
-fn flatten_hierarchy<'a>(expr: &'a Expr, chain: &mut Vec<&'a Expr>) {
-    match expr {
-        Expr::Binary {
-            op, left, right, ..
-        } if op == ">" => {
-            flatten_hierarchy(left, chain);
-            flatten_hierarchy(right, chain);
-        }
-        _ => chain.push(expr),
-    }
-}
-
 fn merge_contribution(
     members: &mut Vec<OriginMember>,
     contribution: &OriginMember,
@@ -2644,6 +3177,171 @@ fn push_action(
         span: *span,
     });
     action_origins.insert(name, file.to_string());
+}
+
+fn end_outcomes(body: &[Member]) -> BTreeMap<String, String> {
+    let mut outcomes = BTreeMap::new();
+    infer_end_outcomes(body, &mut outcomes);
+    outcomes
+}
+
+fn infer_end_outcomes(body: &[Member], outcomes: &mut BTreeMap<String, String>) {
+    let mut index = 0;
+    while index < body.len() {
+        match &body[index] {
+            Member::Statement {
+                statement:
+                    Stmt::ReturnStatement {
+                        value: Some(expr), ..
+                    },
+                ..
+            } => {
+                if let Some(name) = expr_text(expr) {
+                    outcomes
+                        .entry(name)
+                        .or_insert_with(|| "success".to_string());
+                }
+            }
+            Member::Statement {
+                statement:
+                    Stmt::ExpressionStatement {
+                        expression: Expr::Identifier { name, .. },
+                        ..
+                    },
+                ..
+            } if name == "throw" || name == "cancel" => {
+                if let Some(Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Identifier { name: end, .. },
+                            ..
+                        },
+                    ..
+                }) = body.get(index + 1)
+                {
+                    let outcome = if name == "throw" {
+                        "failure"
+                    } else {
+                        "cancelled"
+                    };
+                    outcomes
+                        .entry(end.clone())
+                        .or_insert_with(|| outcome.to_string());
+                    index += 1;
+                }
+            }
+            Member::Block { body, .. } => infer_end_outcomes(body, outcomes),
+            _ => {}
+        }
+        index += 1;
+    }
+}
+
+fn parse_lane_header(label: &str) -> Option<(String, Vec<String>)> {
+    let rest = label.strip_prefix("lane ")?.trim();
+    let (name, rest) = if let Some(quoted) = rest.strip_prefix('"') {
+        let end = quoted.find('"')?;
+        (quoted[..end].to_string(), quoted[end + 1..].trim())
+    } else {
+        let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+        (rest[..end].to_string(), rest[end..].trim())
+    };
+    let rest = rest.strip_prefix("for")?.trim();
+    let rest = rest.strip_prefix('[')?;
+    let end = rest.find(']')?;
+    let roles = rest[..end]
+        .split(',')
+        .map(str::trim)
+        .filter(|role| !role.is_empty())
+        .map(str::to_string)
+        .collect();
+    Some((name, roles))
+}
+
+fn parse_catch_header(label: &str) -> Option<String> {
+    let rest = label.strip_prefix("catch")?.trim();
+    let rest = rest.strip_prefix('(')?.strip_suffix(')')?.trim();
+    (!rest.is_empty()).then(|| rest.to_string())
+}
+
+fn step_kind(body: &[Member]) -> &'static str {
+    let has_edit = body.iter().any(|member| is_command(member, "edit"));
+    let has_show = body.iter().any(|member| is_command(member, "show"));
+    if has_edit {
+        "form"
+    } else if has_show {
+        "report"
+    } else {
+        "compute"
+    }
+}
+
+fn is_command(member: &Member, command: &str) -> bool {
+    matches!(
+        member,
+        Member::Statement {
+            statement: Stmt::ExpressionStatement {
+                expression: Expr::Identifier { name, .. },
+                ..
+            },
+            ..
+        } if name == command
+    )
+}
+
+fn parse_step_header(label: &str) -> Option<(String, String, Option<String>)> {
+    for kind in ["form", "compute", "report"] {
+        let Some(rest) = label.strip_prefix(&format!("{kind} ")) else {
+            continue;
+        };
+        let rest = rest.trim();
+        if let Some((name, guard)) = rest.split_once(" if ") {
+            return Some((
+                kind.to_string(),
+                name.trim().to_string(),
+                Some(guard.trim().to_string()),
+            ));
+        }
+        return Some((kind.to_string(), rest.to_string(), None));
+    }
+    None
+}
+
+fn shift_expr_locs(value: &mut Value, offset: usize) {
+    match value {
+        Value::Object(object) => {
+            if let Some(loc) = object.get_mut("loc").and_then(Value::as_object_mut) {
+                if let Some(start) = loc.get("start").and_then(Value::as_u64) {
+                    loc.insert("start".to_string(), json!(start as usize + offset));
+                }
+                if let Some(end) = loc.get("end").and_then(Value::as_u64) {
+                    loc.insert("end".to_string(), json!(end as usize + offset));
+                }
+            }
+            for child in object.values_mut() {
+                shift_expr_locs(child, offset);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                shift_expr_locs(item, offset);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn default_alias(uri: &str) -> String {
+    let last = uri.rsplit('/').next().unwrap_or(uri);
+    let mut alias = String::new();
+    for part in last.split(['-', '_']).filter(|part| !part.is_empty()) {
+        let mut chars = part.chars();
+        if let Some(first) = chars.next() {
+            alias.extend(first.to_uppercase());
+            alias.push_str(&chars.as_str().to_lowercase());
+        }
+    }
+    alias
 }
 
 fn member_key(member: &Member) -> Option<String> {

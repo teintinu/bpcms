@@ -15,6 +15,8 @@ pub enum Keyword {
     Process,
     View,
     Form,
+    Compute,
+    Report,
     Message,
     Shape,
     Role,
@@ -62,6 +64,8 @@ impl Keyword {
             "process" => Process,
             "view" => View,
             "form" => Form,
+            "compute" => Compute,
+            "report" => Report,
             "message" => Message,
             "shape" => Shape,
             "role" => Role,
@@ -110,6 +114,8 @@ impl Keyword {
             Process => "process",
             View => "view",
             Form => "form",
+            Compute => "compute",
+            Report => "report",
             Message => "message",
             Shape => "shape",
             Role => "role",
@@ -158,6 +164,8 @@ impl Keyword {
                 | Keyword::Process
                 | Keyword::View
                 | Keyword::Form
+                | Keyword::Compute
+                | Keyword::Report
                 | Keyword::Message
                 | Keyword::Shape
                 | Keyword::Role
@@ -183,6 +191,8 @@ impl Keyword {
             Process => "Process",
             View => "View",
             Form => "Form",
+            Compute => "Step",
+            Report => "Step",
             Message => "Message",
             Shape => "Shape",
             Role => "Role",

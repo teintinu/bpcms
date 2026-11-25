@@ -17,8 +17,11 @@ process DeliveryTracking(shipment: Shipment) {
   // REVIEW [2026-12-15] Indica que o processo é chamado por outro processo, sem gatilho próprio.
   called
 
-  // REVIEW [2026-12-15] Flag durável que registra se a espera por rastreio expirou.
-  let timedOut = false
+  // REVIEW [2026-12-25] Variáveis duráveis do processo; substituem as antigas declarações `let`.
+  vars {
+    // REVIEW [2026-12-15] Flag durável que registra se a espera por rastreio expirou.
+    timedOut: boolean = false
+  }
 
   // REVIEW [2026-12-15] Laço de ciclos de rastreio, limitado a dez iterações.
   loop TrackingCycle max 10 {

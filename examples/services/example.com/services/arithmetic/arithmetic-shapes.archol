@@ -1,0 +1,25 @@
+shape ArithmeticOperation {
+  title: { pt-BR: "Operação Aritmética", en: "Arithmetic Operation" }
+  base: classification
+  value Sum {
+    title: { pt-BR: "Soma", en: "Sum" }
+    // TOFIX [2026-12-25] Icon também pode ser um character UTF-8, como "+" ou "-". O AST precisa ser capaz de inferir o tipo do icon a partir do valor informado.
+    icon: "+"
+    ordinal: 10
+  }
+  value Subtract {
+    title: { pt-BR: "Subtração", en: "Subtraction" }
+    icon: "-"
+    ordinal: 20
+  }
+  value Multiply {
+    title: { pt-BR: "Multiplicação", en: "Multiplication" }
+    icon: "*"
+    ordinal: 30
+  }
+  value Divide {
+    title: { pt-BR: "Divisão", en: "Division" }
+    icon: "/"
+    ordinal: 40
+  }
+}

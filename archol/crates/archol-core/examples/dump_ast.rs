@@ -48,6 +48,9 @@ fn print_members(members: &[Member], depth: usize, source: &str) {
                 println!("{pad}EnumValue {name} L{}", line(source, span.start));
             }
             Member::Statement { span, .. } => println!("{pad}Stmt L{}", line(source, span.start)),
+            Member::StepCall { name, span, .. } => {
+                println!("{pad}StepCall {name} L{}", line(source, span.start))
+            }
             Member::ShorthandProperty { name, .. } => println!("{pad}Shorthand {name}"),
             Member::ImportDeclaration { alias, .. } => println!("{pad}Import {alias}"),
             Member::ServiceEntry { uri, alias, .. } => {

@@ -1,0 +1,955 @@
+"kind": "ArcholApplication"
+"uri": "example.com/app/arithmetic"
+"title":
+  "kind": "ShapeValue"
+  "value":
+    "en-US": "Arithmetic"
+    "pt-BR": "Aritmética"
+  "typeRef": "std.bpcms.i18n"
+"artifact":
+  "a":
+    "name": "Operator"
+    "kind": "RoleDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Operator"
+        "pt-BR": "Operador"
+      "typeRef": "std.bpcms.i18n"
+    "id": "a"
+    "capabilities": []
+    "inherits": []
+    "organogram":
+      "kind": "OrganogramRef"
+      "id": "d"
+    "permissions": []
+    "scopes": []
+    "serviceId": "j"
+  "d":
+    "name": "Arithmetic"
+    "kind": "OrganogramDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Sum"
+        "pt-BR": "Soma"
+      "typeRef": "std.bpcms.i18n"
+    "id": "d"
+    "delegations": []
+    "fourEyes": []
+    "hierarchy":
+      "kind": "Hierarchy"
+      "chains": []
+    "roles":
+      -
+        "kind": "OrganogramRoleDef"
+        "inherits": []
+        "manages": []
+        "permissions": []
+        "role":
+          "kind": "RoleRef"
+          "id": "a"
+    "scopes": []
+    "segregation": []
+    "serviceId": "j"
+  "h":
+    "name": "ArithmeticOperation"
+    "kind": "ShapeDef"
+    "id": "h"
+    "base": "classification"
+    "conversions": []
+    "formula": null
+    "methods": []
+    "serviceId": "j"
+    "shapeKind": "classification"
+    "unit": null
+    "values":
+      -
+        "name": "Sum"
+        "kind": "ShapeValueDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Sum"
+            "pt-BR": "Soma"
+          "typeRef": "std.bpcms.i18n"
+        "icon":
+          "kind": "IconLiteral"
+          "value": "+"
+        "ordinal": 10
+        "transitions": []
+      -
+        "name": "Subtract"
+        "kind": "ShapeValueDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Subtraction"
+            "pt-BR": "Subtração"
+          "typeRef": "std.bpcms.i18n"
+        "icon":
+          "kind": "IconLiteral"
+          "value": "-"
+        "ordinal": 20
+        "transitions": []
+      -
+        "name": "Multiply"
+        "kind": "ShapeValueDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Multiplication"
+            "pt-BR": "Multiplicação"
+          "typeRef": "std.bpcms.i18n"
+        "icon":
+          "kind": "IconLiteral"
+          "value": "*"
+        "ordinal": 30
+        "transitions": []
+      -
+        "name": "Divide"
+        "kind": "ShapeValueDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Division"
+            "pt-BR": "Divisão"
+          "typeRef": "std.bpcms.i18n"
+        "icon":
+          "kind": "IconLiteral"
+          "value": "/"
+        "ordinal": 40
+        "transitions": []
+  "i":
+    "name": "ArithmeticOperation"
+    "kind": "ProcessDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Arithmetic operation"
+        "pt-BR": "Operação aritmética"
+      "typeRef": "std.bpcms.i18n"
+    "id": "i"
+    "decisions": []
+    "ends": []
+    "flow":
+      "kind": "FlowDef"
+      "edges": []
+      "nodes":
+        - "AskForAB"
+        - "SumJob"
+        - "SubtractJob"
+        - "MultiplyJob"
+        - "DivideJob"
+        - "ShowSumReport"
+    "lanes":
+      -
+        "name": "Operator"
+        "kind": "LaneDef"
+        "catches":
+          -
+            "kind": "CatchDef"
+            "commands":
+              -
+                "kind": "AllowCommand"
+                "action": "retry"
+            "steps":
+              -
+                "name": "ShowErrorReport"
+                "kind": "StepDef"
+                "title":
+                  "kind": "ShapeValue"
+                  "value":
+                    "en": "Operation error"
+                    "pt-BR": "Erro na operação"
+                  "typeRef": "std.bpcms.i18n"
+                "commands":
+                  -
+                    "kind": "ShowCommand"
+                    "field": "error"
+                "lane": "Operator"
+                "roles":
+                  -
+                    "kind": "RoleRef"
+                    "id": "a"
+                "stepKind": "report"
+            "variable": "error"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "steps":
+          -
+            "name": "AskForAB"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Ask for a and b"
+                "pt-BR": "Perguntar a e b"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "EditCommand"
+                "field": "value1"
+              -
+                "kind": "EditCommand"
+                "field": "operation"
+              -
+                "kind": "EditCommand"
+                "field": "value2"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "k"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "form"
+          -
+            "name": "SumJob"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Add a and b"
+                "pt-BR": "Somar a e b"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "AssignCommand"
+                "value":
+                  "kind": "Binary"
+                  "left":
+                    "name": "value1"
+                    "kind": "Identifier"
+                  "op": "+"
+                  "right":
+                    "name": "value2"
+                    "kind": "Identifier"
+                "target": "result"
+            "guard":
+              "kind": "Binary"
+              "left":
+                "name": "operation"
+                "kind": "VariableRef"
+                "processId": "i"
+              "op": "==="
+              "right":
+                "kind": "ShapeValueRef"
+                "shapeId": "h"
+                "valuePath": "Sum"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "p"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "compute"
+          -
+            "name": "SubtractJob"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Subtract a and b"
+                "pt-BR": "Subtrair a e b"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "AssignCommand"
+                "value":
+                  "kind": "Binary"
+                  "left":
+                    "name": "value1"
+                    "kind": "Identifier"
+                  "op": "-"
+                  "right":
+                    "name": "value2"
+                    "kind": "Identifier"
+                "target": "result"
+            "guard":
+              "kind": "Binary"
+              "left":
+                "name": "operation"
+                "kind": "VariableRef"
+                "processId": "i"
+              "op": "==="
+              "right":
+                "kind": "ShapeValueRef"
+                "shapeId": "h"
+                "valuePath": "Subtract"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "o"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "compute"
+          -
+            "name": "MultiplyJob"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Multiply a and b"
+                "pt-BR": "Multiplicar a e b"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "AssignCommand"
+                "value":
+                  "kind": "Binary"
+                  "left":
+                    "name": "value1"
+                    "kind": "Identifier"
+                  "op": "*"
+                  "right":
+                    "name": "value2"
+                    "kind": "Identifier"
+                "target": "result"
+            "guard":
+              "kind": "Binary"
+              "left":
+                "name": "operation"
+                "kind": "VariableRef"
+                "processId": "i"
+              "op": "==="
+              "right":
+                "kind": "ShapeValueRef"
+                "shapeId": "h"
+                "valuePath": "Multiply"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "m"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "compute"
+          -
+            "name": "DivideJob"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Divide a and b"
+                "pt-BR": "Dividir a e b"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "AssignCommand"
+                "value":
+                  "kind": "Binary"
+                  "left":
+                    "name": "value1"
+                    "kind": "Identifier"
+                  "op": "/"
+                  "right":
+                    "name": "value2"
+                    "kind": "Identifier"
+                "target": "result"
+            "guard":
+              "kind": "Binary"
+              "left":
+                "name": "operation"
+                "kind": "VariableRef"
+                "processId": "i"
+              "op": "==="
+              "right":
+                "kind": "ShapeValueRef"
+                "shapeId": "h"
+                "valuePath": "Divide"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "l"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "compute"
+          -
+            "name": "ShowSumReport"
+            "kind": "StepDef"
+            "title":
+              "kind": "ShapeValue"
+              "value":
+                "en": "Show operation result"
+                "pt-BR": "Mostrar resultado da operação"
+              "typeRef": "std.bpcms.i18n"
+            "commands":
+              -
+                "kind": "ShowCommand"
+                "field": "value1"
+              -
+                "kind": "ShowCommand"
+                "field": "operation"
+              -
+                "kind": "ShowCommand"
+                "field": "value2"
+              -
+                "kind": "ShowCommand"
+                "field": "result"
+            "lane": "Operator"
+            "ref":
+              "kind": "StepArtifactRef"
+              "id": "n"
+            "roles":
+              -
+                "kind": "RoleRef"
+                "id": "a"
+            "stepKind": "report"
+    "messages": []
+    "roles":
+      -
+        "kind": "RoleRef"
+        "id": "a"
+    "serviceId": "j"
+    "sla": null
+    "start":
+      "kind": "StartSpec"
+      "schedule": null
+      "trigger": null
+    "steps":
+      -
+        "name": "AskForAB"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Ask for a and b"
+            "pt-BR": "Perguntar a e b"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "EditCommand"
+            "field": "value1"
+          -
+            "kind": "EditCommand"
+            "field": "operation"
+          -
+            "kind": "EditCommand"
+            "field": "value2"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "k"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "form"
+      -
+        "name": "SumJob"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Add a and b"
+            "pt-BR": "Somar a e b"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "AssignCommand"
+            "value":
+              "kind": "Binary"
+              "left":
+                "name": "value1"
+                "kind": "Identifier"
+              "op": "+"
+              "right":
+                "name": "value2"
+                "kind": "Identifier"
+            "target": "result"
+        "guard":
+          "kind": "Binary"
+          "left":
+            "name": "operation"
+            "kind": "VariableRef"
+            "processId": "i"
+          "op": "==="
+          "right":
+            "kind": "ShapeValueRef"
+            "shapeId": "h"
+            "valuePath": "Sum"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "p"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "compute"
+      -
+        "name": "SubtractJob"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Subtract a and b"
+            "pt-BR": "Subtrair a e b"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "AssignCommand"
+            "value":
+              "kind": "Binary"
+              "left":
+                "name": "value1"
+                "kind": "Identifier"
+              "op": "-"
+              "right":
+                "name": "value2"
+                "kind": "Identifier"
+            "target": "result"
+        "guard":
+          "kind": "Binary"
+          "left":
+            "name": "operation"
+            "kind": "VariableRef"
+            "processId": "i"
+          "op": "==="
+          "right":
+            "kind": "ShapeValueRef"
+            "shapeId": "h"
+            "valuePath": "Subtract"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "o"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "compute"
+      -
+        "name": "MultiplyJob"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Multiply a and b"
+            "pt-BR": "Multiplicar a e b"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "AssignCommand"
+            "value":
+              "kind": "Binary"
+              "left":
+                "name": "value1"
+                "kind": "Identifier"
+              "op": "*"
+              "right":
+                "name": "value2"
+                "kind": "Identifier"
+            "target": "result"
+        "guard":
+          "kind": "Binary"
+          "left":
+            "name": "operation"
+            "kind": "VariableRef"
+            "processId": "i"
+          "op": "==="
+          "right":
+            "kind": "ShapeValueRef"
+            "shapeId": "h"
+            "valuePath": "Multiply"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "m"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "compute"
+      -
+        "name": "DivideJob"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Divide a and b"
+            "pt-BR": "Dividir a e b"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "AssignCommand"
+            "value":
+              "kind": "Binary"
+              "left":
+                "name": "value1"
+                "kind": "Identifier"
+              "op": "/"
+              "right":
+                "name": "value2"
+                "kind": "Identifier"
+            "target": "result"
+        "guard":
+          "kind": "Binary"
+          "left":
+            "name": "operation"
+            "kind": "VariableRef"
+            "processId": "i"
+          "op": "==="
+          "right":
+            "kind": "ShapeValueRef"
+            "shapeId": "h"
+            "valuePath": "Divide"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "l"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "compute"
+      -
+        "name": "ShowSumReport"
+        "kind": "StepDef"
+        "title":
+          "kind": "ShapeValue"
+          "value":
+            "en": "Show operation result"
+            "pt-BR": "Mostrar resultado da operação"
+          "typeRef": "std.bpcms.i18n"
+        "commands":
+          -
+            "kind": "ShowCommand"
+            "field": "value1"
+          -
+            "kind": "ShowCommand"
+            "field": "operation"
+          -
+            "kind": "ShowCommand"
+            "field": "value2"
+          -
+            "kind": "ShowCommand"
+            "field": "result"
+        "lane": "Operator"
+        "ref":
+          "kind": "StepArtifactRef"
+          "id": "n"
+        "roles":
+          -
+            "kind": "RoleRef"
+            "id": "a"
+        "stepKind": "report"
+    "variables":
+      -
+        "name": "value1"
+        "kind": "VariableDef"
+        "type":
+          "name": "number"
+          "kind": "PrimitiveRef"
+      -
+        "name": "operation"
+        "kind": "VariableDef"
+        "type":
+          "kind": "ShapeRef"
+          "id": "h"
+      -
+        "name": "value2"
+        "kind": "VariableDef"
+        "type":
+          "name": "number"
+          "kind": "PrimitiveRef"
+      -
+        "name": "result"
+        "kind": "VariableDef"
+        "type":
+          "name": "number"
+          "kind": "PrimitiveRef"
+  "j":
+    "name": "example.com/services/arithmetic"
+    "kind": "ServiceDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Arithmetic"
+        "pt-BR": "Aritmética"
+      "typeRef": "std.bpcms.i18n"
+    "id": "j"
+    "aliases":
+      -
+        "name": "Arithmetic"
+        "kind": "ServiceAlias"
+        "by": null
+        "path": "applications/example.com/app/arithmetic/arithmetic-application.archol"
+        "use": "entryPoint"
+    "entryPoint": true
+    "imports": []
+    "locales":
+      - "pt-BR"
+      - "en"
+    "path": "services/example.com/services/arithmetic/arithmetic-service.archol"
+    "url": "example.com/services/arithmetic"
+  "k":
+    "name": "AskForAB"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Ask for a and b"
+        "pt-BR": "Perguntar a e b"
+      "typeRef": "std.bpcms.i18n"
+    "id": "k"
+    "commands":
+      -
+        "kind": "EditCommand"
+        "field": "value1"
+      -
+        "kind": "EditCommand"
+        "field": "operation"
+      -
+        "kind": "EditCommand"
+        "field": "value2"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "form"
+  "l":
+    "name": "DivideJob"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Divide a and b"
+        "pt-BR": "Dividir a e b"
+      "typeRef": "std.bpcms.i18n"
+    "id": "l"
+    "commands":
+      -
+        "kind": "AssignCommand"
+        "value":
+          "kind": "Binary"
+          "left":
+            "name": "value1"
+            "kind": "Identifier"
+          "op": "/"
+          "right":
+            "name": "value2"
+            "kind": "Identifier"
+        "target": "result"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "compute"
+  "m":
+    "name": "MultiplyJob"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Multiply a and b"
+        "pt-BR": "Multiplicar a e b"
+      "typeRef": "std.bpcms.i18n"
+    "id": "m"
+    "commands":
+      -
+        "kind": "AssignCommand"
+        "value":
+          "kind": "Binary"
+          "left":
+            "name": "value1"
+            "kind": "Identifier"
+          "op": "*"
+          "right":
+            "name": "value2"
+            "kind": "Identifier"
+        "target": "result"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "compute"
+  "n":
+    "name": "ShowSumReport"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Show operation result"
+        "pt-BR": "Mostrar resultado da operação"
+      "typeRef": "std.bpcms.i18n"
+    "id": "n"
+    "commands":
+      -
+        "kind": "ShowCommand"
+        "field": "value1"
+      -
+        "kind": "ShowCommand"
+        "field": "operation"
+      -
+        "kind": "ShowCommand"
+        "field": "value2"
+      -
+        "kind": "ShowCommand"
+        "field": "result"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "report"
+  "o":
+    "name": "SubtractJob"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Subtract a and b"
+        "pt-BR": "Subtrair a e b"
+      "typeRef": "std.bpcms.i18n"
+    "id": "o"
+    "commands":
+      -
+        "kind": "AssignCommand"
+        "value":
+          "kind": "Binary"
+          "left":
+            "name": "value1"
+            "kind": "Identifier"
+          "op": "-"
+          "right":
+            "name": "value2"
+            "kind": "Identifier"
+        "target": "result"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "compute"
+  "p":
+    "name": "SumJob"
+    "kind": "StepArtifactDef"
+    "title":
+      "kind": "ShapeValue"
+      "value":
+        "en": "Add a and b"
+        "pt-BR": "Somar a e b"
+      "typeRef": "std.bpcms.i18n"
+    "id": "p"
+    "commands":
+      -
+        "kind": "AssignCommand"
+        "value":
+          "kind": "Binary"
+          "left":
+            "name": "value1"
+            "kind": "Identifier"
+          "op": "+"
+          "right":
+            "name": "value2"
+            "kind": "Identifier"
+        "target": "result"
+    "guard": null
+    "serviceId": "j"
+    "stepKind": "compute"
+"environments":
+  -
+    "name": "dev"
+    "kind": "EnvironmentEntry"
+"files":
+  -
+    "kind": "FileEntry"
+    "id": "f:a"
+    "application": true
+    "path": "applications/example.com/app/arithmetic/arithmetic-application.archol"
+    "serviceId": null
+  -
+    "kind": "FileEntry"
+    "id": "f:g"
+    "application": false
+    "path": "services/example.com/services/arithmetic/arithmetic-organograms.archol"
+    "serviceId": "j"
+  -
+    "kind": "FileEntry"
+    "id": "f:h"
+    "application": false
+    "path": "services/example.com/services/arithmetic/arithmetic-service.archol"
+    "serviceId": "j"
+  -
+    "kind": "FileEntry"
+    "id": "f:j"
+    "application": false
+    "path": "services/example.com/services/arithmetic/arithmetic-shapes.archol"
+    "serviceId": "j"
+  -
+    "kind": "FileEntry"
+    "id": "f:k"
+    "application": false
+    "path": "services/example.com/services/arithmetic/processes/arithmetic-arithmetic-operation-process.archol"
+    "serviceId": "j"
+"index":
+  "byKind":
+    "OrganogramDef":
+      - "d"
+    "ProcessDef":
+      - "i"
+    "RoleDef":
+      - "a"
+    "ServiceDef":
+      - "j"
+    "ShapeDef":
+      - "h"
+    "StepArtifactDef":
+      - "k"
+      - "l"
+      - "m"
+      - "n"
+      - "o"
+      - "p"
+  "byService":
+    "j":
+      - "a"
+      - "d"
+      - "h"
+      - "i"
+      - "k"
+      - "l"
+      - "m"
+      - "n"
+      - "o"
+      - "p"
+"locales":
+  -
+    "kind": "LocaleRef"
+    "default": true
+    "tag": "pt-BR"
+  -
+    "kind": "LocaleRef"
+    "default": false
+    "tag": "en-US"
+"main":
+  "kind": "MainEntry"
+  "parameters": []
+  "secrets": []
+  "start": []
+  "statements": []
+"path": "applications/example.com/app/arithmetic/arithmetic-application.archol"
+"pendings":
+  -
+    "kind": "PendingTofix"
+    "message": "o \"as\" é opcional, quando ausente o nome do service é o mesmo da ultima parte do path. O AST precisa ser capaz de inferir o nome do service a partir do path, sem precisar do \"as\"."
+    "id": "p:l"
+    "dateText": "2026-12-25"
+    "dueDate": "2026-12-25"
+  -
+    "kind": "PendingTofix"
+    "message": "Icon também pode ser um character UTF-8, como \"+\" ou \"-\". O AST precisa ser capaz de inferir o tipo do icon a partir do valor informado."
+    "id": "p:r"
+    "dateText": "2026-12-25"
+    "dueDate": "2026-12-25"
+  -
+    "kind": "PendingTofix"
+    "message": "remover by: [Operator] --- as lanes declaram os papéis que executam o processo."
+    "id": "p:x"
+    "dateText": "2026-12-25"
+    "dueDate": "2026-12-25"
+"schemaVersion": 1
+"theme":
+  "kind": "ThemeRef"
+  "id": "Nuvula"
+"workspaceRoot": "/Users/teintinu/dsv/bpcms/examples"

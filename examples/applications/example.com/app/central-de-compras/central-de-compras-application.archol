@@ -15,31 +15,6 @@ application "example.com/app/central-de-compras" {
     "example.com/services/credit" as Credit // REVIEW [2026-12-15] Análise de crédito e limite de fornecedores.
   }
 
-  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
-  roles {
-    Requester // REVIEW [2026-12-15] Solicitante: abre a requisição de compra.
-    Buyer // REVIEW [2026-12-15] Comprador: conduz cotação e pedido.
-    Approver // REVIEW [2026-12-15] Aprovador: decide alçadas de aprovação.
-    ProcurementManager // REVIEW [2026-12-15] Gestor de compras: responde pela área de compras.
-    ComplianceAnalyst // REVIEW [2026-12-15] Analista de compliance: verifica conformidade.
-    PayablesClerk // REVIEW [2026-12-15] Contas a pagar: liquida as faturas dos fornecedores.
-    ReceivingClerk // REVIEW [2026-12-15] Recebedor: registra o recebimento de materiais.
-    QualityInspector // REVIEW [2026-12-15] Inspetor de qualidade: aceita ou rejeita itens recebidos.
-    SupplierUser // REVIEW [2026-12-15] Usuário do fornecedor: interage pelo portal do fornecedor.
-    ContractManager // REVIEW [2026-12-15] Gestor de contratos: responde pelos contratos.
-    ContractAnalyst // REVIEW [2026-12-15] Analista de contratos: mantém minutas e aditivos.
-    LegalCounsel // REVIEW [2026-12-15] Jurídico: valida cláusulas sensíveis.
-    CreditAnalyst // REVIEW [2026-12-15] Analista de crédito: analisa o risco do fornecedor.
-    CreditManager // REVIEW [2026-12-15] Gestor de crédito: decide limites de crédito.
-    // REVIEW [2026-12-15] ProcurementManager é superior a Buyer, que é superior a Requester.
-    ProcurementManager > Buyer > Requester
-    // REVIEW [2026-12-15] Approver é superior a Buyer.
-    Approver > Buyer
-    // REVIEW [2026-12-15] ContractManager é superior a ContractAnalyst.
-    ContractManager > ContractAnalyst
-    // REVIEW [2026-12-15] CreditManager é superior a CreditAnalyst.
-    CreditManager > CreditAnalyst
-  }
 
   theme: Compras // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
   locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.

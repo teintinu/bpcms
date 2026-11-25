@@ -199,3 +199,15 @@ fn hierarchy_rejects_single_role_lines() {
         result.diagnostics
     );
 }
+
+#[test]
+fn reads_top_level_compute_step_with_guard() {
+    let result = parse(
+        "compute SumJob if operation === Sum {\n  result = value1 + value2\n}\n",
+        "step.archol",
+    );
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert_eq!(result.ast.items.len(), 1);
+    assert_eq!(result.ast.items[0].kind, ArtifactKind::Step);
+    assert!(result.ast.items[0].guard.is_some());
+}

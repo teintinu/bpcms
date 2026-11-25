@@ -16,7 +16,7 @@ pub struct SourceFile {
     pub kind: &'static str,
     pub path: String,
     pub items: Vec<Artifact>,
-    /// TODO/FIXME/REVIEW/OPTIMIZE/HACK comments found in the file.
+    /// TODO/TOFIX/FIXME/REVIEW/OPTIMIZE/HACK comments found in the file.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub pendings: Vec<Pending>,
 }
@@ -58,6 +58,7 @@ impl Pending {
     pub fn keyword(&self) -> &'static str {
         match self.kind {
             "PendingTodo" => "TODO",
+            "PendingTofix" => "TOFIX",
             "PendingFixme" => "FIXME",
             "PendingReview" => "REVIEW",
             "PendingOptimize" => "OPTIMIZE",
@@ -77,6 +78,7 @@ pub enum ArtifactKind {
     Process,
     View,
     Form,
+    Step,
     Message,
     Shape,
     Role,
@@ -101,6 +103,7 @@ impl ArtifactKind {
         ArtifactKind::Process,
         ArtifactKind::View,
         ArtifactKind::Form,
+        ArtifactKind::Step,
         ArtifactKind::Message,
         ArtifactKind::Shape,
         ArtifactKind::Role,
@@ -125,6 +128,7 @@ impl ArtifactKind {
             "Process" => ArtifactKind::Process,
             "View" => ArtifactKind::View,
             "Form" => ArtifactKind::Form,
+            "Step" => ArtifactKind::Step,
             "Message" => ArtifactKind::Message,
             "Shape" => ArtifactKind::Shape,
             "Role" => ArtifactKind::Role,
@@ -151,6 +155,7 @@ impl ArtifactKind {
             ArtifactKind::Process => "Process",
             ArtifactKind::View => "View",
             ArtifactKind::Form => "Form",
+            ArtifactKind::Step => "Step",
             ArtifactKind::Message => "Message",
             ArtifactKind::Shape => "Shape",
             ArtifactKind::Role => "Role",
@@ -176,6 +181,7 @@ impl ArtifactKind {
             ArtifactKind::Process => "ArtifactProcess",
             ArtifactKind::View => "ArtifactView",
             ArtifactKind::Form => "ArtifactForm",
+            ArtifactKind::Step => "ArtifactStep",
             ArtifactKind::Message => "ArtifactMessage",
             ArtifactKind::Shape => "ArtifactShape",
             ArtifactKind::Role => "ArtifactRole",
@@ -208,6 +214,9 @@ pub struct Artifact {
     pub name: String,
     pub params: Vec<Param>,
     pub body: Vec<Member>,
+    /// `compute X if <expr>` guard on a reusable step artifact.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guard: Option<Expr>,
     #[serde(rename = "loc")]
     pub span: Span,
     /// Stable identifier from the application lock (assigned by the semantic pass).
@@ -233,6 +242,7 @@ impl Artifact {
         name: impl Into<String>,
         params: Vec<Param>,
         body: Vec<Member>,
+        guard: Option<Expr>,
         span: Span,
     ) -> Self {
         Self {
@@ -240,6 +250,7 @@ impl Artifact {
             name: name.into(),
             params,
             body,
+            guard,
             span,
             id: None,
             roles: Vec::new(),
@@ -284,6 +295,13 @@ pub enum Member {
         span: Span,
         #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
+    },
+    /// `SumJob if operation === Sum` inside a lane: a step reference plus a flow guard.
+    StepCall {
+        name: String,
+        guard: Option<Expr>,
+        #[serde(rename = "loc")]
+        span: Span,
     },
     /// `fields { ... }`, `on Order.create(...) { ... }`, `end Closed { ... }`.
     Block {
@@ -369,6 +387,7 @@ impl Member {
     pub fn span(&self) -> Span {
         match self {
             Member::PropertyAssignment { span, .. }
+            | Member::StepCall { span, .. }
             | Member::Block { span, .. }
             | Member::Hierarchy { span, .. }
             | Member::EnumValueDeclaration { span, .. }
@@ -385,6 +404,7 @@ impl Member {
     pub fn name(&self) -> Option<&str> {
         match self {
             Member::PropertyAssignment { name, .. }
+            | Member::StepCall { name, .. }
             | Member::Block { name, .. }
             | Member::EnumValueDeclaration { name, .. }
             | Member::ShorthandProperty { name, .. } => Some(name),

@@ -488,7 +488,7 @@ impl Server {
         if self.application.is_none() {
             return json!({ "ast": Value::Null, "error": NO_APPLICATION_MESSAGE });
         }
-        let root = self.root.to_string_lossy().to_string();
+        let workspace_root = self.workspace_root();
         let analysis = self.analysis();
         if analysis.closure.is_none() || analysis.semantic.is_none() {
             return json!({
@@ -502,7 +502,7 @@ impl Server {
                 "path": closure.application.path,
             })
         });
-        match archol_analysis::application_ast::build(analysis, &root) {
+        match archol_analysis::application_ast::build(analysis, &workspace_root) {
             Ok(mut ast) => {
                 if params
                     .get("noBody")
@@ -578,6 +578,15 @@ impl Server {
             .to_string()
     }
 
+    /// Root that contains `applications/` and `services/` (future `externalServices/`).
+    fn workspace_root(&self) -> String {
+        archol_analysis::find_services_root(&self.root)
+            .and_then(|services| services.parent().map(Path::to_path_buf))
+            .unwrap_or_else(|| self.root.clone())
+            .to_string_lossy()
+            .to_string()
+    }
+
     fn collect_files(&self) -> Vec<FileInput> {
         let mut files = Vec::new();
         collect(&self.root, &mut files);
@@ -592,6 +601,11 @@ impl Server {
             })
             .collect();
         for (path, source) in &self.docs {
+            // A renamed/deleted file can stay in `docs` until the client sends
+            // didClose. Do not resurrect it and create a duplicate declaration.
+            if !std::path::Path::new(path).exists() {
+                continue;
+            }
             inputs.push(FileInput {
                 path: path.clone(),
                 source: source.clone(),

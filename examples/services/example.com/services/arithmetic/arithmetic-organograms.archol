@@ -1,0 +1,7 @@
+organogram Arithmetic {
+  title: { pt-BR: "Soma", en: "Sum" }
+}
+
+role Operator {
+  title: { pt-BR: "Operador", en: "Operator" }
+}

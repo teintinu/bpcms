@@ -77,16 +77,6 @@ application "example.com/app/loja-do-joao" {
     "example.com/services/checkout" as Checkout
     "example.com/services/notifications" as Notifications
   }
-  roles { Customer; Clerk; Manager; Manager > Clerk }
-  theme: Nuvula
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
-
-  main {
-    // DefaultCurrency é um Parameter do serviço Catalog
-    set Catalog.DefaultCurrency = "BRL"
-  }
-}
 ```
 
 *Valida: só entry points; `cart`, `payment`, `shipping` e `auth` entram implicitamente. `main` faz `set` em um Parameter **do serviço Catalog**; a app não declara artefatos.*
@@ -101,13 +91,6 @@ application "example.com/app/clinica-vida" {
     "example.com/services/encounters"
     "example.com/services/billing"
     "example.com/services/notifications"
-  }
-  roles {
-    Reception
-    Nurse
-    Doctor
-    Manager
-    Manager > Doctor > Nurse > Reception
   }
   theme: Clinica
   locales: [pt-BR]
@@ -132,11 +115,6 @@ application "example.com/app/rota-certa" {
     "example.com/services/billing"
     "example.com/services/notifications"
   }
-  roles { Dispatcher; Driver; Supervisor; Supervisor > Dispatcher > Driver }
-  theme: Ops
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: `orders`, `fleet` e `auth` implícitos; tracking reage ao dispatch sem wire.*
@@ -152,11 +130,6 @@ application "example.com/app/backoffice-loja" {
     "example.com/services/orders"
     "example.com/services/reports"
   }
-  roles { Clerk; Manager; Admin; Admin > Manager > Clerk }
-  theme: Backoffice
-  locales: [pt-BR]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: o mesmo `catalog` usado pela loja entra implicitamente via inventory; billing via reports.*
@@ -172,11 +145,6 @@ application "example.com/app/campo-agil" {
     "example.com/services/billing"
     "example.com/services/notifications"
   }
-  roles { Technician; Dispatcher; Manager; Manager > Dispatcher > Technician }
-  theme: Field
-  locales: [pt-BR]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: scheduling, inventory e auth entram por work-orders; billing é entry point.*
@@ -196,11 +164,6 @@ application "example.com/app/mercado-aberto" {
     "example.com/services/disputes"
     "example.com/services/notifications"
   }
-  roles { Buyer; Seller; Support; Admin; Admin > Support > Seller > Buyer }
-  theme: Market
-  locales: [pt-BR, en-US]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: listings, payments e auth implícitos; disputes é entry point e depende de orders/payments.*
@@ -216,11 +179,6 @@ application "github.com/acme/field-app" {
     "example.com/services/auth"
     "example.com/services/notifications"
   }
-  roles { Technician; Dispatcher; Manager; Manager > Dispatcher > Technician }
-  theme: Field
-  locales: [pt-BR]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: app em repositório, versão por commit e mistura de serviço do repo com registry.*
@@ -236,11 +194,6 @@ application "example.com/app/loja-com-antifraude" {
     "example.com/services/fraud-checkout"
     "example.com/services/notifications"
   }
-  roles { Customer; Clerk; Manager; Manager > Clerk }
-  theme: Nuvula
-  locales: [pt-BR]
-  environments: [dev, qa, prod]
-}
 ```
 
 *Valida: `fraud-checkout` importa `checkout` e reintroduz apenas o passo `FraudCheck`; a app não precisa configurar substituição.*
@@ -474,9 +427,11 @@ process Checkout(session: CheckoutSession) {
   on [CheckoutSession.CartValidated]
   key: session
 
-  let offer: FreightOffer | null = null
-  let authorized = false
-  let authorization: string
+  vars {
+    offer: FreightOffer | null = null
+    authorized: boolean = false
+    authorization: string
+  }
 
   try {
     try {
@@ -572,7 +527,9 @@ process PurchaseApproval(purchaseRequest: PurchaseRequest) {
   on [PurchaseRequest.Submitted]
   key: purchaseRequest
 
-  let tier: ApproverTier
+  vars {
+    tier: ApproverTier
+  }
 
   tier = ApprovalLimit.evaluate({
     amount: purchaseRequest.amount,
@@ -631,7 +588,9 @@ process DispatchOrder(shipment: Shipment) {
   on [Shipment.Created]
   key: shipment
 
-  let tracking: TrackingCode
+  vars {
+    tracking: TrackingCode
+  }
 
   parallel {
     branch Pick { Pick.show({ shipment }) }
@@ -5130,7 +5089,9 @@ process Replenishment(stockItem: StockItem) {
   fanOut: StockItem where available < reorderPoint
   key: stockItem
 
-  let decision: ReplenishmentDecision
+  vars {
+    decision: ReplenishmentDecision
+  }
 
   decision = ReplenishmentOrder.evaluate({
     available: stockItem.available,
@@ -5185,6 +5146,61 @@ process DailyDigest() {
 ```
 
 *Valida: processo agendado sem sujeito, com `send` e task manual de conferência; não há documento de relatório.*
+
+### S.5 Soma com steps e variáveis de processo
+
+```archol
+service "example.com/services/arithmetic" {
+  title: { pt-BR: "Aritmética", en: "Arithmetic" }
+  locales: [ "pt-BR", "en" ]
+}
+
+process ArithmeticOperation() {
+  title: { pt-BR: "Operação aritmética", en: "Arithmetic operation" }
+  vars {
+    value1: number
+    operation: ArithmeticOperation
+    value2: number
+    result: number
+  }
+
+  lane Operator for [Operator] {
+    AskForAB
+    SumJob if operation === Sum
+    ShowSumReport
+
+    catch (error) {
+      allow retry
+      report ShowErrorReport {
+        title: { pt-BR: "Erro na operação", en: "Operation error" }
+        show error
+      }
+    }
+  }
+}
+
+form AskForAB {
+  title: { pt-BR: "Perguntar a e b", en: "Ask for a and b" }
+  edit value1
+  edit operation
+  edit value2
+}
+
+compute SumJob {
+  title: { pt-BR: "Somar a e b", en: "Add a and b" }
+  result = value1 + value2
+}
+
+report ShowSumReport {
+  title: { pt-BR: "Mostrar resultado", en: "Show result" }
+  show value1
+  show operation
+  show value2
+  show result
+}
+```
+
+*Valida: steps como artefatos reutilizáveis, lane que referencia só pelo nome, processo sem documento, `vars` com variáveis duráveis, guard de step, `catch` de lane com `allow retry` e status derivado do passo atual.*
 
 ## Policy / Rule
 

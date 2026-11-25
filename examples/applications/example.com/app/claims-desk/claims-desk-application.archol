@@ -15,27 +15,6 @@ application "example.com/app/claims-desk" {
     "example.com/services/payments" as Payments // REVIEW [2026-12-15] Pagamentos de indenizações.
   }
 
-  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
-  roles {
-    Clerk // REVIEW [2026-12-15] Atendente: registra e triagem os sinistros.
-    Adjuster // REVIEW [2026-12-15] Regulador: analisa e decide a indenização.
-    FraudAnalyst // REVIEW [2026-12-15] Analista antifraude: investiga indícios de fraude.
-    FinanceAnalyst // REVIEW [2026-12-15] Analista financeiro: acompanha os pagamentos.
-    Manager // REVIEW [2026-12-15] Gerente: responde pela operação da mesa.
-    Policyholder // REVIEW [2026-12-15] Segurado: acompanha o próprio sinistro.
-    Dispatcher // REVIEW [2026-12-15] Despachante: distribui as vistorias em campo.
-    FieldTechnician // REVIEW [2026-12-15] Técnico de campo: executa a vistoria.
-    Supervisor // REVIEW [2026-12-15] Supervisor: coordena campo e despacho.
-    Customer // REVIEW [2026-12-15] Cliente: acompanha o atendimento.
-    // REVIEW [2026-12-15] Manager é superior a Adjuster, que é superior a Clerk.
-    Manager > Adjuster > Clerk
-    // REVIEW [2026-12-15] Manager é superior a FraudAnalyst.
-    Manager > FraudAnalyst
-    // REVIEW [2026-12-15] Supervisor é superior a FieldTechnician.
-    Supervisor > FieldTechnician
-    // REVIEW [2026-12-15] Supervisor é superior a Dispatcher.
-    Supervisor > Dispatcher
-  }
 
   theme: Claims // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
   locales: [pt-BR, en-US] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.

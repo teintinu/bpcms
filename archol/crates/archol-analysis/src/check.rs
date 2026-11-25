@@ -11,7 +11,39 @@ use crate::workspace::Workspace;
 
 pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnostic)> {
     let mut diagnostics = Vec::new();
-    let mut seen: BTreeMap<(Option<String>, String, String), usize> = BTreeMap::new();
+    let mut seen: BTreeMap<(Option<String>, String, String), String> = BTreeMap::new();
+    let mut service_steps: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut service_step_vars: BTreeMap<String, BTreeMap<String, BTreeSet<String>>> =
+        BTreeMap::new();
+    for (file, artifact) in workspace.artifacts() {
+        if artifact.artifact_kind() != "Step" {
+            continue;
+        }
+        if artifact.guard.is_some() {
+            diagnostics.push((
+                file.path.clone(),
+                Diagnostic::error(
+                    "E_STEP_GUARD",
+                    "Step guards belong to the lane call (`Step if ...`), not to the Step artifact."
+                        .to_string(),
+                    artifact.span,
+                ),
+            ));
+        }
+        if let Some(service) = file.service.as_deref() {
+            service_steps
+                .entry(service.to_string())
+                .or_default()
+                .insert(artifact.name.clone());
+            service_step_vars
+                .entry(service.to_string())
+                .or_default()
+                .insert(
+                    artifact.name.clone(),
+                    step_variables(&artifact.body, artifact.guard.as_ref()),
+                );
+        }
+    }
 
     for (file, artifact) in workspace.artifacts() {
         let key = (
@@ -25,7 +57,7 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
                 Diagnostic::error(
                     "E_DUP_ARTIFACT",
                     format!(
-                        "Duplicate {} {} in service (first declaration at offset {first})",
+                        "Duplicate {} {} in service (first declaration in {first})",
                         artifact.artifact_kind(),
                         artifact.name
                     ),
@@ -33,10 +65,17 @@ pub fn check(workspace: &Workspace, symbols: &Symbols) -> Vec<(String, Diagnosti
                 ),
             ));
         } else {
-            seen.insert(key, artifact.span.start);
+            seen.insert(key, file.path.clone());
         }
         let mut local = Vec::new();
-        check_artifact(symbols, file.service.as_deref(), artifact, &mut local);
+        check_artifact(
+            symbols,
+            file.service.as_deref(),
+            artifact,
+            service_steps.get(file.service.as_deref().unwrap_or("")),
+            service_step_vars.get(file.service.as_deref().unwrap_or("")),
+            &mut local,
+        );
         diagnostics.extend(local.into_iter().map(|d| (file.path.clone(), d)));
     }
     let today = pending::today();
@@ -54,11 +93,27 @@ fn check_artifact(
     symbols: &Symbols,
     service: Option<&str>,
     artifact: &Artifact,
+    step_names: Option<&BTreeSet<String>>,
+    step_vars: Option<&BTreeMap<String, BTreeSet<String>>>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     if artifact.artifact_kind() == "Service" {
         check_service_locales(artifact, diagnostics);
         check_reintroductions(symbols, service, artifact, diagnostics);
+    }
+    if artifact.artifact_kind() == "Application" {
+        for member in &artifact.body {
+            if let Member::Block { name, span, .. } = member {
+                if name == "roles" {
+                    diagnostics.push(Diagnostic::error(
+                        "E_APP_ROLE",
+                        "Application roles were removed; declare roles in the service organogram."
+                            .to_string(),
+                        *span,
+                    ));
+                }
+            }
+        }
     }
     for param in &artifact.params {
         if let Some(type_ref) = &param.type_ref {
@@ -71,6 +126,16 @@ fn check_artifact(
     }
     collect_locals(&artifact.body, &mut locals);
     check_members(symbols, service, &artifact.body, &locals, diagnostics);
+    if artifact.artifact_kind() == "Process" {
+        check_process_layout(
+            symbols,
+            service,
+            &artifact.body,
+            step_names,
+            step_vars,
+            diagnostics,
+        );
+    }
 }
 
 /// `reintroduce` must import the owner service and name an existing artifact.
@@ -127,6 +192,405 @@ fn check_reintroductions(
 }
 
 /// Every service declares `locales` with at least one language.
+fn check_process_layout(
+    symbols: &Symbols,
+    service: Option<&str>,
+    body: &[Member],
+    step_names: Option<&BTreeSet<String>>,
+    step_vars: Option<&BTreeMap<String, BTreeSet<String>>>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for member in body {
+        if let Member::Statement {
+            statement: Stmt::LetDeclaration { span, .. },
+            ..
+        } = member
+        {
+            diagnostics.push(Diagnostic::error(
+                "E_LET_REMOVED",
+                "Process variables must be declared inside `vars`.".to_string(),
+                *span,
+            ));
+        }
+    }
+    let vars = block_body(body, "vars").unwrap_or(&[]);
+    let mut variables: HashMap<String, Option<String>> = HashMap::new();
+    for variable in vars {
+        if let Member::Statement {
+            statement:
+                Stmt::LetDeclaration {
+                    name,
+                    type_ref,
+                    span,
+                    ..
+                },
+            ..
+        } = variable
+        {
+            if let Some(type_ref) = type_ref {
+                check_type_name(symbols, service, type_ref, *span, diagnostics);
+                variables.insert(name.clone(), Some(type_ref.clone()));
+            } else {
+                variables.insert(name.clone(), None);
+            }
+        }
+    }
+    for lane in body {
+        let Member::Block {
+            name: label,
+            body: lane_body,
+            ..
+        } = lane
+        else {
+            continue;
+        };
+        if !label.starts_with("lane ") {
+            continue;
+        }
+        for role in lane_roles(label) {
+            if !symbols.roles.contains(&role) {
+                diagnostics.push(Diagnostic::error(
+                    "E_UNKNOWN_ROLE",
+                    format!("Lane role `{role}` is not declared"),
+                    lane.span(),
+                ));
+            }
+        }
+        for step in lane_body {
+            if let Member::StepCall { name, guard, span } = step {
+                if step_names.is_none_or(|names| !names.contains(name)) {
+                    diagnostics.push(Diagnostic::error(
+                        "E_UNKNOWN_STEP",
+                        format!("Step `{name}` is not declared as a Step artifact in the service"),
+                        *span,
+                    ));
+                } else if let Some(step_vars) = step_vars {
+                    if let Some(required) = step_vars.get(name) {
+                        for variable in required {
+                            if !variables.contains_key(variable) {
+                                diagnostics.push(Diagnostic::error(
+                                    "E_STEP_VARIABLE",
+                                    format!(
+                                        "Step `{name}` uses variable `{variable}`, which is not declared in the process `vars`"
+                                    ),
+                                    *span,
+                                ));
+                            }
+                        }
+                    }
+                }
+                if let Some(guard) = guard {
+                    check_guard_expr(symbols, service, &variables, guard, *span, diagnostics);
+                }
+                continue;
+            }
+            if let Member::Statement {
+                statement:
+                    Stmt::ExpressionStatement {
+                        expression: Expr::Identifier { name, span },
+                        ..
+                    },
+                ..
+            } = step
+            {
+                if step_names.is_none_or(|names| !names.contains(name)) {
+                    diagnostics.push(Diagnostic::error(
+                        "E_UNKNOWN_STEP",
+                        format!("Step `{name}` is not declared as a Step artifact in the service"),
+                        *span,
+                    ));
+                } else if let Some(step_vars) = step_vars {
+                    if let Some(required) = step_vars.get(name) {
+                        for variable in required {
+                            if !variables.contains_key(variable) {
+                                diagnostics.push(Diagnostic::error(
+                                    "E_STEP_VARIABLE",
+                                    format!(
+                                        "Step `{name}` uses variable `{variable}`, which is not declared in the process `vars`"
+                                    ),
+                                    *span,
+                                ));
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+            let Member::Block {
+                name: step_label,
+                body: step_body,
+                ..
+            } = step
+            else {
+                continue;
+            };
+            let Some((kind, _name, guard)) = parse_step_header(step_label) else {
+                continue;
+            };
+            let mut index = 0;
+            while index < step_body.len() {
+                let command = &step_body[index];
+                if let Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Identifier { name, .. },
+                            ..
+                        },
+                    ..
+                } = command
+                {
+                    if name == "edit" || name == "show" {
+                        if let Some(Member::Statement {
+                            statement:
+                                Stmt::ExpressionStatement {
+                                    expression:
+                                        Expr::Identifier {
+                                            name: field,
+                                            span: field_span,
+                                        },
+                                    ..
+                                },
+                            ..
+                        }) = step_body.get(index + 1)
+                        {
+                            if !variables.contains_key(field) {
+                                diagnostics.push(Diagnostic::error(
+                                    "E_UNKNOWN_VARIABLE",
+                                    format!("Step command `{name}` refers to unknown process variable `{field}`"),
+                                    *field_span,
+                                ));
+                            }
+                            index += 2;
+                            continue;
+                        }
+                    }
+                }
+                if let Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Binary { op, left, .. },
+                            ..
+                        },
+                    ..
+                } = command
+                {
+                    if op == "=" {
+                        if let Expr::Identifier { name, span } = left.as_ref() {
+                            if !variables.contains_key(name) {
+                                diagnostics.push(Diagnostic::error(
+                                    "E_UNKNOWN_VARIABLE",
+                                    format!("Assignment target `{name}` is not a process variable"),
+                                    *span,
+                                ));
+                            }
+                        }
+                    }
+                }
+                index += 1;
+            }
+            if kind == "compute" {
+                if let Some(guard) = guard {
+                    check_guard(
+                        symbols,
+                        service,
+                        &variables,
+                        &guard,
+                        step.span(),
+                        diagnostics,
+                    );
+                }
+            }
+        }
+    }
+}
+
+fn check_guard(
+    symbols: &Symbols,
+    service: Option<&str>,
+    variables: &HashMap<String, Option<String>>,
+    guard: &str,
+    span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let Some((left, right)) = guard.split_once("===").or_else(|| guard.split_once("==")) else {
+        return;
+    };
+    let left = left.trim();
+    let right = right.trim();
+    let Some(Some(type_ref)) = variables.get(left) else {
+        if !variables.contains_key(left) {
+            diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_VARIABLE",
+                format!("Guard refers to unknown process variable `{left}`"),
+                span,
+            ));
+        }
+        return;
+    };
+    if let Some(info) = symbols.resolve_enum(type_ref, service) {
+        if !info.values.iter().any(|value| value.name == right) {
+            diagnostics.push(Diagnostic::error(
+                "E_ENUM_VALUE",
+                format!("`{right}` is not a value of `{type_ref}`"),
+                span,
+            ));
+        }
+    }
+}
+
+fn check_guard_expr(
+    symbols: &Symbols,
+    service: Option<&str>,
+    variables: &HashMap<String, Option<String>>,
+    guard: &Expr,
+    span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let Expr::Binary {
+        op, left, right, ..
+    } = guard
+    else {
+        return;
+    };
+    if !matches!(op.as_str(), "==" | "===" | "!=" | "!==") {
+        return;
+    }
+    let Expr::Identifier {
+        name: variable,
+        span: variable_span,
+    } = left.as_ref()
+    else {
+        return;
+    };
+    let Some(type_ref) = variables.get(variable) else {
+        diagnostics.push(Diagnostic::error(
+            "E_UNKNOWN_VARIABLE",
+            format!("Guard refers to unknown process variable `{variable}`"),
+            *variable_span,
+        ));
+        return;
+    };
+    let Some(type_ref) = type_ref else {
+        return;
+    };
+    let Expr::Identifier {
+        name: value,
+        span: value_span,
+    } = right.as_ref()
+    else {
+        return;
+    };
+    if let Some(info) = symbols.resolve_enum(type_ref, service) {
+        if !info.values.iter().any(|candidate| candidate.name == *value) {
+            diagnostics.push(Diagnostic::error(
+                "E_ENUM_VALUE",
+                format!("`{value}` is not a value of `{type_ref}`"),
+                *value_span,
+            ));
+        }
+    }
+    let _ = span;
+}
+
+fn block_body<'a>(members: &'a [Member], name: &str) -> Option<&'a [Member]> {
+    members.iter().find_map(|member| match member {
+        Member::Block {
+            name: key, body, ..
+        } if key == name => Some(body.as_slice()),
+        _ => None,
+    })
+}
+
+fn step_variables(body: &[Member], guard: Option<&Expr>) -> BTreeSet<String> {
+    let mut variables = BTreeSet::new();
+    if let Some(Expr::Binary { op, left, .. }) = guard {
+        if matches!(op.as_str(), "==" | "===" | "!=" | "!==") {
+            if let Expr::Identifier { name, .. } = left.as_ref() {
+                variables.insert(name.clone());
+            }
+        }
+    }
+    let mut index = 0;
+    while index < body.len() {
+        let member = &body[index];
+        if let Member::Statement {
+            statement:
+                Stmt::ExpressionStatement {
+                    expression: Expr::Identifier { name, .. },
+                    ..
+                },
+            ..
+        } = member
+        {
+            if name == "edit" || name == "show" {
+                if let Some(Member::Statement {
+                    statement:
+                        Stmt::ExpressionStatement {
+                            expression: Expr::Identifier { name: field, .. },
+                            ..
+                        },
+                    ..
+                }) = body.get(index + 1)
+                {
+                    variables.insert(field.clone());
+                    index += 2;
+                    continue;
+                }
+            }
+        }
+        if let Member::Statement {
+            statement:
+                Stmt::ExpressionStatement {
+                    expression: Expr::Binary { op, left, .. },
+                    ..
+                },
+            ..
+        } = member
+        {
+            if op == "=" {
+                if let Expr::Identifier { name, .. } = left.as_ref() {
+                    variables.insert(name.clone());
+                }
+            }
+        }
+        index += 1;
+    }
+    variables
+}
+
+fn lane_roles(label: &str) -> Vec<String> {
+    let Some(after) = label.split_once("for [").map(|(_, after)| after) else {
+        return Vec::new();
+    };
+    let Some(end) = after.find(']') else {
+        return Vec::new();
+    };
+    after[..end]
+        .split(',')
+        .map(str::trim)
+        .filter(|role| !role.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+fn parse_step_header(label: &str) -> Option<(String, String, Option<String>)> {
+    for kind in ["form", "compute", "report"] {
+        let Some(rest) = label.strip_prefix(&format!("{kind} ")) else {
+            continue;
+        };
+        let rest = rest.trim();
+        if let Some((name, guard)) = rest.split_once(" if ") {
+            return Some((
+                kind.to_string(),
+                name.trim().to_string(),
+                Some(guard.trim().to_string()),
+            ));
+        }
+        return Some((kind.to_string(), rest.to_string(), None));
+    }
+    None
+}
+
 fn check_service_locales(artifact: &Artifact, diagnostics: &mut Vec<Diagnostic>) {
     let declared = artifact.body.iter().find_map(|member| match member {
         Member::PropertyAssignment {

@@ -51,7 +51,7 @@ Cada cláusula tem **onde aparece**, **sintaxe** e **funcionamento**. Cláusulas
 | `<uri>` | app/service | `"example.com/app/loja-do-joao"`, `"github.com/acme/store"` | URI sem `http://`/`https://`. Resolve para registry BPCMS ou repositório Git. |
 | `alias` | app/service | `"<uri>" as Nome` | Nome local para a URI em `services`/`imports`. Não é identidade e não vai para o lock. |
 
-**Regras:** a URI é a identidade canônica; o alias não substitui a URI em imports/releases. O `check` rejeita duas identidades para o mesmo artefato.
+**Regras:** a URI é a identidade canônica; o alias não substitui a URI em imports/releases. O `check` rejeita duas identidades para o mesmo artefato. Sem `as`, o alias é inferido do último segmento da URI em PascalCase (`example.com/services/arithmetic` → `Arithmetic`).
 
 ## 1.1.1 Tipos básicos
 
@@ -237,7 +237,7 @@ b,example.com/services/billing#shape/InvoiceStatus/value/Overdue
 
 ### 1.6.1 Pendências em comentários
 
-Comentários que começam com **`TODO`**, **`FIXME`**, **`REVIEW`**, **`OPTIMIZE`** ou **`HACK`** viram nós `Pending` no AST (`SourceFile.pending`), utilizáveis pelo construtor.
+Comentários que começam com **`TODO`**, **`TOFIX`**, **`FIXME`**, **`REVIEW`**, **`OPTIMIZE`** ou **`HACK`** viram nós `Pending` no AST (`SourceFile.pending`), utilizáveis pelo construtor.
 
 **Sintaxe:** `// <MARCADOR> [YYYY-MM-DD] <comentário>` (data opcional entre colchetes).
 
@@ -497,7 +497,6 @@ A comparação aceita o locale exato e o fallback de idioma (`en` cobre `en-US`,
 | declaração | `application "<uri>" { ... }` | Identidade + composição. |
 | `title` | `title: "..."` ou `title: { pt-BR: "..."; en-US: "..." }` | I18N; string = primeiro locale de `locales` (ver 1.9). |
 | `services` | `services { "<uri>" as Alias ... }` | **Entry points**; alias local opcional. A closure vem dos imports de cada serviço. |
-| `roles` | `roles { Customer; Clerk; Manager; Manager > Clerk }` | Papéis da aplicação e hierarquia (`>` = “superior a”). |
 | `theme` | `theme: Nuvula` | ID de tema fornecido pelo **construtor**; não é artefato de serviço. |
 | `locales` | `locales: [pt-BR, en-US]` | Idiomas da app/construtor; o primeiro é o default. |
 | `environments` | `environments: [dev, qa, prod]` | Ambientes declarados para a aplicação. |
@@ -506,7 +505,7 @@ A comparação aceita o locale exato e o fallback de idioma (`en` cobre `en-US`,
 | `start` | `start ["<uri>"]` | Boot antecipado opcional; não declara dependência. |
 | `lock` | `lock: "<app>.lock"` | Lock do app: IDs estáveis dos identificadores da closure (versões por serviço em evolução). |
 
-**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, papéis, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure. **A compilação começa sempre pela aplicação**: `check`, `lock`, `links` e o LSP exigem uma aplicação e só carregam a closure; arquivos fora dela são inertes (o LSP os trata como comentado). O lock fixa os IDs dos identificadores da closure. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
+**Funcionamento:** a `Application` **não declara artefatos** e não contém regra nem `wire`; apenas compõe entry points, tema, idiomas, ambientes e o lock. Dependências vêm de `Service.imports`; o resolver calcula a closure. **A compilação começa sempre pela aplicação**: `check`, `lock`, `links` e o LSP exigem uma aplicação e só carregam a closure; arquivos fora dela são inertes (o LSP os trata como comentado). O lock fixa os IDs dos identificadores da closure. A URI é o identificador; a página `http://<uri>/index.html` é download por SO (registry) ou README/releases (repositório). O arquivo da aplicação é `examples/applications/<fullpath>/<app>-application.archol`; a aplicação é o único contexto principal e deve ser o primeiro artefato do arquivo (30).
 
 ```archol
 application "example.com/app/loja-do-joao" {
@@ -521,7 +520,6 @@ application "example.com/app/loja-do-joao" {
     "example.com/services/checkout" as Checkout
     "example.com/services/notifications" as Notifications
   }
-  roles { Customer; Clerk; Manager; Manager > Clerk }
   theme: Nuvula
   locales: [pt-BR, en-US]
   environments: [dev, qa, prod]
@@ -697,9 +695,11 @@ process Checkout(session: CheckoutSession) {
   on [CheckoutSession.CartValidated]
   key: session
 
-  // declarações de variáveis (somente aqui)
-  let offer: FreightOffer | null = null
-  let authorized = false
+  // variáveis duráveis (somente aqui)
+  vars {
+    offer: FreightOffer | null = null
+    authorized: boolean = false
+  }
 ```
 
 | Cláusula | Sintaxe | Funcionamento |
@@ -743,13 +743,16 @@ form PaymentRetry {
 ## 4.4 Variáveis
 
 ```archol
-let offer: FreightOffer | null = null
-let authorized = false
-let authorization: string
-let item: OrderItem
+vars {
+  offer: FreightOffer | null = null
+  authorized: boolean = false
+  authorization: string
+  item: OrderItem
+}
 ```
 
-- `let`/`const` **somente no topo do processo**, antes do código.
+- `vars` fica **no topo do processo**, antes do código; ele declara todas as variáveis duráveis.
+- `let` foi removido: o compilador emite `E_LET_REMOVED` se ainda aparecer. `const` continua válido para constantes locais.
 - **Não declare variáveis dentro de `try`, `catch`, `if`, `loop`, `parallel` ou `forEach`.**
 - Atribuição dentro de blocos é permitida.
 - A instância é o escopo; as variáveis são **duráveis** e persistidas pelo builder.
@@ -1037,6 +1040,66 @@ form OrderReview {
 - Devolver é uma action (`calls: Order.reject(reason)`), contabilizada como retrabalho.
 - **Form não é View.** Form é escrita/desfecho; View é leitura/navegação. Não existe `view type: form`.
 
+**Steps no processo (em revisão).** `form`, `compute` e `report` podem ser declarados como **artefatos Step** no serviço. O processo referencia cada step **apenas pelo nome**; o step pode ser reutilizado por outro processo desde que as variáveis usadas existam no `vars` do processo.
+
+```archol
+service "example.com/services/arithmetic" {
+  title: { pt-BR: "Aritmética" }
+  locales: [ "pt-BR" ]
+}
+
+process ArithmeticOperation() {
+  title: { pt-BR: "Operação aritmética" }
+  vars {
+    value1: number
+    operation: ArithmeticOperation
+    value2: number
+    result: number
+  }
+  lane Operator for [Operator] {
+    AskForAB
+    SumJob if operation === Sum
+    ShowSumReport
+
+    catch (error) {
+      allow retry
+      report ShowErrorReport {
+        title: { pt-BR: "Erro na operação" }
+        show error
+      }
+    }
+  }
+}
+
+form AskForAB {
+  title: { pt-BR: "Perguntar a e b" }
+  edit value1
+  edit operation
+  edit value2
+}
+
+compute SumJob {
+  title: { pt-BR: "Somar a e b" }
+  result = value1 + value2
+}
+
+report ShowSumReport {
+  title: { pt-BR: "Mostrar resultado" }
+  show value1
+  show operation
+  show value2
+  show result
+}
+```
+
+- `form`, `compute` e `report` de topo são artefatos Step; `edit`/`show` e a atribuição usam variáveis do processo, nunca declaram variáveis;
+- a lane referencia steps só pelo nome;
+- o compilador valida que toda variável usada pelo step existe no `vars` do processo (`E_STEP_VARIABLE`);
+- o guard fica na lane (`SumJob if operation === Sum`); o Step é independente do fluxo;
+- o **passo atual é o status do processo**: não há `return`, `end` nem `outcome`;
+- `catch (error)` é da lane; `allow retry` reroda o step que falhou e os steps do `catch` viram o passo atual;
+- um Step pode ser reutilizado por outro processo do mesmo serviço se as variáveis exigidas forem compatíveis.
+
 ## 4.15 Message — contrato entre participantes
 
 ```archol
@@ -1150,9 +1213,15 @@ decision ApprovalLimit {
 | `parallel` sem branches | `E_PARALLEL_EMPTY` |
 | escrita conflitante em branches | `W_PARALLEL_WRITE` |
 | ação de form sem `calls`/`returns` | `E_FORM_ACTION` |
+| `let` usado no processo em vez de `vars` | `E_LET_REMOVED` |
+| `roles` na `Application` (papéis vivem no serviço) | `E_APP_ROLE` |
+| step de lane que não existe como Step artifact do serviço | `E_UNKNOWN_STEP` |
+| guard declarado no Step artifact em vez da lane | `E_STEP_GUARD` |
+| step usa variável que não existe no `vars` do processo | `E_STEP_VARIABLE` |
 | `send`/`receive` sem `key` | `E_MESSAGE_KEY` |
 | `receive` com `apply` incompatível | `E_RECEIVE_APPLY` |
 | `fanOut` sem documento/expressão | `E_FANOUT` |
+| comando de step (`edit`/`show`) ou atribuição para variável inexistente | `E_UNKNOWN_VARIABLE` |
 | `timeout`/`sla` inválidos | `E_DURATION` |
 
 ---
@@ -1955,6 +2024,7 @@ shape InvoiceStatus {
 - O primeiro ordinal é **10**; os seguintes incrementam de **10 em 10**.
 - `ordinal` é único, inteiro e estável; inserir um value no meio usa um ordinal livre.
 - O ordinal é usado no stream binário; o title/icon são para UI.
+- `icon` aceita um IconRef (`Draft`, `status.draft`) ou um literal UTF-8 de um caractere (`"+"`); no segundo caso o AST emite `IconLiteral`.
 - `value` sem `title`/`icon`/`ordinal` é erro, exceto `std.Currency`.
 - `state` tem exatamente um `initial`; a legalidade de cada transição é validada pela action do Document (`E_TRANSITION_STATE`).
 - `classification` não tem `initial` nem participa de ciclo de vida.
@@ -3993,7 +4063,9 @@ A unidade de organização do fonte é o **contexto principal**, não o tipo de 
 | Compartilhado | `<workspace>/services/<fullpath service>/<service>-<tipo-no-plural>.archol` |
 | SVG | `<workspace>/services/<fullpath service>/icons/<namespace>/<icon>.svg` |
 | `-icons.archol` (não-SVG) | `<workspace>/services/<fullpath service>/<service>-icons.archol` |
+| Serviço externo (futuro) | `<workspace>/externalServices/<fullpath service>/<service>-service.archol` |
 
+- O `<workspace>` contém `applications/` e `services/`; `externalServices/` é reservado para serviços de terceiros (fonte baixada/compilada ou usado online) e ainda não faz parte desta versão.
 - `<fullpath>` é a URI sem protocolo, exatamente como declarada.
 - O full path preserva os segmentos da URI; nomes de arquivos e pastas de artefato são kebab-case.
 - `<app>`/`<service>` é o último segmento da URI, em kebab-case, e deve ser igual ao slug da pasta.
@@ -4124,7 +4196,4 @@ examples/
 * `private` — **decidido** para membros; artefato de topo nunca é privado.
 * capabilities de UI/widget — **decidido**: vocabulário de alto nível (1.7), sem termos de tecnologia.
 * `compensation` — **decidido**: task `type: compensation` com `for` (B-37).
-
-
-
-
+* `externalServices` — **TODO**: pasta de serviços de terceiros no workspace, com duas formas: código-fonte baixado e compilado localmente, e serviço consumido online. Inclui package manager, resolução, versão, cache e lock.

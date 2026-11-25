@@ -1,0 +1,4 @@
+service "example.com/services/arithmetic" {
+  title: { pt-BR: "Aritmética", en: "Arithmetic" }
+  locales: [ "pt-BR", "en" ]
+}

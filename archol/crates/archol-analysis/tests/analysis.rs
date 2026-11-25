@@ -393,7 +393,7 @@ fn shape_files(process: &str) -> Vec<FileInput> {
 #[test]
 fn duration_and_shape_strings_become_shape_literals() {
     let files = shape_files(
-        "process P {\n  let video: ProductVideo = \"https://example.com/v.mp4\"\n  title: \"Processo\"\n  sla: \"2h\"\n}",
+        "process P {\n  vars { video: ProductVideo = \"https://example.com/v.mp4\" }\n  title: \"Processo\"\n  sla: \"2h\"\n}",
     );
     let analysis = analyze_application(files, Some("ws/services"), "example.com/app/demo", false)
         .expect("analysis");
@@ -925,4 +925,176 @@ fn reintroduce_requires_an_import_and_an_existing_target() {
         .diagnostics
         .iter()
         .any(|d| d.diagnostic.code == "E_REINTRODUCE_TARGET"));
+}
+
+#[test]
+fn process_step_commands_reference_known_variables() {
+    let mut files = base_files();
+    files.push((
+        "ws/services/example.com/services/demo/processes/demo-sum-process.archol",
+        "process Sum() {\n  vars { value1: number }\n  lane \"Operator\" for [Clerk] {\n    form Ask {\n      edit missing\n    }\n  }\n}",
+    ));
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_UNKNOWN_VARIABLE"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| &d.diagnostic.code)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn compute_guard_uses_a_known_enum_value() {
+    let mut files = base_files();
+    files.push((
+        "ws/services/example.com/services/demo/processes/demo-sum-process.archol",
+        "process Sum() {\n  vars { regime: TaxRegimeCode }\n  lane \"Operator\" for [Clerk] {\n    compute Check if regime === Missing {\n      result = 1\n    }\n  }\n}",
+    ));
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_ENUM_VALUE"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| &d.diagnostic.code)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn let_is_rejected_in_favor_of_vars() {
+    let mut files = base_files();
+    files.push((
+        "ws/services/example.com/services/demo/processes/demo-sum-process.archol",
+        "process Sum() {\n  let other: number\n  vars { another: number }\n}",
+    ));
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_LET_REMOVED"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| &d.diagnostic.code)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn lane_steps_must_exist_in_the_service_steps_block() {
+    let files = [
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" {\n  title: { pt-BR: \"Demo\" }\n  locales: [ \"pt-BR\" ]\n  steps {\n    form Known { title: { pt-BR: \"Known\" } }\n  }\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/processes/demo-process.archol",
+            "process P() {\n  lane Operator for [Clerk] {\n    Unknown\n  }\n}",
+        ),
+    ];
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_UNKNOWN_STEP"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| &d.diagnostic.code)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn application_roles_are_rejected() {
+    let files = [(
+        "ws/applications/example.com/app/demo/demo-application.archol",
+        "application \"example.com/app/demo\" {\n  roles { Clerk }\n}",
+    )];
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_APP_ROLE"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| &d.diagnostic.code)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn shape_and_process_can_share_a_name() {
+    let files = [
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } locales: [ \"pt-BR\" ] }",
+        ),
+        (
+            "ws/services/example.com/services/demo/demo-shapes.archol",
+            "shape Operation {\n  base: classification\n  value Sum { title: { pt-BR: \"Soma\" } }\n}",
+        ),
+        (
+            "ws/services/example.com/services/demo/processes/demo-process.archol",
+            "process Operation() { title: { pt-BR: \"Operação\" } }",
+        ),
+    ];
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .all(|d| d.diagnostic.code != "E_DUP_ARTIFACT"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn reusable_step_variables_must_exist_in_the_process() {
+    let files = [
+        (
+            "ws/services/example.com/services/demo/demo-service.archol",
+            "service \"example.com/services/demo\" { title: { pt-BR: \"Demo\" } locales: [ \"pt-BR\" ] }",
+        ),
+        (
+            "ws/services/example.com/services/demo/processes/demo-step.archol",
+            "process P() {\n  vars { value: number }\n  lane Operator for [Clerk] {\n    Ask\n  }\n}\n\nform Ask {\n  title: { pt-BR: \"Ask\" }\n  edit missing\n}",
+        ),
+    ];
+    let analysis = workspace(&files);
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.diagnostic.code == "E_STEP_VARIABLE"),
+        "{:?}",
+        analysis
+            .diagnostics
+            .iter()
+            .map(|d| (&d.diagnostic.code, &d.diagnostic.message))
+            .collect::<Vec<_>>()
+    );
 }

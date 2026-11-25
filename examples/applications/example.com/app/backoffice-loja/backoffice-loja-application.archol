@@ -9,21 +9,6 @@ application "example.com/app/backoffice-loja" {
     "example.com/services/support" as Support 
       "example.com/services/notifications" as Notifications 
   }
-  // REVIEW [2026-12-15] Papéis da aplicação e a hierarquia entre eles (`>` = superior a).
-  roles {
-    Clerk // REVIEW [2026-12-15] Balconista: opera a loja no dia a dia.
-    Manager // REVIEW [2026-12-15] Gerente: responde pela operação da loja.
-    SupportAgent // REVIEW [2026-12-15] Agente de suporte: atende clientes e ocorrências.
-    Admin // REVIEW [2026-12-15] Administrador: acesso amplo à configuração.
-    Dispatcher // REVIEW [2026-12-15] Despachante: organiza as entregas.
-    Driver // REVIEW [2026-12-15] Motorista: executa as entregas.
-    // REVIEW [2026-12-15] Admin é superior a Manager, que por sua vez é superior a Clerk.
-    Admin > Manager > Clerk
-    // REVIEW [2026-12-15] Manager é superior a SupportAgent.
-    Manager > SupportAgent
-    // REVIEW [2026-12-15] Manager é superior a Dispatcher, que é superior a Driver.
-    Manager > Dispatcher > Driver
-  }
   theme: Backoffice // REVIEW [2026-12-15] Tema visual fornecido pelo construtor (não é artefato de serviço).
   locales: [pt-BR] // REVIEW [2026-12-15] Idiomas da app; o primeiro (pt-BR) é o default.
   environments: [dev, qa, prod] // REVIEW [2026-12-15] Ambientes em que a aplicação é promovida.

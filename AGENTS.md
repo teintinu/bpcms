@@ -17,7 +17,7 @@
 A `Application` só pode:
 
 - listar entry-point services;
-- configurar papéis, ambientes e referenciar tema/idiomas fornecidos pelo construtor;
+- configurar ambientes e referenciar tema/idiomas fornecidos pelo construtor;
 - apontar para o lock;
 - no `main`, inicializar um `Parameter` já declarado em um serviço (`set <Alias>.<Parameter> = <valor>`) e, opcionalmente, fazer boot antecipado (`start`).
 
@@ -44,7 +44,7 @@ Não aplique mudanças “óbvias” por conta própria. Reverter também é mud
 
 ## Pastas e namespaces
 
-`BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
+`BPCMS_WORKSPACE` é o diretório raiz do workspace, passado ao compilador/construtor. Ele contém `applications/` e `services/`; `externalServices/` será adicionado para serviços de terceiros. Nos exemplos, `BPCMS_WORKSPACE = examples/`.
 
 - A raiz de um serviço é a pasta que contém `<service>-service.archol`.
 - `documents/`, `processes/`, `views/` e `messages/` são pastas **organizacionais**, não namespaces: `documents/billing-invoice-document.archol` continua `Invoice`, não `documents.Invoice`.
@@ -117,7 +117,7 @@ Regras:
 
 ## Pendências e brainstorm da DSL
 
-- **Marcadores de pendência:** `TODO`, `FIXME`, `REVIEW`, `OPTIMIZE` e `HACK` no início de um comentário (`// TODO ...`). O compilador aceita maiúsculas/minúsculas; o AST e o `archol format` normalizam para maiúsculas.
+- **Marcadores de pendência:** `TODO`, `TOFIX`, `FIXME`, `REVIEW`, `OPTIMIZE` e `HACK` no início de um comentário (`// TODO ...`). O compilador aceita maiúsculas/minúsculas; o AST e o `archol format` normalizam para maiúsculas.
 - **Sintaxe:** `// <MARCADOR> [YYYY-MM-DD] <comentário>`. A data é o **due date** (vencimento): sem data ou data no passado é **erro**; vencimento em até 15 dias é **warning**. O AST expõe `pending` em `SourceFile` para o construtor. Pendências **não são artefatos**: não recebem ID nem entram no lock.
 - **Durante este brainstorm/planejamento da DSL:** toda linha criada/modificada nos exemplos deve manter um comentário explicativo (como já está) e o `REVIEW` com due date de **+30 dias** a partir da data da alteração. Os comentários legados dos exemplos foram marcados com `REVIEW [2026-12-15]`.
 - `format` e `lint` rodam no compilador (`archol format`, `archol lint`) e no plugin: formatação ao salvar e lint contínuo via diagnósticos do LSP.
